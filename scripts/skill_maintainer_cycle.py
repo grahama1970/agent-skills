@@ -331,13 +331,20 @@ def classify(issue: dict[str, Any]) -> dict[str, str]:
     labels = {label.get("name", "").lower() for label in issue.get("labels", [])}
     text = f"{issue.get('title', '')}\n{issue.get('body', '')}".lower()
     for route in ROUTES:
-        if labels & route["labels"] or any(term in text for term in route["terms"]):
+        if labels & route["labels"] or route_terms_match(text, route["terms"]):
             return route_payload(route, source="maintainer_inference", reason="label_or_text_match")
     return route_payload(
         ROUTES_BY_NAME["backend_python_or_skill_runtime"],
         source="safe_default",
         reason="no_route_metadata_or_match",
     )
+
+
+def route_terms_match(text: str, terms: set[str]) -> bool:
+    for term in terms:
+        if re.search(rf"(?<![a-z0-9_-]){re.escape(term.lower())}(?![a-z0-9_-])", text):
+            return True
+    return False
 
 
 def target_skills(issue: dict[str, Any]) -> list[str]:
@@ -1341,9 +1348,10 @@ def terminal_success_comment(issue: dict[str, Any], issue_dir: Path, result: dic
     verifier = load_json(issue_dir / "verifier-response.json", {})
     review = load_json(issue_dir / "review-response.json", {})
     command_lines = [
-        f"- `{item.get('command')}` -> `{item.get('output_summary') or item.get('exit_code')}`"
+        f"- `{item.get('command') or item.get('cmd')}` -> "
+        f"`{item.get('output_summary') or item.get('summary') or item.get('result') or item.get('exit_code')}`"
         for item in verifier.get("commands_run", [])
-        if isinstance(item, dict)
+        if isinstance(item, dict) and (item.get("command") or item.get("cmd"))
     ]
     write_text(
         path,
@@ -1811,6 +1819,191 @@ def load_json(path: Path, default: Any) -> Any:
         return default
 
 
+def read_status_json(path: Path) -> tuple[Any, dict[str, Any]]:
+    artifact = {"path": str(path)}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {}, {**artifact, "state": "missing"}
+    except OSError as exc:
+        return {}, {**artifact, "state": "unreadable", "error": str(exc)}
+    try:
+        return json.loads(text), {**artifact, "state": "ok"}
+    except json.JSONDecodeError as exc:
+        return {}, {
+            **artifact,
+            "state": "corrupt",
+            "error": exc.msg,
+            "line": exc.lineno,
+            "column": exc.colno,
+        }
+
+
+def receipt_gate_status(issue_dir: Path) -> dict[str, Any]:
+    phases = {
+        "repair": ("repair-response.json", "repair"),
+        "deterministic_verification": ("verifier-response.json", "deterministic_verification"),
+        "independent_review": ("review-response.json", "independent_review"),
+    }
+    phase_status: dict[str, Any] = {}
+    for name, (filename, gate_phase) in phases.items():
+        data, artifact = read_status_json(issue_dir / filename)
+        receipt = data if isinstance(data, dict) and artifact["state"] == "ok" else {}
+        ok, reason = receipt_gate(receipt, phase=gate_phase)
+        phase_status[name] = {
+            "ok": ok,
+            "reason": reason,
+            "receipt_status": receipt.get("status"),
+            "artifact": artifact,
+        }
+    return {
+        "overall": "pass" if all(item["ok"] for item in phase_status.values()) else "blocked",
+        "phases": phase_status,
+    }
+
+
+def infer_status_phase(status: Any, receipt_gate_state: dict[str, Any], webgpt_state: dict[str, Any]) -> str:
+    normalized = str(status or "")
+    if normalized in {"fixed_with_deterministic_proof", "fixed_with_deterministic_proof_webgpt_advisory"}:
+        return "completed"
+    if normalized in {"repair_subagent_started", "waiting_for_repair_subagent_receipt"}:
+        return "repair"
+    if normalized in {"verifier_subagent_started", "waiting_for_verifier_subagent_receipt"}:
+        return "deterministic_verification"
+    if normalized in {"review_subagent_started", "waiting_for_review_subagent_receipt"}:
+        return "independent_review"
+    if "webgpt" in normalized:
+        return "webgpt_external_review"
+    if normalized.startswith("blocked_invalid_repair_receipt"):
+        return "repair"
+    if normalized.startswith("blocked_invalid_verifier_receipt"):
+        return "deterministic_verification"
+    if normalized.startswith("blocked_invalid_review_receipt"):
+        return "independent_review"
+    for phase, gate in receipt_gate_state.get("phases", {}).items():
+        if not gate.get("ok"):
+            return phase
+    if webgpt_state.get("status") not in {"completed", "dry_run"}:
+        return "webgpt_external_review"
+    return "terminal_disposition"
+
+
+def subagent_sessions_status(issue_dir: Path) -> dict[str, Any]:
+    root = issue_dir / "subagent-sessions"
+    if not root.exists():
+        return {"state": "missing", "root": str(root), "items": []}
+    items: list[dict[str, Any]] = []
+    for session_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+        status_data, status_artifact = read_status_json(session_dir / "status.json")
+        spec_data, spec_artifact = read_status_json(session_dir / "spec.json")
+        status_obj = status_data if isinstance(status_data, dict) else {}
+        spec_obj = spec_data if isinstance(spec_data, dict) else {}
+        tags = spec_obj.get("tags") if isinstance(spec_obj.get("tags"), list) else []
+        items.append({
+            "session_id": status_obj.get("session_id") or session_dir.name,
+            "task_id": status_obj.get("task_id") or spec_obj.get("task_id"),
+            "phase": next((tag for tag in tags if tag in {"repair", "verify", "review"}), None),
+            "status": status_obj.get("status"),
+            "exit_code": status_obj.get("exit_code"),
+            "started_at": status_obj.get("started_at"),
+            "updated_at": status_obj.get("updated_at"),
+            "artifact_dir": str(session_dir),
+            "status_artifact": status_artifact,
+            "spec_artifact": spec_artifact,
+        })
+    return {"state": "ok", "root": str(root), "items": items}
+
+
+def webgpt_status_summary(issue_dir: Path) -> dict[str, Any]:
+    data, artifact = read_status_json(issue_dir / "ask-webgpt-result.json")
+    result = data if isinstance(data, dict) and artifact["state"] == "ok" else {}
+    return {
+        "state": artifact["state"],
+        "artifact": artifact,
+        "status": result.get("status") if result else "missing",
+        "returncode": result.get("returncode"),
+        "blocking_findings": webgpt_blocking_findings(result) if result else None,
+        "review_bundle": result.get("review_bundle"),
+    }
+
+
+def publication_status_summary(issue_dir: Path, cycle_result: dict[str, Any]) -> dict[str, Any]:
+    data, artifact = read_status_json(issue_dir / "publication-result.json")
+    result = data if isinstance(data, dict) and artifact["state"] == "ok" else {}
+    if not result and isinstance(cycle_result.get("publication"), dict):
+        result = cycle_result["publication"]
+        artifact = {"path": str(issue_dir / "cycle-result.json:publication"), "state": "embedded"}
+    return {
+        "state": artifact["state"],
+        "artifact": artifact,
+        "status": result.get("status") if result else "missing",
+        "reason": result.get("reason"),
+        "commit": result.get("commit"),
+        "scoped_paths": result.get("scoped_paths") or [],
+    }
+
+
+def issue_status_summary(issue_dir: Path) -> dict[str, Any]:
+    issue_dir = issue_dir.expanduser().resolve()
+    cycle_data, cycle_artifact = read_status_json(issue_dir / "cycle-result.json")
+    issue_data, issue_artifact = read_status_json(issue_dir / "issue-snapshot.json")
+    cycle_result = cycle_data if isinstance(cycle_data, dict) and cycle_artifact["state"] == "ok" else {}
+    issue = issue_data if isinstance(issue_data, dict) and issue_artifact["state"] == "ok" else {}
+    receipt_status = receipt_gate_status(issue_dir)
+    webgpt_status = webgpt_status_summary(issue_dir)
+    publication_status = publication_status_summary(issue_dir, cycle_result)
+    status = cycle_result.get("status")
+    if not status:
+        status = "corrupt_cycle_result" if cycle_artifact["state"] == "corrupt" else "missing_cycle_result"
+    return {
+        "issue": issue.get("number") or cycle_result.get("issue"),
+        "issue_url": issue.get("url") or cycle_result.get("issue_url"),
+        "artifact_dir": str(issue_dir),
+        "status": status,
+        "closure_decision": cycle_result.get("closure_decision") or "unknown_missing_cycle_result",
+        "phase": infer_status_phase(status, receipt_status, webgpt_status),
+        "required_next_evidence": cycle_result.get("required_next_evidence") or [],
+        "receipt_gate": receipt_status,
+        "subagent_sessions": subagent_sessions_status(issue_dir),
+        "webgpt_status": webgpt_status,
+        "publication_status": publication_status,
+        "terminal_disposition_status": cycle_result.get("terminal_disposition_status") or "not_started",
+        "artifacts": {
+            "cycle_result": cycle_artifact,
+            "issue_snapshot": issue_artifact,
+        },
+    }
+
+
+def refresh_route_decision(
+    issue_dir: Path,
+    issue: dict[str, Any],
+    result: dict[str, Any],
+    current_route: dict[str, Any],
+) -> tuple[dict[str, Any], bool]:
+    if not current_route:
+        refreshed = classify(issue)
+        write_json(issue_dir / "route-decision.json", refreshed)
+        result["selected_route"] = refreshed
+        return refreshed, True
+    if current_route.get("selection_source") != "maintainer_inference":
+        result.setdefault("selected_route", current_route)
+        return current_route, False
+    refreshed = classify(issue)
+    comparable = ("route", "repair_agent", "verifier_agent", "review_agent")
+    if any(current_route.get(key) != refreshed.get(key) for key in comparable):
+        result.setdefault("route_refreshes", []).append({
+            "previous": {key: current_route.get(key) for key in comparable},
+            "refreshed": {key: refreshed.get(key) for key in comparable},
+            "reason": "classifier_changed_since_initial_lease",
+        })
+        write_json(issue_dir / "route-decision.json", refreshed)
+        result["selected_route"] = refreshed
+        return refreshed, True
+    result.setdefault("selected_route", current_route)
+    return current_route, False
+
+
 def continue_pending_run(
     issue_dir: Path,
     *,
@@ -1822,7 +2015,12 @@ def continue_pending_run(
     result_path = issue_dir / "cycle-result.json"
     result = load_json(result_path, {})
     issue = load_json(issue_dir / "issue-snapshot.json", {})
-    route = load_json(issue_dir / "route-decision.json", {})
+    route, route_refreshed = refresh_route_decision(
+        issue_dir,
+        issue,
+        result,
+        load_json(issue_dir / "route-decision.json", {}),
+    )
     skills = list(result.get("target_skills") or [])
     status = result.get("status")
     result["last_invocation_dry_run"] = dry_run
@@ -1862,6 +2060,21 @@ def continue_pending_run(
         result["terminal_disposition_status"] = "superseded_by_webgpt_bundle_sanitizer"
         terminal_webgpt["status"] = "superseded_unreadable_web_review_bundle"
         terminal_webgpt["superseded_by"] = "review-bundle.webgpt.md with local path tokens redacted"
+        write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
+        status = result["status"]
+        terminal_webgpt_status = terminal_webgpt.get("status")
+    if (
+        status == "webgpt_review_attempted"
+        and terminal_webgpt_status == "completed"
+        and webgpt_blocking_findings(terminal_webgpt) is True
+        and route_refreshed
+    ):
+        result["status"] = "review_subagent_started"
+        result["continuation_status"] = "resuming_after_stale_route_webgpt_bundle"
+        result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
+        result["terminal_disposition_status"] = "superseded_by_refreshed_route_decision"
+        terminal_webgpt["status"] = "superseded_stale_route_bundle"
+        terminal_webgpt["superseded_by"] = "route-decision.json refreshed from current classifier before rerun"
         write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
         status = result["status"]
         terminal_webgpt_status = terminal_webgpt.get("status")
@@ -2213,6 +2426,39 @@ def continue_pending_run(
                     result["github_disposition_skipped"] = "github_dry_run"
                     write_json(result_path, result)
                     return result
+                if not ask_failed:
+                    gate_ok, gate_reason = terminal_webgpt_gate_valid(issue_dir)
+                    result["terminal_disposition_gate_validated"] = gate_ok
+                    result["receipt_gate_reason"] = gate_reason
+                    if gate_ok:
+                        publication = publish_scoped_changes(
+                            issue_dir,
+                            result,
+                            repair,
+                            dry_run=dry_run,
+                            github_dry_run=github_dry_run,
+                        )
+                        result["publication"] = publication
+                        if publication.get("status") not in {"committed", "no_changes", "dry_run"}:
+                            blocked_status = f"blocked_publication:{publication.get('reason') or publication.get('status')}"
+                            result["status"] = blocked_status
+                            result["continuation_status"] = blocked_status
+                            result["closure_decision"] = blocked_status
+                            result["required_next_evidence"] = ["successful scoped publication commit before GitHub closure"]
+                            write_json(result_path, result)
+                            return result
+                        result["status"] = "fixed_with_deterministic_proof_webgpt_advisory"
+                        result["continuation_status"] = "fixed_with_deterministic_proof_webgpt_advisory"
+                        result["closure_decision"] = "close_from_deterministic_proof_webgpt_advisory"
+                        result["observed_webgpt_status"] = ask_status
+                        result["required_next_evidence"] = []
+                        return terminal_success_dispose(
+                            issue_dir,
+                            result,
+                            issue,
+                            dry_run=dry_run,
+                            github_dry_run=github_dry_run,
+                        )
                 result["terminal_disposition_gate_validated"] = True
                 return terminal_dispose(issue_dir, result, issue, dry_run=dry_run, github_dry_run=github_dry_run)
             if not require_webgpt:
@@ -2270,6 +2516,10 @@ def main() -> int:
         "--continue-issue-dir",
         help="Continue one explicit local issue artifact directory, including github-dry-run fixture artifacts.",
     )
+    parser.add_argument(
+        "--status-issue-dir",
+        help="Print a read-only JSON status summary for one local issue artifact directory.",
+    )
     parser.add_argument("--require-webgpt", action="store_true")
     parser.add_argument("--refresh-baseline", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -2315,6 +2565,11 @@ def main() -> int:
     )
     args = parser.parse_args()
     github_dry_run = args.dry_run or args.github_dry_run
+
+    if args.status_issue_dir:
+        result = issue_status_summary(Path(args.status_issue_dir))
+        print(json.dumps(result, indent=2))
+        return 0
 
     labels = [label.strip() for label in args.labels.split(",") if label.strip()]
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")

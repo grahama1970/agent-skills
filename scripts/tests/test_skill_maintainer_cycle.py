@@ -94,6 +94,33 @@ def test_issue_body_route_metadata_wins_over_misleading_text():
     assert route["selection_reason"] == "route:backend_python_or_skill_runtime"
 
 
+def test_route_inference_does_not_match_ui_inside_issue_words():
+    cycle = load_cycle_module()
+    issue = {
+        "number": 11,
+        "title": "Add skill-maintainer local issue status JSON command",
+        "labels": [
+            {"name": "skill-maintenance"},
+            {"name": "skills-ci"},
+            {"name": "type:feature"},
+        ],
+        "body": "\n".join([
+            "## Summary",
+            "Add a machine-readable status mode for issue artifact directories.",
+            "",
+            "## Target paths",
+            "- scripts/skill_maintainer_cycle.py",
+            "- scripts/tests/test_skill_maintainer_cycle.py",
+        ]),
+    }
+
+    route = cycle.classify(issue)
+
+    assert route["route"] == "backend_python_or_skill_runtime"
+    assert route["repair_agent"] == "coder"
+    assert route["selection_source"] == "maintainer_inference"
+
+
 def test_ask_webgpt_command_uses_dedicated_review_code_project(tmp_path):
     cycle = load_cycle_module()
     bundle = tmp_path / "bundle.md"
@@ -891,7 +918,7 @@ def test_continue_pending_run_disposes_failed_repair_receipt_with_github_actions
         },
     )
 
-    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=True)
+    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=True, require_webgpt=True)
 
     assert result["status"].startswith("blocked_invalid_repair_receipt")
     assert [action["action"] for action in result["github_actions"]] == [
@@ -991,7 +1018,7 @@ def test_continue_pending_run_terminalizes_verifier_dispatch_failure(tmp_path, m
     monkeypatch.setattr(cycle, "gh_issue_comment", lambda issue_number, body_path, dry_run=False: {"cmd": [], "dry_run": dry_run, "returncode": 0, "stdout": "", "stderr": ""})
     monkeypatch.setattr(cycle, "gh_issue_edit", lambda issue_number, *args, dry_run=False: {"cmd": [], "dry_run": dry_run, "returncode": 0, "stdout": "", "stderr": ""})
 
-    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=True)
+    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=True, require_webgpt=True)
 
     assert result["status"] == "blocked_verifier_subagent_start_failed"
     assert result["closure_decision"] == "blocked_verifier_subagent_start_failed"
@@ -1676,6 +1703,186 @@ def test_continue_pending_run_retries_obsolete_webgpt_review_command_failure(tmp
     webgpt = json.loads((issue_dir / "ask-webgpt-result.json").read_text())
     assert webgpt["status"] == "completed"
     assert webgpt["cmd"][2] == "ask"
+
+
+def test_continue_pending_run_supersedes_stale_inferred_route_webgpt_blocker(tmp_path):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-80"
+    issue_dir.mkdir(parents=True)
+    issue_body = "\n".join([
+        "## Summary",
+        "Add a machine-readable status mode for issue artifact directories.",
+        "",
+        "## Target paths",
+        "- scripts/skill_maintainer_cycle.py",
+        "- scripts/tests/test_skill_maintainer_cycle.py",
+    ])
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "webgpt_review_attempted",
+        "target_skills": [],
+        "github_actions": [],
+        "subagent_dispatch": [],
+        "subagent_specs": {},
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({
+        "number": 80,
+        "url": "https://example.invalid/80",
+        "title": "Add skill-maintainer local issue status JSON command",
+        "labels": [{"name": "skill-maintenance"}, {"name": "skills-ci"}],
+        "body": issue_body,
+    }))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "design_or_ux",
+        "repair_agent": "designer",
+        "verifier_agent": "qa-tester",
+        "review_agent": "code-reviewer",
+        "selection_source": "maintainer_inference",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "commands_run": ["repair command"],
+        "evidence_summary": "repair evidence",
+    }))
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["verify command"],
+        "evidence_summary": "verify evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "review-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["review command"],
+        "evidence_summary": "review evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "ask-webgpt-result.json").write_text(json.dumps({
+        "status": "completed",
+        "returncode": 0,
+        "stdout": json.dumps({"answer": "WEBGPT_BLOCKING_FINDINGS: YES\nWrong route."}),
+    }))
+
+    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=True, require_webgpt=True)
+
+    route = json.loads((issue_dir / "route-decision.json").read_text())
+    webgpt = json.loads((issue_dir / "ask-webgpt-result.json").read_text())
+    assert route["route"] == "backend_python_or_skill_runtime"
+    assert result["continuation_status"] == "blocked_waiting_for_webgpt_and_closure_wiring"
+    assert result["terminal_disposition_status"] == "superseded_by_refreshed_route_decision"
+    assert webgpt["status"] == "superseded_stale_route_bundle"
+
+
+def test_continue_pending_run_publishes_after_successful_webgpt_run(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-81"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "review_subagent_started",
+        "closure_decision": "waiting_for_review_subagent_receipt",
+        "target_skills": ["skill-maintainer"],
+        "github_actions": [],
+        "subagent_dispatch": [],
+        "subagent_specs": {},
+        "target_paths": ["scripts/skill_maintainer_cycle.py"],
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({"number": 81, "url": "https://example.invalid/81"}))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "backend_python_or_skill_runtime",
+        "repair_agent": "coder",
+        "verifier_agent": "project-or-harness-verifier",
+        "review_agent": "code-reviewer",
+        "selection_source": "issue_body",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "commands_run": ["repair command"],
+        "evidence_summary": "repair evidence",
+        "changed_files": ["scripts/skill_maintainer_cycle.py"],
+    }))
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["verify command"],
+        "evidence_summary": "verify evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "review-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["review command"],
+        "evidence_summary": "review evidence",
+        "blocking_findings": [],
+    }))
+    monkeypatch.setattr(
+        cycle,
+        "maybe_run_webgpt",
+        lambda bundle, dry_run=False: {
+            "cmd": ["bash", "skills/ask/run.sh", "ask"],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": json.dumps({
+                "answer": "WEBGPT_BLOCKING_FINDINGS: NO\nNo blocking findings.",
+                "oracle": {
+                    "adapter_response": {
+                        "sentinel_required": True,
+                        "turns": [{"raw_contains_sentinel": True}],
+                    }
+                },
+            }),
+            "stderr": "",
+        },
+    )
+    monkeypatch.setattr(
+        cycle,
+        "publish_scoped_changes",
+        lambda *args, **kwargs: {
+            "status": "committed",
+            "commit": "abc123",
+            "scoped_paths": ["scripts/skill_maintainer_cycle.py"],
+        },
+    )
+    mock_successful_github_terminal_disposition(monkeypatch, cycle)
+
+    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=False, run_webgpt=True)
+
+    assert result["status"] == "fixed_with_deterministic_proof_webgpt_advisory"
+    assert result["publication"]["status"] == "committed"
+    assert result["closure_decision"] == "close_from_deterministic_proof_webgpt_advisory"
+    assert result["terminal_disposition_status"] == "completed"
+
+
+def test_terminal_success_comment_renders_verifier_command_receipt_shapes(tmp_path):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "issue-82"
+    issue_dir.mkdir()
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": [
+            {"cmd": "pytest -q scripts/tests/test_skill_maintainer_cycle.py", "result": "65 passed"},
+            {"command": "git diff --check", "output_summary": "exit 0"},
+        ],
+    }))
+    (issue_dir / "review-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": [{"cmd": "review command", "result": "pass"}],
+    }))
+
+    comment = cycle.terminal_success_comment(
+        {"number": 82},
+        issue_dir,
+        {
+            "status": "fixed_with_deterministic_proof",
+            "closure_decision": "close_from_deterministic_proof",
+        },
+    )
+    text = comment.read_text()
+
+    assert "`pytest -q scripts/tests/test_skill_maintainer_cycle.py` -> `65 passed`" in text
+    assert "`git diff --check` -> `exit 0`" in text
+    assert "`None` -> `None`" not in text
 
 
 def test_continue_pending_run_runs_webgpt_but_skips_disposition_under_github_dry_run(tmp_path, monkeypatch):
@@ -2408,3 +2615,152 @@ def test_webgpt_terminal_retry_handles_missing_disposition_status(tmp_path, monk
     assert result["observed_webgpt_status"] == "completed"
     assert result["closure_decision"] == "blocked_waiting_for_finding_disposition_and_closure_wiring"
     assert result["terminal_disposition_status"] == "completed"
+
+
+def run_status_command(cycle, monkeypatch, capsys, issue_dir: Path) -> dict:
+    monkeypatch.setattr(
+        "sys.argv",
+        ["skill_maintainer_cycle.py", "--status-issue-dir", str(issue_dir)],
+    )
+    assert cycle.main() == 0
+    return json.loads(capsys.readouterr().out)
+
+
+def test_status_issue_dir_reports_completed_fixed_summary(tmp_path, monkeypatch, capsys):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-74"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({
+        "number": 74,
+        "url": "https://example.invalid/74",
+    }))
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "fixed_with_deterministic_proof",
+        "issue": 74,
+        "closure_decision": "close_from_deterministic_proof",
+        "required_next_evidence": [],
+        "terminal_disposition_status": "completed",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "commands_run": ["repair command"],
+        "evidence_summary": "repair evidence",
+    }))
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["verify command"],
+        "evidence_summary": "verifier evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "review-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "pass",
+        "commands_run": ["review command"],
+        "evidence_summary": "review evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "ask-webgpt-result.json").write_text(json.dumps({
+        "status": "completed",
+        "returncode": 0,
+        "stdout": json.dumps({"answer": "WEBGPT_BLOCKING_FINDINGS: NO\nNo blocking findings."}),
+    }))
+    (issue_dir / "publication-result.json").write_text(json.dumps({
+        "status": "no_changes",
+        "reason": "no_scoped_staged_changes",
+        "scoped_paths": ["scripts/skill_maintainer_cycle.py"],
+    }))
+
+    output = run_status_command(cycle, monkeypatch, capsys, issue_dir)
+
+    assert output["issue"] == 74
+    assert output["issue_url"] == "https://example.invalid/74"
+    assert output["status"] == "fixed_with_deterministic_proof"
+    assert output["phase"] == "completed"
+    assert output["receipt_gate"]["overall"] == "pass"
+    assert output["webgpt_status"]["blocking_findings"] is False
+    assert output["publication_status"]["status"] == "no_changes"
+    assert output["terminal_disposition_status"] == "completed"
+
+
+def test_status_issue_dir_reports_waiting_repair_with_subagent_session(tmp_path, monkeypatch, capsys):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-75"
+    session_dir = issue_dir / "subagent-sessions" / "skill-maintainer-issue-75-repair-abc123"
+    session_dir.mkdir(parents=True)
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({
+        "number": 75,
+        "url": "https://example.invalid/75",
+    }))
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "repair_subagent_started",
+        "issue": 75,
+        "closure_decision": "waiting_for_repair_subagent_receipt",
+        "required_next_evidence": ["repair-response.json from running repair subagent"],
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({"status": "running"}))
+    (session_dir / "status.json").write_text(json.dumps({
+        "session_id": "skill-maintainer-issue-75-repair-abc123",
+        "task_id": "skill-maintainer-issue-75-repair",
+        "status": "running",
+        "exit_code": None,
+    }))
+    (session_dir / "spec.json").write_text(json.dumps({
+        "task_id": "skill-maintainer-issue-75-repair",
+        "tags": ["skill-maintainer", "repair", "designer"],
+    }))
+
+    output = run_status_command(cycle, monkeypatch, capsys, issue_dir)
+
+    assert output["status"] == "repair_subagent_started"
+    assert output["phase"] == "repair"
+    assert output["receipt_gate"]["phases"]["repair"]["reason"] == "running"
+    assert output["subagent_sessions"]["state"] == "ok"
+    assert output["subagent_sessions"]["items"] == [
+        {
+            "session_id": "skill-maintainer-issue-75-repair-abc123",
+            "task_id": "skill-maintainer-issue-75-repair",
+            "phase": "repair",
+            "status": "running",
+            "exit_code": None,
+            "started_at": None,
+            "updated_at": None,
+            "artifact_dir": str(session_dir),
+            "status_artifact": {"path": str(session_dir / "status.json"), "state": "ok"},
+            "spec_artifact": {"path": str(session_dir / "spec.json"), "state": "ok"},
+        }
+    ]
+
+
+def test_status_issue_dir_reports_missing_and_corrupt_optional_artifacts(tmp_path, monkeypatch, capsys):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-76"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({
+        "number": 76,
+        "url": "https://example.invalid/76",
+    }))
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "review_subagent_started",
+        "issue": 76,
+        "closure_decision": "waiting_for_review_subagent_receipt",
+        "required_next_evidence": ["review-response.json"],
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "commands_run": ["repair command"],
+        "evidence_summary": "repair evidence",
+    }))
+    (issue_dir / "verifier-response.json").write_text("{bad json")
+    (issue_dir / "review-response.json").write_text(json.dumps({"status": "running"}))
+
+    output = run_status_command(cycle, monkeypatch, capsys, issue_dir)
+
+    assert output["phase"] == "independent_review"
+    assert output["receipt_gate"]["overall"] == "blocked"
+    verifier_gate = output["receipt_gate"]["phases"]["deterministic_verification"]
+    assert verifier_gate["artifact"]["state"] == "corrupt"
+    assert verifier_gate["reason"] == "missing"
+    assert output["webgpt_status"]["state"] == "missing"
+    assert output["publication_status"]["status"] == "missing"
+    assert output["terminal_disposition_status"] == "not_started"
