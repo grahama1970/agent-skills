@@ -6,6 +6,7 @@ unset VIRTUAL_ENV
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SURF_BIN="${SURF_BIN:-$SKILLS_ROOT/surf/run.sh}"
+FETCHER_BIN="${FETCHER_BIN:-$SKILLS_ROOT/fetcher/run.sh}"
 CLIPBOARD_BIN="$SKILLS_ROOT/clipboard/run.sh"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
@@ -64,7 +65,7 @@ case "$cmd" in
       exit 1
     fi
 
-    zip_path="$("$PYTHON_BIN" "$SCRIPT_DIR/scripts/cli.py" "${args[@]}" --surf-bin "$SURF_BIN")"
+    zip_path="$("$PYTHON_BIN" "$SCRIPT_DIR/scripts/cli.py" "${args[@]}" --surf-bin "$SURF_BIN" --fetcher-bin "$FETCHER_BIN")"
     echo "$zip_path"
 
     if [[ "$clipboard" -eq 1 ]]; then

@@ -18,6 +18,7 @@ provides:
 composes:
   - surf
   - clipboard
+  - fetcher
 complies:
   - best-practices-skills
   - best-practices-python
@@ -47,6 +48,13 @@ This is **not** `/review-page` (full fail-closed page review) and **not**
 
 External fetch is on by default for `--url`. Disable with `--no-fetch` for visual-only bundles.
 Fetch is same-origin only, capped, and best-effort.
+
+`/fetcher` is composed as a **fallback** when urllib source fetch fails (SPAs, thin pages, blocked localhost). Default backend is `auto`:
+
+1. urllib same-origin crawl
+2. `/fetcher get` into `source/fetcher/` if step 1 produced nothing
+
+Force with `--fetch-backend urllib|fetcher`.
 
 ## Preflight
 

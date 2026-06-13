@@ -30,6 +30,7 @@ def capture(
         help="Output zip path. Default: /tmp/html-bundler-<timestamp>.zip",
     ),
     surf_bin: str = typer.Option("surf", "--surf-bin", help="Path to skills/surf/run.sh"),
+    fetcher_bin: str = typer.Option("", "--fetcher-bin", help="Path to skills/fetcher/run.sh for source fallback."),
     desktop: str = typer.Option("1440x1000", "--desktop", help="Desktop viewport, e.g. 1440x1000."),
     mobile: str = typer.Option("390x844", "--mobile", help="Mobile viewport, e.g. 390x844."),
     no_mobile: bool = typer.Option(False, "--no-mobile", help="Skip mobile viewport capture."),
@@ -43,6 +44,7 @@ def capture(
     ),
     max_scroll_slices: int = typer.Option(12, "--max-scroll-slices", help="Max viewport scroll slices per form factor."),
     no_fetch: bool = typer.Option(False, "--no-fetch", help="Skip same-origin source fetch for --url captures."),
+    fetch_backend: str = typer.Option("auto", "--fetch-backend", help="Source backend: auto, urllib, or fetcher."),
 ) -> None:
     """Render a page through /surf and write an upload-ready zip under /tmp by default."""
     if html is None and url is None:
@@ -64,6 +66,8 @@ def capture(
         source_entry=source_entry,
         max_scroll_slices=max_scroll_slices,
         no_fetch=no_fetch,
+        fetcher_bin=fetcher_bin,
+        fetch_backend=fetch_backend,
     )
     zip_path = run_capture(options)
     typer.echo(str(zip_path))

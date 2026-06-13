@@ -89,6 +89,7 @@ class CaptureContext:
     source_dir: pathlib.Path
     warnings: list[CaptureWarning] = field(default_factory=list)
     commands: list[dict] = field(default_factory=list)
+    source_mode: str = "visual-only"
 
     def warn(self, area: str, message: str) -> None:
         self.warnings.append(CaptureWarning(area=area, message=message))
@@ -158,6 +159,8 @@ class CaptureOptions:
     source_entry: pathlib.Path | None = None
     max_scroll_slices: int = 12
     no_fetch: bool = False
+    fetcher_bin: str = ""
+    fetch_backend: str = "auto"
 
 
 
@@ -382,6 +385,81 @@ def copy_source_files(files: Iterable[pathlib.Path], root_dir: pathlib.Path, sou
         except OSError as exc:
             ctx.warn("source", f"Could not copy {path}: {exc}")
     return copied
+
+
+def resolve_fetcher_bin(fetcher_bin: str) -> str | None:
+    if not fetcher_bin:
+        return None
+    if os.path.sep in fetcher_bin or fetcher_bin.startswith("."):
+        resolved = pathlib.Path(fetcher_bin).expanduser().resolve()
+        if not resolved.exists():
+            ctx_msg = f"fetcher entrypoint not found: {resolved}"
+            return None
+        return str(resolved)
+    found = shutil.which(fetcher_bin)
+    return found
+
+
+def fetch_via_fetcher(
+    page_url: str,
+    fetcher_bin: str,
+    workdir: pathlib.Path,
+    source_dir: pathlib.Path,
+    ctx: CaptureContext,
+) -> tuple[dict[str, str], dict[str, list[str]]]:
+    copied: dict[str, str] = {}
+    unresolved: dict[str, list[str]] = {}
+    fetch_out = workdir / "fetcher-run"
+    fetch_out.mkdir(parents=True, exist_ok=True)
+
+    result = run_command([fetcher_bin, "get", page_url, "--out", str(fetch_out)], timeout=180, ctx=ctx)
+    summary_path = fetch_out / "consumer_summary.json"
+    if result.returncode != 0 or not summary_path.exists():
+        ctx.warn(
+            "fetcher",
+            "fetcher get failed or produced no consumer_summary.json; keeping urllib-only source if any.",
+        )
+        return copied, unresolved
+
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        ctx.warn("fetcher", f"Could not parse fetcher summary: {exc}")
+        return copied, unresolved
+
+    counts = summary.get("counts", {})
+    if counts.get("downloaded", 0) < 1:
+        ctx.warn("fetcher", f"fetcher returned no downloads: {summary.get('failure_summary', counts)}")
+        return copied, unresolved
+
+    dest_root = source_dir / "fetcher"
+    for sub in ("downloads", "markdown", "fit_markdown", "text_blobs", "extracted_text", "screenshots"):
+        src = fetch_out / sub
+        if not src.exists():
+            continue
+        for path in src.rglob("*"):
+            if not path.is_file():
+                continue
+            rel = path.relative_to(src)
+            dest = dest_root / sub / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, dest)
+            copied[str(path)] = str(dest.relative_to(source_dir.parent))
+
+    summary_dest = dest_root / "consumer_summary.json"
+    summary_dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(summary_path, summary_dest)
+    copied[str(summary_path)] = str(summary_dest.relative_to(source_dir.parent))
+
+    walkthrough = fetch_out / "Walkthrough.md"
+    if walkthrough.exists():
+        wt_dest = dest_root / "Walkthrough.md"
+        shutil.copy2(walkthrough, wt_dest)
+        copied[str(walkthrough)] = str(wt_dest.relative_to(source_dir.parent))
+
+    if not copied:
+        ctx.warn("fetcher", "fetcher run succeeded but no artifacts were copied into source/.")
+    return copied, unresolved
 
 
 FETCH_USER_AGENT = "html-bundler/1.0"
@@ -677,6 +755,7 @@ def collect_source_bundle(
     unresolved: dict[str, list[str]] = {}
 
     if options.no_source:
+        ctx.source_mode = "visual-only"
         return copied_files, unresolved, html_path, root_dir
 
     source_entry: pathlib.Path | None = None
@@ -699,14 +778,37 @@ def collect_source_bundle(
             die(f"--source-entry must be inside --root. source_entry={source_entry} root={root_dir}")
         html_path = source_entry
     elif options.url and not options.no_fetch:
-        copied_files, unresolved = fetch_remote_source(str(options.url), ctx.source_dir, ctx)
+        backend = (options.fetch_backend or "auto").strip().lower()
+        fetcher_bin = resolve_fetcher_bin(options.fetcher_bin) if options.fetcher_bin else None
+
+        if backend in {"auto", "urllib"}:
+            copied_files, unresolved = fetch_remote_source(str(options.url), ctx.source_dir, ctx)
+            if copied_files:
+                ctx.source_mode = "url-fetch-urllib"
+
+        if not copied_files and backend in {"auto", "fetcher"}:
+            if fetcher_bin:
+                copied_files, unresolved = fetch_via_fetcher(
+                    str(options.url), fetcher_bin, ctx.workdir, ctx.source_dir, ctx
+                )
+                if copied_files:
+                    ctx.source_mode = "url-fetch-fetcher"
+            elif backend == "fetcher":
+                die("fetcher backend selected but --fetcher-bin is missing. Use skills/fetcher/run.sh")
+            elif backend == "auto":
+                ctx.warn(
+                    "fetcher",
+                    "urllib source fetch produced no files; configure skills/fetcher/run.sh for fallback.",
+                )
+
         if not copied_files:
             ctx.warn(
                 "source",
-                "No source/ copied from URL fetch. For local dev-server assets, pass --root and --source-entry.",
+                "No source/ copied. For local dev-server assets, pass --root and --source-entry.",
             )
         return copied_files, unresolved, html_path, root_dir
     elif options.url:
+        ctx.source_mode = "visual-only"
         ctx.warn("source", "Source fetch disabled (--no-fetch). Visual bundle only.")
         return copied_files, unresolved, html_path, root_dir
 
@@ -715,6 +817,7 @@ def collect_source_bundle(
         copied_files = copy_source_files(files, root_dir, ctx.source_dir, ctx)
         if not copied_files:
             ctx.warn("source", "source/ is empty after asset collection.")
+        ctx.source_mode = "local-html" if options.html else "dev-server-root"
 
     return copied_files, unresolved, html_path, root_dir
 
@@ -1065,15 +1168,7 @@ def run_capture(options: CaptureOptions) -> pathlib.Path:
                 "desktop_viewport": {"width": desktop_size[0], "height": desktop_size[1]},
                 "mobile_viewport": None if options.no_mobile else {"width": mobile_size[0], "height": mobile_size[1]},
                 "capture_files": capture_names,
-                                "source_mode": (
-                    "local-html"
-                    if options.html
-                    else "dev-server-root"
-                    if options.url and options.root and options.source_entry
-                    else "url-fetch"
-                    if options.url and not options.no_fetch
-                    else "visual-only"
-                ),
+                                "source_mode": ctx.source_mode,
                 "copied_files": copied_files,
                 "unresolved_local_references": unresolved,
                 "optional_reports": optional_reports,
