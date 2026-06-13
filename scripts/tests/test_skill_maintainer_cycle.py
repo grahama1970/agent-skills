@@ -96,9 +96,16 @@ def test_issue_body_route_metadata_wins_over_misleading_text():
 
 def test_ask_webgpt_command_uses_dedicated_review_code_project(tmp_path):
     cycle = load_cycle_module()
-    cmd = cycle.ask_webgpt_command(tmp_path / "bundle.md")
-    assert "--project" in cmd
-    assert cmd[cmd.index("--project") + 1] == "agent-skills-review-code"
+    bundle = tmp_path / "bundle.md"
+    bundle.write_text("# Review bundle\n\nEvidence body\n")
+    cmd = cycle.ask_webgpt_command(bundle)
+    assert cmd[:3] == ["bash", "skills/ask/run.sh", "ask"]
+    assert "--oracle-backend" in cmd
+    assert cmd[cmd.index("--oracle-backend") + 1] == "webgpt"
+    assert "--webgpt-project" in cmd
+    assert cmd[cmd.index("--webgpt-project") + 1] == "agent-skills-review-code"
+    assert "--once" in cmd
+    assert "Evidence body" in cmd[3]
 
 
 def test_target_skills_are_extracted_from_target_paths_section_only():
@@ -1205,6 +1212,24 @@ def test_receipt_gate_accepts_result_pass_for_verifier_receipt():
     assert reason == "pass"
 
 
+def test_receipt_gate_accepts_verification_result_and_summary_for_verifier_receipt():
+    cycle = load_cycle_module()
+
+    ok, reason = cycle.receipt_gate(
+        {
+            "status": "completed",
+            "verification_result": "pass",
+            "summary": "Verified deterministic fact-extractor behavior.",
+            "commands_run": [{"command": "pytest", "exit_code": 0, "result": "10 passed"}],
+            "acceptance_criteria": [{"criterion": "emits JSON", "result": "pass"}],
+        },
+        phase="deterministic_verification",
+    )
+
+    assert ok is True
+    assert reason == "pass"
+
+
 def test_receipt_gate_blocks_result_pass_with_findings():
     cycle = load_cycle_module()
 
@@ -1327,6 +1352,66 @@ def test_continue_pending_run_resumes_terminalized_invalid_repair_after_gate_fix
     assert result["status"] == "verifier_subagent_started"
     assert result["terminal_disposition_status"] == "superseded_by_valid_repair_receipt"
     assert result["verifier_session"]["session_id"] == "skill-maintainer-issue-78-verify-resumed"
+
+
+def test_continue_pending_run_resumes_terminalized_invalid_verifier_after_gate_fix(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-79"
+    issue_dir.mkdir(parents=True)
+    review_spec = issue_dir / "review_spec.json"
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "blocked_invalid_verifier_receipt:missing_evidence_summary",
+        "closure_decision": "blocked_invalid_verifier_receipt:missing_evidence_summary",
+        "terminal_disposition_status": "completed",
+        "target_skills": ["fact-extractor"],
+        "subagent_dispatch": [],
+        "subagent_specs": {
+            "repair_spec": str(issue_dir / "repair_spec.json"),
+            "verifier_spec": str(issue_dir / "verifier_spec.json"),
+            "review_spec": str(review_spec),
+        },
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({"number": 79, "url": "https://example.invalid/79"}))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "backend_python_or_skill_runtime",
+        "repair_agent": "coder",
+        "verifier_agent": "project-or-harness-verifier",
+        "review_agent": "code-reviewer",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "summary": "Implemented book progress summary.",
+        "changed_files": ["skills/fact-extractor/fact_extractor/cli.py"],
+        "commands_run": [{"command": "pytest", "exit_code": 0}],
+    }))
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "verification_result": "pass",
+        "summary": "Verified deterministic behavior.",
+        "commands_run": [{"command": "pytest", "exit_code": 0}],
+    }))
+    monkeypatch.setattr(
+        cycle,
+        "maybe_dispatch_subagent",
+        lambda spec_path, dry_run=False: {
+            "cmd": ["bash", "skills/subagent-runner/run.sh", "start", spec_path],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": json.dumps({
+                "session_id": "skill-maintainer-issue-79-review-resumed",
+                "status": "starting",
+                "artifact_dir": "/tmp/subagent-sessions/review",
+                "watcher_pid": 44444,
+            }),
+            "stderr": "",
+        },
+    )
+
+    result = cycle.continue_pending_run(issue_dir, dry_run=False)
+
+    assert result["status"] == "review_subagent_started"
+    assert result["terminal_disposition_status"] == "superseded_by_valid_verifier_receipt"
+    assert result["review_session"]["session_id"] == "skill-maintainer-issue-79-review-resumed"
 
 
 def test_continue_pending_run_closes_after_completed_review_when_webgpt_not_required(tmp_path):
@@ -1511,6 +1596,86 @@ def test_continue_pending_run_can_run_webgpt_after_completed_review(tmp_path, mo
     webgpt = json.loads((issue_dir / "ask-webgpt-result.json").read_text())
     assert webgpt["status"] == "completed"
     assert webgpt["returncode"] == 0
+
+
+def test_continue_pending_run_retries_obsolete_webgpt_review_command_failure(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-52"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "webgpt_review_failed",
+        "closure_decision": "blocked_webgpt_review_failed",
+        "target_skills": ["fact-extractor"],
+        "required_next_evidence": ["ask-webgpt-result.json"],
+        "subagent_dispatch": [],
+        "subagent_specs": {
+            "repair_spec": str(issue_dir / "repair_spec.json"),
+            "verifier_spec": str(issue_dir / "verifier_spec.json"),
+            "review_spec": str(issue_dir / "review_spec.json"),
+        },
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({"number": 52, "url": "https://example.invalid/52"}))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "backend_python_or_skill_runtime",
+        "repair_agent": "coder",
+        "verifier_agent": "project-or-harness-verifier",
+        "review_agent": "code-reviewer",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({
+        "status": "completed",
+        "commands_run": ["repair command"],
+        "evidence_summary": "repair evidence",
+        "changed_files": ["skills/fact-extractor/SKILL.md"],
+    }))
+    (issue_dir / "verifier-response.json").write_text(json.dumps({
+        "status": "completed",
+        "result": "pass",
+        "commands_run": ["verify command"],
+        "evidence_summary": "verify evidence",
+        "blocking_findings": [],
+    }))
+    (issue_dir / "review-response.json").write_text(json.dumps({
+        "status": "completed",
+        "decision": "no_findings",
+        "commands_run": ["review command"],
+        "evidence_summary": "review evidence",
+        "findings": [],
+        "blocking_findings": [],
+    }))
+    (issue_dir / "review-bundle.md").write_text("# Review bundle\n")
+    (issue_dir / "ask-webgpt-result.json").write_text(json.dumps({
+        "status": "failed",
+        "cmd": ["bash", "skills/ask/run.sh", "webgpt-review"],
+        "stdout": "Unknown command: webgpt-review\nRun './run.sh help' for usage.\n",
+        "stderr": "",
+    }))
+    monkeypatch.setattr(
+        cycle,
+        "maybe_run_webgpt",
+        lambda bundle, dry_run=False: {
+            "cmd": ["bash", "skills/ask/run.sh", "ask", "Review", "--oracle-backend", "webgpt"],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": '{"status":"completed"}',
+            "stderr": "",
+        },
+    )
+    mock_successful_github_terminal_disposition(monkeypatch, cycle)
+
+    result = cycle.continue_pending_run(
+        issue_dir,
+        dry_run=False,
+        github_dry_run=False,
+        run_webgpt=True,
+        require_webgpt=True,
+    )
+
+    assert result["status"] == "webgpt_review_attempted"
+    assert result["continuation_status"] == "blocked_waiting_for_finding_disposition_and_closure_wiring"
+    assert result["terminal_disposition_status"] == "completed"
+    webgpt = json.loads((issue_dir / "ask-webgpt-result.json").read_text())
+    assert webgpt["status"] == "completed"
+    assert webgpt["cmd"][2] == "ask"
 
 
 def test_continue_pending_run_runs_webgpt_but_skips_disposition_under_github_dry_run(tmp_path, monkeypatch):

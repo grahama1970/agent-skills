@@ -470,6 +470,50 @@ def test_cli_orchestrate_records_drafted_dag(monkeypatch, tmp_path):
     assert request["ask_dag"]["nodes"][-1]["id"] == "final_report"
 
 
+def test_cli_explicit_webgpt_backend_skips_natural_dag_autodetection(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {
+            "question": kwargs["question"],
+            "scope": kwargs["scope"],
+            "items": [{"solution": "review ok"}],
+            "answer": "review ok",
+        }
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Review",
+            "this",
+            "workflow",
+            "bundle",
+            "with",
+            "book_progress.jsonl",
+            "and",
+            "implementation",
+            "evidence",
+            "--oracle",
+            "--oracle-backend",
+            "webgpt",
+            "--ask-id",
+            "explicit-webgpt-no-dag",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured["ask_dag"] is None
+    request = json.loads((tmp_path / "explicit-webgpt-no-dag" / "explicit-webgpt-no-dag.request.json").read_text())
+    assert request["orchestrate"] is False
+    assert request["ask_dag"] is None
+
+
 def test_dag_dry_run_summary_includes_layers_and_ascii_chart():
     dag = ask_dag.validate_ask_dag(
         {

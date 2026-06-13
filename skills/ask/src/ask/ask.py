@@ -2001,8 +2001,8 @@ def main(
             return
 
     explicit_webgpt_oracle = bool(
-        model_alias_route
-        and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
+        (model_alias_route and getattr(model_alias_route, "oracle_backend", "") == "webgpt")
+        or (oracle and oracle_backend == "webgpt")
     )
     if explicit_webgpt_oracle:
         if webgpt_once and oracle_iterations > 1:

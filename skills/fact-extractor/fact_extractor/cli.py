@@ -1503,6 +1503,55 @@ def append_book_progress_event(
     return event
 
 
+def summarize_book_progress(book_root: Path) -> dict[str, Any]:
+    progress_path = book_root / "book_progress.jsonl"
+    if not progress_path.exists():
+        raise FileNotFoundError(f"{progress_path}:missing_book_progress_jsonl")
+
+    rows = load_jsonl(progress_path)
+    latest_by_chapter: dict[str, dict[str, Any]] = {}
+    for line_no, row in enumerate(rows, start=1):
+        chapter_id = str(row.get("chapter_id") or "").strip()
+        if not chapter_id:
+            raise ValueError(f"{progress_path}:line_{line_no}:missing_chapter_id")
+        latest_by_chapter[chapter_id] = {**row, "event_index": line_no}
+
+    status_counts = {"started": 0, "running": 0, "accepted": 0, "failed": 0}
+    chapters = sorted(latest_by_chapter.values(), key=lambda row: str(row.get("chapter_id") or ""))
+    for chapter in chapters:
+        status = str(chapter.get("status") or "")
+        if status in status_counts:
+            status_counts[status] += 1
+
+    def sum_int(key: str) -> int:
+        return sum(int(chapter.get(key) or 0) for chapter in chapters)
+
+    latest_event = rows[-1] if rows else {}
+    summary = {
+        "schema_version": "fact-extractor-book-progress-summary.v1",
+        "book_root": str(book_root),
+        "progress_path": str(progress_path),
+        "book": latest_event.get("book"),
+        "book_id": latest_event.get("book_id"),
+        "event_count": len(rows),
+        "chapter_count": len(chapters),
+        "chapters_started": status_counts["started"],
+        "chapters_running": status_counts["running"],
+        "chapters_accepted": status_counts["accepted"],
+        "chapters_failed": status_counts["failed"],
+        "completed_chunks": sum_int("completed_chunks"),
+        "total_chunks": sum_int("total_chunks"),
+        "accepted_chunks": sum_int("accepted_chunks"),
+        "failed_chunks": sum_int("failed_chunks"),
+        "accepted_records": sum_int("accepted_records"),
+        "latest_event_timestamp": latest_event.get("timestamp"),
+        "chapters": chapters,
+        "memory_writes_performed": False,
+        "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+    }
+    return summary
+
+
 async def run_batch(config: BatchConfig) -> int:
     config.out_dir.mkdir(parents=True, exist_ok=True)
     if config.force:
@@ -1748,6 +1797,18 @@ def book_progress_command(
     except ValueError as exc:
         raise typer.BadParameter(str(exc), param_hint="--status") from exc
     typer.echo(json.dumps(event, indent=2, ensure_ascii=False))
+
+
+@app.command("book-progress-summary")
+def book_progress_summary_command(
+    book_root: Annotated[Path, typer.Argument(exists=True, file_okay=False, readable=True)],
+) -> None:
+    try:
+        summary = summarize_book_progress(book_root)
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 @app.command("extract")

@@ -130,6 +130,13 @@ skills/fact-extractor/run.sh book-progress \
   --status running
 ```
 
+Summarize the latest known state from a book-level progress artifact:
+
+```bash
+skills/fact-extractor/run.sh book-progress-summary \
+  /mnt/storage12tb/skills/fact-extractor/outputs/galaxy_in_flames
+```
+
 Extract from existing chunk JSONL:
 
 ```bash
@@ -235,6 +242,12 @@ The book-level progress artifact is append-only JSONL. Each row has
 artifact paths, `memory_writes_performed: false`, and the same forbidden-write
 list. It is a monitoring artifact only and must not replace per-chapter
 `progress.as_completed.jsonl`.
+
+The `book-progress-summary` command reads `<book_root>/book_progress.jsonl` and
+emits JSON to stdout with the latest append-order event per chapter, chapter
+status totals for `started`, `running`, `accepted`, and `failed`, aggregate
+chunk/record totals, `memory_writes_performed: false`, and the same
+forbidden-write list. Missing `book_progress.jsonl` is a nonzero error.
 
 ## Relationship To Other Skills
 

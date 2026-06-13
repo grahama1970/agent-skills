@@ -3,11 +3,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from typer.testing import CliRunner
+
 from fact_extractor.cli import (
     ChunkResult,
+    app,
     append_book_progress_event,
     enrich_records,
     stage_book_source,
+    summarize_book_progress,
     validate_content,
     write_aggregate,
 )
@@ -41,6 +45,9 @@ def _record(idx: int, quote: str) -> dict:
 
 
 class ValidateContentTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.runner = CliRunner()
+
     def test_too_many_valid_records_hard_fails(self) -> None:
         content = "\n".join(
             json.dumps(_record(idx, "Alpha sentence."))
@@ -255,6 +262,135 @@ class ValidateContentTests(unittest.TestCase):
             self.assertEqual(len(resumed_rows), 4)
             self.assertEqual(resumed_rows[-1]["chapter_id"], "test_book_ch02")
             self.assertEqual(resumed_rows[-1]["total_chunks"], 3)
+
+    def test_book_progress_summary_reports_latest_chapter_state_and_totals(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            book_root = Path(tmp)
+            rows = [
+                {
+                    "schema_version": "fact-extractor-book-progress.v1",
+                    "timestamp": "2026-06-13T17:00:00+00:00",
+                    "book": "Test Book",
+                    "book_id": "test_book",
+                    "chapter": "Chapter 01",
+                    "chapter_id": "test_book_ch01",
+                    "status": "started",
+                    "total_chunks": 3,
+                    "completed_chunks": 0,
+                    "accepted_chunks": 0,
+                    "failed_chunks": 0,
+                    "accepted_records": 0,
+                    "memory_writes_performed": False,
+                    "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+                },
+                {
+                    "schema_version": "fact-extractor-book-progress.v1",
+                    "timestamp": "2026-06-13T17:01:00+00:00",
+                    "book": "Test Book",
+                    "book_id": "test_book",
+                    "chapter": "Chapter 01",
+                    "chapter_id": "test_book_ch01",
+                    "status": "accepted",
+                    "total_chunks": 3,
+                    "completed_chunks": 3,
+                    "accepted_chunks": 3,
+                    "failed_chunks": 0,
+                    "accepted_records": 7,
+                    "memory_writes_performed": False,
+                    "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+                },
+                {
+                    "schema_version": "fact-extractor-book-progress.v1",
+                    "timestamp": "2026-06-13T17:02:00+00:00",
+                    "book": "Test Book",
+                    "book_id": "test_book",
+                    "chapter": "Chapter 02",
+                    "chapter_id": "test_book_ch02",
+                    "status": "running",
+                    "total_chunks": 4,
+                    "completed_chunks": 2,
+                    "accepted_chunks": 1,
+                    "failed_chunks": 1,
+                    "accepted_records": 2,
+                    "memory_writes_performed": False,
+                    "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+                },
+                {
+                    "schema_version": "fact-extractor-book-progress.v1",
+                    "timestamp": "2026-06-13T17:03:00+00:00",
+                    "book": "Test Book",
+                    "book_id": "test_book",
+                    "chapter": "Chapter 03",
+                    "chapter_id": "test_book_ch03",
+                    "status": "failed",
+                    "total_chunks": 2,
+                    "completed_chunks": 2,
+                    "accepted_chunks": 1,
+                    "failed_chunks": 1,
+                    "accepted_records": 3,
+                    "memory_writes_performed": False,
+                    "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+                },
+                {
+                    "schema_version": "fact-extractor-book-progress.v1",
+                    "timestamp": "2026-06-13T17:04:00+00:00",
+                    "book": "Test Book",
+                    "book_id": "test_book",
+                    "chapter": "Chapter 04",
+                    "chapter_id": "test_book_ch04",
+                    "status": "started",
+                    "total_chunks": 5,
+                    "completed_chunks": 0,
+                    "accepted_chunks": 0,
+                    "failed_chunks": 0,
+                    "accepted_records": 0,
+                    "memory_writes_performed": False,
+                    "forbidden_writes": ["persona_memory", "lessons", "arangodb"],
+                },
+            ]
+            (book_root / "book_progress.jsonl").write_text(
+                "\n".join(json.dumps(row) for row in rows) + "\n",
+                encoding="utf-8",
+            )
+
+            summary = summarize_book_progress(book_root)
+
+            self.assertEqual(summary["schema_version"], "fact-extractor-book-progress-summary.v1")
+            self.assertEqual(summary["event_count"], 5)
+            self.assertEqual(summary["chapter_count"], 4)
+            self.assertEqual(summary["chapters_started"], 1)
+            self.assertEqual(summary["chapters_running"], 1)
+            self.assertEqual(summary["chapters_accepted"], 1)
+            self.assertEqual(summary["chapters_failed"], 1)
+            self.assertEqual(summary["total_chunks"], 14)
+            self.assertEqual(summary["completed_chunks"], 7)
+            self.assertEqual(summary["accepted_chunks"], 5)
+            self.assertEqual(summary["failed_chunks"], 2)
+            self.assertEqual(summary["accepted_records"], 12)
+            self.assertEqual(summary["memory_writes_performed"], False)
+            self.assertEqual(summary["forbidden_writes"], ["persona_memory", "lessons", "arangodb"])
+            self.assertEqual(
+                {chapter["chapter_id"]: chapter["status"] for chapter in summary["chapters"]},
+                {
+                    "test_book_ch01": "accepted",
+                    "test_book_ch02": "running",
+                    "test_book_ch03": "failed",
+                    "test_book_ch04": "started",
+                },
+            )
+
+            result = self.runner.invoke(app, ["book-progress-summary", str(book_root)])
+            self.assertEqual(result.exit_code, 0, result.output)
+            cli_summary = json.loads(result.output)
+            self.assertEqual(cli_summary["accepted_records"], 12)
+            self.assertEqual(cli_summary["chapters"][0]["event_index"], 2)
+
+    def test_book_progress_summary_missing_jsonl_fails_clearly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.runner.invoke(app, ["book-progress-summary", tmp])
+
+            self.assertNotEqual(result.exit_code, 0)
+            self.assertIn("missing_book_progress_jsonl", result.output)
 
 
 if __name__ == "__main__":

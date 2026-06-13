@@ -409,9 +409,52 @@ def tail(text: str, limit: int = 4000) -> str:
     return text[-limit:] if len(text) > limit else text
 
 
+def read_json_file(path: Path, default: Any) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def receipt_summary(receipt: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": receipt.get("status"),
+        "decision": receipt.get("decision") or receipt.get("result") or receipt.get("verification_result"),
+        "evidence_summary": receipt.get("evidence_summary") or receipt.get("summary"),
+        "commands_run": receipt.get("commands_run") or [],
+        "changed_files": receipt.get("changed_files") or receipt.get("files_changed") or [],
+        "blocking_findings": receipt.get("blocking_findings") or [],
+        "findings": receipt.get("findings") or [],
+    }
+
+
+def scoped_diff_summary(paths: list[str]) -> dict[str, Any]:
+    scoped = [path for path in paths if isinstance(path, str) and not path.startswith("/") and (REPO_ROOT / path).exists()]
+    if not scoped:
+        return {"paths": [], "name_status": "", "stat": ""}
+    name_status = git_run(["diff", "--name-status", "--", *scoped])
+    stat = git_run(["diff", "--stat", "--", *scoped])
+    return {
+        "paths": scoped,
+        "name_status": tail(name_status.stdout, 6000),
+        "stat": tail(stat.stdout, 6000),
+    }
+
+
 def build_bundle(run_dir: Path, issue: dict[str, Any], route: dict[str, str], skills: list[str]) -> Path:
     bundle = run_dir / "review-bundle.md"
     complies = {skill: read_complies(skill) for skill in skills}
+    result = read_json_file(run_dir / "cycle-result.json", {})
+    repair = read_json_file(run_dir / "repair-response.json", {})
+    verifier = read_json_file(run_dir / "verifier-response.json", {})
+    review = read_json_file(run_dir / "review-response.json", {})
+    target_path_list = result.get("target_paths") or target_paths(issue)
+    diff_summary = scoped_diff_summary(target_path_list)
+    issue_labels = [
+        label.get("name")
+        for label in issue.get("labels", [])
+        if isinstance(label, dict) and isinstance(label.get("name"), str)
+    ]
     bundle.write_text(
         "\n".join(
             [
@@ -419,6 +462,8 @@ def build_bundle(run_dir: Path, issue: dict[str, Any], route: dict[str, str], sk
                 "",
                 f"Issue: #{issue.get('number')} {issue.get('title')}",
                 f"URL: {issue.get('url')}",
+                f"State: `{issue.get('state')}`",
+                f"Labels: `{', '.join(issue_labels) or 'none'}`",
                 f"Selected route: `{route['route']}`",
                 f"Repair agent: `{route['repair_agent']}`",
                 f"Verifier agent: `{route['verifier_agent']}`",
@@ -426,6 +471,41 @@ def build_bundle(run_dir: Path, issue: dict[str, Any], route: dict[str, str], sk
                 "",
                 "## Target Skills",
                 json.dumps({"target_skills": skills, "complies": complies}, indent=2),
+                "",
+                "## Target Paths",
+                json.dumps(target_path_list, indent=2),
+                "",
+                "## Issue Body",
+                tail(str(issue.get("body") or ""), 8000),
+                "",
+                "## Lease And GitHub Actions",
+                json.dumps(
+                    {
+                        "lease": result.get("lease"),
+                        "github_actions": result.get("github_actions") or [],
+                    },
+                    indent=2,
+                ),
+                "",
+                "## Scoped Diff Summary",
+                json.dumps(diff_summary, indent=2),
+                "",
+                "## Receipt Summaries",
+                json.dumps(
+                    {
+                        "repair": receipt_summary(repair),
+                        "verifier": receipt_summary(verifier),
+                        "review": receipt_summary(review),
+                    },
+                    indent=2,
+                ),
+                "",
+                "## Workflow Phase Notes",
+                "- This WebGPT review occurs after local repair, deterministic verification, and code-review receipts, but before scoped publication.",
+                "- Commit, push, and final issue close proof are post-WebGPT gates; absence of commit/push proof in this bundle is expected at this phase.",
+                "- Historical terminal blocked comments in the GitHub action log are superseded retry artifacts from bugs found during this E2E.",
+                "- Current maintainer code includes a duplicate terminal-disposition idempotency guard for future retries.",
+                "- Closure still requires a scoped commit or explicit no-change publication result, a fresh issue-state check, and deterministic local proof.",
                 "",
                 "## Required Review Question",
                 "Does this maintenance packet route the issue to the correct subagents, require deterministic verification, and avoid closing from WebGPT opinion alone?",
@@ -435,12 +515,34 @@ def build_bundle(run_dir: Path, issue: dict[str, Any], route: dict[str, str], sk
                 "- Repair and verifier agents are different.",
                 "- Deterministic local proof required before closure.",
                 "- WebGPT findings must be reconciled before GitHub close/comment.",
+                "- Treat WebGPT as advisory; local deterministic proof and reviewer receipts are required for closure.",
+                "",
+                "## Requested Output",
+                "Start with exactly one line: `WEBGPT_BLOCKING_FINDINGS: YES` or `WEBGPT_BLOCKING_FINDINGS: NO`.",
+                "Then explain any blocking findings or state that there are no blocking findings.",
             ]
         )
         + "\n",
         encoding="utf-8",
     )
     return bundle
+
+
+PATH_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9_])(?:/(?:[A-Za-z0-9_.<>-]+/)+[A-Za-z0-9_.<>-]+|(?:skills|scripts|agents|docs|extensions|hooks|\.artifacts)/(?:[A-Za-z0-9_.<>-]+/)*[A-Za-z0-9_.<>-]+)"
+)
+URL_TOKEN_RE = re.compile(r"https?://[^\s)\"']+")
+
+
+def sanitize_webgpt_bundle_text(text: str) -> str:
+    text = URL_TOKEN_RE.sub(lambda match: f"[url redacted: {match.group(0).replace('/', ' > ')}]", text)
+
+    def repl(match: re.Match[str]) -> str:
+        label = match.group(0).replace("/", " > ")
+        return f"[local path redacted: {label}]"
+
+    redacted = PATH_TOKEN_RE.sub(repl, text)
+    return redacted.replace("/", " slash ")
 
 
 def write_phase_receipts(
@@ -770,12 +872,14 @@ def receipt_gate(receipt: dict[str, Any], *, phase: str) -> tuple[bool, str]:
     if not isinstance(commands_run, list) or not commands_run:
         return False, "missing_commands_run"
     evidence_text = receipt.get("evidence_summary")
-    if phase == "repair" and not str(evidence_text or "").strip():
+    if not str(evidence_text or "").strip():
         evidence_text = receipt.get("summary")
     if not str(evidence_text or "").strip():
         return False, "missing_evidence_summary"
     if phase in {"deterministic_verification", "independent_review"}:
-        decision = str(receipt.get("decision") or receipt.get("result") or "").lower()
+        decision = str(
+            receipt.get("decision") or receipt.get("result") or receipt.get("verification_result") or ""
+        ).lower()
         if decision not in {"pass", "passed", "no_findings"}:
             return False, f"nonpassing_decision:{decision or 'missing'}"
         findings = receipt.get("blocking_findings", receipt.get("findings", []))
@@ -809,7 +913,83 @@ def terminal_webgpt_gate_valid(issue_dir: Path) -> tuple[bool, str]:
     )
     if not review_ok:
         return False, f"review:{review_reason}"
+    webgpt = load_json(issue_dir / "ask-webgpt-result.json", {})
+    if webgpt:
+        if webgpt.get("status") == "failed" or int(webgpt.get("returncode", 0)) != 0:
+            return False, "webgpt:failed"
+        sentinel_ok = webgpt_sentinel_confirmed(webgpt)
+        if not sentinel_ok:
+            return False, "webgpt:missing_sentinel_proof"
+        blocking = webgpt_blocking_findings(webgpt)
+        if blocking is True:
+            return False, "webgpt:blocking_findings_present"
+        if blocking is None:
+            return False, "webgpt:missing_blocking_findings_verdict"
     return True, "pass"
+
+
+def webgpt_stdout_payload(result: dict[str, Any]) -> dict[str, Any]:
+    stdout = result.get("stdout")
+    if not isinstance(stdout, str) or not stdout.strip():
+        return {}
+    try:
+        parsed = json.loads(stdout)
+    except json.JSONDecodeError:
+        try:
+            parsed, _ = json.JSONDecoder().raw_decode(stdout.lstrip())
+        except json.JSONDecodeError:
+            return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def webgpt_answer_text(result: dict[str, Any]) -> str:
+    payload = webgpt_stdout_payload(result)
+    answer = payload.get("answer")
+    return answer if isinstance(answer, str) else ""
+
+
+def webgpt_sentinel_confirmed(result: dict[str, Any]) -> bool:
+    payload = webgpt_stdout_payload(result)
+    adapter = ((payload.get("oracle") or {}).get("adapter_response") or {})
+    if adapter.get("sentinel_required") and adapter.get("failure"):
+        return False
+    turns = adapter.get("turns") or []
+    if turns:
+        return any(bool(turn.get("raw_contains_sentinel")) for turn in turns if isinstance(turn, dict))
+    return True
+
+
+def webgpt_blocking_findings(result: dict[str, Any]) -> bool | None:
+    answer = webgpt_answer_text(result)
+    if not answer:
+        return None
+    first_nonempty = next((line.strip() for line in answer.splitlines() if line.strip()), "")
+    normalized_first = first_nonempty.lower()
+    if normalized_first == "webgpt_blocking_findings: yes":
+        return True
+    if normalized_first == "webgpt_blocking_findings: no":
+        return False
+    normalized = answer.lower()
+    if "no blocking findings" in normalized:
+        return False
+    if "blocking findings" in normalized:
+        return True
+    return None
+
+
+def bundle_needs_evidence_refresh(bundle: Path) -> bool:
+    try:
+        text = bundle.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return True
+    required_sections = [
+        "## Issue Body",
+        "## Lease And GitHub Actions",
+        "## Scoped Diff Summary",
+        "## Receipt Summaries",
+        "## Workflow Phase Notes",
+    ]
+    return any(section not in text for section in required_sections)
 
 
 def _repair_receipt_paths(repair: dict[str, Any]) -> list[str]:
@@ -1204,6 +1384,11 @@ def terminal_dispose(
     dry_run: bool,
     github_dry_run: bool,
 ) -> dict[str, Any]:
+    disposition_key = f"blocked:{result.get('closure_decision')}:{result.get('receipt_gate_reason', '')}"
+    if result.get("last_terminal_disposition_key") == disposition_key and result.get("terminal_disposition_status") == "completed":
+        result["terminal_disposition_skipped"] = "duplicate_terminal_disposition"
+        write_json(issue_dir / "cycle-result.json", result)
+        return result
     if dry_run:
         return dry_run_simulation(
             result,
@@ -1241,6 +1426,7 @@ def terminal_dispose(
         return result
     if not github_dry_run:
         result["terminal_disposition_status"] = "completed"
+        result["last_terminal_disposition_key"] = disposition_key
     write_json(issue_dir / "cycle-result.json", result)
     return result
 
@@ -1303,16 +1489,28 @@ def terminal_success_dispose(
 
 
 def ask_webgpt_command(bundle: Path) -> list[str]:
+    webgpt_bundle = bundle.with_suffix(".webgpt.md")
+    webgpt_bundle.write_text(
+        sanitize_webgpt_bundle_text(bundle.read_text(encoding="utf-8", errors="replace")),
+        encoding="utf-8",
+    )
+    question = "\n\n".join(
+        [
+            "Review this skill-maintainer evidence bundle. Return blocking findings, if any, and do not treat your review as deterministic closure proof.",
+            webgpt_bundle.read_text(encoding="utf-8", errors="replace"),
+        ]
+    )
     return [
         "bash",
         "skills/ask/run.sh",
-        "webgpt-review",
-        "--bundle",
-        str(bundle),
-        "--review-type",
-        "code",
-        "--project",
+        "ask",
+        question,
+        "--oracle",
+        "--oracle-backend",
+        "webgpt",
+        "--webgpt-project",
         "agent-skills-review-code",
+        "--once",
         "--json",
     ]
 
@@ -1329,6 +1527,43 @@ def maybe_run_webgpt(bundle: Path, *, dry_run: bool = False) -> dict[str, Any]:
         "stdout": cp.stdout,
         "stderr": cp.stderr,
     }
+
+
+def obsolete_webgpt_review_command_failure(result: dict[str, Any]) -> bool:
+    cmd = result.get("cmd") or []
+    stdout = str(result.get("stdout") or "")
+    return (
+        result.get("status") == "failed"
+        and isinstance(cmd, list)
+        and "webgpt-review" in cmd
+        and "Unknown command: webgpt-review" in stdout
+    )
+
+
+def ask_webgpt_dag_autodetect_failure(result: dict[str, Any]) -> bool:
+    cmd = result.get("cmd") or []
+    if result.get("status") != "failed" or not isinstance(cmd, list):
+        return False
+    if cmd[:3] != ["bash", "skills/ask/run.sh", "ask"]:
+        return False
+    payload = webgpt_stdout_payload(result)
+    attention = payload.get("needs_attention") if isinstance(payload, dict) else None
+    if not isinstance(attention, dict):
+        return False
+    return attention.get("reason") == "dag_orchestration_ambiguous"
+
+
+def ask_webgpt_unreadable_bundle_failure(result: dict[str, Any]) -> bool:
+    cmd = result.get("cmd") or []
+    if result.get("status") != "failed" or not isinstance(cmd, list):
+        return False
+    if cmd[:3] != ["bash", "skills/ask/run.sh", "ask"]:
+        return False
+    payload = webgpt_stdout_payload(result)
+    attention = payload.get("needs_attention") if isinstance(payload, dict) else None
+    if not isinstance(attention, dict):
+        return False
+    return attention.get("reason") == "web_review_bundle_unreadable"
 
 
 def ensure_ask_runtime() -> None:
@@ -1597,6 +1832,54 @@ def continue_pending_run(
     terminal_webgpt = load_json(issue_dir / "ask-webgpt-result.json", {})
     terminal_webgpt_status = terminal_webgpt.get("status")
     disposition_status = result.get("terminal_disposition_status")
+    if status == "webgpt_review_failed" and obsolete_webgpt_review_command_failure(terminal_webgpt):
+        result["status"] = "review_subagent_started"
+        result["continuation_status"] = "resuming_after_obsolete_webgpt_command"
+        result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
+        result["terminal_disposition_status"] = "superseded_by_valid_ask_webgpt_command"
+        terminal_webgpt["status"] = "superseded_obsolete_command"
+        terminal_webgpt["superseded_by"] = "ask --oracle-backend webgpt"
+        write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
+        status = result["status"]
+        terminal_webgpt_status = terminal_webgpt.get("status")
+    if status == "webgpt_review_failed" and ask_webgpt_dag_autodetect_failure(terminal_webgpt):
+        result["status"] = "review_subagent_started"
+        result["continuation_status"] = "resuming_after_explicit_webgpt_dag_autodetect_fix"
+        result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
+        result["terminal_disposition_status"] = "superseded_by_explicit_webgpt_dag_autodetect_fix"
+        terminal_webgpt["status"] = "superseded_explicit_webgpt_dag_autodetect_failure"
+        terminal_webgpt["superseded_by"] = "explicit --oracle-backend webgpt now suppresses natural DAG autodetection"
+        write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
+        status = result["status"]
+        terminal_webgpt_status = terminal_webgpt.get("status")
+    if (
+        status in {"webgpt_review_failed", "blocked_invalid_webgpt_gate_receipt:webgpt:failed"}
+        and ask_webgpt_unreadable_bundle_failure(terminal_webgpt)
+    ):
+        result["status"] = "review_subagent_started"
+        result["continuation_status"] = "resuming_after_webgpt_bundle_sanitizer"
+        result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
+        result["terminal_disposition_status"] = "superseded_by_webgpt_bundle_sanitizer"
+        terminal_webgpt["status"] = "superseded_unreadable_web_review_bundle"
+        terminal_webgpt["superseded_by"] = "review-bundle.webgpt.md with local path tokens redacted"
+        write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
+        status = result["status"]
+        terminal_webgpt_status = terminal_webgpt.get("status")
+    if (
+        status == "webgpt_review_attempted"
+        and terminal_webgpt_status == "completed"
+        and webgpt_blocking_findings(terminal_webgpt) is True
+        and bundle_needs_evidence_refresh(issue_dir / "review-bundle.md")
+    ):
+        result["status"] = "review_subagent_started"
+        result["continuation_status"] = "resuming_after_enriched_webgpt_bundle"
+        result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
+        result["terminal_disposition_status"] = "superseded_by_enriched_webgpt_bundle"
+        terminal_webgpt["status"] = "superseded_insufficient_review_bundle"
+        terminal_webgpt["superseded_by"] = "review-bundle.md with issue, lease, diff, and receipt evidence"
+        write_json(issue_dir / "ask-webgpt-result.json", terminal_webgpt)
+        status = result["status"]
+        terminal_webgpt_status = terminal_webgpt.get("status")
     if (
         not require_webgpt
         and status in {"webgpt_review_failed", "webgpt_review_attempted"}
@@ -1635,6 +1918,13 @@ def continue_pending_run(
                 dry_run=dry_run,
                 github_dry_run=github_dry_run,
             )
+        blocked_status = terminal_block_status("webgpt_gate", gate_reason)
+        result["status"] = blocked_status
+        result["continuation_status"] = blocked_status
+        result["closure_decision"] = blocked_status
+        result["required_next_evidence"] = ["resolved WebGPT advisory blockers before scoped publication"]
+        write_json(result_path, result)
+        return terminal_dispose(issue_dir, result, issue, dry_run=dry_run, github_dry_run=github_dry_run)
     if (
         disposition_status in {"started", "failed", "github_dry_run"}
         or (
@@ -1689,6 +1979,22 @@ def continue_pending_run(
         else:
             result["continuation_status"] = terminal_block_status("repair", repair_reason)
             result["receipt_gate_reason"] = repair_reason
+            write_json(result_path, result)
+            return result
+
+    if str(status or "").startswith("blocked_invalid_verifier_receipt"):
+        verifier = load_json(issue_dir / "verifier-response.json", {})
+        verifier_ok, verifier_reason = receipt_gate(verifier, phase="deterministic_verification")
+        if verifier_ok:
+            result["status"] = "verifier_subagent_started"
+            result["continuation_status"] = "resuming_after_repaired_verifier_gate"
+            result["closure_decision"] = "waiting_for_review_subagent_receipt"
+            result["receipt_gate_reason"] = "pass"
+            result["terminal_disposition_status"] = "superseded_by_valid_verifier_receipt"
+            status = result["status"]
+        else:
+            result["continuation_status"] = terminal_block_status("verifier", verifier_reason)
+            result["receipt_gate_reason"] = verifier_reason
             write_json(result_path, result)
             return result
 
@@ -1872,7 +2178,7 @@ def continue_pending_run(
                     },
                 )
             if run_webgpt:
-                bundle = issue_dir / "review-bundle.md"
+                bundle = build_bundle(issue_dir, issue, route, skills)
                 ask_result = maybe_run_webgpt(bundle, dry_run=dry_run)
                 ask_status = (
                     "dry_run"
