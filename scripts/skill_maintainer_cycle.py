@@ -329,13 +329,41 @@ def target_skills(issue: dict[str, Any]) -> list[str]:
     found: list[str] = []
     for match in re.finditer(r"skills/([A-Za-z0-9_.-]+)(?=/|\s|$)", text):
         skill = match.group(1)
-        if (REPO_ROOT / "skills" / skill / "SKILL.md").exists() and skill not in found:
+        if skill not in found:
             found.append(skill)
     return found
 
 
+def target_paths(issue: dict[str, Any]) -> list[str]:
+    text = issue_section(issue, "Target paths")
+    if not text:
+        return []
+    found: list[str] = []
+    for line in text.splitlines():
+        cleaned = line.strip()
+        cleaned = re.sub(r"^[-*]\s+", "", cleaned)
+        cleaned = cleaned.strip("` ")
+        match = re.search(r"\b(?:skills|agents|scripts|docs|extensions|hooks)/[A-Za-z0-9_./-]+", cleaned)
+        if not match:
+            continue
+        candidate = match.group(0).rstrip(".,;:)")
+        if candidate not in found:
+            found.append(candidate)
+    return found
+
+
+def missing_target_paths(paths: list[str]) -> list[str]:
+    missing: list[str] = []
+    for rel_path in paths:
+        if not (REPO_ROOT / rel_path).exists():
+            missing.append(rel_path)
+    return missing
+
+
 def read_complies(skill: str) -> list[str]:
     path = REPO_ROOT / "skills" / skill / "SKILL.md"
+    if not path.exists():
+        return ["missing-skill-contract"]
     text = path.read_text(encoding="utf-8", errors="ignore")
     match = re.search(r"\ncomplies:\n((?:\s+- .+\n?)+)", text)
     if not match:
@@ -923,6 +951,37 @@ def blocked_comment(
         + "\n",
     )
     write_json(issue_dir / "blocked-state.json", result)
+    return path
+
+
+def missing_target_comment(issue: dict[str, Any], issue_dir: Path, result: dict[str, Any]) -> Path:
+    path = issue_dir / "missing-target-comment.md"
+    missing = result.get("missing_target_paths", [])
+    write_text(
+        path,
+        "\n".join(
+            [
+                "Skill-maintainer status: BLOCKED",
+                "",
+                "The maintainer did not dispatch a repair worker because the issue names target paths that are absent from this checkout.",
+                "",
+                "Evidence:",
+                f"- Artifact dir: `{issue_dir}`",
+                f"- Issue: `#{issue.get('number')}`",
+                f"- Local status: `{result.get('status')}`",
+                f"- Missing target paths: `{', '.join(missing) if missing else '(none recorded)'}`",
+                "",
+                "Safety action:",
+                "- Adding `maintainer-blocked` and `needs-human`.",
+                "- Releasing `maintainer-active` so this ticket is not repeatedly dispatched into a checkout without the target files.",
+                "",
+                "Required next evidence:",
+                "- Commit or restore the missing target paths in the repository checkout, or retarget the issue to paths that exist.",
+                "- Rerun skill-maintainer after the target paths are present.",
+            ]
+        )
+        + "\n",
+    )
     return path
 
 
@@ -1692,6 +1751,8 @@ def main() -> int:
     issue = issues[0]
     route = classify(issue)
     skills = target_skills(issue)
+    targets = target_paths(issue)
+    missing_targets = missing_target_paths(targets)
     already_leased = LEASE_LABEL in issue_labels(issue)
     issue_dir = run_root / f"issue-{issue['number']}"
     issue_dir.mkdir(parents=True, exist_ok=True)
@@ -1727,6 +1788,8 @@ def main() -> int:
         "artifact_dir": str(issue_dir),
         "selected_route": route,
         "target_skills": skills,
+        "target_paths": targets,
+        "missing_target_paths": missing_targets,
         "require_webgpt": args.require_webgpt,
         "ask_webgpt_command": ask_webgpt_command(bundle),
         "dry_run": args.dry_run,
@@ -1838,6 +1901,34 @@ def main() -> int:
         lease_comment_action = gh_issue_comment(issue["number"], lease_body, dry_run=github_dry_run)
         require_gh_ok(lease_comment_action, "lease comment")
         result["github_actions"].append({"action": "lease_comment", "body_file": str(lease_body), **lease_comment_action})
+
+    if missing_targets:
+        result["status"] = "blocked_missing_target_paths"
+        result["closure_decision"] = "blocked_missing_target_paths"
+        result["required_next_evidence"] = [
+            "commit or restore the missing target paths before repair dispatch",
+            "rerun skill-maintainer after target paths exist",
+        ]
+        write_json(issue_dir / "missing-targets.json", {
+            "issue": issue.get("number"),
+            "target_paths": targets,
+            "missing_target_paths": missing_targets,
+            "repo_root": str(REPO_ROOT),
+        })
+        missing_body = missing_target_comment(issue, issue_dir, result)
+        missing_comment_action = gh_issue_comment(issue["number"], missing_body, dry_run=github_dry_run)
+        require_gh_ok(missing_comment_action, "missing target comment")
+        result["github_actions"].append({"action": "missing_target_comment", "body_file": str(missing_body), **missing_comment_action})
+        block_args: list[str] = []
+        for label in BLOCKED_LABELS:
+            block_args.extend(["--add-label", label])
+        block_args.extend(["--remove-label", LEASE_LABEL])
+        block_action = gh_issue_edit(issue["number"], *block_args, dry_run=github_dry_run)
+        require_gh_ok(block_action, "missing target blocked labels")
+        result["github_actions"].append({"action": "missing_target_labels_release_lease", **block_action})
+        write_json(issue_dir / "cycle-result.json", result)
+        print(json.dumps(result, indent=2))
+        return 0 if args.dry_run else 2
 
     if args.controlled_live_mutation_fixture:
         proof = write_controlled_live_mutation_receipts(

@@ -95,6 +95,24 @@ def test_target_skills_are_extracted_from_target_paths_section_only():
     assert cycle.target_skills(issue_fixture()) == ["ask", "surf", "browser-oracle"]
 
 
+def test_target_skills_are_preserved_when_skill_path_is_missing():
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["body"] = "\n".join(
+        [
+            "## Target paths",
+            "- skills/fact-extractor/fact_extractor/cli.py",
+            "- agents/audiobook-extractor/AGENTS.md",
+        ]
+    )
+
+    assert cycle.target_skills(issue) == ["fact-extractor"]
+    assert cycle.target_paths(issue) == [
+        "skills/fact-extractor/fact_extractor/cli.py",
+        "agents/audiobook-extractor/AGENTS.md",
+    ]
+
+
 def test_target_skills_do_not_fall_back_to_prose_paths_without_target_section():
     cycle = load_cycle_module()
     issue = issue_fixture()
@@ -108,6 +126,22 @@ def test_target_skills_do_not_fall_back_to_prose_paths_without_target_section():
         ]
     )
     assert cycle.target_skills(issue) == []
+
+
+def test_missing_target_paths_are_detected_against_repo_root(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    (tmp_path / "skills" / "present").mkdir(parents=True)
+    (tmp_path / "skills" / "present" / "SKILL.md").write_text("---\nname: present\n")
+    monkeypatch.setattr(cycle, "REPO_ROOT", tmp_path)
+
+    assert cycle.missing_target_paths([
+        "skills/present/SKILL.md",
+        "skills/missing/SKILL.md",
+        "agents/missing/AGENTS.md",
+    ]) == [
+        "skills/missing/SKILL.md",
+        "agents/missing/AGENTS.md",
+    ]
 
 
 def test_active_lease_does_not_prevent_explicit_issue_classification():
@@ -251,6 +285,58 @@ def test_dry_run_dispatch_records_repair_subagent_start(tmp_path, monkeypatch, c
     repair = json.loads((Path(output["artifact_dir"]) / "repair-response.json").read_text())
     assert repair["status"] == "running"
     assert repair["subagent_dispatch"]["stdout_json"]["artifact_dir"] == "/tmp/subagent-sessions/session"
+
+
+def test_missing_target_paths_block_before_subagent_dispatch(tmp_path, monkeypatch, capsys):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["labels"] = [{"name": "skill-maintenance"}]
+    issue["number"] = 46
+    issue["body"] = "\n".join(
+        [
+            "## Target paths",
+            "- skills/missing-skill/SKILL.md",
+            "- agents/missing-agent/AGENTS.md",
+            "",
+            "## Maintainer route",
+            "backend_python_or_skill_runtime",
+        ]
+    )
+
+    monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path)
+    monkeypatch.setattr(cycle, "issue_view", lambda number: issue)
+    monkeypatch.setattr(cycle, "git_repo_slug", lambda: "owner/repo")
+    monkeypatch.setattr(cycle, "ensure_ask_runtime", lambda: None)
+    dispatch_calls = []
+    monkeypatch.setattr(cycle, "maybe_dispatch_subagent", lambda *args, **kwargs: dispatch_calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skill_maintainer_cycle.py",
+            "--issue",
+            "46",
+            "--require-webgpt",
+            "--dry-run",
+            "--dispatch-subagents",
+        ],
+    )
+
+    assert cycle.main() == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["status"] == "blocked_missing_target_paths"
+    assert output["missing_target_paths"] == [
+        "skills/missing-skill/SKILL.md",
+        "agents/missing-agent/AGENTS.md",
+    ]
+    assert dispatch_calls == []
+    assert [action["action"] for action in output["github_actions"]] == [
+        "lease_label",
+        "lease_comment",
+        "missing_target_comment",
+        "missing_target_labels_release_lease",
+    ]
+    assert (Path(output["artifact_dir"]) / "missing-targets.json").exists()
 
 
 def test_command_fixture_specs_write_completed_receipts(tmp_path):
