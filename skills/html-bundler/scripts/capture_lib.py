@@ -32,6 +32,7 @@ import textwrap
 import threading
 import time
 import urllib.parse
+import urllib.request
 import zipfile
 from dataclasses import dataclass, field
 from typing import Iterable
@@ -120,7 +121,7 @@ def ensure_dir(path: pathlib.Path) -> pathlib.Path:
 
 def default_output_path() -> pathlib.Path:
     stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return pathlib.Path(f"/tmp/local-page-analysis-{stamp}.zip")
+    return pathlib.Path(f"/tmp/html-bundler-{stamp}.zip")
 
 
 def resolve_surf_bin(surf_bin: str) -> str:
@@ -156,6 +157,7 @@ class CaptureOptions:
     no_source: bool = False
     source_entry: pathlib.Path | None = None
     max_scroll_slices: int = 12
+    no_fetch: bool = False
 
 
 
@@ -382,6 +384,123 @@ def copy_source_files(files: Iterable[pathlib.Path], root_dir: pathlib.Path, sou
     return copied
 
 
+FETCH_USER_AGENT = "html-bundler/1.0"
+MAX_FETCH_BYTES = 25 * 1024 * 1024
+MAX_FETCH_FILES = 120
+
+
+def is_same_origin(url: str, base_url: str) -> bool:
+    left = urllib.parse.urlparse(url)
+    right = urllib.parse.urlparse(base_url)
+    return (left.scheme, left.netloc) == (right.scheme, right.netloc)
+
+
+def resolve_remote_url(raw_url: str, base_url: str) -> str | None:
+    raw_url = strip_url_noise(raw_url)
+    if not raw_url or not is_probably_local_url(raw_url):
+        return None
+    if raw_url.startswith("//"):
+        parsed = urllib.parse.urlparse(base_url)
+        if not parsed.scheme:
+            return None
+        raw_url = f"{parsed.scheme}:{raw_url}"
+    return urllib.parse.urljoin(base_url, raw_url)
+
+
+def sanitize_relpath_from_url(asset_url: str) -> pathlib.Path:
+    parsed = urllib.parse.urlparse(asset_url)
+    path = urllib.parse.unquote(parsed.path or "/index.html")
+    if path.endswith("/"):
+        path = f"{path}index.html"
+    path = path.lstrip("/") or "index.html"
+    parts = [re.sub(r"[^A-Za-z0-9._-]+", "_", part) or "part" for part in path.split("/")]
+    return pathlib.Path(*parts)
+
+
+def fetch_url_bytes(url: str, *, timeout: int = 30) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": FETCH_USER_AGENT})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        data = response.read(MAX_FETCH_BYTES + 1)
+    if len(data) > MAX_FETCH_BYTES:
+        die(f"Refusing to fetch asset larger than {MAX_FETCH_BYTES} bytes: {url}")
+    return data
+
+
+def extract_urls_from_text(text: str, suffix: str) -> set[str]:
+    raw_urls: set[str] = set()
+    if suffix in {".html", ".htm", ".svg", ""}:
+        parser = LocalAssetParser()
+        try:
+            parser.feed(text)
+        except Exception:
+            pass
+        raw_urls.update(parser.urls)
+    if suffix in {".css", ".svg"}:
+        raw_urls.update(css_urls(text))
+    return raw_urls
+
+
+def fetch_remote_source(page_url: str, source_dir: pathlib.Path, ctx: CaptureContext) -> tuple[dict[str, str], dict[str, list[str]]]:
+    # Fetch same-origin HTML/CSS/JS/image assets for external URL captures.
+    copied: dict[str, str] = {}
+    unresolved: dict[str, list[str]] = {}
+
+    try:
+        main_bytes = fetch_url_bytes(page_url)
+    except Exception as exc:
+        ctx.warn("fetch", f"Could not fetch page URL: {exc}")
+        return copied, unresolved
+
+    main_dest = source_dir / sanitize_relpath_from_url(page_url)
+    main_dest.parent.mkdir(parents=True, exist_ok=True)
+    main_dest.write_bytes(main_bytes)
+    copied[page_url] = str(main_dest.relative_to(source_dir.parent))
+
+    queue: list[tuple[pathlib.Path, str]] = [(main_dest, page_url)]
+    seen_urls: set[str] = {page_url}
+    fetched_count = 1
+
+    while queue and fetched_count < MAX_FETCH_FILES:
+        current_path, current_url = queue.pop(0)
+        suffix = current_path.suffix.lower()
+        if suffix not in {".html", ".htm", ".css", ".svg", ""}:
+            continue
+        try:
+            text = current_path.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            ctx.warn("fetch", f"Could not read fetched asset {current_path.name}: {exc}")
+            continue
+
+        for raw in extract_urls_from_text(text, suffix):
+            asset_url = resolve_remote_url(raw, current_url)
+            if not asset_url or asset_url in seen_urls:
+                continue
+            if not is_same_origin(asset_url, page_url):
+                continue
+            seen_urls.add(asset_url)
+            dest = source_dir / sanitize_relpath_from_url(asset_url)
+            if dest.exists():
+                if dest.suffix.lower() in {".html", ".htm", ".css", ".svg"}:
+                    queue.append((dest, asset_url))
+                continue
+            try:
+                blob = fetch_url_bytes(asset_url)
+            except Exception as exc:
+                unresolved.setdefault(current_url, []).append(raw)
+                ctx.warn("fetch", f"Could not fetch same-origin asset: {exc}")
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(blob)
+            copied[asset_url] = str(dest.relative_to(source_dir.parent))
+            fetched_count += 1
+            if dest.suffix.lower() in {".html", ".htm", ".css", ".svg", ""}:
+                queue.append((dest, asset_url))
+
+    if fetched_count >= MAX_FETCH_FILES:
+        ctx.warn("fetch", f"Stopped after {MAX_FETCH_FILES} fetched files.")
+    return copied, unresolved
+
+
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:  # noqa: A003 - inherited name
         return
@@ -579,12 +698,16 @@ def collect_source_bundle(
         except ValueError:
             die(f"--source-entry must be inside --root. source_entry={source_entry} root={root_dir}")
         html_path = source_entry
+    elif options.url and not options.no_fetch:
+        copied_files, unresolved = fetch_remote_source(str(options.url), ctx.source_dir, ctx)
+        if not copied_files:
+            ctx.warn(
+                "source",
+                "No source/ copied from URL fetch. For local dev-server assets, pass --root and --source-entry.",
+            )
+        return copied_files, unresolved, html_path, root_dir
     elif options.url:
-        ctx.warn(
-            "source",
-            "No source/ copied: pass --root and --source-entry with --url for dev-server workflows, "
-            "or capture with --html.",
-        )
+        ctx.warn("source", "Source fetch disabled (--no-fetch). Visual bundle only.")
         return copied_files, unresolved, html_path, root_dir
 
     if source_entry and root_dir:
@@ -770,7 +893,7 @@ def create_readme(manifest: dict) -> str:
         f"""
         # WebGPT webpage analysis package
 
-        This zip was generated by the `local-page-analysis-capture` skill.
+        This zip was generated by the `html-bundler` skill.
 
         Start with `BUNDLE_ASSESSMENT.md` for capture coverage and gaps.
 
@@ -833,7 +956,7 @@ def run_capture(options: CaptureOptions) -> pathlib.Path:
         if not re.match(r"^https?://", options.url or ""):
             die("--url must start with http:// or https://")
 
-    tmp = pathlib.Path(tempfile.mkdtemp(prefix="page-analysis-"))
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="html-bundler-"))
     ctx = CaptureContext(
         workdir=tmp,
         captures_dir=ensure_dir(tmp / "captures"),
@@ -933,7 +1056,7 @@ def run_capture(options: CaptureOptions) -> pathlib.Path:
             duplicate_warnings = [w.message for w in ctx.warnings if w.area == "capture"]
             manifest = {
                 "generated_at_utc": now_iso(),
-                "tool": "local-page-analysis-capture",
+                "tool": "html-bundler",
                 "capture_url": capture_url,
                 "input_html": safe_manifest_path(html_path, root_dir),
                 "root_dir": safe_manifest_path(root_dir, root_dir) if root_dir else None,
@@ -942,6 +1065,15 @@ def run_capture(options: CaptureOptions) -> pathlib.Path:
                 "desktop_viewport": {"width": desktop_size[0], "height": desktop_size[1]},
                 "mobile_viewport": None if options.no_mobile else {"width": mobile_size[0], "height": mobile_size[1]},
                 "capture_files": capture_names,
+                                "source_mode": (
+                    "local-html"
+                    if options.html
+                    else "dev-server-root"
+                    if options.url and options.root and options.source_entry
+                    else "url-fetch"
+                    if options.url and not options.no_fetch
+                    else "visual-only"
+                ),
                 "copied_files": copied_files,
                 "unresolved_local_references": unresolved,
                 "optional_reports": optional_reports,

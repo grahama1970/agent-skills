@@ -58,3 +58,13 @@ def test_sanitize_tab_list_command() -> None:
     record = sanitize_surf_command(["/skills/surf/run.sh", "tab.list"], 0, '[{"title":"Secret"}]', "")
     assert record == {"command": "tab.list", "returncode": 0}
     assert "stdout" not in record
+
+
+def test_resolve_remote_url_joins_relative_paths() -> None:
+    from capture_lib import is_same_origin, resolve_remote_url
+
+    base = "https://example.com/docs/page.html"
+    assert resolve_remote_url("style.css", base) == "https://example.com/docs/style.css"
+    assert resolve_remote_url("/assets/app.js", base) == "https://example.com/assets/app.js"
+    assert is_same_origin("https://example.com/x", base) is True
+    assert is_same_origin("https://other.com/x", base) is False

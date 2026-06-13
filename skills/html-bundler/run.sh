@@ -11,14 +11,14 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 usage() {
   cat <<'USAGE'
-local-page-analysis-capture
+html-bundler
 
 Usage:
   ./run.sh capture (--html PATH | --url URL) [options]
   ./run.sh capture ... --clipboard
 
 Defaults:
-  --out       /tmp/local-page-analysis-<timestamp>.zip
+  --out       /tmp/html-bundler-<timestamp>.zip
   --surf-bin  skills/surf/run.sh
 
 Examples:

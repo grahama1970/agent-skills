@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Typer CLI for local-page-analysis-capture."""
+"""Typer CLI for html-bundler."""
 from __future__ import annotations
 
 import sys
@@ -27,7 +27,7 @@ def capture(
     out: Path | None = typer.Option(
         None,
         "--out",
-        help="Output zip path. Default: /tmp/local-page-analysis-<timestamp>.zip",
+        help="Output zip path. Default: /tmp/html-bundler-<timestamp>.zip",
     ),
     surf_bin: str = typer.Option("surf", "--surf-bin", help="Path to skills/surf/run.sh"),
     desktop: str = typer.Option("1440x1000", "--desktop", help="Desktop viewport, e.g. 1440x1000."),
@@ -42,6 +42,7 @@ def capture(
         help="HTML entry file under --root when capturing a dev-server --url.",
     ),
     max_scroll_slices: int = typer.Option(12, "--max-scroll-slices", help="Max viewport scroll slices per form factor."),
+    no_fetch: bool = typer.Option(False, "--no-fetch", help="Skip same-origin source fetch for --url captures."),
 ) -> None:
     """Render a page through /surf and write an upload-ready zip under /tmp by default."""
     if html is None and url is None:
@@ -62,6 +63,7 @@ def capture(
         no_source=no_source,
         source_entry=source_entry,
         max_scroll_slices=max_scroll_slices,
+        no_fetch=no_fetch,
     )
     zip_path = run_capture(options)
     typer.echo(str(zip_path))

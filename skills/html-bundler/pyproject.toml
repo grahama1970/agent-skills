@@ -1,0 +1,8 @@
+[project]
+name = "html-bundler"
+version = "0.1.0"
+description = "Bundle HTML pages for WebGPT review into WebGPT-ready zip bundles"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+]

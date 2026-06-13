@@ -1,18 +1,18 @@
-# local-page-analysis-capture
+# html-bundler
 
 Capture a local HTML page or localhost URL into one WebGPT-ready zip.
 
 ## Quick start
 
 ```bash
-cd skills/local-page-analysis-capture
+cd skills/html-bundler
 ./run.sh capture --url http://localhost:3000 --clipboard
 ```
 
 Default artifact path:
 
 ```text
-/tmp/local-page-analysis-<timestamp>.zip
+/tmp/html-bundler-<timestamp>.zip
 ```
 
 ## Dependencies

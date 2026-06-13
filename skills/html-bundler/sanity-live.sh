@@ -7,7 +7,7 @@ if [[ "${SURF_LIVE:-0}" != "1" ]]; then
   exit 0
 fi
 
-out="/tmp/local-page-analysis-live-sanity.zip"
+out="/tmp/html-bundler-live-sanity.zip"
 root="/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892"
 url="http://127.0.0.1:8892/index.html"
 rm -f "$out"
@@ -25,7 +25,7 @@ fi
 python3 - <<'PY'
 import zipfile
 from pathlib import Path
-out = Path("/tmp/local-page-analysis-live-sanity.zip")
+out = Path("/tmp/html-bundler-live-sanity.zip")
 with zipfile.ZipFile(out) as zf:
     names = set(zf.namelist())
 for required in ("manifest.json", "README_FOR_CHATGPT.md", "BUNDLE_ASSESSMENT.md"):
@@ -38,4 +38,4 @@ assert any("-scroll-" in n for n in names), names
 print("live zip contract ok")
 PY
 
-echo "local-page-analysis-capture sanity-live passed: $out"
+echo "html-bundler sanity-live passed: $out"

@@ -1,5 +1,5 @@
 ---
-name: local-page-analysis-capture
+name: html-bundler
 description: >
   Capture and package a local HTML page or localhost URL into one WebGPT-ready
   zip with screenshots, source/assets, and reports. Use when the user asks to
@@ -10,8 +10,10 @@ triggers:
   - zip local webpage for analysis
   - screenshot local page for review
   - upload local page to chatgpt
+  - bundle external webpage
+  - html bundler
 provides:
-  - page-capture-bundle
+  - html-bundle
   - webgpt-upload-package
 composes:
   - surf
@@ -34,6 +36,18 @@ upload**. This skill composes `/surf` for browser capture and optionally
 This is **not** `/review-page` (full fail-closed page review) and **not**
 `/webgpt-review` (deterministic `$ask webgpt` markdown bundle).
 
+
+## Source modes
+
+| Mode | Command | `source/` |
+|------|---------|-----------|
+| Local HTML | `--html ./index.html [--root .]` | copied from disk |
+| Dev server + mirror | `--url http://127.0.0.1:PORT/... --root ./public --source-entry index.html` | copied from disk |
+| External URL | `--url https://example.com/page` | same-origin fetch into `source/` |
+
+External fetch is on by default for `--url`. Disable with `--no-fetch` for visual-only bundles.
+Fetch is same-origin only, capped, and best-effort.
+
 ## Preflight
 
 Run `/surf` health before capture:
@@ -52,7 +66,7 @@ Read `BUNDLE_ASSESSMENT.md` inside the zip first. It records review coverage
 Default output is under **`/tmp`**:
 
 ```text
-/tmp/local-page-analysis-<timestamp>.zip
+/tmp/html-bundler-<timestamp>.zip
 ```
 
 From this skill directory:

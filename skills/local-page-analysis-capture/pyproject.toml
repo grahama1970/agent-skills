@@ -1,8 +1,0 @@
-[project]
-name = "local-page-analysis-capture"
-version = "0.1.0"
-description = "Capture local HTML pages into WebGPT-ready zip bundles"
-requires-python = ">=3.11"
-dependencies = [
-  "typer>=0.12",
-]

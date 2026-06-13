@@ -36,4 +36,4 @@ fi
 
 python3 ../best-practices-skills/scripts/validate_skill.py . || true
 
-echo "local-page-analysis-capture sanity passed"
+echo "html-bundler sanity passed"
