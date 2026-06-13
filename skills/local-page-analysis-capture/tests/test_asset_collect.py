@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from capture_lib import CaptureContext, collect_local_files
+
+
+def test_collects_linked_local_assets() -> None:
+    fixture_root = Path(__file__).resolve().parent / "fixtures" / "minimal"
+    html = fixture_root / "index.html"
+    ctx = CaptureContext(
+        workdir=Path("/tmp/page-analysis-test"),
+        captures_dir=Path("/tmp/page-analysis-test/captures"),
+        reports_dir=Path("/tmp/page-analysis-test/reports"),
+        source_dir=Path("/tmp/page-analysis-test/source"),
+    )
+    files, unresolved = collect_local_files(html, fixture_root, ctx)
+    names = {p.name for p in files}
+    assert "index.html" in names
+    assert "style.css" in names
+    assert "logo.svg" in names
+    assert unresolved == {}
+
+
+def test_negative_missing_html_fails_at_cli() -> None:
+    import subprocess
+
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT_DIR / "cli.py"), "capture"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode != 0
+
+
+def test_bundle_assessment_flags_missing_source() -> None:
+    from capture_lib import build_bundle_assessment
+
+    md = build_bundle_assessment(
+        manifest={"capture_url": "http://127.0.0.1:8892/index.html", "desktop_viewport": {"width": 1440, "height": 1000}, "mobile_viewport": None},
+        capture_names=["desktop-viewport.png"],
+        source_file_count=0,
+        duplicate_warnings=[],
+        optional_reports={"network-export": False, "perf-metrics": True},
+    )
+    assert "source/" in md
+    assert "Mobile/responsive review: no" in md
+
+
+def test_sanitize_tab_list_command() -> None:
+    from capture_lib import sanitize_surf_command
+
+    record = sanitize_surf_command(["/skills/surf/run.sh", "tab.list"], 0, '[{"title":"Secret"}]', "")
+    assert record == {"command": "tab.list", "returncode": 0}
+    assert "stdout" not in record
