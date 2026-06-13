@@ -1,0 +1,80 @@
+{
+  "name": "agent-debugger-bridge",
+  "displayName": "Agent Debugger Bridge",
+  "description": "Manifest-driven VS Code debug bridge for agent-debugger Python sessions.",
+  "version": "0.1.0",
+  "publisher": "grahama1970",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:agentDebugger.loadManifest",
+    "onCommand:agentDebugger.runCurrentManifest",
+    "onCommand:agentDebugger.setBreakpoints",
+    "onCommand:agentDebugger.start",
+    "onCommand:agentDebugger.stop",
+    "onCommand:agentDebugger.replay",
+    "onCommand:agentDebugger.continue",
+    "onCommand:agentDebugger.stepOver",
+    "onCommand:agentDebugger.stepIn",
+    "onCommand:agentDebugger.stepOut",
+    "onCommand:agentDebugger.pause",
+    "onCommand:agentDebugger.evaluate",
+    "onCommand:agentDebugger.processCommandQueue"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "agentDebugger.loadManifest", "title": "Agent Debugger: Load Manifest" },
+      { "command": "agentDebugger.runCurrentManifest", "title": "Agent Debugger: Run Current Manifest" },
+      { "command": "agentDebugger.setBreakpoints", "title": "Agent Debugger: Set Breakpoints" },
+      { "command": "agentDebugger.start", "title": "Agent Debugger: Start" },
+      { "command": "agentDebugger.stop", "title": "Agent Debugger: Stop Managed Session" },
+      { "command": "agentDebugger.replay", "title": "Agent Debugger: Replay Managed Session" },
+      { "command": "agentDebugger.continue", "title": "Agent Debugger: Continue" },
+      { "command": "agentDebugger.stepOver", "title": "Agent Debugger: Step Over" },
+      { "command": "agentDebugger.stepIn", "title": "Agent Debugger: Step In" },
+      { "command": "agentDebugger.stepOut", "title": "Agent Debugger: Step Out" },
+      { "command": "agentDebugger.pause", "title": "Agent Debugger: Pause" },
+      { "command": "agentDebugger.evaluate", "title": "Agent Debugger: Evaluate Expression" },
+      { "command": "agentDebugger.processCommandQueue", "title": "Agent Debugger: Process Command Queue" }
+    ],
+    "debuggers": [
+      {
+        "type": "agent-debugger-mock",
+        "label": "Agent Debugger Mock Test Adapter",
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Workspace test file used by the mock adapter."
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "package": "npm run compile && npx @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.17.19",
+    "@types/vscode": "^1.94.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.2",
+    "mocha": "^11.1.0",
+    "typescript": "^5.7.3"
+  }
+}
