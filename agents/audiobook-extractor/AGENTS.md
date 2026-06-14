@@ -165,6 +165,27 @@ The worker must report:
 - whether `manifest.json`, `chapters.jsonl`, chapter text, and transcript JSONL
   are present for transcript-only modes
 
+After any durable `extract-audiobook` job, run the implemented runtime verifier
+against the extraction output root:
+
+```bash
+skills/extract-audiobook/run.sh verify \
+  --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/<book_id>
+```
+
+The verifier writes:
+
+```text
+/mnt/storage12tb/skills/extract-audiobook/outputs/<book_id>/verify-receipt.json
+```
+
+If this command fails, generate the local maintainer packet and stop handoff:
+
+```bash
+skills/extract-audiobook/run.sh file-maintainer-ticket \
+  --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/<book_id>
+```
+
 Never delete partial outputs unless the human explicitly requests a fresh run or
 `--force` is part of the requested command.
 
@@ -215,12 +236,11 @@ the `book-extraction-verifier` artifact root, `sanity_report.json`,
 
 When this worker runs a substantial job with a durable output/job directory:
 
-1. Run `./run.sh verify --job-dir <job>` (or skill-specific verify documented in SKILL.md).
+1. Run `skills/extract-audiobook/run.sh verify --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/<book_id>`.
 2. **PASS** → continue handoff.
-3. **FAIL** → `./run.sh file-maintainer-ticket --job-dir <job> --create` — do **not** self-commit.
+3. **FAIL** → `skills/extract-audiobook/run.sh file-maintainer-ticket --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/<book_id>` — do **not** self-commit.
 
 WebGPT review belongs in the **skill-maintainer** cycle, not after every successful run.
 
 Rollout: see `skills/best-practices-skills/references/runtime-self-improvement.md`.
-Reference implementation: `skills/voice-segment-selector/references/maintainer-escalation.md`.
-
+Escalation reference: `skills/extract-audiobook/references/maintainer-escalation.md`.

@@ -6,6 +6,7 @@ description: >
   lost chapter boundaries, when users ask to split/transcribe an audiobook by
   chapter, or when fact extraction needs clean chapter text with reliable
   chapter_id provenance.
+runtime_self_improvement: substantial
 triggers:
   - extract audiobook
   - split audiobook by chapter
@@ -95,6 +96,27 @@ skills/extract-audiobook/run.sh extract ./audio.m4b \
 ```
 
 For fast canaries, use `--limit 1` or `--limit-seconds 90`.
+
+Verify a completed extraction output directory:
+
+```bash
+skills/extract-audiobook/run.sh verify \
+  --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/galaxy_in_flames
+```
+
+This writes `verify-receipt.json` in the output directory and exits nonzero
+when the manifest, chapter map linkage, transcript JSONL, or resume/checkpoint
+invariants are broken.
+
+Create a local maintainer packet from the verification receipt:
+
+```bash
+skills/extract-audiobook/run.sh file-maintainer-ticket \
+  --job-dir /mnt/storage12tb/skills/extract-audiobook/outputs/galaxy_in_flames
+```
+
+This writes `maintainer-ticket.json` in the output directory. It does not create
+or close GitHub issues.
 
 Normalize an already-transcribed flat audiobook transcript without running
 Whisper again:

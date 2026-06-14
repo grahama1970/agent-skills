@@ -4,16 +4,27 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
 
 app = typer.Typer(help="Create story-grounded casting contracts and contact-sheet work orders.")
+
+VERIFY_RECEIPT_SCHEMA_VERSION = "casting-agent-verify-receipt.v1"
+CASTING_AGENT_TARGET_PATHS = [
+    "skills/casting-agent/SKILL.md",
+    "skills/casting-agent/run.sh",
+    "skills/casting-agent/scripts/casting_agent.py",
+    "skills/casting-agent/references/maintainer-escalation.md",
+    "agents/casting-agent/AGENTS.md",
+]
 
 
 def _load_json(path: Path) -> dict:
@@ -37,6 +48,287 @@ def _parse_references(items: list[str]) -> dict[str, list[str]]:
             raise typer.BadParameter("--reference must include non-empty entity_id and path/url")
         refs.setdefault(entity_id, []).append(value)
     return refs
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _check_result(checks: list[dict[str, Any]], check_id: str, passed: bool, detail: str) -> None:
+    checks.append({"id": check_id, "passed": bool(passed), "detail": detail})
+
+
+def _is_url(value: str) -> bool:
+    return value.startswith(("http://", "https://"))
+
+
+def _resolve_job_path(job_dir: Path, value: Any) -> Path | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or _is_url(text):
+        return None
+    path = Path(text)
+    if not path.is_absolute():
+        path = job_dir / path
+    return path
+
+
+def _path_exists_for_job(job_dir: Path, value: Any) -> bool:
+    path = _resolve_job_path(job_dir, value)
+    return bool(path and path.exists())
+
+
+def _load_optional_json(path: Path, checks: list[dict[str, Any]]) -> dict | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        _check_result(checks, f"{path.name}_parse", False, f"{path}: invalid JSON: {exc}")
+        return None
+    if not isinstance(data, dict):
+        _check_result(checks, f"{path.name}_object", False, f"{path}: expected JSON object")
+        return None
+    _check_result(checks, f"{path.name}_parse", True, f"{path}: valid JSON")
+    return data
+
+
+def _schema_check(checks: list[dict[str, Any]], data: dict | None, path: Path, expected: str) -> None:
+    if data is None:
+        _check_result(checks, f"{path.stem}_exists", False, f"missing {path}")
+        return
+    _check_result(checks, f"{path.stem}_exists", True, f"found {path}")
+    actual = data.get("schema") or data.get("schema_version")
+    _check_result(
+        checks,
+        f"{path.stem}_schema",
+        actual == expected,
+        f"{path.name}: expected {expected}, got {actual!r}",
+    )
+
+
+def _path_values(record: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    scalar_keys = (
+        "evidence_path",
+        "artifact_path",
+        "receipt_path",
+        "review_receipt_path",
+        "contact_sheet_receipt_path",
+        "contact_sheet_path",
+        "blocked_evidence_path",
+    )
+    list_keys = (
+        "evidence_paths",
+        "artifact_paths",
+        "receipt_paths",
+        "review_receipt_paths",
+        "contact_sheet_receipt_paths",
+    )
+    for key in scalar_keys:
+        value = record.get(key)
+        if value:
+            values.append(str(value))
+    for key in list_keys:
+        raw = record.get(key) or []
+        if isinstance(raw, str):
+            raw = [raw]
+        if isinstance(raw, list):
+            values.extend(str(value) for value in raw if str(value).strip())
+    return values
+
+
+def _state_from_record(record: dict[str, Any], default: str | None = None) -> str:
+    state = str(record.get("status") or record.get("state") or default or "").strip().lower()
+    if not state:
+        if record.get("accepted") is True:
+            return "accepted"
+        if record.get("blocked") is True:
+            return "blocked"
+    return state
+
+
+def _collect_terminal_states(job_dir: Path, checks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    states: dict[str, dict[str, Any]] = {}
+    receipt_specs = [
+        ("accepted_casting_receipt.json", "accepted"),
+        ("blocked_casting_receipt.json", "blocked"),
+        ("casting_receipt.json", None),
+    ]
+    found_terminal_receipt = False
+    for filename, default_state in receipt_specs:
+        path = job_dir / filename
+        data = _load_optional_json(path, checks)
+        if data is None:
+            continue
+        found_terminal_receipt = True
+        groups: list[tuple[Any, str | None]] = [
+            (data.get("entities"), default_state),
+            (data.get("entity_states"), default_state),
+            (data.get("accepted_entities"), "accepted"),
+            (data.get("blocked_entities"), "blocked"),
+        ]
+        for raw_group, group_default in groups:
+            if isinstance(raw_group, dict):
+                iterable = raw_group.values()
+            elif isinstance(raw_group, list):
+                iterable = raw_group
+            else:
+                iterable = []
+            for item in iterable:
+                record = item if isinstance(item, dict) else {"entity_id": item}
+                entity_id = str(record.get("entity_id") or "").strip()
+                if not entity_id:
+                    continue
+                merged = dict(record)
+                merged.setdefault("status", _state_from_record(record, group_default))
+                merged.setdefault("source_receipt", str(path))
+                states[entity_id] = merged
+
+        entity_id = str(data.get("entity_id") or "").strip()
+        if entity_id:
+            record = dict(data)
+            record.setdefault("status", _state_from_record(record, default_state))
+            record.setdefault("source_receipt", str(path))
+            states[entity_id] = record
+
+    _check_result(
+        checks,
+        "terminal_casting_receipt_present",
+        found_terminal_receipt,
+        "found accepted_casting_receipt.json, blocked_casting_receipt.json, or casting_receipt.json"
+        if found_terminal_receipt
+        else "missing accepted_casting_receipt.json, blocked_casting_receipt.json, or casting_receipt.json",
+    )
+    return states
+
+
+def _claimed_receipt_paths(records: list[dict[str, Any]]) -> list[str]:
+    paths: list[str] = []
+    for record in records:
+        paths.extend(_path_values(record))
+    return paths
+
+
+def validate_job_artifacts(job_dir: Path) -> dict[str, Any]:
+    job_dir = job_dir.resolve()
+    checks: list[dict[str, Any]] = []
+    _check_result(checks, "job_dir_exists", job_dir.exists() and job_dir.is_dir(), f"job_dir={job_dir}")
+
+    contract_path = job_dir / "casting_contract.json"
+    chosen_path = job_dir / "chosen_reference_inputs.json"
+    work_path = job_dir / "contact_sheet_work_order.json"
+
+    contract = _load_optional_json(contract_path, checks)
+    chosen = _load_optional_json(chosen_path, checks)
+    work = _load_optional_json(work_path, checks)
+    _schema_check(checks, contract, contract_path, "casting_agent.casting_contract.v1")
+    _schema_check(checks, chosen, chosen_path, "casting_agent.chosen_reference_inputs.v1")
+    _schema_check(checks, work, work_path, "casting_agent.contact_sheet_work_order.v1")
+
+    entities = contract.get("entities") if isinstance(contract, dict) else []
+    if not isinstance(entities, list):
+        entities = []
+    _check_result(checks, "contract_entities_present", bool(entities), f"entity_count={len(entities)}")
+
+    elements = work.get("elements") if isinstance(work, dict) else []
+    if not isinstance(elements, list):
+        elements = []
+    elements_by_entity = {
+        str(element.get("entity_id")): element
+        for element in elements
+        if isinstance(element, dict) and element.get("entity_id")
+    }
+    terminal_states = _collect_terminal_states(job_dir, checks)
+
+    for entity in entities:
+        if not isinstance(entity, dict):
+            _check_result(checks, "entity_record_object", False, f"non-object entity record: {entity!r}")
+            continue
+        entity_id = str(entity.get("entity_id") or "").strip()
+        check_prefix = f"entity_{entity_id or 'unknown'}"
+        _check_result(checks, f"{check_prefix}_id", bool(entity_id), f"entity_id={entity_id!r}")
+        if not entity_id:
+            continue
+
+        required = bool(entity.get("contact_sheet_required", True))
+        if entity_id not in elements_by_entity:
+            _check_result(checks, f"{check_prefix}_work_order_element", not required, "required entity has no work order element")
+        else:
+            _check_result(checks, f"{check_prefix}_work_order_element", True, "work order element present")
+
+        if not required:
+            continue
+
+        state_record = terminal_states.get(entity_id)
+        state = _state_from_record(state_record or {})
+        _check_result(
+            checks,
+            f"{check_prefix}_terminal_state",
+            state in {"accepted", "blocked"},
+            f"state={state!r}; expected accepted or blocked",
+        )
+        if state in {"accepted", "blocked"}:
+            evidence_paths = _path_values(state_record or {})
+            evidence_ok = any(_path_exists_for_job(job_dir, value) for value in evidence_paths)
+            _check_result(
+                checks,
+                f"{check_prefix}_evidence_path",
+                evidence_ok,
+                f"evidence_paths={evidence_paths!r}",
+            )
+
+    claimed_paths = _claimed_receipt_paths(
+        [record for record in elements if isinstance(record, dict)]
+        + [record for record in terminal_states.values() if isinstance(record, dict)]
+    )
+    for index, value in enumerate(claimed_paths, start=1):
+        if _is_url(value):
+            continue
+        _check_result(
+            checks,
+            f"claimed_receipt_path_{index}",
+            _path_exists_for_job(job_dir, value),
+            f"path={value}",
+        )
+
+    failed_checks = [check for check in checks if not check["passed"]]
+    return {
+        "schema_version": VERIFY_RECEIPT_SCHEMA_VERSION,
+        "created_at": _now(),
+        "skill": "casting-agent",
+        "job_dir": str(job_dir),
+        "accepted": not failed_checks,
+        "checks": checks,
+        "failed_checks": failed_checks,
+        "artifacts": {
+            "casting_contract": str(contract_path),
+            "chosen_reference_inputs": str(chosen_path),
+            "contact_sheet_work_order": str(work_path),
+        },
+        "verify_receipt": str(job_dir / "verify-receipt.json"),
+    }
+
+
+def write_verify_receipt(job_dir: Path) -> dict[str, Any]:
+    receipt = validate_job_artifacts(job_dir)
+    receipt_path = Path(receipt["verify_receipt"])
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_path.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return receipt
+
+
+def load_self_improvement_helper() -> Any:
+    helper_path = Path(__file__).resolve().parents[3] / "skills" / "_shared" / "skill_self_improvement.py"
+    if not helper_path.exists():
+        raise FileNotFoundError(f"{helper_path}:missing_shared_self_improvement_helper")
+    spec = importlib.util.spec_from_file_location("skill_self_improvement", helper_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load {helper_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _flatten_keyed_entities(package: dict) -> list[dict]:
@@ -565,6 +857,53 @@ def identity_contracts(
         "artifacts": written,
     }
     typer.echo(json.dumps(result, indent=2))
+
+
+@app.command("verify")
+def verify_command(
+    job_dir: Annotated[Path | None, typer.Option("--job-dir", help="Casting output directory to verify.")] = None,
+    out_dir: Annotated[Path | None, typer.Option("--out-dir", help="Alias for --job-dir.")] = None,
+) -> None:
+    """Verify a completed casting job directory and write verify-receipt.json."""
+    target_dir = job_dir or out_dir
+    if target_dir is None:
+        raise typer.BadParameter("Pass --job-dir or --out-dir.")
+    receipt = write_verify_receipt(target_dir)
+    typer.echo(json.dumps(receipt, indent=2, ensure_ascii=False))
+    if not receipt["accepted"]:
+        raise typer.Exit(1)
+
+
+@app.command("file-maintainer-ticket")
+def file_maintainer_ticket_command(
+    job_dir: Annotated[Path | None, typer.Option("--job-dir", help="Casting output directory to inspect.")] = None,
+    out_dir: Annotated[Path | None, typer.Option("--out-dir", help="Alias for --job-dir.")] = None,
+    output: Annotated[Path | None, typer.Option("--output", help="Ticket packet path. Defaults inside the job dir.")] = None,
+) -> None:
+    """Write a deterministic local maintainer ticket packet from verify output."""
+    target_dir = job_dir or out_dir
+    if target_dir is None:
+        raise typer.BadParameter("Pass --job-dir or --out-dir.")
+    receipt = write_verify_receipt(target_dir)
+    helper = load_self_improvement_helper()
+    packet_path = output or (target_dir / "maintainer-ticket.json")
+    packet = helper.write_maintainer_ticket(
+        skill_name="casting-agent",
+        route="backend_python_or_skill_runtime",
+        job_dir=target_dir,
+        output_path=packet_path,
+        verify_receipt_path=Path(receipt["verify_receipt"]),
+        failed_checks=receipt["failed_checks"],
+        target_paths=CASTING_AGENT_TARGET_PATHS,
+        repro_commands=[
+            "cd skills/casting-agent && ./sanity.sh",
+            f"cd skills/casting-agent && ./run.sh verify --job-dir {target_dir}",
+            f"cd skills/casting-agent && ./run.sh file-maintainer-ticket --job-dir {target_dir}",
+            "cd skills/best-practices-skills && uv run python scripts/validate_skill.py ../casting-agent",
+        ],
+        issue_url="https://github.com/grahama1970/agent-skills/issues/16",
+    )
+    typer.echo(json.dumps(packet, indent=2, ensure_ascii=False))
 
 
 @app.command()

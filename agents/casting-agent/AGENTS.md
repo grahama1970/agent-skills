@@ -105,10 +105,8 @@ When this worker runs a substantial job with a durable output/job directory:
 
 1. Run `./run.sh verify --job-dir <job>` (or skill-specific verify documented in SKILL.md).
 2. **PASS** → continue handoff.
-3. **FAIL** → `./run.sh file-maintainer-ticket --job-dir <job> --create` — do **not** self-commit.
+3. **FAIL** → `./run.sh file-maintainer-ticket --job-dir <job>` — do **not** self-commit.
 
 WebGPT review belongs in the **skill-maintainer** cycle, not after every successful run.
 
-Rollout: see `skills/best-practices-skills/references/runtime-self-improvement.md`.
-Reference implementation: `skills/voice-segment-selector/references/maintainer-escalation.md`.
-
+Escalation workflow: `skills/casting-agent/references/maintainer-escalation.md`.

@@ -15,7 +15,7 @@ def normalize_failed_checks(failed_checks: list[dict[str, Any]]) -> list[dict[st
     for check in failed_checks:
         normalized.append(
             {
-                "id": str(check.get("id") or "unknown_check"),
+                "id": str(check.get("id") or check.get("name") or "unknown_check"),
                 "detail": str(check.get("detail") or ""),
                 "passed": bool(check.get("passed")),
             }

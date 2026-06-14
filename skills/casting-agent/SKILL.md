@@ -9,6 +9,7 @@ description: >
   "visual casting", "choose references", "research character look", "use these
   image paths as references", "Brave-search for references", and "produce all
   contact sheets from story context".
+runtime_self_improvement: substantial
 triggers:
   - casting agent
   - visual casting
@@ -119,6 +120,12 @@ cd skills/casting-agent
   --reference character_horus_lupercal_warmaster=/path/to/ref2.png
 
 ./run.sh sanity
+
+./run.sh verify \
+  --job-dir /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/casting
+
+./run.sh file-maintainer-ticket \
+  --job-dir /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/casting
 ```
 
 The `plan-package` command is the preferred intake for real persona-dream work.
@@ -130,6 +137,16 @@ The `plan` command remains a compatibility path for pre-split story/entity
 inputs. Neither command calls providers, runs Brave search, generates images,
 writes memory, or writes Qdrant. Live research/generation remains delegated to
 the named skills and must preserve their receipts.
+
+The `verify` command is a fail-closed post-run gate for completed casting job
+directories. It writes `verify-receipt.json` in the job directory and exits
+nonzero when required contract files are missing, schemas are invalid, required
+entities lack an `accepted` or `blocked` terminal state, or claimed evidence and
+contact-sheet receipt paths are absent.
+
+The `file-maintainer-ticket` command re-runs verification and writes a local
+`maintainer-ticket.json` packet through `skills/_shared/skill_self_improvement.py`.
+It does not create, close, or edit GitHub issues.
 
 ## Inputs
 
