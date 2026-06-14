@@ -31,6 +31,25 @@ should invoke it every N minutes instead of running a long-lived daemon:
 skills/skill-maintainer/run.sh scheduler --max-issues 1
 ```
 
+Install the managed crontab entry that launches the single-shot scheduler every
+N minutes:
+
+```bash
+skills/skill-maintainer/run.sh install-cron --interval-minutes 5 --max-issues 1
+```
+
+Inspect or remove the managed crontab entry:
+
+```bash
+skills/skill-maintainer/run.sh cron-status
+skills/skill-maintainer/run.sh remove-cron
+```
+
+The managed cron entry is tagged with `skill-maintainer-scheduler`, appends
+cron stdout/stderr to `.artifacts/skill-maintainer/cron.log`, and leaves the
+scheduler JSONL stream in `.artifacts/skill-maintainer/scheduler-events.jsonl`.
+Use `install-cron --dry-run` before mutating a host crontab.
+
 For a pinned queue item, keep the same single-shot scheduler path and specify
 the issue explicitly:
 
