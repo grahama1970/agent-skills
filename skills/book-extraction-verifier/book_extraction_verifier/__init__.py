@@ -1,0 +1,1 @@
+"""Book extraction verifier skill."""
