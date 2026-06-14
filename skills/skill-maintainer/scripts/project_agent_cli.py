@@ -322,7 +322,7 @@ def cron_auto_update(branch: str) -> dict[str, object]:
             "stdout": fetch.stdout,
             "stderr": fetch.stderr,
         }
-    checkout = git_output(["checkout", "-B", branch, f"origin/{branch}"])
+    checkout = git_output(["checkout", "--detach", f"origin/{branch}"])
     if checkout.returncode != 0:
         return {
             "status": "checkout_failed",

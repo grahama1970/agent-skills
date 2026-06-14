@@ -56,7 +56,7 @@ The managed cron entry is tagged with `skill-maintainer-scheduler`, appends
 cron stdout/stderr to `.artifacts/skill-maintainer/cron.log`, and leaves the
 scheduler JSONL stream in `.artifacts/skill-maintainer/scheduler-events.jsonl`.
 By default, the managed entry calls `cron-tick --auto-update`, so each host cron
-tick fetches `origin/main` and checks out the updated `main` branch before
+tick fetches `origin/main` and detaches the worker worktree at that ref before
 running the scheduler. Use `install-cron --dry-run` before mutating a host
 crontab.
 
