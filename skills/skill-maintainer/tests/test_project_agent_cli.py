@@ -291,6 +291,37 @@ def test_cron_tick_stops_when_auto_update_fails(monkeypatch, capsys):
     assert calls == []
 
 
+def test_cron_auto_update_detaches_at_origin_branch(monkeypatch):
+    cli = load_cli()
+    calls = []
+
+    class Completed:
+        def __init__(self, returncode=0, stdout="", stderr=""):
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def fake_git_output(args):
+        calls.append(args)
+        if args == ["status", "--porcelain"]:
+            return Completed(stdout="")
+        if args == ["fetch", "--prune", "origin", "main"]:
+            return Completed()
+        if args == ["checkout", "--detach", "origin/main"]:
+            return Completed()
+        if args == ["rev-parse", "HEAD"]:
+            return Completed(stdout="abc123\n")
+        raise AssertionError(args)
+
+    monkeypatch.setattr(cli, "git_output", fake_git_output)
+
+    result = cli.cron_auto_update("main")
+
+    assert result == {"status": "updated", "branch": "main", "head": "abc123"}
+    assert ["checkout", "--detach", "origin/main"] in calls
+    assert ["checkout", "-B", "main", "origin/main"] not in calls
+
+
 def test_remove_cron_deletes_only_managed_entry(monkeypatch, capsys):
     cli = load_cli()
     written = []
