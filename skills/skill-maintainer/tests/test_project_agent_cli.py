@@ -159,6 +159,104 @@ def test_scheduler_can_target_explicit_issue(monkeypatch, tmp_path, capsys):
     assert json.loads("\n".join(stdout_lines[2:]))["issue"] == 15
 
 
+def test_install_cron_writes_single_shot_scheduler_entry(monkeypatch, capsys):
+    cli = load_cli()
+    written = []
+
+    monkeypatch.setattr(cli, "crontab_read", lambda: (0, "0 1 * * * echo keep\n", ""))
+    monkeypatch.setattr(cli, "crontab_write", lambda content: written.append(content) or (0, "", ""))
+
+    code = cli.command_install_cron(argparse.Namespace(
+        interval_minutes=7,
+        schedule=None,
+        max_issues=1,
+        run_webgpt=True,
+        dry_run=False,
+    ))
+
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["status"] == "installed"
+    assert payload["marker"] == cli.CRON_MARKER
+    assert payload["removed_existing"] == 0
+    assert payload["event_log"].endswith(".artifacts/skill-maintainer/scheduler-events.jsonl")
+    assert payload["cron_log"].endswith(".artifacts/skill-maintainer/cron.log")
+    assert len(written) == 1
+    assert "0 1 * * * echo keep" in written[0]
+    assert "*/7 * * * *" in written[0]
+    assert "skills/skill-maintainer/run.sh scheduler --max-issues 1 --run-webgpt" in written[0]
+    assert cli.CRON_MARKER in written[0]
+
+
+def test_install_cron_replaces_existing_managed_entry(monkeypatch, capsys):
+    cli = load_cli()
+    written = []
+    existing = "\n".join([
+        "0 1 * * * echo keep",
+        f"*/5 * * * * old command # {cli.CRON_MARKER}",
+        "",
+    ])
+
+    monkeypatch.setattr(cli, "crontab_read", lambda: (0, existing, ""))
+    monkeypatch.setattr(cli, "crontab_write", lambda content: written.append(content) or (0, "", ""))
+
+    code = cli.command_install_cron(argparse.Namespace(
+        interval_minutes=5,
+        schedule="*/13 * * * *",
+        max_issues=2,
+        run_webgpt=False,
+        dry_run=False,
+    ))
+
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["removed_existing"] == 1
+    assert "old command" not in written[0]
+    assert "0 1 * * * echo keep" in written[0]
+    assert "*/13 * * * *" in written[0]
+    assert "scheduler --max-issues 2 --no-run-webgpt" in written[0]
+
+
+def test_cron_status_reports_managed_lines(monkeypatch, capsys):
+    cli = load_cli()
+    line = f"*/5 * * * * command # {cli.CRON_MARKER}"
+
+    monkeypatch.setattr(cli, "crontab_read", lambda: (0, f"{line}\n", ""))
+
+    code = cli.command_cron_status(argparse.Namespace())
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {
+        "status": "installed",
+        "marker": cli.CRON_MARKER,
+        "lines": [line],
+    }
+
+
+def test_remove_cron_deletes_only_managed_entry(monkeypatch, capsys):
+    cli = load_cli()
+    written = []
+    existing = "\n".join([
+        "0 1 * * * echo keep",
+        f"*/5 * * * * old command # {cli.CRON_MARKER}",
+        "",
+    ])
+
+    monkeypatch.setattr(cli, "crontab_read", lambda: (0, existing, ""))
+    monkeypatch.setattr(cli, "crontab_write", lambda content: written.append(content) or (0, "", ""))
+
+    code = cli.command_remove_cron(argparse.Namespace(dry_run=False))
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["status"] == "removed"
+    assert payload["removed_existing"] == 1
+    assert written == ["0 1 * * * echo keep\n"]
+
+
 def test_run_cycle_preserves_nonzero_json_artifact_result(monkeypatch, tmp_path):
     cli = load_cli()
     issue_dir = tmp_path / "issue-16"

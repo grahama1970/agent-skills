@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 import time
@@ -14,6 +15,8 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CYCLE = REPO_ROOT / "scripts" / "skill_maintainer_cycle.py"
 SCHEDULER_EVENT_LOG = REPO_ROOT / ".artifacts" / "skill-maintainer" / "scheduler-events.jsonl"
+CRON_LOG = REPO_ROOT / ".artifacts" / "skill-maintainer" / "cron.log"
+CRON_MARKER = "skill-maintainer-scheduler"
 
 TERMINAL_STATUSES = {
     "fixed_with_deterministic_proof",
@@ -231,6 +234,146 @@ def run_cycle(args: list[str]) -> dict[str, Any]:
     return parsed
 
 
+def crontab_read() -> tuple[int, str, str]:
+    cp = subprocess.run(
+        ["crontab", "-l"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if cp.returncode == 0:
+        return 0, cp.stdout, cp.stderr
+    if cp.returncode == 1 and "no crontab" in cp.stderr.lower():
+        return 0, "", cp.stderr
+    return cp.returncode, cp.stdout, cp.stderr
+
+
+def crontab_write(content: str) -> tuple[int, str, str]:
+    cp = subprocess.run(
+        ["crontab", "-"],
+        cwd=REPO_ROOT,
+        input=content,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return cp.returncode, cp.stdout, cp.stderr
+
+
+def cron_scheduler_command(max_issues: int, run_webgpt: bool) -> str:
+    runner = REPO_ROOT / "skills" / "skill-maintainer" / "run.sh"
+    parts = [
+        shlex.quote(str(runner)),
+        "scheduler",
+        "--max-issues",
+        str(max_issues),
+    ]
+    if run_webgpt:
+        parts.append("--run-webgpt")
+    else:
+        parts.append("--no-run-webgpt")
+    return (
+        f"cd {shlex.quote(str(REPO_ROOT))} && "
+        f"{' '.join(parts)} >> {shlex.quote(str(CRON_LOG))} 2>&1"
+    )
+
+
+def cron_line(schedule: str, max_issues: int, run_webgpt: bool) -> str:
+    return f"{schedule} {cron_scheduler_command(max_issues, run_webgpt)} # {CRON_MARKER}"
+
+
+def strip_managed_cron(content: str) -> tuple[str, int]:
+    kept: list[str] = []
+    removed = 0
+    for line in content.splitlines():
+        if CRON_MARKER in line:
+            removed += 1
+            continue
+        kept.append(line)
+    return "\n".join(kept).rstrip(), removed
+
+
+def command_install_cron(args: argparse.Namespace) -> int:
+    if args.interval_minutes < 1 or args.interval_minutes > 59:
+        raise SystemExit("--interval-minutes must be between 1 and 59")
+    if args.max_issues < 1:
+        raise SystemExit("--max-issues must be at least 1")
+    schedule = args.schedule or f"*/{args.interval_minutes} * * * *"
+    line = cron_line(schedule, args.max_issues, args.run_webgpt)
+    read_code, existing, read_stderr = crontab_read()
+    if read_code != 0:
+        print(json.dumps({
+            "status": "crontab_read_failed",
+            "returncode": read_code,
+            "stderr": read_stderr,
+        }, indent=2, sort_keys=True))
+        return 2
+    stripped, removed = strip_managed_cron(existing)
+    new_content = f"{stripped}\n{line}\n" if stripped else f"{line}\n"
+    payload = {
+        "status": "dry_run" if args.dry_run else "installed",
+        "marker": CRON_MARKER,
+        "line": line,
+        "removed_existing": removed,
+        "event_log": str(SCHEDULER_EVENT_LOG),
+        "cron_log": str(CRON_LOG),
+    }
+    if not args.dry_run:
+        write_code, stdout, stderr = crontab_write(new_content)
+        payload.update({"returncode": write_code, "stdout": stdout, "stderr": stderr})
+        if write_code != 0:
+            payload["status"] = "crontab_write_failed"
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 2
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_remove_cron(args: argparse.Namespace) -> int:
+    read_code, existing, read_stderr = crontab_read()
+    if read_code != 0:
+        print(json.dumps({
+            "status": "crontab_read_failed",
+            "returncode": read_code,
+            "stderr": read_stderr,
+        }, indent=2, sort_keys=True))
+        return 2
+    stripped, removed = strip_managed_cron(existing)
+    payload = {
+        "status": "dry_run" if args.dry_run else "removed",
+        "marker": CRON_MARKER,
+        "removed_existing": removed,
+    }
+    if not args.dry_run:
+        write_code, stdout, stderr = crontab_write(f"{stripped}\n" if stripped else "")
+        payload.update({"returncode": write_code, "stdout": stdout, "stderr": stderr})
+        if write_code != 0:
+            payload["status"] = "crontab_write_failed"
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 2
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_cron_status(args: argparse.Namespace) -> int:
+    read_code, existing, read_stderr = crontab_read()
+    if read_code != 0:
+        print(json.dumps({
+            "status": "crontab_read_failed",
+            "returncode": read_code,
+            "stderr": read_stderr,
+        }, indent=2, sort_keys=True))
+        return 2
+    lines = [line for line in existing.splitlines() if CRON_MARKER in line]
+    print(json.dumps({
+        "status": "installed" if lines else "not_installed",
+        "marker": CRON_MARKER,
+        "lines": lines,
+    }, indent=2, sort_keys=True))
+    return 0
+
+
 def status_for(issue_dir: Path) -> dict[str, Any]:
     return run_cycle(["--status-issue-dir", str(issue_dir)])
 
@@ -409,6 +552,21 @@ def build_parser() -> argparse.ArgumentParser:
     scheduler.add_argument("--run-webgpt", action=argparse.BooleanOptionalAction, default=True)
     scheduler.add_argument("--github-dry-run", action="store_true")
     scheduler.set_defaults(func=command_scheduler)
+
+    install_cron = sub.add_parser("install-cron")
+    install_cron.add_argument("--interval-minutes", type=int, default=5)
+    install_cron.add_argument("--schedule")
+    install_cron.add_argument("--max-issues", type=int, default=1)
+    install_cron.add_argument("--run-webgpt", action=argparse.BooleanOptionalAction, default=True)
+    install_cron.add_argument("--dry-run", action="store_true")
+    install_cron.set_defaults(func=command_install_cron)
+
+    remove_cron = sub.add_parser("remove-cron")
+    remove_cron.add_argument("--dry-run", action="store_true")
+    remove_cron.set_defaults(func=command_remove_cron)
+
+    cron_status = sub.add_parser("cron-status")
+    cron_status.set_defaults(func=command_cron_status)
 
     audit = sub.add_parser("audit-run")
     audit.add_argument("artifact_dir")
