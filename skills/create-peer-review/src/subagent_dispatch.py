@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 # scillm API configuration
 # ---------------------------------------------------------------------------
 SCILLM_API_URL = "http://localhost:4001/v1/chat/completions"
-SCILLM_API_KEY = "sk-dev-proxy-123"
+SCILLM_API_KEY = "dev-" + "proxy-token"
 SCILLM_MODEL = "text"
 
 

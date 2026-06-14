@@ -115,9 +115,9 @@ ollama pull x/flux2-klein
 Get a FREE API key from [aistudio.google.com](https://aistudio.google.com/):
 
 ```bash
-export GEMINI_API_KEY="your_api_key_here"
+export GEMINI_API_KEY=<your-api-key>
 # or
-export GOOGLE_API_KEY="your_api_key_here"
+export GOOGLE_API_KEY=<your-api-key>
 ```
 
 **Note:** This uses the `gemini-2.5-flash-image` model (aka "nano-banana") via the REST API. No special SDK installation required (uses `requests`). Image generation counts against your daily Pro quota (~1000 images/day). Either `GEMINI_API_KEY` or `GOOGLE_API_KEY` will work.
@@ -127,7 +127,7 @@ export GOOGLE_API_KEY="your_api_key_here"
 Get a FREE HuggingFace token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens):
 
 ```bash
-export HF_TOKEN="hf_your_token_here"
+export HF_TOKEN=<your-huggingface-token>
 ```
 
 ### Option 4: Mermaid (for Diagrams)

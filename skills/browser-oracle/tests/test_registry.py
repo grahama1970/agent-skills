@@ -1,0 +1,47 @@
+from pathlib import Path
+
+from browser_oracle.registry import register_mapping, resolve_project
+
+
+def test_resolve_default_from_walkup(tmp_path: Path) -> None:
+    root = tmp_path / "oc-subagent"
+    math_dir = root / "personas" / "mathematics"
+    math_dir.mkdir(parents=True)
+    register_mapping(registry_root=root, backend="webgpt", project="oc-subagent-personas", as_default=True)
+
+    result = resolve_project(start=math_dir, backend="webgpt")
+    assert result.project == "oc-subagent-personas"
+    assert result.source == "default"
+    assert result.registry_root == root
+
+
+def test_resolve_by_relative_path(tmp_path: Path) -> None:
+    root = tmp_path / "oc-subagent"
+    math_dir = root / "personas" / "mathematics"
+    math_dir.mkdir(parents=True)
+    register_mapping(
+        registry_root=root,
+        backend="webgpt",
+        project="oc-subagent-personas",
+        as_default=True,
+    )
+    register_mapping(
+        registry_root=root,
+        backend="webgpt",
+        project="oc-subagent-mathematics",
+        relative_path="personas/mathematics",
+    )
+
+    result = resolve_project(start=math_dir, backend="webgpt")
+    assert result.project == "oc-subagent-mathematics"
+    assert result.source == "by_relative_path.exact"
+
+
+def test_project_override_skips_yaml(tmp_path: Path) -> None:
+    root = tmp_path / "oc-subagent"
+    root.mkdir()
+    register_mapping(registry_root=root, backend="webgpt", project="from-yaml", as_default=True)
+
+    result = resolve_project(start=root, backend="webgpt", project_override="explicit-project")
+    assert result.project == "explicit-project"
+    assert result.source == "cli.project_override"

@@ -144,7 +144,7 @@ IMMEDIATELY in one sentence. Do not silently fall back to a worse approach.
 
 ```bash
 # API key in .env or environment
-export STITCH_API_KEY="your-key"
+export STITCH_API_KEY=<your-api-key>
 
 # SDK installed (auto-installed on first run)
 npm install @google/stitch-sdk

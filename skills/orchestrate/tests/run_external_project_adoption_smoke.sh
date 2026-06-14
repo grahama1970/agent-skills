@@ -9,6 +9,10 @@ TMP="${TMPDIR:-/tmp}/external-project-adoption-smoke-$$"
 REPO="$TMP/repo"
 FAIL_HOME="$TMP/orchestrate-fail-home"
 PASS_HOME="$TMP/orchestrate-pass-home"
+PYTEST_CMD="uv run --with pytest python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+export PLAN_ARTIFACT_ROOT="$TMP/plan-artifacts"
+export PLAN_UV_ENV="$PLAN_ARTIFACT_ROOT/.venv"
+export PLAN_ALLOW_UNSAFE_ARTIFACT_ROOT=1
 
 cleanup() {
   status=$?
@@ -87,12 +91,12 @@ tasks:
     commit_on_success: true
     rollback_on_failure: true
     definition_of_done:
-      command: "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      command: "$PYTEST_CMD"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      - "$PYTEST_CMD"
     blind_tests:
-      - command: "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      - command: "$PYTEST_CMD"
 YAML
 
 "$PLAN" --validate "$TMP/hack-plan.yaml" > "$TMP/plan.log" 2>&1

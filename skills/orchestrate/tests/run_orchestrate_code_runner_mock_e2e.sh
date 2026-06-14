@@ -6,6 +6,7 @@ ORCH="$ROOT/skills/orchestrate/run.sh"
 TMP="${TMPDIR:-/tmp}/orchestrate-code-runner-mock-e2e-$$"
 REPO="$TMP/repo"
 ORCH_HOME="$TMP/orchestrate-home"
+PYTEST_CMD="uv run --with pytest python -m pytest tests/test_target.py -q"
 
 cleanup() {
   status=$?
@@ -78,10 +79,10 @@ tasks:
     max_rounds: 1
     timeout_seconds: 120
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "$PYTEST_CMD"
       assertion: "exit_code == 0"
     blind_tests:
-      - command: "python -m pytest tests/test_target.py -q"
+      - command: "$PYTEST_CMD"
 YAML
 
 MOCK_RESPONSE=$'### FILE: src/target.py\n```python\ndef answer():\n    return 42\n```'
@@ -126,7 +127,7 @@ for forbidden in [
 
 assert spec["allowlist"] == ["src/target.py"], spec
 assert spec["definition_of_done"] == {
-    "command": "python -m pytest tests/test_target.py -q",
+    "command": "$PYTEST_CMD",
     "assertion": "exit_code == 0",
 }, spec
 assert spec["read_context"] == ["src/target.py", "tests/test_target.py"], spec

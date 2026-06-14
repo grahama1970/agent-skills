@@ -400,7 +400,7 @@ function handleToolRequest(msg, socket) {
     
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      sendToolResponse(socket, originalId, null, "GOOGLE_API_KEY environment variable not set. Export it with: export GOOGLE_API_KEY='your-key'");
+      sendToolResponse(socket, originalId, null, "GOOGLE_API_KEY environment variable not set. Export it with: export GOOGLE_API_KEY=<your-api-key>");
       return;
     }
     

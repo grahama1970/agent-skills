@@ -87,8 +87,11 @@ run_in_twin() {
 STATE_DIR="${ORCHESTRATE_STATE_DIR:-.orchestrate}"
 ARTIFACT_ROOT="${AGENT_SKILLS_ARTIFACT_ROOT:-/mnt/storage12tb/artifacts/agent-skills}"
 ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$ARTIFACT_ROOT/orchestrate}"
+if ! mkdir -p "$ORCHESTRATE_DIR/structured" 2>/dev/null; then
+    ORCHESTRATE_DIR="${TMPDIR:-/tmp}/agent-skills-artifacts/orchestrate"
+    mkdir -p "$ORCHESTRATE_DIR/structured"
+fi
 export ORCHESTRATE_HOME="$ORCHESTRATE_DIR"
-mkdir -p "$ORCHESTRATE_DIR/structured"
 SCHEDULER_HOME="${SCHEDULER_HOME:-$HOME/.pi/scheduler}"
 SCHEDULER_JOBS_FILE="$SCHEDULER_HOME/jobs.json"
 

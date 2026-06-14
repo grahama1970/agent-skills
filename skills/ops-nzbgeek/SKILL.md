@@ -137,12 +137,12 @@ Required environment variables (set in `.env`):
 
 ```bash
 # NZBGeek API credentials
-NZBD_GEEK_API_KEY="your_api_key"
+NZBD_GEEK_API_KEY=<your-api-key>
 NZBD_GEEK_USER="your_username"
 NZBD_GEEK_BASE_URL="https://api.nzbgeek.info/"
 
 # SABnzbd API credentials
-SABNZBD_API_KEY="your_api_key"
+SABNZBD_API_KEY=<your-api-key>
 SABNZBD_BASE_URL="http://localhost:8090"
 ```
 

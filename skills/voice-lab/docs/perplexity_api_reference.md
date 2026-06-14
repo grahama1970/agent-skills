@@ -52,7 +52,7 @@ API key portal: https://perplexity.ai/account/api
 Set the environment variable:
 ```bash
 # macOS/Linux
-export PERPLEXITY_API_KEY="your_api_key_here"
+export PERPLEXITY_API_KEY=<your-api-key>
 
 # Windows
 setx PERPLEXITY_API_KEY "your_api_key_here"

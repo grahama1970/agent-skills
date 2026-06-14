@@ -1,0 +1,17 @@
+[project]
+name = "fact-extractor"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "aiohttp",
+  "python-dotenv",
+  "typer",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -8,6 +8,10 @@ ORCH="$ROOT/skills/orchestrate/run.sh"
 TMP="${TMPDIR:-/tmp}/plan-review-orchestrate-code-runner-mock-e2e-$$"
 REPO="$TMP/repo"
 ORCH_HOME="$TMP/orchestrate-home"
+PYTEST_CMD="uv run --with pytest python -m pytest tests/test_target.py -q"
+export PLAN_ARTIFACT_ROOT="$TMP/plan-artifacts"
+export PLAN_UV_ENV="$PLAN_ARTIFACT_ROOT/.venv"
+export PLAN_ALLOW_UNSAFE_ARTIFACT_ROOT=1
 
 cleanup() {
   status=$?
@@ -83,12 +87,12 @@ tasks:
     apply_to_source: true
     commit_on_success: true
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "$PYTEST_CMD"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest tests/test_target.py -q"
+      - "$PYTEST_CMD"
     blind_tests:
-      - command: "python -m pytest tests/test_target.py -q"
+      - command: "$PYTEST_CMD"
 YAML
 
 "$PLAN" --validate "$TMP/good-plan.yaml" > "$TMP/plan-good.log" 2>&1
@@ -163,7 +167,7 @@ assert spec["apply_to_source"] is True, spec
 assert spec["commit_on_success"] is True, spec
 assert spec["rollback_on_failure"] is True, spec
 assert spec["definition_of_done"] == {
-    "command": "python -m pytest tests/test_target.py -q",
+    "command": "$PYTEST_CMD",
     "assertion": "exit_code == 0",
 }, spec
 assert "Prior Related Context" in spec["prompt"], spec["prompt"]
@@ -265,10 +269,10 @@ tasks:
     commit_on_success: true
     rollback_on_failure: true
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "$PYTEST_CMD"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest tests/test_target.py -q"
+      - "$PYTEST_CMD"
     blind_tests:
       - command: "python -c 'import sys; sys.exit(1)'"
 YAML

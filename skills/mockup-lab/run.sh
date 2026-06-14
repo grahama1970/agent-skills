@@ -7,7 +7,8 @@ SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [[ -z "${STITCH_API_KEY:-}" ]]; then
   ENV_FILE="$(git -C "$SKILL_DIR" rev-parse --show-toplevel 2>/dev/null)/.env"
   if [[ -f "$ENV_FILE" ]]; then
-    export STITCH_API_KEY="$(grep '^STITCH_API_KEY=' "$ENV_FILE" | cut -d'"' -f2)"
+    STITCH_API_KEY=$(grep '^STITCH_API_KEY=' "$ENV_FILE" | cut -d'"' -f2)
+    export STITCH_API_KEY
   fi
 fi
 
