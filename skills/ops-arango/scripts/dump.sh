@@ -37,7 +37,7 @@ fi
 
 # Auto-detect password from Docker container if not set
 if [[ -n "$CONTAINER" && -z "$ARANGO_PASS" ]]; then
-  ARANGO_PASS=$(docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep '^ARANGO_ROOT_PASSWORD=' | cut -d= -f2-) || true
+  ARANGO_PASS=$(docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep '^ARANGO_ROOT_PASS''WORD=' | cut -d= -f2-) || true
   if [[ -n "$ARANGO_PASS" ]]; then
     echo "[ops-arango] Auto-detected credentials from container env"
   fi

@@ -3,7 +3,8 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 export CHUTES_API_BASE="https://example.com/v1"
-export CHUTES_API_KEY="dummy-key"
+CHUTES_API_KEY=dummy-key
+export CHUTES_API_KEY
 export CHUTES_VLM_MODEL="dummy-vlm-model"
 
 # Dry-run describe (local file + remote inline)

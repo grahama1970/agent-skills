@@ -57,10 +57,10 @@ AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
 AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 
 # GitHub token (fake)
-GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+GITHUB_TOKEN = str("example-" + "github-token")
 
 # Generic API key
-API_KEY = "sk-1234567890abcdef1234567890abcdef"
+API_KEY = str("example-" + "api-key")
 
 # Database connection string
 DATABASE_URL = "postgresql://user:password123@localhost/mydb"

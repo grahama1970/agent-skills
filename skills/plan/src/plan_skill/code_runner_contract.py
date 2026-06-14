@@ -76,6 +76,17 @@ def dod_uses_opaque_command(command: str) -> bool:
     return bool(_OPAQUE_CODE_RUNNER_COMMAND_RE.search(command or ""))
 
 
+def opaque_command_is_audited(task: dict[str, Any]) -> bool:
+    return (
+        bool(task.get("opaque_command_reviewed"))
+        and str(task.get("dod_scope") or "").strip() == "worktree_local"
+        and task.get("requires_network") is False
+        and task.get("requires_live_server") is False
+        and task.get("browser_required") is False
+        and bool(task.get("blind_tests") or [])
+    )
+
+
 def code_runner_live_surface(task: dict[str, Any], dod_command: str) -> str:
     parts = [dod_command]
     for item in task.get("tests") or []:
@@ -168,7 +179,7 @@ def audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[str
                 "Code-runner edits an isolated worktree, while live servers serve the source tree. "
                 "Use scillm for the edit plus a separate local verification task, or use a file/process-local DoD."
             )
-        if dod_uses_opaque_command(code_runner_live_surface(task, dod_command)):
+        if dod_uses_opaque_command(code_runner_live_surface(task, dod_command)) and not opaque_command_is_audited(task):
             issues.append(
                 f"{prefix} code-runner DoD/tests use an opaque shell indirection command. "
                 "Use an explicit file/process-local command such as `python -m pytest tests/test_file.py -q`, "
@@ -186,4 +197,3 @@ def audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[str
             )
 
     return issues, warnings
-

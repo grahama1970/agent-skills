@@ -137,7 +137,7 @@ OpenCode serve does **not** replace `/memory`, `/dogpile`, `/debugger`, or `/sci
 Start serve:
 
 ```bash
-export OPENCODE_SERVER_PASSWORD='…'   # same value in scillm/.env
+export OPENCODE_SERVER_PASSWORD=<same-value-as-scillm-env>
 opencode serve --port 4097 --hostname 127.0.0.1
 docker compose -p scillm -f deploy/docker/compose.scillm.core.yml up -d --build scillm-proxy
 bash scripts/sanity_opencode_serve.sh
@@ -274,5 +274,4 @@ data = resp.json()
 print(data["status"], data.get("assistant_text", "")[:500])
 print("artifacts:", data.get("artifacts"))
 ```
-
 

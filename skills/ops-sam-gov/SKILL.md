@@ -45,7 +45,7 @@ Query the U.S. federal government's System for Award Management (SAM.gov) for:
 
 ```bash
 # Set API key (or use .env)
-export SAMGOV_API_KEY="your_api_key"
+export SAMGOV_API_KEY=<your-api-key>
 
 # Lookup entity by name
 ./run.sh entity --name "Lockheed Martin"
