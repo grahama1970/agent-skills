@@ -31,6 +31,13 @@ should invoke it every N minutes instead of running a long-lived daemon:
 skills/skill-maintainer/run.sh scheduler --max-issues 1
 ```
 
+Run one cron tick. This fetches and fast-forwards the worker worktree from
+`origin/main` before invoking the single-shot scheduler:
+
+```bash
+skills/skill-maintainer/run.sh cron-tick --max-issues 1 --auto-update
+```
+
 Install the managed crontab entry that launches the single-shot scheduler every
 N minutes:
 
@@ -48,7 +55,10 @@ skills/skill-maintainer/run.sh remove-cron
 The managed cron entry is tagged with `skill-maintainer-scheduler`, appends
 cron stdout/stderr to `.artifacts/skill-maintainer/cron.log`, and leaves the
 scheduler JSONL stream in `.artifacts/skill-maintainer/scheduler-events.jsonl`.
-Use `install-cron --dry-run` before mutating a host crontab.
+By default, the managed entry calls `cron-tick --auto-update`, so each host cron
+tick fetches `origin/main` and checks out the updated `main` branch before
+running the scheduler. Use `install-cron --dry-run` before mutating a host
+crontab.
 
 For a pinned queue item, keep the same single-shot scheduler path and specify
 the issue explicitly:
@@ -127,6 +137,8 @@ classification, recommended action, and any self-improvement issue URL.
 - One run handles one issue.
 - Scheduled use is single-shot: cron launches `scheduler` every N minutes, and
   each tick leases/processes at most one eligible issue.
+- Managed cron use launches `cron-tick`, which updates the worker worktree from
+  `origin/main` before invoking `scheduler`.
 - Project agents monitor the JSONL stream, not prose.
 - Pre-repair WebGPT diagnosis is mandatory before repair dispatch.
 - WebGPT tab id and URL must be resolved through `$browser-oracle` project
