@@ -23,6 +23,7 @@ dist/
 Thumbs.db
 
 # Test artifacts
+.artifacts/
 .pytest_cache/
 .coverage
 htmlcov/
