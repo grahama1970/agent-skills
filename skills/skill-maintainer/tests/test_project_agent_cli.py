@@ -171,6 +171,7 @@ def test_install_cron_writes_single_shot_scheduler_entry(monkeypatch, capsys):
         schedule=None,
         max_issues=1,
         run_webgpt=True,
+        auto_update=True,
         dry_run=False,
     ))
 
@@ -185,7 +186,7 @@ def test_install_cron_writes_single_shot_scheduler_entry(monkeypatch, capsys):
     assert len(written) == 1
     assert "0 1 * * * echo keep" in written[0]
     assert "*/7 * * * *" in written[0]
-    assert "skills/skill-maintainer/run.sh scheduler --max-issues 1 --run-webgpt" in written[0]
+    assert "skills/skill-maintainer/run.sh cron-tick --max-issues 1 --run-webgpt --auto-update" in written[0]
     assert cli.CRON_MARKER in written[0]
 
 
@@ -206,6 +207,7 @@ def test_install_cron_replaces_existing_managed_entry(monkeypatch, capsys):
         schedule="*/13 * * * *",
         max_issues=2,
         run_webgpt=False,
+        auto_update=True,
         dry_run=False,
     ))
 
@@ -216,7 +218,7 @@ def test_install_cron_replaces_existing_managed_entry(monkeypatch, capsys):
     assert "old command" not in written[0]
     assert "0 1 * * * echo keep" in written[0]
     assert "*/13 * * * *" in written[0]
-    assert "scheduler --max-issues 2 --no-run-webgpt" in written[0]
+    assert "cron-tick --max-issues 2 --no-run-webgpt --auto-update" in written[0]
 
 
 def test_cron_status_reports_managed_lines(monkeypatch, capsys):
@@ -234,6 +236,59 @@ def test_cron_status_reports_managed_lines(monkeypatch, capsys):
         "marker": cli.CRON_MARKER,
         "lines": [line],
     }
+
+
+def test_cron_tick_auto_updates_before_scheduler(monkeypatch, capsys):
+    cli = load_cli()
+    calls = []
+
+    monkeypatch.setattr(cli, "cron_auto_update", lambda branch: {"status": "updated", "branch": branch, "head": "abc123"})
+    monkeypatch.setattr(cli, "command_scheduler", lambda args: calls.append(args) or 0)
+
+    code = cli.command_cron_tick(argparse.Namespace(
+        issue=None,
+        max_issues=1,
+        run_webgpt=True,
+        github_dry_run=False,
+        auto_update=True,
+        branch="main",
+    ))
+
+    output = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert output == {
+        "event": "cron_auto_update",
+        "status": "updated",
+        "branch": "main",
+        "head": "abc123",
+    }
+    assert len(calls) == 1
+    assert calls[0].max_issues == 1
+
+
+def test_cron_tick_stops_when_auto_update_fails(monkeypatch, capsys):
+    cli = load_cli()
+    calls = []
+
+    monkeypatch.setattr(cli, "cron_auto_update", lambda branch: {"status": "dirty_worktree", "branch": branch})
+    monkeypatch.setattr(cli, "command_scheduler", lambda args: calls.append(args) or 0)
+
+    code = cli.command_cron_tick(argparse.Namespace(
+        issue=None,
+        max_issues=1,
+        run_webgpt=True,
+        github_dry_run=False,
+        auto_update=True,
+        branch="main",
+    ))
+
+    output = json.loads(capsys.readouterr().out)
+
+    assert code == 2
+    assert output["event"] == "cron_auto_update"
+    assert output["status"] == "dirty_worktree"
+    assert calls == []
 
 
 def test_remove_cron_deletes_only_managed_entry(monkeypatch, capsys):

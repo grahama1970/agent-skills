@@ -261,11 +261,11 @@ def crontab_write(content: str) -> tuple[int, str, str]:
     return cp.returncode, cp.stdout, cp.stderr
 
 
-def cron_scheduler_command(max_issues: int, run_webgpt: bool) -> str:
+def cron_scheduler_command(max_issues: int, run_webgpt: bool, auto_update: bool) -> str:
     runner = REPO_ROOT / "skills" / "skill-maintainer" / "run.sh"
     parts = [
         shlex.quote(str(runner)),
-        "scheduler",
+        "cron-tick",
         "--max-issues",
         str(max_issues),
     ]
@@ -273,14 +273,70 @@ def cron_scheduler_command(max_issues: int, run_webgpt: bool) -> str:
         parts.append("--run-webgpt")
     else:
         parts.append("--no-run-webgpt")
+    if auto_update:
+        parts.append("--auto-update")
+    else:
+        parts.append("--no-auto-update")
     return (
         f"cd {shlex.quote(str(REPO_ROOT))} && "
         f"{' '.join(parts)} >> {shlex.quote(str(CRON_LOG))} 2>&1"
     )
 
 
-def cron_line(schedule: str, max_issues: int, run_webgpt: bool) -> str:
-    return f"{schedule} {cron_scheduler_command(max_issues, run_webgpt)} # {CRON_MARKER}"
+def cron_line(schedule: str, max_issues: int, run_webgpt: bool, auto_update: bool) -> str:
+    return f"{schedule} {cron_scheduler_command(max_issues, run_webgpt, auto_update)} # {CRON_MARKER}"
+
+
+def git_output(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def worktree_clean() -> tuple[bool, str]:
+    cp = git_output(["status", "--porcelain"])
+    if cp.returncode != 0:
+        return False, cp.stderr.strip()
+    status = cp.stdout.strip()
+    return status == "", status
+
+
+def cron_auto_update(branch: str) -> dict[str, object]:
+    clean, status = worktree_clean()
+    if not clean:
+        return {
+            "status": "dirty_worktree",
+            "branch": branch,
+            "worktree_status": status,
+        }
+    fetch = git_output(["fetch", "--prune", "origin", branch])
+    if fetch.returncode != 0:
+        return {
+            "status": "fetch_failed",
+            "branch": branch,
+            "returncode": fetch.returncode,
+            "stdout": fetch.stdout,
+            "stderr": fetch.stderr,
+        }
+    checkout = git_output(["checkout", "-B", branch, f"origin/{branch}"])
+    if checkout.returncode != 0:
+        return {
+            "status": "checkout_failed",
+            "branch": branch,
+            "returncode": checkout.returncode,
+            "stdout": checkout.stdout,
+            "stderr": checkout.stderr,
+        }
+    head = git_output(["rev-parse", "HEAD"])
+    return {
+        "status": "updated",
+        "branch": branch,
+        "head": head.stdout.strip() if head.returncode == 0 else None,
+    }
 
 
 def strip_managed_cron(content: str) -> tuple[str, int]:
@@ -300,7 +356,7 @@ def command_install_cron(args: argparse.Namespace) -> int:
     if args.max_issues < 1:
         raise SystemExit("--max-issues must be at least 1")
     schedule = args.schedule or f"*/{args.interval_minutes} * * * *"
-    line = cron_line(schedule, args.max_issues, args.run_webgpt)
+    line = cron_line(schedule, args.max_issues, args.run_webgpt, args.auto_update)
     read_code, existing, read_stderr = crontab_read()
     if read_code != 0:
         print(json.dumps({
@@ -318,6 +374,7 @@ def command_install_cron(args: argparse.Namespace) -> int:
         "removed_existing": removed,
         "event_log": str(SCHEDULER_EVENT_LOG),
         "cron_log": str(CRON_LOG),
+        "auto_update": args.auto_update,
     }
     if not args.dry_run:
         write_code, stdout, stderr = crontab_write(new_content)
@@ -328,6 +385,18 @@ def command_install_cron(args: argparse.Namespace) -> int:
             return 2
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
+
+
+def command_cron_tick(args: argparse.Namespace) -> int:
+    if args.auto_update:
+        update = cron_auto_update(args.branch)
+        print(json.dumps({
+            "event": "cron_auto_update",
+            **update,
+        }, sort_keys=True))
+        if update["status"] != "updated":
+            return 2
+    return command_scheduler(args)
 
 
 def command_remove_cron(args: argparse.Namespace) -> int:
@@ -553,11 +622,21 @@ def build_parser() -> argparse.ArgumentParser:
     scheduler.add_argument("--github-dry-run", action="store_true")
     scheduler.set_defaults(func=command_scheduler)
 
+    cron_tick = sub.add_parser("cron-tick")
+    cron_tick.add_argument("--issue", type=int)
+    cron_tick.add_argument("--max-issues", type=int, default=1)
+    cron_tick.add_argument("--run-webgpt", action=argparse.BooleanOptionalAction, default=True)
+    cron_tick.add_argument("--github-dry-run", action="store_true")
+    cron_tick.add_argument("--auto-update", action=argparse.BooleanOptionalAction, default=True)
+    cron_tick.add_argument("--branch", default="main")
+    cron_tick.set_defaults(func=command_cron_tick)
+
     install_cron = sub.add_parser("install-cron")
     install_cron.add_argument("--interval-minutes", type=int, default=5)
     install_cron.add_argument("--schedule")
     install_cron.add_argument("--max-issues", type=int, default=1)
     install_cron.add_argument("--run-webgpt", action=argparse.BooleanOptionalAction, default=True)
+    install_cron.add_argument("--auto-update", action=argparse.BooleanOptionalAction, default=True)
     install_cron.add_argument("--dry-run", action="store_true")
     install_cron.set_defaults(func=command_install_cron)
 
