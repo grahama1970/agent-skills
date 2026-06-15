@@ -1,0 +1,43 @@
+{
+  "schema": "persona_dream.phase_01_idea_anti_hallucination_gate.v1",
+  "created_at": "2026-06-15T12:07:49.777156+00:00",
+  "phase": "Phase 1: Idea",
+  "anti_hallucination_rule": "The idea gate only proves the recorded seed/input idea exists. It does not prove memories, story prose, props, environment interactions, or generated panels. Those are separate gates.",
+  "phase_verdict": "PASS_RECORDED_IDEA_ONLY",
+  "source_artifacts": {
+    "story_contract": "story_contract.json",
+    "idea_contract": "idea_contract.json"
+  },
+  "claims": [
+    {
+      "id": "I1-C01",
+      "claim": "A seed idea exists as a recorded pipeline input.",
+      "verdict": "PROVEN_RECORDED_SEED",
+      "basis": "story_contract.json contains seed: 'Horus and Embry have tea under a patio umbrella on a Warhammer 40k void world while Tyranids run/play in the background and they discuss SPARTA Explorer.'"
+    },
+    {
+      "id": "I1-C02",
+      "claim": "The idea has an input contract artifact.",
+      "verdict": "PROVEN",
+      "basis": "idea_contract.json exists=True"
+    },
+    {
+      "id": "I1-C03",
+      "claim": "The idea gate proves persona memories, emotional beats, or story completeness.",
+      "verdict": "EXPLICITLY_NOT_PROVEN",
+      "basis": "Persona memories are Phase 2. Story completeness is Phase 3. Generated panels are later gates."
+    },
+    {
+      "id": "I1-C04",
+      "claim": "Old P1-C04 belongs to Phase 1.",
+      "verdict": "MOVED_TO_PHASE_2_MEMORY_GATE",
+      "basis": "Embry Kai/Hawaii/father/garage/ToM claims depend on persona_memory/tom_edges recall, not idea provenance."
+    },
+    {
+      "id": "I1-C05",
+      "claim": "Old P1-C05 belongs to Phase 1.",
+      "verdict": "MOVED_TO_PHASE_3_STORY_GATE",
+      "basis": "Completeness of props/characters/weather/environment interactions is a story-package gate, not idea provenance."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "written_at_utc": "2026-06-14T17:06:58.456285+00:00",
+  "target": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "positions": {
+    "idea": 13391,
+    "memories": 15496,
+    "story_pkg": 16463,
+    "creative": 17800,
+    "contact": 19004,
+    "script_gate": 20241,
+    "storyboard": 20788,
+    "voice": 79648,
+    "final_gate": 85742,
+    "final_api": 86428,
+    "logs": 106095,
+    "contracts": 124945
+  },
+  "pipeline_order_ok": true,
+  "project_agent_sections_in_appendix": true,
+  "main_stage_counts": {
+    "Idea And Story": 1,
+    "Memories Used": 1,
+    "Story, Characters, Props, And Environment": 1,
+    "Producer, Script Writer, And Director Choices": 1,
+    "Contact Sheets For Characters, Props, And Environment": 1,
+    "Final Script And Realism Gate": 1,
+    "Scene-By-Scene Panel Directions Prepared For Kling Omni": 1,
+    "Voice And Image Manifest": 1,
+    "Live Kling Gate": 1,
+    "Final Kling API Packet - Not Live Submittable": 1,
+    "Appendix: Prior Generated Boards": 1,
+    "Project-Agent Appendix": 1
+  }
+}

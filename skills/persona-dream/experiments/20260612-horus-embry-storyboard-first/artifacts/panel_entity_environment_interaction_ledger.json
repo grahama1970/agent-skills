@@ -1,0 +1,620 @@
+{
+  "schema": "persona_dream.panel_entity_environment_interaction_ledger.v1",
+  "created_at": "2026-06-14T15:54:09.567050+00:00",
+  "status": "FAIL",
+  "provider_handoff_status": "BLOCKED_PANEL_INTERACTION_GATE",
+  "rule": "Every character, prop, surface, creature, weather force, and environment element mentioned or required by a panel must define environment_interaction, motion_or_state_change, material_or_body_response, sound_or_silence, script_evidence, and visual_support_status. Any missing or unverified field fails the panel before Kling.",
+  "deterministic_validator": "skills/persona-dream/scripts/validate_panel_interaction_gate.py",
+  "panels": [
+    {
+      "panel": 1,
+      "time_range": "0.0s-0.8s",
+      "shot": "Wide establishing shot",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Rendered image shows a second armored male/random space marine instead of Embry Lawson; all required elements also need explicit interaction evidence and visual support.",
+      "elements": [
+        {
+          "id": "character_horus_lupercal",
+          "category": "character",
+          "mentioned_or_required": "Required by story and panel",
+          "environment_interaction": "Seated at tea table under cold void wind and sky-eye light.",
+          "motion_or_state_change": "Holds composed posture at Primarch scale while camera pushes in.",
+          "material_or_body_response": "Black-and-gold armor catches cold side light; skin/scale must remain visibly Horus.",
+          "sound_or_silence": "Silent presence; armor may creak faintly in wind.",
+          "script_evidence": "Panel 1 provider text mentions both figures composed, but not Horus-specific interaction.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SPECIFIC_SCRIPT_EVIDENCE",
+          "required_repair": ""
+        },
+        {
+          "id": "character_embry_lawson",
+          "category": "character",
+          "mentioned_or_required": "Required by story and panel",
+          "environment_interaction": "Must sit opposite Horus at the same tea table, affected by cold wind/steam/sky-eye light.",
+          "motion_or_state_change": "Still composed but visibly present, not replaced by an armored male.",
+          "material_or_body_response": "Fieldwear/skin/hair respond to cold wind; human scale contrasts with Horus.",
+          "sound_or_silence": "Silent presence; breath/cloth can move softly.",
+          "script_evidence": "",
+          "visual_support_status": "FAIL_MISSING_REQUIRED_CHARACTER",
+          "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+          "required_repair": "Regenerate with Embry reference; human woman in fieldwear visibly seated opposite Horus."
+        },
+        {
+          "id": "umbrella",
+          "category": "prop",
+          "mentioned_or_required": "Required by story",
+          "environment_interaction": "Void wind presses the canopy and casts shifting shade over the table.",
+          "motion_or_state_change": "Fabric edge ripples or strains through the establishing beat.",
+          "material_or_body_response": "Weathered fabric, ribs flex slightly, seams catch cold rim light.",
+          "sound_or_silence": "Low fabric flutter unless wind is intentionally still.",
+          "script_evidence": "Only generic umbrella/table text exists.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+          "required_repair": ""
+        },
+        {
+          "id": "tea_service",
+          "category": "prop",
+          "mentioned_or_required": "Required by story",
+          "environment_interaction": "Cold air makes steam rise and bend downwind above cups.",
+          "motion_or_state_change": "Steam curls, thins, and disperses across the table.",
+          "material_or_body_response": "Porcelain/metal catches warm practical highlights; liquid surface reflects sky.",
+          "sound_or_silence": "Quiet ceramic/metal stillness; steam movement visible.",
+          "script_evidence": "Panel action says tea table; dynamic tea behavior is only in required behavior ledger, not panel text.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+          "required_repair": ""
+        },
+        {
+          "id": "tzeentch_sky_eye",
+          "category": "environment_entity",
+          "mentioned_or_required": "Required by revised story",
+          "environment_interaction": "Integrated into clouds over terrace, watching the table.",
+          "motion_or_state_change": "Pupil contracts/blinks once.",
+          "material_or_body_response": "Blue-violet storm light diffuses through clouds, not a pasted rectangle.",
+          "sound_or_silence": "Silent uncanny atmospheric beat.",
+          "script_evidence": "Panel action says the eye blinks.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "void_world_patio_and_tyranids",
+          "category": "environment",
+          "mentioned_or_required": "Required by story",
+          "environment_interaction": "Distant Tyranids and void horizon create scale behind calm foreground.",
+          "motion_or_state_change": "Background creatures move at distance while table remains calm.",
+          "material_or_body_response": "Stone/metal surfaces show cold haze, grit, wetness or dust state.",
+          "sound_or_silence": "Distant alien movement should be low and muffled.",
+          "script_evidence": "Panel text mentions impossible void horizon only.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SURFACE_WEATHER_DETAIL",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 2,
+      "time_range": "0.8s-1.5s",
+      "shot": "Medium shot on Horus",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Script has some tea/skin cues, but visual support and complete table/umbrella/environment interactions are unconfirmed.",
+      "elements": [
+        {
+          "id": "character_horus_lupercal",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Cold void light and tea heat interact with his armor/skin.",
+          "motion_or_state_change": "Slow blink, jaw tightens then relaxes.",
+          "material_or_body_response": "Pores, old scars, scalp rim light, faint jaw stubble; 11.5 ft Primarch scale must read.",
+          "sound_or_silence": "Silent breath/armor creak may be implied.",
+          "script_evidence": "Panel 2 action/emotional_behavior.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "teacup_and_steam",
+          "category": "prop",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Steam bends around black gauntlet in cold air.",
+          "motion_or_state_change": "Steam curls and heat shimmer softens armor edge.",
+          "material_or_body_response": "Hot liquid/porcelain/metal highlights.",
+          "sound_or_silence": "Quiet steam; no dialogue.",
+          "script_evidence": "Panel 2 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "umbrella_or_table_context",
+          "category": "prop/environment",
+          "mentioned_or_required": "Required by scene continuity",
+          "environment_interaction": "Must continue affecting shade/wind at the table.",
+          "motion_or_state_change": "Canopy/table should remain stable or visibly moved by gusts.",
+          "material_or_body_response": "Weathered table/umbrella material catches light.",
+          "sound_or_silence": "If present, fabric flutter or tableware rattle.",
+          "script_evidence": "",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 3,
+      "time_range": "1.5s-2.2s",
+      "shot": "Medium shot on Embry",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Embry memory/behavior is described, but visual support and all prop/environment interactions are not verified.",
+      "elements": [
+        {
+          "id": "character_embry_lawson",
+          "category": "character/persona",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Tea steam and void wind trigger salt-air/Kai/garage memory while she stays at work.",
+          "motion_or_state_change": "Eyes dip, thumb rubs laptop edge, breath catches, refocuses.",
+          "material_or_body_response": "Skin has eyelid moisture highlight; fieldwear/hair should respond to wind.",
+          "sound_or_silence": "Small inhale; no dialogue.",
+          "script_evidence": "Panel 3 action/emotional_behavior.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "sparta_laptop_or_tablet",
+          "category": "prop/ui",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Screen glow/reflections interact with wind, tea steam, and cold light.",
+          "motion_or_state_change": "Screen/readable UI holds focus during rack focus.",
+          "material_or_body_response": "Glass/screen reflections shift; fingerprints or smudges possible.",
+          "sound_or_silence": "Quiet electronic presence.",
+          "script_evidence": "Panel 3 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "tea_steam",
+          "category": "prop/environment_trigger",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Steam crosses her sightline and triggers memory.",
+          "motion_or_state_change": "Steam rises and bends with void wind.",
+          "material_or_body_response": "Vapor catches side light with uneven density.",
+          "sound_or_silence": "Silent visual cue.",
+          "script_evidence": "Panel 3 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 4,
+      "time_range": "2.2s-3.0s",
+      "shot": "Background wide",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "The current script does not explain the foreground stone railing or baby Tyranid behavior; if visible/required, it needs speed, claw contact, pause/attention, sound, and exit.",
+      "elements": [
+        {
+          "id": "adult_tyranids_background",
+          "category": "creature",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Move through cold haze beyond railing under the sky-eye.",
+          "motion_or_state_change": "Run/play laterally at distant scale.",
+          "material_or_body_response": "Chitin silhouettes catch cold light and vanish in mist.",
+          "sound_or_silence": "Distant skittering/scraping should be muffled if audio-bearing.",
+          "script_evidence": "Panel 4 action says Tyranids run/play.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_CREATURE_BEHAVIOR",
+          "required_repair": ""
+        },
+        {
+          "id": "baby_tyranid_on_stone_railing",
+          "category": "creature/foreground_prop_interaction",
+          "mentioned_or_required": "Required if visible or added to panel repair",
+          "environment_interaction": "Skittering across the foreground stone railing in wind and grit.",
+          "motion_or_state_change": "Moves right-to-left at about 0.8 m/s, pauses for 0.2s as its small eyes meet the Tzeentch sky-eye/adult swarm, then darts off frame.",
+          "material_or_body_response": "Tiny claws scrape chipped wet stone; tail flicks; chitin glints blue-violet.",
+          "sound_or_silence": "Rapid tick-tick claw clicks, one scrape as it pivots, then sound drops as it exits.",
+          "script_evidence": "",
+          "visual_support_status": "MISSING_FROM_CURRENT_SCRIPT_AND_IMAGE_REVIEW",
+          "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+          "required_repair": "Add to second-pass script and regenerated panel if the baby Tyranid is part of the shot."
+        },
+        {
+          "id": "stone_patio_railing",
+          "category": "foreground_surface/prop",
+          "mentioned_or_required": "Visible/required surface",
+          "environment_interaction": "Cold void wind pushes grit and moisture along chipped stone seams.",
+          "motion_or_state_change": "Dust/wet runoff shifts; baby Tyranid claws leave tiny scrape/tracks if used.",
+          "material_or_body_response": "Chipped stone, wet highlights, dust in seams, cold rim light.",
+          "sound_or_silence": "Stone scrape/clicks if creature crosses.",
+          "script_evidence": "",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SCRIPT_INTERACTION",
+          "required_repair": "Script must describe railing as an active surface, not just a crop line."
+        },
+        {
+          "id": "tzeentch_sky_eye",
+          "category": "environment_entity",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Integrated into clouds; watches the railing/background.",
+          "motion_or_state_change": "Subtle pupil twitch/blink; gaze can meet baby Tyranid moment.",
+          "material_or_body_response": "Blue-violet light diffuses through storm clouds.",
+          "sound_or_silence": "Silent uncanny pressure; no pasted overlay.",
+          "script_evidence": "Panel 4 action/timing mentions blink/twitch.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "umbrella_edge_foreground",
+          "category": "prop",
+          "mentioned_or_required": "Mentioned by camera line",
+          "environment_interaction": "Edge catches gusts at frame edge if visible.",
+          "motion_or_state_change": "Canopy edge flutters behind/above foreground.",
+          "material_or_body_response": "Weathered fabric, wet or dusty rim depending on weather.",
+          "sound_or_silence": "Low cloth snap in gust.",
+          "script_evidence": "Camera says motion crosses behind umbrella.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 5,
+      "time_range": "3.0s-3.8s",
+      "shot": "Insert detail",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Script has useful prop motion, but visual support and all individual prop interactions are not verified.",
+      "elements": [
+        {
+          "id": "tea_cups_and_liquid",
+          "category": "prop/liquid",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Cold wind bends steam; sky-eye light reflects in tea.",
+          "motion_or_state_change": "Steam rises; tea surface ripples/glints.",
+          "material_or_body_response": "Porcelain/amber liquid, condensation/meniscus required.",
+          "sound_or_silence": "Quiet ceramic stillness.",
+          "script_evidence": "Panel 5 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "source_ref_cards_and_notes",
+          "category": "prop/paper",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Void wind lifts paper corners unless pinned by cup/hand.",
+          "motion_or_state_change": "Edges lift/flutter or remain pinned with reason.",
+          "material_or_body_response": "Paper fibers, curled edges, ink/smudges.",
+          "sound_or_silence": "Soft paper flutter.",
+          "script_evidence": "Panel 5 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "teapot_and_horus_hand",
+          "category": "prop/character_fragment",
+          "mentioned_or_required": "Required by image and camera",
+          "environment_interaction": "Teapot/gauntlet anchor scale at the table.",
+          "motion_or_state_change": "Macro slide crosses them; metal highlights shift.",
+          "material_or_body_response": "Scratched metal/black gauntlet/steam highlights.",
+          "sound_or_silence": "Faint metal set-down/rattle if moving.",
+          "script_evidence": "Panel 5 camera mentions Horus armored hand.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 6,
+      "time_range": "3.8s-4.6s",
+      "shot": "Medium close-up on Horus",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Horus skin/steam are described, but visual support and full prop/environment continuity are not verified.",
+      "elements": [
+        {
+          "id": "character_horus_lupercal",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Looks from evidence card to Embry in cold side light.",
+          "motion_or_state_change": "Brow tightens, jaw creases, small dry smile.",
+          "material_or_body_response": "Pores, scars, stubble, armor edge light.",
+          "sound_or_silence": "Inhale then voice line if audio-bearing.",
+          "script_evidence": "Panel 6 action/emotion/dialogue.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "monitor_sparta_evidence_card",
+          "category": "prop/paper",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Held/read at table; reacts to steam/wind/hand pressure.",
+          "motion_or_state_change": "Card edge may flex; gaze shifts to it.",
+          "material_or_body_response": "Paper texture, handled edges, source-ref markings.",
+          "sound_or_silence": "Small paper tap/rustle if touched.",
+          "script_evidence": "Panel 6 action mentions evidence card.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+          "required_repair": ""
+        },
+        {
+          "id": "tea_steam",
+          "category": "prop/vapor",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Steam threads past Horus cheek in cold air.",
+          "motion_or_state_change": "Rises/curls through close-up.",
+          "material_or_body_response": "Uneven vapor catches light.",
+          "sound_or_silence": "Silent vapor.",
+          "script_evidence": "Panel 6 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 7,
+      "time_range": "4.6s-5.5s",
+      "shot": "Reverse medium close-up on Embry",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Embry ToM behavior exists in text, but visual support and physical state of laptop/table/weather are not verified.",
+      "elements": [
+        {
+          "id": "character_embry_lawson",
+          "category": "character/persona",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Cold wind, tea steam, and word colleague trigger memory conflict.",
+          "motion_or_state_change": "Thumb pause, half-smile, shoulders drop.",
+          "material_or_body_response": "Cheek redness, eyelid highlight, uneven eye creases; fieldwear affected by wind.",
+          "sound_or_silence": "Tiny exhale then voice line if audio-bearing.",
+          "script_evidence": "Panel 7 action/emotion/dialogue.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "sparta_laptop_source_refs",
+          "category": "prop/ui",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Her tap anchors source_refs line; screen must be readable/useful.",
+          "motion_or_state_change": "Finger taps; screen reflection/brightness shifts.",
+          "material_or_body_response": "Glass smudges/reflections, UI glow.",
+          "sound_or_silence": "Soft tap on laptop/table.",
+          "script_evidence": "Panel 7 action.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "tea_table_context",
+          "category": "prop/environment",
+          "mentioned_or_required": "Required by continuity",
+          "environment_interaction": "Steam/wind/tableware remain active around dialogue.",
+          "motion_or_state_change": "Steam/paper/tableware shift subtly.",
+          "material_or_body_response": "Warm highlights against cold grade.",
+          "sound_or_silence": "Low table ambience.",
+          "script_evidence": "",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 8,
+      "time_range": "5.5s-6.4s",
+      "shot": "Shared screen insert",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Screen is mentioned but lacks full material/environment interaction and visual readability proof.",
+      "elements": [
+        {
+          "id": "sparta_laptop_screen",
+          "category": "prop/ui",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Screen sits under cold/warm mixed light with reflections of Horus/Embry.",
+          "motion_or_state_change": "Slow push-in; highlights or cursor/interface glow shifts.",
+          "material_or_body_response": "Glass, fingerprints/smudges, readable monitor_sparta/source_refs UI.",
+          "sound_or_silence": "Silent electronic/room tone.",
+          "script_evidence": "Panel 8 action/camera.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "horus_embry_reflections",
+          "category": "character_reflection",
+          "mentioned_or_required": "Mentioned by camera",
+          "environment_interaction": "Faint reflections should anchor both speakers around the screen.",
+          "motion_or_state_change": "Reflections hold or shift with camera push.",
+          "material_or_body_response": "Dim glass reflections, not ghosted blobs.",
+          "sound_or_silence": "Silent.",
+          "script_evidence": "Panel 8 camera mentions reflections.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "table_weather_context",
+          "category": "environment",
+          "mentioned_or_required": "Required by continuity",
+          "environment_interaction": "Steam/wind/cold light should still affect screen edge and table.",
+          "motion_or_state_change": "Reflections/steam shift across glass edge.",
+          "material_or_body_response": "Moisture/dust/fingerprints visible.",
+          "sound_or_silence": "Quiet table ambience.",
+          "script_evidence": "",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 9,
+      "time_range": "6.4s-7.2s",
+      "shot": "Wide background motion",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Text improved, but current visual review still shows Embry/required elements are not reliably supported; all environment/prop interactions need image proof.",
+      "elements": [
+        {
+          "id": "character_horus_lupercal",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Remains seated at Primarch scale, calm under cold rain/wind.",
+          "motion_or_state_change": "Continues quiet conversation, does not flinch.",
+          "material_or_body_response": "Armor wet/cold highlights, scale contrast.",
+          "sound_or_silence": "Low voice/armor stillness if audio-bearing.",
+          "script_evidence": "Panel 9 action/emotion.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "character_embry_lawson",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Hunches slightly against cold damp wind while staying engaged.",
+          "motion_or_state_change": "Keeps attention on Horus; remains visible.",
+          "material_or_body_response": "Fieldwear/hair/skin respond to wind/rain.",
+          "sound_or_silence": "Quiet breath/cloth movement.",
+          "script_evidence": "Panel 9 action/emotion.",
+          "visual_support_status": "FAIL_NOT_VISIBLY_LEGIBLE_IN_PRIOR_REVIEW",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "umbrella",
+          "category": "prop",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Canopy takes gusts above them.",
+          "motion_or_state_change": "Fabric ripples/strains.",
+          "material_or_body_response": "Wet/dusty fabric edge catches cold light.",
+          "sound_or_silence": "Low flap/rustle.",
+          "script_evidence": "Panel 9 camera mentions umbrella rippling.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "stone_railing_and_patio",
+          "category": "surface/environment",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Cold rain/wind leave runoff, grit, chipped highlights.",
+          "motion_or_state_change": "Water/grit shifts; creatures pass behind.",
+          "material_or_body_response": "Wet stone, seams, chips, slick reflections.",
+          "sound_or_silence": "Distant scrape/rain/wind if audio-bearing.",
+          "script_evidence": "Panel 9 required_dynamic_behaviors ledger, but not full provider text.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_SCRIPT_EVIDENCE_IN_PROVIDER_TEXT",
+          "required_repair": ""
+        },
+        {
+          "id": "tzeentch_sky_eye_and_tyranids",
+          "category": "environment/creatures",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Eye watches while Tyranids cross under it.",
+          "motion_or_state_change": "Eye blinks; creatures move laterally.",
+          "material_or_body_response": "Storm cloud blue-violet glow; chitin silhouettes.",
+          "sound_or_silence": "Distant creature movement; no overlay artifact.",
+          "script_evidence": "Panel 9 action/timing.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        }
+      ]
+    },
+    {
+      "panel": 10,
+      "time_range": "7.2s-8.0s",
+      "shot": "Closing two-shot",
+      "panel_gate_status": "FAIL",
+      "summary_failure": "Umbrella wind behavior is too vague; all closing props and environment must have specific interaction and visual proof.",
+      "elements": [
+        {
+          "id": "character_horus_lupercal",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Leans over notes beside much smaller Embry while cold light recedes.",
+          "motion_or_state_change": "Lowers gaze; posture settles.",
+          "material_or_body_response": "Armor/skin/scale remain readable; not generic marine.",
+          "sound_or_silence": "Silent final pause.",
+          "script_evidence": "Panel 10 action/emotion.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "character_embry_lawson",
+          "category": "character",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Leans with Horus over notes, affected by wind and cold.",
+          "motion_or_state_change": "Nods once; remains visible and human-scale.",
+          "material_or_body_response": "Fieldwear/hair/skin respond to cold wind.",
+          "sound_or_silence": "Silent nod/breath.",
+          "script_evidence": "Panel 10 action/emotion.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "umbrella",
+          "category": "prop",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Void wind pulls canopy toward camera-left; ribs flex while it keeps table sheltered.",
+          "motion_or_state_change": "Edge flutters twice, then settles as pullback widens.",
+          "material_or_body_response": "Weathered fabric, damp seams, strained ribs, moving shadow on table.",
+          "sound_or_silence": "Low cloth flutter/rib creak in gust.",
+          "script_evidence": "Current text only says umbrella shifts in wind.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+          "required_repair": "Replace vague \"shifts\" with direction, intensity, fabric/rib behavior, shadow movement, and sound."
+        },
+        {
+          "id": "tea_service_and_steam",
+          "category": "prop/vapor",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Steam thins and bends downwind as the scene ends.",
+          "motion_or_state_change": "Steam dissipates; tea surface settles.",
+          "material_or_body_response": "Porcelain/metal/amber reflections dim.",
+          "sound_or_silence": "Quiet table stillness.",
+          "script_evidence": "Panel 10 action/timing.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        },
+        {
+          "id": "sparta_notes_laptop",
+          "category": "prop/ui/paper",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Notes remain pinned/handled while wind tries to lift paper.",
+          "motion_or_state_change": "Paper corners tremble or are held down; laptop glow dims/reflects sky.",
+          "material_or_body_response": "Paper fibers/screen smudges/warm-cold reflection.",
+          "sound_or_silence": "Paper flutter unless pinned.",
+          "script_evidence": "Panel 10 action mentions notes but not paper behavior.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_MISSING_PROP_INTERACTION",
+          "required_repair": ""
+        },
+        {
+          "id": "tzeentch_sky_eye",
+          "category": "environment_entity",
+          "mentioned_or_required": "Required",
+          "environment_interaction": "Recedes/dims in clouds above horizon without resolving.",
+          "motion_or_state_change": "Final blink/dim as steam dissipates.",
+          "material_or_body_response": "Blue-violet light softens into storm haze.",
+          "sound_or_silence": "Silent ominous background.",
+          "script_evidence": "Panel 10 action/timing.",
+          "visual_support_status": "UNCONFIRMED",
+          "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+          "required_repair": ""
+        }
+      ]
+    }
+  ]
+}

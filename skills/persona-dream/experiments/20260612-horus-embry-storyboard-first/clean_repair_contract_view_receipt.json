@@ -1,0 +1,10 @@
+{
+  "schema": "persona_dream.report_clean_repair_contract_view_receipt.v1",
+  "created_at": "2026-06-14T16:53:17.535534+00:00",
+  "html": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-clean-repair-contract-view-2-20260614T165317Z.html",
+  "panel_contract_tables": 10,
+  "raw_panel_gate_fail_labels": 0,
+  "baby_tyranid_visible_contract": true,
+  "final_api_after_panels": true
+}

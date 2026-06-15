@@ -1,0 +1,13 @@
+{
+  "updated_at_utc": "2026-06-14T15:20:35.606379+00:00",
+  "page": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-design-20260614T152035Z.html",
+  "changes": [
+    "modern document CSS with max-width 1100px and card sections",
+    "reordered payload sections above chronological pipeline detail",
+    "moved memory/grounding audit to collapsible appendix",
+    "added status badges with lucide icon hooks",
+    "cleaned tables and scene card layout",
+    "changed experiment mode display from 4k to std / 720p"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "audit": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/artifacts/stage_hallucination_audit.json",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-stage-hallucination-audit-20260614T2028Z.html",
+  "created_at": "2026-06-14T20:33:47.320143+00:00",
+  "panel_gate_failure_count": 56,
+  "panel_gate_verdict": "FAIL",
+  "provider_readiness_status": "BLOCKED",
+  "report": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "schema": "persona_dream.stage_hallucination_audit_receipt.v1",
+  "stage_count": 9
+}

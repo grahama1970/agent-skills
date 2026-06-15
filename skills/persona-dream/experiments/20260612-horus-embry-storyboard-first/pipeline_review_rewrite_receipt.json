@@ -1,0 +1,134 @@
+{
+  "schema": "persona_dream.pipeline_review_rewrite_receipt.v2",
+  "created_at": "2026-06-13T13:54:52.450609+00:00",
+  "status": "GENERATED_UNREVIEWED",
+  "page": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "scene_packet": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/provider_packet/kling_omni_scene_packet_dry_run.json",
+  "markdown_packet": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/kling_omni_scene_packet_self_contained.md",
+  "panel_crop_count": 10,
+  "voice_asset_count": 3,
+  "voice_status": "VOICE_CLONE_CANDIDATES_FOUND_PROVIDER_ID_MISSING",
+  "api_alignment_status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "non_claims": [
+    "No paid Kling call performed",
+    "No live video exists",
+    "Manual review still required",
+    "Exact Kling live request schema not submitted"
+  ],
+  "updated_at": "2026-06-14T00:14:35.112202+00:00",
+  "voice_example_count": 4,
+  "provider_voice_id_count": 0,
+  "audio_strategy_status": "CUSTOM_SCORE_POST_PRODUCTION_OR_NATIVE_PROMPTED_SOUND_ONLY; LIP_SYNC_SEPARATE_WORKFLOW_FOR_PRERECORDED_SPEECH",
+  "voice_clone_candidate_count": 2,
+  "provider_payload_template": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/provider_packet/kling_omni_payload_template_blocked.json",
+  "provider_payload_status": "BLOCKED_MISSING_PROVIDER_URLS_VOICE_IDS_CALLBACK_AND_SCHEMA_MAPPING",
+  "production_payload_parameters": {
+    "mode": "4k",
+    "aspect_ratio": "16:9",
+    "sound": "on",
+    "multi_shot": true,
+    "shot_type": "customize",
+    "watermark_enabled": false,
+    "external_task_id": "MISSING_PROJECT_TASK_UUID",
+    "callback_url": "MISSING_REACHABLE_PROJECT_WEBHOOK_URL"
+  },
+  "voice_audio_controls": {
+    "horus": "assets/audio/horus_voice_clone_candidate.wav",
+    "embry": "assets/audio/embry_voice_clone_candidate.wav",
+    "http_checked": true
+  },
+  "memory_grounding_visible": true,
+  "memory_grounding_artifact": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/grounding/memory_recall_horus_embry.json",
+  "brave_grounding_artifact": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/grounding/brave_search_horus_hair.json",
+  "codebase_recall_artifact_status": "GENERATED_UNREVIEWED",
+  "codebase_recall_gate_for_autonomous_runs": "REQUIRED: project_activity/code_symbols recall artifacts with scope, collections, recall profile, and source refs before story generation.",
+  "cinematography_control_matrix_visible": true,
+  "cinematography_control_matrix_status": "GENERATED_UNREVIEWED",
+  "live_memory_recall_visible": true,
+  "live_memory_recall_summary": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/grounding/memory_recall_live/story_grounding_summary.json",
+  "project_activity_commits_used": [
+    "c064407",
+    "b8e05e7"
+  ],
+  "code_symbols_recall_status": "FOUND_LOW_RELEVANCE_FOR_PERSONA_DREAM",
+  "story_revised_from_memory_recall": true,
+  "codebase_recall_artifact": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/grounding/memory_recall_live/story_grounding_summary.json",
+  "direction_board_sha256": "4fd143324ad4ce6dd92f876f5a23c790eb655fe3971d24e79dc957527995c135",
+  "direction_board_bytes": 1347812,
+  "storyboard_board_sha256": "5f66c3102d147ad9a82282a898f02c5191a9a50f0e6e6d3c31fa2d1c22e782b9",
+  "storyboard_board_bytes": 1670677,
+  "storyboard_board_regenerated_from_memory_recall": true,
+  "memory_recall_section_expanded": true,
+  "memory_recall_return_values_visible": true,
+  "project_activity_items_visible": 2,
+  "code_symbols_items_visible": 5,
+  "persona_memory_items_visible": 3,
+  "technique_selection_artifact_created": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/technique_selection.json",
+  "cinematic_look_lock_visible": true,
+  "per_panel_cinematography_visible": true,
+  "director_dop_owner_visible": true,
+  "lighting_camera_color_visible_per_panel": true,
+  "provider_prompts_include_look_lock": true,
+  "script_dna_selection_artifact_created": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/script_dna_selection.json",
+  "script_dna_visible_in_packet": true,
+  "script_dna_pipeline_stage_added": true,
+  "scene_panel_layout_css_updated": true,
+  "horus_voice_candidate_rejected": false,
+  "horus_voice_rejection_reason": "Generated/kokoclone voice reference is not audiobook-derived and is not an acceptable clone candidate.",
+  "horus_voice_status": "VOICE_CLONE_CANDIDATE_FOUND_PROVIDER_ID_MISSING",
+  "voice_manifest_corrected": true,
+  "updates": [
+    {
+      "timestamp": "2026-06-13T16:55:00-04:00",
+      "change": "horus_voice_source_correction",
+      "evidence": {
+        "audiobook_path": "/mnt/storage12tb/media/personas/horus/data/audiobooks/Horus_Rising_The_Horus_Heresy_Book_1-LC_64_22050_stereo/audio.wav",
+        "audiobook_duration_s": 44104.585625,
+        "sample_rate": 16000,
+        "channels": 1,
+        "extracted_clip_pool": "/mnt/storage12tb/artifacts/graph-memory-operator/2026-03-14/datasets/horus_voice/clips",
+        "extracted_clip_count": 7625,
+        "rejected_generated_reference": "/mnt/storage12tb/skills/persona-dream/outputs/horus-embry-tea-void-sparta-r11-both-voices/converted_horus_timed/01_horus_shot_01_kokoclone_personaplex_timed.wav",
+        "duration_scan": {
+          "total_clips": 7625,
+          "candidate_5_30s": 12,
+          "candidate_10_15s": 0,
+          "longest_clip_s": 7.28
+        }
+      },
+      "status": "VOICE_AUDIOBOOK_SOURCE_FOUND_PROVIDER_ID_MISSING",
+      "next_gate": "select clean 10-15s single-speaker audiobook-derived sample, or consciously accept a reviewed shorter 5-30s fallback, then obtain Kling provider voice_id"
+    },
+    {
+      "timestamp": "2026-06-13T19:30:33.931607-04:00",
+      "change": "horus_embry_kling_clone_candidates_created",
+      "evidence": {
+        "horus_candidate": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/horus_kling_clone_candidate.wav",
+        "horus_duration_s": 11.552,
+        "horus_sha256": "590d8a4614b9128bf31ace7df97a4d9330791f5400475112f9322ef5b8c7293d",
+        "embry_candidate": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/embry_kling_clone_candidate.wav",
+        "embry_duration_s": 8.0,
+        "embry_sha256": "c28aa1cb750242f5779cf124a2e3c2af2c12d041e2a11c5d762afbc32c11f2fe"
+      },
+      "status": "VOICE_CLONE_CANDIDATES_READY_PROVIDER_ID_MISSING",
+      "next_gate": "human listen review, then submit Kling voice clone API to obtain provider voice_ids"
+    }
+  ],
+  "voice_clone_candidate_manifest": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/manifest.json",
+  "visible_voice_section_rewritten": true,
+  "current_voice_candidates": {
+    "horus": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/horus_kling_clone_candidate.wav",
+      "sha256": "4b70bfe6b5d624371c7e447ba2eb5438ba0bd1c0bd7c036ec900853654290049",
+      "duration_s": 30.0,
+      "selector_bundle_json": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/horus_kling_clone_candidate.selector_bundle.json"
+    },
+    "embry": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/embry_kling_clone_candidate.wav",
+      "sha256": "4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098",
+      "duration_s": 30.0,
+      "selector_bundle_json": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/voice_clone_candidates/embry_kling_clone_candidate.selector_bundle.json",
+      "speaker_id": "SPEAKER_04"
+    }
+  }
+}

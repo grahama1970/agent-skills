@@ -1,0 +1,79 @@
+{
+  "schema": "persona_dream.phase_03_story_package_anti_hallucination_gate.v1",
+  "created_at": "2026-06-15T00:01:35.405953+00:00",
+  "phase": "Phase 3: Story Package",
+  "anti_hallucination_rule": "Treat the prior story package as a hostile hallucinated lie until a deterministic ledger enumerates every character, prop, creature, environment, weather, temperature, motion, material/light response, and sound/silence cue per panel. Persona-memory claims remain forbidden unless Phase 2 returned raw rows.",
+  "prior_artifact_verdict": {
+    "source": "storyboard/panel_entity_environment_interaction_gate_receipt.json",
+    "verdict": "FAIL",
+    "panel_count": 10,
+    "failure_count": 56,
+    "per_panel_failures": {
+      "1": 8,
+      "2": 5,
+      "3": 4,
+      "4": 8,
+      "5": 4,
+      "6": 4,
+      "7": 5,
+      "8": 5,
+      "9": 6,
+      "10": 7
+    }
+  },
+  "repaired_story_package_verdict": {
+    "ledger": "story_package/story_package_entity_environment_ledger_v2.json",
+    "receipt": "story_package/story_package_phase3_gate_receipt_v2.json",
+    "verdict": "PASS",
+    "panel_count": 10,
+    "interaction_count": 40,
+    "failure_count": 0,
+    "validator": "deterministic_nonempty_required_fields_v1"
+  },
+  "quarantined_claims": [
+    "Embry Kai/Hawaii/surf memory beat",
+    "Embry father/garage memory beat",
+    "Embry Theory-of-Mind tom_edges tags",
+    "Horus persona-memory false-green beat"
+  ],
+  "allowed_downstream_scope": [
+    "May proceed to Phase 4 producer/scriptwriter/director selection using this repaired story package as the structural story contract.",
+    "Must not reintroduce persona-memory emotional beats until Phase 2 memory recall is repaired with raw rows.",
+    "Must not claim storyboard images pass; image generation and visual entity checks remain later gates.",
+    "Must not claim Kling API readiness; voices, provider URLs, callback URL, external_task_id, and live API schema remain later gates."
+  ],
+  "claim_audit": [
+    {
+      "id": "S3-C01",
+      "claim": "A story premise exists.",
+      "verdict": "QUARANTINED_GENERATED_PREMISE",
+      "basis": "story_contract.json status is GENERATED_UNREVIEWED; Phase 1 allowed it only as recorded generated story, not source truth."
+    },
+    {
+      "id": "S3-C02",
+      "claim": "Prior story/package explained every panel entity interaction.",
+      "verdict": "LIE_NOT_ALLOWED_PRIOR_ARTIFACT_FAILED",
+      "basis": "Old interaction receipt verdict=FAIL with failure_count=56 across panel_count=10.",
+      "evidence": "storyboard/panel_entity_environment_interaction_gate_receipt.json"
+    },
+    {
+      "id": "S3-C03",
+      "claim": "Repaired Phase 3 story package enumerates all required characters, props, creatures, environment, weather, temperature, and interaction fields.",
+      "verdict": "PROVEN_STRUCTURAL_PASS",
+      "basis": "Repaired deterministic receipt verdict=PASS; panels=10; interactions=40; missing_fields=0.",
+      "evidence": "story_package/story_package_phase3_gate_receipt_v2.json"
+    },
+    {
+      "id": "S3-C04",
+      "claim": "Persona-memory emotional beats may be used in story/script.",
+      "verdict": "BLOCKED_BY_PHASE_2",
+      "basis": "Phase 2 found 0 raw persona_memory/tom_edges rows for Kai/Hawaii/father/garage/ToM claims. The repaired story package explicitly quarantines these beats."
+    },
+    {
+      "id": "S3-C05",
+      "claim": "This phase proves storyboard images or Kling payload readiness.",
+      "verdict": "EXPLICITLY_NOT_PROVEN",
+      "basis": "Phase 3 structural pass only covers written story package completeness. Image, voice, and provider gates remain downstream."
+    }
+  ]
+}

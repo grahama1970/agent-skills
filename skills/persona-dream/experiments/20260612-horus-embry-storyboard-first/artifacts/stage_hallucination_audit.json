@@ -1,0 +1,136 @@
+{
+  "created_at": "2026-06-14T20:33:47.317631+00:00",
+  "principle": "All model-authored stage claims are untrusted until backed by concrete artifacts and gates.",
+  "schema": "persona_dream.stage_hallucination_audit.v1",
+  "source_report": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "stages": [
+    {
+      "claim": "Horus and Embry discuss SPARTA Explorer false-green/read-only evidence behavior at a tea table on a void-world patio.",
+      "current_evidence": [
+        "grounding/code_memory_recall_20260614T2016Z/summary.json",
+        "pipeline_review_8892/index.html#memories-used"
+      ],
+      "next_repair": "Keep the code topic. Audit/remove every Kai/Hawaii/father/garage beat until exact persona_memory/ToM recall records are shown.",
+      "order": 1,
+      "required_proof": "Story topic must be tied to actual project/code memory; any persona-emotion beat must cite exact persona_memory/ToM records.",
+      "stage": "Idea and story",
+      "verdict": "PARTIAL_GROUNDED",
+      "why": "The SPARTA false-green/read-only topic is grounded by project_activity commits c064407 and b8e05e7. Persona-emotion intrusions in downstream panel text are not yet grounded by this pass."
+    },
+    {
+      "claim": "The report uses actual /recall code/project activity records, not boilerplate.",
+      "current_evidence": [
+        "grounding/code_memory_recall_20260614T2016Z/monitor_sparta_false_green_project_activity_response.pretty.json"
+      ],
+      "next_repair": "None for code topic; later code-symbol recall needs better ingestion/query because current code_symbols result was marked not used.",
+      "order": 2,
+      "required_proof": "Show exact recall question, collection, found/confidence, returned rows, commit SHAs, files_changed, and raw request/response artifacts.",
+      "stage": "Code memory recall",
+      "verdict": "GROUNDED",
+      "why": "/recall returned two git-provenance project_activity records: c064407 Tighten SPARTA monitor false-green gates and b8e05e7 Make SPARTA monitor start read-only by default."
+    },
+    {
+      "claim": "Embry interior beats about Kai, Hawaii surf, father/garage, and divided attention are grounded in persona memory.",
+      "current_evidence": [
+        "storyboard/script_realism_and_persona_memory_contract.json",
+        "grounding/targeted_persona_memory_recall_20260614T1725Z/summary.json"
+      ],
+      "next_repair": "Run a persona-memory-only recall pass and either show exact returned persona/TOM records or remove the beats from script and panel payloads.",
+      "order": 3,
+      "required_proof": "Exact persona_memory or tom_edges records with query, source, evidence text, graph/edge context, and use verdict.",
+      "stage": "Persona memory / Theory of Mind",
+      "verdict": "STALE_OR_UNPROVEN",
+      "why": "The script contract claims FOUND summaries, but the later targeted recall section showed generic memory/project records for those emotional beats. Treat those beats as untrusted until re-proven from persona_memory/TOM graph."
+    },
+    {
+      "claim": "Producer chooses the script writer and director/DoP based on story, genre, and characters.",
+      "current_evidence": [
+        "storyboard/producer_rationale.json",
+        "storyboard/script_dna_selection.json",
+        "storyboard/technique_selection.json"
+      ],
+      "next_repair": "Create producer_dna_selection.json and require it to name the producer logic and the selected script/director roles before storyboard.",
+      "order": 4,
+      "required_proof": "Named producer DNA, named/role-linked script writer selection, named/role-linked director/DoP selection, rationale, and status accepted by verifier.",
+      "stage": "Producer / script writer / director selection",
+      "verdict": "GENERATED_UNREVIEWED",
+      "why": "Artifacts exist but are status GENERATED_UNREVIEWED; producer artifact is rationale, not a formal accepted Producer DNA contract. Current labels are role labels, not a fully selected producer choosing named creative owners."
+    },
+    {
+      "claim": "Characters, props, and environments have sufficient visual references and physical identity constraints.",
+      "current_evidence": [
+        "storyboard/storyboard_identity_contract.json",
+        "storyboard/character_physical_identity_contract.json",
+        "reference_sheets/"
+      ],
+      "next_repair": "Promote physical identity to a gate: unknown dimensions either get sourced or remain explicit blockers before image regeneration.",
+      "order": 5,
+      "required_proof": "Reference sheets exist, character dimensions/appearance are specified, unknowns are explicit, and human or verifier review accepts them.",
+      "stage": "Contact sheets and character identity",
+      "verdict": "PARTIAL_GROUNDED",
+      "why": "Identity contract is ACCEPTED_AUTOMATED and reference paths exist. Physical identity contract remains GENERATED_UNREVIEWED and has blocking unknowns such as Embry height and Horus eye color."
+    },
+    {
+      "claim": "The script explains all characters, props, and environment interactions including weather, temperature, steam, wind, railing, creatures, and skin realism.",
+      "current_evidence": [
+        "storyboard/script_realism_and_persona_memory_contract.json",
+        "storyboard/panel_entity_environment_interaction_ledger.json"
+      ],
+      "next_repair": "Repair script first, then rerun interaction gate before any image or Kling step.",
+      "order": 6,
+      "required_proof": "Script realism ledger with every character/prop/environment row, script evidence for each, and independent verifier PASS.",
+      "stage": "Final script and realism gate",
+      "verdict": "FAIL_OR_PENDING",
+      "why": "The available contract is SELF_CHECKED_PENDING_VERIFIER, not a verifier pass. Panel interaction gate reports missing script evidence for required elements such as Embry in panel 1, baby tyranid and stone railing in panel 4, and umbrella behavior in panel 10."
+    },
+    {
+      "claim": "Generated panels contain all required characters, props, environment, and Tzeentch sky-eye integration.",
+      "current_evidence": [
+        "storyboard/panel_entity_environment_interaction_gate_receipt.json",
+        "storyboard/regenerated_panels/*_receipt.json"
+      ],
+      "next_repair": "Use a self-correcting panel subagent loop: script requirements + contact sheets + generated image + visual verifier; regenerate until panel gate passes or quarantine the panel.",
+      "order": 7,
+      "required_proof": "Each panel image must pass visual support against the script ledger; image generation receipt alone is insufficient.",
+      "stage": "Storyboard panel creation",
+      "verdict": "FAIL",
+      "why": "Panel interaction gate verdict is FAIL with 56 failures across 10 panels. Panel failure counts: {'1': 8, '10': 7, '2': 5, '3': 4, '4': 8, '5': 4, '6': 4, '7': 5, '8': 5, '9': 6}."
+    },
+    {
+      "claim": "Horus and Embry voices are ready for Kling voice_list.",
+      "current_evidence": [
+        "pipeline_review_8892/index.html#voices"
+      ],
+      "next_repair": "Human listen review, then Kling voice clone calls, then update payload with returned provider voice IDs.",
+      "order": 8,
+      "required_proof": "Human-accepted local voice sample plus Kling voice clone API response returning provider voice_id for each voice token.",
+      "stage": "Voice preparation",
+      "verdict": "BLOCKED",
+      "why": "Report shows local clone candidates only. No provider voice_id exists for voice_1 or voice_2, so Kling voice_list is not live-ready."
+    },
+    {
+      "claim": "Final Kling API packet is ready to submit.",
+      "current_evidence": [
+        "provider_packet/kling_omni_payload_template_blocked.json",
+        "provider_packet/readiness_receipt.json",
+        "provider_packet/provider_packet_validation_receipt.json"
+      ],
+      "next_repair": "Do not submit to Kling. Resolve storyboard gate, voice IDs, provider URLs, callback URL, and endpoint schema mapping first.",
+      "order": 9,
+      "required_proof": "Current official API schema mapping, provider-accessible media URLs, mode/aspect/sound/multi_prompt validity, callback_url, external_task_id, voice IDs, and all upstream gates passed.",
+      "stage": "Kling provider payload / live execution",
+      "verdict": "BLOCKED",
+      "why": "Readiness receipt status is BLOCKED; live_call_authorized=False. Template still has missing provider-accessible image URLs, missing callback URL, and missing voice IDs. Dry-run packet validation only proves file structure."
+    }
+  ],
+  "summary": {
+    "fail_or_pending": 4,
+    "generated_unreviewed": 1,
+    "grounded": 1,
+    "panel_gate_failure_count": 56,
+    "panel_gate_verdict": "FAIL",
+    "partial": 2,
+    "provider_readiness_status": "BLOCKED",
+    "stale_or_unproven": 1
+  }
+}

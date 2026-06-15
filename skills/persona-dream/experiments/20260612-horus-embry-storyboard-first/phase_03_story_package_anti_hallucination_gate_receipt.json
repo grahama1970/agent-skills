@@ -1,0 +1,11 @@
+{
+  "schema": "persona_dream.phase_gate_write_receipt.v1",
+  "created_at": "2026-06-15T00:01:35.405953+00:00",
+  "phase_gate": "phase_03_story_package_anti_hallucination_gate",
+  "artifact": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/artifacts/phase_03_story_package_anti_hallucination_gate.json",
+  "sha256": "81c4370bf304df1fce1bbc5528bbe9404aafcffc8f431bc6442e4c1a543956f4",
+  "verdict": "PASS",
+  "prior_failure_count": 56,
+  "repaired_interaction_count": 40,
+  "repaired_failure_count": 0
+}

@@ -1,0 +1,397 @@
+{
+  "schema": "persona_dream.panel_interaction_gate_receipt.v1",
+  "validated_at": "2026-06-14T15:54:09.599554+00:00",
+  "verdict": "FAIL",
+  "panel_count": 10,
+  "failure_count": 56,
+  "failures": [
+    {
+      "panel": 1,
+      "element": "character_horus_lupercal",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SPECIFIC_SCRIPT_EVIDENCE",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 1,
+      "element": "character_embry_lawson",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 1,
+      "element": "character_embry_lawson",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+      "visual_support_status": "FAIL_MISSING_REQUIRED_CHARACTER"
+    },
+    {
+      "panel": 1,
+      "element": "umbrella",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 1,
+      "element": "tea_service",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 1,
+      "element": "tzeentch_sky_eye",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 1,
+      "element": "void_world_patio_and_tyranids",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SURFACE_WEATHER_DETAIL",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 1,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 2,
+      "element": "character_horus_lupercal",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 2,
+      "element": "teacup_and_steam",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 2,
+      "element": "umbrella_or_table_context",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 2,
+      "element": "umbrella_or_table_context",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 2,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 3,
+      "element": "character_embry_lawson",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 3,
+      "element": "sparta_laptop_or_tablet",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 3,
+      "element": "tea_steam",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 3,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 4,
+      "element": "adult_tyranids_background",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_CREATURE_BEHAVIOR",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 4,
+      "element": "baby_tyranid_on_stone_railing",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 4,
+      "element": "baby_tyranid_on_stone_railing",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+      "visual_support_status": "MISSING_FROM_CURRENT_SCRIPT_AND_IMAGE_REVIEW"
+    },
+    {
+      "panel": 4,
+      "element": "stone_patio_railing",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 4,
+      "element": "stone_patio_railing",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 4,
+      "element": "tzeentch_sky_eye",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 4,
+      "element": "umbrella_edge_foreground",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 4,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 5,
+      "element": "tea_cups_and_liquid",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 5,
+      "element": "source_ref_cards_and_notes",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 5,
+      "element": "teapot_and_horus_hand",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 5,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 6,
+      "element": "character_horus_lupercal",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 6,
+      "element": "monitor_sparta_evidence_card",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 6,
+      "element": "tea_steam",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 6,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 7,
+      "element": "character_embry_lawson",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 7,
+      "element": "sparta_laptop_source_refs",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 7,
+      "element": "tea_table_context",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 7,
+      "element": "tea_table_context",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 7,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 8,
+      "element": "sparta_laptop_screen",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 8,
+      "element": "horus_embry_reflections",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 8,
+      "element": "table_weather_context",
+      "reason": "missing_required_fields",
+      "fields": [
+        "script_evidence"
+      ]
+    },
+    {
+      "panel": 8,
+      "element": "table_weather_context",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_AND_VISUAL_SUPPORT",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 8,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 9,
+      "element": "character_horus_lupercal",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 9,
+      "element": "character_embry_lawson",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "FAIL_NOT_VISIBLY_LEGIBLE_IN_PRIOR_REVIEW"
+    },
+    {
+      "panel": 9,
+      "element": "umbrella",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 9,
+      "element": "stone_railing_and_patio",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_SCRIPT_EVIDENCE_IN_PROVIDER_TEXT",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 9,
+      "element": "tzeentch_sky_eye_and_tyranids",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 9,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    },
+    {
+      "panel": 10,
+      "element": "character_horus_lupercal",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "element": "character_embry_lawson",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "element": "umbrella",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_UNDERSPECIFIED_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "element": "tea_service_and_steam",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "element": "sparta_notes_laptop",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_MISSING_PROP_INTERACTION",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "element": "tzeentch_sky_eye",
+      "reason": "element_gate_not_pass",
+      "gate_status": "FAIL_VISUAL_SUPPORT_UNCONFIRMED",
+      "visual_support_status": "UNCONFIRMED"
+    },
+    {
+      "panel": 10,
+      "scope": "panel",
+      "reason": "panel_gate_not_pass",
+      "panel_gate_status": "FAIL"
+    }
+  ]
+}

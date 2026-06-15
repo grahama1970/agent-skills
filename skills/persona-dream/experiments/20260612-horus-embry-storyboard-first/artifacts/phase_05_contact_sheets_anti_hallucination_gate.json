@@ -1,0 +1,210 @@
+{
+  "schema": "persona_dream.phase_05_contact_sheet_anti_hallucination_gate.v1",
+  "created_at": "2026-06-15T21:29:45.207876+00:00",
+  "phase": "Phase 5: Contact Sheets",
+  "anti_hallucination_rule": "A contact-sheet claim is false until every required character/prop/creature/effect/environment group maps to an existing nonzero PNG at an accepted 4:3 contact-sheet size (1600x1200 preferred, 1448x1086 ChatGPT-native export) with sha256. Probe file dimensions before install; image header text is not proof. Generic shared sheets may be PARTIAL but do not satisfy dedicated prop/interaction references. Each required sheet also needs a colocated .prompt.md and .contact_sheet.meta.json whose probed dimensions match the PNG bytes.",
+  "layout_contract": {
+    "width": 1600,
+    "height": 1200,
+    "preferred_size": {
+      "width": 1600,
+      "height": 1200
+    },
+    "accepted_sizes": [
+      {
+        "width": 1600,
+        "height": 1200,
+        "label": "pipeline_preferred"
+      },
+      {
+        "width": 1448,
+        "height": 1086,
+        "label": "chatgpt_export_native"
+      }
+    ],
+    "required_aspect_ratio": "4:3",
+    "required_format": "PNG"
+  },
+  "verdict": "PASS",
+  "file_inventory": {
+    "horus_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/horus_reference_sheet.png",
+      "bytes": 2440957,
+      "sha256": "7dc41e5e64ec3667e3f582b69ecb567e44ead7d602287c150eb429026af635e0",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "embry_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/embry_reference_sheet.png",
+      "bytes": 3012392,
+      "sha256": "0a3fb221bbb9f91d090525c891eecd51ffe6e826f036e528eddcb4fb627bafb7",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "tyranid_environment_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/tyranid_environment_reference_sheet.png",
+      "bytes": 2844865,
+      "sha256": "44005782ea0120a3535977fb8122bf1fdbfbf816572da885da14477a51ec5c82",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "creature_baby_tyranid_railing_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/creature_baby_tyranid_railing_reference_sheet.png",
+      "bytes": 3148704,
+      "sha256": "28aa99e088bea828866e1bf3d130af3a4d72a9648277a94fe6b55a2ecda75e19",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "tzeentch_warp_eye_motion_contact_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/tzeentch_warp_eye_motion_contact_sheet.png",
+      "bytes": 2996229,
+      "sha256": "74aaa84e4683abc17b0179b555d6904a4daa98c99637a3a2d48b85c253faad93",
+      "width": 1448,
+      "height": 1086,
+      "layout_ok": true,
+      "size_label": "1448x1086",
+      "size_tier": "chatgpt_export_native"
+    },
+    "prop_umbrella_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/prop_umbrella_reference_sheet.png",
+      "bytes": 3226197,
+      "sha256": "ba38737499e13ad99b2961cd5a8fd895e916986d1ebdf43fb1dd5fe1b2ad4f72",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "prop_tea_service_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/prop_tea_service_reference_sheet.png",
+      "bytes": 3261294,
+      "sha256": "c3e0e4e9374bfdd2312d1912e519d310c1f5deb708ae9d31b8be284d6fe50ab6",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "prop_sparta_laptop_notes_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/prop_sparta_laptop_notes_reference_sheet.png",
+      "bytes": 3139322,
+      "sha256": "aa7be1baae458d3a0428aedb45c60b4c75488695e36c6c727e5f4d9a2a8b81ee",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    },
+    "surface_stone_railing_patio_reference_sheet.png": {
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reference_sheets/surface_stone_railing_patio_reference_sheet.png",
+      "bytes": 3486827,
+      "sha256": "f9c4654e6836dd23969cc65a36637a44217055878b443fbd6eabc3b3dacdb0ac",
+      "width": 1600,
+      "height": 1200,
+      "layout_ok": true,
+      "size_label": "1600x1200",
+      "size_tier": "pipeline_preferred"
+    }
+  },
+  "requirements": [
+    {
+      "id": "character_horus_lupercal",
+      "name": "Horus Lupercal",
+      "type": "character",
+      "file": "horus_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: horus_reference_sheet.png"
+    },
+    {
+      "id": "character_embry_lawson",
+      "name": "Embry Lawson",
+      "type": "character",
+      "file": "embry_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: embry_reference_sheet.png"
+    },
+    {
+      "id": "creature_adult_tyranids",
+      "name": "Adult Tyranids",
+      "type": "creature",
+      "file": "tyranid_environment_reference_sheet.png",
+      "verdict": "PARTIAL",
+      "basis": "Dedicated reference sheet exists at 1600x1200, but sheet also carries generic environment duties."
+    },
+    {
+      "id": "creature_baby_tyranid_railing",
+      "name": "Baby Tyranid on stone railing",
+      "type": "creature/foreground interaction",
+      "file": "creature_baby_tyranid_railing_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: creature_baby_tyranid_railing_reference_sheet.png"
+    },
+    {
+      "id": "effect_tzeentch_sky_eye",
+      "name": "Tzeentch sky-eye",
+      "type": "environment effect",
+      "file": "tzeentch_warp_eye_motion_contact_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1448x1086: tzeentch_warp_eye_motion_contact_sheet.png"
+    },
+    {
+      "id": "prop_umbrella",
+      "name": "Umbrella fabric/ribs/wind behavior",
+      "type": "prop",
+      "file": "prop_umbrella_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: prop_umbrella_reference_sheet.png"
+    },
+    {
+      "id": "prop_tea_service",
+      "name": "Tea cups/pot/steam/liquid",
+      "type": "prop/liquid/vapor",
+      "file": "prop_tea_service_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: prop_tea_service_reference_sheet.png"
+    },
+    {
+      "id": "prop_sparta_laptop_notes",
+      "name": "SPARTA screen, notes, source refs, evidence cards",
+      "type": "prop/ui/paper",
+      "file": "prop_sparta_laptop_notes_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: prop_sparta_laptop_notes_reference_sheet.png"
+    },
+    {
+      "id": "surface_stone_railing_patio",
+      "name": "Stone railing and wet patio surface",
+      "type": "environment surface/prop",
+      "file": "surface_stone_railing_patio_reference_sheet.png",
+      "verdict": "PASS",
+      "basis": "Dedicated reference sheet exists at 1600x1200: surface_stone_railing_patio_reference_sheet.png"
+    },
+    {
+      "id": "environment_void_world_patio",
+      "name": "Void-world patio/weather/temperature",
+      "type": "environment",
+      "file": "tyranid_environment_reference_sheet.png",
+      "verdict": "PARTIAL",
+      "basis": "Dedicated reference sheet exists at 1600x1200, but sheet also carries generic environment duties."
+    }
+  ],
+  "failure_count": 0,
+  "partial_count": 2,
+  "dimension_failure_count": 0,
+  "dimension_failures": [],
+  "sidecar_failure_count": 0,
+  "sidecar_failures": [],
+  "downstream_scope": []
+}

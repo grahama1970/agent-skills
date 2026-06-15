@@ -1,0 +1,22 @@
+{
+  "schema": "persona_dream.report_design_polish_receipt.v1",
+  "created_at": "2026-06-14T16:27:50.335039+00:00",
+  "html": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-final-design-polish-20260614T162750Z.html",
+  "changes": [
+    "dark mode link contrast",
+    "panel interaction metadata grid",
+    "balanced deterministic gate table columns",
+    "neutral element metric badges",
+    "highlight.js CDN assets",
+    "language-markdown final prompt block",
+    "language-json blocked payload block"
+  ],
+  "counts": {
+    "language_json": 1,
+    "language_markdown": 1,
+    "badge_neutral": 11,
+    "highlight_js": 1,
+    "panel_metadata": 1
+  }
+}

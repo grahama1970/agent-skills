@@ -1,0 +1,57 @@
+{
+  "schema": "persona_dream.phase_04_creative_leadership_anti_hallucination_gate.v1",
+  "created_at": "2026-06-15T00:06:58.964827+00:00",
+  "phase": "Phase 4: Producer, Scriptwriter, Director/DoP",
+  "anti_hallucination_rule": "Creative leadership is a lie until the artifact names the producer, names what scriptwriter/director/DoP techniques the producer selected, gives story-specific rationale, and states a no-imitation provider boundary.",
+  "verdict": "PASS",
+  "receipt": "storyboard/creative_leadership_phase4_gate_receipt.json",
+  "selection": "storyboard/creative_leadership_selection_v2.json",
+  "producer_dna_selection": "storyboard/producer_dna_selection.json",
+  "selected": {
+    "producer": "George Lucas",
+    "scriptwriter_primary": "Aaron Sorkin",
+    "scriptwriter_supporting": [
+      "Billy Wilder",
+      "Joseph L. Mankiewicz"
+    ],
+    "director": "Denis Villeneuve",
+    "dop": "Roger Deakins / Greig Fraser technique blend"
+  },
+  "claim_audit": [
+    {
+      "id": "C4-C01",
+      "claim": "Formal producer DNA selection exists.",
+      "verdict": "PROVEN",
+      "basis": "storyboard/producer_dna_selection.json now exists and points to creative_leadership_selection_v2.json."
+    },
+    {
+      "id": "C4-C02",
+      "claim": "Producer is named and gives story-specific rationale.",
+      "verdict": "PROVEN",
+      "basis": "The Phase 3 story is a short chamber conversation inside a mythic franchise-scale Warhammer-like void exterior. It needs an iconic worldbuilding system, repeatable visual continuity, and technology-as-story-object discipline rather than a generic battle scene."
+    },
+    {
+      "id": "C4-C03",
+      "claim": "Producer selected scriptwriter techniques by name.",
+      "verdict": "PROVEN",
+      "basis": "The story is about whether a tool has earned trust. The script needs compressed dialogue pressure, not exposition. Every line must force a claim toward source evidence or a control boundary."
+    },
+    {
+      "id": "C4-C04",
+      "claim": "Producer selected director/DoP techniques by name and look lock.",
+      "verdict": "PROVEN",
+      "basis": "The scene requires intimacy and awe in the same frame: a tea-table proof conversation must stay legible while the void, Tyranids, and Tzeentch sky-eye remain enormous and coherent."
+    },
+    {
+      "id": "C4-C05",
+      "claim": "Names are sent to Kling as style-copy commands.",
+      "verdict": "FORBIDDEN_NOT_ALLOWED",
+      "basis": "Final Kling prompts should say the concrete camera/lens/light/color/motion traits. They should not say \u201cin the style of Denis Villeneuve/Roger Deakins/Greig Fraser.\u201d"
+    }
+  ],
+  "downstream_scope": [
+    "May proceed to Phase 5 contact-sheet gate using selected visual/script constraints.",
+    "Do not claim script/storyboard/images pass.",
+    "Provider prompts must use concrete traits, not in-the-style-of names."
+  ]
+}

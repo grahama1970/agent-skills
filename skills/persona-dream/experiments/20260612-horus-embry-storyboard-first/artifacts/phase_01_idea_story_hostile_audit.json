@@ -1,0 +1,101 @@
+{
+  "blocking_repairs": [
+    "Replace generated story paragraph with a Phase 1 story package that lists every character, prop, environment, weather, temperature, and interaction.",
+    "Do not allow persona-emotion beats until persona_memory/TOM exact records are surfaced.",
+    "Do not allow storyboard generation from Phase 1 until the story package has a deterministic gate receipt."
+  ],
+  "claims": [
+    {
+      "basis": "idea_contract.json records source_mode=human_supplied_seed and status=ACCEPTED_AUTOMATED. The artifact records the seed, but does not include the raw originating human transcript line; therefore this is accepted only as the fixture input, not as independently source-proven history.",
+      "claim": "Seed idea text: Horus and Embry have tea under a patio umbrella on a Warhammer 40k void world while Tyranids run/play in the background and they discuss SPARTA Explorer.",
+      "claim_id": "P1-C01",
+      "default_state": "HOSTILE_LIE_UNTIL_PROVEN",
+      "downstream_permission": "May be used as the phase seed. Must not imply persona memories or provider readiness.",
+      "evidence": [
+        "idea_contract.json"
+      ],
+      "verdict": "RECORDED_INPUT_NOT_FULL_SOURCE_PROVEN"
+    },
+    {
+      "basis": "story_contract.json has status=GENERATED_UNREVIEWED and non_claims say storyboard images require review/regeneration before acceptance. It is a draft story artifact, not an accepted script or provider input.",
+      "claim": "Story prose text in story_contract.json is accepted as the story.",
+      "claim_id": "P1-C02",
+      "default_state": "HOSTILE_LIE_UNTIL_PROVEN",
+      "downstream_permission": "Can feed repair/audit only. Cannot feed storyboard or Kling until script/realism/persona-memory gates pass.",
+      "evidence": [
+        "story_contract.json"
+      ],
+      "verdict": "GENERATED_UNREVIEWED_QUARANTINED"
+    },
+    {
+      "basis": "/recall returned project_activity records c064407 (Tighten SPARTA monitor false-green gates) and b8e05e7 (Make SPARTA monitor start read-only by default), with commit SHAs, source_refs, repo_path, and files_changed.",
+      "claim": "The SPARTA false-green/read-only topic is grounded in code/project memory.",
+      "claim_id": "P1-C03",
+      "default_state": "HOSTILE_LIE_UNTIL_PROVEN",
+      "downstream_permission": "May be used as the technical conversation topic. Does not prove persona emotion, visual panels, voices, or Kling readiness.",
+      "evidence": [
+        "grounding/code_memory_recall_20260614T2016Z/summary.json",
+        "grounding/code_memory_recall_20260614T2016Z/monitor_sparta_false_green_project_activity_response.pretty.json"
+      ],
+      "verdict": "PROVEN_FOR_CODE_TOPIC_ONLY"
+    },
+    {
+      "basis": "This Phase 1 pass did not surface exact persona_memory/TOM records for those beats. Prior report text is explicitly not enough.",
+      "claim": "Embry inner memories about Kai, Hawaii surf, or father/garage belong in Phase 1 story.",
+      "claim_id": "P1-C04",
+      "default_state": "HOSTILE_LIE_UNTIL_PROVEN",
+      "downstream_permission": "Must be removed or quarantined until a persona-memory phase produces exact records and a gate receipt.",
+      "evidence": [
+        "none accepted in Phase 1 code-memory pass"
+      ],
+      "verdict": "LIE_NOT_ALLOWED_IN_PHASE_1"
+    },
+    {
+      "basis": "The story is a short prose paragraph. The panel interaction gate later reports 56 failures, including missing/underspecified Embry, umbrella, tea service, baby tyranid, stone railing, Tzeentch eye, and weather/surface details.",
+      "claim": "The story explains all props, characters, weather, temperature, and environmental interactions.",
+      "claim_id": "P1-C05",
+      "default_state": "HOSTILE_LIE_UNTIL_PROVEN",
+      "downstream_permission": "Cannot feed storyboard generation as final story. Needs a Phase 1 repair into a complete story package with entity/environment interaction ledger.",
+      "evidence": [
+        "story_contract.json",
+        "storyboard/panel_entity_environment_interaction_gate_receipt.json"
+      ],
+      "verdict": "FAILED_FOR_COMPLETENESS"
+    }
+  ],
+  "code_memory_commits": [
+    {
+      "commit_sha": "c0644074a44b63dda819b1e90c842e6a69877b74",
+      "commit_short": "c064407",
+      "commit_subject": "Tighten SPARTA monitor false-green gates",
+      "files_changed": [
+        "scripts/validation/_health_checks.py",
+        "scripts/validation/monitor_sparta.py",
+        "scripts/validation/source_text_qra_coverage.py",
+        "scripts/validation/sparta_repair_manifests.py",
+        "tests/health/test_monitor_sparta_prevention_checks.py",
+        "tests/unit/test_source_text_qra_coverage.py"
+      ]
+    },
+    {
+      "commit_sha": "b8e05e70c6bb18dc435b6b4f70287aaa4215f1d7",
+      "commit_short": "b8e05e7",
+      "commit_subject": "Make SPARTA monitor start read-only by default",
+      "files_changed": [
+        "scripts/validation/monitor_sparta.py",
+        "scripts/validation/source_text_qra_coverage.py",
+        "tests/health/test_monitor_sparta_prevention_checks.py",
+        "tests/unit/test_source_text_qra_coverage.py"
+      ]
+    }
+  ],
+  "created_at": "2026-06-14T22:10:40.996518+00:00",
+  "default_rule": "Every Phase 1 claim is a hostile hallucinated lie until exact artifact evidence proves a narrower claim.",
+  "idea_contract_status": "ACCEPTED_AUTOMATED",
+  "phase": "01_idea_and_story",
+  "phase_verdict": "PARTIAL_RECORDED_INPUT_CODE_TOPIC_PROVEN_STORY_QUARANTINED",
+  "schema": "persona_dream.phase_01_idea_story_hostile_audit.v1",
+  "seed": "Horus and Embry have tea under a patio umbrella on a Warhammer 40k void world while Tyranids run/play in the background and they discuss SPARTA Explorer.",
+  "story": "At a small patio table under a wind-tugged umbrella, Horus Lupercal and Embry drink tea on a Warhammer 40k void world. Tyranids move in the distance like a living storm, but the table remains calm. Embry opens SPARTA Explorer to a recalled project-activity thread about tightening monitor false-green gates and making monitor_sparta start read-only by default. Horus treats the phrase false green like a campaign banner that must not be raised without proof; Embry turns it into a practical design joke about evidence, source refs, and a tool that behaves like a trusted colleague instead of a throne.",
+  "story_contract_status": "GENERATED_UNREVIEWED"
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "M2-C01": "PROVEN_FOR_PROJECT_ACTIVITY_ONLY"
+    },
+    {
+      "M2-C02": "NEGATIVE_CONTROL_PROVEN"
+    },
+    {
+      "M2-C03": "PROVEN_PERSONA_MEMORY"
+    },
+    {
+      "M2-C04": "PROVEN_PERSONA_MEMORY"
+    },
+    {
+      "M2-C05": "PROVEN_PERSONA_MEMORY"
+    },
+    {
+      "M2-C06": "PROVEN_PERSONA_MEMORY"
+    },
+    {
+      "M2-C08": "NEGATIVE_CONTROL_PROVEN"
+    },
+    {
+      "M2-C07": "RECONCILED_BY_FRESH_RECALL"
+    }
+  ],
+  "command": [
+    "./run.sh",
+    "pipeline-phase02-recall"
+  ],
+  "created_at": "2026-06-15T19:22:09.124061+00:00",
+  "exit_code": 0,
+  "gate": "PASS_CLOSED_MEMORY_CLAIMS",
+  "memory_endpoint": "/run/user/1000/embry/memory.sock",
+  "phase_verdict": "PHASE_02_COMPLETE",
+  "proceed_to_phase_3": true,
+  "recall_dir": "grounding/phase_02_memory_recall_20260615T1922Z",
+  "script": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/run_phase_02_memory_recall.py"
+}

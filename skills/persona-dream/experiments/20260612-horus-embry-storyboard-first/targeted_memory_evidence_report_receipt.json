@@ -1,0 +1,14 @@
+{
+  "written_at_utc": "2026-06-14T17:26:59.070677+00:00",
+  "target": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "targeted_recall_dir": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/grounding/targeted_persona_memory_recall_20260614T1725Z",
+  "targeted_query_count": 5,
+  "usable_project_memory_rows": 2,
+  "usable_identity_rows": 2,
+  "persona_emotion_memory_grounded": false,
+  "blocked_persona_beats": [
+    "Embry Kai/Hawaii/surf",
+    "Embry father/garage",
+    "Horus persona-state emotional memory"
+  ]
+}

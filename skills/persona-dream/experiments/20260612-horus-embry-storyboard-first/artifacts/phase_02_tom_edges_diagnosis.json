@@ -1,0 +1,92 @@
+{
+  "claim": "tom_edges collection is populated for legacy lesson graphs but not for Embry book-persona ToM recall.",
+  "claim_id": "M2-C05B",
+  "claim_kind": "data_gap_diagnostic",
+  "collection_counts": {
+    "persona_memory_edges_persona_id_embry": 1937,
+    "tom_edges_persona_id_embry": 0,
+    "tom_edges_total": 42
+  },
+  "downstream_permission": "Do not cite tom_edges for Embry ToM until book-persona tom_edges are ingested/materialized. Use persona_memory rows (M2-C05) for grief-masking beats.",
+  "generic_tom_recall_sample": [
+    {
+      "_from": "users/16992288",
+      "_key": "17649832",
+      "_to": "user_lessons/17646073",
+      "book_id": null,
+      "persona_id": null,
+      "retrieval_text": null,
+      "tom_state_type": null
+    },
+    {
+      "_from": "users/16992288",
+      "_key": "17649804",
+      "_to": "user_lessons/17646045",
+      "book_id": null,
+      "persona_id": null,
+      "retrieval_text": null,
+      "tom_state_type": null
+    },
+    {
+      "_from": "users/16992288",
+      "_key": "17649836",
+      "_to": "user_lessons/17646077",
+      "book_id": null,
+      "persona_id": null,
+      "retrieval_text": null,
+      "tom_state_type": null
+    }
+  ],
+  "recall_question": "What belief or theory-of-mind edges exist for Embry Lawson about masking grief, SPARTA evidence pressure, or visible emotional leaks?",
+  "recall_request": {
+    "collections": [
+      "tom_edges"
+    ],
+    "k": 8,
+    "q": "What belief or theory-of-mind edges exist for Embry Lawson about masking grief, SPARTA evidence pressure, or visible emotional leaks?",
+    "tags": [
+      "persona:embry"
+    ]
+  },
+  "recall_response": {
+    "confidence": 0.0,
+    "errors": [],
+    "found": false,
+    "items": [],
+    "meta": {
+      "collections_filter": [
+        "tom_edges"
+      ],
+      "k": 8,
+      "memory_first": true,
+      "q": "What belief or theory-of-mind edges exist for Embry Lawson about masking grief, SPARTA evidence pressure, or visible emotional leaks?",
+      "runtime_pressure": {
+        "active_workloads": [],
+        "checked_at": 1781551328,
+        "level": "normal",
+        "recommended_action": "No active persisted runtime pressure detected.",
+        "slow_query_risk": false,
+        "sources": []
+      },
+      "scope": "",
+      "threshold": 0.3,
+      "took_ms": 36,
+      "used_dense": true,
+      "used_reranker": false
+    },
+    "should_scan": true
+  },
+  "recall_response_summary": {
+    "confidence": 0.0,
+    "found": false,
+    "item_count": 0,
+    "should_scan": true
+  },
+  "repair_path": [
+    "Ingest or materialize Embry/Horus book-persona tom_edges with persona_id, book_id, retrieval_text, tom_state_type.",
+    "Or narrow memory SKILL/examples to distinguish legacy user_lessons tom_edges from persona_memory_edges.",
+    "Re-run persona-graph E2E after tom_edges backfill; M2-C05B should flip to live recall proof."
+  ],
+  "root_cause": "tom_edges holds legacy user_lessons/persona_states conversation graph rows, not book-persona ToM. Zero tom_edges documents have persona_id=embry or persona:embry tags, so tagged recall returns found=false. Embry belief/grief masking content lives in persona_memory; structural edges live in persona_memory_edges.",
+  "verdict": "DATA_GAP_DOCUMENTED"
+}

@@ -1,0 +1,8 @@
+{
+  "audit": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/artifacts/phase_01_idea_story_hostile_audit.json",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-phase-01-hostile-audit-20260614T2048Z.html",
+  "created_at": "2026-06-14T22:10:40.998862+00:00",
+  "phase_verdict": "PARTIAL_RECORDED_INPUT_CODE_TOPIC_PROVEN_STORY_QUARANTINED",
+  "report": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "schema": "persona_dream.phase_01_idea_story_hostile_audit_receipt.v1"
+}

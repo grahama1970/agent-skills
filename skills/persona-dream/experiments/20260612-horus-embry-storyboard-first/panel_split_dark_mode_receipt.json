@@ -1,0 +1,13 @@
+{
+  "updated_at_utc": "2026-06-14T15:24:25.926596+00:00",
+  "page": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "backup": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.before-panel-split-20260614T152425Z.html",
+  "scene_articles_converted": 10,
+  "changes": [
+    "replaced CSS with light/dark tokenized document theme",
+    "added explicit .panel-card, .panel-header, .panel-body, .panel-split, .panel-image-container, and .panel-metadata-container structure",
+    "made panel images sticky on desktop and stacked on <=900px screens",
+    "added fixed Toggle Theme button and lucide initialization before </body>",
+    "normalized pass/fail badge class names while keeping compatibility aliases"
+  ]
+}

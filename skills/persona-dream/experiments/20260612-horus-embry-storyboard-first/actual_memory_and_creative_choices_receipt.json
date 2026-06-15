@@ -1,0 +1,20 @@
+{
+  "written_at_utc": "2026-06-14T17:17:01.418032+00:00",
+  "target": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/pipeline_review_8892/index.html",
+  "memory_source_artifacts": [
+    "grounding/memory_recall_live/story_grounding_summary.json",
+    "grounding/memory_recall_horus_embry.json",
+    "grounding/panel_repair_memory_recall_20260614T044000Z/summary.json"
+  ],
+  "creative_source_artifacts": [
+    "storyboard/producer_rationale.json",
+    "storyboard/script_dna_selection.json",
+    "storyboard/technique_selection.json"
+  ],
+  "memory_rows": 3,
+  "identity_fact_rows": 2,
+  "producer_choices": 8,
+  "script_lineage_items": 3,
+  "director_lineage_items": 3,
+  "formal_producer_dna_selection_exists": false
+}
