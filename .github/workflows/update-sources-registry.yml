@@ -1,0 +1,69 @@
+name: Update Sources Registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'skills/**'
+      - 'agents/**'
+      - 'scripts/generate_sources_registry.py'
+      - '.github/workflows/update-sources-registry.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'skills/**'
+      - 'agents/**'
+      - 'scripts/generate_sources_registry.py'
+      - '.github/workflows/update-sources-registry.yml'
+      - 'SOURCES.md'
+      - 'sources/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: Generate Sources registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate generator syntax
+        run: python -m py_compile scripts/generate_sources_registry.py
+
+      - name: Generate Sources registry
+        run: python scripts/generate_sources_registry.py
+
+      - name: Show registry diff on pull requests
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff -- SOURCES.md sources/agent-skills-registry.json || true
+          if [[ -n "$(git status --porcelain -- SOURCES.md sources/agent-skills-registry.json)" ]]; then
+            echo "::notice::Generated Sources registry differs from this PR. Run python scripts/generate_sources_registry.py and commit the generated files if you want this PR to include the preview."
+          fi
+
+      - name: Commit generated registry
+        if: github.event_name != 'pull_request'
+        run: |
+          if [[ -z "$(git status --porcelain -- SOURCES.md sources/agent-skills-registry.json)" ]]; then
+            echo "Sources registry already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SOURCES.md sources/agent-skills-registry.json
+          git commit -m "chore: update generated sources registry"
+          git push
