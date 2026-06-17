@@ -1,0 +1,12 @@
+[project]
+name = "watch"
+version = "0.1.0"
+description = "Video analysis agent: scene-change frames, transcripts, emotion-scene analysis"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx",
+    "rich",
+]
+
+[tool.uv]
+dev-dependencies = []
