@@ -29,7 +29,7 @@ provides:
 composes:
   - memory
   - ingest-youtube
-  - ingest-movie
+  - ingest-movie      # Owns ALL movie search, Radarr acquisition, SRT scene analysis
   - scillm
   - task-monitor
 complies:
@@ -75,13 +75,26 @@ uv run python scripts/watch.py video.mp4 --fps 0.5
 ```
 watch "https://youtube.com/watch?v=..."   → YouTube: ingest-youtube + yt-dlp frames
 watch /path/to/video.mp4                  → Local file: direct processing
-watch "There Will Be Blood"              → Movie title: disk → Radarr → brave-search
+watch "There Will Be Blood"              → Movie title: disk → ingest-movie search → ingest-movie Radarr
 ```
 
-Movie title resolution order:
+**Movie title resolution order:**
+
 1. **Disk**: check `/mnt/storage12tb/media/movies/` (fuzzy match)
-2. **Radarr**: check Radarr API (`GET /api/v3/movie`) → tells you if owned, downloaded, or missing
-3. Then re-run with the resolved path once acquired
+2. **ingest-movie search** (NOT brave-search, NOT ops-nzbgeek directly):
+   ```bash
+   cd ../ingest-movie
+   ./run.sh search "Bad Santa 2003"        # Searches NZBGeek, filters for subtitle hints
+   ```
+3. **ingest-movie Radarr add** (enforces SDH subs, English audio, 1080p):
+   ```bash
+   cd ../ingest-movie
+   ./run.sh acquire radarr --preset horus_standard --execute
+   ```
+4. **Failure**: if all paths fail, `watch` exits with code 1. The agent MUST
+   report the unresolved title to the user. Do NOT fall back to brave-search,
+   manual Radarr API calls, or ops-nzbgeek directly — route ALL acquisition through
+   `ingest-movie`.
 
 ## Composition Routing
 
