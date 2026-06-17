@@ -76,25 +76,44 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
         f'Video: "{title}" by {creator}\n\n'
         + f"Transcript excerpt ({len(truncated)} chars):\n{truncated}\n\n"
         + "Generate exactly 3 question-answer pairs about this video. "
-        + "Return ONLY this JSON array, no other text:\n"
-        + '[{"question":"specific question about video content","answer":"2-4 sentence answer"},\n'
-        + '{"question":"another specific question","answer":"2-4 sentence answer"},\n'
-        + '{"question":"a third specific question","answer":"2-4 sentence answer"}]'
+        + "Return ONLY valid JSON array, one pair per line, no other text:\n"
+        + '{"question":"specific question about video content","answer":"2-4 sentence answer"}\n'
+        + '{"question":"another specific question","answer":"2-4 sentence answer"}\n'
+        + '{"question":"a third specific question","answer":"2-4 sentence answer"}'
     )
     text = _zen_chat([{"role": "user", "content": prompt}], timeout=120)
     if not text:
         return []
     text = text.replace("```json", "").replace("```", "").strip()
-    try:
-        pairs = json.loads(text)
-        if isinstance(pairs, list) and len(pairs) >= 3:
-            for p in pairs:
-                if len(p.get("answer", "")) < 40:
-                    return []
-            return pairs[:3]
-    except Exception as exc:
-        logger.error("QRA JSON parse failed: {}", exc)
-    return []
+    # Try to extract JSON array via regex if direct parse fails
+    import re as _re
+    for attempt in range(2):
+        try:
+            # If it's individual objects on separate lines, wrap in array
+            if not text.startswith("["):
+                lines = [l.strip() for l in text.split("\n") if l.strip().startswith("{")]
+            else:
+                lines = [text]
+            # Try parsing as full array first
+            pairs = json.loads(text if text.startswith("[") else f"[{','.join(lines)}]")
+            if not isinstance(pairs, list):
+                pairs = [pairs]
+            if len(pairs) >= 1:
+                valid = [p for p in pairs if len(p.get("answer", "")) >= 30]
+                if len(valid) >= 3:
+                    return valid[:3]
+                if len(valid) >= 1:
+                    return valid  # Return what we have
+            return []
+        except Exception as exc:
+            if attempt == 0:
+                logger.warning("QRA parse attempt 1 failed: {} — retrying LLM...", exc)
+                text = _zen_chat([{"role": "user", "content": prompt + "\n\nCRITICAL: Return ONLY valid JSON array. Check all quotes are escaped."}], timeout=120)
+                if text:
+                    text = text.replace("```json", "").replace("```", "").strip()
+                    continue
+            logger.error("QRA JSON parse failed after retry: {}", exc)
+            return []
 
 
 def describe_scene_images(frames: list[dict], title: str) -> list[dict]:

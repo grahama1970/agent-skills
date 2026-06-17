@@ -336,7 +336,7 @@ def main() -> int:
         max_frames=args.max_frames, resolution=args.resolution,
         start=args.start, end=args.end, subtitle=args.subtitle,
         emotion=args.emotion, tag=args.tag, query=args.query,
-        whisper=args.whisper and not args.no_whisper,
+        whisper=args.whisper,
         doc2qra=args.doc2qra, out_dir=args.out_dir, json_output=args.json,
     )
 
