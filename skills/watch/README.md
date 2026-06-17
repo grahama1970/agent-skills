@@ -8,241 +8,111 @@
   />
 </p>
 
-> Watch any video. Remember what happened. Ask about any moment later.
+> Turn video into searchable, timecode-aligned memory.
 
-Agents need to understand video the way a person does: not just the words, but the
-screen, the cuts, the timing, the mood, and the little visual details that never
-show up in a transcript. A YouTube title is not enough. A caption file is not
-enough. If the important clue is on a slide, in a screen recording, in a facial
-expression, or in the soundtrack, a text-only agent will miss it.
+Some videos are easy for a person and surprisingly hard for an agent. A transcript
+captures the words, but not the screen. A thumbnail shows one moment, but not the
+story. A generic summary loses the exact timestamp where something happened.
 
-That is what `/watch` is for. Give it a YouTube URL or a local video file and it
-turns the video into searchable, timecode-aligned memory. It downloads or probes
-the video, pulls key frames, transcribes speech, describes what is on screen,
-summarizes the soundtrack, and stores the result in `watch_content` so
-`/memory/recall` can find it later.
+`watch` fixes that gap. Give it a YouTube URL, a local video file, or a configured
+movie-library title, and it builds a searchable record of what was said, what was
+shown, when scenes changed, and what the audio felt like. The run leaves behind
+local reports you can inspect, plus memory records that `/memory/recall` can use
+later.
 
 Use it for work like:
 
-- "Watch this YouTube tutorial and tell me what the instructor's screen shows at 2:30."
-- "Find the part of this lecture where they start explaining gradient descent."
-- "Extract the scene changes from this movie and describe what each scene looks like."
-- "Summarize this Zoom recording, but include the moments where the slides changed."
-- "What is the soundtrack mood during the chase scene?"
-- "Index this screen recording so another agent can ask about exact moments later."
+- "What is on the instructor's screen at 2:30?"
+- "Find the part of this lecture where they discuss gradient descent."
+- "Summarize this Zoom recording, including when the shared slides change."
+- "Extract key visual scenes from this movie clip."
+- "Index this screen recording so another agent can ask about it later."
 
-```text
-video URL or local file
-    ↓
-yt-dlp / local probe → ffmpeg frames → faster-whisper transcript
-    ↓
-text QRA pairs + scene image descriptions + soundtrack descriptions
-    ↓
-timecode-aligned artifacts saved under /mnt/storage12tb/media/watch-frames/<slug>/
-    ↓
-/upsert → watch_content → Qdrant text + image search
-    ↓
-/memory/recall can answer: "what happened at 3:12?"
-```
+Agents and project skills should read [`SKILL.md`](SKILL.md) for the invocation
+contract, output schemas, memory records, and error behavior. This README is for
+humans installing, running, and debugging `watch`.
 
-**One core principle:** every modality points back to the same clock. Frames,
-transcript segments, audio chunks, scene descriptions, and soundtrack notes all
-reference seconds from the start of the video. That means an agent can ask
-"what happens at 3:12?" and get the frame, dialogue, scene description, and audio
-mood for that exact moment.
+## Quickstart
 
-## Try this first
-
-You do not need to understand the whole pipeline before using `watch`. Start with
-the shape of the job: give it a video, choose how much visual detail you want, and
-let it persist the result.
+Start with one video. You do not need to understand the whole pipeline first.
 
 ```bash
 cd skills/watch
 
-# Watch a YouTube video using captions/transcription plus 5 key frames
+# Watch a YouTube video
 uv run python scripts/watch.py "https://youtu.be/iYG5tiFfK3E"
 
-# Watch a local movie or screen recording with scene-change detection
-uv run python scripts/watch.py movie.mkv --scene-change
+# Watch a local file
+uv run python scripts/watch.py movie.mkv
 
-# Watch only the useful part of a long video
+# Focus on a section of a long video
 uv run python scripts/watch.py movie.mkv --start 180 --end 600
 
-# Full multimodal pass: transcript, scene frames, image descriptions, soundtrack notes
-uv run python scripts/watch.py movie.mkv --scene-change
+# Static screen recording? Try uniform sampling instead of scene cuts
+uv run python scripts/watch.py recording.mp4 --no-scene-change
 ```
 
-Agents should read `SKILL.md` before calling the skill programmatically. Humans
-and operators can use this README for setup, mental model, and troubleshooting.
+By default, `watch` tries scene-change frame extraction. Focused ranges and
+explicit `--fps` runs use uniform sampling, which is often better for static
+screen recordings and slide decks.
 
-## What `watch` gives you
+After the run, open `report.md` in the printed work directory. That tells you what
+was actually processed before you ask recall questions about the video.
 
-`watch` turns an opaque video file into artifacts an agent can inspect, cite, and
-remember.
+## What it does
 
-| You get | Why it matters |
-| --- | --- |
-| Timestamped transcript | Find what was said and when it was said. |
-| Scene-change frames | See visual transitions, slides, screens, cuts, and camera changes. |
-| Image descriptions | Search the visual content, not just spoken words. |
-| Soundtrack descriptions | Capture mood, music, silence, effects, and audio texture. |
-| QRA memory records | Store useful question/reasoning/answer summaries for recall. |
-| Local artifacts | Keep frames, audio, reports, and metadata available for later review. |
-| `/memory/recall` integration | Ask natural-language questions later and retrieve the relevant moments. |
+`watch` builds a time-aligned bundle from a video. First it gets a workable video
+file: URLs go through `yt-dlp`, while local paths are probed directly. Then it
+pulls the audio track for transcription and samples frames either at visual cuts
+or at regular intervals.
 
-The practical difference is simple: instead of asking an agent to "guess what is
-in this video," you give it a real memory of the video.
+From there, the useful pieces get stitched together. The transcript, frame list,
+scene notes, optional enrichment, and memory records all refer back to seconds
+from the start of the same source. That alignment is the reason a later query can
+recover the matching dialogue, frame, and audio context for the same moment.
+
+A normal run does some or all of this:
+
+- downloads or probes the source video
+- extracts frames with `ffmpeg`
+- extracts audio and transcribes speech when captions are not available
+- writes a markdown report and structured JSON report
+- persists selected frames and audio for later recall
+- upserts searchable memory records when transcript/QRA generation succeeds
 
 ## When to use it
 
-| Situation | Reach for `watch` when you need... |
+Use `watch` when the visual or audio context matters, not just the transcript.
+
+| Situation | Why `watch` helps |
 | --- | --- |
-| YouTube tutorials | The spoken explanation plus what is visible on the instructor's screen. |
-| Screen recordings | UI steps, cursor context, menus, dialogs, and timing. |
-| Lectures and talks | Searchable explanations tied to slide changes and timestamps. |
-| Meetings and Zoom calls | A transcript plus visual context from shared screens. |
-| Films and clips | Scene boundaries, key frames, dialogue, and soundtrack mood. |
-| Agent memory | A reusable video index that another agent can recall later. |
+| YouTube tutorials | Captures the instructor's screen, not only the narration. |
+| Screen recordings | Preserves UI state, menus, dialogs, cursor context, and timing. |
+| Lectures and talks | Connects spoken explanations to slide changes and timestamps. |
+| Meetings and Zoom calls | Combines transcript with shared-screen context. |
+| Film or video clips | Records scene boundaries, key frames, dialogue, and soundtrack mood. |
+| Agent memory | Creates a reusable video index that other agents can query later. |
 
-For very long videos, use `--start` and `--end` to focus the pass. The best
-results come from videos under 10 minutes or from focused clips of longer videos.
+For long videos, prefer a focused clip with `--start` and `--end`. The output is
+usually better when `watch` analyzes the section you actually care about instead
+of an entire long recording.
 
-## What happens under the hood
+## Installation
 
-The pipeline is deliberately plain:
-
-1. **Input** — accepts a YouTube URL or local file path.
-2. **Download / probe** — uses `yt-dlp` for URLs and local probing for files.
-3. **Frame extraction** — uses `ffmpeg` to detect scene changes or sample frames.
-4. **Speech transcription** — uses `faster-whisper` to produce timestamped speech.
-5. **Text enrichment** — creates question/reasoning/answer records for memory.
-6. **Image enrichment** — describes key scene frames so visuals become searchable.
-7. **Soundtrack enrichment** — describes mood, music, sound effects, and silence.
-8. **Persistence** — saves artifacts locally and upserts searchable records into memory.
-
-```text
-skills/watch/
-├── SKILL.md                 agent-facing contract
-├── sanity.sh                test suite
-└── scripts/
-    ├── cli.py               Typer CLI (recommended entry point)
-    ├── watch.py             core pipeline orchestration
-    ├── download.py          yt-dlp download + local file probe
-    ├── frames.py            ffmpeg scene-change + uniform frame extraction
-    ├── transcribe.py        faster-whisper transcription + SRT parsing
-    ├── qra.py               LLM-based QRA + image/audio description
-    ├── storage.py           artifact persistence + memory upsert
-    ├── scenes.py            SRT emotion/tag detection
-    ├── report.py            JSON + markdown report generation
-    └── recall_proof.py      end-to-end memory recall verification
-```
-
-The memory service adds `watch_content` and `watch_edges`, exposes a
-`watch_content_search` view, and links the results into unified recall. Text and
-image vectors are searched together so a question can match either spoken content
-or visual evidence.
-
-## Modalities
-
-| Modality | Model / tool | What it produces | Status |
-| --- | --- | --- | --- |
-| Text transcripts | `faster-whisper` local | Timestamped transcript segments | ✅ |
-| Text QRA pairs | `deepseek-v4-flash` | 3 question/reasoning/answer records per watch | ✅ |
-| Scene images | `ffmpeg` scene detection | JPEGs at visual cuts or sampled intervals | ✅ |
-| Image descriptions | `mimo-v2-omni` via Zen API | Two-sentence descriptions of 5 key frames | ✅ concurrent |
-| Soundtrack descriptions | `gpt-5.5` through `scillm` | Mood, SFX, silence, and dialogue notes per scene chunk | ✅ concurrent |
-| Audio embedding | Jina v5 Omni | 1024-dimensional vector in `image_mm` slot | ⏳ needs service rebuild |
-| Memory recall | BM25 + Qdrant dense search | Text and image vectors retrieved together | ✅ |
-
-## Timecodes are the product
-
-The most important output is not the transcript, the frames, or the summary by
-itself. The important output is the alignment between them.
-
-A useful memory record can say:
-
-```text
-At 03:12:
-- the transcript says the instructor is explaining the loss curve
-- the frame shows a plotted graph on the screen
-- the scene description mentions a code editor and terminal
-- the soundtrack is quiet except for narration
-```
-
-That alignment is what lets an agent answer specific video questions instead of
-returning a vague summary.
-
-## Outputs and storage
-
-Each run writes artifacts under:
-
-```text
-/mnt/storage12tb/media/watch-frames/<slug>/
-```
-
-A typical run can include:
-
-```text
-frames/                 extracted scene or sample frames
-audio.wav               audio track used for transcription and soundtrack chunks
-transcript.srt          timestamped transcript
-watch_report.json       structured machine-readable report
-watch_report.md         human-readable report
-recall_proof.json       optional end-to-end recall verification
-```
-
-Each QRA pair is also stored as its own `watch_content` document:
-
-```json
-{
-  "_key": "watch-<sha256>",
-  "question": "what is this video about",
-  "reasoning": "{source, duration, frame_count, ...}",
-  "answer": "2-4 sentence summary",
-  "title": "...",
-  "frames": "[{path, timestamp_seconds}, ...]",
-  "audio_path": "/mnt/storage12tb/.../audio.wav",
-  "frame_dir": "/mnt/storage12tb/media/watch-frames/<slug>/",
-  "scope": "watch_history",
-  "tags": ["watch_history", "scene-change", "<slug>"]
-}
-```
-
-## Scene detection
-
-Scene-change detection uses `ffmpeg` with:
-
-```text
-select='gt(scene,0.3)'
-```
-
-If too few cuts are detected, or if the detected cuts cover too little of the
-video, `watch` falls back to uniform sampling. This keeps the output useful even
-for videos with long static shots, screen recordings, or slide decks.
-
-## Limits
-
-| Area | Current limit / behavior |
-| --- | --- |
-| Frames | Maximum 100 frames per watch, capped at 2 fps. |
-| Transcript | `faster-whisper` base model. CPU is roughly 2x realtime; GPU is roughly 8x. |
-| Image descriptions | 5 key frames, processed concurrently. |
-| Soundtrack descriptions | 3 scene chunks, processed concurrently. |
-| Best accuracy | Focused clips and videos under 10 minutes. |
-| Audio embedding | Requires embedding service Docker rebuild for audio MIME support. |
-
-## Dependencies
-
-Python packages:
+Install the Python dependencies used by `watch` and its nearby helper tooling:
 
 ```bash
 uv pip install httpx rich loguru typer pillow faster-whisper
-# For PDF embedding (via skills/embedding):
+
+# Optional: only needed for PDF embedding through skills/embedding
 uv pip install pypdfium2
 ```
 
-System tools that must be on `PATH`:
+`watch.py` itself uses the backward-compatible `argparse` entry point, while
+`scripts/cli.py` uses `typer`. Installing the full set on a fresh machine avoids
+confusing import errors when you switch between entry points or run helper scripts.
+
+Make sure these system tools are available on `PATH`:
 
 ```text
 ffmpeg
@@ -250,52 +120,254 @@ ffprobe
 yt-dlp
 ```
 
+Useful checks:
+
+```bash
+ffmpeg -version
+ffprobe -version
+yt-dlp --version
+```
+
+Some enrichment steps depend on configured model/API access in the surrounding
+agent-skills environment. If those services are unavailable, the local extraction
+steps may still work, but image descriptions, soundtrack descriptions, or memory
+upsert may be incomplete. Check stderr and the generated report for the exact
+failure.
+
+## Usage
+
+Basic form:
+
+```bash
+uv run python scripts/watch.py SOURCE [options]
+```
+
+`SOURCE` can be a video URL, a local file path, or a movie title that resolves in
+the configured local library.
+
+Common options:
+
+```text
+--start SECONDS_OR_TIME     start offset, for example 120 or 02:00
+--end SECONDS_OR_TIME       end offset, for example 420 or 07:00
+--scene-change              use scene-change extraction (default)
+--no-scene-change           use uniform sampling instead
+--fps FLOAT                 force a sampling rate
+--max-frames INT            cap extracted frames, up to 100
+--resolution INT            output frame width, default 512
+--subtitle PATH             use a specific subtitle/SRT file
+--no-whisper                skip local Whisper transcription
+--out-dir PATH              keep the working artifacts in a known directory
+--json                      print the JSON report
+```
+
+Examples:
+
+```bash
+# URL input
+uv run python scripts/watch.py "https://youtu.be/iYG5tiFfK3E"
+
+# Local file input
+uv run python scripts/watch.py /path/to/demo.mp4
+
+# Focused range, useful for long recordings
+uv run python scripts/watch.py /path/to/demo.mp4 --start 120 --end 420
+
+# Uniform sampling for a static screen recording
+uv run python scripts/watch.py /path/to/recording.mp4 --no-scene-change
+
+# Keep the work directory instead of using a temporary one
+uv run python scripts/watch.py /path/to/demo.mp4 --out-dir /tmp/watch-demo
+```
+
+Use scene detection for videos with cuts, camera changes, slide transitions, or
+visually distinct sections. Use uniform sampling for long static videos, screen
+recordings, or slide decks where there may be too few visual cuts.
+
+## Outputs
+
+There are two output locations to know about.
+
+### 1. Work directory
+
+This is the run directory used while processing the video. By default, `watch`
+creates a temporary directory and prints its path at the end. Use `--out-dir` when
+you want artifacts to stay somewhere predictable.
+
+A typical work directory contains some or all of:
+
+```text
+frames/                 extracted scene or sample frames
+audio.wav               extracted audio track
+transcript.json         parsed transcript segments
+scenes.json             optional SRT scene/query matches
+frames_manifest.json    frame list with timestamps
+report.json             structured run report
+report.md               human-readable run report
+```
+
+Start with `report.md` when checking a run by hand. It should tell you what source
+was processed, how long it was, which frames were selected, what transcript
+segments were found, and which enrichment steps completed.
+
+### 2. Persistent media directory
+
+Selected frames and audio are also copied to persistent storage for memory recall:
+
+```text
+/mnt/storage12tb/media/watch-frames/<slug>/
+```
+
+That path is currently hardcoded in the skill. The script will create per-video
+slug directories when it can, but on a laptop or smaller dev box `/mnt` may not be
+mounted or writable. Before relying on persisted recall artifacts, create the path
+with the right permissions or symlink it to a local media directory.
+
+```bash
+mkdir -p /mnt/storage12tb/media/watch-frames
+```
+
+`--out-dir` only controls the work directory. It does not change the persistent
+media path.
+
+`watch` stores memory records when QRA generation succeeds, so `/memory/recall`
+can find the video later. The exact memory schema is agent-facing contract
+material and lives in [`SKILL.md`](SKILL.md).
+
+## Using the result
+
+Once the run finishes, the report tells you what was found. The real value comes
+later, when you can ask about the video without opening it again.
+
+Good recall questions usually include one of three anchors:
+
+- a timestamp: "at 2:30"
+- a topic: "when they discuss gradient descent"
+- a visual clue: "the frame with the terminal error"
+
+Examples:
+
+```text
+What happens at 3:12 in the watched video?
+Where does the speaker explain gradient descent?
+Which frame shows the terminal error?
+What was on screen when the narrator mentioned deployment?
+What is the mood of the soundtrack during the chase scene?
+```
+
+If recall gives a weak answer, check `report.md` first. The moment may not have
+been sampled, the transcript may be missing, or the memory service may not have
+accepted the upsert.
+
 ## Sanity check
 
-Run the skill test suite before trusting a new setup:
+Run the skill test suite after setup or before changing the implementation:
 
 ```bash
 cd skills/watch
 ./sanity.sh
 ```
 
-The current suite contains 17 tests.
+The suite is intended to catch broken dependencies, script regressions, and recall
+integration problems before you trust a run.
 
 ## Troubleshooting
 
-**The video has almost no frames**
+### `yt-dlp` cannot download the video
 
-Use `--scene-change` for visually active videos. For slide decks, screen
-recordings, or static camera footage, allow the uniform sampling fallback to do
-its job.
+Confirm `yt-dlp` is installed and up to date:
 
-**The answer misses something visible on screen**
+```bash
+yt-dlp --version
+```
 
-Make sure the relevant moment is inside the watched range. For long files, rerun
-with a tighter `--start` / `--end` window around the section you care about.
+Some sites block downloads, require authentication, or change formats. Try a local
+file when URL download is the unreliable part.
 
-**The transcript is weak**
+### `ffmpeg` or `ffprobe` is missing
 
-Check audio quality first. Background noise, music over speech, and quiet speakers
-will reduce transcription quality. A focused clip often works better than a full
-long recording.
+Install the system package for your platform and verify both commands are on
+`PATH`:
 
-**Recall cannot find the watched moment**
+```bash
+ffmpeg -version
+ffprobe -version
+```
 
-Run `scripts/recall_proof.py` to verify that artifacts were written, records were
-upserted, and `watch_content` is visible to `/memory/recall`.
+### The run produced too few useful frames
+
+Try the opposite extraction mode. If you used scene detection on a static screen
+recording, rerun with `--no-scene-change`. If uniform sampling missed fast visual
+cuts, rerun with the default scene-change mode.
+
+### The transcript is weak
+
+Check the audio quality. Quiet speakers, overlapping voices, loud music, and noisy
+rooms can reduce transcription quality. For long recordings, rerun a focused
+section with `--start` and `--end`.
+
+### Recall cannot find the watched moment
+
+First inspect `report.md` to confirm the moment was actually processed. Then run
+the recall proof script if available:
+
+```bash
+uv run python scripts/recall_proof.py
+```
+
+If local artifacts exist but recall fails, the issue is likely in memory upsert,
+indexing, or service configuration rather than video extraction.
+
+### Image or soundtrack descriptions are missing
+
+The frame and transcript extraction steps are local, but multimodal enrichment may
+use configured model services. Check the report and stderr for service errors,
+credential problems, rate limits, or unavailable endpoints.
+
+### Persistent artifacts fail to write
+
+Check the hardcoded media path:
+
+```bash
+ls -ld /mnt/storage12tb/media /mnt/storage12tb/media/watch-frames
+```
+
+If that path does not exist or is not writable, create it, fix permissions, mount
+the storage volume, or symlink `watch-frames` to a directory on local disk.
+
+## Hard limits
+
+| Area | Current behavior |
+| --- | --- |
+| Frames | Up to 100 frames per watch, capped at 2 fps. |
+| Transcription | Uses `faster-whisper` for local files when captions are not available; speed depends heavily on CPU/GPU. |
+| Image descriptions | Enrichment describes a small set of key frames rather than every frame. |
+| Soundtrack descriptions | Enrichment samples scene chunks rather than continuously analyzing the full audio track. |
+| Persisted media root | Hardcoded to `/mnt/storage12tb/media/watch-frames`. |
+| Recall | Requires memory services to be running and reachable. |
+
+`watch` is not a video editor and it is not a perfect substitute for a human
+watching every second. It is an indexing tool: it gives agents enough aligned
+visual, audio, and text evidence to search and reason about a video later.
+
+## Tips and gotchas
+
+- Keep the first run small. A focused five-minute segment is easier to verify than
+  a two-hour recording.
+- Use `--start` and `--end` to keep long videos small, readable, and easier to
+  recall accurately.
+- Static videos often work better with `--no-scene-change` because there may be
+  too few visual cuts to sample well.
+- Scene detection is better for movies, edited videos, talks with slide changes,
+  and recordings with visible transitions.
+- Use `--out-dir` when debugging so the reports and intermediate files do not
+  disappear into a temporary directory.
+- Memory recall is only as good as the sampled frames, transcript quality, and
+  successful memory upsert.
 
 ## Credits
 
-`/watch` builds on scene-detection techniques from
+`watch` builds on scene-detection techniques from
 [claude-watch](https://github.com/taoufik123-collab/claude-watch) by
 taoufik123-collab. The ingest-youtube and ingest-movie skills provide transcript
 and SRT analysis. Memory schema additions follow the SPARTA QRA document pattern.
-
-## The short version
-
-`watch` makes videos usable by agents.
-
-It does not just summarize a file. It builds a timecode-aligned memory of what was
-said, what was shown, what changed, and what the audio felt like — then stores
-that memory so an agent can ask about the video later.
