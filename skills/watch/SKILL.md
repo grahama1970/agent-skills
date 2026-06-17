@@ -28,8 +28,9 @@ provides:
   - watch
 composes:
   - memory
+  - brave-search          # Topic discovery: find what movie to watch
   - ingest-youtube
-  - ingest-movie      # Owns ALL movie search, Radarr acquisition, SRT scene analysis
+  - ingest-movie          # Acquisition + SRT scene analysis (owns search, Radarr, subtitle quality)
   - scillm
   - task-monitor
 complies:
@@ -78,23 +79,21 @@ watch /path/to/video.mp4                  → Local file: direct processing
 watch "There Will Be Blood"              → Movie title: disk → ingest-movie search → ingest-movie Radarr
 ```
 
-**Movie title resolution order:**
+**Movie resolution and acquisition:**
 
-1. **Disk**: check `/mnt/storage12tb/media/movies/` (fuzzy match)
-2. **ingest-movie search** (NOT brave-search, NOT ops-nzbgeek directly):
-   ```bash
-   cd ../ingest-movie
-   ./run.sh search "Bad Santa 2003"        # Searches NZBGeek, filters for subtitle hints
-   ```
-3. **ingest-movie Radarr add** (enforces SDH subs, English audio, 1080p):
-   ```bash
-   cd ../ingest-movie
-   ./run.sh acquire radarr --preset horus_standard --execute
-   ```
-4. **Failure**: if all paths fail, `watch` exits with code 1. The agent MUST
-   report the unresolved title to the user. Do NOT fall back to brave-search,
-   manual Radarr API calls, or ops-nzbgeek directly — route ALL acquisition through
-   `ingest-movie`.
+| Step | Task | Tool | Command |
+|------|------|------|---------|
+| 1 | **What to watch?** — discover movies about a topic | `brave-search` | `./run.sh web "revenge movies 2000s"` |
+| 2 | **Is it on disk?** — check local library | watch built-in | Fuzzy match in `/mnt/storage12tb/media/movies/` |
+| 3 | **Find a release** — search Usenet with subtitle checks | `ingest-movie` search | `./run.sh search "Bad Santa 2003"` |
+| 4 | **Acquire** — download with quality enforcement | `ingest-movie` Radarr | `./run.sh acquire radarr --preset horus_standard --execute` |
+| 5 | **Failure** — can't find or acquire | agent reports to user | Exit code 1 + context |
+
+Rules:
+- **Topic discovery** → `brave-search` (find *what* to watch)
+- **Acquisition** → `ingest-movie` ONLY (find + download *a specific title*)
+- Do NOT call ops-nzbgeek, Radarr API, or brave-search for acquisition —
+  `ingest-movie` owns all of that and enforces subtitle quality.
 
 ## Composition Routing
 
