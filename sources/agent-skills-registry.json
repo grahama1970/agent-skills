@@ -1,9 +1,9 @@
 {
-  "content_hash": "07760af43dd44b9ae77a2b22381602a511f74f1577e71dc7d05c0a646f85db23",
+  "content_hash": "9fc44c5fc58d00bb6f832255c3958fa51ce24c0a2861f73000627d51a20f04dc",
   "counts": {
-    "agents": 3,
-    "entries": 314,
-    "skills": 311
+    "agents": 4,
+    "entries": 316,
+    "skills": 312
   },
   "entries": [
     {
@@ -70,6 +70,28 @@
         "tts-train",
         "extract-audiobook",
         "ingest-youtube"
+      ],
+      "verifier": ""
+    },
+    {
+      "content_hash": "af91ebc5156ad532",
+      "handoffs_to": [],
+      "id": "watch",
+      "kind": "worker",
+      "path": "agents/watch",
+      "source_file": "agents/watch/AGENTS.md",
+      "summary": "Transport wrapper for the `watch` subagent.",
+      "title": "Watch",
+      "type": "agent",
+      "uses_skills": [
+        "memory",
+        "brave-search",
+        "watch",
+        "ingest-youtube",
+        "ingest-movie",
+        "doc2qra",
+        "scillm",
+        "task-monitor"
       ],
       "verifier": ""
     },
@@ -1098,7 +1120,9 @@
       "content_hash": "e8f76b2c5c334081",
       "id": "brave-search",
       "path": "skills/brave-search",
-      "related_agents": [],
+      "related_agents": [
+        "watch"
+      ],
       "source_file": "skills/brave-search/SKILL.md",
       "summary": "Free web and local search via Brave Search API. Use when user says \"brave search\", \"search with brave\", \"brave web search\", \"brave local search\", \"local search\", \"find businesses near\", or \"near me\".",
       "title": "brave-search",
@@ -2993,7 +3017,9 @@
       "content_hash": "4f97d8693c122fc3",
       "id": "doc2qra",
       "path": "skills/doc2qra",
-      "related_agents": [],
+      "related_agents": [
+        "watch"
+      ],
       "source_file": "skills/doc2qra/SKILL.md",
       "summary": "Convert any document (PDF, URL, text) into Question-Reasoning-Answer pairs with a document summary. Stores to memory for later recall.",
       "title": "doc2qra",
@@ -3834,7 +3860,9 @@
       "content_hash": "ea2773ff9b06351f",
       "id": "ingest-movie",
       "path": "skills/ingest-movie",
-      "related_agents": [],
+      "related_agents": [
+        "watch"
+      ],
       "source_file": "skills/ingest-movie/SKILL.md",
       "summary": "Locate NZBGeek releases with subtitle-rich movie files, auto-tag rage/anger/humor cues, and emit PersonaPlex-ready JSON for Horus Theory-of-Mind benchmarks.",
       "title": "ingest-movie",
@@ -3919,7 +3947,8 @@
       "id": "ingest-youtube",
       "path": "skills/ingest-youtube",
       "related_agents": [
-        "voice-segment-selector"
+        "voice-segment-selector",
+        "watch"
       ],
       "source_file": "skills/ingest-youtube/SKILL.md",
       "summary": "Extract transcripts from YouTube videos. Use when user says \"get transcript\", \"transcribe this video\", \"what does this YouTube video say\", \"extract captions\", \"youtube transcript\", or provides a YouTube URL and wants the text content.",
@@ -4259,7 +4288,8 @@
       "id": "memory",
       "path": "skills/memory",
       "related_agents": [
-        "book-extractor"
+        "book-extractor",
+        "watch"
       ],
       "source_file": "skills/memory/SKILL.md",
       "summary": "MEMORY FIRST - Query memory BEFORE scanning any codebase. Use when encountering ANY problem, error, or task. Call \"recall\" FIRST, then scan codebase only if nothing found. Triggers: \"check memory\", \"recall\", \"have we seen\", \"remember how\".",
@@ -6359,7 +6389,9 @@
       "content_hash": "4e7d21f1409be911",
       "id": "scillm",
       "path": "skills/scillm",
-      "related_agents": [],
+      "related_agents": [
+        "watch"
+      ],
       "source_file": "skills/scillm/SKILL.md",
       "summary": "Universal LLM proxy on localhost:4001. Surfaces: chat/batch completions, scillm exec, OpenCode serve (coding delegate), OpenCode transport (DAG/SSE), standing Codex agents. Chutes, Gemini, Claude/Codex OAuth, OpenCode Go, Ollama. Auto-rout\u2026",
       "title": "scillm",
@@ -6895,7 +6927,9 @@
       "content_hash": "156dcae31f688acd",
       "id": "task-monitor",
       "path": "skills/task-monitor",
-      "related_agents": [],
+      "related_agents": [
+        "watch"
+      ],
       "source_file": "skills/task-monitor/SKILL.md",
       "summary": "Monitor long-running tasks with Rich TUI and HTTP API. Includes scheduler integration and auto-restart.",
       "title": "task-monitor",
@@ -7277,6 +7311,32 @@
         "best 30 second male clip",
         "tts dataset prep",
         "select voice clips"
+      ],
+      "type": "skill"
+    },
+    {
+      "allowed_tools": [
+        "Bash",
+        "Read"
+      ],
+      "content_hash": "7afc6d9e7e163b86",
+      "id": "watch",
+      "path": "skills/watch",
+      "related_agents": [
+        "watch"
+      ],
+      "source_file": "skills/watch/SKILL.md",
+      "summary": "Watch any video (URL or local file) with scene-change frame extraction, transcript extraction (native captions or Whisper via scillm), SRT-based emotion/scene analysis, and structured reports. Merges capabilities from ingest-youtube (trans\u2026",
+      "title": "watch",
+      "triggers": [
+        "watch video",
+        "extract frames",
+        "get video transcript",
+        "scene detection",
+        "analyze video",
+        "what happens in this video",
+        "watch this url",
+        "extract scenes from video"
       ],
       "type": "skill"
     },
