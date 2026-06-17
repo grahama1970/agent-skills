@@ -132,6 +132,35 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
     return []
 
 
+def _build_scene_chunks(segments: list[dict], frames: list[dict], sampling_mode: str) -> list[dict]:
+    """Split transcript segments into time-based scene chunks."""
+    if not segments:
+        return []
+    duration = segments[-1]["start"] + segments[-1].get("duration", 30)
+    if duration <= 300:
+        cuts = [0, duration]
+    else:
+        interval = min(300, duration / 5)
+        cuts = [i * interval for i in range(int(duration / interval) + 1)]
+    if cuts[-1] < duration:
+        cuts.append(duration)
+    chunks = []
+    for i in range(len(cuts) - 1):
+        segs = [s for s in segments if s["start"] >= cuts[i] and s["start"] < cuts[i + 1]]
+        if not segs:
+            continue
+        text = " ".join(s["text"] for s in segs)
+        if len(text.strip()) < 20:
+            continue
+        chunks.append({"index": i, "start_seconds": cuts[i], "end_seconds": cuts[i + 1], "text": text, "segment_count": len(segs)})
+    return chunks
+
+
+def _call_doc2qra_scene(scene_text: str, scene_index: int, source_title: str, start: float, end: float) -> dict | None:
+    """Send a scene chunk to doc2qra for QRA extraction (optional enrichment)."""
+    return None  # doc2qra integration placeholder — currently handled by main pipeline
+
+
 def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
     """Describe up to 5 scene frames via mimo-v2-omni, concurrent."""
     if not _zen_api_key():
