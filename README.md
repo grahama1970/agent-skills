@@ -11,12 +11,15 @@ agent-skills/
 │   ├── distill/
 │   ├── memory/
 │   └── ...
+├── agents/           # Subagent definitions and role specs
 ├── hooks/            # Agent lifecycle hooks
 │   ├── quality-gate.sh
 │   ├── memory-first.sh
 │   ├── memory-prompt.sh
 │   └── prompts/
 │       └── quality-gate.md
+├── scripts/          # Utility and registry-generation scripts
+├── SOURCES.md        # Generated human-readable Sources registry
 ├── deploy.sh         # Deploy to all agents
 └── README.md
 ```
@@ -38,6 +41,24 @@ agent-skills/
 After deployment:
 - **Skills** available at `~/.claude/skills/`, `~/.codex/skills/`, `~/.pi/agent/skills/`
 - **Hooks** available at `~/.claude/hooks/`
+
+## Sources Registry
+
+Generated references for all skills and subagents live in:
+
+- `SOURCES.md` — human-readable Sources section for ChatGPT/WebGPT-style context.
+- `sources/agent-skills-registry.json` — machine-readable registry for tooling and routers.
+
+The registry is generated from `skills/` and `agents/`; do not edit generated outputs by hand.
+
+Refresh locally:
+
+```bash
+python scripts/generate_sources_registry.py
+python scripts/generate_sources_registry.py --check
+```
+
+The `Update Sources Registry` GitHub Action refreshes the generated registry whenever `skills/**` or `agents/**` changes, so the Sources section is not static.
 
 ## Skills
 
