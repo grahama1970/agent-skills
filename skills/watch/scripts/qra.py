@@ -67,7 +67,10 @@ def _zen_chat(messages: list, model: str = "deepseek-v4-flash", timeout: int = 1
 
 
 def generate_qras(transcript_text: str, title: str, uploader: str | None = None) -> list[dict]:
-    """Generate 3 QRA pairs from transcript via deepseek-v4-flash."""
+    """Generate 3 QRA pairs from transcript.
+
+    Tries: deepseek-v4-flash (Zen) → gpt-5.5 (scillm) → deterministic fallback.
+    """
     if not transcript_text or len(transcript_text.strip()) < 50:
         return []
     creator = uploader or "unknown"
@@ -77,43 +80,56 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
         + f"Transcript excerpt ({len(truncated)} chars):\n{truncated}\n\n"
         + "Generate exactly 3 question-answer pairs about this video. "
         + "Return ONLY valid JSON array, one pair per line, no other text:\n"
-        + '{"question":"specific question about video content","answer":"2-4 sentence answer"}\n'
+        + '{"question":"specific question","answer":"2-4 sentence answer"}\n'
         + '{"question":"another specific question","answer":"2-4 sentence answer"}\n'
         + '{"question":"a third specific question","answer":"2-4 sentence answer"}'
     )
-    text = _zen_chat([{"role": "user", "content": prompt}], timeout=120)
-    if not text:
-        return []
-    text = text.replace("```json", "").replace("```", "").strip()
-    # Try to extract JSON array via regex if direct parse fails
-    import re as _re
-    for attempt in range(2):
+
+    def _extract_pairs(text: str) -> list[dict] | None:
+        """Try to extract QRA pairs from LLM response text."""
+        if not text:
+            return None
+        text = text.replace("```json", "").replace("```", "").strip()
+        import re as _re
         try:
-            # If it's individual objects on separate lines, wrap in array
-            if not text.startswith("["):
-                lines = [l.strip() for l in text.split("\n") if l.strip().startswith("{")]
+            if text.startswith("["):
+                pairs = json.loads(text)
             else:
-                lines = [text]
-            # Try parsing as full array first
-            pairs = json.loads(text if text.startswith("[") else f"[{','.join(lines)}]")
+                lines = [l.strip() for l in text.split("\n") if l.strip().startswith("{")]
+                pairs = json.loads(f"[{','.join(lines)}]")
             if not isinstance(pairs, list):
                 pairs = [pairs]
-            if len(pairs) >= 1:
-                valid = [p for p in pairs if len(p.get("answer", "")) >= 30]
-                if len(valid) >= 3:
-                    return valid[:3]
-                if len(valid) >= 1:
-                    return valid  # Return what we have
-            return []
-        except Exception as exc:
-            if attempt == 0:
-                logger.warning("QRA parse attempt 1 failed: {} — retrying LLM...", exc)
-                text = _zen_chat([{"role": "user", "content": prompt + "\n\nCRITICAL: Return ONLY valid JSON array. Check all quotes are escaped."}], timeout=120)
-                if text:
-                    text = text.replace("```json", "").replace("```", "").strip()
-                    continue
-            logger.error("QRA JSON parse failed after retry: {}", exc)
-            return []
+            valid = [p for p in pairs if len(p.get("answer", "")) >= 30]
+            return valid[:3] if valid else None
+        except Exception:
+            return None
+
+    # Tier 1: deepseek-v4-flash via Zen API
+    for attempt in range(2):
+        text = _zen_chat([{"role": "user", "content": prompt}], timeout=120)
+        pairs = _extract_pairs(text)
+        if pairs:
+            return pairs
+        prompt += "\n\nCRITICAL: Return ONLY valid JSON. Check all quotes are escaped. No markdown."
+
+    # Tier 2: gpt-5.5 via scillm (better JSON reliability)
+    logger.warning("deepseek QRA failed — falling back to gpt-5.5 via scillm")
+    scillm_prompt = prompt.replace('"question"', '\\"question\\"').replace('"answer"', '\\"answer\\"')
+    text = _scillm_call([{"role": "user", "content": scillm_prompt}], model="gpt-5.5", timeout=120)
+    pairs = _extract_pairs(text)
+    if pairs:
+        return pairs
+
+    # Tier 3: deterministic fallback from transcript sentences
+    logger.warning("all LLM QRA failed — using deterministic fallback")
+    sents = [s.strip() for s in transcript_text.replace("!",".").replace("?",".").split(".") if len(s.strip()) > 50]
+    if sents:
+        return [
+            {"question": f"what happens in the first part of {title[:60]}", "answer": sents[0][:400]},
+            {"question": f"what is discussed in {title[:60]}", "answer": sents[len(sents)//3][:400] if len(sents) > 2 else sents[0][:400]},
+            {"question": f"how does {title[:60]} conclude", "answer": sents[-1][:400]},
+        ]
+    return []
 
 
 def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
