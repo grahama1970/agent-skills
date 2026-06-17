@@ -27,6 +27,7 @@ metadata:
 provides:
   - memory-recall
   - memory-learn
+  - intent-classification
   - edge-verification
   - usage-assessment
 composes:
@@ -36,6 +37,11 @@ composes:
   - embedding
   - task-monitor
 
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-scillm
+  - best-practices-arangodb
 taxonomy:
   - knowledge
   - persistence
@@ -48,7 +54,7 @@ docs:
 > **STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.**
 > Do not skim. Do not skip to the code examples. This document contains
 > unique constraints, deterministic `_key` rules, secondary unique indexes,
-> embedding dimension requirements (384), and schema ownership rules that
+> Qdrant semantic-sync metadata rules (no Arango vector arrays), and schema ownership rules that
 > WILL cause silent data corruption or 400/409 errors if you ignore them.
 > Every section exists because an agent broke something by not reading it.
 
@@ -64,11 +70,17 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 | ------------------------------------------------- | ---------------------------------------------------------------------- |
 | `./run.sh recall --q "..." --brief`               | **DEFAULT.** Slim output + proven skill chain. Use this.               |
 | `./run.sh recall --q "..."`                       | Full output with taxonomy, raw scores, _key (when you need metadata)   |
+| `./run.sh intent --q "..."` / `httpx POST /intent {q, scope?, fast?, app?}` | First-class intent product: classify route, QuerySpec, `recall_profile`, slots, and query plan |
+| `httpx POST /answer {q, scope?, k?, collections?}` | First-class grounded answer product: answer only from deterministic general answers or recall evidence |
+| `./run.sh clarify --q "..."` / `httpx POST /clarify {q, scope?, context?, k?}` | First-class ambiguity product: ask targeted follow-up questions when the request is underspecified |
+| `./run.sh deflect --q "..."` / `httpx POST /deflect {q, persona_id?, intent_action?}` | First-class deflection product: route off-topic, unsafe, or no-match turns away from memory/evidence work |
 | `httpx POST /store {document, collection}`         | **THE write endpoint.** Write to ANY collection. Auto-upserts by `_key`. |
-| `httpx POST /store {document}` (no collection)     | Writes to `lessons` with embeddings + dedup (same as old `/learn`)     |
+| `httpx POST /store {document}` (no collection)     | Writes to `lessons` with Qdrant semantic sync + dedup (same as old `/learn`)     |
 | `httpx POST /upsert {collection, documents}`       | Batch write (multiple docs). Same rules as `/store`.                   |
+| `memory-agent activity ingest-git REPO ...`         | Ingest git commits as durable `project_activity` records for day/week code-activity recall |
+| `uv run python -m graph_memory.maintenance.sanity_recall persona-graph-materialize` | Materialize searchable persona relationship docs into true Arango graph edge collections |
+| `uv run python -m graph_memory.maintenance.sanity_recall persona-graph --base-url http://127.0.0.1:8601` | E2E canary: natural-language persona recall returns source/evidence-grounded memories, QRA-style question/answer/evidence/source records, explicit 2+ hop graph traversal, and directly filterable `tom_edges` |
 | `./run.sh learn --problem "..." --solution "..."`  | **Deprecated.** CLI shorthand that calls `/store` with `collection=lessons` |
-| `./run.sh clarify --q "..."`                      | Detect ambiguity + generate clarifying questions when recall is weak    |
 | `./run.sh chain-recall "query"`                   | Search proven skill chains directly                                    |
 | `./run.sh chain-learn --skills "a,b,c" --task "..."` | Store a proven skill chain                                          |
 | `./run.sh chain-stats`                            | Skill chain collection statistics                                      |
@@ -142,6 +154,255 @@ to transcript-mined chains that match semantically.
 
 Memory service runs as a Docker container on `http://127.0.0.1:8601`.
 
+### First-Class Routing Products: Intent, Answer, Clarify, Deflect
+
+`/intent`, `/answer`, `/clarify`, and `/deflect` are structured JSON products,
+not prose helpers. They are a shared fail-closed
+routing contract for memory, `/create-evidence-case`, SciLLM-backed final
+responses, and delegated subagents. Do not let each skill invent its own
+threshold for answerability, ambiguity, or off-topic rejection.
+
+Use the routing set this way:
+
+```text
+/intent
+  -> /answer   when the request is grounded enough to answer
+  -> /clarify  when entities, scope, evidence, or relationships are ambiguous
+  -> /deflect  when the turn is off-topic, unsafe, no-match, or outside memory scope
+```
+
+These endpoints are routing or final-response products, not raw retrieval:
+
+| Product | When to use | Schema | Surface |
+| --- | --- | --- | --- |
+| `/intent` | Classify the user turn into a route, QuerySpec, recall profile, extracted entities, tag families, confidence/ranked candidates, slots, required artifacts, and query plan before retrieval or final-response work. | intent response fields | `./run.sh intent` and HTTP |
+| `/answer` | Return a grounded final answer from deterministic general answers or memory recall evidence. It must not invent unsupported facts. | `memory.answer.v1` | HTTP only for now |
+| `/clarify` | Ask targeted follow-up questions when the query is too vague, has weak recall, unsupported entities, taxonomy gaps, or ambiguous scope. | `memory.clarify.v1` | `./run.sh clarify` and HTTP |
+| `/deflect` | Redirect off-topic, unsafe, no-match, or content-safety turns before they enter recall, evidence-case, QRA, or subagent work. | `memory.deflect.v1` | `./run.sh deflect` and HTTP |
+
+`/create-evidence-case` depends on this boundary: `ANSWER` means evidence is
+coherent enough to synthesize; `CLARIFY` means the case should not force a
+verdict yet; `DEFLECT` means the request should not enter the evidence pipeline.
+SciLLM may write the human-facing `final_response`, but deterministic memory
+logic owns the route state and source packet. Every SciLLM final-response call
+from memory must include `X-Caller-Skill: memory` and source metadata.
+
+#### POST /intent -- Route and QuerySpec Product
+
+Use `/intent` before recall or final-response work when a caller needs a
+machine-readable decision about what kind of turn it received. It is the
+first-class routing product that tells callers whether to query memory, answer
+directly, clarify, deflect/no-match, run an app command, or route to research.
+It returns the action, confidence, classifier source, entities, frameworks,
+keywords, `recall_profile`, `slots`, required artifacts, and `query_plan`.
+The response must be valid structured JSON. Human-facing copy belongs in a
+separate response product, not in `memory.intent`.
+Entity extraction is a first-class part of this product: `/intent` must surface
+grounded entities, unresolved/fabricated-looking terms, frameworks, and the tag
+families that should drive recall or clarification. Do not make callers rerun
+regexes or infer evidence-case shape from prose.
+
+`confidence` is required on the selected action. When the classifier is unsure
+or the top actions are close, `/intent` should also return `top_intents` (or the
+backward-compatible name `candidate_intents`) as a ranked list of alternatives:
+
+```json
+{
+  "action": "CLARIFY",
+  "confidence": 0.58,
+  "top_intents": [
+    {"action": "CLARIFY", "confidence": 0.58, "reason": "ambiguous_scope"},
+    {"action": "QUERY", "confidence": 0.51, "recall_profile": "persona_memory_recall"},
+    {"action": "QUERY", "confidence": 0.44, "recall_profile": "qra_evidence_question"}
+  ]
+}
+```
+
+Callers should treat low-confidence single-label outputs as incomplete. If
+`confidence` is below the product threshold or the top two intents are too close,
+route to `/clarify` instead of forcing recall, evidence-case generation, or a
+subagent handoff.
+
+Keep tag families separate:
+
+| Family | Purpose | Typical fields | Used by |
+| --- | --- | --- | --- |
+| Grounded entities | Deterministic anchors and spans from `/extract-entities` / `graph_memory.entity_extraction.extract_entities()` | `entities`, `valid_entities`, `unresolved_terms`, `frameworks`, `query_plan.extracted_entities` | `/intent`, `/clarify`, `/create-evidence-case`, subagents |
+| SPARTA taxonomy tags | Security/compliance bridge and mind taxonomy for SPARTA/control work | `sparta_tags`, `sparta_mind_tags`, `tier1`, `frameworks` | SPARTA recall profiles, evidence cases, QRA review |
+| Theory-of-Mind tags | Belief, desire, emotion, stance, relationship, and non-compliance interpretation for persona/user memory graph traversal | `tom_state_type`, `tom_tags`, `emotion`, `stance`, `relationship_type` | persona recall, ToM graph traversal, non-compliance questions |
+| Emotional intensity | Salience/ranking signal for persona or user memories after grounding and scope gates pass | `intensity`, `emotional_intensity`, `intensity_score` | persona/user memory ranking and tie-breaking |
+
+SPARTA `mind` tags such as Harden/Detect/Model are not Theory-of-Mind tags.
+They are security taxonomy labels and must stay gated by security/compliance
+signal. Do not use them to infer a user's belief, desire, emotion, stance, or
+non-compliance motive.
+
+```bash
+./run.sh intent --q "How do I fix the Codex prehook memory first result?" --scope project-agent
+```
+
+```python
+resp = client.post("/intent", json={
+    "q": "How do I fix the Codex prehook memory first result?",
+    "scope": "project-agent",
+    "session_id": "agent",
+    "fast": True,
+})
+intent = resp.json()
+```
+
+#### POST /answer -- Grounded Final Answer Product
+
+Use `/answer` when the caller wants memory to decide whether a final answer can
+be produced. It first checks deterministic general-answer fixtures, otherwise
+calls `/recall` and answers only from non-routing recall evidence. If recall
+does not provide enough grounded evidence, it returns
+`can_answer=false` with `answer_type="insufficient_memory_evidence"`.
+
+```python
+import httpx
+
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
+resp = client.post("/answer", json={
+    "q": "What did we decide about memory first hooks?",
+    "scope": "memory",
+    "k": 5,
+})
+data = resp.json()
+# data includes:
+# {
+#   "schema": "memory.answer.v1",
+#   "can_answer": true,
+#   "answer_type": "memory_recall",
+#   "source_answer": "...",
+#   "final_response": "...",          # written by SciLLM from the source packet
+#   "final_response_origin": "scillm",
+#   "confidence": 0.82,
+#   "sources": [...],
+#   "recall": {"found": true, ...},
+#   "scillm": {"caller_skill": "memory", "source_packet_hash": "..."}
+# }
+```
+
+#### POST /clarify -- Ambiguity Product
+
+Use `/clarify` when the request is underspecified or evidence is weak. It
+combines intent mapping, taxonomy/entity extraction, QRA correlation, and recall
+confidence to produce specific follow-up questions. For direct grounded control
+lookups, it can explicitly return `needs_clarification=false`.
+
+```bash
+./run.sh clarify --q "How do I secure it?" --scope sparta
+```
+
+```python
+resp = client.post("/clarify", json={
+    "q": "GPS spoofing",
+    "scope": "sparta",
+    "context": "I meant the F-36 GPS receiver",
+    "k": 5,
+})
+```
+
+#### POST /deflect -- Off-Topic and Safety Product
+
+Use `/deflect` before launching memory, QRA, evidence-case, or subagent work
+when a turn may be off-topic, unsafe, or a no-match. `QUERY` passes through with
+`deflection_type="none"`; `CLARIFY`, `NO_MATCH`, `OFF_TOPIC`, and content-safety
+actions return `should_deflect=true`.
+
+```bash
+./run.sh deflect --q "what is the weather" --persona embry
+./run.sh deflect --q "something" --intent CLARIFY
+```
+
+```python
+resp = client.post("/deflect", json={
+    "q": "what is the weather",
+    "persona_id": "embry",
+    "intent_action": "NO_MATCH",
+})
+```
+
+### POST /intent -- Intent Classification and Recall Profile Selection
+
+`/intent` is the deterministic front door for classifying a user turn before
+retrieval. It does not perform recall. It returns routing metadata that callers
+can use to decide whether to call `/recall`, answer directly, ask for
+clarification, route to a UI/app command, or launch a research workflow.
+
+Use `/intent` when a caller needs to distinguish SPARTA/compliance questions,
+project-agent procedural memory, artifacts, math, research, app commands, and
+off-topic turns. SPARTA Chat and Explorer-style clients should call `/intent`
+first, then pass `recall_profile` explicitly to `/recall` only when the returned
+action calls for memory retrieval.
+
+```python
+import httpx
+
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
+resp = client.post("/intent", json={
+    "q": "How do I fix the Codex prehook memory first result?",
+    "session_id": "agent",
+    "fast": True,
+})
+intent = resp.json()
+# intent includes:
+# {
+#   "action": "QUERY",
+#   "recall_profile": "procedural_memory",
+#   "recall_profile_source": "deterministic_procedural",
+#   "required_artifacts": ["lesson"],
+#   "reranker_mode": "off",
+#   "slots": {...},
+#   "query_plan": null
+# }
+```
+
+**Request fields:**
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `q` | str | required | User query or command |
+| `scope` | str | `""` | Calling surface scope, such as `sparta` or `binary-explorer` |
+| `session_id` | str | `api` | Thread key for self-correction context |
+| `fast` | bool | `false` | Skip slower LLM paths; use deterministic/classifier routing |
+| `app` | str | null | App context for registered UI action routing |
+
+**Response fields include:** `action`, `confidence`, `top_intents` or
+`candidate_intents`, `classifier_source`, `entities`, `frameworks`, `keywords`,
+`ui_action`, `query_plan`,
+`recall_profile`, `recall_profile_confidence`, `recall_profile_source`,
+`recall_profile_spec`, `slots`, `required_artifacts`, `reranker_mode`, `k`, and
+`depth`.
+
+For compliance and persona-memory turns, the response should make the extraction
+boundary explicit. Security/control queries should expose grounded control IDs
+and SPARTA taxonomy fields. Persona, user-modeling, and non-compliance queries
+should expose or route toward ToM fields (`tom_state_type`, `tom_tags`,
+`emotion`, `stance`) and intensity/salience fields when available. If an entity,
+taxonomy, or ToM tag family is ambiguous, route to `CLARIFY` instead of forcing a
+generic recall profile.
+
+Common actions:
+
+| Action | Caller behavior |
+|--------|-----------------|
+| `QUERY` or `COMPLIANCE` | Call `/recall` or evidence-case flow as appropriate; pass `recall_profile` explicitly when present |
+| `CLARIFY` | Ask the returned clarifying question instead of recalling |
+| `NO_MATCH` | Do not run memory/QRA recall |
+| `APP_COMMAND` | Execute the returned UI/app command or `query_plan` |
+| `GENERAL_MATH` | Answer directly or route to a math solver; do not run memory/QRA recall |
+| `RESEARCH` | Route to research/search tooling; do not run QRA recall |
+
+**Critical contract:** `/recall` remains backward-compatible for ordinary recall
+and does not run the full `/intent` pipeline internally. If callers want general
+profile-aware retrieval, they should call `/intent` first and pass the selected
+`recall_profile` explicitly to `/recall`. The exception is the deterministic
+project-activity shortcut: when a query plainly asks about code work by ISO date,
+ISO week, or human time window, `/recall` may apply the `temporal_project_state`
+profile and `project_activity` routing automatically so project agents can ask
+normal activity questions without a separate `/intent` call.
+
 ### POST /recall — Semantic Search (BM25 + cosine + graph traversal)
 
 The primary search endpoint. Searches across lessons and SPARTA collections using
@@ -152,8 +413,7 @@ per-item scores and a combined `confidence` value.
 ```python
 import httpx
 
-transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-client = httpx.Client(transport=transport, base_url="http://localhost")
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
 
 # Search all collections (lessons + SPARTA supplemental)
 r = client.post("/recall", json={"q": "jamming satellite Telestar", "k": 5})
@@ -168,7 +428,7 @@ data = r.json()
 #       "scores": {               ← per-item breakdown
 #         "bm25": 1.0,            ← BM25 reciprocal rank (0-1)
 #         "graph": 0.5,           ← graph traversal score (0-1)
-#         "dense": 0.39,          ← cosine similarity (0-1, requires vector-store)
+#         "dense": 0.39,          ← Qdrant semantic similarity (0-1, requires embedding + Qdrant)
 #         "freshness": 0.87       ← time decay (0-1)
 #       },
 #       ...
@@ -200,16 +460,21 @@ r = client.post("/recall", json={
 - `confidence` — combined score from top items (BM25 × 0.6 + graph × 0.4 for lessons, BM25 only for SPARTA)
 - Each item has `scores: {bm25, graph, dense, freshness}` breakdown
 - When `collections` targets SPARTA collections, results come from supplemental sources via ArangoSearch View
-- `dense=0.0` means vector-store is down — check `docker ps | grep vector-store`
+- `dense=0.0` means Qdrant semantic recall is unavailable — check `embry-embedding-mm`, `embry-qdrant`, and `qdrant_point_id` metadata
 
 **CRITICAL:** The daemon proxy runs `MemoryClient.recall()` locally (not just HTTP forwarding). Code changes to `api.py` require `uv pip install -e . && systemctl --user restart embry-memory`. The Docker container at 8601 has its own code copy — it does NOT auto-reload from host source files.
 
-#### CORRECT usage — via Unix socket, read `items` and `confidence`:
+`SKILL.md` is the agent contract and lives outside the memory Docker image. It
+is read from the shared skill path, which project mirrors may symlink to. Editing
+`SKILL.md` changes project-agent behavior as soon as agents read the file; it
+does not require a Docker rebuild. Rebuild/relaunch Docker only for runtime code,
+dependency, Dockerfile, or service configuration changes.
+
+#### CORRECT usage — via the Docker-backed HTTP daemon, read `items` and `confidence`:
 ```python
 import httpx
 
-transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-client = httpx.Client(transport=transport, base_url="http://localhost")
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
 resp = client.post("/recall", json={"q": "jamming satellite", "k": 5})
 data = resp.json()
 
@@ -218,6 +483,438 @@ if data["found"]:
         print(item["scores"])         # ← {bm25, graph, dense, freshness}
     print(data["confidence"])         # ← combined grounding signal
 ```
+
+## Persona Memory Recall For Project Agents
+
+All persona memories use the same `/recall` endpoint. Do not query ArangoDB
+directly, do not call Qdrant directly for answers, and do not build a separate
+persona-memory retrieval path. Use `/recall` with the right `collections` and
+scope tags, then inspect `items`, `scores`, and source fields.
+
+Persona-memory recall for story, script, Theory-of-Mind, and character work
+MUST be question-shaped. Do not use a bag of BM25 keywords as the `q` value when
+proving persona memory availability or driving a story/script pipeline.
+
+Required persona-memory recall contract:
+
+1. `q` is a natural-language question that asks what the caller needs to know.
+2. `collections` includes the target persona collection, usually
+   `["persona_memory"]`.
+3. `tags` includes the persona scope, for example `persona:embry` or
+   `persona:horus_lupercal`; include book/source tags when relevant.
+4. The caller checks returned `items` for the expected persona tag or
+   `persona_id`.
+5. For proof gates, the caller records the question, expected key/persona
+   constraints, returned keys, and pass/fail result.
+
+Bad persona-memory probe:
+
+```json
+{
+  "q": "Horus Lupercal Warmaster brothers father Emperor Cthonia",
+  "collections": ["persona_memory"],
+  "tags": ["persona:horus_lupercal"]
+}
+```
+
+Good persona-memory probe:
+
+```json
+{
+  "q": "What memories or source-grounded facts explain Horus Lupercal as Warmaster, brother, son of the Emperor, and Cthonian primarch?",
+  "collections": ["persona_memory"],
+  "tags": ["persona:horus_lupercal"],
+  "k": 8
+}
+```
+
+Good Embry persona-memory probe:
+
+```json
+{
+  "q": "What memory explains why Embry Lawson reacts to Hawaii, surfing, Kai, and afternoon rain with grief?",
+  "collections": ["persona_memory"],
+  "tags": ["persona:embry"],
+  "k": 8
+}
+```
+
+Required tags for book/persona recall:
+
+```python
+tags = ["persona:horus_lupercal", "book:flight_of_the_eisenstein"]
+```
+
+Use these collections by intent:
+
+| Question type | Collections | Must inspect |
+| --- | --- | --- |
+| Source-grounded facts/Q&A | `["persona_memory"]` | `_key`, `book_id`, `persona_id`, `retrieval_text`, `scores.bm25`, `scores.dense`, `scores.graph` |
+| Character/entity nodes | `["persona_entities"]` | `canonical_name`, `aliases`, `entity_kind`, `book_id`, `persona_id` |
+| Fact mentions of characters | `["persona_memory_entity_edges"]` | `relationship_type="mentions"` or `"mentioned_by"`, `record_id`, `canonical_name`, `mention_text`, `source_ref` |
+| Character co-mentions | `["persona_entity_edges"]` | `relationship_type="appears_with"`, `from_canonical_name`, `to_canonical_name`, `retrieval_text` |
+| Theory-of-Mind/fact graph edges | `["persona_memory_edges", "tom_edges"]` | `_from`, `_to`, `relationship_type`, `tom_state_type`, `tom_tags`, `emotion`, `stance`, `confidence` |
+| High-salience persona/user memories | `["persona_memory"]` plus graph edges | `emotion`, `stance`, `tom_state_type`, `tom_tags`, `intensity`, `emotional_intensity`, `intensity_score`, `scores.profile` |
+
+Theory-of-Mind tags are first-class graph traversal fields, especially for
+non-compliance questions. A non-compliance prompt usually asks why a user,
+persona, actor, or character refuses, avoids, distrusts, rationalizes, or fails
+to comply. Do not answer that from flat BM25 alone. Prefer recall over
+`persona_memory`, `persona_memory_edges`, and `tom_edges`, then inspect:
+
+- `tom_state_type`: belief, desire, intent, emotion, stance, knowledge,
+  uncertainty, relationship, preference, memory, avoidance, or obligation.
+- `tom_tags`: normalized traversal tags such as `belief`, `desire`, `fear`,
+  `trust`, `distrust`, `avoidance`, `resistance`, `loyalty`, `shame`,
+  `grief`, `anger`, `respect`, `authority`, `non_compliance`, and
+  `compliance_pressure`.
+- `emotion` and `stance`: direct affect and attitude toward the target.
+- `relationship_type`: how one memory/persona/user state connects to another.
+
+Emotional intensity is a first-class ranking signal for persona and user
+memories, not just a drive attribute. After scope, evidence, and graph gates
+pass, higher-salience memories should outrank neutral memories for persona/user
+questions. Use whichever field the record exposes today (`intensity`,
+`emotional_intensity`, or `intensity_score`), and preserve the field in the
+returned item or profile trace. Do not let intensity override grounding: an
+intense but unscoped or unsupported memory is still invalid.
+
+Example real-world persona recall:
+
+```python
+import httpx
+
+client = httpx.Client(
+    base_url="http://127.0.0.1:8601",
+    timeout=httpx.Timeout(10.0, connect=2.0),
+)
+
+resp = client.post("/recall", json={
+    "q": "What did Caleb Arryn believe in Flight of the Eisenstein?",
+    "k": 10,
+    "collections": ["persona_memory"],
+    "tags": ["persona:horus_lupercal", "book:flight_of_the_eisenstein"],
+})
+data = resp.json()
+
+for item in data["items"]:
+    assert item["book_id"] == "flight_of_the_eisenstein"
+    assert item["persona_id"] == "horus_lupercal"
+    print(item["_key"], item["scores"])
+```
+
+Graph edge recall:
+
+```python
+resp = client.post("/recall", json={
+    "q": "Which characters appear with Horus Lupercal in Flight of the Eisenstein?",
+    "k": 8,
+    "collections": ["persona_entity_edges"],
+    "tags": ["persona:horus_lupercal", "book:flight_of_the_eisenstein"],
+})
+for item in resp.json()["items"]:
+    print(item["from_canonical_name"], item["relationship_type"], item["to_canonical_name"])
+```
+
+ToM edge recall:
+
+```python
+resp = client.post("/recall", json={
+    "q": "What belief theory of mind edges exist for Caleb Arryn in Flight of the Eisenstein?",
+    "k": 8,
+    "collections": ["persona_memory_edges", "tom_edges"],
+    "tags": ["persona:horus_lupercal", "book:flight_of_the_eisenstein"],
+})
+```
+
+Healthy persona-memory recall has all of these signals:
+
+- Returned rows have the requested `book_id` and `persona_id`.
+- Story/script/TOM recall proof uses a natural-language question, not a keyword
+  pile; keyword-only probes are not valid proof that persona recall works.
+- Returned rows have the requested persona tag or `persona_id`; unscoped recall
+  that mixes unrelated personas is a failed story/script pipeline gate even if
+  `/recall` returns `found=true`.
+- `persona_entity_edges` rows include endpoint names:
+  `from_canonical_name`, `to_canonical_name`, `text`, and `retrieval_text`.
+- `persona_memory_entity_edges` rows include `record_id`, `canonical_name`,
+  `mention_text`, and `source_ref` span metadata.
+- `scores.dense > 0.0` for at least some returned rows when Qdrant is healthy.
+- `scores.graph > 0.0` for graph-supported facts when graph neighbors exist.
+- ToM/non-compliance recalls expose `tom_state_type`, `tom_tags`, `emotion`, or
+  `stance` on either the memory row or attached graph edge; generic security
+  `mind` taxonomy tags are not accepted as substitutes.
+- Persona/user-memory ranking preserves emotional salience fields
+  (`intensity`, `emotional_intensity`, or `intensity_score`) when available and
+  uses them only after scope/evidence/graph gates pass.
+- `persona_memory_search` contains the linked persona collections:
+  `persona_memory`, `persona_entities`, `persona_memory_entity_edges`,
+  `persona_entity_edges`, `persona_memory_edges`, and `tom_edges`.
+- Qdrant points for persona-memory rows have payload
+  `arango_collection="persona_memory"` and `arango_key` equal to the Arango
+  document `_key`. A mismatch means semantic point IDs collided and dense recall
+  is not trustworthy.
+
+Run the live E2E sanity gate after persona-memory code, schema, view, Qdrant, or
+book-extractor changes:
+
+```bash
+cd /home/graham/workspace/experiments/memory
+uv run pytest -q tests/health/test_persona_memory_recall_e2e.py
+```
+
+This gate asks real book/persona questions through `/recall`, checks graph-edge
+fields, verifies `persona_memory_search` view coverage, checks Qdrant text
+identity, and proves the configured multimodal Qdrant collection can query both
+`text_mm` and `image_mm` vectors.
+
+## Project Activity Memory: Code Work By Day/Week
+
+Use `project_activity` when a project agent needs to answer questions like:
+
+- "What did we work on last week?"
+- "What did we accomplish on 2026-05-13?"
+- "What changed during 2026-W20?"
+- "What work touched `scripts/validation/monitor_sparta.py`?"
+- "Which commits solved the monitor false-green problem?"
+
+`project_activity` records are generated from git commits and stored through
+`/upsert` in the memory daemon. Git is the provenance backbone: commit SHAs,
+repo paths, changed files, dates, and source refs are evidence fields.
+`project_knowledge`, checkpoints, lessons, and conversations may enrich an
+answer, but they do not replace the git-derived source refs.
+
+### Ingest Git Activity
+
+Run this after meaningful commits, before asking memory to summarize recent code
+work, or from a scheduled project-agent maintenance job:
+
+```bash
+memory-agent activity ingest-git /home/graham/workspace/experiments/memory \
+  --project memory \
+  --scope memory \
+  --since 2026-05-13T00:00:00 \
+  --until 2026-05-14T00:00:00 \
+  --batch-id memory-activity-2026-05-13
+```
+
+Useful options:
+
+| Option | Meaning |
+|--------|---------|
+| `--project` | Project name stored on records, for example `memory` or `sparta`. |
+| `--scope` | Recall scope. Usually the project name. |
+| `--since` / `--until` | ISO datetime bounds. Prefer these over vague human phrases in automation. |
+| `--author` | Restrict to one git author when needed. |
+| `--max-count` | Bound ingestion size for a proof run or smoke test. |
+| `--all-branches` | Include commits outside the current branch. |
+| `--batch-id` | Stable ingestion batch id for audit and rollback. |
+| `--dry-run` | Build records without writing to memory. |
+| `--skip-embedding` | Skip semantic embedding if the caller only needs BM25/source fields. |
+
+Re-running ingestion for the same repo and commit SHAs must be idempotent. Event
+identity is deterministic from repo root plus commit SHA, so repeat runs update
+the same `_key` values instead of creating duplicates.
+
+### Recall Activity
+
+Project agents can ask activity questions through the normal recall endpoint:
+
+```python
+import httpx
+
+client = httpx.Client(
+    base_url="http://127.0.0.1:8601",
+    timeout=httpx.Timeout(10.0, connect=2.0),
+)
+
+resp = client.post("/recall", json={
+    "q": "what did we accomplish on 2026-05-13?",
+    "scope": "memory",
+    "k": 5,
+})
+data = resp.json()
+
+for item in data["items"]:
+    if item.get("_source") == "project_activity":
+        print(item["commit_short"], item["commit_subject"])
+        print(item["activity_date"], item["iso_week"])
+        print(item["files_changed"])
+        print(item["source_refs"])
+```
+
+For strict activity-only retrieval, pass `collections=["project_activity"]`:
+
+```python
+resp = client.post("/recall", json={
+    "q": "what changed in scripts/validation/monitor_sparta.py?",
+    "scope": "memory",
+    "collections": ["project_activity"],
+    "k": 5,
+})
+```
+
+A healthy activity recall response should show:
+
+- `meta.recall_profile = "temporal_project_state"` for date/week activity
+  questions.
+- `meta.recall_profile_source = "deterministic_project_activity"` when the
+  deterministic project-activity router fired.
+- Top activity answers with `_source = "project_activity"`.
+- Evidence fields such as `commit_sha`, `commit_short`, `activity_date`,
+  `iso_week`, `files_changed`, and `source_refs`.
+
+### Answering Human Time Phrases
+
+Humans may ask "last week" or "yesterday", but project agents should normalize
+those phrases to ISO datetimes at the calling boundary whenever possible. Use
+the caller's timezone and explicit bounds, then either:
+
+1. ingest the matching git range with `memory-agent activity ingest-git`, or
+2. recall using an ISO date/week query such as `2026-05-13` or `2026-W20`.
+
+Do not rely on memory to inspect live git history by itself. Memory recalls
+stored activity records. If recall misses or source refs are stale, the project
+agent should run live git commands, ingest the missing range, and recall again.
+
+### Relationship To `$project-knowledge` And `$ingest-code`
+
+`$project-knowledge` may store durable summaries into memory and can appear in
+the same `temporal_project_state` recall profile. Treat those rows as narrative
+or project-state enrichment unless they cite immutable source refs.
+
+`$ingest-code` is the code-structure lane. It extracts symbols with Tree-sitter
+and writes `code_symbols` through `/memory`; `/memory` owns ArangoDB, Qdrant,
+semantic sync, and payload/index behavior. `$ingest-code` must not write
+directly to Qdrant. Join activity memory to code-symbol memory by shared
+`repo_path`, file path, and commit metadata.
+
+### Backout And Bad Imports
+
+Every activity ingest should use a stable `--batch-id`. If a bad import happens,
+quarantine or delete generated `project_activity` records by that batch id using
+the memory project's maintenance path, then re-run recall to confirm the bad
+records are absent. Do not delete git-derived records without preserving the
+batch id, command, and reason in an artifact or maintenance log.
+
+## Project Agent Location Registry
+
+Memory is a durable registry of observations, not a live workstation scanner.
+It can recall stored facts about paths, projects, artifacts, prior scans,
+telemetry, and lessons only after those facts have been written into ArangoDB.
+It does **not** list directories, probe mounts, run `rg`, call `find`, inspect
+git worktrees, or invoke `ops-workstation` by itself.
+
+Project agents should use this pattern for path and workspace discovery:
+
+1. Call `/recall` before scanning. Ask for the project root, artifact path,
+   prior scan result, or known location.
+2. Use the result only when `found=true`, `confidence` is high enough for the
+   task, `should_scan=false`, and the record's freshness/status is acceptable.
+3. When memory misses, confidence is low, `should_scan=true`, or the record is
+   stale-sensitive, run live discovery outside memory with `rg`, `find`, git,
+   `test -e`, or `ops-workstation`.
+4. Validate identity before trusting a path. A path match is not enough; check
+   marker files, expected repository metadata, schemas, or command output.
+5. Write the observation back through `/upsert` for batches. Use `/store` only
+   for a single document write.
+
+Example project-agent loop:
+
+```python
+import httpx
+
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
+
+recall = client.post("/recall", json={
+    "q": "memory project root path",
+    "k": 5,
+    "collections": ["workspace_locations"],
+}).json()
+
+if (
+    recall.get("found")
+    and recall.get("confidence", 0.0) > 0.5
+    and not recall.get("should_scan")
+):
+    candidates = recall["items"]
+else:
+    # Caller/orchestrator runs live discovery here, for example:
+    # rg --files /home/graham/workspace/experiments
+    # find /home/graham/workspace/experiments -maxdepth 3 -name AGENTS.md
+    # ops-workstation scan ...
+    candidates = []
+```
+
+When live discovery finds or validates locations, batch-write them:
+
+```python
+client.post("/upsert", json={
+    "collection": "workspace_locations",
+    "documents": [
+        {
+            "_key": "project:memory:root",
+            "kind": "workspace_location",
+            "project": "memory",
+            "path": "/home/graham/workspace/experiments/memory",
+            "status": "current",
+            "observed_at": "2026-06-09T17:40:00Z",
+            "validated_at": "2026-06-09T17:40:00Z",
+            "source": "project_agent_scan",
+            "evidence": {
+                "commands": [
+                    "test -d /home/graham/workspace/experiments/memory",
+                    "test -f /home/graham/workspace/experiments/memory/AGENTS.md",
+                    "rg --files /home/graham/workspace/experiments/memory"
+                ],
+                "markers": ["AGENTS.md", "pyproject.toml", ".git"]
+            }
+        }
+    ],
+}).raise_for_status()
+```
+
+### Stale Location Handling
+
+Do not silently delete old location records. Mark them with lifecycle status so
+future agents can explain moves and avoid reusing invalid paths:
+
+| Status | Meaning |
+|--------|---------|
+| `current` | Path exists and identity markers validate. |
+| `unverified` | Recalled from memory but not checked in this session. |
+| `stale` | Path existed before but now fails validation or is too old for the task. |
+| `moved` | Old path is invalid and a replacement is known. |
+| `missing` | Old path is invalid and no replacement was found. |
+
+When a scan disproves an old record, `/upsert` the old `_key` with `status`,
+`invalidated_at`, `invalidated_by`, and evidence. If a replacement is known,
+write or update the replacement record and link it with `replacement_key`.
+
+```python
+client.post("/upsert", json={
+    "collection": "workspace_locations",
+    "documents": [
+        {
+            "_key": "project:memory:root:old",
+            "kind": "workspace_location",
+            "project": "memory",
+            "path": "/old/path/memory",
+            "status": "moved",
+            "replacement_key": "project:memory:root",
+            "invalidated_at": "2026-06-09T17:45:00Z",
+            "invalidated_by": "project_agent_scan",
+            "evidence": {
+                "commands": ["test -d /old/path/memory"],
+                "result": "path missing"
+            }
+        }
+    ],
+}).raise_for_status()
+```
+
+Mental model: memory answers "what did we previously know?", live discovery
+answers "what exists right now?", and `/upsert` reconciles the two.
 
 ## scillm Persistence Collections
 
@@ -365,7 +1062,7 @@ stats = client.post("/latency-stats", json={
 }).json()
 
 timeout = stats.get("recommended_timeout_ms", 30000) / 1000
-response = await scillm_client.post("/v1/chat/completions", 
+response = await scillm_client.post("/v1/chat/completions",
     json=request, timeout=timeout)
 ```
 
@@ -379,11 +1076,10 @@ data.get("results", [])              # ← returns [] always
 # RIGHT:
 data["items"]                        # ← correct key
 
-# WRONG: curl to localhost:8601 (TCP)
+# WRONG: curl one-offs or raw TCP calls without typed timeouts
 curl http://localhost:8601/recall
-# RIGHT: use httpx with Unix socket
-transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-client = httpx.Client(transport=transport, base_url="http://localhost")
+# RIGHT: use httpx with the Docker-backed daemon and explicit timeouts
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=httpx.Timeout(10.0, connect=2.0))
 resp = client.post("/recall", json={"q": query, "k": 5})
 
 # WRONG: subprocess.run(["memory/run.sh", "recall", ...]) in a loop
@@ -437,25 +1133,66 @@ client.post("/store", json={"document": {"problem": "X", "solution": "Y"}})
 # RIGHT: include tags so /recall can find it via multi-hop
 client.post("/store", json={"document": {"problem": "X", "solution": "Y", "tags": ["Fragility", "extraction"]}})
 
-# WRONG: writing docs to searchable collections without embeddings
-# → Breaks dense lane of hybrid search, causes vector index errors on UPDATE
-db.aql.execute("INSERT {question: @q, answer: @a} INTO sparta_qra", ...)
-# RIGHT: ALWAYS include embedding (384-dim vector)
-embedding = embedding_service.embed(question)
-client.post("/store", json={"document": {"question": q, "answer": a, "embedding": embedding}, "collection": "sparta_qra"})
-# Check for missing embeddings: /ops-arango embeddings --check
-# Fix missing embeddings: /ops-arango embeddings --fix
+# WRONG: writing inline vector arrays into ArangoDB documents
+db.aql.execute("INSERT {question: @q, answer: @a, embedding: @vec} INTO sparta_qra", ...)
+client.post("/store", json={"document": {"question": q, "answer": a, "embedding": [...]}, "collection": "sparta_qra"})
+# → ArangoDB is not the vector store. Do not write embedding/embedding_visual/vector fields.
+# RIGHT: write canonical docs through /store or /upsert; memory semantic sync embeds and upserts Qdrant
+client.post("/upsert", json={
+    "collection": "sparta_qra",
+    "documents": [{"_key": "...", "question": q, "answer": a}],
+})
+# Arango should receive pointer metadata only: qdrant_collection, qdrant_point_id,
+# embedding_model, embedding_version, text_hash, semantic_sync_state
+# Check coverage: uv run python scripts/validation/source_embedding_coverage.py --no-manifest
+# Backfill/repair: scripts/migrate_arango_embeddings_to_qdrant.py (memory repo)
 
 # WRONG: ignoring should_scan in recall response
 if data["found"]: return data["items"]
 # RIGHT: check should_scan for hybrid recall+codebase search
 if data["found"] and data["confidence"] > 0.5: return data["items"]
 elif data.get("should_scan"): return merge(data["items"], scan_codebase(query))
+
+# WRONG: expecting memory to discover live workstation files
+client.post("/recall", json={"q": "find every AGENTS.md on disk"})
+# → /recall only searches stored memory records.
+# RIGHT: recall first, then run live discovery outside memory when needed,
+# then /upsert the validated observations.
+if data.get("should_scan") or data.get("confidence", 0.0) <= 0.5:
+    locations = run_rg_or_ops_workstation_scan()
+    client.post("/upsert", json={
+        "collection": "workspace_locations",
+        "documents": locations,
+    })
+
+# WRONG: deleting stale paths with no audit trail
+delete_doc("workspace_locations", old_key)
+# RIGHT: mark stale/moved/missing and preserve evidence
+client.post("/upsert", json={
+    "collection": "workspace_locations",
+    "documents": [{
+        "_key": old_key,
+        "status": "moved",
+        "replacement_key": new_key,
+        "invalidated_at": now,
+        "evidence": {"commands": ["test -d /old/path"], "result": "missing"},
+    }],
+})
 ```
 
 
-See [TOM.md](references/TOM.md) for Theory of Mind (ToM) persona agent commands, context/commiseration, deep analysis, and graph traversal.
+## Additional Project Documentation
 
-See [ARCHITECTURE.md](references/ARCHITECTURE.md) for the control extraction pipeline, edge collections, and 3-tier extraction architecture.
+This skill tree does not currently contain a `references/` directory. Use the
+memory repository docs and source as the detailed contract:
 
-See [API.md](references/API.md) for /list, /upsert, /recall/by-keys endpoints, schema management, embedding reference, layout controls, common memory client, Python API, and configuration.
+- `/home/graham/workspace/experiments/memory/docs/guides/QDRANT_EMBEDDING_CONTRACT.md` — Qdrant vs Arango semantic vector contract.
+- `/home/graham/workspace/experiments/memory/docs/CONTRACT.md` — stable CLI and Python API contract.
+- `/home/graham/workspace/experiments/memory/docs/guides/QUICK_START.md` — setup and Python API quick start.
+- `/home/graham/workspace/experiments/memory/docs/INTENT_MODEL_WALKTHROUGH.md` — `/intent` and QuerySpec architecture.
+- `/home/graham/workspace/experiments/memory/docs/INTENT_MAPPER_WALKTHROUGH.md` — intent mapper failure modes, fixes, and validation notes.
+- `/home/graham/workspace/experiments/memory/README.md` — project-level Theory of Mind, entity extraction, intent, and intensity contract notes.
+- `/home/graham/workspace/experiments/memory/docs/guides/PERSONA_RECALL.md` — curated persona recall collection notes.
+- `/home/graham/workspace/experiments/memory/src/graph_memory/cli/tom.py` — primary ToM/persona CLI entrypoint.
+- `/home/graham/workspace/experiments/memory/src/graph_memory/cli/tom_advanced.py` — advanced ToM graph traversal and persona commands.
+- `/home/graham/workspace/experiments/memory/src/graph_memory/service/app/` — live FastAPI endpoint implementation, including `_intent.py`, `_core.py`, `_store.py`, `_persona.py`, and `_tom.py`.
