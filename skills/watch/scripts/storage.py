@@ -235,7 +235,7 @@ def upsert_qras(
             "audio_path": audio_path or "",
             "visual_descriptions": json.dumps(visual_descriptions or []),
             "scene_elements": json.dumps(scene_elements or []),
-            "model": "deepseek-v4-flash",
+            "model": pair.get("_model", "unknown"),
             "scope": "watch_history", "tags": ["watch_history", sampling_mode, slug],
         })
     if not docs:
