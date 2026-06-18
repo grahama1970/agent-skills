@@ -15,6 +15,8 @@ def run_submit(
     tmp_path: Path,
     archive: Path,
     fake_run_body: str | None = None,
+    extra_env: dict[str, str] | None = None,
+    extra_args: list[str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     request = tmp_path / "request.md"
     output = tmp_path / "response.md"
@@ -29,6 +31,8 @@ def run_submit(
     fake_run.chmod(0o755)
     env = os.environ.copy()
     env["SURF_RUN_SH"] = str(fake_run)
+    if extra_env:
+        env.update(extra_env)
     return subprocess.run(
         [
             "bash",
@@ -46,6 +50,7 @@ def run_submit(
             "--expect-url",
             "https://chatgpt.com/c/example",
             "--no-activate",
+            *(extra_args or []),
         ],
         cwd=tmp_path,
         env=env,
@@ -70,6 +75,18 @@ case "${1:-}" in
     ;;
   focus.state)
     printf '{"active_tab_id":"123","active_window_id":"456"}\\n'
+    ;;
+"""
+
+
+FAKE_RUN_ACTIVE_PREAMBLE = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":456,"activeTabId":837352334}\\n'
     ;;
 """
 
@@ -128,6 +145,130 @@ esac
     assert meta["exit_code"] == 7
     assert meta["requested_tab_id"] == "837352334"
     assert meta["tab_identity_preflight"]["ok"] is True
+
+
+def test_webgpt_submit_no_activate_allows_already_active_controlled_tab(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_ACTIVE_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'same-tab observed response\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "same-tab observed response\n"
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["focus_changed"] is False
+    assert meta["active_tab_before"] == 837352334
+    assert meta["active_tab_after"] == 837352334
+
+
+def test_webgpt_submit_roundtrip_preflight_blocks_main_prompt(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_ACTIVE_PREAMBLE
+        + """  chatgpt)
+    prompt="${2:-}"
+    if printf '%s' "$prompt" | grep -q 'WEBGPT_PREFLIGHT_DONE'; then
+      echo 'hidden preflight stall'
+      echo 'Tab ID: 837352334' >&2
+      echo 'ResponseSource: assistant-dom' >&2
+      echo 'ResponseTimedOut: true' >&2
+      echo 'TimeoutError: Response timeout; hidden_polls=8; last_visibility=hidden; document_hidden=true' >&2
+      exit 0
+    fi
+    echo 'MAIN_PROMPT_SHOULD_NOT_RUN' >> "$PWD/main-ran.txt"
+    echo 'main response'
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, extra_args=["--roundtrip-preflight", "--roundtrip-timeout", "5"])
+
+    assert proc.returncode == 6
+    assert not (tmp_path / "main-ran.txt").exists()
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "roundtrip_preflight_failed"
+    assert meta["roundtrip_preflight_required"] is True
+    assert "hidden_tab_stall" in meta["roundtrip_preflight"]["failures"]
+    assert meta["roundtrip_preflight"]["diagnosis"]["hidden_tab_stall"] is True
+
+
+def test_webgpt_submit_roundtrip_preflight_success_is_recorded(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_ACTIVE_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'ok\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    echo 'PageTextContainsSentinel: true' >&2
+    echo 'DocumentHiddenAtCompletion: false' >&2
+    echo 'VisibilityStateAtCompletion: visible' >&2
+    echo 'BackgroundHiddenPolls: 0' >&2
+    echo 'BackgroundPollCount: 2' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, extra_args=["--roundtrip-preflight", "--roundtrip-timeout", "5"])
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["roundtrip_preflight_required"] is True
+    assert meta["roundtrip_preflight"]["status"] == "pass"
+    assert meta["roundtrip_preflight"]["diagnosis"]["raw_contains_sentinel"] is True
 
 
 def test_webgpt_submit_failed_timeout_preserves_partial_raw_output(tmp_path: Path) -> None:
@@ -205,6 +346,41 @@ esac
     assert meta["response_source"] == "assistant-dom"
     assert meta["response_timed_out"] is True
     assert meta["raw_response_advisory"] is True
+
+
+def test_webgpt_submit_failure_without_raw_extracts_available_tab_text(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'simulated sentinel wait failure with no stdout' >&2
+    exit 124
+    ;;
+  chatgpt.extract)
+    echo 'available same-tab assistant text after soft timeout'
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, {"SURF_WEBGPT_ADVISORY_AFTER_SECONDS": "3"})
+
+    assert proc.returncode == 124
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == (
+        "available same-tab assistant text after soft timeout\n"
+    )
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "submit_failed"
+    assert meta["raw_response_advisory"] is True
+    assert meta["extract_fallback_used"] is True
+    assert meta["extract_fallback_reason"] == "submit_failed"
+    assert meta["response_source"] == "webgpt-extract-fallback"
 
 
 def test_webgpt_submit_recovers_sentinel_output_when_focus_changed_after_completion(tmp_path: Path) -> None:

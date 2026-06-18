@@ -109,10 +109,11 @@ class CDPController:
                 return
             except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
                 # Connection lost, close and reconnect
-                try:
-                    self.ws.close()
-                except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
-                    pass
+                if self.ws:
+                    try:
+                        self.ws.close()
+                    except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
+                        pass
                 self.ws = None
 
         self.connect()
@@ -144,10 +145,11 @@ class CDPController:
                     ConnectionError, BrokenPipeError, OSError) as e:
                 last_error = e
                 # Connection issue - close and retry
-                try:
-                    self.ws.close()
-                except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
-                    pass
+                if self.ws:
+                    try:
+                        self.ws.close()
+                    except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
+                        pass
                 self.ws = None
 
                 if attempt < self.MAX_RETRIES - 1:

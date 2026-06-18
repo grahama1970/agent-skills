@@ -24,6 +24,17 @@ Options:
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 900.
+  --advisory-after SECONDS  Soft wait before returning same-tab available text
+                            without a sentinel. Default:
+                            SURF_WEBGPT_ADVISORY_AFTER_SECONDS or 600.
+                            Set 0 to disable.
+  --roundtrip-preflight     Before submitting the main prompt, send a tiny
+                            sentinel ping through the same controlled tab.
+  --roundtrip-timeout SECONDS
+                            Timeout for --roundtrip-preflight. Default:
+                            SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT or 60.
+  --roundtrip-output-dir DIR
+                            Artifact directory for the round-trip preflight.
   --model MODEL             Optional ChatGPT model selector label.
   --reasoning LABEL         Optional ChatGPT reasoning dropdown label
                             (for example: "Pro" or "Heavy Reasoning").
@@ -64,6 +75,7 @@ submitted_output=""
 sentinel="auto"
 stable_polls=3
 timeout_s=900
+advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-600}"
 model=""
 reasoning=""
 tab_id=""
@@ -78,6 +90,9 @@ create_tab=0
 no_remember=0
 allow_foreground_controlled=0
 attach_file=""
+roundtrip_preflight=0
+roundtrip_timeout_s="${SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT:-60}"
+roundtrip_output_dir=""
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
 
 while [[ $# -gt 0 ]]; do
@@ -90,6 +105,10 @@ while [[ $# -gt 0 ]]; do
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --advisory-after) advisory_after_s="${2:-}"; shift 2 ;;
+    --roundtrip-preflight) roundtrip_preflight=1; shift ;;
+    --roundtrip-timeout) roundtrip_timeout_s="${2:-}"; shift 2 ;;
+    --roundtrip-output-dir) roundtrip_output_dir="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
     --reasoning) reasoning="${2:-}"; shift 2 ;;
     --project) project="${2:-}"; shift 2 ;;
@@ -118,6 +137,10 @@ if [[ -z "$input" || -z "$output" ]]; then
   usage >&2
   exit 2
 fi
+if ! [[ "$roundtrip_timeout_s" =~ ^[0-9]+$ ]] || [[ "$roundtrip_timeout_s" -lt 5 ]]; then
+  echo "--roundtrip-timeout must be an integer >= 5" >&2
+  exit 2
+fi
 if [[ ! -f "$input" ]]; then
   echo "Input file not found: $input" >&2
   exit 2
@@ -133,14 +156,32 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
   bo_from="$(cd "${browser_oracle_from:-.}" 2>/dev/null && pwd || pwd)"
   bo_payload="$(browser_oracle_resolve_json "$bo_from" webgpt "$project" "" 2>/dev/null || true)"
   if [[ -n "$bo_payload" ]]; then
+    bo_resolved_project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
+    bo_resolved_tab="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_payload")"
+    bo_resolved_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
+    bo_reconcile_status=""
+    bo_reconcile_payload=""
+    if [[ -n "$bo_resolved_project" && -n "$bo_resolved_tab" ]]; then
+      bo_reconcile_payload="$(browser_oracle_reconcile_json webgpt "$bo_resolved_project" "${SURF_BROWSER_ORACLE_PRUNE_MISSING:-0}" || true)"
+      bo_reconcile_status="$(python3 -c 'import json,sys; d=json.load(sys.stdin); rows=d.get("rows") or []; print((rows[0].get("status") if rows else ""))' <<<"$bo_reconcile_payload" 2>/dev/null || true)"
+      if [[ "$bo_reconcile_status" == "missing_live_tab" && -n "$bo_resolved_url" && ( "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "1" || "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "true" ) ]]; then
+        bo_open_payload="$(browser_oracle_open_bind_json "$bo_resolved_project" webgpt "$bo_resolved_url" 2>/dev/null || true)"
+        bo_new_tab="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_open_payload" 2>/dev/null || true)"
+        if [[ -n "$bo_new_tab" ]]; then
+          bo_payload="$bo_open_payload"
+          bo_resolved_tab="$bo_new_tab"
+          bo_reconcile_status="ready"
+        fi
+      fi
+    fi
     if [[ -z "$project" ]]; then
-      project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
+      project="$bo_resolved_project"
     fi
-    if [[ -z "$tab_id" ]]; then
-      tab_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_payload")"
+    if [[ -z "$tab_id" && ( -z "$bo_resolved_tab" || "$bo_reconcile_status" == "ready" ) ]]; then
+      tab_id="$bo_resolved_tab"
     fi
-    if [[ -z "$target_url" ]]; then
-      bo_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
+    if [[ -z "$target_url" && ( -z "$bo_resolved_tab" || "$bo_reconcile_status" == "ready" ) ]]; then
+      bo_url="$bo_resolved_url"
       if [[ -n "$bo_url" ]]; then
         target_url="$bo_url"
       fi
@@ -253,6 +294,45 @@ printf '%s\n' "$submitted_prompt" > "$submitted_output"
 
 stderr_log="$(mktemp /tmp/surf-webgpt-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-webgpt-submit-raw.XXXXXX.md)"
+
+attempt_extract_fallback() {
+  local reason="${1:-unknown}"
+  if [[ -z "${requested_tab_id:-}" || -s "$raw_output" ]]; then
+    return 1
+  fi
+  local extract_clean extract_raw extract_meta extract_err
+  extract_clean="$(mktemp /tmp/surf-webgpt-submit-extract-clean.XXXXXX.md)"
+  extract_raw="$(mktemp /tmp/surf-webgpt-submit-extract-raw.XXXXXX.md)"
+  extract_meta="$(mktemp /tmp/surf-webgpt-submit-extract-meta.XXXXXX.json)"
+  extract_err="$(mktemp /tmp/surf-webgpt-submit-extract-stderr.XXXXXX.log)"
+  if "${SCRIPT_DIR}/webgpt-extract.sh" \
+      --tab-id "$requested_tab_id" \
+      --output "$extract_clean" \
+      --raw-output "$extract_raw" \
+      --meta-output "$extract_meta" \
+      --timeout "${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-12}" \
+      > /dev/null 2>"$extract_err"; then
+    if [[ -s "$extract_raw" ]]; then
+      cp "$extract_raw" "$raw_output"
+      cp "$extract_clean" "$output"
+      {
+        echo "ExtractFallback: true"
+        echo "ExtractFallbackReason: $reason"
+        echo "ExtractFallbackRaw: $extract_raw"
+        echo "ExtractFallbackMeta: $extract_meta"
+        echo "Tab ID: $requested_tab_id"
+        echo "ResponseSource: webgpt-extract-fallback"
+      } >> "$stderr_log"
+      return 0
+    fi
+  fi
+  {
+    echo "ExtractFallback: false"
+    echo "ExtractFallbackReason: $reason"
+    echo "ExtractFallbackErrorLog: $extract_err"
+  } >> "$stderr_log"
+  return 1
+}
 # Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
 # the newest chatgpt.com tab (often the user's foreground conversation).
 if [[ "$create_tab" -eq 1 ]]; then
@@ -286,7 +366,12 @@ if [[ "$create_tab" -eq 1 ]]; then
   done
 fi
 
-args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
+effective_timeout_s="$timeout_s"
+if [[ "$advisory_after_s" =~ ^[0-9]+$ && "$advisory_after_s" -gt 0 && "$advisory_after_s" -lt "$timeout_s" ]]; then
+  effective_timeout_s="$advisory_after_s"
+fi
+
+args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
@@ -386,6 +471,91 @@ else
   identity_preflight_json=""
 fi
 
+roundtrip_preflight_json=""
+roundtrip_preflight_status=0
+roundtrip_preflight_dir=""
+if [[ "$roundtrip_preflight" -eq 1 ]]; then
+  roundtrip_preflight_dir="${roundtrip_output_dir:-$(dirname "$meta_output")/roundtrip-preflight}"
+  roundtrip_args=(--timeout "$roundtrip_timeout_s" --output-dir "$roundtrip_preflight_dir")
+  if [[ -n "${requested_tab_id:-}" ]]; then
+    roundtrip_args+=(--tab-id "$requested_tab_id")
+  fi
+  if [[ -n "$target_url" ]]; then
+    roundtrip_args+=(--url "$target_url")
+  fi
+  if [[ -n "$expect_url" ]]; then
+    roundtrip_args+=(--expect-url "$expect_url")
+  elif [[ -n "$target_url" && "${requested_tab_source:-}" == "url" ]]; then
+    roundtrip_args+=(--expect-url "$target_url")
+  fi
+  if [[ -n "$expect_title" ]]; then
+    roundtrip_args+=(--expect-title "$expect_title")
+  fi
+  if [[ -n "$project" ]]; then
+    roundtrip_args+=(--project "$project")
+  fi
+  if [[ -n "$browser_oracle_from" ]]; then
+    roundtrip_args+=(--browser-oracle-from "$browser_oracle_from")
+  fi
+  if [[ "$create_tab" -eq 1 && -z "${requested_tab_id:-}" ]]; then
+    roundtrip_args+=(--create-tab)
+  fi
+  if [[ "$no_activate" -eq 1 ]]; then
+    roundtrip_args+=(--no-activate)
+  fi
+  set +e
+  roundtrip_preflight_json="$("${SCRIPT_DIR}/webgpt-roundtrip-preflight.sh" "${roundtrip_args[@]}" --json 2>"$roundtrip_preflight_dir.stderr.log")"
+  roundtrip_preflight_status=$?
+  set -e
+  if [[ "$roundtrip_preflight_status" -ne 0 ]]; then
+    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight_json" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$failed_at" <<'PY'
+import json, pathlib, sys
+(
+    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id, target_url,
+    model, reasoning, identity_s, roundtrip_s, roundtrip_status,
+    roundtrip_dir, failed_at
+) = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+try:
+    roundtrip = json.loads(roundtrip_s) if roundtrip_s else {"status": "missing", "failures": ["no_roundtrip_json"]}
+except Exception:
+    roundtrip = {
+        "status": "invalid_json",
+        "failures": ["roundtrip_json_parse_failed"],
+        "stdout_tail": (roundtrip_s or "")[-2000:],
+    }
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "roundtrip_preflight_failed",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "roundtrip_preflight_required": True,
+    "roundtrip_preflight_exit_code": int(roundtrip_status),
+    "roundtrip_preflight_output_dir": roundtrip_dir,
+    "roundtrip_preflight": roundtrip,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+    echo "webgpt.submit roundtrip preflight failed before main prompt." >&2
+    python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(json.dumps({"status": d.get("status"), "failures": d.get("failures"), "diagnosis": d.get("diagnosis"), "output_dir": d.get("output_dir")}, indent=2))' "$roundtrip_preflight_json" >&2 || true
+    exit 6
+  fi
+fi
+
 # Pre-run focus snapshot (also used for --no-activate foreground guard).
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
@@ -393,14 +563,6 @@ if [[ "$no_activate" -eq 1 ]]; then
   if [[ -z "${requested_tab_id:-}" ]]; then
     echo "--no-activate requires --tab-id, --url, or --create-tab so we never foreground a tab to discover one." >&2
     exit 2
-  fi
-  if [[ "$allow_foreground_controlled" -eq 0 ]]; then
-    active_now="$(webgpt_focus_active_tab_id "$focus_before_json")"
-    if [[ -n "$active_now" && "$active_now" == "$requested_tab_id" ]]; then
-      echo "Controlled tab $requested_tab_id is the foreground active tab; --no-activate will fail." >&2
-      echo "Switch to another tab, pick a dedicated reviewer tab, or pass --allow-foreground-controlled." >&2
-      exit 2
-    fi
   fi
   args+=(--no-activate)
 fi
@@ -452,13 +614,18 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
+  attempt_extract_fallback "submit_failed" || true
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
     identity = {"ok": False, "error": "identity_meta_parse_failed"}
+try:
+    roundtrip = json.loads(roundtrip_s) if roundtrip_s else None
+except Exception:
+    roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
 raw_path = pathlib.Path(raw)
 out_path = pathlib.Path(out)
 err_path = pathlib.Path(err)
@@ -474,6 +641,10 @@ out_text = out_path.read_text() if out_path.exists() else ""
 response_timed_out = None
 timeout_error = None
 response_source = None
+extract_fallback_used = False
+extract_fallback_reason = None
+extract_fallback_raw = None
+extract_fallback_meta = None
 tab_id = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
@@ -484,6 +655,14 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallback:") and not extract_fallback_used:
+        extract_fallback_used = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ExtractFallbackReason:") and extract_fallback_reason is None:
+        extract_fallback_reason = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackRaw:") and extract_fallback_raw is None:
+        extract_fallback_raw = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
+        extract_fallback_meta = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "failure": "submit_failed",
@@ -499,6 +678,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
+    "roundtrip_preflight_required": roundtrip_required_s == "1",
+    "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),
+    "roundtrip_preflight_output_dir": roundtrip_dir or None,
+    "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
@@ -508,6 +691,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "extract_fallback_used": extract_fallback_used,
+    "extract_fallback_reason": extract_fallback_reason,
+    "extract_fallback_raw": extract_fallback_raw,
+    "extract_fallback_meta": extract_fallback_meta,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -517,20 +704,29 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
+  attempt_extract_fallback "missing_sentinel" || true
   cp "$raw_output" "$output"
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
     identity = {"ok": False, "error": "identity_meta_parse_failed"}
+try:
+    roundtrip = json.loads(roundtrip_s) if roundtrip_s else None
+except Exception:
+    roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
 raw_text = pathlib.Path(raw).read_text() if pathlib.Path(raw).exists() else ""
 out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 response_timed_out = None
 timeout_error = None
 response_source = None
+extract_fallback_used = False
+extract_fallback_reason = None
+extract_fallback_raw = None
+extract_fallback_meta = None
 tab_id = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
@@ -541,6 +737,14 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallback:") and not extract_fallback_used:
+        extract_fallback_used = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ExtractFallbackReason:") and extract_fallback_reason is None:
+        extract_fallback_reason = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackRaw:") and extract_fallback_raw is None:
+        extract_fallback_raw = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
+        extract_fallback_meta = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "failure": "missing_sentinel",
@@ -555,6 +759,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
+    "roundtrip_preflight_required": roundtrip_required_s == "1",
+    "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),
+    "roundtrip_preflight_output_dir": roundtrip_dir or None,
+    "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
@@ -564,6 +772,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "extract_fallback_used": extract_fallback_used,
+    "extract_fallback_reason": extract_fallback_reason,
+    "extract_fallback_raw": extract_fallback_raw,
+    "extract_fallback_meta": extract_fallback_meta,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -586,13 +798,17 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
     identity = {"ok": False, "error": "identity_meta_parse_failed"}
+try:
+    roundtrip = json.loads(roundtrip_s) if roundtrip_s else None
+except Exception:
+    roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -717,6 +933,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
+    "roundtrip_preflight_required": roundtrip_required_s == "1",
+    "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),
+    "roundtrip_preflight_output_dir": roundtrip_dir or None,
+    "roundtrip_preflight": roundtrip,
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

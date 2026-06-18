@@ -34,5 +34,5 @@ webgpt_sanitize_tab_id() {
 
 webgpt_focus_active_tab_id() {
   local focus_json="${1:-\{\}}"
-  python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('activeTabId') or '')" "$focus_json"
+  python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('activeTabId') or d.get('active_tab_id') or '')" "$focus_json"
 }

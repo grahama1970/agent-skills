@@ -2568,6 +2568,30 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (data.responseSource) {
+      console.error(`ResponseSource: ${data.responseSource}`);
+    }
+    if (data.pageTextContainsSentinel !== undefined) {
+      console.error(`PageTextContainsSentinel: ${data.pageTextContainsSentinel}`);
+    }
+    if (data.documentHiddenAtCompletion !== undefined) {
+      console.error(`DocumentHiddenAtCompletion: ${data.documentHiddenAtCompletion}`);
+    }
+    if (data.visibilityStateAtCompletion !== undefined) {
+      console.error(`VisibilityStateAtCompletion: ${data.visibilityStateAtCompletion}`);
+    }
+    if (data.backgroundHiddenPolls !== undefined) {
+      console.error(`BackgroundHiddenPolls: ${data.backgroundHiddenPolls}`);
+    }
+    if (data.backgroundPollCount !== undefined) {
+      console.error(`BackgroundPollCount: ${data.backgroundPollCount}`);
+    }
+    if (data.responseTimedOut !== undefined) {
+      console.error(`ResponseTimedOut: ${data.responseTimedOut}`);
+    }
+    if (data.timeoutError) {
+      console.error(`TimeoutError: ${data.timeoutError}`);
+    }
     const meta = [data.model || 'unknown'];
     if (data.reasoning) meta.push(data.reasoning);
     meta.push(`${((data.tookMs || 0) / 1000).toFixed(1)}s`);

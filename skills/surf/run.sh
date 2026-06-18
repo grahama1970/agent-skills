@@ -479,6 +479,22 @@ if [[ "$1" == "webgpt.preflight" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-preflight.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.roundtrip-preflight" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-roundtrip-preflight.sh" "${@:2}"
+fi
+
+if [[ "$1" == "kde.spaces" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" inventory "${@:2}"
+fi
+
+if [[ "$1" == "kde.helper" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" serve "${@:2}"
+fi
+
+if [[ "$1" == "kde.helper.health" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" health "${@:2}"
+fi
+
 # Handle help
 if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "surf - Unified browser automation for AI agents"
@@ -517,6 +533,11 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf webgpt.no-activate-sanity --tab-id ID|--url URL  Full sentinel + background proof"
     echo "  surf webgpt.preflight --tab-id ID [--no-activate]  Pre-submit tab/focus checks"
     echo ""
+    echo "KDE Workspace Tracking:"
+    echo "  surf kde.spaces        Inventory KDE desktops/windows (helper-first)"
+    echo "  surf kde.helper        Serve KDE desktop/window metadata from the desktop session"
+    echo "  surf kde.helper.health Check the local KDE helper"
+    echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
     echo "  surf cdp stop           Stop Chrome CDP"
@@ -532,6 +553,44 @@ fi
 
 LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
+
+if [[ "$1" == "tab.list" ]]; then
+    _with_kde=0
+    _want_json=0
+    _args=()
+    for _arg in "$@"; do
+        if [[ "$_arg" == "--with-kde" ]]; then
+            _with_kde=1
+            continue
+        fi
+        if [[ "$_arg" == "--json" ]]; then
+            _want_json=1
+        fi
+        _args+=("$_arg")
+    done
+    if [[ "$_with_kde" == "1" ]]; then
+        if ! surf_cli_available; then
+            echo "Error: tab.list --with-kde requires surf-cli extension." >&2
+            exit 1
+        fi
+        if [[ ! -f "$LOCAL_CLI" ]]; then
+            echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2
+            exit 1
+        fi
+        _json="$(node "$LOCAL_CLI" "${_args[@]}" --json)"
+        _annotated="$(printf '%s' "$_json" | python3 "$SKILL_DIR/scripts/kde_spaces.py" annotate-tabs)"
+        if [[ "$_want_json" == "1" ]]; then
+            printf '%s\n' "$_annotated"
+        else
+            printf '%s\n' "$_annotated" | python3 -c 'import json,sys
+data=json.load(sys.stdin)
+for tab in data.get("tabs", []):
+    kde=tab.get("kde", {})
+    print(f"{tab.get(\"id\", \"\")}\t{tab.get(\"title\", \"\")}\t{tab.get(\"url\", \"\")}\twindow={tab.get(\"windowId\", \"\")}\tdesktop={kde.get(\"desktop_index\")}")'
+        fi
+        exit 0
+    fi
+fi
 
 # If surf-cli socket is available, route ALL commands through it
 if surf_cli_available; then

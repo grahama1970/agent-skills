@@ -19,13 +19,41 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function wakeBackgroundTab(inputCdp, log) {
-  if (!inputCdp) return;
+const BACKGROUND_WAKE_EVERY_POLLS = 5;
+
+async function wakeBackgroundTab(inputCdp, log, reason = "poll") {
+  if (!inputCdp) return false;
   try {
     await inputCdp("Page.setWebLifecycleState", { state: "active" });
-    log?.("Background tab lifecycle set to active for DOM polling");
+    log?.(`Background tab lifecycle set to active (${reason})`);
+    return true;
   } catch (err) {
-    log?.(`Page.setWebLifecycleState skipped: ${err?.message || err}`);
+    log?.(`Page.setWebLifecycleState skipped (${reason}): ${err?.message || err}`);
+    return false;
+  }
+}
+
+async function nudgeBackgroundRendering(cdp, inputCdp, log, reason = "poll") {
+  await wakeBackgroundTab(inputCdp, log, reason);
+  try {
+    await evaluate(
+      cdp,
+      `(() => {
+        try {
+          document.dispatchEvent(new Event('visibilitychange'));
+          if (typeof document.onvisibilitychange === 'function') {
+            document.onvisibilitychange(new Event('visibilitychange'));
+          }
+        } catch (_) {}
+        return {
+          documentHidden: document.hidden === true,
+          visibilityState: document.visibilityState || null,
+          documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
+        };
+      })()`,
+    );
+  } catch (err) {
+    log?.(`Background render nudge skipped (${reason}): ${err?.message || err}`);
   }
 }
 
@@ -83,15 +111,18 @@ function withTimeout(promise, timeoutMs, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-const assistantSnapshotExpression = (sentinel) => {
+const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
+  const baseline = Number.isFinite(baselineAssistantCount) && baselineAssistantCount >= 0
+    ? Math.floor(baselineAssistantCount)
+    : 0;
   const sentinelLiteral = JSON.stringify(sentinel || null);
   return `(() => {
+    const BASELINE = ${baseline};
     const SENTINEL = ${sentinelLiteral};
     const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
     const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
     const STOP_SELECTOR = '${SELECTORS.stopButton}';
     const FINISHED_SELECTOR = '${SELECTORS.finishedActions}';
-    const pageText = (document.body?.innerText || document.body?.textContent || '').trim();
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
@@ -102,28 +133,33 @@ const assistantSnapshotExpression = (sentinel) => {
     };
     const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
       .filter((node) => node instanceof HTMLElement);
-    const turns = directAssistantTurns.length
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
       ? directAssistantTurns
-      : Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-    let lastAssistantTurn = null;
-    for (let i = turns.length - 1; i >= 0; i--) {
-      if (isAssistantTurn(turns[i])) {
-        lastAssistantTurn = turns[i];
-        break;
-      }
-    }
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const newAssistantTurns = assistantTurns.slice(BASELINE);
+    const lastAssistantTurn = newAssistantTurns.length
+      ? newAssistantTurns[newAssistantTurns.length - 1]
+      : null;
     const sentinelVariants = SENTINEL
       ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
       : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
-    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(pageText));
+    const documentHidden = document.hidden === true;
+    const visibilityState = document.visibilityState || null;
+    const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
     if (!lastAssistantTurn) {
       return {
         text: '',
         stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
         finished: false,
-        source: 'no-assistant-turn',
-        pageTextContainsSentinel,
+        source: 'awaiting-assistant-turn',
+        pageTextContainsSentinel: false,
+        documentHidden,
+        visibilityState,
+        documentHasFocus,
+        baselineAssistantCount: BASELINE,
+        newAssistantTurnCount: 0,
       };
     }
     const messageRoot = lastAssistantTurn.querySelector(ASSISTANT_SELECTOR) || lastAssistantTurn;
@@ -146,13 +182,38 @@ const assistantSnapshotExpression = (sentinel) => {
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
     const messageId = messageRoot.getAttribute('data-message-id') || null;
-    return { text, stopVisible, finished, messageId, turnIndex: turns.length - 1, source: 'assistant-dom', pageTextContainsSentinel, sentinelMatch };
+    const turnTextForSentinel = turnText || contentText || '';
+    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(turnTextForSentinel));
+    let source = 'assistant-dom';
+    if (SENTINEL && pageTextContainsSentinel && !findSentinel(text)) {
+      const marker = findSentinel(turnTextForSentinel);
+      const idx = marker ? turnTextForSentinel.lastIndexOf(marker) : -1;
+      if (idx >= 0) {
+        text = turnTextForSentinel.slice(Math.max(0, idx - 12000), idx + marker.length).trim();
+        source = 'page-text-fallback';
+      }
+    }
+    return {
+      text,
+      stopVisible,
+      finished,
+      messageId,
+      turnIndex: assistantTurns.length - 1,
+      source,
+      pageTextContainsSentinel,
+      sentinelMatch,
+      documentHidden,
+      visibilityState,
+      documentHasFocus,
+      baselineAssistantCount: BASELINE,
+      newAssistantTurnCount: newAssistantTurns.length,
+    };
   })()`;
 };
 
-async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000) {
+async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000, baselineAssistantCount = 0) {
   return withTimeout(
-    evaluate(cdp, assistantSnapshotExpression(sentinel)),
+    evaluate(cdp, assistantSnapshotExpression(sentinel, baselineAssistantCount)),
     timeoutMs,
     "ChatGPT assistant DOM snapshot",
   );
@@ -550,6 +611,38 @@ async function typePrompt(cdp, inputCdp, prompt) {
   }
 }
 
+
+async function captureAssistantBaseline(cdp) {
+  const expr = `(() => {
+    const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
+    const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
+    const isAssistantTurn = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
+      if (role === 'assistant') return true;
+      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
+      if (turn === 'assistant') return true;
+      return Boolean(node.querySelector(ASSISTANT_SELECTOR));
+    };
+    const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
+      .filter((node) => node instanceof HTMLElement);
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
+      ? directAssistantTurns
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
+    return {
+      assistantCount: assistantTurns.length,
+      lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
+    };
+  })()`;
+  const value = await evaluate(cdp, expr);
+  return {
+    assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
+    lastMessageId: value?.lastMessageId || null,
+  };
+}
+
 async function clickSend(cdp, inputCdp) {
   const selectors = SELECTORS.sendButton.split(", ");
   const selectorsJson = JSON.stringify(selectors);
@@ -598,12 +691,12 @@ async function clickSend(cdp, inputCdp) {
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const sentinel = options.sentinel || null;
+  const baselineAssistantCount = Number.isFinite(options.baselineAssistantCount)
+    ? options.baselineAssistantCount
+    : 0;
   const noActivate = options.noActivate === true;
   const inputCdp = options.inputCdp || null;
   const log = options.log || (() => {});
-  if (noActivate) {
-    await wakeBackgroundTab(inputCdp, log);
-  }
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -613,10 +706,22 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const minStableMs = 1200;
   let lastChangeAt = Date.now();
   let lastSnapshotError = null;
+  let pollCount = 0;
+  let hiddenPolls = 0;
+  let lastVisibilityState = null;
+  let lastDocumentHidden = null;
+  let lastNonEmptySnapshot = null;
+  if (noActivate) {
+    await nudgeBackgroundRendering(cdp, inputCdp, log, "start");
+  }
   while (Date.now() < deadline) {
+    pollCount++;
+    if (noActivate && (pollCount === 1 || pollCount % BACKGROUND_WAKE_EVERY_POLLS === 0)) {
+      await nudgeBackgroundRendering(cdp, inputCdp, log, `poll-${pollCount}`);
+    }
     let snapshot;
     try {
-      snapshot = await assistantSnapshot(cdp, sentinel);
+      snapshot = await assistantSnapshot(cdp, sentinel, 12000, baselineAssistantCount);
       lastSnapshotError = null;
     } catch (err) {
       lastSnapshotError = err;
@@ -627,8 +732,19 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       await delay(400);
       continue;
     }
+    if (snapshot.documentHidden === true) {
+      hiddenPolls++;
+      if (noActivate) {
+        await nudgeBackgroundRendering(cdp, inputCdp, log, `hidden-poll-${pollCount}`);
+      }
+    }
+    lastVisibilityState = snapshot.visibilityState || null;
+    lastDocumentHidden = snapshot.documentHidden === true;
     const currentText = snapshot.text || "";
     const currentLength = currentText.length;
+    if (currentLength > 0) {
+      lastNonEmptySnapshot = { ...snapshot };
+    }
     if (currentText !== previousText) {
       previousText = currentText;
       stableCycles = 0;
@@ -637,13 +753,16 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       stableCycles++;
     }
     const stableMs = Date.now() - lastChangeAt;
-    const hasSentinel = sentinel ? ((snapshot.text || "").includes(sentinel) || Boolean(snapshot.sentinelMatch)) : true;
+    const hasAssistantSentinel = sentinel
+      ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
+      : true;
     const pageHasSentinel = sentinel ? snapshot.pageTextContainsSentinel === true : false;
+    const hasSentinel = sentinel ? hasAssistantSentinel : true;
     // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
     // is focused, even after the assistant message is complete. In --no-activate mode we
-    // trust a stable assistant sentinel (or page-level sentinel) instead of stop-button absence.
+    // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
     const stopGateOk = !snapshot.stopVisible
-      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel));
+      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel || snapshot.source === 'page-text-fallback'));
     if (stopGateOk && hasSentinel) {
       const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
       const finishedVisible = snapshot.finished;
@@ -657,13 +776,38 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
           hasSentinel,
           source: snapshot.source,
           pageTextContainsSentinel: snapshot.pageTextContainsSentinel,
+          documentHiddenAtCompletion: snapshot.documentHidden === true,
+          visibilityStateAtCompletion: snapshot.visibilityState || null,
+          backgroundHiddenPolls: hiddenPolls,
+          backgroundPollCount: pollCount,
         };
       }
     }
     await delay(400);
   }
   const detail = lastSnapshotError ? `; last snapshot error: ${lastSnapshotError.message}` : "";
-  throw new Error(`Response timeout${detail}`);
+  const hiddenDetail = noActivate
+    ? `; hidden_polls=${hiddenPolls}; last_visibility=${lastVisibilityState || "unknown"}; document_hidden=${lastDocumentHidden}`
+    : "";
+  const err = new Error(`Response timeout${hiddenDetail}${detail}`);
+  if (lastNonEmptySnapshot?.text) {
+    err.partialResponse = {
+      text: lastNonEmptySnapshot.text,
+      messageId: lastNonEmptySnapshot.messageId || null,
+      turnIndex: lastNonEmptySnapshot.turnIndex,
+      sentinel,
+      hasSentinel: false,
+      source: lastNonEmptySnapshot.source || "assistant-dom",
+      pageTextContainsSentinel: lastNonEmptySnapshot.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: lastNonEmptySnapshot.documentHidden === true,
+      visibilityStateAtCompletion: lastNonEmptySnapshot.visibilityState || null,
+      backgroundHiddenPolls: hiddenPolls,
+      backgroundPollCount: pollCount,
+      timeout: true,
+      timeoutError: err.message,
+    };
+  }
+  throw err;
 }
 
 async function extractAssistantResponse(options) {
@@ -689,6 +833,8 @@ async function extractAssistantResponse(options) {
     sentinel: sentinel || null,
     hasSentinel,
     pageTextContainsSentinel: snapshot?.pageTextContainsSentinel === true,
+    documentHiddenAtCompletion: snapshot?.documentHidden === true,
+    visibilityStateAtCompletion: snapshot?.visibilityState || null,
     stopVisible: snapshot?.stopVisible === true,
     finished: snapshot?.finished === true,
     turnIndex: snapshot?.turnIndex,
@@ -761,9 +907,31 @@ async function query(options) {
     }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
+    const assistantBaseline = await captureAssistantBaseline(cdp);
+    log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
     log("Prompt sent, waiting for response...");
-    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls, noActivate, inputCdp, log });
+    let response;
+    let responseTimedOut = false;
+    let timeoutError = null;
+    try {
+      response = await waitForResponse(cdp, timeout, {
+        sentinel,
+        stablePolls,
+        noActivate,
+        inputCdp,
+        log,
+        baselineAssistantCount: assistantBaseline.assistantCount,
+      });
+    } catch (err) {
+      if (!err.partialResponse?.text) {
+        throw err;
+      }
+      response = err.partialResponse;
+      responseTimedOut = true;
+      timeoutError = err.message;
+      log(`Response timed out; preserving partial assistant text (${response.text.length} chars)`);
+    }
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
@@ -777,6 +945,13 @@ async function query(options) {
       responseSource: response.source,
       sentinel,
       hasSentinel: response.hasSentinel,
+      pageTextContainsSentinel: response.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
+      backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
+      backgroundPollCount: response.backgroundPollCount || 0,
+      responseTimedOut,
+      timeoutError,
       tookMs: Date.now() - startTime,
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,

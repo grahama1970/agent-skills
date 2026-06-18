@@ -89,7 +89,8 @@ add("focus_state", bool(focus_json), "ok" if focus_json else "focus.state unavai
 active_tab = ""
 if focus_json:
     try:
-        active_tab = str(json.loads(focus_json).get("activeTabId") or "")
+        focus_data = json.loads(focus_json)
+        active_tab = str(focus_data.get("activeTabId") or focus_data.get("active_tab_id") or "")
     except json.JSONDecodeError:
         pass
 
@@ -175,12 +176,12 @@ elif target_url:
 else:
     add("explicit_target", False, "pass --tab-id or --url")
 
-if no_activate and requested_tab_id and not allow_foreground:
+if no_activate and requested_tab_id:
     if active_tab == requested_tab_id:
         add(
-            "not_foreground_controlled",
-            False,
-            "controlled tab is active; switch tabs or --allow-foreground-controlled",
+            "foreground_controlled_user_visible",
+            True,
+            "controlled tab is already active; no activation is needed",
         )
     else:
         add(
