@@ -12,12 +12,15 @@
 - **recall.py KEEP list:** Must include `question`, `reasoning`, `answer`, `frames`, `frame_dir`, `audio_path`
 - **Image description:** `mimo-v2-omni` via Zen API (concurrent ThreadPoolExecutor)
 - **Audio description:** `gpt-5.5` via scillm port 4001 (concurrent ThreadPoolExecutor)
-- **QRA generation:** `deepseek-v4-flash` via Zen API
+- **QRA generation:** 3-tier fallback: `deepseek-v4-flash` (Zen) → `gpt-5.5` (scillm) → deterministic from transcript
 - **Embedder:** `jinaai/jina-embeddings-v5-omni-small-retrieval` (1024d), port 8603
 - **Vectors:** `text_mm` (text), `image_mm` (images + audio)
 - **Scene fallback:** If scene-change covers <10% of video duration, fall back to uniform sampling
 - **audio_path stored:** in document but audio embedding pending service Docker rebuild for data:audio/ MIME support
 - **Persisted artifacts:** `/mnt/storage12tb/media/watch-frames/<slug>/` (frames + audio.wav)
+- **Movie acquisition:** Route ALL through `ingest-movie` (search + Radarr). brave-search for topic discovery only.
+- **Key env vars:** `ZEN_API_KEY` (deepseek, mimo-v2-omni), `RADARR_API_KEY` (Radarr), `NZBD_GEEK_API_KEY` (Usenet search), `SABNZBD_API_KEY` (download)
+- **Bugs found in e2e:** `import re` missing in storage.py, `args.no_whisper` doesn't exist, `_build_scene_chunks` lost in refactor, deepseek returns malformed JSON → added fallback chain
 - **E2E sanity:** 17/17 tests pass
 **Status:** Active development
 
