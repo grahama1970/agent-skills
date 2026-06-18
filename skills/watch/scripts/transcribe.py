@@ -5,6 +5,9 @@ Local faster-whisper handles arbitrary local files (free, GPU-accelerated, no AP
 """
 from __future__ import annotations
 
+import difflib
+import re
+import statistics
 import subprocess
 from pathlib import Path
 
@@ -115,3 +118,98 @@ def filter_segments(segments: list[dict], start: float | None, end: float | None
             continue
         filtered.append(seg)
     return filtered
+
+
+def align_segments_to_reference(
+    target: dict | None,
+    reference: dict | None,
+    *,
+    min_offset_seconds: float = 2.0,
+    min_matches: int = 5,
+    max_spread_seconds: float = 1.5,
+    min_ratio: float = 0.65,
+) -> tuple[dict | None, dict | None]:
+    """Shift target segment starts when text-matched timing is stably offset.
+
+    Returns ``(aligned_target, alignment)``. ``alignment`` is None when there is
+    not enough evidence to alter timestamps. The original segment start is kept
+    as ``original_start`` for auditability.
+    """
+    if not target or not reference:
+        return target, None
+    target_segments = list(target.get("segments") or [])
+    reference_segments = list(reference.get("segments") or [])
+    if not target_segments or not reference_segments:
+        return target, None
+
+    pairs = _matched_offsets(target_segments, reference_segments, min_ratio)
+    if len(pairs) < min_matches:
+        return target, {
+            "status": "insufficient_matches",
+            "match_count": len(pairs),
+            "offset_seconds": 0.0,
+        }
+
+    offsets = sorted(p["offset_seconds"] for p in pairs)
+    median = statistics.median(offsets)
+    deviations = sorted(abs(offset - median) for offset in offsets)
+    median_deviation = statistics.median(deviations)
+    if abs(median) < min_offset_seconds or median_deviation > max_spread_seconds:
+        return target, {
+            "status": "already_aligned" if abs(median) < min_offset_seconds else "unstable_offset",
+            "match_count": len(pairs),
+            "offset_seconds": round(median, 3),
+            "median_deviation_seconds": round(median_deviation, 3),
+        }
+
+    aligned_segments = []
+    for segment in target_segments:
+        row = dict(segment)
+        row["original_start"] = row.get("start", 0.0)
+        row["start"] = round(max(0.0, float(row.get("start", 0.0)) + median), 3)
+        aligned_segments.append(row)
+
+    aligned = dict(target)
+    aligned["segments"] = aligned_segments
+    aligned["alignment"] = {
+        "status": "shifted",
+        "reference_source": reference.get("source", "reference"),
+        "offset_seconds": round(median, 3),
+        "match_count": len(pairs),
+        "median_deviation_seconds": round(median_deviation, 3),
+        "examples": pairs[:5],
+    }
+    return aligned, aligned["alignment"]
+
+
+def _matched_offsets(target_segments: list[dict], reference_segments: list[dict], min_ratio: float) -> list[dict]:
+    pairs: list[dict] = []
+    normalized_targets = [(_normalize_text(seg.get("text", "")), seg) for seg in target_segments]
+    for ref in reference_segments[:80]:
+        ref_text = _normalize_text(ref.get("text", ""))
+        if len(ref_text) < 8:
+            continue
+        best_ratio = 0.0
+        best_target = None
+        for target_text, target in normalized_targets:
+            if len(target_text) < 8:
+                continue
+            ratio = difflib.SequenceMatcher(None, ref_text, target_text).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_target = target
+        if best_target and best_ratio >= min_ratio:
+            offset = float(ref.get("start", 0.0)) - float(best_target.get("start", 0.0))
+            pairs.append({
+                "offset_seconds": round(offset, 3),
+                "ratio": round(best_ratio, 3),
+                "reference_start": round(float(ref.get("start", 0.0)), 3),
+                "target_start": round(float(best_target.get("start", 0.0)), 3),
+                "reference_text": str(ref.get("text", ""))[:120],
+                "target_text": str(best_target.get("text", ""))[:120],
+            })
+    return pairs
+
+
+def _normalize_text(value: str) -> str:
+    return re.sub(r"[^a-z0-9 ]+", "", value.lower()).strip()

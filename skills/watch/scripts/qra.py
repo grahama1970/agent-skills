@@ -109,6 +109,8 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
         text = _zen_chat([{"role": "user", "content": prompt}], timeout=120)
         pairs = _extract_pairs(text)
         if pairs:
+            for p in pairs:
+                p["_model"] = "deepseek-v4-flash"
             return pairs
         prompt += "\n\nCRITICAL: Return ONLY valid JSON. Check all quotes are escaped. No markdown."
 
@@ -118,6 +120,8 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
     text = _scillm_call([{"role": "user", "content": scillm_prompt}], model="gpt-5.5", timeout=120)
     pairs = _extract_pairs(text)
     if pairs:
+        for p in pairs:
+            p["_model"] = "gpt-5.5"
         return pairs
 
     # Tier 3: deterministic fallback from transcript sentences
@@ -125,9 +129,9 @@ def generate_qras(transcript_text: str, title: str, uploader: str | None = None)
     sents = [s.strip() for s in transcript_text.replace("!",".").replace("?",".").split(".") if len(s.strip()) > 50]
     if sents:
         return [
-            {"question": f"what happens in the first part of {title[:60]}", "answer": sents[0][:400]},
-            {"question": f"what is discussed in {title[:60]}", "answer": sents[len(sents)//3][:400] if len(sents) > 2 else sents[0][:400]},
-            {"question": f"how does {title[:60]} conclude", "answer": sents[-1][:400]},
+            {"question": f"what happens in the first part of {title[:60]}", "answer": sents[0][:400], "_model": "deterministic"},
+            {"question": f"what is discussed in {title[:60]}", "answer": sents[len(sents)//3][:400] if len(sents) > 2 else sents[0][:400], "_model": "deterministic"},
+            {"question": f"how does {title[:60]} conclude", "answer": sents[-1][:400], "_model": "deterministic"},
         ]
     return []
 
@@ -162,9 +166,7 @@ def _call_doc2qra_scene(scene_text: str, scene_index: int, source_title: str, st
 
 
 def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
-    """Describe up to 5 scene frames via mimo-v2-omni, concurrent."""
-    if not _zen_api_key():
-        return []
+    """Describe every sampled scene frame via Scillm VLM, with Zen fallback."""
     descriptions: list[dict] = []
 
     def _describe_one(f: dict) -> dict | None:
@@ -172,20 +174,39 @@ def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
         if not fp.exists():
             return None
         b64 = base64.b64encode(fp.read_bytes()).decode("ascii")
-        text = _zen_chat(
+        content = [
+            {"type": "text", "text": f"Describe this frame from '{title}' in 2 sentences. Include only visible setting, lighting, subjects, clothing, objects, and action. Do not infer plot facts not visible in the image."},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+        ]
+        source = "vlm-chutes"
+        text = _scillm_call(
+            [{"role": "user", "content": content}],
+            model="vlm-chutes",
+            timeout=120,
+        )
+        if not text and _zen_api_key():
+            source = "mimo-v2-omni"
+            text = _zen_chat(
             [{"role": "user", "content": [
-                {"type": "text", "text": f"Describe this frame from '{title}' in 2 sentences. Include setting, lighting, visible subjects, and action."},
+                {"type": "text", "text": f"Describe this frame from '{title}' in 2 sentences. Include only visible setting, lighting, subjects, clothing, objects, and action. Do not infer plot facts not visible in the image."},
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
             ]}],
             model="mimo-v2-omni",
             timeout=120,
-        )
+            )
         if text:
-            return {"index": f["index"], "timestamp": f["timestamp_seconds"], "description": text[:300]}
+            return {
+                "index": f["index"],
+                "timestamp": f["timestamp_seconds"],
+                "path": str(fp),
+                "description": text[:300],
+                "source": source,
+                "status": "described",
+            }
         return None
 
     with ThreadPoolExecutor(max_workers=5) as pool:
-        futures = {pool.submit(_describe_one, f): f for f in frames[:5]}
+        futures = {pool.submit(_describe_one, f): f for f in frames}
         for fut in as_completed(futures):
             r = fut.result()
             if r:

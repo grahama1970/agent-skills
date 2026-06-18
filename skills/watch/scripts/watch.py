@@ -11,7 +11,6 @@ Output: frames + transcript + 3 QRA pairs + image descriptions + audio descripti
 """
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import shutil
@@ -30,10 +29,18 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from download import download, is_url, is_youtube_url
 from frames import extract_frames, get_metadata, format_time, parse_time, auto_fps, auto_fps_focus
 from qra import generate_qras, describe_scene_images, describe_audio_tracks
-from report import write_report, write_markdown_report, write_frames_manifest
+from report import build_scene_elements, write_report, write_html_report, write_markdown_report, write_frames_manifest
 from scenes import parse_srt, find_scenes, analyze_emotions
-from storage import persist_frames, extract_and_persist_audio, upsert_qras, _slugify, WATCH_FRAMES_DIR
-from transcribe import transcribe_video, parse_captions, filter_segments
+from storage import (
+    persist_frames,
+    extract_and_persist_audio,
+    generate_playable_segments,
+    upsert_qras,
+    upsert_visual_descriptions,
+    _slugify,
+    WATCH_FRAMES_DIR,
+)
+from transcribe import transcribe_video, parse_captions, filter_segments, align_segments_to_reference
 
 MOVIE_LIBRARY = Path("/mnt/storage12tb/media/movies")
 
@@ -180,12 +187,21 @@ def run_watch(
     work.mkdir(parents=True, exist_ok=True)
     logger.info("working dir: {}", work)
 
-    dl = download(resolved_source, work / "download")
+    try:
+        dl = download(resolved_source, work / "download")
+    except Exception as exc:
+        logger.error("download/source probe failed: {}", exc)
+        return 1
     video_path = dl["video_path"]
     logger.info("video: {}", video_path)
 
-    meta = get_metadata(video_path)
+    try:
+        meta = get_metadata(video_path)
+    except Exception as exc:
+        logger.error("media metadata probe failed: {}", exc)
+        return 1
     full_duration = meta["duration_seconds"]
+    gaps: list[str] = []
 
     start_sec = parse_time(start)
     end_sec = parse_time(end)
@@ -201,14 +217,19 @@ def run_watch(
     scope_str = (f"{format_time(effective_start)}-{format_time(effective_end)} ({effective_duration:.1f}s)"
                  if focused else f"full {effective_duration:.1f}s")
 
-    frames, sampling_mode = extract_frames(
-        video_path, work / "frames",
-        use_scene_change=use_scene, fps=use_fps, resolution=resolution,
-        max_frames=max_frames_capped, start_seconds=start_sec, end_seconds=end_sec,
-    )
+    try:
+        frames, sampling_mode = extract_frames(
+            video_path, work / "frames",
+            use_scene_change=use_scene, fps=use_fps, resolution=resolution,
+            max_frames=max_frames_capped, start_seconds=start_sec, end_seconds=end_sec,
+        )
+    except Exception as exc:
+        logger.error("frame extraction failed: {}", exc)
+        return 1
     logger.info("extracted {} frames ({})", len(frames), sampling_mode)
 
     transcript = None
+    captions = None
     sub_path = subtitle or dl.get("subtitle_path")
     if sub_path is None and resolved_from_library:
         lib_srt = _find_srt_in_dir(Path(resolved_source).parent)
@@ -231,20 +252,39 @@ def run_watch(
             if ingest_result:
                 transcript = _filter_transcript(ingest_result, start_sec, end_sec)
 
-    if transcript is None and sub_path and Path(sub_path).exists():
+    if sub_path and Path(sub_path).exists():
         try:
             captions = parse_captions(sub_path)
-            captions["source"] = "captions"
-            transcript = _filter_transcript(captions, start_sec, end_sec)
+            captions["source"] = f"english-srt:{sub_path}"
+            captions = _filter_transcript(captions, start_sec, end_sec)
+            if transcript is None and not whisper:
+                transcript = captions
         except Exception as exc:
             logger.error("caption parse failed: {}", exc)
+            gaps.append("caption_parse_failed")
+    else:
+        gaps.append("missing_english_srt")
 
-    if transcript is None and whisper and not source_url:
+    if whisper and not source_url:
         try:
             w_result = transcribe_video(video_path, work)
             transcript = _filter_transcript(w_result, start_sec, end_sec)
         except RuntimeError as exc:
             logger.error("Whisper failed: {}", exc)
+            gaps.append("transcription_failed")
+            if transcript is None and captions is not None:
+                transcript = captions
+
+    if captions and transcript and captions is not transcript:
+        captions, alignment = align_segments_to_reference(captions, transcript)
+        if alignment:
+            if alignment.get("status") == "shifted":
+                gaps.append(f"srt_whisper_alignment_corrected:{alignment.get('offset_seconds')}s")
+            elif alignment.get("status") not in {"already_aligned"}:
+                gaps.append(f"srt_whisper_alignment_{alignment.get('status')}")
+
+    if transcript is None:
+        gaps.append("missing_transcript")
 
     qra_result = None
     if transcript and transcript.get("full_text") and doc2qra:
@@ -282,64 +322,84 @@ def run_watch(
     if scenes_analysis:
         (work / "scenes.json").write_text(json.dumps({"matches": scenes_analysis}, indent=2))
 
-    report_path = work / "report.md"
-    write_markdown_report(report_path, source, title, full_duration, sampling_mode, frames, transcript, scenes_analysis, emotion_analysis, focused_range=scope_str if focused else None)
-
-    json_report_path = work / "report.json"
-    write_report(json_report_path, source, title, full_duration, sampling_mode, frames, transcript, scenes_analysis, emotion_analysis, metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")})
-
     persisted_frames = persist_frames(frames, _slugify(title))
     audio_path = extract_and_persist_audio(video_path, work, _slugify(title)) if video_path else None
+    visual_descriptions = []
+    try:
+        visual_descriptions = describe_scene_images(persisted_frames or frames, title)
+    except Exception as exc:
+        logger.error("image description failed: {}", exc)
+    if frames and not visual_descriptions:
+        gaps.append("image_descriptions_missing")
     transcript_source = transcript.get("source") if transcript else None
     uploader = dl.get("info", {}).get("uploader")
     full_text = transcript.get("full_text", "") if transcript else ""
     slug = _slugify(title)
+    playable_frames = persisted_frames or frames
+    try:
+        playable_frames, clip_gaps = generate_playable_segments(video_path, playable_frames, full_duration, slug)
+        gaps.extend(clip_gaps)
+    except Exception as exc:
+        logger.error("browser playable clip generation failed: {}", exc)
+        gaps.append("playable_clip_generation_failed")
+
     now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+    scene_elements = build_scene_elements(playable_frames, full_duration, transcript, visual_descriptions, audio_path, captions)
+
+    report_path = work / "report.md"
+    write_markdown_report(
+        report_path, source, title, full_duration, sampling_mode, playable_frames,
+        transcript, scenes_analysis, emotion_analysis, focused_range=scope_str if focused else None,
+        gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+    )
+    html_report_path = work / "report.html"
+    write_html_report(
+        html_report_path, source, title, full_duration, sampling_mode, playable_frames,
+        transcript, scenes_analysis, emotion_analysis, captions=captions, focused_range=scope_str if focused else None,
+        gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+    )
+
+    json_report_path = work / "report.json"
+    write_report(
+        json_report_path, source, title, full_duration, sampling_mode, playable_frames,
+        transcript, scenes_analysis, emotion_analysis,
+        metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
+        gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
+    )
 
     qra_pairs = generate_qras(full_text, title, uploader) if full_text else None
     if qra_pairs:
         upsert_qras(qra_pairs, source, title, full_duration, len(frames), sampling_mode,
-                    transcript_source, slug, now, persisted_frames, audio_path)
+                    transcript_source, slug, now, playable_frames, audio_path, visual_descriptions, scene_elements)
     else:
         logger.warning("no QRA pairs generated — nothing stored to memory")
+        if full_text:
+            gaps.append("qra_generation_failed")
+            write_markdown_report(
+                report_path, source, title, full_duration, sampling_mode, playable_frames,
+                transcript, scenes_analysis, emotion_analysis, focused_range=scope_str if focused else None,
+                gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+            )
+            write_html_report(
+                html_report_path, source, title, full_duration, sampling_mode, playable_frames,
+                transcript, scenes_analysis, emotion_analysis, captions=captions, focused_range=scope_str if focused else None,
+                gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+            )
+            write_report(
+                json_report_path, source, title, full_duration, sampling_mode, playable_frames,
+                transcript, scenes_analysis, emotion_analysis,
+                metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
+                gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
+            )
+
+    if visual_descriptions:
+        upsert_visual_descriptions(visual_descriptions, source, title, slug, now)
 
     if json_output:
         print(json_report_path.read_text())
     else:
         _print_summary(source, title, full_duration, meta, frames, sampling_mode, transcript, scenes_analysis, emotion_analysis, qra_result, work)
     return 0
-
-
-def main() -> int:
-    """Argparse entry point (backward compat). Delegates to run_watch()."""
-    ap = argparse.ArgumentParser(prog="watch", description="Watch any video: frames + transcript + scene analysis")
-    ap.add_argument("source", help="Video URL, local file path, or movie title")
-    ap.add_argument("--scene-change", action="store_true", default=True, dest="scene_change")
-    ap.add_argument("--no-scene-change", action="store_false", dest="scene_change")
-    ap.add_argument("--fps", type=float, default=None)
-    ap.add_argument("--max-frames", type=int, default=100)
-    ap.add_argument("--resolution", type=int, default=512)
-    ap.add_argument("--start", type=str, default=None)
-    ap.add_argument("--end", type=str, default=None)
-    ap.add_argument("--subtitle", type=str, default=None)
-    ap.add_argument("--emotion", type=str, default=None)
-    ap.add_argument("--tag", type=str, default=None)
-    ap.add_argument("--query", type=str, default=None)
-    ap.add_argument("--whisper", action="store_true", default=True, dest="whisper")
-    ap.add_argument("--no-whisper", action="store_false", dest="whisper")
-    ap.add_argument("--out-dir", type=str, default=None)
-    ap.add_argument("--doc2qra", action="store_true", dest="doc2qra", default=False)
-    ap.add_argument("--json", action="store_true", default=False)
-    args = ap.parse_args()
-    return run_watch(
-        source=args.source, scene_change=args.scene_change, fps=args.fps,
-        max_frames=args.max_frames, resolution=args.resolution,
-        start=args.start, end=args.end, subtitle=args.subtitle,
-        emotion=args.emotion, tag=args.tag, query=args.query,
-        whisper=args.whisper,
-        doc2qra=args.doc2qra, out_dir=args.out_dir, json_output=args.json,
-    )
-
 
 def _print_summary(source, title, duration, meta, frames, sampling_mode, transcript, scenes, emotion_analysis, qra_result, work):
     m, s = divmod(int(duration), 60)
@@ -365,8 +425,4 @@ def _print_summary(source, title, duration, meta, frames, sampling_mode, transcr
         print(f"- `{f['path']}` (t={ts})")
     if len(frames) > 20:
         print(f"- ... and {len(frames) - 20} more")
-    print(f"\n---\nReport: `{work / 'report.md'}`\nFrames manifest: `{work / 'frames_manifest.json'}`\nWork dir: `{work}`")
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+    print(f"\n---\nReport: `{work / 'report.md'}`\nHTML report: `{work / 'report.html'}`\nFrames manifest: `{work / 'frames_manifest.json'}`\nWork dir: `{work}`")
