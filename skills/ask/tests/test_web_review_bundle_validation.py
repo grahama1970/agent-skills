@@ -227,6 +227,42 @@ def test_call_webgpt_passes_url_for_explicit_tab_and_url(
     assert "--url" not in cmd
 
 
+def test_call_webgpt_fails_on_browser_oracle_missing_binding(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    surf = tmp_path / "surf"
+    surf.write_text("#!/bin/sh\n", encoding="utf-8")
+    surf.chmod(0o755)
+
+    def fake_browser_oracle(**kwargs):
+        return (
+            "demo-project",
+            "",
+            "",
+            {
+                "status": "needs_attention",
+                "reason": "binding_missing",
+                "project": "demo-project",
+                "browser_oracle_applied": True,
+            },
+        )
+
+    def fake_run(cmd, **kwargs):
+        raise AssertionError(f"surf should not run after browser-oracle failure: {cmd}")
+
+    monkeypatch.setattr("ask.webgpt_runtime.apply_webgpt_browser_oracle", fake_browser_oracle)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    with pytest.raises(WebgptBackendError, match="binding_missing"):
+        call_webgpt(
+            "Review this.",
+            project="demo-project",
+            surf_run=surf,
+            artifact_dir=tmp_path / "artifacts",
+        )
+
+
 def test_call_webgpt_uses_url_resolution_without_tab_id(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,

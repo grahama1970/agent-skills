@@ -11,7 +11,17 @@ from typing import Optional
 import typer
 from loguru import logger
 
-from .bindings import BindingError, DuplicateConversationUrlError, bind, list_bindings, load, unbind, verify
+from .bindings import (
+    BindingError,
+    DuplicateConversationUrlError,
+    bind,
+    list_bindings,
+    load,
+    open_tab_and_bind,
+    reconcile_bindings,
+    unbind,
+    verify,
+)
 from .config import SUPPORTED_BACKENDS, project_root, surf_run_path
 from .registry import register_mapping, resolve_project
 from .walkup import find_all_registries, find_registry
@@ -65,7 +75,7 @@ def resolve_cmd(
         "view_id": result.binding.view_id if result.binding else None,
         "conversation_url": result.binding.conversation_url if result.binding else None,
         "bound_manually": result.binding.bound_manually if result.binding else None,
-        "status": "ok" if result.project else "needs_attention",
+        "status": "ok" if result.project and result.binding else "needs_attention",
     }
     if not result.project:
         payload["reason"] = "no_project_resolved"
@@ -82,6 +92,8 @@ def resolve_cmd(
     _emit(payload, as_json)
     if not result.project:
         raise typer.Exit(2)
+    if not result.binding:
+        raise typer.Exit(1)
 
 
 @app.command("bind")
@@ -171,6 +183,74 @@ def unbind_cmd(
     _emit(payload, as_json)
     if not removed:
         raise typer.Exit(1)
+
+
+@app.command("reconcile")
+def reconcile_cmd(
+    backend: Optional[str] = typer.Option(None, "--backend", help="Backend to scan; defaults to all."),
+    project: str = typer.Option("", "--project", help="Optional project name filter."),
+    prune_missing: bool = typer.Option(
+        False,
+        "--prune-missing",
+        help="Delete binding files whose Chrome tab id no longer exists.",
+    ),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Compare stored bindings with live surf tabs; optionally prune dead tab ids."""
+    if backend and backend not in SUPPORTED_BACKENDS:
+        typer.echo(f"unsupported backend {backend!r}", err=True)
+        raise typer.Exit(2)
+    rows = reconcile_bindings(
+        backend,
+        project=project,
+        prune_missing=prune_missing,
+        surf_run=surf_run_path(),
+    )
+    payload = {
+        "status": "ok" if all(row.status == "ready" for row in rows) else "needs_attention",
+        "backend": backend,
+        "project": project or None,
+        "prune_missing": prune_missing,
+        "rows": [row.to_dict() for row in rows],
+    }
+    _emit(payload, as_json)
+    if not as_json:
+        for row in rows:
+            marker = "pruned" if row.pruned else row.status
+            typer.echo(
+                f"{row.name}\t{row.backend}\ttab={row.tab_id or row.view_id}\t{marker}\t{row.state_path}"
+            )
+    if any(row.status not in {"ready", "unsupported_live_scan"} for row in rows):
+        raise typer.Exit(1)
+
+
+@app.command("open-bind")
+def open_bind_cmd(
+    name: str = typer.Argument(..., help="Project name to bind."),
+    backend: str = typer.Option("webgpt", "--backend"),
+    url: str = typer.Option(..., "--url", help="URL to open in a fresh tab before binding."),
+    manual: bool = typer.Option(True, "--manual/--auto", help="Manual bindings are not auto-replaced."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Open a fresh surf tab and persist the new tab id as a browser-oracle binding."""
+    if backend not in SUPPORTED_BACKENDS:
+        typer.echo(f"unsupported backend {backend!r}", err=True)
+        raise typer.Exit(2)
+    try:
+        state = open_tab_and_bind(
+            name,
+            backend,
+            url=url,
+            manual=manual,
+            surf_run=surf_run_path(),
+        )
+    except (ValueError, BindingError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
+    payload = {**state.to_dict(), "state_path": str(project_root(backend) / f"{state.name}.json")}
+    _emit(payload, as_json)
+    if not as_json:
+        typer.echo(f"opened and bound {state.name} ({backend})")
 
 
 @app.command("register")

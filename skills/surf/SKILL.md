@@ -685,19 +685,20 @@ Required proof for this path:
 | `--expect-url <url>` | Identity assertion with `--tab-id` |
 | `--expect-title <text>` | Title assertion with `--tab-id` |
 | `--create-tab` | Fresh inactive ChatGPT tab; skips walk-up |
-| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml |
+| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml and remembered-tab fallback |
 | `--browser-oracle-from <dir>` | Walk-up root (default: cwd) |
 | `--no-activate` | Background controlled tab (required for reviewer work) |
 | `--no-remember` | Do not touch `/tmp/surf-webgpt-controlled-tab-id` |
 
 When Surf resolves a project through `$browser-oracle`, it reconciles the stored
-tab id against live `surf tab.list --json --with-kde` before using it. A stale
-or URL-mismatched binding is ignored fail-closed unless explicit repair is
-enabled:
+tab id against live `surf tab.list` before using it. The project binding is used
+only when reconciliation returns `ready`. A missing, stale, URL-mismatched, or
+duplicate-conversation binding is a hard stop; Surf must not fall back to
+`/tmp/surf-webgpt-controlled-tab-id` for a project-bound submit.
 
 | Environment | Role |
 |-------------|------|
-| `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` | Delete stored bindings whose tab id no longer exists after a complete live scan |
+| `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` | Delete stored bindings whose tab id no longer exists after a successful live scan |
 | `SURF_BROWSER_ORACLE_CREATE_MISSING=1` | For a missing stored tab with a known URL, open a fresh tab and rebind |
 
 ```bash

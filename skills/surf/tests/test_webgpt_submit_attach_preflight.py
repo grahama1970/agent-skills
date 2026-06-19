@@ -258,7 +258,97 @@ esac
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "failed"
     assert meta["failure"] == "create_tab_navigation_failed"
-    assert meta["requested_tab_id"] == "9001"
+
+
+def test_webgpt_submit_project_reconcile_failure_does_not_use_remembered_tab(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    remembered = tmp_path / "remembered-tab"
+    remembered.write_text("99999\n", encoding="utf-8")
+    fake_bo = tmp_path / "browser-oracle.sh"
+    fake_bo.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  resolve)
+    printf '{"status":"ok","project":"demo-project","tab_id":"12345","conversation_url":"https://chatgpt.com/c/demo"}\\n'
+    ;;
+  reconcile)
+    printf '{"status":"needs_attention","rows":[{"status":"duplicate_conversation_url","issues":["duplicate_conversation_url"]}]}\\n'
+    exit 1
+    ;;
+  *)
+    echo "unexpected browser-oracle command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_bo.chmod(0o755)
+    fake_run = """#!/usr/bin/env bash
+echo "surf should not run after project reconcile failure: $*" >&2
+exit 99
+"""
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        extra_env={
+            "BROWSER_ORACLE_RUN": str(fake_bo),
+            "SURF_WEBGPT_TAB_STATE": str(remembered),
+        },
+        target_args=["--project", "demo-project", "--no-activate"],
+    )
+
+    assert proc.returncode == 2
+    assert "Refusing to fall back to remembered ChatGPT tab state" in proc.stderr
+    assert "99999" not in proc.stderr
+
+
+def test_webgpt_submit_project_missing_binding_fails_before_remembered_tab(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    remembered = tmp_path / "remembered-tab"
+    remembered.write_text("99999\n", encoding="utf-8")
+    fake_bo = tmp_path / "browser-oracle.sh"
+    fake_bo.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  resolve)
+    printf '{"status":"needs_attention","reason":"binding_missing","project":"demo-project","tab_id":null,"conversation_url":null}\\n'
+    exit 1
+    ;;
+  *)
+    echo "unexpected browser-oracle command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_bo.chmod(0o755)
+    fake_run = """#!/usr/bin/env bash
+echo "surf should not run after missing project binding: $*" >&2
+exit 99
+"""
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        extra_env={
+            "BROWSER_ORACLE_RUN": str(fake_bo),
+            "SURF_WEBGPT_TAB_STATE": str(remembered),
+        },
+        target_args=["--project", "demo-project", "--no-activate"],
+    )
+
+    assert proc.returncode == 2
+    assert "browser-oracle project 'demo-project' is not ready: binding_missing" in proc.stderr
+    assert "99999" not in proc.stderr
 
 
 def test_webgpt_roundtrip_terminates_submit_child_on_parent_term(tmp_path: Path) -> None:

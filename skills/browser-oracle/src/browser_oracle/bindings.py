@@ -41,6 +41,37 @@ class DuplicateConversationUrlError(BindingError):
     """Raised when a bound conversation URL is open in more than one tab."""
 
 
+@dataclass
+class LiveTab:
+    id: str
+    title: str = ""
+    url: str = ""
+
+
+@dataclass
+class ReconcileRow:
+    name: str
+    backend: str
+    state_path: str
+    tab_id: str = ""
+    view_id: str = ""
+    conversation_url: str = ""
+    bound_manually: bool = False
+    live_found: bool = False
+    live_title: str = ""
+    live_url: str = ""
+    duplicate_url_tab_ids: list[str] | None = None
+    status: str = "unknown"
+    issues: list[str] | None = None
+    pruned: bool = False
+
+    def to_dict(self) -> dict:
+        data = asdict(self)
+        data["issues"] = data["issues"] or []
+        data["duplicate_url_tab_ids"] = data["duplicate_url_tab_ids"] or []
+        return data
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -56,6 +87,49 @@ def _normalise_url_for_identity(url: str) -> str:
         netloc = "chatgpt.com"
     path = re.sub(r"/+$", "", parsed.path or "/")
     return f"{scheme}://{netloc}{path}"
+
+
+def parse_tab_list(text: str) -> dict[str, LiveTab]:
+    """Parse ``surf tab.list`` TSV output into live tabs keyed by Chrome tab id."""
+    tabs: dict[str, LiveTab] = {}
+    for line in text.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) < 3:
+            continue
+        tab_id, title, url = parts[0].strip(), parts[1].strip(), parts[2].strip()
+        if tab_id:
+            tabs[tab_id] = LiveTab(id=tab_id, title=title, url=url)
+    return tabs
+
+
+def _duplicate_url_tab_ids(tabs_by_id: dict[str, LiveTab], *, tab_id: str, url: str) -> list[str]:
+    expected = _normalise_url_for_identity(url)
+    if not expected:
+        return []
+    return sorted(
+        tab.id
+        for tab in tabs_by_id.values()
+        if tab.id != tab_id and _normalise_url_for_identity(tab.url) == expected
+    )
+
+
+def live_tabs(*, surf_run: Path | None = None, timeout: float = 15.0) -> dict[str, LiveTab]:
+    surf = surf_run or surf_run_path()
+    if not surf.exists():
+        raise BindingError(f"surf runtime not found at {surf}")
+    try:
+        proc = subprocess.run(
+            [str(surf), "tab.list"],
+            cwd=surf.parent,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except Exception as exc:
+        raise BindingError(f"surf tab.list failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise BindingError(f"surf tab.list failed with exit {proc.returncode}: {proc.stderr.strip()}")
+    return parse_tab_list(proc.stdout)
 
 
 def sanitize_name(name: str) -> str:
@@ -150,6 +224,139 @@ def unbind(name: str, backend: str, *, root: Path | None = None) -> bool:
     return True
 
 
+def reconcile_bindings(
+    backend: str | None = None,
+    *,
+    project: str = "",
+    prune_missing: bool = False,
+    surf_run: Path | None = None,
+    root: Path | None = None,
+) -> list[ReconcileRow]:
+    """Compare stored bindings to live browser tabs and optionally prune dead ids."""
+    states = list_bindings(backend, root=root)
+    if project:
+        wanted = sanitize_name(project)
+        states = [state for state in states if sanitize_name(state.name) == wanted]
+
+    tabs_by_id: dict[str, LiveTab] = {}
+    scan_error = ""
+    if any(state.backend != "cursor-browser" for state in states):
+        try:
+            tabs_by_id = live_tabs(surf_run=surf_run)
+        except BindingError as exc:
+            scan_error = str(exc)
+
+    rows: list[ReconcileRow] = []
+    for state in states:
+        issues: list[str] = []
+        live_found = False
+        live_title = ""
+        live_url = ""
+        duplicates: list[str] = []
+        status = "ready"
+
+        if state.backend == "cursor-browser":
+            status = "unsupported_live_scan"
+            issues.append("cursor_browser_live_scan_unsupported")
+        elif scan_error:
+            status = "scan_failed"
+            issues.append("surf_tab_list_failed")
+        elif not state.tab_id:
+            status = "missing_tab_id"
+            issues.append("missing_tab_id")
+        else:
+            live = tabs_by_id.get(state.tab_id)
+            if live is None:
+                status = "missing_live_tab"
+                issues.append("missing_live_tab")
+            else:
+                live_found = True
+                live_title = live.title
+                live_url = live.url
+                if state.conversation_url and live.url and live.url != state.conversation_url:
+                    status = "url_mismatch"
+                    issues.append("url_mismatch")
+                else:
+                    duplicates = _duplicate_url_tab_ids(
+                        tabs_by_id,
+                        tab_id=state.tab_id,
+                        url=state.conversation_url,
+                    )
+                    if duplicates:
+                        status = "duplicate_conversation_url"
+                        issues.append("duplicate_conversation_url")
+
+        pruned = False
+        if prune_missing and status == "missing_live_tab":
+            pruned = unbind(state.name, state.backend, root=root)
+
+        if scan_error:
+            issues.append(scan_error)
+        rows.append(
+            ReconcileRow(
+                name=state.name,
+                backend=state.backend,
+                state_path=str(state_path(state.name, state.backend, root=root)),
+                tab_id=state.tab_id,
+                view_id=state.view_id,
+                conversation_url=state.conversation_url,
+                bound_manually=state.bound_manually,
+                live_found=live_found,
+                live_title=live_title,
+                live_url=live_url,
+                duplicate_url_tab_ids=duplicates,
+                status=status,
+                issues=issues,
+                pruned=pruned,
+            )
+        )
+    return rows
+
+
+def open_tab_and_bind(
+    name: str,
+    backend: str,
+    *,
+    url: str,
+    manual: bool = True,
+    surf_run: Path | None = None,
+    root: Path | None = None,
+    timeout: float = 15.0,
+) -> BindingState:
+    """Open a fresh browser tab through Surf and bind the returned tab id."""
+    if backend == "cursor-browser":
+        raise ValueError("open-bind is only supported for Chrome tab backends")
+    target_url = url.strip()
+    if not target_url:
+        raise ValueError("url is required")
+    surf = surf_run or surf_run_path()
+    if not surf.exists():
+        raise BindingError(f"surf runtime not found at {surf}")
+    try:
+        proc = subprocess.run(
+            [str(surf), "tab.new", target_url],
+            cwd=surf.parent,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except Exception as exc:
+        raise BindingError(f"surf tab.new failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise BindingError(f"surf tab.new failed with exit {proc.returncode}: {proc.stderr.strip()}")
+    match = re.search(r"Created tab\s+([0-9]+):", proc.stdout)
+    if not match:
+        raise BindingError(f"could not parse tab id from surf tab.new output: {proc.stdout.strip()}")
+    return bind(
+        name,
+        backend,
+        tab_id=match.group(1),
+        conversation_url=target_url,
+        manual=manual,
+        root=root,
+    )
+
+
 def list_bindings(backend: str | None = None, *, root: Path | None = None) -> list[BindingState]:
     from .config import SUPPORTED_BACKENDS
 
@@ -193,37 +400,13 @@ def verify(
         logger.error("surf runtime not found at {}", surf)
         return state
     try:
-        proc = subprocess.run(
-            [str(surf), "tab.list"],
-            cwd=surf.parent,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except Exception as exc:
+        tabs_by_id = live_tabs(surf_run=surf, timeout=timeout)
+    except BindingError as exc:
         logger.error("surf tab.list failed: {}", exc)
         return state
-    if proc.returncode != 0:
-        return state
-    seen = False
-    matched_url = ""
-    duplicate_tab_ids: list[str] = []
-    bound_url_identity = _normalise_url_for_identity(state.conversation_url)
-    for line in proc.stdout.splitlines():
-        parts = line.split("\t")
-        if len(parts) < 3:
-            continue
-        tid, _title, url = parts[0], parts[1], parts[2]
-        if (
-            state.conversation_url
-            and tid != state.tab_id
-            and _normalise_url_for_identity(url) == bound_url_identity
-        ):
-            duplicate_tab_ids.append(tid)
-        if tid == state.tab_id:
-            seen = True
-            matched_url = url
-    if seen:
+    live = tabs_by_id.get(state.tab_id)
+    if live is not None:
+        matched_url = live.url
         if matched_url and state.conversation_url and matched_url != state.conversation_url:
             if state.bound_manually:
                 raise BindingError(
@@ -237,6 +420,11 @@ def verify(
             state.conversation_url = matched_url
         elif matched_url and matched_url != state.conversation_url:
             state.conversation_url = matched_url
+        duplicate_tab_ids = _duplicate_url_tab_ids(
+            tabs_by_id,
+            tab_id=state.tab_id,
+            url=state.conversation_url,
+        )
         if duplicate_tab_ids:
             raise DuplicateConversationUrlError(
                 f"Project {state.name!r} ({backend}) is bound to tab {state.tab_id}, "

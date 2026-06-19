@@ -81,6 +81,9 @@ Within a registry root, `by_relative_path` keys are relative to that root
                  [--project NAME] [--lane LANE] [--json]
 ```
 Walk up from `--from` (default `.`), map directory → project, load `~/.pi/*-projects/<project>.json`.
+If a project is resolved but has no binding file, `resolve` reports
+`status: needs_attention`, `reason: binding_missing`, and exits non-zero. Callers
+must not treat that as permission to use remembered/global tab state.
 
 ### `bind`
 ```bash
@@ -98,6 +101,25 @@ Check binding file exists and tab is still open (Chrome backends via `surf tab.l
 ```bash
 ./run.sh list [--backend webgpt] [--verify] [--json]
 ```
+
+### `reconcile`
+```bash
+./run.sh reconcile [--backend webgpt] [--project NAME] [--prune-missing] [--json]
+```
+Scan stored bindings against live `surf tab.list` inventory. Reports `ready`,
+`missing_live_tab`, `url_mismatch`, `duplicate_conversation_url`, `missing_tab_id`,
+`scan_failed`, or `unsupported_live_scan` per binding. `--prune-missing` deletes
+only binding files whose stored Chrome tab id no longer exists after a successful
+live scan; it does not close browser tabs. Duplicate conversation URLs fail
+closed because `tab id + URL` is ambiguous when the same ChatGPT conversation is
+open in more than one Chrome tab.
+
+### `open-bind`
+```bash
+./run.sh open-bind NAME [--backend webgpt] --url URL [--manual|--auto] [--json]
+```
+Open a fresh tab with `surf tab.new URL`, parse the new tab id, and persist it as
+the project binding.
 
 ### `register`
 ```bash
@@ -130,7 +152,8 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 | Explicit project | `--project NAME` (resolve only) | `--webgpt-project NAME` | `--project NAME` |
 | Tab id | via `bind` → binding file | `--webgpt-tab-id ID` | `--tab-id ID` |
 | Conversation URL | `--url` on `bind`; resolve returns it | `--webgpt-url URL` | `--url URL` (+ `--expect-url`) |
-| Fresh tab | — | `--webgpt-create-tab` | `--create-tab` |
+| Fresh tab | `open-bind NAME --url URL` | `--webgpt-create-tab` | `--create-tab` |
+| Stored tab scan | `reconcile --project NAME` | compose before review | automatic before walked-up submit |
 | Single round | — | `--once` | — |
 
 ## Commands (quick)
@@ -140,6 +163,8 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 ./run.sh bind NAME [--backend webgpt] --tab-id ID [--url URL] [--view-id ID] [--manual]
 ./run.sh verify NAME [--backend webgpt] [--json]
 ./run.sh list [--backend webgpt] [--verify] [--json]
+./run.sh reconcile [--backend webgpt] [--project NAME] [--prune-missing] [--json]
+./run.sh open-bind NAME [--backend webgpt] --url URL [--manual] [--json]
 ./run.sh register [--at DIR] [--backend webgpt] [--default] [--relative-path SUB] PROJECT
 ./run.sh show-registry [--from PATH] [--json]
 ./run.sh walk-up [--from PATH] [--json]
@@ -178,6 +203,8 @@ Legacy `./run.sh webgpt-project …` in `/ask` remains; prefer **`browser-oracle
 ## Proof
 
 - Resolve/doctor JSON with `project`, `registry_path`, `tab_id`, `readiness`.
+- Reconcile JSON includes `status`, `issues`, `live_found`, `live_url`, and
+  `duplicate_url_tab_ids`.
 - Ask artifacts for actual WebGPT rounds (not chat paraphrase).
 
 Details: `README.md`, `docs/PROJECT_KNOWLEDGE.md`, `references/browser-oracles.schema.yml`.
@@ -190,7 +217,7 @@ Details: `README.md`, `docs/PROJECT_KNOWLEDGE.md`, `references/browser-oracles.s
 | Skill | Role | How it composes |
 | --- | --- | --- |
 | **`/ask`** | Orchestration | Before `call_webgpt`, resolves project/tab/url from cwd (or `--browser-oracle-from`) via `browser_oracle_client.py` → `./run.sh resolve --json`. Records `browser_oracle_resolved` in run events. |
-| **`/surf`** | Transport | `webgpt.submit` accepts `--project` and `--browser-oracle-from`; shells to the same `resolve --json` and fills `--tab-id` / `--url` / `--expect-url`. |
+| **`/surf`** | Transport | `webgpt.submit` accepts `--project` and `--browser-oracle-from`; shells to `resolve --json`, then `reconcile --json`, and fills `--tab-id` / `--url` / `--expect-url` only when the binding is `ready`. |
 
 **Zero-flag workflow** (from a registered directory):
 
@@ -201,3 +228,5 @@ $surf webgpt.submit --input REQ.md --output RESP.md --no-activate  # same walk-u
 ```
 
 Explicit overrides still win: `--webgpt-tab-id`, `--webgpt-url`, `--webgpt-project`, `--webgpt-create-tab`.
+For project-bound submits, a missing, stale, mismatched, or duplicate binding is
+a hard stop. Do not fall back to `/tmp/surf-webgpt-controlled-tab-id`.

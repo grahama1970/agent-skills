@@ -728,6 +728,7 @@ def call_webgpt(
     if not surf.exists():
         raise WebgptBackendError(f"surf runtime not found: {surf}")
 
+    browser_oracle_meta: dict[str, Any] = {}
     if not tab_id and not url and not create_tab:
         from_path = (
             browser_oracle_from.strip()
@@ -747,6 +748,20 @@ def call_webgpt(
             run_state.event(
                 "browser_oracle_resolved",
                 **{k: v for k, v in browser_oracle_meta.items() if v is not None},
+            )
+        if browser_oracle_meta.get("status") in {"needs_attention", "error"} and (
+            project or browser_oracle_meta.get("project")
+        ):
+            reason = (
+                browser_oracle_meta.get("reason")
+                or browser_oracle_meta.get("error")
+                or browser_oracle_meta.get("status")
+            )
+            resolved_project = project or str(browser_oracle_meta.get("project") or "")
+            raise WebgptBackendError(
+                f"browser-oracle project {resolved_project!r} is not ready: {reason}. "
+                "Run browser-oracle doctor/reconcile, re-bind the project, pass "
+                "--webgpt-tab-id/--webgpt-url, or use --webgpt-create-tab deliberately."
             )
 
     # Soft rate-limit guard: stop a runaway loop from burning the

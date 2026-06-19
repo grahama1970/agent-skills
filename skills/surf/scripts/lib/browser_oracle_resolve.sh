@@ -96,22 +96,37 @@ browser_oracle_apply_webgpt() {
     return 0
   fi
 
-  local payload
-  payload="$(browser_oracle_resolve_json "$from_path" webgpt "$project_in" "")" || return 0
+  local payload resolve_status
+  resolve_status=0
+  payload="$(browser_oracle_resolve_json "$from_path" webgpt "$project_in" "")" || resolve_status=$?
+  if [[ "$resolve_status" -ne 0 && -z "$payload" ]]; then
+    [[ -n "$project_in" ]] && return 2
+    return 0
+  fi
 
-  local resolved_project resolved_tab resolved_url
+  local status reason resolved_project resolved_tab resolved_url
+  status="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("status") or "")' <<<"$payload" 2>/dev/null || true)"
+  reason="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("reason") or "")' <<<"$payload" 2>/dev/null || true)"
   resolved_project="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("project") or "")' <<<"$payload")"
   resolved_tab="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("tab_id") or "")' <<<"$payload")"
   resolved_url="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("conversation_url") or "")' <<<"$payload")"
+
+  if [[ -n "$resolved_project" && "$status" != "ok" ]]; then
+    echo "browser-oracle project '$resolved_project' is not ready: ${reason:-$status}" >&2
+    return 2
+  fi
 
   if [[ -n "$resolved_project" && -n "$resolved_tab" ]]; then
     local reconcile_payload reconcile_status
     reconcile_payload="$(browser_oracle_reconcile_json webgpt "$resolved_project" "${SURF_BROWSER_ORACLE_PRUNE_MISSING:-0}" || true)"
     reconcile_status="$(python3 -c 'import json,sys; d=json.load(sys.stdin); rows=d.get("rows") or []; print((rows[0].get("status") if rows else ""))' <<<"$reconcile_payload" 2>/dev/null || true)"
     if [[ "$reconcile_status" != "ready" ]]; then
-      resolved_tab=""
-      resolved_url=""
+      echo "browser-oracle project '$resolved_project' is not ready: ${reconcile_status:-reconcile_failed}" >&2
+      return 2
     fi
+  elif [[ -n "$resolved_project" && -z "$resolved_tab" ]]; then
+    echo "browser-oracle project '$resolved_project' has no bound tab id" >&2
+    return 2
   fi
 
   if [[ -z "$project_in" && -n "$resolved_project" ]]; then
