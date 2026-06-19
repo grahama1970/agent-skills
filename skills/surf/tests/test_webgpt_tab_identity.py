@@ -74,6 +74,46 @@ def test_expected_url_fails_when_duplicate_conversation_url_is_open():
     assert any(check["name"] == "expected_url_unique" and not check["ok"] for check in out["checks"])
 
 
+def test_expected_url_detects_duplicate_project_conversation_by_uuid():
+    tabs = (
+        "837354098\tPersonas - Horus\t"
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+        "837354358\tPersonas - Horus duplicate\t"
+        "https://chatgpt.com/g/g-p-demo-personas-renamed/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+    )
+    code, out = _check(
+        "837354098",
+        tabs,
+        "--expect-url",
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a",
+    )
+    assert code == 5
+    assert out["ok"] is False
+    assert out["error"] == "expected_url_ambiguous_duplicate_tabs"
+    assert {candidate["id"] for candidate in out["url_resolution"]["candidates"]} == {
+        "837354098",
+        "837354358",
+    }
+
+
+def test_expected_plain_url_verifies_project_conversation_tab_by_uuid():
+    tabs = (
+        "837354098\tPersonas - Horus\t"
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+        "837354340\tDream\t"
+        "https://chatgpt.com/g/g-p-dream/c/6a3538bf-e07c-83ea-9c82-2c88a7f3eb21\n"
+    )
+    code, out = _check(
+        "837354098",
+        tabs,
+        "--expect-url",
+        "https://chatgpt.com/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a",
+    )
+    assert code == 0
+    assert out["ok"] is True
+    assert out["tab_id"] == "837354098"
+
+
 def test_expected_url_matching_different_tab_fails():
     tabs = (
         "837346327\tDelegate review\t"

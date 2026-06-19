@@ -10,7 +10,7 @@ import sys
 from urllib.parse import urlparse
 
 _CONV_RE = re.compile(
-    r"chatgpt\.com/c/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{10,})",
+    r"chatgpt\.com/(?:g/[^/]+/)?c/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{10,})",
 )
 
 
@@ -60,11 +60,24 @@ def resolve_url(target_url: str, tabs: list[dict[str, str]]) -> dict:
     by_cid: list[dict[str, str]] = []
     for tab in tabs:
         tab_norm = normalize_chatgpt_url(tab["url"])
+        tab_cid = conversation_id(tab_norm)
+        if target_cid and tab_cid == target_cid:
+            by_cid.append(tab)
         if tab_norm == target_norm:
             exact.append(tab)
             continue
-        if target_cid and conversation_id(tab_norm) == target_cid:
-            by_cid.append(tab)
+
+    if target_cid and len(by_cid) > 1:
+        return {
+            "ok": False,
+            "error": "ambiguous_url",
+            "requested_url": target_url,
+            "normalized_url": target_norm,
+            "tab_id": None,
+            "candidates": [
+                {"id": t["id"], "url": t["url"], "title": t["title"]} for t in by_cid
+            ],
+        }
 
     candidates = exact if exact else by_cid
     if not candidates:

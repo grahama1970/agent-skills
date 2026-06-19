@@ -419,8 +419,11 @@ Behavior:
 - `--no-remember` skips reading and writing the controlled-tab state file.
 - Explicit `--tab-id` or `--url` automatically implies `--no-remember` (do not
   overwrite `/tmp/surf-webgpt-controlled-tab-id` with a reviewer tab).
-- `--url` matching is normalized (host, trailing slash) and conversation-uuid aware;
-  multiple open tabs with the same conversation id fail closed as `ambiguous_url`.
+- `--url` matching is normalized (host, trailing slash) and conversation-uuid aware
+  for both plain `https://chatgpt.com/c/<id>` and project-scoped
+  `https://chatgpt.com/g/<project>/c/<id>` URLs. Multiple open tabs with the
+  same conversation id fail closed as `ambiguous_url`, even when one tab is an
+  exact URL match.
 - If the controlled tab is already your foreground active tab, `--no-activate`
   is allowed: Surf does not need to activate anything. This is user-visible
   same-tab operation, not background proof. Avoid typing or clicking in that

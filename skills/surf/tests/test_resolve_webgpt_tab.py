@@ -49,3 +49,29 @@ def test_ambiguous_duplicate_conversation():
     assert out["ok"] is False
     assert out["error"] == "ambiguous_url"
     assert len(out["candidates"]) == 2
+
+
+def test_project_conversation_matches_plain_conversation_url():
+    tabs = (
+        "837354098\tPersonas - Horus\t"
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+    )
+    out = _resolve("https://chatgpt.com/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a", tabs)
+    assert out["ok"] is True
+    assert out["tab_id"] == "837354098"
+
+
+def test_duplicate_project_conversation_urls_are_ambiguous_by_conversation_id():
+    tabs = (
+        "837354098\tPersonas - Horus\t"
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+        "837354358\tPersonas - Horus duplicate\t"
+        "https://chatgpt.com/g/g-p-demo-personas-renamed/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a\n"
+    )
+    out = _resolve(
+        "https://chatgpt.com/g/g-p-demo-personas/c/6a357de1-ff0c-83ea-9f5a-e5b4dd12c06a",
+        tabs,
+    )
+    assert out["ok"] is False
+    assert out["error"] == "ambiguous_url"
+    assert {candidate["id"] for candidate in out["candidates"]} == {"837354098", "837354358"}
