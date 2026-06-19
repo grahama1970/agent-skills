@@ -28,6 +28,8 @@ CDP_PID_FILE="/tmp/chrome-cdp.pid"
 # Vendored surf-cli lives under vendor/surf-cli (override with SURF_CLI_PATH).
 # shellcheck source=scripts/lib/surf-cli-path.sh
 source "${SKILL_DIR}/scripts/lib/surf-cli-path.sh"
+# shellcheck source=scripts/lib/webgpt_singleflight.sh
+source "${SKILL_DIR}/scripts/lib/webgpt_singleflight.sh"
 
 # ─────────────────────────────────────────────────────────────
 # Chrome Detection
@@ -601,6 +603,13 @@ fi
 if surf_cli_available; then
     if [[ -f "$LOCAL_CLI" ]]; then
         "$SKILL_DIR/scripts/ensure-surf-cli.sh"
+        if [[ "${1:-}" == "chatgpt" && "${SURF_WEBGPT_LOCK_HELD:-0}" != "1" ]]; then
+            if ! surf_webgpt_acquire_lock "surf chatgpt $*"; then
+                echo "surf chatgpt refused concurrent ChatGPT submit; lock is held: $(surf_webgpt_lock_file)" >&2
+                echo "Use surf webgpt.submit artifacts, wait for the active submit, or set SURF_WEBGPT_LOCK_TIMEOUT to a bounded wait." >&2
+                exit 73
+            fi
+        fi
         exec node "$LOCAL_CLI" "$@"
     fi
     echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2

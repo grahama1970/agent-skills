@@ -769,6 +769,80 @@ esac
     assert "fresh foreground reviewer" in meta["agent_action"]
 
 
+def test_webgpt_submit_refuses_concurrent_submit_with_proof_meta(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    lock_file = tmp_path / "webgpt.lock"
+    locker = subprocess.Popen(["flock", str(lock_file), "sleep", "10"])
+    try:
+        time.sleep(0.2)
+        fake_run = (
+            FAKE_RUN_PREAMBLE
+            + """  chatgpt)
+    echo 'chatgpt should not run while lock is held' >&2
+    exit 99
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+        )
+
+        proc = run_submit(
+            tmp_path,
+            archive,
+            fake_run,
+            {"SURF_WEBGPT_LOCK_FILE": str(lock_file)},
+        )
+    finally:
+        locker.terminate()
+        locker.wait(timeout=5)
+
+    assert proc.returncode == 73
+    assert "chatgpt should not run" not in proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "webgpt_submit_in_progress"
+    assert meta["proof_status"] == "not_submitted"
+    assert meta["webgpt_lock_file"] == str(lock_file)
+    assert "already active" in meta["agent_diagnosis"]
+    assert "Do not run concurrent ChatGPT submits" in meta["agent_action"]
+
+
+def test_webgpt_submit_classifies_chatgpt_rate_limit(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'Too many requests'
+    echo 'You're making requests too quickly. We've temporarily limited access to your conversations to protect your data.'
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: page-text-fallback' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 4
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "chatgpt_rate_limited"
+    assert meta["chatgpt_rate_limited"] is True
+    assert meta["proof_status"] == "rate_limited"
+    assert "Too many requests" in meta["agent_diagnosis"]
+    assert "one request at a time" in meta["agent_action"]
+
+
 def test_webgpt_submit_notification_assisted_wait_is_advisory_only(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)

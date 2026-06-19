@@ -9,6 +9,8 @@ RUN_SH="${SURF_RUN_SH:-${SKILL_DIR}/run.sh}"
 source "${SCRIPT_DIR}/lib/webgpt_resolve.sh"
 # shellcheck source=lib/browser_oracle_resolve.sh
 source "${SCRIPT_DIR}/lib/browser_oracle_resolve.sh"
+# shellcheck source=lib/webgpt_singleflight.sh
+source "${SCRIPT_DIR}/lib/webgpt_singleflight.sh"
 
 usage() {
   cat <<'EOF'
@@ -269,6 +271,14 @@ elif failure == "project_shell_target_not_conversation":
     proof_status = "not_submitted"
     diagnosis = "Surf refused to submit to a ChatGPT project home/shell URL because it is not a proven independent conversation."
     action = "Create a new chat inside the ChatGPT project first, then rerun with the resulting /c/<id> conversation URL via --url or --expect-url."
+elif failure == "webgpt_submit_in_progress":
+    proof_status = "not_submitted"
+    diagnosis = "Surf refused to start another ChatGPT/WebGPT submit because one is already active for this browser profile."
+    action = "Wait for the active WebGPT submit to finish, or set SURF_WEBGPT_LOCK_TIMEOUT to a bounded wait before retrying. Do not run concurrent ChatGPT submits in one account."
+elif failure == "chatgpt_rate_limited":
+    proof_status = "rate_limited"
+    diagnosis = "ChatGPT reported a Too many requests / temporarily limited access state during this Surf submit."
+    action = "Stop submitting from this browser profile and wait for the ChatGPT rate limit to clear before retrying one request at a time."
 elif failure == "attach_file_preflight_failed":
     proof_status = "not_submitted"
     diagnosis = "Attachment preflight failed before Surf submitted anything to ChatGPT."
@@ -720,6 +730,49 @@ PY
   exit 6
 fi
 
+if [[ "${SURF_WEBGPT_LOCK_HELD:-0}" != "1" ]] && ! surf_webgpt_acquire_lock "webgpt.submit tab=${requested_tab_id:-none} url=${target_url:-none} sentinel=${sentinel}"; then
+  failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$(surf_webgpt_lock_file)" "$failed_at" <<'PY'
+import json
+import pathlib
+import sys
+
+(
+    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
+    target_url, model, reasoning, identity_s, lock_file, failed_at,
+) = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "webgpt_submit_in_progress",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "webgpt_lock_file": lock_file,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n", encoding="utf-8")
+PY
+  enrich_agent_diagnosis
+  echo "webgpt.submit refused concurrent ChatGPT submit; lock is held: $(surf_webgpt_lock_file)" >&2
+  exit 73
+fi
+if [[ "${SURF_WEBGPT_LOCK_HELD:-0}" != "1" ]]; then
+  export SURF_WEBGPT_LOCK_HELD=1
+  trap 'surf_webgpt_release_lock' EXIT
+fi
+
 roundtrip_preflight_json=""
 roundtrip_preflight_status=0
 roundtrip_preflight_dir=""
@@ -912,6 +965,12 @@ out_path = pathlib.Path(out)
 err_path = pathlib.Path(err)
 raw_text = raw_path.read_text() if raw_path.exists() else ""
 stderr_text = err_path.read_text() if err_path.exists() else ""
+rate_limited = (
+    "Too many requests" in raw_text
+    or "Too many requests" in stderr_text
+    or "temporarily limited access" in raw_text
+    or "temporarily limited access" in stderr_text
+)
 if raw_text:
     idx = raw_text.rfind(sentinel)
     if idx >= 0:
@@ -958,8 +1017,9 @@ for line in reversed(stderr_text.splitlines()):
         extract_fallback_meta = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "submit_failed",
+    "failure": "chatgpt_rate_limited" if rate_limited else "submit_failed",
     "chatgpt_ready_error": chatgpt_ready_error,
+    "chatgpt_rate_limited": rate_limited,
     "exit_code": int(status),
     "input": inp,
     "submitted_output": submitted,
@@ -1016,6 +1076,12 @@ except Exception:
 raw_text = pathlib.Path(raw).read_text() if pathlib.Path(raw).exists() else ""
 out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
+rate_limited = (
+    "Too many requests" in raw_text
+    or "Too many requests" in stderr_text
+    or "temporarily limited access" in raw_text
+    or "temporarily limited access" in stderr_text
+)
 response_timed_out = None
 timeout_error = None
 response_source = None
@@ -1045,8 +1111,8 @@ for line in reversed(stderr_text.splitlines()):
     elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
         extract_fallback_meta = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
-    "status": "missing_sentinel",
-    "failure": "missing_sentinel",
+    "status": "failed" if rate_limited else "missing_sentinel",
+    "failure": "chatgpt_rate_limited" if rate_limited else "missing_sentinel",
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -1072,6 +1138,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "chatgpt_rate_limited": rate_limited,
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
     "extract_fallback_raw": extract_fallback_raw,
@@ -1197,6 +1264,15 @@ for needle in [
     if needle in out_text:
         contamination.append(needle)
 
+rate_limited = (
+    "Too many requests" in raw_text
+    or "Too many requests" in out_text
+    or "Too many requests" in stderr_text
+    or "temporarily limited access" in raw_text
+    or "temporarily limited access" in out_text
+    or "temporarily limited access" in stderr_text
+)
+
 def _parse_focus(s):
     if not s:
         return {"focusedWindowId": None, "activeTabId": None, "activeTabUrl": None}
@@ -1228,13 +1304,17 @@ response_integrity_ok = (
     and sentinel in raw_text
     and sentinel not in out_text
 )
-if response_integrity_ok and not focus_violation:
+if rate_limited:
+    status = "failed"
+elif response_integrity_ok and not focus_violation:
     status = "completed"
 elif response_integrity_ok and focus_violation:
     status = "recovered_focus_changed"
 else:
     status = "failed"
-if status == "completed":
+if rate_limited:
+    failure = "chatgpt_rate_limited"
+elif status == "completed":
     failure = None
 elif focus_violation and focus_stolen_mid:
     failure = "focus_stolen_mid_submit"
@@ -1271,6 +1351,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_contains_sentinel": sentinel in raw_text,
     "clean_contains_sentinel": sentinel in out_text,
     "clean_contamination_markers": contamination,
+    "chatgpt_rate_limited": rate_limited,
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "controlled_tab_id": tab_id,

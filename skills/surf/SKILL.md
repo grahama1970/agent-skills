@@ -358,6 +358,15 @@ Behavior:
   `<output>.receipt.json`). `status: prepared_prompt` means only the prompt file
   was prepared and is not transport proof. `status: submitted_to_chatgpt` means
   the native helper observed ChatGPT accept the prompt for the current sentinel.
+- `$surf` enforces a single active ChatGPT/WebGPT submit per browser profile.
+  A second concurrent `webgpt.submit` fails before touching ChatGPT with
+  `failure: webgpt_submit_in_progress`, `proof_status: not_submitted`, and exit
+  code `73`. This is deliberate account protection, not a browser transport
+  failure. Wait for the active submit or set `SURF_WEBGPT_LOCK_TIMEOUT` to a
+  bounded wait.
+- The lower-level `surf chatgpt` path uses the same lock unless it is invoked
+  by `webgpt.submit`; project agents must not bypass `webgpt.submit` to start
+  parallel ChatGPT submissions.
 - `--model` selects the ChatGPT model dropdown before submit.
 - `--reasoning` selects the ChatGPT reasoning dropdown before submit; it
   defaults to `SURF_WEBGPT_REASONING` or `Pro`. Use labels exactly as shown in
@@ -377,7 +386,9 @@ Behavior:
   sentinel-bearing assistant response. `not_submitted` means Surf failed before
   the main prompt was submitted. `delivery_not_proven` means prompt delivery was
   not proven. `submitted_no_response_proof` means ChatGPT accepted the prompt
-  but Surf did not capture sentinel-bearing assistant output. `wrong_tab`,
+  but Surf did not capture sentinel-bearing assistant output. `rate_limited`
+  means ChatGPT reported "Too many requests" or temporary conversation access
+  limiting; stop submitting from that browser profile and wait. `wrong_tab`,
   `degraded_focus`, and `project_session_unproven` are hard stop states unless
   the caller is explicitly doing recovery.
 - If only `.submitted.md` exists, treat the round as
