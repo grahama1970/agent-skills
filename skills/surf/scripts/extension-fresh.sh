@@ -17,7 +17,7 @@ dist_sw="$SURF_CLI/dist/service-worker/index.js"
 native_dir="$SURF_CLI/native"
 
 python3 - "$SURF_CLI" "$src_sw" "$dist_sw" "$native_dir" "$JSON" << 'PY'
-import json, os, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 from pathlib import Path
 
 surf_cli, src_sw, dist_sw, native_dir, json_out = sys.argv[1:6]
@@ -39,9 +39,12 @@ def newest_mtime(paths):
     return max(mtimes) if mtimes else None
 
 def surf_host_processes():
+    return host_processes_for(f"{surf_cli}/native/host.cjs")
+
+def host_processes_for(pattern):
     try:
         proc = subprocess.run(
-            ["pgrep", "-af", f"{surf_cli}/native/host.cjs"],
+            ["pgrep", "-af", pattern],
             check=False,
             capture_output=True,
             text=True,
@@ -56,6 +59,44 @@ def surf_host_processes():
         if parts[0].isdigit():
             rows.append({"pid": int(parts[0]), "cmd": parts[1] if len(parts) > 1 else ""})
     return rows
+
+def native_manifest_paths():
+    home = Path.home()
+    rels = [
+        ".config/google-chrome/NativeMessagingHosts/surf.browser.host.json",
+        ".config/chromium/NativeMessagingHosts/surf.browser.host.json",
+        ".config/BraveSoftware/Brave-Browser/NativeMessagingHosts/surf.browser.host.json",
+        ".config/microsoft-edge/NativeMessagingHosts/surf.browser.host.json",
+    ]
+    return [home / rel for rel in rels if (home / rel).exists()]
+
+def wrapper_host_path(wrapper_path):
+    if not wrapper_path:
+        return None
+    try:
+        text = Path(wrapper_path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    matches = re.findall(r'["\']([^"\']*/native/host\.cjs)["\']', text)
+    return matches[-1] if matches else None
+
+def installed_native_hosts():
+    installed = []
+    for manifest_path in native_manifest_paths():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            installed.append({"manifest": str(manifest_path), "error": f"manifest_parse_failed: {exc}"})
+            continue
+        wrapper = manifest.get("path")
+        host_path = wrapper_host_path(wrapper)
+        installed.append({
+            "manifest": str(manifest_path),
+            "wrapper": wrapper,
+            "host_path": host_path,
+            "allowed_origins": manifest.get("allowed_origins") or [],
+        })
+    return installed
 
 def process_start_epoch(pid):
     try:
@@ -87,12 +128,23 @@ native_newest_mtime = newest_mtime(native_sources)
 host_processes = surf_host_processes()
 for row in host_processes:
     row["start_epoch"] = process_start_epoch(row["pid"])
+installed_hosts = installed_native_hosts()
+installed_host_paths = sorted({h.get("host_path") for h in installed_hosts if h.get("host_path")})
+installed_host_processes = []
+for host_path in installed_host_paths:
+    for row in host_processes_for(host_path):
+        row["start_epoch"] = process_start_epoch(row["pid"])
+        row["host_path"] = host_path
+        installed_host_processes.append(row)
 
 native_restart_required = False
 if native_newest_mtime:
     if not host_processes:
         native_restart_required = True
-        reasons.append("native host process not running")
+        if installed_host_processes:
+            reasons.append("native host path mismatch: installed host is running from a different checkout")
+        else:
+            reasons.append("native host process not running")
     elif any((row.get("start_epoch") or 0) < native_newest_mtime for row in host_processes):
         native_restart_required = True
         reasons.append("running native host older than native source")
@@ -111,6 +163,9 @@ payload = {
     "native_newest_mtime": native_newest_mtime,
     "native_sources": [str(p) for p in native_sources],
     "host_processes": host_processes,
+    "installed_native_hosts": installed_hosts,
+    "installed_host_processes": installed_host_processes,
+    "installed_host_path_mismatch": bool(installed_host_processes and not host_processes),
 }
 
 if json_out:

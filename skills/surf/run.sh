@@ -458,6 +458,10 @@ if [[ "$1" == "webgpt.sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.e2e-sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-e2e-sanity.sh" "${@:2}"
+fi
+
 if [[ "$1" == "cursor-browser.submit" ]]; then
     exec "$SKILL_DIR/scripts/cursor-browser-submit.sh" "${@:2}"
 fi
@@ -529,6 +533,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
+    echo "  surf webgpt.e2e-sanity  Fail-closed WebGPT transport sanity matrix"
     echo "  surf webgpt.tab-id-background-sanity [--tab-id|--url]  Fast tab-id + focus proof"
     echo "  surf webgpt.no-activate-sanity --tab-id ID|--url URL  Full sentinel + background proof"
     echo "  surf webgpt.preflight --tab-id ID [--no-activate]  Pre-submit tab/focus checks"

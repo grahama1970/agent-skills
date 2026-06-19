@@ -222,6 +222,7 @@ the caller explicitly overrides the WebGPT reasoning label.
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
+| "is WebGPT transport safe to use", "run e2e WebGPT sanity", "debug brittle Surf" | `surf webgpt.e2e-sanity [--tab-id <id> --expect-url <url>] --json` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
 | "prove tab id targeting while I work elsewhere", "Tab ID Viewer" | `surf webgpt.tab-id-background-sanity --tab-id <id>` |
 | "what tab/window am I focused on" | `surf focus.state --json` |
@@ -884,6 +885,31 @@ metadata where available, and `roundtrip-preflight.json`. A failure with
 or `missing_sentinel` means the expensive review bundle should not be submitted
 in background mode yet. Activate/repair/rebind the reviewer tab or use a visible
 dedicated reviewer tab/window.
+
+When Surf/WebGPT reliability is in question, run the fail-closed E2E matrix
+before any project-agent review bundle:
+
+```bash
+surf webgpt.e2e-sanity --json
+surf webgpt.e2e-sanity \
+  --tab-id <TAB_ID> \
+  --expect-url "https://chatgpt.com/c/<uuid>" \
+  --no-activate \
+  --json
+```
+
+`webgpt.e2e-sanity` always checks extension/native freshness, `tab.list`,
+`focus.state`, and a fresh `--create-tab` sentinel round trip. When `--tab-id`
+or `--url` is supplied, it also tests that explicit target. It fails closed on
+stale native host, missing tab list, missing focus state, failed preflight,
+prompt delivery not proven, missing sentinel, missing controlled tab id,
+controlled-tab mismatch, focus drift in `--no-activate`, unproven project
+conversation URL, or missing reasoning-selection metadata. It writes
+`e2e-sanity-result.json` plus per-scenario artifacts under the output directory.
+
+Treat `warning_reasoning_selector_unavailable` as a visible degradation: Surf
+can still prove delivery and response, but ChatGPT did not expose the requested
+reasoning selector, so agents must not claim that `Pro` was actually selected.
 
 
 #### Background controlled-tab mode (`--no-activate`)
