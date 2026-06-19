@@ -10,7 +10,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 E2E_SANITY = REPO_ROOT / "skills/surf/scripts/webgpt-e2e-sanity.sh"
 
 
-def run_sanity(tmp_path: Path, fake_run_body: str) -> subprocess.CompletedProcess[str]:
+def run_sanity(
+    tmp_path: Path,
+    fake_run_body: str,
+    extra_args: list[str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     fake_run = tmp_path / "surf-run.sh"
     fake_run.write_text(fake_run_body, encoding="utf-8")
     fake_run.chmod(0o755)
@@ -26,6 +30,7 @@ def run_sanity(tmp_path: Path, fake_run_body: str) -> subprocess.CompletedProces
             "--timeout",
             "10",
             "--json",
+            *(extra_args or []),
         ],
         text=True,
         stdout=subprocess.PIPE,
@@ -85,6 +90,30 @@ case "$1" in
   webgpt.roundtrip-preflight)
     echo "roundtrip should not run after stale freshness" >&2
     exit 98
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+
+def fake_dispatch_times_out_roundtrip() -> str:
+    return """#!/usr/bin/env bash
+set -euo pipefail
+case "$1" in
+  extension.fresh)
+    printf '{"status":"fresh","extension_dist_fresh":true,"native_host_fresh":true}\\n'
+    ;;
+  tab.list)
+    printf '[{"id":837352334,"title":"ChatGPT","url":"https://chatgpt.com/"}]\\n'
+    ;;
+  focus.state)
+    printf '{"activeTabId":837352000,"activeTabUrl":"https://example.test/"}\\n'
+    ;;
+  webgpt.roundtrip-preflight)
+    exit 124
     ;;
   *)
     echo "unexpected command: $*" >&2
@@ -183,6 +212,22 @@ def test_webgpt_e2e_sanity_fails_missing_controlled_tab_id(tmp_path: Path) -> No
     assert "missing_controlled_tab_id" in scenario["failures"]
 
 
+def test_webgpt_e2e_sanity_classifies_chatgpt_page_not_ready(tmp_path: Path) -> None:
+    payload = pass_payload()
+    payload["status"] = "fail"
+    payload["failures"] = ["submit_failed"]
+    payload["meta"]["proof_status"] = "not_submitted"
+    payload["meta"]["submitted_to_chatgpt"] = False
+    payload["meta"]["raw_contains_sentinel"] = False
+    payload["meta"]["chatgpt_ready_error"] = "composer_not_empty"
+    proc = run_sanity(tmp_path, fake_dispatch(payload))
+
+    assert proc.returncode == 7
+    scenario = json.loads(proc.stdout)["scenarios"][0]
+    assert "chatgpt_page_not_ready" in scenario["failures"]
+    assert "not_submitted_to_chatgpt" in scenario["failures"]
+
+
 def test_webgpt_e2e_sanity_fails_project_shell_without_conversation(tmp_path: Path) -> None:
     payload = pass_payload()
     payload["meta"]["conversation_url"] = "https://chatgpt.com/g/g-p-example/project"
@@ -206,3 +251,28 @@ def test_webgpt_e2e_sanity_fails_missing_reasoning_status(tmp_path: Path) -> Non
     assert proc.returncode == 7
     scenario = json.loads(proc.stdout)["scenarios"][0]
     assert "reasoning_status_missing" in scenario["failures"]
+
+
+def test_webgpt_e2e_sanity_can_skip_fresh_create_tab(tmp_path: Path) -> None:
+    proc = run_sanity(
+        tmp_path,
+        fake_dispatch(pass_payload()),
+        ["--skip-create-tab", "--tab-id", "837352334", "--expect-url", "https://chatgpt.com/c/example"],
+    )
+
+    assert proc.returncode == 0
+    result = json.loads(proc.stdout)
+    assert [scenario["name"] for scenario in result["scenarios"]] == ["explicit-target"]
+
+
+def test_webgpt_e2e_sanity_classifies_scenario_timeout(tmp_path: Path) -> None:
+    proc = run_sanity(
+        tmp_path,
+        fake_dispatch_times_out_roundtrip(),
+        ["--timeout", "10", "--skip-create-tab", "--tab-id", "837352334"],
+    )
+
+    assert proc.returncode == 7
+    scenario = json.loads(proc.stdout)["scenarios"][0]
+    assert "scenario_timeout" in scenario["failures"]
+    assert scenario["scenario_timeout"] is True

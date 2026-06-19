@@ -230,15 +230,28 @@ def test_chatgpt_client_rejects_busy_page_before_submit(tmp_path: Path) -> None:
             const {{ assertReadyForNewPrompt }} = require({json.dumps(str(client))});
             class HTMLElement {{}}
             const stop = new HTMLElement();
+            stop.innerText = 'Stop answering';
+            stop.textContent = 'Stop answering';
+            stop.disabled = false;
+            stop.hasAttribute = (name) => name === 'data-testid';
+            stop.getAttribute = (name) => name === 'data-testid' ? 'stop-button' : null;
             const prompt = new HTMLElement();
+            prompt.innerText = '';
+            prompt.textContent = '';
+            prompt.value = '';
             global.HTMLElement = HTMLElement;
             global.document = {{
+              body: {{ innerText: '' }},
+              hidden: false,
+              visibilityState: 'visible',
+              hasFocus: () => true,
               title: 'ChatGPT - busy',
               querySelector: (selector) => {{
                 if (selector.includes('stop-button')) return stop;
                 if (selector.includes('prompt-textarea')) return prompt;
                 return null;
               }},
+              querySelectorAll: (selector) => selector === 'button' ? [stop] : [],
             }};
             global.location = {{ href: 'https://chatgpt.com/c/example' }};
             const cdp = async (expression) => ({{ result: {{ value: eval(expression) }} }});
@@ -248,6 +261,53 @@ def test_chatgpt_client_rejects_busy_page_before_submit(tmp_path: Path) -> None:
             }}).catch((err) => {{
               assert.match(String(err.message), /page is busy before submit/);
               assert.equal(err.chatgptPageState.stopVisible, true);
+            }});
+            """
+        ),
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["node", str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_chatgpt_client_rejects_dirty_composer_before_submit(tmp_path: Path) -> None:
+    script = tmp_path / "dirty-composer-preflight.cjs"
+    client = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            const assert = require('assert');
+            const {{ assertReadyForNewPrompt }} = require({json.dumps(str(client))});
+            class HTMLElement {{}}
+            const prompt = new HTMLElement();
+            prompt.innerText = 'does';
+            prompt.textContent = 'does';
+            prompt.value = 'does';
+            global.HTMLElement = HTMLElement;
+            global.document = {{
+              body: {{ innerText: 'prior response\\nStopped thinking\\n\\ndoes' }},
+              hidden: true,
+              visibilityState: 'hidden',
+              hasFocus: () => false,
+              title: 'Personas - Horus Lupercal Persona JSONL',
+              querySelector: (selector) => selector.includes('prompt-textarea') ? prompt : null,
+              querySelectorAll: () => [],
+            }};
+            global.location = {{ href: 'https://chatgpt.com/g/g-p-example-personas/c/example' }};
+            const cdp = async (expression) => ({{ result: {{ value: eval(expression) }} }});
+            assertReadyForNewPrompt(cdp).then(() => {{
+              console.error('dirty composer was accepted');
+              process.exit(1);
+            }}).catch((err) => {{
+              assert.match(String(err.message), /composer is not empty before submit/);
+              assert.equal(err.chatgptPageState.promptChars, 4);
+              assert.equal(err.chatgptPageState.documentHidden, true);
             }});
             """
         ),
@@ -644,6 +704,69 @@ esac
     assert receipt["submitted_to_chatgpt"] is True
     assert receipt["prepared_prompt_is_transport_proof"] is False
     assert receipt["requested_reasoning"] == "Pro"
+
+
+def test_webgpt_submit_prepared_receipt_records_resolved_tab_on_timeout(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    exit 124
+    ;;
+  chatgpt.extract)
+    exit 1
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 124
+    receipt = json.loads((tmp_path / "response.md.receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "prepared_prompt"
+    assert receipt["submitted_to_chatgpt"] is False
+    assert receipt["requested_tab_id"] == "837352334"
+    assert receipt["requested_url"] is None
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["failure"] == "submit_failed"
+    assert meta["controlled_tab_id"] is None
+
+
+def test_webgpt_submit_classifies_chatgpt_ready_error(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'Error: ChatGPT prompt composer is not empty before submit; clear the draft or use a fresh reviewer tab' >&2
+    exit 1
+    ;;
+  chatgpt.extract)
+    exit 1
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 1
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["failure"] == "submit_failed"
+    assert meta["chatgpt_ready_error"] == "composer_not_empty"
+    assert meta["proof_status"] == "not_submitted"
+    assert "ChatGPT rejected pre-submit readiness" in meta["agent_diagnosis"]
+    assert "fresh foreground reviewer" in meta["agent_action"]
 
 
 def test_webgpt_submit_notification_assisted_wait_is_advisory_only(tmp_path: Path) -> None:

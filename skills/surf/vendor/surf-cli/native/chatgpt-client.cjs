@@ -316,16 +316,49 @@ async function assertReadyForNewPrompt(cdp) {
       const stop = document.querySelector(STOP_SELECTOR);
       const send = document.querySelector(SEND_SELECTOR);
       const prompt = document.querySelector(PROMPT_SELECTOR);
+      const promptText = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '') : '';
+      const visibleText = (document.body?.innerText || '').slice(-4000);
+      const buttons = Array.from(document.querySelectorAll('button'))
+        .map((button) => ({
+          text: (button.innerText || button.textContent || '').trim(),
+          aria: (button.getAttribute('aria-label') || '').trim(),
+          testid: (button.getAttribute('data-testid') || '').trim(),
+          disabled: button.disabled ||
+            button.hasAttribute('disabled') ||
+            button.getAttribute('aria-disabled') === 'true' ||
+            button.getAttribute('data-disabled') === 'true',
+        }));
+      const activeStopButton = buttons.find((button) => {
+        const label = (button.text + ' ' + button.aria + ' ' + button.testid).toLowerCase();
+        return !button.disabled && (
+          label.includes('stop answering') ||
+          label.includes('stop generating') ||
+          label.includes('stop response') ||
+          button.testid === 'stop-button'
+        );
+      }) || null;
+      const stoppedThinkingCount = buttons.filter((button) => {
+        const label = (button.text + ' ' + button.aria).toLowerCase();
+        return label.includes('stopped thinking');
+      }).length;
       const disabled = send
         ? (send.hasAttribute('disabled') ||
            send.getAttribute('aria-disabled') === 'true' ||
            send.getAttribute('data-disabled') === 'true')
         : null;
       return {
-        stopVisible: Boolean(stop),
+        stopVisible: Boolean(stop) || Boolean(activeStopButton),
+        activeStopLabel: activeStopButton ? (activeStopButton.text || activeStopButton.aria || activeStopButton.testid || null) : null,
+        stoppedThinkingCount,
         sendPresent: Boolean(send),
         sendDisabled: disabled,
         promptPresent: Boolean(prompt),
+        promptChars: promptText.length,
+        promptPreview: promptText.slice(0, 200),
+        documentHidden: document.hidden === true,
+        visibilityState: document.visibilityState || null,
+        documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
+        tailContainsStoppedThinking: visibleText.toLowerCase().includes('stopped thinking'),
         title: document.title || '',
         url: location.href || '',
       };
@@ -339,6 +372,16 @@ async function assertReadyForNewPrompt(cdp) {
   if (!state?.promptPresent) {
     const err = new Error("ChatGPT prompt composer not present before submit");
     err.chatgptPageState = state || null;
+    throw err;
+  }
+  if (state?.promptChars > 0) {
+    const err = new Error("ChatGPT prompt composer is not empty before submit; clear the draft or use a fresh reviewer tab");
+    err.chatgptPageState = state;
+    throw err;
+  }
+  if (state?.stoppedThinkingCount > 0 || state?.tailContainsStoppedThinking) {
+    const err = new Error("ChatGPT page is in a stopped-generation state before submit; retry in a clean conversation or use a fresh reviewer tab");
+    err.chatgptPageState = state;
     throw err;
   }
   return state;

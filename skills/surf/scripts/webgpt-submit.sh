@@ -282,9 +282,15 @@ elif failure == "roundtrip_preflight_failed":
     diagnosis = "The small sentinel roundtrip failed, so Surf blocked the main prompt before submission."
     action = "Inspect roundtrip_preflight_output_dir, repair tab visibility/state, or use a foreground/fresh reviewer tab before retrying."
 elif failure == "submit_failed":
-    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
-    diagnosis = "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response."
-    action = "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately."
+    ready_error = str(meta.get("chatgpt_ready_error") or "")
+    if ready_error:
+        proof_status = "not_submitted"
+        diagnosis = f"ChatGPT rejected pre-submit readiness: {ready_error}"
+        action = "Clear the ChatGPT composer/stopped generation state, or use a fresh foreground reviewer/project conversation tab before retrying."
+    else:
+        proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+        diagnosis = "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response."
+        action = "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately."
 elif failure == "missing_sentinel" or status == "missing_sentinel":
     proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
     diagnosis = "Surf captured response text, but it did not contain the current completion sentinel in assistant output."
@@ -585,6 +591,11 @@ elif [[ "$no_remember" -eq 0 && "$create_tab" -eq 0 && -f "$tab_state_file" ]]; 
   fi
 fi
 
+# Refresh the prepared receipt after target resolution. The first receipt is
+# written before tab/url discovery so callers can see prompt preparation early;
+# this second write records the actual intended controlled tab when available.
+write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+
 if [[ -n "${requested_tab_id:-}" ]]; then
   tab_list_text="${tab_list_text:-$("$RUN_SH" tab.list 2>/dev/null || true)}"
   identity_args=(check --tab-id "$requested_tab_id" --source "${requested_tab_source:-tab-id}")
@@ -851,6 +862,15 @@ extract_fallback_reason = None
 extract_fallback_raw = None
 extract_fallback_meta = None
 tab_id = None
+chatgpt_ready_error = None
+if "ChatGPT prompt composer is not empty before submit" in stderr_text:
+    chatgpt_ready_error = "composer_not_empty"
+elif "ChatGPT page is in a stopped-generation state before submit" in stderr_text:
+    chatgpt_ready_error = "stopped_generation_state"
+elif "ChatGPT page is busy before submit" in stderr_text:
+    chatgpt_ready_error = "busy_stop_button_visible"
+elif "ChatGPT prompt composer not present before submit" in stderr_text:
+    chatgpt_ready_error = "composer_not_present"
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
         response_timed_out = line.split(":", 1)[1].strip() == "true"
@@ -873,6 +893,7 @@ for line in reversed(stderr_text.splitlines()):
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "failure": "submit_failed",
+    "chatgpt_ready_error": chatgpt_ready_error,
     "exit_code": int(status),
     "input": inp,
     "submitted_output": submitted,

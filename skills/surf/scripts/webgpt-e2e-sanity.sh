@@ -15,6 +15,7 @@ Options:
   --url URL               Also test this already-open ChatGPT conversation URL.
   --expect-url URL        Identity assertion for --tab-id.
   --expect-title TEXT     Identity assertion for --tab-id.
+  --skip-create-tab       Do not run the fresh --create-tab round trip.
   --no-activate           Run round trips in background mode. Default: on.
   --foreground            Disable --no-activate for diagnostic foreground runs.
   --timeout SECONDS       Per-roundtrip timeout. Default: 120.
@@ -34,6 +35,7 @@ target_url=""
 expect_url=""
 expect_title=""
 no_activate=1
+skip_create_tab=0
 timeout_s=120
 output_dir=""
 json_only=0
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
     --url) target_url="${2:-}"; shift 2 ;;
     --expect-url) expect_url="${2:-}"; shift 2 ;;
     --expect-title) expect_title="${2:-}"; shift 2 ;;
+    --skip-create-tab) skip_create_tab=1; shift ;;
     --no-activate) no_activate=1; shift ;;
     --foreground) no_activate=0; shift ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
@@ -153,11 +156,18 @@ run_roundtrip() {
   fi
   args+=("$@")
   local status=0
-  "$SURF_DISPATCH_SH" "${args[@]}" >"$dir/roundtrip.stdout.json" 2>"$dir/roundtrip.stderr.log" || status=$?
+  local scenario_timeout_s=$((timeout_s + 60))
+  if command -v timeout >/dev/null 2>&1; then
+    timeout --kill-after=10s "${scenario_timeout_s}s" \
+      "$SURF_DISPATCH_SH" "${args[@]}" >"$dir/roundtrip.stdout.json" 2>"$dir/roundtrip.stderr.log" || status=$?
+  else
+    "$SURF_DISPATCH_SH" "${args[@]}" >"$dir/roundtrip.stdout.json" 2>"$dir/roundtrip.stderr.log" || status=$?
+  fi
   printf '%s\n' "$status" >"$dir/exit-code.txt"
+  if [[ "$status" -eq 124 || "$status" -eq 137 ]]; then
+    printf 'scenario_timeout_seconds=%s\n' "$scenario_timeout_s" >"$dir/scenario-timeout.txt"
+  fi
 }
-
-run_roundtrip "fresh-create-tab" --create-tab
 
 if [[ -n "$tab_id" || -n "$target_url" ]]; then
   target_args=()
@@ -174,6 +184,10 @@ if [[ -n "$tab_id" || -n "$target_url" ]]; then
     target_args+=(--expect-title "$expect_title")
   fi
   run_roundtrip "explicit-target" "${target_args[@]}"
+fi
+
+if [[ "$skip_create_tab" -eq 0 ]]; then
+  run_roundtrip "fresh-create-tab" --create-tab
 fi
 
 python3 - "$summary_json" "$output_dir" "$fresh_json" "$fresh_status" "$tab_list_json" "$tab_list_status" "$focus_json" "$focus_status" "$json_only" <<'PY'
@@ -257,6 +271,7 @@ for scenario_dir in sorted((root / "scenarios").glob("*")):
     stdout_json = scenario_dir / "roundtrip.stdout.json"
     stderr_log = scenario_dir / "roundtrip.stderr.log"
     exit_code_path = scenario_dir / "exit-code.txt"
+    scenario_timeout_path = scenario_dir / "scenario-timeout.txt"
     exit_code = int(read_text(exit_code_path).strip() or "999") if exit_code_path.exists() else 999
     payload = read_json(stdout_json) or {}
     if not payload and (scenario_dir / "roundtrip-preflight.json").exists():
@@ -267,10 +282,14 @@ for scenario_dir in sorted((root / "scenarios").glob("*")):
     scenario_failures = []
     if exit_code != 0 or payload.get("status") != "pass":
         scenario_failures.append("roundtrip_failed")
+    if scenario_timeout_path.exists() or exit_code in {124, 137}:
+        scenario_failures.append("scenario_timeout")
     if meta.get("proof_status") != "response_proven":
         scenario_failures.append("response_not_proven")
     if meta.get("submitted_to_chatgpt") is not True:
         scenario_failures.append("not_submitted_to_chatgpt")
+    if meta.get("chatgpt_ready_error"):
+        scenario_failures.append("chatgpt_page_not_ready")
     if meta.get("raw_contains_sentinel") is not True:
         scenario_failures.append("missing_sentinel")
     if not meta.get("controlled_tab_id"):
@@ -305,6 +324,8 @@ for scenario_dir in sorted((root / "scenarios").glob("*")):
         "requested_reasoning": meta.get("requested_reasoning"),
         "reasoning_selection_status": meta.get("reasoning_selection_status"),
         "roundtrip_failures": payload.get("failures"),
+        "scenario_timeout": scenario_timeout_path.exists() or exit_code in {124, 137},
+        "scenario_timeout_detail": read_text(scenario_timeout_path).strip() or None,
         "diagnosis": diagnosis,
         "stderr_tail": read_text(stderr_log)[-2000:],
     }
