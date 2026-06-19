@@ -1,5 +1,5 @@
 {
-  "content_hash": "6ce2a268368ba03c836903e795c1ee5c96ad6487ba521a6811798ce035e009d4",
+  "content_hash": "67d4e0ee4108bd09a00c89026a93fa2101a2bfa92baf9debff4c4344e9ce7127",
   "counts": {
     "agents": 4,
     "entries": 316,
@@ -6742,7 +6742,7 @@
         "Bash",
         "Read"
       ],
-      "content_hash": "c6308c8a90b6040d",
+      "content_hash": "3a1c90b26dafb1ea",
       "id": "surf",
       "path": "skills/surf",
       "related_agents": [],
