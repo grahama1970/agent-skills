@@ -152,7 +152,40 @@ if [[ "$no_activate" -eq 1 ]]; then
 fi
 
 submit_status=0
-"${submit_cmd[@]}" > "$output_dir/webgpt-submit.stdout.log" 2> "$stderr_log" || submit_status=$?
+submit_pid=""
+submit_started_with_setsid=0
+cleanup_submit_child() {
+  if [[ -n "${submit_pid:-}" ]] && kill -0 "$submit_pid" 2>/dev/null; then
+    if [[ "$submit_started_with_setsid" -eq 1 ]]; then
+      kill -TERM -- "-$submit_pid" 2>/dev/null || true
+      sleep 0.2
+      kill -KILL -- "-$submit_pid" 2>/dev/null || true
+    else
+      pkill -TERM -P "$submit_pid" 2>/dev/null || true
+      kill -TERM "$submit_pid" 2>/dev/null || true
+      sleep 0.2
+      pkill -KILL -P "$submit_pid" 2>/dev/null || true
+      kill -KILL "$submit_pid" 2>/dev/null || true
+    fi
+  fi
+}
+handle_termination() {
+  cleanup_submit_child
+  exit 143
+}
+trap handle_termination TERM INT HUP
+trap cleanup_submit_child EXIT
+if command -v setsid >/dev/null 2>&1; then
+  setsid "${submit_cmd[@]}" > "$output_dir/webgpt-submit.stdout.log" 2> "$stderr_log" &
+  submit_started_with_setsid=1
+else
+  "${submit_cmd[@]}" > "$output_dir/webgpt-submit.stdout.log" 2> "$stderr_log" &
+fi
+submit_pid=$!
+wait "$submit_pid" || submit_status=$?
+submit_pid=""
+trap - TERM INT HUP
+trap - EXIT
 "$SURF_DISPATCH_SH" focus.state --json > "$focus_after" 2>/dev/null || true
 
 python3 - "$summary" "$output_dir" "$sentinel" "$timeout_s" "$preflight_status" "$submit_status" "$preflight_json" "$meta" "$raw" "$response" "$stderr_log" "$focus_before" "$focus_after" "$tab_list" "$request" "$submitted" "$as_json" <<'PY'

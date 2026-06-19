@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
+import time
 import zipfile
 from pathlib import Path
 import textwrap
@@ -10,6 +12,7 @@ import textwrap
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WEBGPT_SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
+WEBGPT_ROUNDTRIP = REPO_ROOT / "skills/surf/scripts/webgpt-roundtrip-preflight.sh"
 
 
 def run_submit(
@@ -256,6 +259,83 @@ esac
     assert meta["status"] == "failed"
     assert meta["failure"] == "create_tab_navigation_failed"
     assert meta["requested_tab_id"] == "9001"
+
+
+def test_webgpt_roundtrip_terminates_submit_child_on_parent_term(tmp_path: Path) -> None:
+    fake_run = tmp_path / "surf-run.sh"
+    output_dir = tmp_path / "roundtrip"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"activeTabId":123,"focusedWindowId":456}\\n'
+    ;;
+  tab.list)
+    printf '[]\\n'
+    ;;
+  webgpt.preflight)
+    printf '{"status":"pass","failures":[]}\\n'
+    ;;
+  webgpt.submit)
+    sleep 300 &
+    printf '%s\\n' "$!" > "$PWD/sleeper.pid"
+    wait "$!"
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_DISPATCH_SH"] = str(fake_run)
+    proc = subprocess.Popen(
+        [
+            "bash",
+            str(WEBGPT_ROUNDTRIP),
+            "--tab-id",
+            "837352334",
+            "--expect-url",
+            "https://chatgpt.com/c/example",
+            "--no-activate",
+            "--timeout",
+            "30",
+            "--output-dir",
+            str(output_dir),
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    sleeper_pid_file = tmp_path / "sleeper.pid"
+    deadline = time.time() + 5
+    while time.time() < deadline and not sleeper_pid_file.exists():
+        time.sleep(0.05)
+    assert sleeper_pid_file.exists(), "fake webgpt.submit child did not start"
+    sleeper_pid = sleeper_pid_file.read_text(encoding="utf-8").strip()
+
+    proc.send_signal(signal.SIGTERM)
+    stdout, stderr = proc.communicate(timeout=8)
+
+    assert proc.returncode == 143, stderr or stdout
+    time.sleep(0.5)
+    ps = subprocess.run(
+        ["ps", "-p", sleeper_pid, "-o", "stat="],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if ps.returncode == 0:
+        subprocess.run(["kill", "-KILL", sleeper_pid], check=False)
+    assert ps.returncode != 0, f"orphaned submit child still exists with stat {ps.stdout!r}"
 
 
 def test_webgpt_submit_defaults_to_full_900_second_timeout(tmp_path: Path) -> None:
