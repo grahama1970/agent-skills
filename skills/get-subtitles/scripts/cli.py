@@ -20,6 +20,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 SKILLS_DIR = SKILL_DIR.parent
 BRAVE_RUN = SKILLS_DIR / "brave-search" / "run.sh"
+INGEST_MOVIE_RUN = SKILLS_DIR / "ingest-movie" / "run.sh"
 VIDEO_EXTENSIONS = {".mkv", ".mp4", ".avi", ".m4v", ".mov", ".webm"}
 SUBTITLE_EXTENSIONS = [".srt", ".vtt", ".ass", ".ssa"]
 PRIMARY_SUBTITLE_FORMAT = ".srt"
@@ -447,6 +448,41 @@ def radarr_existing_movie_by_tmdb(tmdb_id: int | None) -> dict[str, Any] | None:
     if isinstance(rows, list) and rows:
         return rows[0]
     return None
+
+
+def radarr_movie_inventory() -> list[dict[str, Any]]:
+    response = radarr_request("GET", "/movie", timeout=20.0)
+    response.raise_for_status()
+    rows = response.json()
+    return rows if isinstance(rows, list) else []
+
+
+def radarr_inventory_matches_for_candidate(candidate: dict[str, Any]) -> list[dict[str, Any]]:
+    try:
+        rows = radarr_movie_inventory()
+    except Exception as exc:
+        return [{
+            "status": "radarr_lookup_failed",
+            "reason": type(exc).__name__,
+            "candidate": candidate,
+        }]
+    matches: list[dict[str, Any]] = []
+    for row in rows:
+        if movie_record_title_matches(row, candidate):
+            movie_file = row.get("movieFile") or {}
+            matches.append({
+                "status": "radarr_inventory_match",
+                "candidate": candidate,
+                "radarr_id": row.get("id"),
+                "title": row.get("title"),
+                "year": row.get("year"),
+                "tmdb_id": row.get("tmdbId"),
+                "imdb_id": row.get("imdbId"),
+                "path": movie_file.get("path") or row.get("path"),
+                "has_file": bool(row.get("movieFileId") or movie_file),
+                "monitored": row.get("monitored"),
+            })
+    return matches
 
 
 def radarr_add_metadata_stub(candidate: dict[str, Any]) -> dict[str, Any]:
@@ -1644,11 +1680,58 @@ def extract_movie_candidates_with_queries(
 def movie_record_title_matches(record: dict[str, Any], candidate: dict[str, Any]) -> bool:
     candidate_title = str(candidate.get("title", "")).lower()
     candidate_year = str(candidate.get("year", ""))
-    titles = [str(record.get("title", "")), *[str(value) for value in record.get("alternativeTitles") or []]]
+    titles: list[str] = [str(record.get("title", ""))]
+    for value in record.get("alternativeTitles") or []:
+        if isinstance(value, dict):
+            titles.append(str(value.get("title") or value.get("name") or ""))
+        else:
+            titles.append(str(value))
     title_match = any(candidate_title == title.lower() for title in titles)
     loose_match = any(candidate_title in title.lower() or title.lower() in candidate_title for title in titles if title)
     year_match = not candidate_year or str(record.get("year", "")) == candidate_year
     return year_match and (title_match or loose_match)
+
+
+def ingest_movie_release_availability_for_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    title = str(candidate.get("title") or "").strip()
+    year = candidate.get("year")
+    query = f"{title} {year}".strip() if year else title
+    if not query:
+        return {
+            "candidate": candidate,
+            "status": "not_checked",
+            "reason": "missing_title",
+            "release_found": False,
+        }
+    if not INGEST_MOVIE_RUN.exists():
+        return {
+            "candidate": candidate,
+            "status": "not_checked",
+            "reason": "ingest_movie_skill_missing",
+            "path": str(INGEST_MOVIE_RUN),
+            "release_found": False,
+        }
+    process = subprocess.run(
+        [str(INGEST_MOVIE_RUN), "search", query],
+        text=True,
+        capture_output=True,
+        timeout=45,
+        check=False,
+    )
+    output = "\n".join(part for part in [process.stdout, process.stderr] if part).strip()
+    no_results = "No results found" in output
+    release_found = process.returncode == 0 and "Results for" in output and not no_results
+    return {
+        "candidate": candidate,
+        "status": "checked",
+        "composed_skill": "ingest-movie",
+        "query": query,
+        "release_found": release_found,
+        "returncode": process.returncode,
+        "evidence_level": "nzbgeek_release_search_only",
+        "safe_default": "release_availability_is_not_subtitle_or_orpheus_evidence",
+        "stdout_excerpt": output[:2000],
+    }
 
 
 def bazarr_local_matches_for_candidate(candidate: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1783,6 +1866,8 @@ def build_movie_acquisition_report(
     external_subtitle_fetch_count: int,
     ingest_movie_handoff: list[dict[str, Any]],
     combined_coverage: dict[str, int],
+    local_radarr_matches: list[dict[str, Any]] | None = None,
+    ingest_movie_availability: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     recommendations: list[dict[str, Any]] = []
     report_coverage = {emotion: 0 for emotion in emotions}
@@ -1829,6 +1914,8 @@ def build_movie_acquisition_report(
             "safe_default": handoff.get("safe_default"),
         })
     missing = [emotion for emotion in emotions if report_coverage.get(emotion, 0) == 0]
+    availability = ingest_movie_availability or []
+    local_matches = local_radarr_matches or []
     return {
         "artifact_type": "orpheus_tts_movie_acquisition_recommendations",
         "schema_version": "0.6",
@@ -1839,6 +1926,10 @@ def build_movie_acquisition_report(
         "brave_query_count": brave_query_count,
         "candidate_count": candidate_count,
         "external_subtitle_fetch_count": external_subtitle_fetch_count,
+        "local_radarr_match_count": len(local_matches),
+        "local_radarr_matches": local_matches,
+        "ingest_movie_available_release_count": sum(1 for item in availability if item.get("release_found")),
+        "ingest_movie_availability": availability,
         "recommendation_invariant": "For this pipeline, an Orpheus emotion exists only if it appears in a verified timecoded subtitle artifact (.srt/.vtt/.ass/.ssa). Each recommendation exposes exact cue timecodes in timecoded_emotion_cues.",
         "combined_emotion_coverage": report_coverage,
         "raw_combined_emotion_coverage": combined_coverage,
@@ -2092,6 +2183,7 @@ def orpheus_sanity(
     max_external_fetches: int = typer.Option(8, "--max-external-fetches", min=0, max=100, help="Maximum external subtitle/transcript URLs to fetch and scan."),
     probe_nonlocal_bazarr: bool = typer.Option(True, "--probe-nonlocal-bazarr/--no-probe-nonlocal-bazarr", help="Try to vet non-local Brave candidates through Bazarr/Radarr metadata stubs."),
     create_radarr_stubs: bool = typer.Option(False, "--create-radarr-stubs/--no-create-radarr-stubs", help="Add unmonitored Radarr metadata stubs with searchForMovie=false so Bazarr can try provider search."),
+    probe_ingest_movie_availability: bool = typer.Option(True, "--probe-ingest-movie-availability/--no-probe-ingest-movie-availability", help="Use ingest-movie/NZBGeek broad title-year search to report movie acquisition availability separately from subtitle evidence."),
     max_nonlocal_probes: int = typer.Option(5, "--max-nonlocal-probes", min=0, max=100, help="Maximum non-local Brave candidates to probe through Bazarr/Radarr."),
     bazarr_sync_wait_seconds: float = typer.Option(20.0, "--bazarr-sync-wait-seconds", min=0.0, max=180.0, help="Seconds to wait for Bazarr to see a newly added Radarr metadata stub."),
     count: int = typer.Option(3, "--count", min=1, max=10, help="Brave results per query."),
@@ -2100,6 +2192,8 @@ def orpheus_sanity(
     json_output: bool = typer.Option(False, "--json", help="Emit JSON."),
 ) -> None:
     """Run the Orpheus e2e sanity check for one actor, including Bazarr subtitle recovery."""
+    if not isinstance(probe_ingest_movie_availability, bool):
+        probe_ingest_movie_availability = True
     emotions = parse_emotions(emotion, all_orpheus_emotions)
     if not emotions:
         emotions = ORPHEUS_EMOTIONS
@@ -2182,20 +2276,47 @@ def orpheus_sanity(
             fetch_receipt = fetch_external_subtitle_artifact(candidate, evidence)
             external_fetched_subtitle_scans.append(scan_external_artifact(fetch_receipt, emotions))
     local_matches: list[dict[str, Any]] = []
+    local_radarr_matches: list[dict[str, Any]] = []
     radarr_ids: list[int] = []
     blocked_or_unverified: list[dict[str, Any]] = []
     nonlocal_candidates: list[dict[str, Any]] = []
     for candidate in candidates:
+        radarr_records = radarr_inventory_matches_for_candidate(candidate)
+        real_radarr_records = [record for record in radarr_records if record.get("status") == "radarr_inventory_match"]
+        local_radarr_matches.extend(real_radarr_records)
         records = bazarr_local_matches_for_candidate(candidate)
         if not records:
-            nonlocal_candidates.append(candidate)
+            if real_radarr_records:
+                blocked_or_unverified.append({
+                    "candidate": candidate,
+                    "status": "in_radarr_not_verified_by_bazarr",
+                    "blocked_reason": "candidate is present in Radarr inventory but Bazarr has no indexed/verified subtitle record for it",
+                    "radarr_matches": real_radarr_records,
+                    "evidence_level": "radarr_metadata_or_file_only",
+                    "next_required_evidence": "movie file and English subtitle must be verified by Bazarr/get-subtitles before Orpheus use",
+                    "safe_default": "do_not_treat_as_local_orpheus_coverage",
+                })
+                for record in real_radarr_records:
+                    if record.get("has_file") and record.get("radarr_id") is not None:
+                        radarr_ids.append(int(record["radarr_id"]))
+            else:
+                nonlocal_candidates.append(candidate)
+                blocked_or_unverified.append({
+                    "candidate": candidate,
+                    "status": "not_in_local_bazarr_inventory",
+                    "blocked_reason": "candidate found by Brave but not present in local Radarr/Bazarr inventory",
+                    "evidence_level": "movie_candidate_only",
+                    "next_required_evidence": "download and scan a real subtitle file before recommending movie acquisition",
+                    "safe_default": "do_not_recommend_movie_download",
+                })
+            continue
+        if records and records[0].get("status") == "bazarr_lookup_failed":
             blocked_or_unverified.append({
                 "candidate": candidate,
-                "status": "not_in_local_bazarr_inventory",
-                "blocked_reason": "candidate found by Brave but not present in local Bazarr/Radarr inventory",
-                "evidence_level": "movie_candidate_only",
-                "next_required_evidence": "download and scan a real subtitle file before recommending movie acquisition",
-                "safe_default": "do_not_recommend_movie_download",
+                "status": "bazarr_lookup_failed",
+                "blocked_reason": records[0].get("reason"),
+                "radarr_matches": real_radarr_records,
+                "safe_default": "do_not_treat_as_local_orpheus_coverage",
             })
             continue
         for record in records:
@@ -2211,6 +2332,11 @@ def orpheus_sanity(
             local_matches.append(match)
             if radarr_id is not None:
                 radarr_ids.append(int(radarr_id))
+
+    ingest_movie_availability: list[dict[str, Any]] = []
+    if probe_ingest_movie_availability:
+        for candidate in candidates:
+            ingest_movie_availability.append(ingest_movie_release_availability_for_candidate(candidate))
 
     nonlocal_bazarr_subtitle_vetting: list[dict[str, Any]] = []
     if probe_nonlocal_bazarr and max_nonlocal_probes > 0:
@@ -2405,6 +2531,8 @@ def orpheus_sanity(
         external_subtitle_fetch_count=len(external_fetched_subtitle_scans),
         ingest_movie_handoff=ingest_movie_handoff,
         combined_coverage=combined_coverage,
+        local_radarr_matches=local_radarr_matches,
+        ingest_movie_availability=ingest_movie_availability,
     )
     final = {
         "status": "ok",
@@ -2419,6 +2547,9 @@ def orpheus_sanity(
         "nonlocal_bazarr_probe_enabled": probe_nonlocal_bazarr,
         "nonlocal_bazarr_probe_count": len(nonlocal_bazarr_subtitle_vetting),
         "nonlocal_radarr_stub_creation_enabled": create_radarr_stubs,
+        "ingest_movie_availability_probe_enabled": probe_ingest_movie_availability,
+        "ingest_movie_availability": ingest_movie_availability,
+        "ingest_movie_available_release_count": sum(1 for item in ingest_movie_availability if item.get("release_found")),
         "external_subtitle_download_supported": True,
         "external_subtitle_download_attempted": bool(fetch_external_subtitles and external_fetched_subtitle_scans),
         "external_subtitle_download_reason": "external Brave result URLs are fetched directly when supported; Bazarr remains the verifier/downloader for local movies",
@@ -2431,6 +2562,8 @@ def orpheus_sanity(
         "candidate_count": len(candidates),
         "local_bazarr_matches": local_matches,
         "local_bazarr_match_count": len(local_matches),
+        "local_radarr_matches": local_radarr_matches,
+        "local_radarr_match_count": len(local_radarr_matches),
         "verified_subtitles": verified_subtitles,
         "local_verified_hits": local_verified_hits,
         "local_bazarr_recovery": scan_results,
