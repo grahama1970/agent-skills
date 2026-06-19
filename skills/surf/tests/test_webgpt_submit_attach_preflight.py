@@ -5,6 +5,7 @@ import os
 import subprocess
 import zipfile
 from pathlib import Path
+import textwrap
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -65,6 +66,109 @@ def make_zip(path: Path, count: int) -> None:
     with zipfile.ZipFile(path, "w") as zf:
         for idx in range(count):
             zf.writestr(f"file-{idx}.txt", f"payload {idx}\n")
+
+
+def test_assistant_snapshot_finds_sentinel_in_baseline_reused_turn(tmp_path: Path) -> None:
+    script = tmp_path / "snapshot-baseline-reuse.cjs"
+    client = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            const assert = require('assert');
+            const {{ assistantSnapshotExpression }} = require({json.dumps(str(client))});
+            class HTMLElement {{}}
+            class Node extends HTMLElement {{
+              constructor(text, attrs = {{}}) {{
+                super();
+                this.innerText = text;
+                this.textContent = text;
+                this.attrs = attrs;
+              }}
+              getAttribute(name) {{ return this.attrs[name] || null; }}
+              querySelector(selector) {{
+                if (selector.includes('[data-message-author-role="assistant"]')) return this;
+                return null;
+              }}
+            }}
+            const sentinel = '<<<WEBGPT_DONE:abc123>>>';
+            const assistant = new Node('review text\\n' + sentinel, {{
+              'data-message-author-role': 'assistant',
+              'data-message-id': 'msg-1',
+            }});
+            global.HTMLElement = HTMLElement;
+            global.document = {{
+              hidden: false,
+              visibilityState: 'visible',
+              hasFocus: () => true,
+              querySelector: () => null,
+              querySelectorAll: (selector) => selector.includes('[data-message-author-role="assistant"]')
+                ? [assistant]
+                : [],
+            }};
+            const snapshot = eval(assistantSnapshotExpression(sentinel, 1));
+            assert.equal(snapshot.source, 'assistant-dom-baseline-fallback');
+            assert.equal(snapshot.pageTextContainsSentinel, true);
+            assert.equal(snapshot.sentinelMatch, sentinel);
+            assert.equal(snapshot.text.includes(sentinel), true);
+            """
+        ),
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["node", str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_webgpt_submit_defaults_to_full_900_second_timeout(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    expected_timeout=0
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --timeout)
+          if [[ "${2:-}" == "900" ]]; then expected_timeout=1; fi
+          shift 2
+          ;;
+        --sentinel)
+          sentinel="${2:-}"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    if [[ "$expected_timeout" != "1" ]]; then
+      echo "missing default --timeout 900" >&2
+      exit 88
+    fi
+    printf 'ok\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
 
 
 FAKE_RUN_PREAMBLE = """#!/usr/bin/env bash
@@ -136,7 +240,7 @@ esac
 """
     )
 
-    proc = run_submit(tmp_path, archive, fake_run)
+    proc = run_submit(tmp_path, archive, fake_run, {"SURF_WEBGPT_ADVISORY_AFTER_SECONDS": "600"})
 
     assert proc.returncode == 7
     assert "simulated browser failure" in proc.stderr

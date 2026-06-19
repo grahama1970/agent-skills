@@ -138,13 +138,28 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       ? directAssistantTurns
       : conversationTurns.filter((node) => isAssistantTurn(node));
     const newAssistantTurns = assistantTurns.slice(BASELINE);
-    const lastAssistantTurn = newAssistantTurns.length
+    let baselineFallback = false;
+    let lastAssistantTurn = newAssistantTurns.length
       ? newAssistantTurns[newAssistantTurns.length - 1]
       : null;
     const sentinelVariants = SENTINEL
       ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
       : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
+    if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
+      // ChatGPT can mutate an already-counted assistant container after we capture the
+      // baseline. The per-submit sentinel is unique, so only fall back when that exact
+      // marker is present in an existing assistant turn.
+      for (let idx = assistantTurns.length - 1; idx >= 0; idx--) {
+        const candidate = assistantTurns[idx];
+        const candidateText = (candidate?.innerText || candidate?.textContent || '').trim();
+        if (findSentinel(candidateText)) {
+          lastAssistantTurn = candidate;
+          baselineFallback = true;
+          break;
+        }
+      }
+    }
     const documentHidden = document.hidden === true;
     const visibilityState = document.visibilityState || null;
     const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
@@ -184,7 +199,7 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
     const messageId = messageRoot.getAttribute('data-message-id') || null;
     const turnTextForSentinel = turnText || contentText || '';
     const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(turnTextForSentinel));
-    let source = 'assistant-dom';
+    let source = baselineFallback ? 'assistant-dom-baseline-fallback' : 'assistant-dom';
     if (SENTINEL && pageTextContainsSentinel && !findSentinel(text)) {
       const marker = findSentinel(turnTextForSentinel);
       const idx = marker ? turnTextForSentinel.lastIndexOf(marker) : -1;
@@ -964,4 +979,10 @@ async function query(options) {
   }
 }
 
-module.exports = { query, extractAssistantResponse, hasRequiredCookies, CHATGPT_URL };
+module.exports = {
+  query,
+  extractAssistantResponse,
+  hasRequiredCookies,
+  CHATGPT_URL,
+  assistantSnapshotExpression,
+};
