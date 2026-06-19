@@ -8,6 +8,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 from loguru import logger
 
@@ -36,8 +37,25 @@ class BindingError(RuntimeError):
     """Raised when a manually-bound tab is missing."""
 
 
+class DuplicateConversationUrlError(BindingError):
+    """Raised when a bound conversation URL is open in more than one tab."""
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _normalise_url_for_identity(url: str) -> str:
+    raw = str(url or "").strip()
+    if not raw:
+        return ""
+    parsed = urlparse(raw)
+    scheme = (parsed.scheme or "https").lower()
+    netloc = parsed.netloc.lower()
+    if netloc == "www.chatgpt.com":
+        netloc = "chatgpt.com"
+    path = re.sub(r"/+$", "", parsed.path or "/")
+    return f"{scheme}://{netloc}{path}"
 
 
 def sanitize_name(name: str) -> str:
@@ -189,15 +207,22 @@ def verify(
         return state
     seen = False
     matched_url = ""
+    duplicate_tab_ids: list[str] = []
+    bound_url_identity = _normalise_url_for_identity(state.conversation_url)
     for line in proc.stdout.splitlines():
         parts = line.split("\t")
         if len(parts) < 3:
             continue
         tid, _title, url = parts[0], parts[1], parts[2]
+        if (
+            state.conversation_url
+            and tid != state.tab_id
+            and _normalise_url_for_identity(url) == bound_url_identity
+        ):
+            duplicate_tab_ids.append(tid)
         if tid == state.tab_id:
             seen = True
             matched_url = url
-            break
     if seen:
         if matched_url and state.conversation_url and matched_url != state.conversation_url:
             if state.bound_manually:
@@ -212,6 +237,14 @@ def verify(
             state.conversation_url = matched_url
         elif matched_url and matched_url != state.conversation_url:
             state.conversation_url = matched_url
+        if duplicate_tab_ids:
+            raise DuplicateConversationUrlError(
+                f"Project {state.name!r} ({backend}) is bound to tab {state.tab_id}, "
+                "but the same conversation URL is also open in other ChatGPT tabs.\n"
+                f"  bound_url: {state.conversation_url}\n"
+                f"  duplicate_tab_ids: {', '.join(sorted(duplicate_tab_ids))}\n"
+                "Close duplicate conversation tabs or bind to a unique reviewer tab before submitting."
+            )
         state.last_verified_at = _utc_now()
         save(state, root=root)
         return state

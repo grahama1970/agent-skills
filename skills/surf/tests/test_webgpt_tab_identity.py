@@ -53,7 +53,7 @@ def test_expected_url_verifies_requested_tab():
     assert out["tab_id"] == "837346327"
 
 
-def test_expected_url_verifies_requested_tab_even_when_duplicate_url_is_open():
+def test_expected_url_fails_when_duplicate_conversation_url_is_open():
     tabs = (
         "837346327\tDelegate review\t"
         "https://chatgpt.com/c/11111111-1111-1111-1111-111111111111\n"
@@ -66,9 +66,12 @@ def test_expected_url_verifies_requested_tab_even_when_duplicate_url_is_open():
         "--expect-url",
         "https://chatgpt.com/c/11111111-1111-1111-1111-111111111111",
     )
-    assert code == 0
-    assert out["ok"] is True
+    assert code == 5
+    assert out["ok"] is False
+    assert out["error"] == "expected_url_ambiguous_duplicate_tabs"
     assert out["tab_id"] == "837346327"
+    assert len(out["url_resolution"]["candidates"]) == 2
+    assert any(check["name"] == "expected_url_unique" and not check["ok"] for check in out["checks"])
 
 
 def test_expected_url_matching_different_tab_fails():

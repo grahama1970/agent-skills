@@ -11,7 +11,7 @@ from typing import Optional
 import typer
 from loguru import logger
 
-from .bindings import BindingError, bind, list_bindings, load, unbind, verify
+from .bindings import BindingError, DuplicateConversationUrlError, bind, list_bindings, load, unbind, verify
 from .config import SUPPORTED_BACKENDS, project_root, surf_run_path
 from .registry import register_mapping, resolve_project
 from .walkup import find_all_registries, find_registry
@@ -263,10 +263,17 @@ def doctor_cmd(
     if result.project and result.binding:
         try:
             verified = verify(result.project, backend, surf_run=surf_run_path())
+        except DuplicateConversationUrlError:
+            issues.append("duplicate_conversation_url")
+            verified = None
         except BindingError:
             issues.append("tab_stale_manual_binding")
             verified = None
-        if verified is None and "tab_stale_manual_binding" not in issues:
+        if (
+            verified is None
+            and "tab_stale_manual_binding" not in issues
+            and "duplicate_conversation_url" not in issues
+        ):
             issues.append("tab_not_open")
     surf = surf_run_path()
     if not surf.exists():

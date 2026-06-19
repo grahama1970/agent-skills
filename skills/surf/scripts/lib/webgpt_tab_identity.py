@@ -106,6 +106,28 @@ def check_identity(
                 "source": source,
                 "checks": checks,
             }
+        resolved = resolve_url(expected_url, all_chatgpt_tabs)
+        duplicate_candidates = resolved.get("candidates") if isinstance(resolved, dict) else None
+        if isinstance(duplicate_candidates, list) and len(duplicate_candidates) > 1:
+            add(
+                "expected_url_unique",
+                False,
+                f"expected_url matches {len(duplicate_candidates)} open ChatGPT tabs",
+            )
+            return {
+                "ok": False,
+                "error": "expected_url_ambiguous_duplicate_tabs",
+                "tab_id": digits,
+                "tab": _tab_payload(tab),
+                "chatgpt_tabs_count": len(all_chatgpt_tabs),
+                "expected_url": expected_url,
+                "expected_title": expected_title or None,
+                "url_resolution": resolved,
+                "url_match": url_match,
+                "source": source,
+                "checks": checks,
+            }
+        add("expected_url_unique", True, "unique")
         url_verified = True
 
     if expected_title:
