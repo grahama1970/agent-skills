@@ -809,25 +809,15 @@ esac
     assert meta["notification_assisted_wait_reason"] == "advisory_wake_only_sentinel_required"
 
 
-def test_webgpt_submit_project_shell_requires_proven_conversation_url(tmp_path: Path) -> None:
+def test_webgpt_submit_project_shell_fails_before_submit(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
     project_url = "https://chatgpt.com/g/g-p-demo-personas/project"
     fake_run = (
         FAKE_RUN_PROJECT_PREAMBLE
         + """  chatgpt)
-    sentinel=""
-    while [[ $# -gt 0 ]]; do
-      if [[ "$1" == "--sentinel" ]]; then
-        sentinel="${2:-}"
-        break
-      fi
-      shift
-    done
-    printf 'project shell response is not enough\\n%s\\n' "$sentinel"
-    echo 'Tab ID: 837352334' >&2
-    echo 'ResponseSource: assistant-dom' >&2
-    exit 0
+    echo 'chatgpt should not run for project shell target' >&2
+    exit 99
     ;;
   *)
     echo "unexpected command: $*" >&2
@@ -844,22 +834,31 @@ esac
         target_args=["--tab-id", "837352334", "--expect-url", project_url, "--no-activate"],
     )
 
-    assert proc.returncode == 5
+    assert proc.returncode == 6
+    assert "chatgpt should not run" not in proc.stderr
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "failed"
-    assert meta["failure"] == "project_conversation_url_unproven"
-    assert meta["proof_status"] == "project_session_unproven"
-    assert "no distinct conversation URL was proven" in meta["agent_diagnosis"]
+    assert meta["failure"] == "project_shell_target_not_conversation"
+    assert meta["proof_status"] == "not_submitted"
+    assert meta["project_shell_url"] == project_url
+    assert "refused to submit" in meta["agent_diagnosis"]
+    assert "/c/<id>" in meta["agent_action"]
 
 
 def test_webgpt_submit_project_shell_accepts_proven_conversation_url(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
-    project_url = "https://chatgpt.com/g/g-p-demo-personas/project"
     conversation_url = "https://chatgpt.com/g/g-p-demo-personas/c/6a35a170-78ac-83ea-9b8f-6e616953df12"
-    fake_run = (
-        FAKE_RUN_PROJECT_PREAMBLE
-        + f"""  chatgpt)
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tChatGPT - Personas\\t{conversation_url}\\n'
+    ;;
+  focus.state)
+    printf '{{"focusedWindowId":456,"activeTabId":837352334}}\\n'
+    ;;
+  chatgpt)
     sentinel=""
     while [[ $# -gt 0 ]]; do
       if [[ "$1" == "--sentinel" ]]; then
@@ -880,13 +879,12 @@ def test_webgpt_submit_project_shell_accepts_proven_conversation_url(tmp_path: P
     ;;
 esac
 """
-    )
 
     proc = run_submit(
         tmp_path,
         archive,
         fake_run,
-        target_args=["--tab-id", "837352334", "--expect-url", project_url, "--no-activate"],
+        target_args=["--tab-id", "837352334", "--expect-url", conversation_url, "--no-activate"],
     )
 
     assert proc.returncode == 0, proc.stderr

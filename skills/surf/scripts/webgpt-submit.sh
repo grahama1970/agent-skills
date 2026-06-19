@@ -265,6 +265,10 @@ elif failure == "project_conversation_url_unproven":
     proof_status = "project_session_unproven"
     diagnosis = "Surf saw sentinel output, but the target was a ChatGPT project shell and no distinct conversation URL was proven."
     action = "Do not treat this as an independent project chat. Create or bind a real project conversation URL containing /c/<id>, then rerun with --url or --expect-url for that conversation."
+elif failure == "project_shell_target_not_conversation":
+    proof_status = "not_submitted"
+    diagnosis = "Surf refused to submit to a ChatGPT project home/shell URL because it is not a proven independent conversation."
+    action = "Create a new chat inside the ChatGPT project first, then rerun with the resulting /c/<id> conversation URL via --url or --expect-url."
 elif failure == "attach_file_preflight_failed":
     proof_status = "not_submitted"
     diagnosis = "Attachment preflight failed before Surf submitted anything to ChatGPT."
@@ -652,6 +656,68 @@ PY
   fi
 else
   identity_preflight_json=""
+fi
+
+project_shell_url=""
+if [[ -n "${target_url:-}" && "$target_url" == *"chatgpt.com/g/"* && "$target_url" == *"/project"* && "$target_url" != *"/c/"* ]]; then
+  project_shell_url="$target_url"
+elif [[ -n "${expect_url:-}" && "$expect_url" == *"chatgpt.com/g/"* && "$expect_url" == *"/project"* && "$expect_url" != *"/c/"* ]]; then
+  project_shell_url="$expect_url"
+elif [[ -n "${identity_preflight_json:-}" ]]; then
+  project_shell_url="$(python3 - "${identity_preflight_json:-}" <<'PY'
+import json
+import sys
+
+try:
+    identity = json.loads(sys.argv[1]) if sys.argv[1] else {}
+except Exception:
+    identity = {}
+tab = identity.get("tab") if isinstance(identity.get("tab"), dict) else {}
+url = str(tab.get("url") or "")
+if "chatgpt.com/g/" in url and "/project" in url and "/c/" not in url:
+    print(url)
+PY
+)"
+fi
+
+if [[ -n "$project_shell_url" ]]; then
+  failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$project_shell_url" "$failed_at" <<'PY'
+import json
+import pathlib
+import sys
+
+(
+    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
+    target_url, model, reasoning, identity_s, project_shell_url, failed_at,
+) = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "project_shell_target_not_conversation",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "project_shell_url": project_shell_url,
+    "tab_identity_preflight": identity,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n", encoding="utf-8")
+PY
+  enrich_agent_diagnosis
+  echo "webgpt.submit refused project shell URL: $project_shell_url" >&2
+  echo "Create or bind a real ChatGPT project conversation URL containing /c/<id> before submitting." >&2
+  exit 6
 fi
 
 roundtrip_preflight_json=""

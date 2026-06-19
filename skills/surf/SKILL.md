@@ -412,10 +412,13 @@ Behavior:
   submits on that id — use for isolated reviewer rounds.
 - Opening a ChatGPT **project home** URL such as
   `https://chatgpt.com/g/<project>/project` is not proof that a new independent
-  project conversation exists. If a project-shell target completes without a
-  proven `conversation_url` containing `/c/<id>`, Surf marks the round
-  `project_session_unproven` and exits nonzero. Bind or target the real
-  conversation URL for concurrent project-agent work.
+  project conversation exists. Surf refuses project-shell targets before
+  submitting and records `failure: project_shell_target_not_conversation` with
+  `proof_status: not_submitted`. Bind or target the real project conversation
+  URL containing `/c/<id>` for concurrent project-agent work. If an older or
+  lower-level path still reaches completion from a project shell without a
+  proven `conversation_url` containing `/c/<id>`, treat
+  `project_session_unproven` as a hard stop.
 - `--no-remember` skips reading and writing the controlled-tab state file.
 - Explicit `--tab-id` or `--url` automatically implies `--no-remember` (do not
   overwrite `/tmp/surf-webgpt-controlled-tab-id` with a reviewer tab).
