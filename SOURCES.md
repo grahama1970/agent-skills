@@ -18,7 +18,7 @@ Machine-readable companion: `sources/agent-skills-registry.json`.
 
 - Repository: `grahama1970/agent-skills`
 - Schema version: `1.0`
-- Content hash: `0f933a1749708a468dfac401f3d899d472098646248d5b8ff1c6096966502805`
+- Content hash: `dcb406cf08bc59408e4e7d340c68c20ff1939e139b14f00a1033332f3174e431`
 - Skill entries: `312`
 - Agent entries: `4`
 - Total entries: `316`
