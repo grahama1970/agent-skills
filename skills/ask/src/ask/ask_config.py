@@ -115,6 +115,10 @@ SURF_RUN = os.environ.get(
     str(SKILLS_DIR / "surf" / "run.sh"),
 )
 WEBGPT_DEFAULT_TIMEOUT = float(os.environ.get("ASK_WEBGPT_TIMEOUT", "900"))
+WEBGPT_DEFAULT_REASONING = os.environ.get(
+    "ASK_WEBGPT_REASONING",
+    os.environ.get("SURF_WEBGPT_REASONING", "Pro"),
+)
 WEBGPT_STABLE_POLLS = int(os.environ.get("ASK_WEBGPT_STABLE_POLLS", "3"))
 
 CURSOR_BROWSER_DEFAULT_TIMEOUT = float(os.environ.get("ASK_CURSOR_BROWSER_TIMEOUT", "900"))

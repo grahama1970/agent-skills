@@ -206,7 +206,9 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
 
 `$ask webgpt ...` defaults to a 900 second WebGPT browser timeout
-(`ASK_WEBGPT_TIMEOUT`) unless the caller supplies `--oracle-timeout`.
+(`ASK_WEBGPT_TIMEOUT`) unless the caller supplies `--oracle-timeout`, and
+defaults the ChatGPT reasoning selector to `Pro` (`ASK_WEBGPT_REASONING`) unless
+the caller explicitly overrides the WebGPT reasoning label.
 
 ---
 
@@ -351,9 +353,14 @@ Behavior:
   `<<<WEBGPT_DONE:20260510T123456Z:8f41c2ab>>>`.
 - `$surf` appends a non-optional final-marker instruction to the submitted
   prompt.
+- `$surf` writes a separate submit receipt JSON (`--receipt-output`, default
+  `<output>.receipt.json`). `status: prepared_prompt` means only the prompt file
+  was prepared and is not transport proof. `status: submitted_to_chatgpt` means
+  the native helper observed ChatGPT accept the prompt for the current sentinel.
 - `--model` selects the ChatGPT model dropdown before submit.
-- `--reasoning` selects the ChatGPT reasoning dropdown before submit; use labels
-  exactly as shown in ChatGPT, such as `Pro` or `Heavy Reasoning`.
+- `--reasoning` selects the ChatGPT reasoning dropdown before submit; it
+  defaults to `SURF_WEBGPT_REASONING` or `Pro`. Use labels exactly as shown in
+  ChatGPT, such as `Pro` or `Heavy Reasoning`.
 - `$surf` waits for the final assistant DOM message to contain the marker and
   then remain unchanged for `--stable-polls` polls.
 - Whole-page text is diagnostic only. It must never satisfy the completion
@@ -361,6 +368,9 @@ Behavior:
 - Raw output keeps the marker. Clean output strips the marker. Metadata records
   the sentinel, output paths, timeout, stability policy, and whether the marker
   appeared only in the raw output.
+- If only `.submitted.md` exists, treat the round as
+  `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`. If the receipt still
+  says `prepared_prompt`, ChatGPT acceptance has not been proven.
 - `raw_contains_sentinel: true` with `clean_contains_sentinel: false` is normal
   when clean output correctly stripped the terminal marker. Do not diagnose this
   as Surf failure.

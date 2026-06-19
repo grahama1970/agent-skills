@@ -32,7 +32,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .ask_config import SURF_RUN, WEBGPT_DEFAULT_TIMEOUT, WEBGPT_STABLE_POLLS
+from .ask_config import (
+    SURF_RUN,
+    WEBGPT_DEFAULT_REASONING,
+    WEBGPT_DEFAULT_TIMEOUT,
+    WEBGPT_STABLE_POLLS,
+)
 from . import webgpt_project
 from .browser_oracle_client import apply_webgpt_browser_oracle
 
@@ -700,6 +705,7 @@ def call_webgpt(
     project: str = "",
     attach_file: str = "",
     timeout: float = WEBGPT_DEFAULT_TIMEOUT,
+    reasoning: str = WEBGPT_DEFAULT_REASONING,
     stable_polls: int = WEBGPT_STABLE_POLLS,
     artifact_dir: Path | None = None,
     no_activate: bool = True,
@@ -832,6 +838,8 @@ def call_webgpt(
         "--timeout", str(int(timeout)),
         "--stable-polls", str(int(stable_polls)),
     ]
+    if reasoning:
+        command.extend(["--reasoning", str(reasoning)])
     if resolved_tab_id:
         command.extend(["--tab-id", resolved_tab_id])
         if url:
@@ -880,6 +888,7 @@ def call_webgpt(
         "url": url or None,
         "no_activate": no_activate,
         "timeout_seconds": float(timeout),
+        "reasoning": str(reasoning) if reasoning else None,
         "artifact_dir": str(artifact_dir),
         "preflight_status": preflight.get("status") if preflight else None,
         "foreground_controlled_auto_allowed": bool(

@@ -225,6 +225,70 @@ def test_call_webgpt_passes_url_for_explicit_tab_and_url(
     assert "--expect-url" in cmd
     assert cmd[cmd.index("--expect-url") + 1] == "https://chatgpt.com/c/example"
     assert "--url" not in cmd
+    assert "--timeout" in cmd
+    assert cmd[cmd.index("--timeout") + 1] == "900"
+    assert "--reasoning" in cmd
+    assert cmd[cmd.index("--reasoning") + 1] == "Pro"
+
+
+def test_call_webgpt_allows_explicit_reasoning_override(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    surf = tmp_path / "surf"
+    surf.write_text("#!/bin/sh\n", encoding="utf-8")
+    surf.chmod(0o755)
+    captured: dict[str, list[str]] = {}
+
+    class _Result:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def fake_run(cmd, **kwargs):
+        if "webgpt.preflight" in cmd:
+            result = _Result()
+            result.stdout = json.dumps({"status": "pass", "failures": []})
+            return result
+        captured["cmd"] = list(cmd)
+        output = pathlib.Path(cmd[cmd.index("--output") + 1])
+        raw_output = pathlib.Path(cmd[cmd.index("--raw-output") + 1])
+        meta_output = pathlib.Path(cmd[cmd.index("--meta-output") + 1])
+        sentinel = "<<<WEBGPT_DONE:test>>>"
+        output.write_text("VERDICT: PASS\n", encoding="utf-8")
+        raw_output.write_text(f"VERDICT: PASS\n{sentinel}\n", encoding="utf-8")
+        meta_output.write_text(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "sentinel": sentinel,
+                    "controlled_tab_id": "837346844",
+                    "requested_tab_id": "837346844",
+                    "requested_reasoning": "Heavy Reasoning",
+                    "raw_contains_sentinel": True,
+                    "clean_contains_sentinel": False,
+                    "no_activate": True,
+                    "focus_changed": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return _Result()
+
+    monkeypatch.setattr("ask.webgpt_runtime.check_and_record", lambda: None)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    call_webgpt(
+        "Review this.",
+        tab_id="837346844",
+        reasoning="Heavy Reasoning",
+        surf_run=surf,
+        artifact_dir=tmp_path / "artifacts",
+    )
+
+    cmd = captured["cmd"]
+    assert "--reasoning" in cmd
+    assert cmd[cmd.index("--reasoning") + 1] == "Heavy Reasoning"
 
 
 def test_call_webgpt_fails_on_browser_oracle_missing_binding(

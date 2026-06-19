@@ -1099,7 +1099,7 @@ async function query(options) {
     log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
     const submitState = await waitForSubmitAccepted(cdp, prompt);
-    log(`Prompt accepted: stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
+    log(`Prompt accepted: sentinel=${sentinel || ''} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     let response;
     let responseTimedOut = false;

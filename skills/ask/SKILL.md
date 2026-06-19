@@ -134,6 +134,13 @@ Use the narrowest mode that matches the user request.
   `NEEDS_ATTENTION`.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging or when an ask reference explicitly routes there.
+- Explicit `$ask webgpt ...` calls default to the WebGPT browser timeout
+  (`ASK_WEBGPT_TIMEOUT`, 900 seconds) unless `--oracle-timeout` is supplied,
+  and to ChatGPT reasoning `Pro` (`ASK_WEBGPT_REASONING`) unless a caller
+  explicitly overrides the WebGPT reasoning label.
+- Surf may also write `round-*/02_response.md.receipt.json`: `prepared_prompt`
+  means no ChatGPT acceptance proof yet, while `submitted_to_chatgpt` is a
+  transport receipt distinct from final response proof.
 - Browser review output is reviewer evidence. It still must be reconciled
   against repository state and deterministic local checks before closure.
 

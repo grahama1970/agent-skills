@@ -20,6 +20,7 @@ Options:
   --output PATH             Clean response path. Required.
   --raw-output PATH         Raw response path. Default: <output>.raw.md
   --meta-output PATH        Proof metadata JSON. Default: <output>.meta.json
+  --receipt-output PATH     Submit receipt JSON. Default: <output>.receipt.json
   --submitted-output PATH   Submitted prompt with sentinel injection.
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
@@ -42,8 +43,8 @@ Options:
                             Completion still requires controlled-tab sentinel
                             or image-artifact proof.
   --model MODEL             Optional ChatGPT model selector label.
-  --reasoning LABEL         Optional ChatGPT reasoning dropdown label
-                            (for example: "Pro" or "Heavy Reasoning").
+  --reasoning LABEL         ChatGPT reasoning dropdown label. Default:
+                            SURF_WEBGPT_REASONING or "Pro".
   --project NAME            browser-oracle project binding (~/.pi/webgpt-projects/<name>.json).
   --browser-oracle-from PATH  Walk-up directory for .ask/browser-oracles.yaml (default: cwd).
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
@@ -77,13 +78,14 @@ input=""
 output=""
 raw_output=""
 meta_output=""
+receipt_output=""
 submitted_output=""
 sentinel="auto"
 stable_polls=3
 timeout_s=900
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 model=""
-reasoning=""
+reasoning="${SURF_WEBGPT_REASONING:-Pro}"
 tab_id=""
 project=""
 browser_oracle_from=""
@@ -101,6 +103,7 @@ roundtrip_timeout_s="${SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT:-60}"
 roundtrip_output_dir=""
 notification_assisted_wait="${SURF_WEBGPT_NOTIFICATION_ASSISTED_WAIT:-0}"
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
+host_log_file="${SURF_WEBGPT_HOST_LOG:-/tmp/surf-host.log}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -108,6 +111,7 @@ while [[ $# -gt 0 ]]; do
     --output) output="${2:-}"; shift 2 ;;
     --raw-output) raw_output="${2:-}"; shift 2 ;;
     --meta-output) meta_output="${2:-}"; shift 2 ;;
+    --receipt-output) receipt_output="${2:-}"; shift 2 ;;
     --submitted-output) submitted_output="${2:-}"; shift 2 ;;
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
@@ -207,8 +211,9 @@ fi
 
 raw_output="${raw_output:-${output}.raw.md}"
 meta_output="${meta_output:-${output}.meta.json}"
+receipt_output="${receipt_output:-${output}.receipt.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
-mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$submitted_output")"
+mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$receipt_output")" "$(dirname "$submitted_output")"
 
 attach_file_abs=""
 if [[ -n "$attach_file" ]]; then
@@ -299,6 +304,41 @@ ${sentinel}
 Do not print anything after that marker."
 
 printf '%s\n' "$submitted_prompt" > "$submitted_output"
+
+write_submit_receipt() {
+  local status="$1"
+  local receipt_at="$2"
+  local accepted="${3:-false}"
+  python3 - "$receipt_output" "$status" "$receipt_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+import json
+import pathlib
+import sys
+
+(
+    receipt, status, receipt_at, accepted_s, inp, submitted, out, raw, meta,
+    sentinel, requested_tab_id, target_url, model, reasoning,
+) = sys.argv[1:]
+pathlib.Path(receipt).write_text(json.dumps({
+    "schema": "surf.webgpt_submit_receipt.v1",
+    "status": status,
+    "submitted_to_chatgpt": accepted_s == "true",
+    "prepared_prompt_is_transport_proof": False,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "meta_output": meta,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "receipt_at": receipt_at,
+}, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
+write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 
 stderr_log="$(mktemp /tmp/surf-webgpt-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-webgpt-submit-raw.XXXXXX.md)"
@@ -619,6 +659,22 @@ run_submit() {
 }
 run_submit > "$raw_tmp" 2> "$stderr_log" &
 submit_pid=$!
+receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
+(
+  while kill -0 "$submit_pid" 2>/dev/null; do
+    if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
+      write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+      printf 'submitted_to_chatgpt\n' > "$receipt_marker"
+      exit 0
+    fi
+    sleep 0.2
+  done
+  if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
+    write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+    printf 'submitted_to_chatgpt\n' > "$receipt_marker"
+  fi
+) &
+receipt_pid=$!
 poll_interval="${SURF_WEBGPT_FOCUS_POLL_INTERVAL:-15}"
 (
   while kill -0 "$submit_pid" 2>/dev/null; do
@@ -639,6 +695,7 @@ wait "$submit_pid"
 status=$?
 kill "$poll_pid" 2>/dev/null || true
 wait "$poll_pid" 2>/dev/null || true
+wait "$receipt_pid" 2>/dev/null || true
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 

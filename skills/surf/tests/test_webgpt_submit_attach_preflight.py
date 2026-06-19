@@ -472,6 +472,108 @@ esac
     assert proc.returncode == 0, proc.stderr
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "completed"
+    assert meta["requested_reasoning"] == "Pro"
+
+
+def test_webgpt_submit_allows_reasoning_env_override(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    expected_reasoning=0
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --reasoning)
+          if [[ "${2:-}" == "Heavy Reasoning" ]]; then expected_reasoning=1; fi
+          shift 2
+          ;;
+        --sentinel)
+          sentinel="${2:-}"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    if [[ "$expected_reasoning" != "1" ]]; then
+      echo "missing overridden --reasoning Heavy Reasoning" >&2
+      exit 88
+    fi
+    printf 'ok\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        {"SURF_WEBGPT_REASONING": "Heavy Reasoning"},
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["requested_reasoning"] == "Heavy Reasoning"
+
+
+def test_webgpt_submit_writes_distinct_submit_receipt(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    host_log = tmp_path / "surf-host.log"
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --sentinel)
+          sentinel="${2:-}"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    printf '%s Prompt accepted: sentinel=%s stopVisible=true composerChars=0\\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sentinel" >> "${SURF_WEBGPT_HOST_LOG:?}"
+    printf 'ok\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        {"SURF_WEBGPT_HOST_LOG": str(host_log)},
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    receipt = json.loads((tmp_path / "response.md.receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "submitted_to_chatgpt"
+    assert receipt["submitted_to_chatgpt"] is True
+    assert receipt["prepared_prompt_is_transport_proof"] is False
+    assert receipt["requested_reasoning"] == "Pro"
 
 
 def test_webgpt_submit_notification_assisted_wait_is_advisory_only(tmp_path: Path) -> None:
