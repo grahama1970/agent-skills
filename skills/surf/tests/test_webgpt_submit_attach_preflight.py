@@ -18,6 +18,7 @@ def run_submit(
     fake_run_body: str | None = None,
     extra_env: dict[str, str] | None = None,
     extra_args: list[str] | None = None,
+    target_args: list[str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     request = tmp_path / "request.md"
     output = tmp_path / "response.md"
@@ -34,6 +35,14 @@ def run_submit(
     env["SURF_RUN_SH"] = str(fake_run)
     if extra_env:
         env.update(extra_env)
+    if target_args is None:
+        target_args = [
+            "--tab-id",
+            "837352334",
+            "--expect-url",
+            "https://chatgpt.com/c/example",
+            "--no-activate",
+        ]
     return subprocess.run(
         [
             "bash",
@@ -46,11 +55,7 @@ def run_submit(
             str(meta),
             "--attach-file",
             str(archive),
-            "--tab-id",
-            "837352334",
-            "--expect-url",
-            "https://chatgpt.com/c/example",
-            "--no-activate",
+            *target_args,
             *(extra_args or []),
         ],
         cwd=tmp_path,
@@ -122,6 +127,135 @@ def test_assistant_snapshot_finds_sentinel_in_baseline_reused_turn(tmp_path: Pat
         check=False,
     )
     assert proc.returncode == 0, proc.stderr
+
+
+def test_type_prompt_replaces_existing_chatgpt_draft(tmp_path: Path) -> None:
+    script = tmp_path / "type-prompt-replace.cjs"
+    client = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            const assert = require('assert');
+            const {{ typePrompt }} = require({json.dumps(str(client))});
+            class EventTarget {{}}
+            class HTMLElement extends EventTarget {{}}
+            class MouseEvent {{}}
+            class InputEvent {{}}
+            class Node extends HTMLElement {{
+              constructor(value) {{
+                super();
+                this.value = value;
+                this.innerText = value;
+                this.textContent = value;
+                this.ownerDocument = global.document;
+              }}
+              focus() {{}}
+              dispatchEvent() {{}}
+            }}
+            const composer = new Node('how many records');
+            global.EventTarget = EventTarget;
+            global.HTMLElement = HTMLElement;
+            global.MouseEvent = MouseEvent;
+            global.InputEvent = InputEvent;
+            global.window = global;
+            global.document = {{
+              querySelector: () => composer,
+              createRange: () => ({{
+                selectNodeContents() {{}},
+                collapse() {{}},
+              }}),
+              getSelection: () => ({{
+                removeAllRanges() {{}},
+                addRange() {{}},
+              }}),
+            }};
+            composer.ownerDocument = global.document;
+            let controlDown = false;
+            let selectedAll = false;
+            const cdp = async (expression) => {{
+              const value = eval(expression);
+              return {{ result: {{ value }} }};
+            }};
+            const inputCdp = async (method, params) => {{
+              if (method === 'Input.dispatchKeyEvent') {{
+                if (params.key === 'Control') controlDown = params.type === 'keyDown';
+                if (params.key === 'a' && controlDown && params.type === 'keyDown') selectedAll = true;
+                if (params.key === 'Backspace' && params.type === 'keyDown' && selectedAll) {{
+                  composer.value = '';
+                  composer.innerText = '';
+                  composer.textContent = '';
+                  selectedAll = false;
+                }}
+              }}
+              if (method === 'Input.insertText') {{
+                composer.value += params.text;
+                composer.innerText = composer.value;
+                composer.textContent = composer.value;
+              }}
+              return {{}};
+            }};
+            const prompt = 'new batch 2 request\\n<<<WEBGPT_DONE:test>>>';
+            typePrompt(cdp, inputCdp, prompt).then(() => {{
+              assert.equal(composer.value, prompt);
+              assert.equal(composer.value.includes('how many records'), false);
+            }}).catch((err) => {{
+              console.error(err && err.stack || err);
+              process.exit(1);
+            }});
+            """
+        ),
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["node", str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_webgpt_submit_create_tab_closes_blank_tab_on_navigation_failure(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.new)
+    printf 'Created tab 9001: about:blank\\n'
+    ;;
+  tab.list)
+    printf '9001\\tNew Tab\\tabout:blank\\n'
+    ;;
+  tab.close)
+    printf '%s\\n' "${2:-}" > "$PWD/closed-tab.txt"
+    ;;
+  chatgpt)
+    echo 'chatgpt should not run after failed create-tab navigation' >&2
+    exit 99
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        target_args=["--create-tab", "--no-activate"],
+    )
+
+    assert proc.returncode == 2
+    assert "did not navigate to chatgpt.com; closed it" in proc.stderr
+    assert (tmp_path / "closed-tab.txt").read_text(encoding="utf-8").strip() == "9001"
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "create_tab_navigation_failed"
+    assert meta["requested_tab_id"] == "9001"
 
 
 def test_webgpt_submit_defaults_to_full_900_second_timeout(tmp_path: Path) -> None:

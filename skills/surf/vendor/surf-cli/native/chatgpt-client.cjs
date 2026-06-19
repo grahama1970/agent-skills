@@ -565,6 +565,8 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
 async function typePrompt(cdp, inputCdp, prompt) {
   const selectors = JSON.stringify(SELECTORS.promptTextarea.split(", "));
   const encodedPrompt = JSON.stringify(prompt);
+  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
+  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
   const focused = await evaluate(
     cdp,
     `(() => {
@@ -592,17 +594,65 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (!focused) {
     throw new Error("Failed to focus prompt textarea");
   }
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Control",
+    code: "ControlLeft",
+    windowsVirtualKeyCode: 17,
+    nativeVirtualKeyCode: 17,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Control",
+    code: "ControlLeft",
+    windowsVirtualKeyCode: 17,
+    nativeVirtualKeyCode: 17,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+  await delay(100);
   await inputCdp("Input.insertText", { text: prompt });
   await delay(300);
-  const verified = await evaluate(
+  let verified = await evaluate(
     cdp,
     `(() => {
       const selectors = ${selectors};
+      const promptStart = ${promptStart};
+      const promptEnd = ${promptEnd};
       for (const selector of selectors) {
         const node = document.querySelector(selector);
         if (!node) continue;
         const text = node.innerText || node.value || node.textContent || '';
-        if (text.trim().length > 0) return true;
+        if (text.includes(promptStart) && text.includes(promptEnd)) return true;
       }
       return false;
     })()`
@@ -611,18 +661,41 @@ async function typePrompt(cdp, inputCdp, prompt) {
     await evaluate(
       cdp,
       `(() => {
-        const editor = document.querySelector('#prompt-textarea');
-        const fallback = document.querySelector('textarea[name="prompt-textarea"]');
-        if (fallback) {
-          fallback.value = ${encodedPrompt};
-          fallback.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+        const selectors = ${selectors};
+        for (const selector of selectors) {
+          const node = document.querySelector(selector);
+          if (!node) continue;
+          if ('value' in node) {
+            node.value = ${encodedPrompt};
+          } else {
+            node.textContent = ${encodedPrompt};
+          }
+          node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          return true;
         }
-        if (editor) {
-          editor.textContent = ${encodedPrompt};
-          editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-        }
+        return false;
       })()`
     );
+    await delay(300);
+    verified = await evaluate(
+      cdp,
+      `(() => {
+        const selectors = ${selectors};
+        const promptStart = ${promptStart};
+        const promptEnd = ${promptEnd};
+        for (const selector of selectors) {
+          const node = document.querySelector(selector);
+          if (!node) continue;
+          const text = node.innerText || node.value || node.textContent || '';
+          if (text.includes(promptStart) && text.includes(promptEnd)) return true;
+        }
+        return false;
+      })()`
+    );
+  }
+  if (!verified) {
+    throw new Error("Failed to replace ChatGPT prompt composer with submitted WebGPT request");
   }
 }
 
@@ -985,4 +1058,5 @@ module.exports = {
   hasRequiredCookies,
   CHATGPT_URL,
   assistantSnapshotExpression,
+  typePrompt,
 };

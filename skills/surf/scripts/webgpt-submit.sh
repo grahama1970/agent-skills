@@ -357,13 +357,39 @@ if [[ "$create_tab" -eq 1 ]]; then
   # The extension can return the created tab id before tab.list reflects the
   # new ChatGPT tab. Wait briefly so the fail-closed identity gate checks the
   # current browser state instead of a stale snapshot.
-  for _ in 1 2 3 4 5; do
+  created_tab_verified=0
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
     tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
     if printf '%s\n' "$tab_list_text" | awk -F '\t' -v tid="$requested_tab_id" '$1 == tid && $3 ~ /chatgpt[.]com/ { found = 1 } END { exit found ? 0 : 1 }'; then
+      created_tab_verified=1
       break
     fi
     sleep 0.5
   done
+  if [[ "$created_tab_verified" -ne 1 ]]; then
+    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    "$RUN_SH" tab.close "$requested_tab_id" >/dev/null 2>&1 || true
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$failed_at" <<'PY'
+import json, pathlib, sys
+meta, inp, submitted, out, raw, err, sentinel, requested_tab_id, failed_at = sys.argv[1:]
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "create_tab_navigation_failed",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id,
+    "requested_tab_source": "create-tab",
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+    echo "webgpt.submit --create-tab failed: created tab $requested_tab_id did not navigate to chatgpt.com; closed it." >&2
+    exit 2
+  fi
 fi
 
 effective_timeout_s="$timeout_s"
