@@ -1085,9 +1085,22 @@ async function query(options) {
       log(`Selected model: ${selectedLabel}`);
     }
     let selectedReasoning = null;
+    let reasoningSelectionStatus = reasoning ? "not_requested" : null;
+    let reasoningSelectionError = null;
     if (reasoning) {
-      selectedReasoning = await selectReasoning(cdp, reasoning);
-      log(`Selected reasoning: ${selectedReasoning}`);
+      reasoningSelectionStatus = "requested";
+      try {
+        selectedReasoning = await selectReasoning(cdp, reasoning);
+        reasoningSelectionStatus = "selected";
+        log(`Selected reasoning: ${selectedReasoning}`);
+      } catch (err) {
+        reasoningSelectionError = err?.message || String(err);
+        if (!reasoningSelectionError.includes("Reasoning selector button not found")) {
+          throw err;
+        }
+        reasoningSelectionStatus = "selector_unavailable";
+        log(`Reasoning selector unavailable for ${reasoning}; continuing with current ChatGPT setting`);
+      }
     }
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
@@ -1128,6 +1141,10 @@ async function query(options) {
       response: response.text,
       model: model || "current",
       reasoning: selectedReasoning || reasoning || null,
+      requestedReasoning: reasoning || null,
+      selectedReasoning: selectedReasoning || null,
+      reasoningSelectionStatus,
+      reasoningSelectionError,
       tabId,
       controlledTabId: tabId,
       conversationUrl,

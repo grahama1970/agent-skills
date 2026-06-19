@@ -457,6 +457,9 @@ def test_webgpt_submit_defaults_to_full_900_second_timeout(tmp_path: Path) -> No
     fi
     printf 'ok\\n%s\\n' "$sentinel"
     echo 'Tab ID: 837352334' >&2
+    echo 'RequestedReasoning: Pro' >&2
+    echo 'ReasoningSelectionStatus: selector_unavailable' >&2
+    echo 'ReasoningSelectionError: Reasoning selector button not found for: Pro' >&2
     echo 'ResponseSource: assistant-dom' >&2
     exit 0
     ;;
@@ -474,6 +477,9 @@ esac
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "completed"
     assert meta["requested_reasoning"] == "Pro"
+    assert meta["observed_requested_reasoning"] == "Pro"
+    assert meta["reasoning_selection_status"] == "selector_unavailable"
+    assert "Reasoning selector button not found" in meta["reasoning_selection_error"]
 
 
 def test_webgpt_submit_passes_large_prompt_by_file_not_argv(tmp_path: Path) -> None:

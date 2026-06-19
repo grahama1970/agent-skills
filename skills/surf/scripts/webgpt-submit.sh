@@ -1039,6 +1039,10 @@ background_poll_count = None
 notification_assisted_wait_requested = False
 notification_assisted_wait_completion_proof = False
 notification_assisted_wait_reason = None
+requested_reasoning_observed = None
+selected_reasoning = None
+reasoning_selection_status = None
+reasoning_selection_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -1072,6 +1076,14 @@ for line in reversed(stderr_text.splitlines()):
         notification_assisted_wait_completion_proof = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("NotificationAssistedWaitReason:") and notification_assisted_wait_reason is None:
         notification_assisted_wait_reason = line.split(":", 1)[1].strip()
+    elif line.startswith("RequestedReasoning:") and requested_reasoning_observed is None:
+        requested_reasoning_observed = line.split(":", 1)[1].strip()
+    elif line.startswith("SelectedReasoning:") and selected_reasoning is None:
+        selected_reasoning = line.split(":", 1)[1].strip()
+    elif line.startswith("ReasoningSelectionStatus:") and reasoning_selection_status is None:
+        reasoning_selection_status = line.split(":", 1)[1].strip()
+    elif line.startswith("ReasoningSelectionError:") and reasoning_selection_error is None:
+        reasoning_selection_error = line.split(":", 1)[1].strip()
     if (
         tab_id is not None
         and activated is not None
@@ -1158,6 +1170,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "observed_requested_reasoning": requested_reasoning_observed,
+    "selected_reasoning": selected_reasoning,
+    "reasoning_selection_status": reasoning_selection_status,
+    "reasoning_selection_error": reasoning_selection_error,
     "tab_identity_preflight": identity,
     "roundtrip_preflight_required": roundtrip_required_s == "1",
     "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),

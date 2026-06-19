@@ -2582,6 +2582,18 @@ async function handleResponse(response) {
     if (data.conversationUrl) {
       console.error(`ConversationUrl: ${data.conversationUrl}`);
     }
+    if (data.requestedReasoning) {
+      console.error(`RequestedReasoning: ${data.requestedReasoning}`);
+    }
+    if (data.selectedReasoning) {
+      console.error(`SelectedReasoning: ${data.selectedReasoning}`);
+    }
+    if (data.reasoningSelectionStatus) {
+      console.error(`ReasoningSelectionStatus: ${data.reasoningSelectionStatus}`);
+    }
+    if (data.reasoningSelectionError) {
+      console.error(`ReasoningSelectionError: ${data.reasoningSelectionError}`);
+    }
     if (data.responseSource) {
       console.error(`ResponseSource: ${data.responseSource}`);
     }
