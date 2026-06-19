@@ -1,5 +1,5 @@
 {
-  "content_hash": "7a8b83d12e363806e53e19c86f5bfe0e5da7dcb4cde30cab099348a1651d8dee",
+  "content_hash": "0f933a1749708a468dfac401f3d899d472098646248d5b8ff1c6096966502805",
   "counts": {
     "agents": 4,
     "entries": 316,
@@ -440,7 +440,7 @@
         "mcp__surf__*",
         "mcp__browser_oracle__*"
       ],
-      "content_hash": "233dfa03ba0d9d21",
+      "content_hash": "d8e6d15c56bae346",
       "id": "ask",
       "path": "skills/ask",
       "related_agents": [
@@ -6742,7 +6742,7 @@
         "Bash",
         "Read"
       ],
-      "content_hash": "7c58c5f7545e97df",
+      "content_hash": "ef3e8935a045564b",
       "id": "surf",
       "path": "skills/surf",
       "related_agents": [],
