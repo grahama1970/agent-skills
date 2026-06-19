@@ -215,6 +215,101 @@ receipt_output="${receipt_output:-${output}.receipt.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
 mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$receipt_output")" "$(dirname "$submitted_output")"
 
+enrich_agent_diagnosis() {
+  [[ -f "$meta_output" ]] || return 0
+  python3 - "$meta_output" "$receipt_output" <<'PY'
+import json
+import pathlib
+import sys
+
+meta_path = pathlib.Path(sys.argv[1])
+receipt_path = pathlib.Path(sys.argv[2])
+try:
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+except Exception:
+    raise SystemExit(0)
+
+receipt = {}
+if receipt_path.exists():
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except Exception:
+        receipt = {}
+
+status = meta.get("status")
+failure = meta.get("failure")
+raw_has = bool(meta.get("raw_contains_sentinel"))
+clean_has = bool(meta.get("clean_contains_sentinel"))
+submitted = bool(receipt.get("submitted_to_chatgpt"))
+conversation_url = str(meta.get("conversation_url") or "")
+requested_url = str(meta.get("requested_url") or "")
+identity = meta.get("tab_identity_preflight") if isinstance(meta.get("tab_identity_preflight"), dict) else {}
+expected_url = str(identity.get("expected_url") or "")
+identity_tab = identity.get("tab") if isinstance(identity.get("tab"), dict) else {}
+identity_tab_url = str(identity_tab.get("url") or "")
+target_identity_url = requested_url or expected_url or identity_tab_url
+project_shell_target = "/project" in target_identity_url and "chatgpt.com/" in target_identity_url
+conversation_url_proven = "chatgpt.com/" in conversation_url and "/c/" in conversation_url
+
+if status in {"completed", "recovered_focus_changed"} and project_shell_target and not conversation_url_proven:
+    status = "failed"
+    failure = "project_conversation_url_unproven"
+    meta["status"] = status
+    meta["failure"] = failure
+
+if status in {"completed", "recovered_focus_changed"} and raw_has and not clean_has:
+    proof_status = "response_proven"
+    diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab."
+    action = "Use raw_output, output, and meta_output as Surf transport evidence; reconcile reviewer content against deterministic local proof."
+elif failure == "project_conversation_url_unproven":
+    proof_status = "project_session_unproven"
+    diagnosis = "Surf saw sentinel output, but the target was a ChatGPT project shell and no distinct conversation URL was proven."
+    action = "Do not treat this as an independent project chat. Create or bind a real project conversation URL containing /c/<id>, then rerun with --url or --expect-url for that conversation."
+elif failure == "attach_file_preflight_failed":
+    proof_status = "not_submitted"
+    diagnosis = "Attachment preflight failed before Surf submitted anything to ChatGPT."
+    action = "Fix the attachment bundle size, file count, or path, then rerun webgpt.submit."
+elif failure == "create_tab_navigation_failed":
+    proof_status = "not_submitted"
+    diagnosis = "Surf created or selected a tab but could not navigate it to ChatGPT before submission."
+    action = "Inspect stderr_log and tab state, then create or bind a known-good ChatGPT reviewer tab."
+elif failure == "tab_identity_preflight_failed":
+    proof_status = "not_submitted"
+    diagnosis = "The requested tab did not match the required ChatGPT identity before submission."
+    action = "Run tab.list and webgpt.preflight with --url, --expect-url, or --expect-title; do not submit until the target tab identity matches."
+elif failure == "roundtrip_preflight_failed":
+    proof_status = "not_submitted"
+    diagnosis = "The small sentinel roundtrip failed, so Surf blocked the main prompt before submission."
+    action = "Inspect roundtrip_preflight_output_dir, repair tab visibility/state, or use a foreground/fresh reviewer tab before retrying."
+elif failure == "submit_failed":
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response."
+    action = "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately."
+elif failure == "missing_sentinel" or status == "missing_sentinel":
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "Surf captured response text, but it did not contain the current completion sentinel in assistant output."
+    action = "Do not use output as proof. If ChatGPT visibly completed, run webgpt.extract with the exact sentinel; otherwise resubmit to a clean verified tab."
+elif failure == "controlled_tab_id_mismatch":
+    proof_status = "wrong_tab"
+    diagnosis = "The response came from a different tab than the requested controlled tab."
+    action = "Discard this result, rerun preflight with --url or --expect-url, and submit only after the controlled tab id matches."
+elif failure in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
+    proof_status = "degraded_focus"
+    diagnosis = "The controlled tab returned sentinel output, but browser focus changed during no-activate mode."
+    action = "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof."
+else:
+    proof_status = "unknown_failure" if status not in {"completed", "recovered_focus_changed"} else "response_unproven"
+    diagnosis = "Surf did not map this result to a known agent-facing diagnosis."
+    action = "Inspect status, failure, stderr_log, receipt_output, raw_output, and meta_output before retrying."
+
+meta["proof_status"] = proof_status
+meta["agent_diagnosis"] = diagnosis
+meta["agent_action"] = action
+meta["submitted_to_chatgpt"] = submitted
+meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
 attach_file_abs=""
 if [[ -n "$attach_file" ]]; then
   if [[ ! -f "$attach_file" ]]; then
@@ -284,6 +379,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": failed_at,
 }, indent=2) + "\n")
 PY
+      enrich_agent_diagnosis
       python3 -c 'import json,sys; print(json.loads(sys.argv[1]).get("error") or "zip attachment preflight failed")' "$zip_preflight_json" >&2
       exit 2
     fi
@@ -435,6 +531,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": failed_at,
 }, indent=2) + "\n")
 PY
+    enrich_agent_diagnosis
     echo "webgpt.submit --create-tab failed: created tab $requested_tab_id did not navigate to chatgpt.com; closed it." >&2
     exit 2
   fi
@@ -445,7 +542,7 @@ if [[ "$advisory_after_s" =~ ^[0-9]+$ && "$advisory_after_s" -gt 0 && "$advisory
   effective_timeout_s="$advisory_after_s"
 fi
 
-args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab)
+args=(chatgpt --query-file "$submitted_output" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
@@ -536,6 +633,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": failed_at,
 }, indent=2) + "\n")
 PY
+    enrich_agent_diagnosis
     echo "webgpt.submit tab identity preflight failed for tab $requested_tab_id." >&2
     python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('error') or 'tab_identity_failed')" "$identity_preflight_json" >&2
     echo "Use --url <conversation-url>, --expect-url, --expect-title, --create-tab, or --allow-unverified-tab-id." >&2
@@ -624,6 +722,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": failed_at,
 }, indent=2) + "\n")
 PY
+    enrich_agent_diagnosis
     echo "webgpt.submit roundtrip preflight failed before main prompt." >&2
     python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(json.dumps({"status": d.get("status"), "failures": d.get("failures"), "diagnosis": d.get("diagnosis"), "output_dir": d.get("output_dir")}, indent=2))' "$roundtrip_preflight_json" >&2 || true
     exit 6
@@ -746,6 +845,7 @@ out_text = out_path.read_text() if out_path.exists() else ""
 response_timed_out = None
 timeout_error = None
 response_source = None
+conversation_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
@@ -758,6 +858,8 @@ for line in reversed(stderr_text.splitlines()):
         timeout_error = line.split(":", 1)[1].strip()
     elif line.startswith("ResponseSource:") and response_source is None:
         response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationUrl:") and conversation_url is None:
+        conversation_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -788,6 +890,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
+    "conversation_url": conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -804,6 +907,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": finished,
 }, indent=2) + "\n")
 PY
+  enrich_agent_diagnosis
   cat "$stderr_log" >&2
   exit "$status"
 fi
@@ -828,6 +932,7 @@ stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else "
 response_timed_out = None
 timeout_error = None
 response_source = None
+conversation_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
@@ -840,6 +945,8 @@ for line in reversed(stderr_text.splitlines()):
         timeout_error = line.split(":", 1)[1].strip()
     elif line.startswith("ResponseSource:") and response_source is None:
         response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationUrl:") and conversation_url is None:
+        conversation_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -869,6 +976,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
+    "conversation_url": conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -885,6 +993,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": finished,
 }, indent=2) + "\n")
 PY
+  enrich_agent_diagnosis
   echo "ChatGPT response did not contain sentinel: $sentinel" >&2
   exit 4
 fi
@@ -921,6 +1030,7 @@ tab_id = None
 activated = None
 tab_was_created = None
 response_source = None
+conversation_url = None
 page_text_contains_sentinel = None
 document_hidden_at_completion = None
 visibility_state_at_completion = None
@@ -938,6 +1048,8 @@ for line in reversed(stderr_text.splitlines()):
         tab_was_created = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ResponseSource:") and response_source is None:
         response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationUrl:") and conversation_url is None:
+        conversation_url = line.split(":", 1)[1].strip()
     elif line.startswith("PageTextContainsSentinel:") and page_text_contains_sentinel is None:
         page_text_contains_sentinel = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("DocumentHiddenAtCompletion:") and document_hidden_at_completion is None:
@@ -1074,6 +1186,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "recovered_output": bool(status == "recovered_focus_changed"),
     "focus_mid_log": focus_mid_log,
     "response_source": response_source,
+    "conversation_url": conversation_url,
     "page_text_contains_sentinel": page_text_contains_sentinel,
     "document_hidden_at_completion": document_hidden_at_completion,
     "visibility_state_at_completion": visibility_state_at_completion,
@@ -1086,6 +1199,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": finished,
 }, indent=2) + "\n")
 PY
+
+enrich_agent_diagnosis
 
 if [[ "$no_remember" -eq 0 ]]; then
   python3 - "$meta_output" "$tab_state_file" <<'PY'

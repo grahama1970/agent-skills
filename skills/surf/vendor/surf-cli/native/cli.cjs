@@ -101,6 +101,7 @@ const TOOLS = {
           "with-page": "Include current page context",
           model: "Model: gpt-4o, o1, etc.",
           reasoning: "Reasoning dropdown label: Pro, Heavy Reasoning, etc.",
+          "query-file": "Read prompt text from file instead of argv",
           file: "Attach file",
           timeout: "Timeout in seconds (default: 2700 = 45min)",
           sentinel: "Wait until the final assistant message contains this exact marker",
@@ -1928,6 +1929,16 @@ if (tool === "js" && toolArgs.file) {
   }
 }
 
+if (tool === "chatgpt" && toolArgs["query-file"]) {
+  try {
+    toolArgs.query = fs.readFileSync(String(toolArgs["query-file"]), "utf8");
+    delete toolArgs["query-file"];
+  } catch (e) {
+    console.error(`Error: Failed to read query file: ${e.message}`);
+    process.exit(1);
+  }
+}
+
 // Handle select command: capture multiple values after selector
 if (tool === "select" && positional.length > 2) {
   const values = positional.slice(2);  // All args after "select <selector>"
@@ -2567,6 +2578,9 @@ async function handleResponse(response) {
     }
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
+    }
+    if (data.conversationUrl) {
+      console.error(`ConversationUrl: ${data.conversationUrl}`);
     }
     if (data.responseSource) {
       console.error(`ResponseSource: ${data.responseSource}`);

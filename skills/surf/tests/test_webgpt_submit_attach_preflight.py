@@ -22,12 +22,13 @@ def run_submit(
     extra_env: dict[str, str] | None = None,
     extra_args: list[str] | None = None,
     target_args: list[str] | None = None,
+    request_text: str = "review the attached bundle\n",
 ) -> subprocess.CompletedProcess[str]:
     request = tmp_path / "request.md"
     output = tmp_path / "response.md"
     meta = tmp_path / "response.meta.json"
     fake_run = tmp_path / "surf-run.sh"
-    request.write_text("review the attached bundle\n", encoding="utf-8")
+    request.write_text(request_text, encoding="utf-8")
     fake_run.write_text(
         fake_run_body
         or "#!/usr/bin/env bash\necho unexpected surf invocation >&2\nexit 99\n",
@@ -475,6 +476,69 @@ esac
     assert meta["requested_reasoning"] == "Pro"
 
 
+def test_webgpt_submit_passes_large_prompt_by_file_not_argv(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    large_marker = "LARGE_PROMPT_SHOULD_NOT_BE_ARGV"
+    large_prompt = (large_marker + "\n") * 9000
+    assert len(large_prompt.encode("utf-8")) > 158_000
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + f"""  chatgpt)
+    query_file=""
+    sentinel=""
+    for arg in "$@"; do
+      if [[ "$arg" == *"{large_marker}"* ]]; then
+        echo "large prompt leaked into argv" >&2
+        exit 88
+      fi
+    done
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --query-file)
+          query_file="${{2:-}}"
+          shift 2
+          ;;
+        --sentinel)
+          sentinel="${{2:-}}"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    if [[ -z "$query_file" || ! -s "$query_file" ]]; then
+      echo "missing --query-file" >&2
+      exit 89
+    fi
+    if ! grep -Fq "{large_marker}" "$query_file"; then
+      echo "query file did not contain large prompt" >&2
+      exit 90
+    fi
+    printf 'ok\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, request_text=large_prompt)
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["raw_contains_sentinel"] is True
+    assert meta["proof_status"] == "response_proven"
+    assert "sentinel-bearing assistant response" in meta["agent_diagnosis"]
+
+
 def test_webgpt_submit_allows_reasoning_env_override(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -616,6 +680,93 @@ esac
     assert meta["notification_assisted_wait_reason"] == "advisory_wake_only_sentinel_required"
 
 
+def test_webgpt_submit_project_shell_requires_proven_conversation_url(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    project_url = "https://chatgpt.com/g/g-p-demo-personas/project"
+    fake_run = (
+        FAKE_RUN_PROJECT_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'project shell response is not enough\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        target_args=["--tab-id", "837352334", "--expect-url", project_url, "--no-activate"],
+    )
+
+    assert proc.returncode == 5
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "project_conversation_url_unproven"
+    assert meta["proof_status"] == "project_session_unproven"
+    assert "no distinct conversation URL was proven" in meta["agent_diagnosis"]
+
+
+def test_webgpt_submit_project_shell_accepts_proven_conversation_url(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    project_url = "https://chatgpt.com/g/g-p-demo-personas/project"
+    conversation_url = "https://chatgpt.com/g/g-p-demo-personas/c/6a35a170-78ac-83ea-9b8f-6e616953df12"
+    fake_run = (
+        FAKE_RUN_PROJECT_PREAMBLE
+        + f"""  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${{2:-}}"
+        break
+      fi
+      shift
+    done
+    printf 'project conversation response\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ConversationUrl: {conversation_url}' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        target_args=["--tab-id", "837352334", "--expect-url", project_url, "--no-activate"],
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["proof_status"] == "response_proven"
+    assert meta["conversation_url"] == conversation_url
+
+
 FAKE_RUN_PREAMBLE = """#!/usr/bin/env bash
 set -euo pipefail
 case "${1:-}" in
@@ -640,6 +791,18 @@ case "${1:-}" in
 """
 
 
+FAKE_RUN_PROJECT_PREAMBLE = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tChatGPT - Personas\\thttps://chatgpt.com/g/g-p-demo-personas/project\\n'
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":456,"activeTabId":837352334}\\n'
+    ;;
+"""
+
+
 def test_webgpt_submit_rejects_zip_attachment_with_more_than_five_files(tmp_path: Path) -> None:
     archive = tmp_path / "too-many.zip"
     make_zip(archive, 6)
@@ -653,6 +816,8 @@ def test_webgpt_submit_rejects_zip_attachment_with_more_than_five_files(tmp_path
     assert meta["failure"] == "attach_file_preflight_failed"
     assert meta["attach_file_preflight"]["file_count"] == 6
     assert meta["attach_file_preflight"]["max_files"] == 5
+    assert meta["proof_status"] == "not_submitted"
+    assert "before Surf submitted anything" in meta["agent_diagnosis"]
 
 
 def test_webgpt_submit_accepts_zip_attachment_with_five_files_until_browser_preflight(tmp_path: Path) -> None:
@@ -666,6 +831,8 @@ def test_webgpt_submit_accepts_zip_attachment_with_five_files_until_browser_pref
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "failed"
     assert meta["failure"] == "tab_identity_preflight_failed"
+    assert meta["proof_status"] == "not_submitted"
+    assert "--expect-url" in meta["agent_action"]
 
 
 def test_webgpt_submit_browser_failure_writes_failed_meta(tmp_path: Path) -> None:
@@ -744,6 +911,21 @@ def test_webgpt_submit_roundtrip_preflight_blocks_main_prompt(tmp_path: Path) ->
         FAKE_RUN_ACTIVE_PREAMBLE
         + """  chatgpt)
     prompt="${2:-}"
+    query_file=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --query-file)
+          query_file="${2:-}"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    if [[ -n "$query_file" && -f "$query_file" ]]; then
+      prompt="$(cat "$query_file")"
+    fi
     if printf '%s' "$prompt" | grep -q 'WEBGPT_PREFLIGHT_DONE'; then
       echo 'hidden preflight stall'
       echo 'Tab ID: 837352334' >&2
@@ -774,6 +956,8 @@ esac
     assert meta["roundtrip_preflight_required"] is True
     assert "hidden_tab_stall" in meta["roundtrip_preflight"]["failures"]
     assert meta["roundtrip_preflight"]["diagnosis"]["hidden_tab_stall"] is True
+    assert meta["proof_status"] == "not_submitted"
+    assert "roundtrip_preflight_output_dir" in meta["agent_action"]
 
 
 def test_webgpt_submit_roundtrip_preflight_success_is_recorded(tmp_path: Path) -> None:
@@ -860,6 +1044,8 @@ esac
     assert meta["raw_chars"] > 0
     assert meta["clean_chars"] > 0
     assert meta["raw_response_advisory"] is True
+    assert meta["proof_status"] == "delivery_not_proven"
+    assert "prepared_prompt" in meta["agent_action"]
 
 
 def test_webgpt_submit_missing_sentinel_writes_advisory_raw_meta(tmp_path: Path) -> None:
@@ -895,6 +1081,8 @@ esac
     assert meta["response_source"] == "assistant-dom"
     assert meta["response_timed_out"] is True
     assert meta["raw_response_advisory"] is True
+    assert meta["proof_status"] == "delivery_not_proven"
+    assert "did not contain the current completion sentinel" in meta["agent_diagnosis"]
 
 
 def test_webgpt_submit_failure_without_raw_extracts_available_tab_text(tmp_path: Path) -> None:

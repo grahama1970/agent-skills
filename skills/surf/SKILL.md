@@ -368,6 +368,17 @@ Behavior:
 - Raw output keeps the marker. Clean output strips the marker. Metadata records
   the sentinel, output paths, timeout, stability policy, and whether the marker
   appeared only in the raw output.
+- `response.meta.json` includes agent-facing proof fields:
+  `proof_status`, `agent_diagnosis`, `agent_action`, and
+  `submitted_to_chatgpt`. Project agents must key their next step off
+  `proof_status`, not off vague stderr text or file existence.
+- `proof_status: response_proven` means the controlled tab returned the current
+  sentinel-bearing assistant response. `not_submitted` means Surf failed before
+  the main prompt was submitted. `delivery_not_proven` means prompt delivery was
+  not proven. `submitted_no_response_proof` means ChatGPT accepted the prompt
+  but Surf did not capture sentinel-bearing assistant output. `wrong_tab`,
+  `degraded_focus`, and `project_session_unproven` are hard stop states unless
+  the caller is explicitly doing recovery.
 - If only `.submitted.md` exists, treat the round as
   `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`. If the receipt still
   says `prepared_prompt`, ChatGPT acceptance has not been proven.
@@ -398,6 +409,12 @@ Behavior:
   pass a `--tab-id` through lower-level `surf chatgpt` commands when debugging.
 - `--create-tab` opens `https://chatgpt.com/` via `tab.new` (inactive), then
   submits on that id — use for isolated reviewer rounds.
+- Opening a ChatGPT **project home** URL such as
+  `https://chatgpt.com/g/<project>/project` is not proof that a new independent
+  project conversation exists. If a project-shell target completes without a
+  proven `conversation_url` containing `/c/<id>`, Surf marks the round
+  `project_session_unproven` and exits nonzero. Bind or target the real
+  conversation URL for concurrent project-agent work.
 - `--no-remember` skips reading and writing the controlled-tab state file.
 - Explicit `--tab-id` or `--url` automatically implies `--no-remember` (do not
   overwrite `/tmp/surf-webgpt-controlled-tab-id` with a reviewer tab).
