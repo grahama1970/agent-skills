@@ -1,7 +1,7 @@
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
@@ -304,6 +304,44 @@ async function waitForPromptReady(cdp, timeoutMs = 30000) {
     await delay(200);
   }
   return false;
+}
+
+async function assertReadyForNewPrompt(cdp) {
+  const state = await evaluate(
+    cdp,
+    `(() => {
+      const STOP_SELECTOR = '${SELECTORS.stopButton}';
+      const SEND_SELECTOR = '${SELECTORS.sendButton}';
+      const PROMPT_SELECTOR = '${SELECTORS.promptTextarea}';
+      const stop = document.querySelector(STOP_SELECTOR);
+      const send = document.querySelector(SEND_SELECTOR);
+      const prompt = document.querySelector(PROMPT_SELECTOR);
+      const disabled = send
+        ? (send.hasAttribute('disabled') ||
+           send.getAttribute('aria-disabled') === 'true' ||
+           send.getAttribute('data-disabled') === 'true')
+        : null;
+      return {
+        stopVisible: Boolean(stop),
+        sendPresent: Boolean(send),
+        sendDisabled: disabled,
+        promptPresent: Boolean(prompt),
+        title: document.title || '',
+        url: location.href || '',
+      };
+    })()`
+  );
+  if (state?.stopVisible) {
+    const err = new Error("ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab");
+    err.chatgptPageState = state;
+    throw err;
+  }
+  if (!state?.promptPresent) {
+    const err = new Error("ChatGPT prompt composer not present before submit");
+    err.chatgptPageState = state || null;
+    throw err;
+  }
+  return state;
 }
 
 async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
@@ -648,12 +686,26 @@ async function typePrompt(cdp, inputCdp, prompt) {
       const selectors = ${selectors};
       const promptStart = ${promptStart};
       const promptEnd = ${promptEnd};
+      const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
+      const normalizedStart = normalize(promptStart);
+      const normalizedEnd = normalize(promptEnd);
+      const hasPrompt = (text) => {
+        const normalized = normalize(text);
+        return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
+      };
       for (const selector of selectors) {
         const node = document.querySelector(selector);
         if (!node) continue;
         const text = node.innerText || node.value || node.textContent || '';
-        if (text.includes(promptStart) && text.includes(promptEnd)) return true;
+        if (hasPrompt(text)) return true;
       }
+      const active = document.activeElement;
+      const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
+      if (hasPrompt(activeText)) return true;
+      const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
+      const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
+      if (hasPrompt(activeFormText)) return true;
+      if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
       return false;
     })()`
   );
@@ -684,12 +736,26 @@ async function typePrompt(cdp, inputCdp, prompt) {
         const selectors = ${selectors};
         const promptStart = ${promptStart};
         const promptEnd = ${promptEnd};
+        const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
+        const normalizedStart = normalize(promptStart);
+        const normalizedEnd = normalize(promptEnd);
+        const hasPrompt = (text) => {
+          const normalized = normalize(text);
+          return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
+        };
         for (const selector of selectors) {
           const node = document.querySelector(selector);
           if (!node) continue;
           const text = node.innerText || node.value || node.textContent || '';
-          if (text.includes(promptStart) && text.includes(promptEnd)) return true;
+          if (hasPrompt(text)) return true;
         }
+        const active = document.activeElement;
+        const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
+        if (hasPrompt(activeText)) return true;
+        const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
+        const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
+        if (hasPrompt(activeFormText)) return true;
+        if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
         return false;
       })()`
     );
@@ -775,6 +841,39 @@ async function clickSend(cdp, inputCdp) {
     nativeVirtualKeyCode: 13,
   });
   return true;
+}
+
+async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
+  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
+  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
+  const deadline = Date.now() + timeoutMs;
+  let lastState = null;
+  while (Date.now() < deadline) {
+    lastState = await evaluate(
+      cdp,
+      `(() => {
+        const STOP_SELECTOR = '${SELECTORS.stopButton}';
+        const PROMPT_SELECTOR = '${SELECTORS.promptTextarea}';
+        const promptStart = ${promptStart};
+        const promptEnd = ${promptEnd};
+        const prompt = document.querySelector(PROMPT_SELECTOR);
+        const text = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '') : '';
+        return {
+          stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
+          promptPresent: Boolean(prompt),
+          composerStillContainsPrompt: Boolean(text && text.includes(promptStart) && text.includes(promptEnd)),
+          composerChars: text.length,
+        };
+      })()`
+    );
+    if (lastState?.stopVisible || lastState?.composerStillContainsPrompt === false) {
+      return { accepted: true, ...lastState };
+    }
+    await delay(200);
+  }
+  const err = new Error("ChatGPT did not accept submitted prompt: prompt remained in the composer after send");
+  err.chatgptSubmitState = lastState || null;
+  throw err;
 }
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
@@ -979,6 +1078,7 @@ async function query(options) {
     if (!promptReady) {
       throw new Error("Prompt textarea not ready");
     }
+    await assertReadyForNewPrompt(cdp);
     log("Prompt ready");
     if (model) {
       const selectedLabel = await selectModel(cdp, model);
@@ -998,6 +1098,8 @@ async function query(options) {
     const assistantBaseline = await captureAssistantBaseline(cdp);
     log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
+    const submitState = await waitForSubmitAccepted(cdp, prompt);
+    log(`Prompt accepted: stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     let response;
     let responseTimedOut = false;
@@ -1058,5 +1160,7 @@ module.exports = {
   hasRequiredCookies,
   CHATGPT_URL,
   assistantSnapshotExpression,
+  assertReadyForNewPrompt,
+  waitForSubmitAccepted,
   typePrompt,
 };

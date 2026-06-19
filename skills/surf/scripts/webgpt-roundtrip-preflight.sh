@@ -111,6 +111,9 @@ fi
 if [[ "$no_activate" -eq 1 ]]; then
   preflight_cmd+=(--no-activate)
 fi
+if [[ "$create_tab" -eq 1 ]]; then
+  preflight_cmd+=(--create-tab)
+fi
 
 preflight_status=0
 "${preflight_cmd[@]}" > "$preflight_json" 2> "$output_dir/preflight.stderr.log" || preflight_status=$?

@@ -35,6 +35,12 @@ Options:
                             SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT or 60.
   --roundtrip-output-dir DIR
                             Artifact directory for the round-trip preflight.
+  --notification-assisted-wait
+                            Experimental advisory mode: allow ChatGPT/browser
+                            response notifications to wake human attention, but
+                            never treat notifications as completion proof.
+                            Completion still requires controlled-tab sentinel
+                            or image-artifact proof.
   --model MODEL             Optional ChatGPT model selector label.
   --reasoning LABEL         Optional ChatGPT reasoning dropdown label
                             (for example: "Pro" or "Heavy Reasoning").
@@ -93,6 +99,7 @@ attach_file=""
 roundtrip_preflight=0
 roundtrip_timeout_s="${SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT:-60}"
 roundtrip_output_dir=""
+notification_assisted_wait="${SURF_WEBGPT_NOTIFICATION_ASSISTED_WAIT:-0}"
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
 
 while [[ $# -gt 0 ]]; do
@@ -109,6 +116,7 @@ while [[ $# -gt 0 ]]; do
     --roundtrip-preflight) roundtrip_preflight=1; shift ;;
     --roundtrip-timeout) roundtrip_timeout_s="${2:-}"; shift 2 ;;
     --roundtrip-output-dir) roundtrip_output_dir="${2:-}"; shift 2 ;;
+    --notification-assisted-wait) notification_assisted_wait=1; shift ;;
     --model) model="${2:-}"; shift 2 ;;
     --reasoning) reasoning="${2:-}"; shift 2 ;;
     --project) project="${2:-}"; shift 2 ;;
@@ -156,16 +164,9 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
   bo_from="$(cd "${browser_oracle_from:-.}" 2>/dev/null && pwd || pwd)"
   bo_payload="$(browser_oracle_resolve_json "$bo_from" webgpt "$project" "" 2>/dev/null || true)"
   if [[ -n "$bo_payload" ]]; then
-    bo_status="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("status") or "")' <<<"$bo_payload" 2>/dev/null || true)"
-    bo_reason="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("reason") or "")' <<<"$bo_payload" 2>/dev/null || true)"
     bo_resolved_project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
     bo_resolved_tab="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_payload")"
     bo_resolved_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
-    if [[ -n "$project" && "$bo_status" != "ok" ]]; then
-      echo "browser-oracle project '$project' is not ready: ${bo_reason:-$bo_status}" >&2
-      echo "Use browser-oracle doctor --project '$project' --json, re-bind the project, or pass --tab-id/--url explicitly." >&2
-      exit 2
-    fi
     bo_reconcile_status=""
     bo_reconcile_payload=""
     if [[ -n "$bo_resolved_project" && -n "$bo_resolved_tab" ]]; then
@@ -180,24 +181,14 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
           bo_reconcile_status="ready"
         fi
       fi
-      if [[ "$bo_reconcile_status" != "ready" ]]; then
-        echo "browser-oracle project '$bo_resolved_project' is not ready: ${bo_reconcile_status:-reconcile_failed}" >&2
-        echo "Refusing to fall back to remembered ChatGPT tab state for a project-bound submit." >&2
-        echo "Use browser-oracle reconcile --project '$bo_resolved_project' --json, close duplicate/stale tabs, re-bind, or pass --tab-id/--url explicitly." >&2
-        exit 2
-      fi
-    elif [[ -n "$bo_resolved_project" && -z "$bo_resolved_tab" ]]; then
-      echo "browser-oracle project '$bo_resolved_project' has no bound tab id." >&2
-      echo "Bind it with browser-oracle bind '$bo_resolved_project' --tab-id <id> --url <url> --manual, or pass --tab-id/--url explicitly." >&2
-      exit 2
     fi
     if [[ -z "$project" ]]; then
       project="$bo_resolved_project"
     fi
-    if [[ -z "$tab_id" && -n "$bo_resolved_tab" ]]; then
+    if [[ -z "$tab_id" && ( -z "$bo_resolved_tab" || "$bo_reconcile_status" == "ready" ) ]]; then
       tab_id="$bo_resolved_tab"
     fi
-    if [[ -z "$target_url" && -n "$bo_resolved_tab" ]]; then
+    if [[ -z "$target_url" && ( -z "$bo_resolved_tab" || "$bo_reconcile_status" == "ready" ) ]]; then
       bo_url="$bo_resolved_url"
       if [[ -n "$bo_url" ]]; then
         target_url="$bo_url"
@@ -654,6 +645,20 @@ finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 # Post-run focus snapshot for proof.
 focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
+if [[ "$notification_assisted_wait" == "1" || "$notification_assisted_wait" == "true" ]]; then
+  {
+    echo "NotificationAssistedWaitRequested: true"
+    echo "NotificationAssistedWaitCompletionProof: false"
+    echo "NotificationAssistedWaitReason: advisory_wake_only_sentinel_required"
+  } >> "$stderr_log"
+else
+  {
+    echo "NotificationAssistedWaitRequested: false"
+    echo "NotificationAssistedWaitCompletionProof: false"
+    echo "NotificationAssistedWaitReason: disabled"
+  } >> "$stderr_log"
+fi
+
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
@@ -864,6 +869,9 @@ document_hidden_at_completion = None
 visibility_state_at_completion = None
 background_hidden_polls = None
 background_poll_count = None
+notification_assisted_wait_requested = False
+notification_assisted_wait_completion_proof = False
+notification_assisted_wait_reason = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -889,6 +897,12 @@ for line in reversed(stderr_text.splitlines()):
             background_poll_count = int(line.split(":", 1)[1].strip())
         except Exception:
             background_poll_count = None
+    elif line.startswith("NotificationAssistedWaitRequested:"):
+        notification_assisted_wait_requested = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("NotificationAssistedWaitCompletionProof:"):
+        notification_assisted_wait_completion_proof = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("NotificationAssistedWaitReason:") and notification_assisted_wait_reason is None:
+        notification_assisted_wait_reason = line.split(":", 1)[1].strip()
     if (
         tab_id is not None
         and activated is not None
@@ -1008,6 +1022,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "visibility_state_at_completion": visibility_state_at_completion,
     "background_hidden_polls": background_hidden_polls,
     "background_poll_count": background_poll_count,
+    "notification_assisted_wait_requested": notification_assisted_wait_requested,
+    "notification_assisted_wait_completion_proof": notification_assisted_wait_completion_proof,
+    "notification_assisted_wait_reason": notification_assisted_wait_reason,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")

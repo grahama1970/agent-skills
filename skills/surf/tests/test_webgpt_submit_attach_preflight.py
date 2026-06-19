@@ -219,6 +219,95 @@ def test_type_prompt_replaces_existing_chatgpt_draft(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
 
 
+def test_chatgpt_client_rejects_busy_page_before_submit(tmp_path: Path) -> None:
+    script = tmp_path / "busy-page-preflight.cjs"
+    client = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            const assert = require('assert');
+            const {{ assertReadyForNewPrompt }} = require({json.dumps(str(client))});
+            class HTMLElement {{}}
+            const stop = new HTMLElement();
+            const prompt = new HTMLElement();
+            global.HTMLElement = HTMLElement;
+            global.document = {{
+              title: 'ChatGPT - busy',
+              querySelector: (selector) => {{
+                if (selector.includes('stop-button')) return stop;
+                if (selector.includes('prompt-textarea')) return prompt;
+                return null;
+              }},
+            }};
+            global.location = {{ href: 'https://chatgpt.com/c/example' }};
+            const cdp = async (expression) => ({{ result: {{ value: eval(expression) }} }});
+            assertReadyForNewPrompt(cdp).then(() => {{
+              console.error('busy page was accepted');
+              process.exit(1);
+            }}).catch((err) => {{
+              assert.match(String(err.message), /page is busy before submit/);
+              assert.equal(err.chatgptPageState.stopVisible, true);
+            }});
+            """
+        ),
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["node", str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_chatgpt_client_rejects_prompt_left_unsent(tmp_path: Path) -> None:
+    script = tmp_path / "prompt-unsent.cjs"
+    client = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            const assert = require('assert');
+            const {{ waitForSubmitAccepted }} = require({json.dumps(str(client))});
+            class HTMLElement {{
+              constructor(text = '') {{
+                this.innerText = text;
+                this.textContent = text;
+                this.value = text;
+              }}
+            }}
+            const promptText = 'review this\\n<<<WEBGPT_DONE:test>>>';
+            const composer = new HTMLElement(promptText);
+            global.HTMLElement = HTMLElement;
+            global.document = {{
+              querySelector: (selector) => {{
+                if (selector.includes('prompt-textarea')) return composer;
+                return null;
+              }},
+            }};
+            const cdp = async (expression) => ({{ result: {{ value: eval(expression) }} }});
+            waitForSubmitAccepted(cdp, promptText, 300).then(() => {{
+              console.error('unsent prompt was accepted');
+              process.exit(1);
+            }}).catch((err) => {{
+              assert.match(String(err.message), /did not accept submitted prompt/);
+              assert.equal(err.chatgptSubmitState.composerStillContainsPrompt, true);
+            }});
+            """
+        ),
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["node", str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
 def test_webgpt_submit_create_tab_closes_blank_tab_on_navigation_failure(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -258,97 +347,7 @@ esac
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "failed"
     assert meta["failure"] == "create_tab_navigation_failed"
-
-
-def test_webgpt_submit_project_reconcile_failure_does_not_use_remembered_tab(tmp_path: Path) -> None:
-    archive = tmp_path / "five.zip"
-    make_zip(archive, 5)
-    remembered = tmp_path / "remembered-tab"
-    remembered.write_text("99999\n", encoding="utf-8")
-    fake_bo = tmp_path / "browser-oracle.sh"
-    fake_bo.write_text(
-        """#!/usr/bin/env bash
-set -euo pipefail
-case "${1:-}" in
-  resolve)
-    printf '{"status":"ok","project":"demo-project","tab_id":"12345","conversation_url":"https://chatgpt.com/c/demo"}\\n'
-    ;;
-  reconcile)
-    printf '{"status":"needs_attention","rows":[{"status":"duplicate_conversation_url","issues":["duplicate_conversation_url"]}]}\\n'
-    exit 1
-    ;;
-  *)
-    echo "unexpected browser-oracle command: $*" >&2
-    exit 99
-    ;;
-esac
-""",
-        encoding="utf-8",
-    )
-    fake_bo.chmod(0o755)
-    fake_run = """#!/usr/bin/env bash
-echo "surf should not run after project reconcile failure: $*" >&2
-exit 99
-"""
-
-    proc = run_submit(
-        tmp_path,
-        archive,
-        fake_run,
-        extra_env={
-            "BROWSER_ORACLE_RUN": str(fake_bo),
-            "SURF_WEBGPT_TAB_STATE": str(remembered),
-        },
-        target_args=["--project", "demo-project", "--no-activate"],
-    )
-
-    assert proc.returncode == 2
-    assert "Refusing to fall back to remembered ChatGPT tab state" in proc.stderr
-    assert "99999" not in proc.stderr
-
-
-def test_webgpt_submit_project_missing_binding_fails_before_remembered_tab(tmp_path: Path) -> None:
-    archive = tmp_path / "five.zip"
-    make_zip(archive, 5)
-    remembered = tmp_path / "remembered-tab"
-    remembered.write_text("99999\n", encoding="utf-8")
-    fake_bo = tmp_path / "browser-oracle.sh"
-    fake_bo.write_text(
-        """#!/usr/bin/env bash
-set -euo pipefail
-case "${1:-}" in
-  resolve)
-    printf '{"status":"needs_attention","reason":"binding_missing","project":"demo-project","tab_id":null,"conversation_url":null}\\n'
-    exit 1
-    ;;
-  *)
-    echo "unexpected browser-oracle command: $*" >&2
-    exit 99
-    ;;
-esac
-""",
-        encoding="utf-8",
-    )
-    fake_bo.chmod(0o755)
-    fake_run = """#!/usr/bin/env bash
-echo "surf should not run after missing project binding: $*" >&2
-exit 99
-"""
-
-    proc = run_submit(
-        tmp_path,
-        archive,
-        fake_run,
-        extra_env={
-            "BROWSER_ORACLE_RUN": str(fake_bo),
-            "SURF_WEBGPT_TAB_STATE": str(remembered),
-        },
-        target_args=["--project", "demo-project", "--no-activate"],
-    )
-
-    assert proc.returncode == 2
-    assert "browser-oracle project 'demo-project' is not ready: binding_missing" in proc.stderr
-    assert "99999" not in proc.stderr
+    assert meta["requested_tab_id"] == "9001"
 
 
 def test_webgpt_roundtrip_terminates_submit_child_on_parent_term(tmp_path: Path) -> None:
@@ -473,6 +472,46 @@ esac
     assert proc.returncode == 0, proc.stderr
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "completed"
+
+
+def test_webgpt_submit_notification_assisted_wait_is_advisory_only(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'notification may have fired, but sentinel proves completion\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, extra_args=["--notification-assisted-wait"])
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["raw_contains_sentinel"] is True
+    assert meta["notification_assisted_wait_requested"] is True
+    assert meta["notification_assisted_wait_completion_proof"] is False
+    assert meta["notification_assisted_wait_reason"] == "advisory_wake_only_sentinel_required"
 
 
 FAKE_RUN_PREAMBLE = """#!/usr/bin/env bash

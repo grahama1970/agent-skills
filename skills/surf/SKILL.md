@@ -205,6 +205,9 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 
 In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
 
+`$ask webgpt ...` defaults to a 900 second WebGPT browser timeout
+(`ASK_WEBGPT_TIMEOUT`) unless the caller supplies `--oracle-timeout`.
+
 ---
 
 ### WebGPT Completion-Sentinel Handoff
@@ -275,6 +278,36 @@ For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
 injection, completion waiting, stability polling, cleaned output, raw output,
 and proof metadata.
+
+#### Project-Agent Anti-Drift Protocol
+
+When a project agent is using WebGPT, follow exactly one layer until it produces
+proof or fails closed:
+
+1. Preferred review path: `$ask webgpt-review` with a readable bundle.
+2. Transport path: `surf webgpt.submit` with `--url` or `--tab-id` plus
+   `--expect-url`/`--expect-title`.
+3. Recovery path: `surf webgpt.extract` with the exact sentinel from the failed
+   round.
+4. Diagnostics only: `surf read`, `surf js`, `surf type`, `surf click`, and
+   screenshots.
+
+Do not mix these layers in one round. In particular:
+
+- `submitted.md` only means the wrapper prepared the prompt; it is not evidence
+  that ChatGPT accepted, ran, or answered.
+- A running process, visible draft text, or "Stop answering" button is not
+  progress proof.
+- If `response.meta.json` or `response.raw.md` is missing, stop and report
+  `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`.
+- If the page shows an old answer, a visible draft, or `Stop answering`, do not
+  keep typing into the page. Use `webgpt.extract` if the old round has the
+  sentinel; otherwise wait for the busy page to finish, activate/clean the
+  reviewer tab, or create a fresh reviewer tab.
+- Do not use low-level `surf type`/`surf click` as a substitute for
+  `webgpt.submit`. Element refs are ephemeral and can change after every read.
+  Low-level commands are allowed only to gather diagnostics or prove why the
+  transport gate is blocked.
 
 ```bash
 surf webgpt.submit \
@@ -369,13 +402,21 @@ Behavior:
 - Long submits poll focus every `SURF_WEBGPT_FOCUS_POLL_INTERVAL` seconds (default
   `15`). Mid-run tab switches set `focus_stolen_mid_submit` in meta. Optional
   `SURF_WEBGPT_ABORT_ON_FOCUS_STEAL=1` kills the in-flight submit when focus drifts.
+- ChatGPT/browser response notifications are advisory wake signals only. Passing
+  `--notification-assisted-wait` or setting
+  `SURF_WEBGPT_NOTIFICATION_ASSISTED_WAIT=1` records that notification-assisted
+  waiting was requested, but `$surf` still accepts completion only from the
+  controlled tab's current sentinel-bearing assistant response, or from the
+  explicit image-artifact proof path for image jobs.
 - **No auto-retry** after human tab switches: use `webgpt.extract` if ChatGPT already
   finished, otherwise re-run the same `--tab-id` / `--url` deliberately.
 
 
 Do not infer WebGPT completion from spinner absence, button state, visual
-stillness, or page text outside the final assistant response. Use the sentinel
-contract for any workflow that copies WebGPT output into files.
+stillness, page text outside the final assistant response, or desktop/mobile
+notification text. Notifications can help wake polling or human attention, but
+they are not tab-bound, prompt-bound, or assistant-output proof. Use the
+sentinel contract for any workflow that copies WebGPT output into files.
 
 #### Transport vs parser failures
 
@@ -403,6 +444,11 @@ wrapper that consumes it:
 - **Transport failure:** missing/invalid controlled tab, failed preflight,
   `controlled_tab_id` mismatch, timeout without the current sentinel in raw
   assistant text, or page chrome/prompt echo in clean output.
+- **Notification-assisted wait:** metadata may include
+  `notification_assisted_wait_requested: true`, but
+  `notification_assisted_wait_completion_proof` must remain `false`. A
+  notification can reduce passive waiting, not satisfy the WebGPT completion
+  contract.
 
 When a completed answer is visible in the controlled tab but the submit wrapper
 was interrupted or did not parse it, use `webgpt.extract` with the exact
@@ -685,20 +731,19 @@ Required proof for this path:
 | `--expect-url <url>` | Identity assertion with `--tab-id` |
 | `--expect-title <text>` | Title assertion with `--tab-id` |
 | `--create-tab` | Fresh inactive ChatGPT tab; skips walk-up |
-| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml and remembered-tab fallback |
+| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml |
 | `--browser-oracle-from <dir>` | Walk-up root (default: cwd) |
 | `--no-activate` | Background controlled tab (required for reviewer work) |
 | `--no-remember` | Do not touch `/tmp/surf-webgpt-controlled-tab-id` |
 
 When Surf resolves a project through `$browser-oracle`, it reconciles the stored
-tab id against live `surf tab.list` before using it. The project binding is used
-only when reconciliation returns `ready`. A missing, stale, URL-mismatched, or
-duplicate-conversation binding is a hard stop; Surf must not fall back to
-`/tmp/surf-webgpt-controlled-tab-id` for a project-bound submit.
+tab id against live `surf tab.list --json --with-kde` before using it. A stale
+or URL-mismatched binding is ignored fail-closed unless explicit repair is
+enabled:
 
 | Environment | Role |
 |-------------|------|
-| `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` | Delete stored bindings whose tab id no longer exists after a successful live scan |
+| `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` | Delete stored bindings whose tab id no longer exists after a complete live scan |
 | `SURF_BROWSER_ORACLE_CREATE_MISSING=1` | For a missing stored tab with a known URL, open a fresh tab and rebind |
 
 ```bash

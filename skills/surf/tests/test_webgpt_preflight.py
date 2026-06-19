@@ -61,3 +61,152 @@ esac
     assert checks["foreground_controlled_user_visible"]["ok"] is True
     assert "not_foreground_controlled" not in checks
 
+
+def test_preflight_tab_id_uses_url_as_identity_evidence(tmp_path: Path) -> None:
+    fake_run = tmp_path / "surf-run.sh"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tAgentic Research\\thttps://chatgpt.com/c/example\\n'
+    printf '837352335\\tOther ChatGPT\\thttps://chatgpt.com/c/other\\n'
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":456,"activeTabId":837352335}\\n'
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_PREFLIGHT),
+            "--tab-id",
+            "837352334",
+            "--url",
+            "https://chatgpt.com/c/example",
+            "--no-activate",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)
+    checks = {check["name"]: check for check in data["checks"]}
+    assert data["status"] == "pass"
+    assert checks["expected_url_matches_tab"]["ok"] is True
+    assert checks["tab_identity_verified_or_allowed"]["detail"] == "verified"
+
+
+def test_preflight_tab_id_url_mismatch_fails_closed(tmp_path: Path) -> None:
+    fake_run = tmp_path / "surf-run.sh"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tAgentic Research\\thttps://chatgpt.com/c/example\\n'
+    printf '837352335\\tOther ChatGPT\\thttps://chatgpt.com/c/other\\n'
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":456,"activeTabId":837352334}\\n'
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_PREFLIGHT),
+            "--tab-id",
+            "837352334",
+            "--url",
+            "https://chatgpt.com/c/other",
+            "--no-activate",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 5
+    data = json.loads(proc.stdout)
+    checks = {check["name"]: check for check in data["checks"]}
+    assert data["status"] == "fail"
+    assert data["failures"] == ["expected_url_matches_tab", "tab_identity"]
+    assert checks["expected_url_matches_tab"]["ok"] is False
+
+
+def test_preflight_accepts_create_tab_as_explicit_target(tmp_path: Path) -> None:
+    fake_run = tmp_path / "surf-run.sh"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf ''
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":456,"activeTabId":837352334}\\n'
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_PREFLIGHT),
+            "--create-tab",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)
+    checks = {check["name"]: check for check in data["checks"]}
+    assert data["status"] == "pass"
+    assert checks["explicit_target"]["detail"] == "--create-tab"

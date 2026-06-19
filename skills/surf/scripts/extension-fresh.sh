@@ -14,20 +14,66 @@ done
 
 src_sw="$SURF_CLI/src/service-worker/index.ts"
 dist_sw="$SURF_CLI/dist/service-worker/index.js"
-src_host="$SURF_CLI/native/host.cjs"
+native_dir="$SURF_CLI/native"
 
-python3 - "$SURF_CLI" "$src_sw" "$dist_sw" "$src_host" "$JSON" << 'PY'
-import json, sys
+python3 - "$SURF_CLI" "$src_sw" "$dist_sw" "$native_dir" "$JSON" << 'PY'
+import json, os, subprocess, sys, time
 from pathlib import Path
 
-surf_cli, src_sw, dist_sw, src_host, json_out = sys.argv[1:6]
+surf_cli, src_sw, dist_sw, native_dir, json_out = sys.argv[1:6]
 json_out = json_out == "true"
 reasons = []
 status = "fresh"
 
 dist = Path(dist_sw)
 src = Path(src_sw)
-host = Path(src_host)
+native = Path(native_dir)
+native_sources = sorted(
+    p
+    for p in native.glob("*.cjs")
+    if p.is_file()
+)
+
+def newest_mtime(paths):
+    mtimes = [p.stat().st_mtime for p in paths if p.exists()]
+    return max(mtimes) if mtimes else None
+
+def surf_host_processes():
+    try:
+        proc = subprocess.run(
+            ["pgrep", "-af", f"{surf_cli}/native/host.cjs"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return []
+    rows = []
+    for line in proc.stdout.splitlines():
+        parts = line.split(maxsplit=1)
+        if not parts:
+            continue
+        if parts[0].isdigit():
+            rows.append({"pid": int(parts[0]), "cmd": parts[1] if len(parts) > 1 else ""})
+    return rows
+
+def process_start_epoch(pid):
+    try:
+        proc = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "lstart="],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    text = proc.stdout.strip()
+    if not text:
+        return None
+    try:
+        return time.mktime(time.strptime(text, "%a %b %d %H:%M:%S %Y"))
+    except ValueError:
+        return None
 
 if not dist.exists():
     status = "stale"
@@ -36,17 +82,35 @@ else:
     if src.exists() and src.stat().st_mtime > dist.stat().st_mtime:
         status = "stale"
         reasons.append("source service-worker newer than dist bundle")
-    if host.exists() and host.stat().st_mtime > dist.stat().st_mtime:
-        status = "stale"
-        reasons.append("native host newer than dist bundle")
+
+native_newest_mtime = newest_mtime(native_sources)
+host_processes = surf_host_processes()
+for row in host_processes:
+    row["start_epoch"] = process_start_epoch(row["pid"])
+
+native_restart_required = False
+if native_newest_mtime:
+    if not host_processes:
+        native_restart_required = True
+        reasons.append("native host process not running")
+    elif any((row.get("start_epoch") or 0) < native_newest_mtime for row in host_processes):
+        native_restart_required = True
+        reasons.append("running native host older than native source")
+
+if native_restart_required:
+    status = "stale"
 
 payload = {
     "status": status,
     "surf_cli": surf_cli,
     "reasons": reasons,
+    "extension_dist_fresh": not any("service-worker" in r or "dist/" in r for r in reasons),
+    "native_host_fresh": not native_restart_required,
     "src_sw_mtime": src.stat().st_mtime if src.exists() else None,
     "dist_sw_mtime": dist.stat().st_mtime if dist.exists() else None,
-    "src_host_mtime": host.stat().st_mtime if host.exists() else None,
+    "native_newest_mtime": native_newest_mtime,
+    "native_sources": [str(p) for p in native_sources],
+    "host_processes": host_processes,
 }
 
 if json_out:
