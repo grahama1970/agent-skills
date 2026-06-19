@@ -1,5 +1,5 @@
 {
-  "content_hash": "a8672f89ceb1fc4b0050ea2a66bf3ca755294a0ff8fed6476b09e052871402fe",
+  "content_hash": "519a9dd4461a33cb8a6dd60041f8f3c31328ec3a18dbaa19b865de2ea0727cd9",
   "counts": {
     "agents": 4,
     "entries": 316,
@@ -1141,7 +1141,7 @@
     },
     {
       "allowed_tools": [],
-      "content_hash": "343d53e73f980ea6",
+      "content_hash": "ade70995d38fa3ed",
       "id": "browser-oracle",
       "path": "skills/browser-oracle",
       "related_agents": [
@@ -6742,7 +6742,7 @@
         "Bash",
         "Read"
       ],
-      "content_hash": "851a499364e17d4e",
+      "content_hash": "f16614be9d880eaf",
       "id": "surf",
       "path": "skills/surf",
       "related_agents": [],
