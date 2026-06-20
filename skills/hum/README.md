@@ -1,18 +1,16 @@
-# hum - Persona Humming Diagnostics and STS Bakeoffs
+# /hum - Persona Humming Diagnostics and STS Bakeoffs
 
-`/hum` is the bounded workflow for finding, preparing, and reviewing static
-persona humming or chant candidates. It does not prove that Embry can hum any
-song dynamically. It gives agents a disciplined way to discover source audio,
-extract or import a guide, audition voice settings, and hand a browser-review
-page back to the human.
+`/hum` is the workflow for finding, preparing, and reviewing static persona
+humming or chant candidates. It does not prove Embry can dynamically hum any
+song on demand. It gives agents a disciplined way to discover source audio,
+extract a clean guide, audition voice settings and tempo variants, and hand a
+browser-review page back to the human for a listening gate.
 
-Use it for work like:
+**The golden rule:** STS changes the voice, not the guide. If your source is
+off-pitch, breathy, lyric-heavy, or wobbly, the output will inherit that
+problem. Fix the guide first, polish with STS second.
 
-- "Find female humming sources Embry could use during idle time."
-- "Demucs this YouTube track, isolate the vocal, and make a guide."
-- "Try Light Rasp at 0.85x and compare ElevenLabs settings."
-- "Make an HTML bakeoff page with every candidate and the request receipts."
-- "Record why this source failed before spending more STS credits."
+## The Workflow
 
 ```text
 human or project agent gives a song, URL, or mood
@@ -40,10 +38,6 @@ HTML/CSS review page
     v
 human listening gate before cache publication
 ```
-
-**One core principle:** STS changes the voice; it does not fix the guide. If the
-guide is off-pitch, lyric-heavy, wobbly, too breathy, or wrong in mood, the
-output will usually inherit that problem.
 
 ## Try this first
 
@@ -157,7 +151,8 @@ trying to accept automatically guessed clip cards.
 ElevenLabs Speech-to-Speech does not accept a documented `text`,
 `style_prompt`, `lyrics`, `transcript`, or pronunciation-dictionary field. The
 correct payload surface is the guide audio, target voice, model, and numeric
-voice settings.
+voice settings. This example shows the early War Chant bakeoff settings, not
+the later controlled S3 settings that won the Hawaiian Eye refinement.
 
 ```python
 import json
@@ -209,7 +204,7 @@ voice identity and speed:
 | Tempo | `0.90x` felt too fast for someone to hum |
 | Tempo | `0.85x` felt natural and retained humor |
 | Tempo | `0.80x` became slower and more ceremonial |
-| Settings | Moderate stability plus low style reduced artifacts |
+| Settings | Controlled stability plus low style reduced artifacts |
 
 The accepted War Chant candidate was:
 
@@ -249,11 +244,12 @@ run/
     `-- status.jsonl
 ```
 
-The War Chant lesson now used by later runs:
+The War Chant and Hawaiian Eye lesson now used by later runs:
 
 ```text
 Light Rasp + 0.85x is the default Embry-like humming center.
-Use controlled settings when glissando or sustained vowels distort.
+Use controlled settings when glissando or sustained vowels distort:
+stability 0.50, similarity_boost 0.84, style 0.15.
 Reject source guides that are off-pitch before trying to polish STS output.
 ```
 
@@ -288,7 +284,7 @@ Avoid sources with:
 | `use_speaker_boost` | Strengthens voice identity | Can make output less intimate |
 | `remove_background_noise` | Can reduce guide leakage | Can strip breath, rasp, consonants, or hum texture |
 
-Known stable Embry-ish settings from the Hawaiian Eye and War Chant work:
+Known stable Embry-ish settings from the Hawaiian Eye S3 winner:
 
 ```json
 {
@@ -300,8 +296,13 @@ Known stable Embry-ish settings from the Hawaiian Eye and War Chant work:
 ```
 
 Use lower `style` when a guide has glissando, sustained vowels, or wobble risk.
-Changing settings cannot rescue a bad guide; it can only reduce how badly STS
-amplifies the problem.
+For the Hawaiian Eye refinement, the selected file was
+`hawaiian_eye_1959_wistful_female_pop__light_rasp__0p85x__controlled__s0p50__sty0p15.wav`:
+Light Rasp, raw 0.85x Demucs vocal guide, `stability 0.50`,
+`similarity_boost 0.84`, and `style 0.15`. The raw guide preserved smooth
+glissando shape, and low style reduced expressive over-amplification. Changing
+settings cannot rescue a bad guide; it can only reduce how badly STS amplifies
+the problem.
 
 ## Source Bakeoff Workflow
 
@@ -363,7 +364,9 @@ If a deterministic bug appears, record the failing command and the repair. Prior
 bugs found this way include a wrong `create-stems` wrapper invocation and a
 missing `pitch-correct-guide` route in `hum/run.sh`.
 
-## Hum Subagent
+## Subagents
+
+### agents/hum/ - The Worker
 
 The transport worker for this workflow lives at:
 
@@ -382,6 +385,8 @@ such as bad wrapper flags or missing CLI routes.
 
 It does **not** own final human listening approval, rights approval, runtime
 cache publication, global project completion, or unrelated repo cleanup.
+
+### skills/hum/subagents/hum-reviewer.yaml - The Reviewer
 
 `skills/hum/subagents/hum-reviewer.yaml` is different: it is a read-only review
 persona for ranking source tracks, voice IDs, guide variants, and STS candidates
