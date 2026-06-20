@@ -1,0 +1,623 @@
+{
+  "counts": {
+    "chuckle": 23,
+    "cough": 0,
+    "gasp": 2,
+    "groan": 5,
+    "laugh": 26,
+    "sigh": 8,
+    "sniffle": 1,
+    "yawn": 0
+  },
+  "matches": [
+    {
+      "emotion": "laugh",
+      "end_seconds": 59.726,
+      "line": "[chattering and laughing]",
+      "marker": "[chattering and laughing]",
+      "speaker": null,
+      "start_seconds": 54.821,
+      "timecode": "00:00:54,821 --> 00:00:59,726"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 104.27,
+      "line": "[chattering and laughing]",
+      "marker": "[chattering and laughing]",
+      "speaker": null,
+      "start_seconds": 100.333,
+      "timecode": "00:01:40,333 --> 00:01:44,270"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 380.813,
+      "line": "[children chattering, laughing]",
+      "marker": "[children chattering, laughing]",
+      "speaker": null,
+      "start_seconds": 378.111,
+      "timecode": "00:06:18,111 --> 00:06:20,813"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 464.931,
+      "line": "[groans]",
+      "marker": "[groans]",
+      "speaker": null,
+      "start_seconds": 463.83,
+      "timecode": "00:07:43,830 --> 00:07:44,931"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 467.567,
+      "line": "-[groaning] Frigo--",
+      "marker": "[groaning]",
+      "speaker": null,
+      "start_seconds": 464.997,
+      "timecode": "00:07:44,997 --> 00:07:47,567"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 471.571,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 467.633,
+      "timecode": "00:07:47,633 --> 00:07:51,571"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 628.494,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 626.058,
+      "timecode": "00:10:26,058 --> 00:10:28,494"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 805.037,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 802.468,
+      "timecode": "00:13:22,468 --> 00:13:25,037"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 881.247,
+      "line": "[man chuckling]",
+      "marker": "[man chuckling]",
+      "speaker": null,
+      "start_seconds": 879.511,
+      "timecode": "00:14:39,511 --> 00:14:41,247"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 963.696,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 962.728,
+      "timecode": "00:16:02,728 --> 00:16:03,696"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 991.623,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 989.021,
+      "timecode": "00:16:29,021 --> 00:16:31,623"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 1096.528,
+      "line": "[sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 1095.494,
+      "timecode": "00:18:15,494 --> 00:18:16,528"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1112.511,
+      "line": "[sighs and chuckles]",
+      "marker": "[sighs and chuckles]",
+      "speaker": null,
+      "start_seconds": 1110.943,
+      "timecode": "00:18:30,943 --> 00:18:32,511"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 1112.511,
+      "line": "[sighs and chuckles]",
+      "marker": "[sighs and chuckles]",
+      "speaker": null,
+      "start_seconds": 1110.943,
+      "timecode": "00:18:30,943 --> 00:18:32,511"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1114.112,
+      "line": "-[chuckles] That's cool.",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1112.578,
+      "timecode": "00:18:32,578 --> 00:18:34,112"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 1212.611,
+      "line": "-[groans] Nasty!",
+      "marker": "[groans]",
+      "speaker": null,
+      "start_seconds": 1209.041,
+      "timecode": "00:20:09,041 --> 00:20:12,611"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1284.182,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1281.346,
+      "timecode": "00:21:21,346 --> 00:21:24,182"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1296.728,
+      "line": "<i>[laughing]</i>",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 1294.726,
+      "timecode": "00:21:34,726 --> 00:21:36,728"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1318.817,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1317.115,
+      "timecode": "00:21:57,115 --> 00:21:58,817"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1341.106,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 1336.935,
+      "timecode": "00:22:16,935 --> 00:22:21,106"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1352.851,
+      "line": "-[laughs] Okay.",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 1350.882,
+      "timecode": "00:22:30,882 --> 00:22:32,851"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1369.735,
+      "line": "[chuckling]",
+      "marker": "[chuckling]",
+      "speaker": null,
+      "start_seconds": 1366.732,
+      "timecode": "00:22:46,732 --> 00:22:49,735"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1414.78,
+      "line": "-[chuckles] Okay.",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1412.611,
+      "timecode": "00:23:32,611 --> 00:23:34,780"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1426.958,
+      "line": "-[all laughing]",
+      "marker": "[all laughing]",
+      "speaker": null,
+      "start_seconds": 1424.723,
+      "timecode": "00:23:44,723 --> 00:23:46,958"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1497.696,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1496.127,
+      "timecode": "00:24:56,127 --> 00:24:57,696"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1499.664,
+      "line": "[chuckle]",
+      "marker": "[chuckle]",
+      "speaker": null,
+      "start_seconds": 1498.43,
+      "timecode": "00:24:58,430 --> 00:24:59,664"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1789.554,
+      "line": "-[chuckles] Cool.",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1787.719,
+      "timecode": "00:29:47,719 --> 00:29:49,554"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1871.769,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 1869.667,
+      "timecode": "00:31:09,667 --> 00:31:11,769"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1888.519,
+      "line": "-Um-- No-- [chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1886.15,
+      "timecode": "00:31:26,150 --> 00:31:28,519"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1936.2,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1934.832,
+      "timecode": "00:32:14,832 --> 00:32:16,200"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1955.753,
+      "line": "No. [chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 1953.284,
+      "timecode": "00:32:33,284 --> 00:32:35,753"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2303.634,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 2299.997,
+      "timecode": "00:38:19,997 --> 00:38:23,634"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 2369.934,
+      "line": "Yeah. [sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 2366.297,
+      "timecode": "00:39:26,297 --> 00:39:29,934"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2407.104,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 2404.835,
+      "timecode": "00:40:04,835 --> 00:40:07,104"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2410.975,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 2409.507,
+      "timecode": "00:40:09,507 --> 00:40:10,975"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2413.244,
+      "line": "<i>-[laughing]</i>",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 2411.041,
+      "timecode": "00:40:11,041 --> 00:40:13,244"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 2622.786,
+      "line": "[chuckling]",
+      "marker": "[chuckling]",
+      "speaker": null,
+      "start_seconds": 2620.517,
+      "timecode": "00:43:40,517 --> 00:43:42,786"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2724.588,
+      "line": "[screaming and laughing]",
+      "marker": "[screaming and laughing]",
+      "speaker": null,
+      "start_seconds": 2723.42,
+      "timecode": "00:45:23,420 --> 00:45:24,588"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 2787.784,
+      "line": "[sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 2785.449,
+      "timecode": "00:46:25,449 --> 00:46:27,784"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 2844.341,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 2843.006,
+      "timecode": "00:47:23,006 --> 00:47:24,341"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 3003.967,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 3002.532,
+      "timecode": "00:50:02,532 --> 00:50:03,967"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 3014.644,
+      "line": "<i>-[laughing] Okay,</i>",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 3012.042,
+      "timecode": "00:50:12,042 --> 00:50:14,644"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 3039.636,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 3037.567,
+      "timecode": "00:50:37,567 --> 00:50:39,636"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 3063.226,
+      "line": "[laughs]",
+      "marker": "[laughs]",
+      "speaker": null,
+      "start_seconds": 3059.122,
+      "timecode": "00:50:59,122 --> 00:51:03,226"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3217.38,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 3215.478,
+      "timecode": "00:53:35,478 --> 00:53:37,380"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3405.301,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 3402.465,
+      "timecode": "00:56:42,465 --> 00:56:45,301"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3445.642,
+      "line": "[chuckling]",
+      "marker": "[chuckling]",
+      "speaker": null,
+      "start_seconds": 3443.473,
+      "timecode": "00:57:23,473 --> 00:57:25,642"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 3507.036,
+      "line": "[laughing]",
+      "marker": "[laughing]",
+      "speaker": null,
+      "start_seconds": 3502.799,
+      "timecode": "00:58:22,799 --> 00:58:27,036"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3720.383,
+      "line": "[Lisa chuckles]",
+      "marker": "[Lisa chuckles]",
+      "speaker": null,
+      "start_seconds": 3718.481,
+      "timecode": "01:01:58,481 --> 01:02:00,383"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3754.283,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 3751.614,
+      "timecode": "01:02:31,614 --> 01:02:34,283"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 3787.517,
+      "line": "[chuckling]",
+      "marker": "[chuckling]",
+      "speaker": null,
+      "start_seconds": 3785.581,
+      "timecode": "01:03:05,581 --> 01:03:07,517"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 3863.092,
+      "line": "-[sighs] Sounds fun.",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 3860.289,
+      "timecode": "01:04:20,289 --> 01:04:23,092"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 3891.654,
+      "line": "[gasps]",
+      "marker": "[gasps]",
+      "speaker": null,
+      "start_seconds": 3888.618,
+      "timecode": "01:04:48,618 --> 01:04:51,654"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 4055.518,
+      "line": "<i>[Em laughing]</i>",
+      "marker": "[Em laughing]",
+      "speaker": null,
+      "start_seconds": 4050.746,
+      "timecode": "01:07:30,746 --> 01:07:35,518"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4114.71,
+      "line": "-[groaning]",
+      "marker": "[groaning]",
+      "speaker": null,
+      "start_seconds": 4111.307,
+      "timecode": "01:08:31,307 --> 01:08:34,710"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 4224.687,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 4222.318,
+      "timecode": "01:10:22,318 --> 01:10:24,687"
+    },
+    {
+      "emotion": "sniffle",
+      "end_seconds": 4647.943,
+      "line": "[sniffles]",
+      "marker": "[sniffles]",
+      "speaker": null,
+      "start_seconds": 4642.204,
+      "timecode": "01:17:22,204 --> 01:17:27,943"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 4691.42,
+      "line": "[sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 4689.418,
+      "timecode": "01:18:09,418 --> 01:18:11,420"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 5025.954,
+      "line": "[sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 5021.616,
+      "timecode": "01:23:41,616 --> 01:23:45,954"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 5130.758,
+      "line": "[chuckles]",
+      "marker": "[chuckles]",
+      "speaker": null,
+      "start_seconds": 5125.887,
+      "timecode": "01:25:25,887 --> 01:25:30,758"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 5596.691,
+      "line": "[sighs]",
+      "marker": "[sighs]",
+      "speaker": null,
+      "start_seconds": 5594.088,
+      "timecode": "01:33:14,088 --> 01:33:16,691"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 5615.242,
+      "line": "[gasps]",
+      "marker": "[gasps]",
+      "speaker": null,
+      "start_seconds": 5613.507,
+      "timecode": "01:33:33,507 --> 01:33:35,242"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 5617.611,
+      "line": "[Joel laughs]",
+      "marker": "[Joel laughs]",
+      "speaker": null,
+      "start_seconds": 5615.309,
+      "timecode": "01:33:35,309 --> 01:33:37,611"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 5621.482,
+      "line": "[Joel's laughing continues]",
+      "marker": "[Joel's laughing continues]",
+      "speaker": null,
+      "start_seconds": 5617.678,
+      "timecode": "01:33:37,678 --> 01:33:41,482"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 5631.292,
+      "line": "-[groans]",
+      "marker": "[groans]",
+      "speaker": null,
+      "start_seconds": 5629.056,
+      "timecode": "01:33:49,056 --> 01:33:51,292"
+    }
+  ],
+  "metadata": {
+    "format": "srt",
+    "speaker_metadata_status": "not_present",
+    "subtitle_filename": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.en.srt",
+    "subtitle_parent": "/mnt/storage12tb/media/movies/Adventureland (2009)",
+    "title_from_path": "Adventureland",
+    "year_from_path": 2009
+  },
+  "missing": [
+    "cough",
+    "yawn"
+  ],
+  "status": "has_orpheus_tags",
+  "subtitle_path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.en.srt",
+  "target_emotions": [
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp"
+  ]
+}

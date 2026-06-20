@@ -1,0 +1,43 @@
+{
+  "counts": {
+    "chuckle": 0,
+    "cough": 0,
+    "gasp": 0,
+    "groan": 0,
+    "laugh": 0,
+    "sigh": 0,
+    "sniffle": 0,
+    "yawn": 0
+  },
+  "matches": [],
+  "metadata": {
+    "format": "srt",
+    "speaker_metadata_status": "not_present",
+    "subtitle_filename": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.en.srt",
+    "subtitle_parent": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)",
+    "title_from_path": "Charlie's Angels",
+    "year_from_path": 2019
+  },
+  "missing": [
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp"
+  ],
+  "status": "no_orpheus_tags",
+  "subtitle_path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.en.srt",
+  "target_emotions": [
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp"
+  ]
+}

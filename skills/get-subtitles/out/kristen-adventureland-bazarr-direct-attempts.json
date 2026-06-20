@@ -1,0 +1,334 @@
+{
+  "generated_at": 1781924729.8516586,
+  "attempts": [
+    {
+      "method": "PATCH",
+      "path": "/movies/subtitles",
+      "params": {
+        "radarrid": 150,
+        "language": "en",
+        "forced": "False",
+        "hi": "False"
+      },
+      "result": {
+        "status": 204,
+        "body": null,
+        "text": ""
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/movies/subtitles",
+      "params": {
+        "radarrid": 150,
+        "language": "en"
+      },
+      "result": {
+        "status": 400,
+        "error": "{\"errors\": {\"forced\": \"Forced true/false as string Missing required parameter in the JSON body or the post body or the query string\"}, \"message\": \"Input payload validation failed\"}\n"
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/movies/subtitles",
+      "params": {
+        "radarrid[]": 150,
+        "language": "en",
+        "forced": "False",
+        "hi": "False"
+      },
+      "result": {
+        "status": 400,
+        "error": "{\"errors\": {\"radarrid\": \"Movie ID Missing required parameter in the JSON body or the post body or the query string\"}, \"message\": \"Input payload validation failed\"}\n"
+      }
+    }
+  ],
+  "movie": {
+    "status": 200,
+    "body": {
+      "data": [
+        {
+          "alternativeTitles": [
+            "\u041f\u0430\u0440\u043a \u043a\u0443\u043b\u044c\u0442\u0443\u0440\u044b \u0438 \u043e\u0442\u0434\u044b\u0445\u0430",
+            "Adventureland - Kalandpark"
+          ],
+          "audio_language": [
+            {
+              "name": "English",
+              "code2": "en",
+              "code3": "eng"
+            }
+          ],
+          "fanart": "/images/movies/MediaCover/150/fanart.jpg?lastWrite=639174873975136034",
+          "imdbId": "tt1091722",
+          "missing_subtitles": [],
+          "monitored": true,
+          "overview": "It's the summer of 1987, and recent college grad James Brennan can't wait to begin his long-anticipated dream trip to Europe. Unfortunately, James' plans come to a screeching halt when his parents announce that they are unable to subsidize his trip. Forced to take a job at the local amusement park, James prepares for the worst summer ever, until he finds love with a captivating co-worker named Em.",
+          "path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv",
+          "poster": "/images/movies/MediaCover/150/poster-500.jpg?lastWrite=639174873973355996",
+          "profileId": null,
+          "radarrId": 150,
+          "sceneName": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "subtitles": [
+            {
+              "name": "English",
+              "code2": "en",
+              "code3": "eng",
+              "path": null,
+              "forced": false,
+              "hi": false,
+              "file_size": null
+            }
+          ],
+          "tags": [],
+          "title": "Adventureland",
+          "year": "2009"
+        }
+      ],
+      "total": 121
+    },
+    "text": "{\"data\": [{\"alternativeTitles\": [\"\\u041f\\u0430\\u0440\\u043a \\u043a\\u0443\\u043b\\u044c\\u0442\\u0443\\u0440\\u044b \\u0438 \\u043e\\u0442\\u0434\\u044b\\u0445\\u0430\", \"Adventureland - Kalandpark\"], \"audio_language\": [{\"name\": \"English\", \"code2\": \"en\", \"code3\": \"eng\"}], \"fanart\": \"/images/movies/MediaCover/150/fanart.jpg?lastWrite=639174873975136034\", \"imdbId\": \"tt1091722\", \"missing_subtitles\": [], \"monitored\": true, \"overview\": \"It's the summer of 1987, and recent college grad James Brennan can't wait to begin his long-anticipated dream trip to Europe. Unfortunately, James' plans come to a screeching halt when his parents announce that they are unable to subsidize his trip. Forced to take a job at the local amusement park, James prepares for the worst summer ever, until he finds love with a captivating co-worker named Em.\", \"path\": \"/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv\", \"poster\": \"/images/movies/MediaCover/150/post"
+  },
+  "logs": {
+    "status": 200,
+    "body": {
+      "data": [
+        {
+          "timestamp": "2026-06-19 23:05:24",
+          "type": "ERROR",
+          "message": "Exception raised while running function: list indices must be integers or slices, not str",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/subtitles/mass_download/movies.py\", line 158, in movie_download_specific_subtitles\\n\u2003\u2003\u2003\u2003result = list(generate_subtitles(moviePath, [(language, hi, forced)], audio_language,\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/subtitles/download.py\", line 45, in generate_subtitles\\n\u2003\u2003\u2003\u2003original_format = profile[\\'originalFormat\\']\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003~~~~~~~^^^^^^^^^^^^^^^^^^\\nTypeError: list indices must be integers or slices, not str"
+        },
+        {
+          "timestamp": "2026-06-19 23:05:03",
+          "type": "ERROR",
+          "message": "Exception on /api/providers/movies [GET]",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 880, in full_dispatch_request\\n\u2003\u2003\u2003\u2003rv = self.dispatch_request()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 865, in dispatch_request\\n\u2003\u2003\u2003\u2003return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/api.py\", line 402, in wrapper\\n\u2003\u2003\u2003\u2003resp = resource(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/views.py\", line 110, in view\\n\u2003\u2003\u2003\u2003return current_app.ensure_sync(self.dispatch_request)(**kwargs)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/resource.py\", line 41, in dispatch_request\\n\u2003\u2003\u2003\u2003resp = meth(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/utils.py\", line 30, in wrapper\\n\u2003\u2003\u2003\u2003return actual_method(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/providers/providers_movies.py\", line 83, in get\\n\u2003\u2003\u2003\u2003data = manual_search(moviePath, profileId, providers_list, sceneName, title, \\'movie\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/pool.py\", line 108, in decorated\\n\u2003\u2003\u2003\u2003return f(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 43, in manual_search\\n\u2003\u2003\u2003\u2003language_set, original_format = _get_language_obj(profile_id=profile_id)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 335, in _get_language_obj\\n\u2003\u2003\u2003\u2003profile = get_profiles_list(profile_id=int(profile_id))\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^\\nTypeError: int() argument must be a string, a bytes-like object or a real number, not \\'NoneType\\"
+        },
+        {
+          "timestamp": "2026-06-19 23:05:01",
+          "type": "INFO",
+          "message": "Throttling addic7ed for 10 minutes, until 26/06/19 23:15, because of: ValueError. Exception info: \"'not enough values to unpack (expected 2, got 1)' ~ addic7ed.py@113\"",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 23:04:29",
+          "type": "ERROR",
+          "message": "Exception raised while running function: list indices must be integers or slices, not str",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/subtitles/mass_download/movies.py\", line 158, in movie_download_specific_subtitles\\n\u2003\u2003\u2003\u2003result = list(generate_subtitles(moviePath, [(language, hi, forced)], audio_language,\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/subtitles/download.py\", line 45, in generate_subtitles\\n\u2003\u2003\u2003\u2003original_format = profile[\\'originalFormat\\']\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003~~~~~~~^^^^^^^^^^^^^^^^^^\\nTypeError: list indices must be integers or slices, not str"
+        },
+        {
+          "timestamp": "2026-06-19 23:04:29",
+          "type": "INFO",
+          "message": "Using addic7ed again after 10 minutes, (disabled because: ValueError)",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 22:37:56",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for Subtitles to upgrade. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 22:37:43",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Movies Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 21:51:42",
+          "type": "ERROR",
+          "message": "Exception raised while running function: [Errno 13] Permission denied: '/var/snap/bazarr-tak/20'",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/health.py\", line 29, in check_health\\n\u2003\u2003\u2003\u2003backup_rotation()\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 203, in backup_rotation\\n\u2003\u2003\u2003\u2003backup_files = get_backup_files()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 36, in get_backup_files\\n\u2003\u2003\u2003\u2003backup_file_pattern = os.path.join(get_backup_path(), \\'bazarr_backup_v*.zip\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 22, in get_backup_path\\n\u2003\u2003\u2003\u2003os.makedirs(backup_dir)\\n\u2003\u2003File \"<frozen os>\", line 215, in makedirs\\n\u2003\u2003File \"<frozen os>\", line 225, in makedirs\\nPermissionError: [Errno 13] Permission denied: \\'/var/snap/bazarr-tak/20\\"
+        },
+        {
+          "timestamp": "2026-06-19 21:41:36",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Series Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 16:37:44",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Movies Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 15:51:42",
+          "type": "ERROR",
+          "message": "Exception raised while running function: [Errno 13] Permission denied: '/var/snap/bazarr-tak/20'",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/health.py\", line 29, in check_health\\n\u2003\u2003\u2003\u2003backup_rotation()\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 203, in backup_rotation\\n\u2003\u2003\u2003\u2003backup_files = get_backup_files()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 36, in get_backup_files\\n\u2003\u2003\u2003\u2003backup_file_pattern = os.path.join(get_backup_path(), \\'bazarr_backup_v*.zip\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 22, in get_backup_path\\n\u2003\u2003\u2003\u2003os.makedirs(backup_dir)\\n\u2003\u2003File \"<frozen os>\", line 215, in makedirs\\n\u2003\u2003File \"<frozen os>\", line 225, in makedirs\\nPermissionError: [Errno 13] Permission denied: \\'/var/snap/bazarr-tak/20\\"
+        },
+        {
+          "timestamp": "2026-06-19 15:41:37",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Series Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 13:50:05",
+          "type": "INFO",
+          "message": "BAZARR All providers are throttled",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 13:50:04",
+          "type": "INFO",
+          "message": "Throttling addic7ed for 10 minutes, until 26/06/19 14:00, because of: ValueError. Exception info: \"'not enough values to unpack (expected 2, got 1)' ~ addic7ed.py@113\"",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 13:50:04",
+          "type": "INFO",
+          "message": "Using addic7ed again after 10 minutes, (disabled because: ValueError)",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 13:35:30",
+          "type": "INFO",
+          "message": "Throttling addic7ed for 10 minutes, until 26/06/19 13:45, because of: ValueError. Exception info: \"'not enough values to unpack (expected 2, got 1)' ~ addic7ed.py@113\"",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 13:35:30",
+          "type": "INFO",
+          "message": "Using addic7ed again after 10 minutes, (disabled because: ValueError)",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:57",
+          "type": "INFO",
+          "message": "BAZARR All providers are throttled",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:43",
+          "type": "INFO",
+          "message": "Throttling addic7ed for 10 minutes, until 26/06/19 11:33, because of: ValueError. Exception info: \"'not enough values to unpack (expected 2, got 1)' ~ addic7ed.py@113\"",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:01",
+          "type": "INFO",
+          "message": "BAZARR throttled providers have been reset (only AuthenticationError, ConfigurationError and PaymentRequired).",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:01",
+          "type": "INFO",
+          "message": "BAZARR throttled providers have been reset (only AuthenticationError, ConfigurationError and PaymentRequired).",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:01",
+          "type": "INFO",
+          "message": "BAZARR throttled providers have been reset (only AuthenticationError, ConfigurationError and PaymentRequired).",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 11:23:01",
+          "type": "INFO",
+          "message": "BAZARR throttled providers have been reset (only AuthenticationError, ConfigurationError and PaymentRequired).",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 10:48:44",
+          "type": "ERROR",
+          "message": "Exception on /api/providers/movies [GET]",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 880, in full_dispatch_request\\n\u2003\u2003\u2003\u2003rv = self.dispatch_request()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 865, in dispatch_request\\n\u2003\u2003\u2003\u2003return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/api.py\", line 402, in wrapper\\n\u2003\u2003\u2003\u2003resp = resource(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/views.py\", line 110, in view\\n\u2003\u2003\u2003\u2003return current_app.ensure_sync(self.dispatch_request)(**kwargs)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/resource.py\", line 41, in dispatch_request\\n\u2003\u2003\u2003\u2003resp = meth(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/utils.py\", line 30, in wrapper\\n\u2003\u2003\u2003\u2003return actual_method(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/providers/providers_movies.py\", line 83, in get\\n\u2003\u2003\u2003\u2003data = manual_search(moviePath, profileId, providers_list, sceneName, title, \\'movie\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/pool.py\", line 108, in decorated\\n\u2003\u2003\u2003\u2003return f(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 43, in manual_search\\n\u2003\u2003\u2003\u2003language_set, original_format = _get_language_obj(profile_id=profile_id)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 335, in _get_language_obj\\n\u2003\u2003\u2003\u2003profile = get_profiles_list(profile_id=int(profile_id))\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^\\nTypeError: int() argument must be a string, a bytes-like object or a real number, not \\'NoneType\\"
+        },
+        {
+          "timestamp": "2026-06-19 10:48:36",
+          "type": "ERROR",
+          "message": "Exception on /api/providers/movies [GET]",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 880, in full_dispatch_request\\n\u2003\u2003\u2003\u2003rv = self.dispatch_request()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 865, in dispatch_request\\n\u2003\u2003\u2003\u2003return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/api.py\", line 402, in wrapper\\n\u2003\u2003\u2003\u2003resp = resource(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/views.py\", line 110, in view\\n\u2003\u2003\u2003\u2003return current_app.ensure_sync(self.dispatch_request)(**kwargs)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/resource.py\", line 41, in dispatch_request\\n\u2003\u2003\u2003\u2003resp = meth(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/utils.py\", line 30, in wrapper\\n\u2003\u2003\u2003\u2003return actual_method(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/providers/providers_movies.py\", line 83, in get\\n\u2003\u2003\u2003\u2003data = manual_search(moviePath, profileId, providers_list, sceneName, title, \\'movie\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/pool.py\", line 108, in decorated\\n\u2003\u2003\u2003\u2003return f(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 43, in manual_search\\n\u2003\u2003\u2003\u2003language_set, original_format = _get_language_obj(profile_id=profile_id)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 335, in _get_language_obj\\n\u2003\u2003\u2003\u2003profile = get_profiles_list(profile_id=int(profile_id))\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^\\nTypeError: int() argument must be a string, a bytes-like object or a real number, not \\'NoneType\\"
+        },
+        {
+          "timestamp": "2026-06-19 10:48:25",
+          "type": "ERROR",
+          "message": "Exception on /api/providers/movies [GET]",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 880, in full_dispatch_request\\n\u2003\u2003\u2003\u2003rv = self.dispatch_request()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 865, in dispatch_request\\n\u2003\u2003\u2003\u2003return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/api.py\", line 402, in wrapper\\n\u2003\u2003\u2003\u2003resp = resource(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/views.py\", line 110, in view\\n\u2003\u2003\u2003\u2003return current_app.ensure_sync(self.dispatch_request)(**kwargs)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/resource.py\", line 41, in dispatch_request\\n\u2003\u2003\u2003\u2003resp = meth(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/utils.py\", line 30, in wrapper\\n\u2003\u2003\u2003\u2003return actual_method(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/providers/providers_movies.py\", line 83, in get\\n\u2003\u2003\u2003\u2003data = manual_search(moviePath, profileId, providers_list, sceneName, title, \\'movie\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/pool.py\", line 108, in decorated\\n\u2003\u2003\u2003\u2003return f(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 43, in manual_search\\n\u2003\u2003\u2003\u2003language_set, original_format = _get_language_obj(profile_id=profile_id)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 335, in _get_language_obj\\n\u2003\u2003\u2003\u2003profile = get_profiles_list(profile_id=int(profile_id))\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^\\nTypeError: int() argument must be a string, a bytes-like object or a real number, not \\'NoneType\\"
+        },
+        {
+          "timestamp": "2026-06-19 10:44:48",
+          "type": "ERROR",
+          "message": "Exception on /api/providers/movies [GET]",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 880, in full_dispatch_request\\n\u2003\u2003\u2003\u2003rv = self.dispatch_request()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/app.py\", line 865, in dispatch_request\\n\u2003\u2003\u2003\u2003return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/api.py\", line 402, in wrapper\\n\u2003\u2003\u2003\u2003resp = resource(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask/views.py\", line 110, in view\\n\u2003\u2003\u2003\u2003return current_app.ensure_sync(self.dispatch_request)(**kwargs)\u2003\u2003# type: ignore[no-any-return]\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/flask_restx/resource.py\", line 41, in dispatch_request\\n\u2003\u2003\u2003\u2003resp = meth(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/utils.py\", line 30, in wrapper\\n\u2003\u2003\u2003\u2003return actual_method(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/api/providers/providers_movies.py\", line 83, in get\\n\u2003\u2003\u2003\u2003data = manual_search(moviePath, profileId, providers_list, sceneName, title, \\'movie\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/pool.py\", line 108, in decorated\\n\u2003\u2003\u2003\u2003return f(*args, **kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 43, in manual_search\\n\u2003\u2003\u2003\u2003language_set, original_format = _get_language_obj(profile_id=profile_id)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/subtitles/manual.py\", line 335, in _get_language_obj\\n\u2003\u2003\u2003\u2003profile = get_profiles_list(profile_id=int(profile_id))\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^\\nTypeError: int() argument must be a string, a bytes-like object or a real number, not \\'NoneType\\"
+        },
+        {
+          "timestamp": "2026-06-19 10:37:56",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for Subtitles to upgrade. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 10:37:43",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Movies Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 09:51:41",
+          "type": "ERROR",
+          "message": "Exception raised while running function: [Errno 13] Permission denied: '/var/snap/bazarr-tak/20'",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/health.py\", line 29, in check_health\\n\u2003\u2003\u2003\u2003backup_rotation()\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 203, in backup_rotation\\n\u2003\u2003\u2003\u2003backup_files = get_backup_files()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 36, in get_backup_files\\n\u2003\u2003\u2003\u2003backup_file_pattern = os.path.join(get_backup_path(), \\'bazarr_backup_v*.zip\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 22, in get_backup_path\\n\u2003\u2003\u2003\u2003os.makedirs(backup_dir)\\n\u2003\u2003File \"<frozen os>\", line 215, in makedirs\\n\u2003\u2003File \"<frozen os>\", line 225, in makedirs\\nPermissionError: [Errno 13] Permission denied: \\'/var/snap/bazarr-tak/20\\"
+        },
+        {
+          "timestamp": "2026-06-19 09:41:36",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Series Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 04:37:44",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Movies Subtitles. Check History for more information.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 04:00:44",
+          "type": "INFO",
+          "message": "BAZARR All existing episode subtitles indexed from disk.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 04:00:41",
+          "type": "ERROR",
+          "message": "BAZARR ffprobe cannot analyze this video file /mnt/storage12tb/media/shows/For All Mankind/Season 2/For All Mankind - S02E02 - The Bleeding Edge WEBRip-1080p.mkv. Could it be corrupted? +-------------------------------------------------------+\n",
+          "exception": "\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 KnowIt 0.5.3\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003+-------------------------------------------------------+\n|                      pymediainfo\n|                         6.1.0\n|                   libmediainfo.so.0\n|                         v24.1\n|\n|          /snap/bazarr-tak/30/usr/bin/ffprobe\n|                    v6.1.1-3ubuntu5\n|\n|\n|                        enzyme\n|                         0.5.2\n+-------------------------------------------------------+\n|                   provider: ffmpeg\n|      ffmpeg: /snap/bazarr-tak/30/usr/bin/ffprobe\n|                   profile: default\n+-------------------------------------------------------+\nTraceback (most recent call last):\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/api.py\", line 59, in know\n    result = provider.describe(video_path, context)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 222, in describe\n    data = self.executor.extract_info(video_path)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 80, in extract_info\n    json_dump = self._execute(filename)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 114, in _execute\n    return check_output([self.location, '-v', 'quiet', '-print_format', 'json',\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 466, in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/snap/bazarr-tak/30/usr/bin/ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-sexagesimal', '/mnt/storage12tb/media/shows/For All Mankind/Season 2/For All Mankind - S02E02 - The Bleeding Edge WEBRip-1080p.mkv']' returned non-zero exit status 1.\n\n+-------------------------------------------------------+\n|      Please report any bug or feature request at\n|       https://github.com/ratoaq2/knowit/issues.\n+-------------------------------------------------------+"
+        },
+        {
+          "timestamp": "2026-06-19 04:00:30",
+          "type": "ERROR",
+          "message": "BAZARR ffprobe cannot analyze this video file /mnt/storage12tb/media/shows/Tulsa King/Season 3/Tulsa King - S03E03 - The G and the OG WEBDL-1080p.mkv. Could it be corrupted? +-------------------------------------------------------+\n",
+          "exception": "\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 KnowIt 0.5.3\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003+-------------------------------------------------------+\n|                      pymediainfo\n|                         6.1.0\n|                   libmediainfo.so.0\n|                         v24.1\n|\n|          /snap/bazarr-tak/30/usr/bin/ffprobe\n|                    v6.1.1-3ubuntu5\n|\n|\n|                        enzyme\n|                         0.5.2\n+-------------------------------------------------------+\n|                   provider: ffmpeg\n|      ffmpeg: /snap/bazarr-tak/30/usr/bin/ffprobe\n|                   profile: default\n+-------------------------------------------------------+\nTraceback (most recent call last):\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/api.py\", line 59, in know\n    result = provider.describe(video_path, context)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 222, in describe\n    data = self.executor.extract_info(video_path)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 80, in extract_info\n    json_dump = self._execute(filename)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 114, in _execute\n    return check_output([self.location, '-v', 'quiet', '-print_format', 'json',\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 466, in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/snap/bazarr-tak/30/usr/bin/ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-sexagesimal', '/mnt/storage12tb/media/shows/Tulsa King/Season 3/Tulsa King - S03E03 - The G and the OG WEBDL-1080p.mkv']' returned non-zero exit status 1.\n\n+-------------------------------------------------------+\n|      Please report any bug or feature request at\n|       https://github.com/ratoaq2/knowit/issues.\n+-------------------------------------------------------+"
+        },
+        {
+          "timestamp": "2026-06-19 04:00:29",
+          "type": "ERROR",
+          "message": "BAZARR ffprobe cannot analyze this video file /mnt/storage12tb/media/shows/South Park/Season 27/South Park - S27E05 - Conflict of Interest WEBDL-1080p.mkv. Could it be corrupted? +-------------------------------------------------------+\n",
+          "exception": "\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 KnowIt 0.5.3\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003+-------------------------------------------------------+\n|                      pymediainfo\n|                         6.1.0\n|                   libmediainfo.so.0\n|                         v24.1\n|\n|          /snap/bazarr-tak/30/usr/bin/ffprobe\n|                    v6.1.1-3ubuntu5\n|\n|\n|                        enzyme\n|                         0.5.2\n+-------------------------------------------------------+\n|                   provider: ffmpeg\n|      ffmpeg: /snap/bazarr-tak/30/usr/bin/ffprobe\n|                   profile: default\n+-------------------------------------------------------+\nTraceback (most recent call last):\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/api.py\", line 59, in know\n    result = provider.describe(video_path, context)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 222, in describe\n    data = self.executor.extract_info(video_path)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 80, in extract_info\n    json_dump = self._execute(filename)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/snap/bazarr-tak/30/Bazarr/bazarr/../libs/knowit/providers/ffmpeg.py\", line 114, in _execute\n    return check_output([self.location, '-v', 'quiet', '-print_format', 'json',\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 466, in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/snap/bazarr-tak/30/usr/bin/ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-sexagesimal', '/mnt/storage12tb/media/shows/South Park/Season 27/South Park - S27E05 - Conflict of Interest WEBDL-1080p.mkv']' returned non-zero exit status 1.\n\n+-------------------------------------------------------+\n|      Please report any bug or feature request at\n|       https://github.com/ratoaq2/knowit/issues.\n+-------------------------------------------------------+"
+        },
+        {
+          "timestamp": "2026-06-19 04:00:03",
+          "type": "INFO",
+          "message": "BAZARR All existing movie subtitles indexed from disk.",
+          "exception": null
+        },
+        {
+          "timestamp": "2026-06-19 03:51:42",
+          "type": "ERROR",
+          "message": "Exception raised while running function: [Errno 13] Permission denied: '/var/snap/bazarr-tak/20'",
+          "exception": "Traceback (most recent call last):\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\", line 564, in _run_job\\n\u2003\u2003\u2003\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/health.py\", line 29, in check_health\\n\u2003\u2003\u2003\u2003backup_rotation()\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 203, in backup_rotation\\n\u2003\u2003\u2003\u2003backup_files = get_backup_files()\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 36, in get_backup_files\\n\u2003\u2003\u2003\u2003backup_file_pattern = os.path.join(get_backup_path(), \\'bazarr_backup_v*.zip\\')\\n\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003 ^^^^^^^^^^^^^^^^^\\n\u2003\u2003File \"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/utilities/backup.py\", line 22, in get_backup_path\\n\u2003\u2003\u2003\u2003os.makedirs(backup_dir)\\n\u2003\u2003File \"<frozen os>\", line 215, in makedirs\\n\u2003\u2003File \"<frozen os>\", line 225, in makedirs\\nPermissionError: [Errno 13] Permission denied: \\'/var/snap/bazarr-tak/20\\"
+        },
+        {
+          "timestamp": "2026-06-19 03:41:36",
+          "type": "INFO",
+          "message": "BAZARR Finished searching for missing Series Subtitles. Check History for more information.",
+          "exception": null
+        }
+      ]
+    },
+    "text": "{\"data\": [{\"timestamp\": \"2026-06-19 23:05:24\", \"type\": \"ERROR\", \"message\": \"Exception raised while running function: list indices must be integers or slices, not str\", \"exception\": \"Traceback (most recent call last):\\\\n\\u2003\\u2003File \\\"/snap/bazarr-tak/30/Bazarr/bazarr/app/jobs_queue.py\\\", line 564, in _run_job\\\\n\\u2003\\u2003\\u2003\\u2003job.job_returned_value = getattr(module, job.func)(*job.args, **job.kwargs)\\\\n\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n\\u2003\\u2003File \\\"/snap/bazarr-tak/30/Bazarr/bazarr/../bazarr/subtitles/mass_download/movies.py\\\", line 158, in movie_download_specific_subtitles\\\\n\\u2003\\u2003\\u2003\\u2003result = list(generate_subtitles(moviePath, [(language, hi, forced)], audio_language,\\\\n\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003\\u2003 ^^^^^^^^^^^^^^^^^^^^^^^^^"
+  }
+}

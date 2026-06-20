@@ -1,0 +1,769 @@
+{
+  "generated_at": 1781924282.1656659,
+  "command_id": 660446,
+  "command_states": [
+    {
+      "ts": 1781924282.134005,
+      "status": "completed",
+      "result": "successful",
+      "message": "Completed search for 3 movies. 3 reports downloaded."
+    }
+  ],
+  "movies": [
+    {
+      "id": 150,
+      "title": "Adventureland",
+      "year": 2009,
+      "monitored": true,
+      "hasFile": false,
+      "movieFile": null,
+      "path": "/mnt/storage12tb/media/movies/Adventureland (2009)",
+      "history_records": [
+        {
+          "movieId": 150,
+          "sourceTitle": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "languages": [
+            {
+              "id": 1,
+              "name": "English"
+            }
+          ],
+          "quality": {
+            "quality": {
+              "id": 3,
+              "name": "WEBDL-1080p",
+              "source": "webdl",
+              "resolution": 1080,
+              "modifier": "none"
+            },
+            "revision": {
+              "version": 2,
+              "real": 0,
+              "isRepack": true
+            }
+          },
+          "customFormats": [
+            {
+              "id": 2,
+              "name": "Orpheus Subtitle-Rich WEB Preferred"
+            }
+          ],
+          "customFormatScore": 2500,
+          "qualityCutoffNotMet": true,
+          "date": "2026-06-20T02:57:25Z",
+          "downloadId": "2dde000c-4ec5-4157-95b8-cf31010c1f71",
+          "eventType": "grabbed",
+          "data": {
+            "indexer": "Newznab",
+            "nzbInfoUrl": "https://nzbgeek.info/geekseek.php?guid=d39256a0017a97167c0c92e439f58aa7",
+            "releaseGroup": "PiRaTeS",
+            "age": "480",
+            "ageHours": "11534.055968412695",
+            "ageMinutes": "692043.35810763",
+            "publishedDate": "2025-02-24T12:54:04Z",
+            "downloadClient": "SABnzbd",
+            "downloadClientName": "SABnzbd",
+            "size": "3921034000",
+            "downloadUrl": "https://api.nzbgeek.info/api?t=get&id=d39256a0017a97167c0c92e439f58aa7&apikey=BD4wsYmTkP8a3TF0hNRDVy9qKWR5MA4G",
+            "guid": "https://nzbgeek.info/geekseek.php?guid=d39256a0017a97167c0c92e439f58aa7",
+            "tmdbId": "0",
+            "imdbId": "1091722",
+            "protocol": "1",
+            "customFormatScore": "2500",
+            "movieMatchType": "Id",
+            "releaseSource": "UserInvokedSearch",
+            "indexerFlags": "0",
+            "indexerId": "1"
+          },
+          "id": 540
+        }
+      ]
+    },
+    {
+      "id": 151,
+      "title": "Underwater",
+      "year": 2020,
+      "monitored": true,
+      "hasFile": false,
+      "movieFile": null,
+      "path": "/mnt/storage12tb/media/movies/Underwater (2020)",
+      "history_records": [
+        {
+          "movieId": 151,
+          "sourceTitle": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "languages": [
+            {
+              "id": 1,
+              "name": "English"
+            }
+          ],
+          "quality": {
+            "quality": {
+              "id": 3,
+              "name": "WEBDL-1080p",
+              "source": "webdl",
+              "resolution": 1080,
+              "modifier": "none"
+            },
+            "revision": {
+              "version": 1,
+              "real": 0,
+              "isRepack": false
+            }
+          },
+          "customFormats": [
+            {
+              "id": 2,
+              "name": "Orpheus Subtitle-Rich WEB Preferred"
+            }
+          ],
+          "customFormatScore": 2500,
+          "qualityCutoffNotMet": true,
+          "date": "2026-06-20T02:57:29Z",
+          "downloadId": "f8f1e50a-680e-4ae1-81a2-1ec57fc6ba06",
+          "eventType": "grabbed",
+          "data": {
+            "indexer": "Newznab",
+            "nzbInfoUrl": "https://nzbgeek.info/geekseek.php?guid=cc77df70568f7c7252ebbaebc28b47de",
+            "releaseGroup": "GPRS",
+            "age": "292",
+            "ageHours": "7023.39451205075",
+            "ageMinutes": "421403.67072309",
+            "publishedDate": "2025-08-31T11:33:49Z",
+            "downloadClient": "SABnzbd",
+            "downloadClientName": "SABnzbd",
+            "size": "5320921000",
+            "downloadUrl": "https://api.nzbgeek.info/api?t=get&id=cc77df70568f7c7252ebbaebc28b47de&apikey=BD4wsYmTkP8a3TF0hNRDVy9qKWR5MA4G",
+            "guid": "https://nzbgeek.info/geekseek.php?guid=cc77df70568f7c7252ebbaebc28b47de",
+            "tmdbId": "0",
+            "imdbId": "5774060",
+            "protocol": "1",
+            "customFormatScore": "2500",
+            "movieMatchType": "Id",
+            "releaseSource": "UserInvokedSearch",
+            "indexerFlags": "0",
+            "indexerId": "1"
+          },
+          "id": 541
+        }
+      ]
+    },
+    {
+      "id": 152,
+      "title": "Charlie's Angels",
+      "year": 2019,
+      "monitored": true,
+      "hasFile": false,
+      "movieFile": null,
+      "path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)",
+      "history_records": [
+        {
+          "movieId": 152,
+          "sourceTitle": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "languages": [
+            {
+              "id": 1,
+              "name": "English"
+            }
+          ],
+          "quality": {
+            "quality": {
+              "id": 3,
+              "name": "WEBDL-1080p",
+              "source": "webdl",
+              "resolution": 1080,
+              "modifier": "none"
+            },
+            "revision": {
+              "version": 1,
+              "real": 0,
+              "isRepack": false
+            }
+          },
+          "customFormats": [
+            {
+              "id": 2,
+              "name": "Orpheus Subtitle-Rich WEB Preferred"
+            }
+          ],
+          "customFormatScore": 2500,
+          "qualityCutoffNotMet": true,
+          "date": "2026-06-20T02:57:32Z",
+          "downloadId": "5450a252-32e3-4ea6-b5b4-670c4c76a4e8",
+          "eventType": "grabbed",
+          "data": {
+            "indexer": "Newznab",
+            "nzbInfoUrl": "https://nzbgeek.info/geekseek.php?guid=22e711fded6ee709cefae886bad71979",
+            "releaseGroup": "Rapta",
+            "age": "47",
+            "ageHours": "1131.0973647631668",
+            "ageMinutes": "67865.84188583333",
+            "publishedDate": "2026-05-03T23:51:42Z",
+            "downloadClient": "SABnzbd",
+            "downloadClientName": "SABnzbd",
+            "size": "3095914000",
+            "downloadUrl": "https://api.nzbgeek.info/api?t=get&id=22e711fded6ee709cefae886bad71979&apikey=BD4wsYmTkP8a3TF0hNRDVy9qKWR5MA4G",
+            "guid": "https://nzbgeek.info/geekseek.php?guid=22e711fded6ee709cefae886bad71979",
+            "tmdbId": "0",
+            "imdbId": "5033998",
+            "protocol": "1",
+            "customFormatScore": "2500",
+            "movieMatchType": "Id",
+            "releaseSource": "UserInvokedSearch",
+            "indexerFlags": "0",
+            "indexerId": "1"
+          },
+          "id": 542
+        }
+      ]
+    }
+  ],
+  "queue": {
+    "page": 1,
+    "pageSize": 50,
+    "sortKey": "progress",
+    "sortDirection": "descending",
+    "totalRecords": 11,
+    "records": [
+      {
+        "movieId": 57,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 6,
+            "name": "Bluray-720p",
+            "source": "bluray",
+            "resolution": 720,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [],
+        "customFormatScore": 0,
+        "size": 2124843566,
+        "title": "Gercege.Cagri.Total.Recall.1990.BluRay.m1080p.X265.10bit.AC3-AAC.TR-EN.TurkSeeD",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "added": "2026-05-01T20:44:50Z",
+        "status": "completed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "importBlocked",
+        "statusMessages": [
+          {
+            "title": "Gercege.Cagri.Total.Recall.1990.BluRay.m1080p.X265.10bit.AC3-AAC.TR-EN.TurkSeeD",
+            "messages": [
+              "Found matching movie via grab history, but release was matched to movie by ID. Manual Import required."
+            ]
+          }
+        ],
+        "errorMessage": "",
+        "downloadId": "SABnzbd_nzo_fpyklo6b",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "indexer": "Newznab",
+        "outputPath": "/mnt/storage12tb/media/movies/Gercege.Cagri.Total.Recall.1990.BluRay.m1080p.X265.10bit.AC3-AAC.TR-EN.TurkSeeD/",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 1855208163
+      },
+      {
+        "movieId": 109,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 5,
+            "name": "WEBDL-720p",
+            "source": "webdl",
+            "resolution": 720,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "the.godfather.part.ii.1974.720p.web.h264-jff",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "the.godfather.part.ii.1974.720p.web.h264-jff",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_oaaldkga",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/the.godfather.part.ii.1974.720p.web.h264-jff",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 2119958234
+      },
+      {
+        "movieId": 109,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 5,
+            "name": "WEBDL-720p",
+            "source": "webdl",
+            "resolution": 720,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "the.godfather.part.ii.1974.720p.web.h264-jff",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "the.godfather.part.ii.1974.720p.web.h264-jff",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_8l_d2kd5",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/the.godfather.part.ii.1974.720p.web.h264-jff.1",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 1402667169
+      },
+      {
+        "movieId": 109,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_8fnm_qz2",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 2061143955
+      },
+      {
+        "movieId": 109,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_rstbuspi",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/The.Godfather.Part.II.1974.1080p.iP.WEB-DL.AAC.2.0.H.264-PiRaTeS.1",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 6182398
+      },
+      {
+        "movieId": 136,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "The.Matrix.Resurrections.2021.1080p.HMAX.WEB-DL.DDP5.1.Atmos.x264-SiGLA",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "The.Matrix.Resurrections.2021.1080p.HMAX.WEB-DL.DDP5.1.Atmos.x264-SiGLA",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Download failed - Not on your server(s) - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_xihalnks",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/The.Matrix.Resurrections.2021.1080p.HMAX.WEB-DL.DDP5.1.Atmos.x264-SiGLA",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 1886236776
+      },
+      {
+        "movieId": 8,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 7,
+            "name": "Bluray-1080p",
+            "source": "bluray",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "Dune.2021.BluRay.1080p.HEVC.10bit.HDR.Dolby.TrueHD.with.Dolby.Atmos.8ch-CAPTCHA",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "Dune.2021.BluRay.1080p.HEVC.10bit.HDR.Dolby.TrueHD.with.Dolby.Atmos.8ch-CAPTCHA",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_n_blv8he",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/Dune.2021.BluRay.1080p.HEVC.10bit.HDR.Dolby.TrueHD.with.Dolby.Atmos.8ch-CAPTCHA",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 219364980
+      },
+      {
+        "movieId": 9,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 30,
+            "name": "Remux-1080p",
+            "source": "bluray",
+            "resolution": 1080,
+            "modifier": "remux"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [],
+        "customFormatScore": 0,
+        "size": 0,
+        "title": "Dune.Part.Two.2024.1080p.BluRay.REMUX.AVC.TrueHD.Atmos.7.1-MrTentsaw",
+        "estimatedCompletionTime": "2026-06-20T02:57:37Z",
+        "status": "failed",
+        "trackedDownloadStatus": "warning",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [
+          {
+            "title": "Dune.Part.Two.2024.1080p.BluRay.REMUX.AVC.TrueHD.Atmos.7.1-MrTentsaw",
+            "messages": [
+              "Download has failed wasn't grabbed by Radarr, skipping automatic download handling"
+            ]
+          }
+        ],
+        "errorMessage": "Aborted, cannot be completed - https://sabnzbd.org/not-complete",
+        "downloadId": "SABnzbd_nzo_2ur2iq_l",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "outputPath": "/mnt/storage12tb/media/archive/incomplete/Dune.Part.Two.2024.1080p.BluRay.REMUX.AVC.TrueHD.Atmos.7.1-MrTentsaw",
+        "sizeleft": 0,
+        "timeleft": "00:00:00",
+        "id": 1793146004
+      },
+      {
+        "movieId": 150,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 2,
+            "real": 0,
+            "isRepack": true
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 2500,
+        "size": 3921034608,
+        "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+        "estimatedCompletionTime": "2026-06-20T03:03:23Z",
+        "added": "2026-06-20T02:57:25Z",
+        "status": "downloading",
+        "trackedDownloadStatus": "ok",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [],
+        "downloadId": "2dde000c-4ec5-4157-95b8-cf31010c1f71",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "indexer": "Newznab",
+        "sizeleft": 3727184363,
+        "timeleft": "00:05:46",
+        "id": 1060366774
+      },
+      {
+        "movieId": 151,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 2500,
+        "size": 5320925511,
+        "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+        "estimatedCompletionTime": "2026-06-20T03:11:37Z",
+        "added": "2026-06-20T02:57:29Z",
+        "status": "downloading",
+        "trackedDownloadStatus": "ok",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [],
+        "downloadId": "f8f1e50a-680e-4ae1-81a2-1ec57fc6ba06",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "indexer": "Newznab",
+        "sizeleft": 5320925511,
+        "timeleft": "00:14:00",
+        "id": 96837564
+      },
+      {
+        "movieId": 152,
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "customFormats": [
+          {
+            "id": 2,
+            "name": "Orpheus Subtitle-Rich WEB Preferred"
+          }
+        ],
+        "customFormatScore": 2500,
+        "size": 3095910154,
+        "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+        "estimatedCompletionTime": "2026-06-20T03:16:25Z",
+        "added": "2026-06-20T02:57:32Z",
+        "status": "downloading",
+        "trackedDownloadStatus": "ok",
+        "trackedDownloadState": "downloading",
+        "statusMessages": [],
+        "downloadId": "5450a252-32e3-4ea6-b5b4-670c4c76a4e8",
+        "protocol": "usenet",
+        "downloadClient": "SABnzbd",
+        "downloadClientHasPostImportCategory": false,
+        "indexer": "Newznab",
+        "sizeleft": 3095910154,
+        "timeleft": "00:18:48",
+        "id": 691339058
+      }
+    ]
+  }
+}

@@ -606,6 +606,84 @@ def verified_subtitle_files_for_media(media_path: Path, language: str) -> list[d
     return verified
 
 
+def embedded_text_subtitle_streams(media_path: Path, language: str) -> list[dict[str, Any]]:
+    if not media_path.exists():
+        return []
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", str(media_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (subprocess.SubprocessError, FileNotFoundError, json.JSONDecodeError):
+        return []
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
+    language_aliases = {language.lower()}
+    if language.lower() == "en":
+        language_aliases.update({"eng", "english"})
+    text_codecs = {"subrip", "ass", "ssa", "webvtt", "mov_text"}
+    streams: list[dict[str, Any]] = []
+    for stream in payload.get("streams") or []:
+        if stream.get("codec_type") != "subtitle":
+            continue
+        codec_name = str(stream.get("codec_name") or "").lower()
+        if codec_name not in text_codecs:
+            continue
+        tags = stream.get("tags") or {}
+        stream_language = str(tags.get("language") or "").lower()
+        if stream_language and stream_language not in language_aliases:
+            continue
+        streams.append({
+            "index": stream.get("index"),
+            "codec_name": codec_name,
+            "language": stream_language or None,
+            "title": tags.get("title"),
+        })
+    return streams
+
+
+def extract_embedded_text_subtitle(media_path: Path, language: str) -> Path | None:
+    streams = embedded_text_subtitle_streams(media_path, language)
+    if not streams:
+        return None
+    stream = streams[0]
+    stream_index = stream.get("index")
+    if stream_index is None:
+        return None
+    suffix = ".srt"
+    output_path = media_path.with_name(f"{media_path.stem}.{language.lower()}{suffix}")
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-v",
+                "error",
+                "-i",
+                str(media_path),
+                "-map",
+                f"0:{stream_index}",
+                "-c:s",
+                "srt",
+                str(output_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return None
+    if output_path.exists() and output_path.is_file() and output_path.stat().st_size > 0:
+        return output_path
+    return None
+
+
 def primary_subtitle_path(subtitle_files: list[dict[str, Any]]) -> Path | None:
     if not subtitle_files:
         return None
@@ -865,6 +943,9 @@ def ensure_radarr_receipt_sync(radarr_id: int, language: str, download: bool) ->
     subtitle_files = verified_subtitle_files_for_media(media_path, language) if media_path else []
     if not subtitle_path:
         subtitle_path = primary_subtitle_path(subtitle_files)
+    if not subtitle_path and media_path:
+        subtitle_path = extract_embedded_text_subtitle(media_path, language)
+        subtitle_files = verified_subtitle_files_for_media(media_path, language)
     if subtitle_path or not download:
         return verification_receipt(
             media_path=media_path,
@@ -902,6 +983,9 @@ def ensure_radarr_receipt_sync(radarr_id: int, language: str, download: bool) ->
     subtitle_files = verified_subtitle_files_for_media(media_path, language) if media_path else []
     if not subtitle_path:
         subtitle_path = primary_subtitle_path(subtitle_files)
+    if not subtitle_path and media_path:
+        subtitle_path = extract_embedded_text_subtitle(media_path, language)
+        subtitle_files = verified_subtitle_files_for_media(media_path, language)
     receipt = verification_receipt(
         media_path=media_path,
         language=language,
@@ -1028,6 +1112,9 @@ def ensure_radarr(
     subtitle_files = verified_subtitle_files_for_media(media_path, language) if media_path else []
     if not subtitle_path:
         subtitle_path = primary_subtitle_path(subtitle_files)
+    if not subtitle_path and media_path:
+        subtitle_path = extract_embedded_text_subtitle(media_path, language)
+        subtitle_files = verified_subtitle_files_for_media(media_path, language)
     if subtitle_path:
         emit(verification_receipt(
             media_path=media_path,
@@ -1087,6 +1174,9 @@ def ensure_radarr(
     subtitle_files = verified_subtitle_files_for_media(media_path, language) if media_path else []
     if not subtitle_path:
         subtitle_path = primary_subtitle_path(subtitle_files)
+    if not subtitle_path and media_path:
+        subtitle_path = extract_embedded_text_subtitle(media_path, language)
+        subtitle_files = verified_subtitle_files_for_media(media_path, language)
     receipt = verification_receipt(
         media_path=media_path,
         language=language,

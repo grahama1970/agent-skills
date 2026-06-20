@@ -1,0 +1,409 @@
+{
+  "counts": {
+    "chuckle": 1,
+    "cough": 5,
+    "gasp": 7,
+    "groan": 21,
+    "laugh": 2,
+    "sigh": 4,
+    "sniffle": 1,
+    "yawn": 0
+  },
+  "matches": [
+    {
+      "emotion": "gasp",
+      "end_seconds": 545.92,
+      "line": "(gasps)",
+      "marker": "(gasps)",
+      "speaker": null,
+      "start_seconds": 544.961,
+      "timecode": "00:09:04,961 --> 00:09:05,920"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 579.078,
+      "line": "-(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 577.243,
+      "timecode": "00:09:37,243 --> 00:09:39,078"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 750.666,
+      "line": "(sighs)",
+      "marker": "(sighs)",
+      "speaker": null,
+      "start_seconds": 749.749,
+      "timecode": "00:12:29,749 --> 00:12:30,666"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 760.968,
+      "line": "(Rodrigo groans)",
+      "marker": "(Rodrigo groans)",
+      "speaker": null,
+      "start_seconds": 758.716,
+      "timecode": "00:12:38,716 --> 00:12:40,968"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 794.335,
+      "line": "(groaning)",
+      "marker": "(groaning)",
+      "speaker": null,
+      "start_seconds": 793.042,
+      "timecode": "00:13:13,042 --> 00:13:14,335"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 851.183,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 850.307,
+      "timecode": "00:14:10,307 --> 00:14:11,183"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 859.024,
+      "line": "-(laughter)",
+      "marker": "(laughter)",
+      "speaker": null,
+      "start_seconds": 857.773,
+      "timecode": "00:14:17,773 --> 00:14:19,024"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 950.991,
+      "line": "(groaning)",
+      "marker": "(groaning)",
+      "speaker": null,
+      "start_seconds": 949.698,
+      "timecode": "00:15:49,698 --> 00:15:50,991"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 1303.844,
+      "line": "(sighs) Can you just admit",
+      "marker": "(sighs)",
+      "speaker": null,
+      "start_seconds": 1302.217,
+      "timecode": "00:21:42,217 --> 00:21:43,844"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 1472.721,
+      "line": "(sighs) All right, this is gonna suck.",
+      "marker": "(sighs)",
+      "speaker": null,
+      "start_seconds": 1471.72,
+      "timecode": "00:24:31,720 --> 00:24:32,721"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 1476.516,
+      "line": "-(Captain groans sharply)",
+      "marker": "(Captain groans sharply)",
+      "speaker": null,
+      "start_seconds": 1474.89,
+      "timecode": "00:24:34,890 --> 00:24:36,516"
+    },
+    {
+      "emotion": "chuckle",
+      "end_seconds": 1569.943,
+      "line": "(chuckles)",
+      "marker": "(chuckles)",
+      "speaker": null,
+      "start_seconds": 1569.067,
+      "timecode": "00:26:09,067 --> 00:26:09,943"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 1678.885,
+      "line": "(gasps, screams)",
+      "marker": "(gasps, screams)",
+      "speaker": null,
+      "start_seconds": 1677.425,
+      "timecode": "00:27:57,425 --> 00:27:58,885"
+    },
+    {
+      "emotion": "sniffle",
+      "end_seconds": 1767.64,
+      "line": "(sniffles, exhales)",
+      "marker": "(sniffles, exhales)",
+      "speaker": null,
+      "start_seconds": 1766.431,
+      "timecode": "00:29:26,431 --> 00:29:27,640"
+    },
+    {
+      "emotion": "laugh",
+      "end_seconds": 1820.61,
+      "line": "(laughs)",
+      "marker": "(laughs)",
+      "speaker": null,
+      "start_seconds": 1819.484,
+      "timecode": "00:30:19,484 --> 00:30:20,610"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2265.263,
+      "line": "(Smith groans)",
+      "marker": "(Smith groans)",
+      "speaker": null,
+      "start_seconds": 2264.053,
+      "timecode": "00:37:44,053 --> 00:37:45,263"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2282.822,
+      "line": "-(Smith groans)",
+      "marker": "(Smith groans)",
+      "speaker": null,
+      "start_seconds": 2281.612,
+      "timecode": "00:38:01,612 --> 00:38:02,822"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 2417.623,
+      "line": "-(Emily gasps)",
+      "marker": "(Emily gasps)",
+      "speaker": null,
+      "start_seconds": 2415.204,
+      "timecode": "00:40:15,204 --> 00:40:17,623"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 2492.99,
+      "line": "-(gasps)",
+      "marker": "(gasps)",
+      "speaker": null,
+      "start_seconds": 2492.031,
+      "timecode": "00:41:32,031 --> 00:41:32,990"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2543.207,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 2542.081,
+      "timecode": "00:42:22,081 --> 00:42:23,207"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2558.889,
+      "line": "SMITH: <i>Emily, watch out! </i>(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 2557.763,
+      "timecode": "00:42:37,763 --> 00:42:38,889"
+    },
+    {
+      "emotion": "cough",
+      "end_seconds": 2606.52,
+      "line": "(coughs)",
+      "marker": "(coughs)",
+      "speaker": null,
+      "start_seconds": 2605.436,
+      "timecode": "00:43:25,436 --> 00:43:26,520"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2607.896,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 2606.979,
+      "timecode": "00:43:26,979 --> 00:43:27,896"
+    },
+    {
+      "emotion": "cough",
+      "end_seconds": 2610.691,
+      "line": "(coughs)",
+      "marker": "(coughs)",
+      "speaker": null,
+      "start_seconds": 2609.648,
+      "timecode": "00:43:29,648 --> 00:43:30,691"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 2938.894,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 2937.726,
+      "timecode": "00:48:57,726 --> 00:48:58,894"
+    },
+    {
+      "emotion": "cough",
+      "end_seconds": 3240.946,
+      "line": "(Smith coughs)",
+      "marker": "(Smith coughs)",
+      "speaker": null,
+      "start_seconds": 3239.611,
+      "timecode": "00:53:59,611 --> 00:54:00,946"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 3545.25,
+      "line": "(Norah groans)",
+      "marker": "(Norah groans)",
+      "speaker": null,
+      "start_seconds": 3544.29,
+      "timecode": "00:59:04,290 --> 00:59:05,250"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 3718.256,
+      "line": "(gasping)",
+      "marker": "(gasping)",
+      "speaker": null,
+      "start_seconds": 3717.213,
+      "timecode": "01:01:57,213 --> 01:01:58,256"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 3720.049,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 3719.173,
+      "timecode": "01:01:59,173 --> 01:02:00,049"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 3785.49,
+      "line": "(gasps)",
+      "marker": "(gasps)",
+      "speaker": null,
+      "start_seconds": 3784.489,
+      "timecode": "01:03:04,489 --> 01:03:05,490"
+    },
+    {
+      "emotion": "sigh",
+      "end_seconds": 3859.981,
+      "line": "(sighs)",
+      "marker": "(sighs)",
+      "speaker": null,
+      "start_seconds": 3858.896,
+      "timecode": "01:04:18,896 --> 01:04:19,981"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4159.864,
+      "line": "(Emily groaning)",
+      "marker": "(Emily groaning)",
+      "speaker": null,
+      "start_seconds": 4158.195,
+      "timecode": "01:09:18,195 --> 01:09:19,864"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4190.102,
+      "line": "(Emily groans)",
+      "marker": "(Emily groans)",
+      "speaker": null,
+      "start_seconds": 4189.059,
+      "timecode": "01:09:49,059 --> 01:09:50,102"
+    },
+    {
+      "emotion": "cough",
+      "end_seconds": 4446.775,
+      "line": "(coughing)",
+      "marker": "(coughing)",
+      "speaker": null,
+      "start_seconds": 4444.815,
+      "timecode": "01:14:04,815 --> 01:14:06,775"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4667.621,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 4665.744,
+      "timecode": "01:17:45,744 --> 01:17:47,621"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4789.159,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 4788.158,
+      "timecode": "01:19:48,158 --> 01:19:49,159"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4807.01,
+      "line": "-(Emily groaning)",
+      "marker": "(Emily groaning)",
+      "speaker": null,
+      "start_seconds": 4804.466,
+      "timecode": "01:20:04,466 --> 01:20:07,010"
+    },
+    {
+      "emotion": "cough",
+      "end_seconds": 4847.509,
+      "line": "-(coughs)",
+      "marker": "(coughs)",
+      "speaker": null,
+      "start_seconds": 4845.924,
+      "timecode": "01:20:45,924 --> 01:20:47,509"
+    },
+    {
+      "emotion": "gasp",
+      "end_seconds": 4859.729,
+      "line": "(gasping)",
+      "marker": "(gasping)",
+      "speaker": null,
+      "start_seconds": 4858.311,
+      "timecode": "01:20:58,311 --> 01:20:59,729"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 4927.297,
+      "line": "-(metallic groaning)",
+      "marker": "(metallic groaning)",
+      "speaker": null,
+      "start_seconds": 4926.129,
+      "timecode": "01:22:06,129 --> 01:22:07,297"
+    },
+    {
+      "emotion": "groan",
+      "end_seconds": 5131.96,
+      "line": "(groans)",
+      "marker": "(groans)",
+      "speaker": null,
+      "start_seconds": 5131.084,
+      "timecode": "01:25:31,084 --> 01:25:31,960"
+    }
+  ],
+  "metadata": {
+    "format": "srt",
+    "inline_speakers": [
+      "NORAH"
+    ],
+    "speaker_metadata_status": "inline_text_labels",
+    "subtitle_filename": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+    "subtitle_parent": "/mnt/storage12tb/media/movies/Underwater (2020)",
+    "title_from_path": "Underwater",
+    "year_from_path": 2020
+  },
+  "missing": [
+    "yawn"
+  ],
+  "status": "has_orpheus_tags",
+  "subtitle_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+  "target_emotions": [
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp"
+  ]
+}

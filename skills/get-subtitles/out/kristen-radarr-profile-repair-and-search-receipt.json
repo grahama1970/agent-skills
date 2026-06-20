@@ -1,0 +1,41 @@
+{
+  "generated_at": 1781924242.4837105,
+  "action": "repair_orpheus_profile_min_score_and_search",
+  "profile_before_path": "skills/get-subtitles/out/radarr-orpheus-profile-before-minscore-repair.json",
+  "profile_after_path": "skills/get-subtitles/out/radarr-orpheus-profile-after-minscore-repair.json",
+  "put_status": 201,
+  "profile_after": {
+    "id": 7,
+    "name": "Orpheus-TTS",
+    "minFormatScore": 2500,
+    "cutoffFormatScore": 2500
+  },
+  "search_command": {
+    "name": "MoviesSearch",
+    "commandName": "Movies Search",
+    "body": {
+      "movieIds": [
+        151,
+        150,
+        152
+      ],
+      "sendUpdatesToClient": true,
+      "updateScheduledTask": true,
+      "requiresDiskAccess": false,
+      "isExclusive": false,
+      "isTypeExclusive": false,
+      "isLongRunning": false,
+      "name": "MoviesSearch",
+      "trigger": "manual",
+      "suppressMessages": false
+    },
+    "priority": "normal",
+    "status": "queued",
+    "result": "unknown",
+    "queued": "2026-06-20T02:57:22Z",
+    "trigger": "manual",
+    "sendUpdatesToClient": true,
+    "updateScheduledTask": true,
+    "id": 660446
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "language": "en",
+  "media_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv",
+  "movie_title": "Underwater",
+  "movie_year": "2020",
+  "primary_subtitle_format": "srt",
+  "radarr_id": 151,
+  "safe_default": "allow_watch_processing",
+  "source": "filesystem",
+  "status": "verified",
+  "subtitle_files": [
+    {
+      "format": "srt",
+      "metadata": {
+        "format": "srt",
+        "inline_speakers": [
+          "NORAH"
+        ],
+        "speaker_metadata_status": "inline_text_labels",
+        "subtitle_filename": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+        "subtitle_parent": "/mnt/storage12tb/media/movies/Underwater (2020)",
+        "title_from_path": "Underwater",
+        "year_from_path": 2020
+      },
+      "path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+      "speaker_metadata_status": "inline_text_labels",
+      "verified": true
+    }
+  ],
+  "subtitle_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+  "verified_at": 1781925317
+}

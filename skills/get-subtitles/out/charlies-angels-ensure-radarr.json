@@ -1,0 +1,29 @@
+{
+  "language": "en",
+  "media_path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.mkv",
+  "movie_title": "Charlie's Angels",
+  "movie_year": "2019",
+  "primary_subtitle_format": "srt",
+  "radarr_id": 152,
+  "safe_default": "allow_watch_processing",
+  "source": "filesystem",
+  "status": "verified",
+  "subtitle_files": [
+    {
+      "format": "srt",
+      "metadata": {
+        "format": "srt",
+        "speaker_metadata_status": "not_present",
+        "subtitle_filename": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.en.srt",
+        "subtitle_parent": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)",
+        "title_from_path": "Charlie's Angels",
+        "year_from_path": 2019
+      },
+      "path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.en.srt",
+      "speaker_metadata_status": "not_present",
+      "verified": true
+    }
+  ],
+  "subtitle_path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.en.srt",
+  "verified_at": 1781925356
+}

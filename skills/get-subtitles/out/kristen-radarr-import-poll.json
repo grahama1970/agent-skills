@@ -1,0 +1,1667 @@
+{
+  "generated_at": 1781925343.1367967,
+  "poll_log": [
+    {
+      "ts": 1781924322.617045,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:18:48",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:14:00",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:05:46",
+          "sizeleft": 3727184363,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924352.630785,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:17:12",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:30",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:25",
+          "sizeleft": 2917243289,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924382.6449168,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:17:12",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:30",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:25",
+          "sizeleft": 2917243289,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924412.662328,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:17:12",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:30",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:25",
+          "sizeleft": 2917243289,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924442.6725996,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:14:45",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:19",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:43",
+          "sizeleft": 1899442995,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924472.687498,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:14:45",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:19",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:43",
+          "sizeleft": 1899442995,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924502.7025743,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:14:45",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:19",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:43",
+          "sizeleft": 1899442995,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924532.7205794,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:13:48",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:09:14",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:22",
+          "sizeleft": 929719910,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924562.732513,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:13:48",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:09:14",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:22",
+          "sizeleft": 929719910,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924592.747387,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": false
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:13:48",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:09:14",
+          "sizeleft": 5320925511,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:22",
+          "sizeleft": 929719910,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924622.7629504,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:50",
+          "sizeleft": 5101123010,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924652.77283,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:50",
+          "sizeleft": 5101123010,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924682.7873077,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:12:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:50",
+          "sizeleft": 5101123010,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924712.8011944,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:11:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:39",
+          "sizeleft": 4175157002,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924742.818713,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:11:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:39",
+          "sizeleft": 4175157002,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924772.83295,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:11:36",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:39",
+          "sizeleft": 4175157002,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924802.8429368,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:03",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:05:05",
+          "sizeleft": 3181872414,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924832.8620145,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:03",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:05:05",
+          "sizeleft": 3181872414,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924862.872947,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:10:03",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:05:05",
+          "sizeleft": 3181872414,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924892.888565,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:52",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:03:15",
+          "sizeleft": 2188587827,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924922.901331,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:52",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:03:15",
+          "sizeleft": 2188587827,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924952.916419,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:07:52",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:03:15",
+          "sizeleft": 2188587827,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781924982.9314744,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:27",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:48",
+          "sizeleft": 1196771246,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925012.9470305,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:27",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:48",
+          "sizeleft": 1196771246,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925042.9620147,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:06:27",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:48",
+          "sizeleft": 1196771246,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925072.9817798,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:47",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:00:15",
+          "sizeleft": 180554301,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925102.9931145,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:47",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:00:15",
+          "sizeleft": 180554301,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925133.0086832,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": false
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:04:47",
+          "sizeleft": 3095910154,
+          "errorMessage": null,
+          "statusMessages": []
+        },
+        {
+          "title": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:00:15",
+          "sizeleft": 180554301,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925163.032819,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:28",
+          "sizeleft": 1700444241,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925193.0447083,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:28",
+          "sizeleft": 1700444241,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925223.0622396,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:02:28",
+          "sizeleft": 1700444241,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925253.0808134,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:06",
+          "sizeleft": 741909463,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925283.0996985,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:06",
+          "sizeleft": 741909463,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925313.1201644,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": false
+        }
+      ],
+      "target_queue": [
+        {
+          "title": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+          "status": "downloading",
+          "trackedDownloadStatus": "ok",
+          "trackedDownloadState": "downloading",
+          "timeleft": "00:01:06",
+          "sizeleft": 741909463,
+          "errorMessage": null,
+          "statusMessages": []
+        }
+      ]
+    },
+    {
+      "ts": 1781925343.1367452,
+      "movies": [
+        {
+          "id": 150,
+          "title": "Adventureland",
+          "hasFile": true
+        },
+        {
+          "id": 151,
+          "title": "Underwater",
+          "hasFile": true
+        },
+        {
+          "id": 152,
+          "title": "Charlie's Angels",
+          "hasFile": true
+        }
+      ],
+      "target_queue": []
+    }
+  ],
+  "final_movies": [
+    {
+      "id": 150,
+      "title": "Adventureland",
+      "hasFile": true,
+      "movieFile": {
+        "movieId": 150,
+        "relativePath": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv",
+        "path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv",
+        "size": 3724405267,
+        "dateAdded": "2026-06-20T03:03:21Z",
+        "sceneName": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS",
+        "releaseGroup": "PiRaTeS",
+        "edition": "",
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 2,
+            "real": 0,
+            "isRepack": true
+          }
+        },
+        "indexerFlags": 0,
+        "mediaInfo": {
+          "audioBitrate": 192000,
+          "audioChannels": 5.1,
+          "audioCodec": "EAC3",
+          "audioLanguages": "eng",
+          "audioStreamCount": 1,
+          "videoBitDepth": 8,
+          "videoBitrate": 0,
+          "videoCodec": "x264",
+          "videoFps": 23.976,
+          "videoDynamicRange": "",
+          "videoDynamicRangeType": "",
+          "resolution": "1920x1080",
+          "runTime": "1:46:51",
+          "scanType": "Progressive",
+          "subtitles": "eng"
+        },
+        "originalFilePath": "Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv",
+        "qualityCutoffNotMet": true,
+        "id": 221
+      },
+      "path": "/mnt/storage12tb/media/movies/Adventureland (2009)"
+    },
+    {
+      "id": 151,
+      "title": "Underwater",
+      "hasFile": true,
+      "movieFile": {
+        "movieId": 151,
+        "relativePath": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv",
+        "path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv",
+        "size": 5054987521,
+        "dateAdded": "2026-06-20T03:12:21Z",
+        "sceneName": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS",
+        "releaseGroup": "GPRS",
+        "edition": "",
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "indexerFlags": 0,
+        "mediaInfo": {
+          "audioBitrate": 768000,
+          "audioChannels": 5.1,
+          "audioCodec": "EAC3 Atmos",
+          "audioLanguages": "eng",
+          "audioStreamCount": 1,
+          "videoBitDepth": 8,
+          "videoBitrate": 6322832,
+          "videoCodec": "h264",
+          "videoFps": 23.976,
+          "videoDynamicRange": "",
+          "videoDynamicRangeType": "",
+          "resolution": "1920x1080",
+          "runTime": "1:34:59",
+          "scanType": "Progressive",
+          "subtitles": "cze/dan/ger/gre/eng/spa/spa/fin/fre/fre/hun/ita/jpn/kor/dut/nor/pol/por/por/rum/slo/swe/tur/chi/chi/chi"
+        },
+        "originalFilePath": "Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv",
+        "qualityCutoffNotMet": true,
+        "id": 222
+      },
+      "path": "/mnt/storage12tb/media/movies/Underwater (2020)"
+    },
+    {
+      "id": 152,
+      "title": "Charlie's Angels",
+      "hasFile": true,
+      "movieFile": {
+        "movieId": 152,
+        "relativePath": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.mkv",
+        "path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.mkv",
+        "size": 2500273334,
+        "dateAdded": "2026-06-20T03:15:21Z",
+        "sceneName": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta",
+        "releaseGroup": "Rapta",
+        "edition": "",
+        "languages": [
+          {
+            "id": 1,
+            "name": "English"
+          }
+        ],
+        "quality": {
+          "quality": {
+            "id": 3,
+            "name": "WEBDL-1080p",
+            "source": "webdl",
+            "resolution": 1080,
+            "modifier": "none"
+          },
+          "revision": {
+            "version": 1,
+            "real": 0,
+            "isRepack": false
+          }
+        },
+        "indexerFlags": 0,
+        "mediaInfo": {
+          "audioBitrate": 384000,
+          "audioChannels": 5.1,
+          "audioCodec": "AC3",
+          "audioLanguages": "",
+          "audioStreamCount": 1,
+          "videoBitDepth": 8,
+          "videoBitrate": 0,
+          "videoCodec": "x264",
+          "videoFps": 23.976,
+          "videoDynamicRange": "",
+          "videoDynamicRangeType": "",
+          "resolution": "1920x798",
+          "runTime": "1:58:28",
+          "scanType": "Progressive",
+          "subtitles": "eng"
+        },
+        "originalFilePath": "Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.mkv",
+        "qualityCutoffNotMet": true,
+        "id": 223
+      },
+      "path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)"
+    }
+  ]
+}
