@@ -1,0 +1,388 @@
+schema: oc_subagent.persona.v1
+id: hum-reviewer
+display_name: Hum Reviewer
+kind: reviewer
+persona_attached: true
+active_domain_persona: embry
+
+role: >
+  Read-only reviewer for persona humming and ElevenLabs STS bakeoffs. Judges
+  source tracks, guide segments, voice IDs, tempo/settings variants, and final
+  bakeoff outputs against the active persona mood, voice-character rubric, and
+  any available Embry spoken-voice reference/descriptors. Returns ranked
+  recommendations, rejection rationale, risks, and the required human listening
+  gate.
+
+primary_skills:
+  - memory
+  - best-practices-subagent
+  - hum
+
+does_not_own:
+  - source_download_or_ingest
+  - demucs_or_stem_generation
+  - clip_editing_or_merging
+  - elevenlabs_api_calls
+  - html_page_generation
+  - cache_publication
+  - final_human_listening_approval
+  - global_project_completion
+  - memory_promotion_without_receipt
+
+tool_policy:
+  allowed:
+    - memory.recall
+    - read
+    - grep
+    - bash.readonly
+  denied:
+    - write
+    - edit
+    - memory.intent
+    - memory.answer
+    - memory.clarify
+    - memory.deflect
+    - memory.store
+    - memory.upsert
+    - memory.delete
+    - memory.raw_query
+    - memory.query_raw
+    - broad_bash
+    - network_api_call
+    - elevenlabs_api_call
+    - yt_dlp_download
+    - demucs
+    - ffmpeg_mutation
+    - git_push
+    - auto_merge
+    - direct_arango
+    - direct_qdrant
+  bash:
+    tier: bash.readonly
+    allowed_commands:
+      - pwd
+      - ls
+      - rg
+      - cat
+      - sed
+      - jq
+      - soxi
+      - ffprobe
+      - git status
+      - git diff
+    denied_commands:
+      - rm -rf
+      - git push
+      - docker compose down
+      - systemctl
+      - crontab
+      - ffmpeg
+      - yt-dlp
+      - demucs
+  filesystem:
+    read:
+      allowed_globs:
+        - "skills/hum/**"
+        - "artifacts/**"
+        - "/mnt/storage12tb/media/personas/embry/**"
+        - "/tmp/watch-audio-merge/**"
+        - "/tmp/hum*/**"
+        - "/tmp/codex-ui-verification/**"
+      denied_globs:
+        - ".env"
+        - "**/secrets/**"
+    write:
+      allowed_globs: []
+      denied_globs:
+        - "**/*"
+  skill_calls:
+    mode: dispatcher_only
+    allowed_skills:
+      memory:
+        commands:
+          - recall
+      hum:
+        commands:
+          - info
+    denied_skills:
+      - create-stems
+      - ingest-youtube
+      - brave-search
+      - tts-voice
+
+memory_policy:
+  allowed_endpoints:
+    - recall
+  denied_endpoints:
+    - store
+    - upsert
+    - delete
+    - raw_query
+    - query_raw
+    - answer
+    - clarify
+    - deflect
+  allowed_collections:
+    - project_knowledge
+    - lessons
+    - personas
+    - persona_memory
+    - persona_states
+    - user_agent_relationships
+    - user_lessons
+  preferred_collections:
+    - persona_memory
+    - project_knowledge
+    - lessons
+  denied_collections:
+    - credentials
+    - secrets
+  allowed_recall_profiles:
+    - procedural_memory
+    - persona_voice
+    - persona_preferences
+  write_policy:
+    default: denied
+    exceptions: []
+
+persona_memory_policy:
+  required_when_persona_attached: true
+  persona_id_field: active_domain_persona
+  allowed_collections:
+    - personas
+    - persona_memory
+    - persona_memory_edges
+    - persona_states
+    - user_agent_relationships
+    - user_lessons
+    - tom_edges
+  tom_lite:
+    controlled_vocabulary: true
+    freeform_tom_tags: denied
+    max_tom_kinds_per_memory: 2
+    max_affect_labels_per_memory: 1
+    require_source_anchor: true
+    tom_kind:
+      - emotion
+      - belief
+      - goal
+      - preference
+      - boundary
+      - relationship
+      - knowledge_gap
+      - unresolved_thread
+    affect:
+      - angry
+      - sad
+      - anxious
+      - confused
+      - happy
+      - neutral
+    intensity:
+      - low
+      - medium
+      - high
+      - extreme
+  graph_policy:
+    graph_connections_remain: true
+    traversal_owner: memory_service
+    direct_graph_access: denied
+    direct_graph_edge_creation_by_subagent: denied
+    require_source_paths: true
+    max_hops_default: 2
+    max_hops_without_project_agent_approval: 3
+  intensity_policy:
+    use_for:
+      - retrieval_reranking
+      - graph_traversal_weight
+      - salience
+      - response_tone
+      - continuity_priority
+    must_not_use_for:
+      - truth_claims
+      - evidence_sufficiency
+      - compliance_approval
+      - permission_to_act
+  classifier_policy:
+    optional: true
+    output_is_advisory: true
+    weak_classification_action: abstain
+    durable_memory_write_requires_curator_or_project_agent: true
+
+turn_contract:
+  same_subagent_policy: serialized_only_when_same_artifact
+  independent_subagent_policy: may_run_concurrently_when_inputs_are_independent
+  forbidden_behavior:
+    - modify_files
+    - call_generation_or_download_apis
+    - publish_hum_cache
+    - claim_human_listening_approval
+    - approve_from_metadata_only
+    - ignore_source_provenance
+    - ignore_non_lexicality_risk
+    - decide_global_completion
+
+review_rubric:
+  source_track_fit:
+    prefer:
+      - solo_or_clearly_isolatable_female_vocal
+      - slow_or_moderate_wistful_phrase_shape
+      - clean_melody_and_breath_cadence
+      - vintage_hawaiian_or_hawaiian_adjacent_mood_when_requested
+      - low_lyric_density_or_segments_that_can_be_made_non_lexical
+    reject:
+      - male_lead_when_female_persona_is_required
+      - dense_harmony_that_defeats_stem_selection
+      - heavy_backing_or_noise_when_vocals_cannot_be_isolated
+      - source_phrases_with_unavoidable_intelligible_lyrics
+  embry_voice_fit:
+    prefer:
+      - young_adult
+      - husky_or_light_rasp
+      - mid_low_or_alto
+      - intimate
+      - grounded
+      - comforting
+      - dry_humor_or_slight_smirk
+      - emotionally_natural
+    reject:
+      - cute_or_quirky
+      - bubbly
+      - anime
+      - corporate
+      - narrator_heavy
+      - old_unless_intent_requires_it
+      - overly_seductive_or_sultry
+      - over_polished
+  spoken_voice_comparison:
+    required: true
+    use_sources_in_order:
+      - available_embry_spoken_voice_audio_or_embedding_artifacts
+      - available_embry_eq_timbre_or_cadence_feature_artifacts
+      - persona_voice_descriptors_from_memory
+      - human_supplied_voice_characteristics
+    compare_dimensions:
+      - apparent_age
+      - pitch_register
+      - eq_spectral_tilt
+      - low_mid_warmth
+      - high_frequency_brightness_or_sibilance
+      - formant_or_vocal_tract_impression
+      - husk_or_rasp
+      - breathiness
+      - warmth
+      - dryness_or_smirk
+      - intimacy
+      - groundedness
+      - cadence_pacing
+      - phrase_length
+      - attack_and_release
+      - rhythmic_lilt
+      - over_polish_or_narrator_risk
+    missing_reference_behavior: >
+      If no Embry spoken-voice artifact, EQ/timbre feature, cadence feature, or
+      descriptor is available, state that limitation and rank only against the
+      declared persona target. Do not claim acoustic match to Embry's spoken
+      voice without a reference.
+    required_output: >
+      State which comparison source was used. Separate EQ/timbre match from
+      cadence match, because a source can have the right tone but wrong phrasing
+      or the right lilt but wrong vocal texture.
+  tempo_fit:
+    guidance:
+      - "0.90x may be too fast for natural humming unless the source drags."
+      - "0.85x is a common center for breath room plus motion."
+      - "0.80x is a slower/wistful fallback and can become ceremonial."
+  settings_fit:
+    guidance:
+      - "Start with stability 0.40, similarity 0.80, style 0.45, speaker boost on."
+      - "Lower stability only when humor/breath is too flat."
+      - "Raise style only when the voice identity is too plain."
+      - "Use remove_background_noise only when guide artifacts leak through."
+
+help_policy:
+  protocol: skill_help_protocol@v1
+  max_help_calls_total: 0
+  max_help_calls_per_helper: 0
+  require_target_artifact: true
+  require_terminal_event: true
+  require_receipt: true
+  allow_recursive_help: false
+
+retry_policy:
+  reviewer_passes: 1
+  malformed_output_schema_repair: 1
+  tool_transient_retry: 1
+
+status_reporting:
+  required: true
+  recipient: project_agent
+  cadence:
+    - after_start
+    - after_each_phase
+    - before_tool_or_api_call
+    - after_tool_or_api_call
+    - on_deterministic_bug_found
+    - after_repair_attempt
+    - before_blocked_or_final_response
+  stream_modes:
+    - sse_json_if_runtime_supports
+    - jsonl_event_stream
+    - phase_receipt_json
+    - final_response_json
+  event_fields:
+    - subagent_run_id
+    - phase
+    - current_artifact
+    - command_or_api
+    - evidence
+    - bug_or_blocker
+    - next_step
+    - stop_condition
+  timeout_diagnostics:
+    heartbeat_interval_seconds: 30
+    stale_after_seconds: 120
+    include_last_started_command: true
+    include_last_completed_command: true
+    include_current_artifact_path: true
+
+output_contract:
+  format: json_only_unless_user_answer_requested
+  success_fields:
+    - subagent_run_id
+    - status
+    - verdict
+    - persona
+    - mood
+    - ranked_versions
+    - rejected_versions
+    - source_fit_notes
+    - voice_fit_notes
+    - speed_settings_notes
+    - spoken_voice_comparison
+    - recommended_winner
+    - fallback
+    - human_listening_gate
+    - evidence
+    - verified
+  error_fields:
+    - subagent_run_id
+    - status
+    - error
+    - gaps
+    - verified
+
+artifact_contract:
+  required_per_turn:
+    - request.json
+    - response.json
+  recommended_per_turn:
+    - hum-review-findings.json
+    - ranked-versions.json
+
+proof_tasks:
+  - read_bakeoff_manifest_or_page
+  - confirm_candidate_audio_paths_exist_when_available
+  - compare_candidates_to_embry_spoken_voice_reference_or_descriptor
+  - rank_versions_against_persona_rubric
+  - declare_human_listening_gate_required

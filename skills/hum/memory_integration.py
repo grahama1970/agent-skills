@@ -100,7 +100,7 @@ def recall_prior_hums(
     try:
         client = MemoryClient(scope=MemoryScope.PERSONA)
         result = client.recall(
-            f"hum {persona_name} {song_title} rvc voice",
+            f"hum {persona_name} {song_title} orpheus seedvc hum",
             k=k,
         )
         if result.found:
@@ -119,7 +119,7 @@ def learn_hum(
     persona_name: str,
     song_title: str = "",
     artist: str = "",
-    rvc_model: str = "",
+    voice_backend: str = "",
     quality_score: float = 0.0,
 ) -> List[str]:
     """
@@ -139,7 +139,7 @@ def learn_hum(
     now = datetime.now().isoformat()
     learned_ids = []
 
-    all_text = " ".join([persona_name or "", song_title or "", artist or "", rvc_model or ""])
+    all_text = " ".join([persona_name or "", song_title or "", artist or "", voice_backend or ""])
     bridges = extract_bridges(all_text)
     base_tags = ["hum", persona_name] + bridges
 
@@ -148,7 +148,7 @@ def learn_hum(
         "persona_name": persona_name,
         "song_title": song_title,
         "artist": artist,
-        "rvc_model": rvc_model,
+        "voice_backend": voice_backend,
         "quality_score": quality_score,
         "generated_at": now,
         "bridges": bridges,

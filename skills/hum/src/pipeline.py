@@ -1,9 +1,11 @@
-"""Humming pipeline: orchestrates download, stem, convert, cache."""
+"""Humming pipeline: melody guide + Orpheus ref + Seed-VC conversion."""
 
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 import subprocess
 import tempfile
 from datetime import datetime
@@ -13,85 +15,20 @@ from typing import Optional
 from rich.console import Console
 
 from .cache import HumCache, HumTrack
-
+from .defaults import DEFAULT_SOURCE_HUM_RENDERER
 console = Console()
 
-SKILLS_ROOT = Path(__file__).resolve().parent.parent.parent  # .pi/skills/
+SKILLS_ROOT = Path(__file__).resolve().parent.parent.parent
 STORAGE_ROOT = Path(os.environ.get("EMBRY_STORAGE", "/mnt/storage12tb")) / "media"
-
-# Python script run inside Docker to generate filelist + config.
-# F0 files use .wav.npy naming (e.g. 0_0.wav.npy), not .npy.
-_FILELIST_SCRIPT = """
-import os, json
-slug = '{slug}'
-log_dir = f'/app/logs/{{slug}}'
-gt = f'{{log_dir}}/0_gt_wavs'
-feat = f'{{log_dir}}/3_feature768'
-f0 = f'{{log_dir}}/2a_f0'
-f0nsf = f'{{log_dir}}/2b-f0nsf'
-names = sorted([n.replace('.wav','') for n in os.listdir(gt) if n.endswith('.wav')])
-opt = []
-for name in names:
-    paths = [f'{{gt}}/{{name}}.wav', f'{{feat}}/{{name}}.npy',
-             f'{{f0}}/{{name}}.wav.npy', f'{{f0nsf}}/{{name}}.wav.npy']
-    if all(os.path.exists(p) for p in paths):
-        opt.append('|'.join(paths) + '|0')
-with open(f'{{log_dir}}/filelist.txt','w') as f: f.write('\\n'.join(opt))
-config = {{'train':{{'log_interval':200,'seed':1234,'epochs':{epochs},'learning_rate':1e-4,
-'betas':[0.8,0.99],'eps':1e-9,'batch_size':4,'fp16_run':True,'lr_decay':0.999875,
-'segment_size':12800,'init_lr_ratio':1,'warmup_epochs':0,'c_mel':45,'c_kl':1.0}},
-'data':{{'max_wav_value':32768.0,'sampling_rate':40000,'filter_length':2048,'hop_length':400,
-'win_length':2048,'n_mel_channels':125,'mel_fmin':0.0,'mel_fmax':None,
-'training_files':f'{{log_dir}}/filelist.txt'}},
-'model':{{'inter_channels':192,'hidden_channels':192,'filter_channels':768,'n_heads':2,
-'n_layers':6,'kernel_size':3,'p_dropout':0,'resblock':'1',
-'resblock_kernel_sizes':[3,7,11],'resblock_dilation_sizes':[[1,3,5],[1,3,5],[1,3,5]],
-'upsample_rates':[10,10,2,2],'upsample_initial_channel':512,
-'upsample_kernel_sizes':[16,16,4,4],'use_spectral_norm':False,
-'gin_channels':256,'spk_embed_dim':109}},
-'s2_ckpt_dir':f'{{log_dir}}','save_every_epoch':25,'name':slug,
-'version':'v2','sample_rate':'40k','if_f0':1}}
-with open(f'{{log_dir}}/config.json','w') as f: json.dump(config,f,indent=2)
-print(f'Filelist: {{len(opt)}} entries, config written')
-"""
-
-# Python script run inside Docker to build FAISS index and export model.
-_INDEX_EXPORT_SCRIPT = """
-import os, glob, numpy as np, faiss, shutil
-slug = '{slug}'
-persona = '{persona}'
-log_dir = f'/app/logs/{{slug}}'
-feat_dir = f'{{log_dir}}/3_feature768'
-features = []
-for f in sorted(os.listdir(feat_dir)):
-    if f.endswith('.npy'):
-        features.append(np.load(os.path.join(feat_dir, f)))
-if not features:
-    print('No features'); exit(1)
-big_npy = np.concatenate(features, axis=0).astype('float32')
-n_ivf = min(int(16 * (big_npy.shape[0] ** 0.5)), big_npy.shape[0] // 39)
-n_ivf = max(n_ivf, 1)
-index = faiss.index_factory(768, f'IVF{{n_ivf}},Flat')
-index.train(big_npy)
-index.add(big_npy)
-index_path = f'{{log_dir}}/added_index.index'
-faiss.write_index(index, index_path)
-# Export: find latest G_*.pth checkpoint
-checkpoints = sorted(glob.glob(f'{{log_dir}}/G_*.pth'))
-if not checkpoints:
-    print('No checkpoints found'); exit(1)
-latest = checkpoints[-1]
-# Export to /app/logs export dir (host copies from rvc-webui/logs/ to rvc-models/)
-export_dir = f'{{log_dir}}/export'
-os.makedirs(export_dir, exist_ok=True)
-shutil.copy2(latest, os.path.join(export_dir, f'{{slug}}.pth'))
-shutil.copy2(index_path, os.path.join(export_dir, f'{{slug}}.index'))
-print(f'EXPORT_DIR={{export_dir}}')
-"""
+ORPHEUS_CHECKPOINTS = Path(
+    os.environ.get(
+        "ORPHEUS_CHECKPOINTS_ROOT",
+        "/mnt/storage12tb/skills/voice-segment-selector/checkpoints",
+    )
+)
 
 
 def _extract_video_id(url: str) -> str:
-    """Extract YouTube video ID from various URL formats."""
     patterns = [
         r"(?:youtu\.be/)([a-zA-Z0-9_-]{11})",
         r"(?:youtube\.com/watch\?v=)([a-zA-Z0-9_-]{11})",
@@ -101,97 +38,285 @@ def _extract_video_id(url: str) -> str:
         match = re.search(pattern, url)
         if match:
             return match.group(1)
-    # Might be a bare video ID
     if re.match(r"^[a-zA-Z0-9_-]{11}$", url):
         return url
     raise ValueError(f"Cannot extract video ID from: {url}")
 
 
 def _slugify(text: str) -> str:
-    """Convert text to filesystem-safe slug."""
     slug = re.sub(r"[^\w\s-]", "", text.lower())
     slug = re.sub(r"[\s-]+", "_", slug).strip("_")
     return slug
 
 
 class HumPipeline:
-    """Orchestrates the full humming pipeline using existing skills."""
+    """Orchestrates licensed-segment → melody hum → Orpheus + Seed-VC → cache."""
 
     def __init__(self, persona: str = "embry"):
         self.persona = persona
         self.cache = HumCache(persona=persona)
-        self.persona_samples_dir = STORAGE_ROOT / "personas" / persona / "tts_output"
-        self.rvc_models_dir = STORAGE_ROOT / "music" / "rvc-models" / "voice" / persona
+        self.orpheus_checkpoint = ORPHEUS_CHECKPOINTS / f"{persona}_orpheus_lora"
 
     def add(
         self,
-        url: str,
+        *,
+        url: str | None = None,
+        song: Path | None = None,
         title: Optional[str] = None,
         artist: Optional[str] = None,
         mood: Optional[list[str]] = None,
         bridges: Optional[list[str]] = None,
         persona_connection: str = "",
-        pitch: int = 0,
-        f0method: str = "rmvpe",
+        start: str = "00:00:00",
+        duration: str = "00:00:20",
+        semi_tone_shift: int = 0,
+        diffusion_steps: int = 45,
+        melody_source: str | None = None,
+        manual_midi: Path | None = None,
+        manual_source_hum: Path | None = None,
+        melody_audio: str = "auto",
+        source_hum_renderer: str = DEFAULT_SOURCE_HUM_RENDERER,
+        source_mode: str | None = None,
+        force: bool = False,
+        allow_diagnostic_cache: bool = False,
+        orpheus_url: str | None = None,
+        seedvc_dir: str | None = None,
     ) -> dict:
-        """Full pipeline: download → stem → convert → cache."""
-        video_id = _extract_video_id(url)
+        from .melody import transcribe_to_midi
+        from .midi_to_hum import synthesize_hum
+        from .orpheus_client import health_ok, make_orpheus_ref
+        from .seedvc import convert_hum, inference_script
 
-        with tempfile.TemporaryDirectory(prefix="hum_") as tmpdir:
-            tmpdir = Path(tmpdir)
+        if not url and not song:
+            return {"status": "error", "error": "Provide --song (licensed local file) or a YouTube URL"}
 
-            # ── Step 1: Download audio ──
-            console.print("[bold cyan]Step 1/4:[/bold cyan] Downloading audio...")
-            download_result = self._download_audio(url, tmpdir)
-            if not download_result:
-                return {"status": "error", "error": "Download failed"}
+        if not self._has_orpheus_voice():
+            return {
+                "status": "error",
+                "error": (
+                    f"No Orpheus LoRA for {self.persona}. "
+                    f"Run: skills/tts-voice/run.sh finish --speaker {self.persona} --job-dir <job>"
+                ),
+            }
 
-            audio_path, detected_title = download_result
+        if not health_ok(orpheus_url):
+            return {
+                "status": "error",
+                "error": "Orpheus infer service not healthy. Run: skills/tts-voice/run.sh docker-up",
+            }
+
+        try:
+            inference_script(seedvc_dir)
+        except FileNotFoundError as exc:
+            return {"status": "error", "error": str(exc)}
+
+        source_url = url or ""
+        video_id = ""
+        if url:
+            video_id = _extract_video_id(url)
+
+        with tempfile.TemporaryDirectory(prefix="hum_") as tmp:
+            work = Path(tmp)
+
+            console.print("[bold cyan]Step 1/7:[/bold cyan] Preparing song segment...")
+            if song:
+                segment = self._trim_segment(song, work / "song_segment.wav", start, duration)
+                detected_title = song.stem
+            else:
+                download_result = self._download_audio(url, work)
+                if not download_result:
+                    return {"status": "error", "error": "Download failed"}
+                audio_path, detected_title = download_result
+                segment = self._trim_segment(audio_path, work / "song_segment.wav", start, duration)
+
             if not title:
-                title = detected_title or video_id
-
+                title = detected_title or video_id or segment.stem
             track_id = _slugify(title)
-            console.print(f"  Downloaded: {audio_path.name} ({audio_path.stat().st_size // 1024}KB)")
 
-            # ── Step 2: Stem separation ──
-            console.print("[bold cyan]Step 2/4:[/bold cyan] Separating vocals...")
-            vocals_path = self._separate_vocals(audio_path, tmpdir)
+            console.print("[bold cyan]Step 2/7:[/bold cyan] Separating vocals...")
+            vocals_path = self._separate_vocals(segment, work)
             if not vocals_path:
                 return {"status": "error", "error": "Stem separation failed"}
-            console.print(f"  Vocals: {vocals_path.name}")
 
-            # ── Step 3: RVC voice conversion ──
-            console.print("[bold cyan]Step 3/4:[/bold cyan] Converting to {}'s voice...".format(self.persona))
-            if not self._has_rvc_model():
+            from .source_hum_gate import (
+                IMPORT_RENDERERS,
+                analyze_midi,
+                normalize_renderer,
+                renderer_requires_import,
+                validate_midi_for_hum,
+                validate_source_hum_wav,
+            )
+
+            renderer = normalize_renderer(source_hum_renderer)
+            if source_mode:
+                renderer = normalize_renderer(source_mode)
+
+            segment_duration_s = self._get_duration(segment) or 20.0
+            gate_metrics: dict = {}
+            diagnostic_only = False
+
+            if manual_source_hum:
+                renderer = normalize_renderer(source_hum_renderer)
+                source_hum = Path(manual_source_hum)
+                if not source_hum.is_file():
+                    return {"status": "error", "error": f"source hum not found: {source_hum}"}
+                resolved_melody_source = renderer if renderer in IMPORT_RENDERERS else "real_hum"
+            elif renderer_requires_import(renderer):
+                hints = {
+                    "ace": (
+                        "Export closed-mouth hum from ACE Studio (MIDI + mmm/hm lyrics), "
+                        "then pass --source-hum path/to/source_hum.wav"
+                    ),
+                    "suno_manual": (
+                        "Generate a dry closed-mouth hum in Suno (Cover/Voice), export WAV, "
+                        "then pass --source-hum path/to/source_hum.wav"
+                    ),
+                    "elevenlabs_manual": (
+                        "Export MIDI/score to a simple audio reference, generate a dry closed-mouth hum "
+                        "in ElevenLabs Music/Sound Effects, export WAV, then pass --source-hum path/to/source_hum.wav"
+                    ),
+                    "real_hum": "Record or provide a human hum WAV via --source-hum",
+                }
                 return {
                     "status": "error",
-                    "error": f"No RVC model for {self.persona}. Run: ./run.sh train --persona {self.persona}",
+                    "error": f"Renderer '{renderer}' requires an imported neural/human guide hum.",
+                    "hint": hints.get(renderer, "Pass --source-hum <wav>"),
+                }
+            elif renderer == "acestep_api":
+                from .acestep_pixazo import generate_hum_guide
+
+                console.print("[bold cyan]Step 3/7:[/bold cyan] ACE-Step hum via Pixazo API...")
+                source_hum = generate_hum_guide(
+                    work / "source_hum.wav",
+                    duration_s=max(5, int(segment_duration_s)),
+                    title=title or "",
+                )
+                resolved_melody_source = "acestep_pixazo"
+                console.print(f"  Guide: {source_hum.name}")
+            elif renderer == "vocal_stem":
+                console.print("[bold cyan]Step 3/7:[/bold cyan] Using vocal stem as melody guide...")
+                source_hum = vocals_path
+                resolved_melody_source = "vocal_stem"
+                console.print(f"  Guide: {source_hum.name}")
+            elif renderer == "vocal_stem_diag":
+                console.print("[bold yellow]Step 3/7:[/bold yellow] Diagnostic vocal-stem guide (not production)...")
+                source_hum = vocals_path
+                resolved_melody_source = "vocal_stem_diag"
+                diagnostic_only = True
+            elif renderer == "neural_hum":
+                from .neural_hum import render_neural_hum
+
+                melody_input = self._pick_melody_input(
+                    segment, vocals_path, melody_audio, work, transcribe_to_midi,
+                )
+                console.print(f"  Melody input: {melody_input.name}")
+
+                if manual_midi:
+                    midi_path = Path(manual_midi)
+                    resolved_melody_source = "manual_midi"
+                else:
+                    console.print("[bold cyan]Step 3/7:[/bold cyan] Transcribing melody (Basic Pitch)...")
+                    midi_path = transcribe_to_midi(melody_input, work / "midi")
+                    resolved_melody_source = melody_source or "basic_pitch_mix"
+                    console.print(f"  MIDI: {midi_path.name}")
+
+                midi_metrics = analyze_midi(midi_path, min_pitch=48)
+                gate_metrics["midi"] = midi_metrics.to_dict()
+                midi_errors = validate_midi_for_hum(midi_metrics, segment_duration_s)
+                if midi_errors and not force:
+                    return {
+                        "status": "error",
+                        "error": "Melody gate failed before neural hum",
+                        "details": midi_errors,
+                        "metrics": gate_metrics,
+                        "hint": "Use --midi corrected.mid, --melody-audio mix, or import ACE/Suno hum via --source-hum",
+                    }
+
+                console.print("[bold cyan]Step 4/7:[/bold cyan] Rendering closed-mouth neural hum guide...")
+                source_hum = render_neural_hum(vocals_path, midi_path, work / "source_hum.wav")
+                resolved_melody_source = "neural_hum_local"
+            elif renderer == "old_synth":
+                melody_input = self._pick_melody_input(
+                    segment, vocals_path, melody_audio, work, transcribe_to_midi,
+                )
+                console.print(f"  Melody input: {melody_input.name}")
+
+                if manual_midi:
+                    midi_path = Path(manual_midi)
+                    resolved_melody_source = "manual_midi"
+                else:
+                    console.print("[bold cyan]Step 3/7:[/bold cyan] Transcribing melody (Basic Pitch)...")
+                    midi_path = transcribe_to_midi(melody_input, work / "midi")
+                    resolved_melody_source = melody_source or "basic_pitch"
+                    console.print(f"  MIDI: {midi_path.name}")
+
+                midi_metrics = analyze_midi(midi_path)
+                gate_metrics["midi"] = midi_metrics.to_dict()
+                midi_errors = validate_midi_for_hum(midi_metrics, segment_duration_s)
+                if midi_errors and not force:
+                    return {
+                        "status": "error",
+                        "error": "Melody gate failed before synth hum",
+                        "details": midi_errors,
+                        "metrics": gate_metrics,
+                        "hint": "Use --midi corrected.mid, --melody-audio mix, or import ACE/Suno hum via --source-hum",
+                    }
+
+                console.print("[bold cyan]Step 4/7:[/bold cyan] Synthesizing oscillator guide hum (test renderer)...")
+                source_hum = synthesize_hum(midi_path, work / "source_hum.wav")
+            else:
+                return {"status": "error", "error": f"Unknown source_hum_renderer: {renderer}"}
+
+            hum_errors, hum_metrics = validate_source_hum_wav(source_hum)
+            gate_metrics["source_hum"] = hum_metrics
+            if hum_errors and not force:
+                return {
+                    "status": "error",
+                    "error": "Source hum gate failed — guide must sound like a vocal performance",
+                    "details": hum_errors,
+                    "metrics": gate_metrics,
                 }
 
-            converted_path = tmpdir / f"{track_id}_converted.wav"
-            ok = self._rvc_convert(vocals_path, converted_path, pitch, f0method)
-            if not ok:
-                return {"status": "error", "error": "RVC voice conversion failed"}
+            if diagnostic_only and not allow_diagnostic_cache:
+                return {
+                    "status": "error",
+                    "error": "vocal_stem_diag is diagnostic-only and cannot be cached by default",
+                    "hint": "Use --source-hum-renderer vocal_stem for vintage vocal sources, import an ACE/Suno/human guide with --source-hum, or pass --allow-diagnostic-cache to override.",
+                }
+
+            console.print("[bold cyan]Step 5/7:[/bold cyan] Generating Orpheus reference...")
+            ref_path = self._ensure_orpheus_ref(work / "orpheus_ref.wav", orpheus_url=orpheus_url)
+
+            console.print("[bold cyan]Step 6/7:[/bold cyan] Seed-VC conversion...")
+            converted_path = convert_hum(
+                source_hum,
+                ref_path,
+                work / "seedvc_out",
+                seedvc_root=seedvc_dir,
+                diffusion_steps=diffusion_steps,
+                semi_tone_shift=semi_tone_shift,
+            )
             console.print(f"  Converted: {converted_path.name}")
 
-            # ── Step 4: Cache with metadata ──
-            console.print("[bold cyan]Step 4/4:[/bold cyan] Caching...")
-
-            # Get duration
+            console.print("[bold cyan]Step 7/7:[/bold cyan] Caching...")
             duration_s = self._get_duration(converted_path)
 
             track = HumTrack(
                 id=track_id,
                 title=title,
                 artist=artist or "",
-                source_url=url,
+                source_url=source_url,
                 source_video_id=video_id,
                 bridge_attributes=bridges or [],
                 mood=mood or [],
                 persona_connection=persona_connection,
                 duration_s=duration_s,
-                pitch_shift=pitch,
-                f0_method=f0method,
+                pitch_shift=semi_tone_shift,
+                f0_method="seedvc_f0",
+                pipeline="orpheus_seedvc_v2",
+                melody_source=resolved_melody_source,
+                source_hum_renderer=renderer,
+                diffusion_steps=diffusion_steps,
                 created=datetime.now().isoformat(),
                 forbidden=False,
             )
@@ -204,174 +329,103 @@ class HumPipeline:
             "track_id": track_id,
             "audio_path": str(cached_path),
             "duration_s": duration_s,
+            "pipeline": track.pipeline,
+            "melody_source": track.melody_source,
+            "source_hum_renderer": getattr(track, "source_hum_renderer", renderer),
+            "gate_metrics": gate_metrics,
         }
 
     def train_voice(self, epochs: int = 200) -> dict:
-        """Train RVC voice model for persona using Docker RVC pipeline directly.
+        return {
+            "status": "error",
+            "error": (
+                "RVC train is deprecated for /hum. "
+                f"Train Orpheus voice via /tts-voice finish --speaker {self.persona}."
+            ),
+            "hint": "skills/tts-voice/run.sh finish --speaker {persona} --job-dir <job>".format(
+                persona=self.persona
+            ),
+        }
 
-        Stages persona TTS samples into the RVC training directory, ensures the
-        Docker container is running, then runs: preprocess → f0 → features →
-        filelist → train → index → export.
-        """
-        if not self.persona_samples_dir.exists():
-            return {
-                "status": "error",
-                "error": f"No TTS samples at {self.persona_samples_dir}",
-            }
-
-        samples = list(self.persona_samples_dir.glob("*.wav"))
-        if not samples:
-            return {
-                "status": "error",
-                "error": f"No WAV files in {self.persona_samples_dir}",
-            }
-
-        console.print(f"  Found {len(samples)} voice samples")
-
-        # Stage samples into RVC training directory
-        import shutil
-        training_data = STORAGE_ROOT / "music" / "rvc-training" / self.persona / "vocals_all"
-        training_data.mkdir(parents=True, exist_ok=True)
-
-        staged = 0
-        for wav in samples:
-            dest = training_data / wav.name
-            if not dest.exists():
-                shutil.copy2(wav, dest)
-                staged += 1
-        console.print(f"  Staged {staged} new samples to {training_data}")
-
-        # Ensure Docker container is running
-        docker_name = "rvc-training"
-        if not self._ensure_docker(docker_name):
-            return {"status": "error", "error": "Failed to start RVC Docker container"}
-
-        slug = self.persona
-        datasets_path = f"/app/datasets/{slug}/vocals_all"
-        logs_path = f"/app/logs/{slug}"
-
-        def docker_exec(cmd: list[str], desc: str) -> subprocess.CompletedProcess:
-            full = ["docker", "exec", docker_name] + cmd
-            console.print(f"  [dim]{desc}...[/dim]")
-            return subprocess.run(full, capture_output=True, text=True,
-                env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
-            )
-
-        # Step 1: Create logs directory and preprocess
-        console.print("[bold cyan]  Step 1/6:[/bold cyan] Preprocessing...")
-        subprocess.run(["docker", "exec", docker_name, "mkdir", "-p", logs_path],
-        env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
-        )
-        r = docker_exec(
-            ["python", "/app/infer/modules/train/preprocess.py",
-             datasets_path, "40000", "4", logs_path, "False", "3.7"],
-            "Slicing audio into training segments",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"Preprocess failed: {r.stderr[:300]}"}
-
-        # Step 2: Extract F0 (pitch)
-        console.print("[bold cyan]  Step 2/6:[/bold cyan] Extracting pitch (F0)...",
-             env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
-        )
-        r = docker_exec(
-            ["python", "/app/infer/modules/train/extract/extract_f0_rmvpe.py",
-             "1", "0", "0", logs_path, "True"],
-            "RMVPE pitch extraction",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"F0 extraction failed: {r.stderr[:300]}"}
-
-        # Step 3: Extract features (Hubert embeddings)
-        console.print("[bold cyan]  Step 3/6:[/bold cyan] Extracting Hubert features...")
-        r = docker_exec(
-            ["python", "/app/infer/modules/train/extract_feature_print.py",
-             "cuda:0", "1", "0", logs_path, "v2", "True"],
-            "768-dim feature extraction",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"Feature extraction failed: {r.stderr[:300]}"}
-
-        # Step 4: Generate filelist (with correct F0 .wav.npy naming)
-        console.print("[bold cyan]  Step 4/6:[/bold cyan] Generating training filelist...")
-        r = docker_exec(
-            ["python3", "-c", _FILELIST_SCRIPT.format(slug=slug, epochs=epochs)],
-            "Building filelist and config",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"Filelist generation failed: {r.stderr[:300]}"}
-
-        # Step 5: Train
-        console.print(f"[bold cyan]  Step 5/6:[/bold cyan] Training ({epochs} epochs)...")
-        r = docker_exec(
-            ["python", "/app/infer/modules/train/train.py",
-             "-e", slug, "-sr", "40k", "-f0", "1", "-bs", "4",
-             "-g", "0", "-te", str(epochs), "-se", "25",
-             "-pg", "assets/pretrained_v2/f0G40k.pth",
-             "-pd", "assets/pretrained_v2/f0D40k.pth",
-             "-l", "0", "-c", "0", "-sw", "1", "-v", "v2"],
-            f"RVC v2 training for {epochs} epochs",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"Training failed: {r.stderr[:300]}"}
-
-        # Step 6: Build FAISS index and export model
-        console.print("[bold cyan]  Step 6/6:[/bold cyan] Building index and exporting model...")
-        r = docker_exec(
-            ["python3", "-c", _INDEX_EXPORT_SCRIPT.format(
-                slug=slug, persona=self.persona)],
-            "FAISS index + model export",
-        )
-        if r.returncode != 0:
-            return {"status": "error", "error": f"Index/export failed: {r.stderr[:300]}"}
-
-        # Copy exported model from Docker volume mount to rvc-models directory
-        import shutil as _shutil
-        host_export = STORAGE_ROOT / "music" / "rvc-webui" / "logs" / slug / "export"
-        self.rvc_models_dir.mkdir(parents=True, exist_ok=True)
-        for ext in ("pth", "index"):
-            src = host_export / f"{slug}.{ext}"
-            dst = self.rvc_models_dir / f"{slug}.{ext}"
-            if src.exists():
-                _shutil.copy2(src, dst)
-                console.print(f"  Exported: {dst}")
-
-        # Check model was produced
-        model_files = list(self.rvc_models_dir.glob("*.pth"))
-        if model_files:
-            return {
-                "status": "ok",
-                "model_path": str(model_files[0]),
-                "sample_count": len(samples),
-                "epochs": epochs,
-            }
-        return {"status": "error", "error": "Training completed but no model file found"}
-
-    def _ensure_docker(self, container_name: str) -> bool:
-        """Ensure the RVC Docker container is running."""
-        r = subprocess.run(
-            ["docker", "inspect", "-f", "{{.State.Running}}", container_name],
-            capture_output=True, text=True,
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
-        )
-        if r.returncode == 0 and "true" in r.stdout:
+    def _has_orpheus_voice(self) -> bool:
+        lora = self.orpheus_checkpoint / "lora"
+        receipt = self.orpheus_checkpoint / "inference_receipt.json"
+        if lora.is_dir():
             return True
+        if receipt.is_file():
+            try:
+                data = json.loads(receipt.read_text())
+                return data.get("status") == "PASS"
+            except json.JSONDecodeError:
+                return False
+        return False
 
-        console.print("  Starting RVC Docker container...")
-        r = subprocess.run(
-            ["docker", "run", "-d", "--gpus", "all",
-             "--name", container_name,
-             "--shm-size=8g",
-             "-v", f"{STORAGE_ROOT}/music/rvc-webui/logs:/app/logs",
-             "-v", f"{STORAGE_ROOT}/music/rvc-training:/app/datasets",
-             "cherrymint/rvc_webui:rvc_boss"],
-            capture_output=True, text=True,
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
+    def _ensure_orpheus_ref(self, out_path: Path, *, orpheus_url: str | None) -> Path:
+        from .orpheus_client import make_orpheus_ref
+        from .orpheus_ref import build_multi_clip_ref
+
+        cached_ref = self.cache.cache_dir / "orpheus_ref.wav"
+        checkpoint_ref = ORPHEUS_CHECKPOINTS / f"{self.persona}_orpheus_lora" / "inference_smoke.wav"
+        if os.environ.get("HUM_ORPHEUS_MULTI_CLIP", "0") == "1":
+            multi = build_multi_clip_ref(
+                self.cache.cache_dir / "orpheus_ref_multi_24k.wav",
+                persona=self.persona,
+            )
+            if multi and multi.is_file():
+                self._prepare_target_ref(multi, out_path)
+                return out_path
+        if checkpoint_ref.is_file():
+            self._prepare_target_ref(checkpoint_ref, out_path)
+            return out_path
+
+        if cached_ref.is_file() and cached_ref.stat().st_size > 10_000:
+            self._prepare_target_ref(cached_ref, out_path)
+            return out_path
+
+        make_orpheus_ref(out_path, speaker=self.persona, orpheus_url=orpheus_url)
+        self.cache.ensure_dir()
+        shutil.copy2(out_path, cached_ref)
+        self._prepare_target_ref(out_path, out_path)
+        return out_path
+
+    def _prepare_target_ref(self, src: Path, dst: Path) -> None:
+        """Resample persona target clip to 44.1kHz stereo for Seed-VC."""
+        tmp = dst.with_name(dst.stem + "._prep.wav")
+        result = subprocess.run(
+            [
+                "ffmpeg", "-y", "-i", str(src),
+                "-ac", "2", "-ar", "44100",
+                str(tmp),
+            ],
+            capture_output=True,
+            text=True,
         )
-        return r.returncode == 0
+        if result.returncode == 0:
+            shutil.move(str(tmp), str(dst))
+        elif src.resolve() != dst.resolve():
+            shutil.copy2(src, dst)
+        elif tmp.exists():
+            tmp.unlink(missing_ok=True)
+
+    def _trim_segment(self, src: Path, dst: Path, start: str, duration: str) -> Path:
+        result = subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", str(src),
+                "-ss", start,
+                "-t", duration,
+                "-ac", "2",
+                "-ar", "44100",
+                str(dst),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"ffmpeg trim failed: {(result.stderr or '')[-300:]}")
+        return dst
 
     def _download_audio(self, url: str, out_dir: Path) -> Optional[tuple[Path, str]]:
-        """Download audio from YouTube via ingest-youtube skill."""
         import sys as _sys
 
         _iy_dir = str(SKILLS_ROOT / "ingest-youtube")
@@ -382,32 +436,26 @@ class HumPipeline:
 
         video_id = _extract_video_id(url)
         audio_path, error = download_audio(video_id, out_dir)
-
         if error or audio_path is None:
             console.print(f"  [red]Download error:[/red] {error}")
             return None
 
-        # Try to get the title from metadata
         meta = fetch_video_metadata(video_id)
         title = meta.get("title") if meta else None
-
         return audio_path, title
 
     def _separate_vocals(self, audio_path: Path, out_dir: Path) -> Optional[Path]:
-        """Separate vocals using create-stems skill.
-
-        create-stems cli.py takes options directly (no subcommand):
-          uv run python cli.py --mix song.wav --out ./stems --instrument vocals
-        """
         stems_skill_dir = SKILLS_ROOT / "create-stems"
         stems_out = out_dir / "stems"
 
+        stem_device = os.environ.get("HUM_DEMUCS_DEVICE", "cpu")
         result = subprocess.run(
             [
                 "uv", "run", "python", "cli.py",
                 "--mix", str(audio_path),
                 "--out", str(stems_out),
                 "--instrument", "vocals",
+                "--device", stem_device,
             ],
             cwd=str(stems_skill_dir),
             capture_output=True,
@@ -419,52 +467,44 @@ class HumPipeline:
             console.print(f"  [red]Stem separation error:[/red] {result.stderr.strip()[:200]}")
             return None
 
-        # Find vocals.wav in output
         for vocals in stems_out.rglob("vocals.wav"):
             return vocals
 
         console.print("  [red]No vocals.wav found in stems output[/red]")
         return None
 
-    def _has_rvc_model(self) -> bool:
-        """Check if persona has a trained RVC model."""
-        if self.rvc_models_dir.exists():
-            return bool(list(self.rvc_models_dir.glob("*.pth")))
-        return False
-
-    def _rvc_convert(
+    def _pick_melody_input(
         self,
-        input_path: Path,
-        output_path: Path,
-        pitch: int = 0,
-        f0method: str = "rmvpe",
-    ) -> bool:
-        """Convert vocals to persona voice using create-music rvc-infer."""
-        music_skill = SKILLS_ROOT / "create-music" / "run.sh"
+        segment: Path,
+        vocals_path: Path,
+        melody_audio: str,
+        work: Path,
+        transcribe_fn,
+    ) -> Path:
+        """Choose audio for Basic Pitch transcription."""
+        choice = (melody_audio or "auto").lower()
+        if choice == "mix":
+            return segment
+        if choice == "vocals":
+            return vocals_path
 
-        result = subprocess.run(
-            [
-                str(music_skill), "rvc-infer",
-                "--model-name", self.persona,
-                "--input", str(input_path),
-                "--output", str(output_path),
-                "--pitch", str(pitch),
-                "--f0method", f0method,
-            ],
-            cwd=str(music_skill.parent),
-            capture_output=True,
-            text=True,
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
-        )
+        probe_dir = work / "melody_probe"
+        probe_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            midi_path = transcribe_fn(vocals_path, probe_dir)
+            from .source_hum_gate import analyze_midi
 
-        if result.returncode != 0:
-            console.print(f"  [red]RVC error:[/red] {result.stderr.strip()[:200]}")
-            return False
+            metrics = analyze_midi(midi_path)
+            if metrics.note_count >= 12 and metrics.pitch_min >= 48:
+                console.print("  [dim]auto: using vocal stem for melody[/dim]")
+                return vocals_path
+        except Exception:
+            pass
+        console.print("  [dim]auto: vocal melody weak — using full mix[/dim]")
+        return segment
 
-        return output_path.exists()
 
     def _get_duration(self, audio_path: Path) -> Optional[float]:
-        """Get audio duration in seconds via ffprobe."""
         result = subprocess.run(
             [
                 "ffprobe", "-v", "quiet",
@@ -474,7 +514,6 @@ class HumPipeline:
             ],
             capture_output=True,
             text=True,
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
         )
         if result.returncode == 0 and result.stdout.strip():
             return round(float(result.stdout.strip()), 1)

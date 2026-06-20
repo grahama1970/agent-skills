@@ -9,6 +9,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from .defaults import (
+    DEFAULT_DIFFUSION_STEPS,
+    DEFAULT_F0_METHOD,
+    DEFAULT_PIPELINE,
+    DEFAULT_SOURCE_HUM_RENDERER,
+)
 
 STORAGE_ROOT = Path(os.environ.get("EMBRY_STORAGE", "/mnt/storage12tb")) / "media" / "personas"
 
@@ -27,7 +33,11 @@ class HumTrack:
     persona_connection: str = ""
     duration_s: Optional[float] = None
     pitch_shift: int = 0
-    f0_method: str = "rmvpe"
+    f0_method: str = DEFAULT_F0_METHOD
+    pipeline: str = DEFAULT_PIPELINE
+    melody_source: str = DEFAULT_SOURCE_HUM_RENDERER
+    source_hum_renderer: str = DEFAULT_SOURCE_HUM_RENDERER
+    diffusion_steps: int = DEFAULT_DIFFUSION_STEPS
     created: str = ""
     forbidden: bool = False
 
@@ -36,7 +46,10 @@ class HumTrack:
 
     @classmethod
     def from_dict(cls, data: dict) -> HumTrack:
-        return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
+        fields = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+        if "pipeline" not in data:
+            fields["pipeline"] = "rvc_v1"
+        return cls(**fields)
 
 
 class HumCache:
@@ -68,21 +81,17 @@ class HumCache:
         return None
 
     def add_track(self, track: HumTrack, audio_path: Path) -> Path:
-        """Add a track to the cache. Copies audio and updates manifest."""
         import shutil
 
         self.ensure_dir()
 
-        # Copy audio to cache
         dest = self.get_audio_path(track.id)
         if audio_path != dest:
             shutil.copy2(audio_path, dest)
 
-        # Write per-track metadata
         meta_path = self.get_metadata_path(track.id)
         meta_path.write_text(json.dumps(track.to_dict(), indent=2))
 
-        # Update manifest
         manifest = self._load_manifest()
         tracks = [t for t in manifest.get("tracks", []) if t["id"] != track.id]
         tracks.append(track.to_dict())
@@ -98,13 +107,11 @@ class HumCache:
         mood: Optional[str] = None,
         bridges: Optional[list[str]] = None,
     ) -> Optional[HumTrack]:
-        """Select a track matching mood/bridges. Used by converse idler."""
         tracks = [t for t in self.list_tracks() if not t.forbidden]
 
         if not tracks:
             return None
 
-        # Score by matching mood and bridges
         def score(t: HumTrack) -> int:
             s = 0
             if mood and mood in t.mood:
