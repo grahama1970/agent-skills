@@ -1673,5 +1673,44 @@
       "query": "Kristen Stewart movies subtitles SRT yawn OR yawns OR yawning"
     }
   ],
-  "status": "verified_local_subtitle_scan_complete_missing_emotions_remain"
+  "status": "verified_local_subtitle_scan_complete_with_brave_grounded_sfx_fallback_candidate",
+  "sfx_fallback_recommendations": [
+    {
+      "emotion": "yawn",
+      "source_type": "sfx",
+      "artifact_path": "skills/get-subtitles/out/kristen-stewart-yawn-sfx-fallback.json",
+      "asset_count": 4,
+      "reason": "Verified local movie SRT scans found yawn:0; SFX fallback is separate provenance and must not be claimed as Kristen Stewart evidence.",
+      "safe_default": "candidate_only_until_manual_audio_review",
+      "recommended_generation_prompts": [
+        {
+          "name": "clean_young_female_yawn_short",
+          "prompt": "25-year-old woman yawning naturally, isolated dry vocal sound, no words, no music, no room noise, no reverb, close microphone, 1 second",
+          "duration_seconds": 1,
+          "purpose": "default clean Orpheus <yawn> candidate"
+        },
+        {
+          "name": "sleepy_soft_yawn",
+          "prompt": "tired young adult woman soft sleepy yawn with breath, isolated vocal, no speech, no background noise, dry studio close mic, 1 second",
+          "duration_seconds": 1,
+          "purpose": "softer yawn variant"
+        },
+        {
+          "name": "longer_tired_yawn",
+          "prompt": "young woman tired natural yawn, single nonverbal vocalization, no words, clean close microphone, no music, no ambience, 2 seconds",
+          "duration_seconds": 2,
+          "purpose": "longer candidate if 1 second sounds truncated"
+        },
+        {
+          "name": "subtle_breath_yawn",
+          "prompt": "female subtle breathy yawn, realistic human mouth sound, no dialogue, no background noise, no effects, dry isolated WAV, 1 second",
+          "duration_seconds": 1,
+          "purpose": "low-intensity yawn variant"
+        }
+      ],
+      "brave_search_artifact": "skills/get-subtitles/out/brave-yawn-sfx-and-orpheus-tags.json",
+      "source_lead_count": 10,
+      "orpheus_tag_reference_count": 6
+    }
+  ]
 }

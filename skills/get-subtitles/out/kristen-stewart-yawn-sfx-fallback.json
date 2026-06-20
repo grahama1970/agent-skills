@@ -1,0 +1,253 @@
+{
+  "artifact_type": "orpheus_sfx_fallback_for_missing_emotion",
+  "schema_version": "1.0",
+  "generated_at": 1781927844.1994703,
+  "actor_context": "Kristen Stewart sanity check",
+  "missing_emotion": "yawn",
+  "reason": "Verified local movie SRT scans found yawn:0; SFX fallback is separate provenance and must not be claimed as Kristen Stewart evidence.",
+  "assets": [
+    {
+      "path": "/home/graham/Downloads/25-year-old_female_y_#4-1781927711348.wav",
+      "exists": true,
+      "sha256": "5753d2786665b0baaa962d8d00391392f41c532e40967db73643a7ef98df1533",
+      "format": {
+        "format_name": "wav",
+        "duration": "1.000000",
+        "size": "192078"
+      },
+      "streams": [
+        {
+          "codec_name": "pcm_s16le",
+          "codec_type": "audio",
+          "sample_rate": "48000",
+          "channels": 2
+        }
+      ],
+      "emotion": "yawn",
+      "source_type": "sfx",
+      "source": "ElevenLabs sound effects",
+      "source_tab": {
+        "tab_id": 837354661,
+        "url": "https://elevenlabs.io/app/sound-effects/history"
+      },
+      "label": "25-year-old female yawn",
+      "training_status": "candidate_requires_manual_listen_and_license_check"
+    },
+    {
+      "path": "/home/graham/Downloads/25-year-old_female_y_#3-1781927711348.wav",
+      "exists": true,
+      "sha256": "dd5cc3300d8838bd099eb6fc4475cbc545cacb619ebc8cab11b26da48f3d735e",
+      "format": {
+        "format_name": "wav",
+        "duration": "1.000000",
+        "size": "192078"
+      },
+      "streams": [
+        {
+          "codec_name": "pcm_s16le",
+          "codec_type": "audio",
+          "sample_rate": "48000",
+          "channels": 2
+        }
+      ],
+      "emotion": "yawn",
+      "source_type": "sfx",
+      "source": "ElevenLabs sound effects",
+      "source_tab": {
+        "tab_id": 837354661,
+        "url": "https://elevenlabs.io/app/sound-effects/history"
+      },
+      "label": "25-year-old female yawn",
+      "training_status": "candidate_requires_manual_listen_and_license_check"
+    },
+    {
+      "path": "/home/graham/Downloads/25-year-old_female_y_#2-1781927711347.wav",
+      "exists": true,
+      "sha256": "2efe49631d4ca965366d09997cba97a603fe7db6cc50b8a96573028fea6168e4",
+      "format": {
+        "format_name": "wav",
+        "duration": "1.000000",
+        "size": "192078"
+      },
+      "streams": [
+        {
+          "codec_name": "pcm_s16le",
+          "codec_type": "audio",
+          "sample_rate": "48000",
+          "channels": 2
+        }
+      ],
+      "emotion": "yawn",
+      "source_type": "sfx",
+      "source": "ElevenLabs sound effects",
+      "source_tab": {
+        "tab_id": 837354661,
+        "url": "https://elevenlabs.io/app/sound-effects/history"
+      },
+      "label": "25-year-old female yawn",
+      "training_status": "candidate_requires_manual_listen_and_license_check"
+    },
+    {
+      "path": "/home/graham/Downloads/25-year-old_female_y_#1-1781927703466.wav",
+      "exists": true,
+      "sha256": "f878f1295ef3ad0557cc8945ddc1391a900569e46d7f433867da7501724a7897",
+      "format": {
+        "format_name": "wav",
+        "duration": "1.000000",
+        "size": "192078"
+      },
+      "streams": [
+        {
+          "codec_name": "pcm_s16le",
+          "codec_type": "audio",
+          "sample_rate": "48000",
+          "channels": 2
+        }
+      ],
+      "emotion": "yawn",
+      "source_type": "sfx",
+      "source": "ElevenLabs sound effects",
+      "source_tab": {
+        "tab_id": 837354661,
+        "url": "https://elevenlabs.io/app/sound-effects/history"
+      },
+      "label": "25-year-old female yawn",
+      "training_status": "candidate_requires_manual_listen_and_license_check"
+    }
+  ],
+  "required_checks": [
+    "manual listen pass",
+    "license/provenance retained",
+    "no music/no dialogue overlap",
+    "trim/normalize if needed",
+    "write to watch_orpheus_segments with source_type=sfx"
+  ],
+  "safe_default": "candidate_only_until_manual_audio_review",
+  "brave_search_artifact": "skills/get-subtitles/out/brave-yawn-sfx-and-orpheus-tags.json",
+  "brave_search_evidence": [
+    {
+      "type": "orpheus_tag_reference",
+      "title": "GitHub - canopyai/Orpheus-TTS: Towards Human-Sounding Speech \u00b7 GitHub",
+      "url": "https://github.com/canopyai/Orpheus-TTS",
+      "description": "The options for name in order of ... You can additionally add the following emotive tags: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;</strong>. For multilingual, see this post for supported tag..."
+    },
+    {
+      "type": "orpheus_tag_reference",
+      "title": "GitHub - Lex-au/Orpheus-FastAPI: High-performance Text-to-Speech server with OpenAI-compatible API, 8 voices, emotion tags, and modern web UI. Optimized for RTX GPUs. \u00b7 GitHub",
+      "url": "https://github.com/Lex-au/Orpheus-FastAPI",
+      "description": "<strong>&lt;sigh&gt;: Add a sigh \u00b7 &lt;chuckle&gt;: Add a chuckle \u00b7 &lt;cough&gt;: Add a cough sound \u00b7 &lt;sniffle&gt;: Add a sniffle sound \u00b7 &lt;groan&gt;: Add a groan \u00b7 &lt;yawn&gt;: Add a yawning sound \u00b7 &lt;gasp&gt;: Add a gasping sound</strong> \u00b7 Example: &quot;Well, that&#x27;s interesting &lt;laugh&gt; ..."
+    },
+    {
+      "type": "orpheus_tag_reference",
+      "title": "legraphista/Orpheus",
+      "url": "https://ollama.com/legraphista/Orpheus",
+      "description": "Key features: - 8 distinct voice options with different characteristics - <strong>Support for emotion tags like laughter, sighs, etc.</strong>"
+    },
+    {
+      "type": "orpheus_tag_reference",
+      "title": "GitHub - canopyai/Orpheus-TTS: Towards Human-Sounding Speech \u00b7 GitHub",
+      "url": "https://github.com/canopyai/Orpheus-TTS",
+      "description": "The options for name in order of ... You can additionally add the following emotive tags: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;</strong>. For multilingual, see this post for supported tag..."
+    },
+    {
+      "type": "orpheus_tag_reference",
+      "title": "Orpheus-TTS - Poe",
+      "url": "https://poe.com/Orpheus-TTS",
+      "description": "Optional parameters: Choose from one of the available voices (`tara`, `leah`, `jess`, `leo`, `dan`,`mia`, `zac`, `zoe`). Officially supported sound effects are: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;, and &lt;giggle&gt;</strong>."
+    },
+    {
+      "type": "orpheus_tag_reference",
+      "title": "GitHub - Lex-au/Orpheus-FastAPI: High-performance Text-to-Speech server with OpenAI-compatible API, 8 voices, emotion tags, and modern web UI. Optimized for RTX GPUs. \u00b7 GitHub",
+      "url": "https://github.com/Lex-au/Orpheus-FastAPI",
+      "description": "<strong>&lt;laugh&gt;: Add laughter \u00b7 &lt;sigh&gt;: Add a sigh \u00b7 &lt;chuckle&gt;: Add a chuckle \u00b7 &lt;cough&gt;: Add a cough sound \u00b7 &lt;sniffle&gt;: Add a sniffle sound \u00b7 &lt;groan&gt;: Add a groan \u00b7 &lt;yawn&gt;: Add a yawning sound \u00b7 &lt;gasp&gt;: Add a gasping sound</strong> \u00b7 Example: &quot;Well, ..."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "How do I prompt for sound effects? \u2013 ElevenLabs",
+      "url": "https://help.elevenlabs.io/hc/en-us/articles/25735604945041-How-do-I-prompt-for-sound-effects",
+      "description": "The prompt is the piece of text or instruction that tells the AI what kind of output is expected. The AI understands natural language as well as audio terminology.Simple PromptsThese are simple pr..."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Best Elevenlabs Prompt Examples for Audio Content Creation",
+      "url": "https://clickup.com/blog/elevenlabs-prompts/",
+      "description": "Stereo sound, high-quality, no thunder, no sudden loud noise, seamless loop. 35. Ocean waves crashing against rocks, seagulls crying in the distance. \ud83d\udc49 Try this: Common terminologies to enhance your sound effect prompts: Ambience: Background environmental sounds that establish atmosphere and space ... Effective prompting transforms ElevenLabs Agents from robotic to lifelike."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Mastering the Art of Sound Effect Prompts in ElevenLabs - Audio Generation Plugin",
+      "url": "https://audio-generation-plugin.com/elevenlabs-mastering-sound-effect-prompts/",
+      "description": "This powerful generator is crafted to help sound designers, content creators, and audio enthusiasts craft detailed, nuanced prompts that will guide ElevenLabs\u2019 AI in producing precisely the sound effects you envision."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Download Free Yawn MP3 Sound Effects \u2013 High-Quality SFX",
+      "url": "https://elevenlabs.io/sound-effects/yawn",
+      "description": "Download Yawn sounds and noises - perfect for creating soundboards or audio projects \u00b7 Create Free Custom Sound EffectsLog in with Google ... Can&#x27;t find what you&#x27;re looking for? Generate your own. Describe what you need and our AI will generate the perfect sound effect for you. ... Yes, with our sound effects generator you can create custom yawn sound effects from a text prompt."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Sound effects | ElevenLabs Documentation",
+      "url": "https://elevenlabs.io/docs/capabilities/sound-effects",
+      "description": "Learn how to create high-quality sound effects from text with ElevenLabs."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Download Free Yawn Sound Effects | Gfx Sounds",
+      "url": "https://gfxsounds.com/category/yawn-sound-effects/",
+      "description": "https://gfxsounds.com/wp-content/uploads/2024/06/Adult-female-exaggerated-yawn.mp3 \u00b7 Exclusive only to Creator or Pro Members \u00b7 MP3 \u00b7 WAV \u00b7 <strong>Standard License</strong> \u00b7 Leah Ramsay \u00b7 HumanYawn \u00b7 https://gfxsounds.com/wp-content/uploads/2024/06/Adult-female-exaggerated-yawn-2.mp3 \u00b7"
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Female yawn, 30 years old 1 Sound Effect - Download FREE - ZapSplat",
+      "url": "https://www.zapsplat.com/music/female-yawn-30-years-old-1/",
+      "description": "Free &quot;Female yawn, 30 years old 1&quot; sound effects to download plus over 150,000 other free sounds at ZapSplat. Royalty free use for all your creative projects!"
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Yawning - female Sound Effect \u2014 Free Download",
+      "url": "https://tunetank.com/sound/26077-yawning-female/",
+      "description": "Sound EffectsYawning - female \u00b7 0:03Sound Effect \u00b7 Download \u00b7 0:03 \u00b7 FemaleSleepHumanMouthAlarmCartoonCartoon SleepingYawnVoiceVoice Clips \u00b7 Man yawning \u00b7 0:03 \u00b7 Man yawning (Long) 0:02 \u00b7 Yawn - female \u00b7 0:03 \u00b7 Man yawns (Short) 0:02 \u00b7 Man yawning slowly \u00b7"
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Woman Yawn Sound Effect Download | Gfx Sounds",
+      "url": "https://gfxsounds.com/sound-effect/woman-yawn/",
+      "description": "https://gfxsounds.com/wp-content/uploads/2024/06/Woman-yawn.mp3 \u00b7 MP3 \u00b7 WAV \u00b7 <strong>Standard License</strong> \u00b7 Jess Fisher \u00b7 HumanYawn \u00b7 Browse Sounds \u00b7 Browse SFX Packs \u00b7 We use cookies on our website to give you the most relevant experience by remembering your preferences and repeat visits."
+    },
+    {
+      "type": "sfx_prompt_or_source_lead",
+      "title": "Download Free Yawn Sound Effects | Mixkit",
+      "url": "https://mixkit.co/free-sound-effects/yawn/",
+      "description": "15 Free Yawn Sound Effects. All of our sound effects are free to download and ready to use in your next video or audio project, under the <strong>Mixkit License</strong>."
+    }
+  ],
+  "recommended_generation_prompts": [
+    {
+      "name": "clean_young_female_yawn_short",
+      "prompt": "25-year-old woman yawning naturally, isolated dry vocal sound, no words, no music, no room noise, no reverb, close microphone, 1 second",
+      "duration_seconds": 1,
+      "purpose": "default clean Orpheus <yawn> candidate"
+    },
+    {
+      "name": "sleepy_soft_yawn",
+      "prompt": "tired young adult woman soft sleepy yawn with breath, isolated vocal, no speech, no background noise, dry studio close mic, 1 second",
+      "duration_seconds": 1,
+      "purpose": "softer yawn variant"
+    },
+    {
+      "name": "longer_tired_yawn",
+      "prompt": "young woman tired natural yawn, single nonverbal vocalization, no words, clean close microphone, no music, no ambience, 2 seconds",
+      "duration_seconds": 2,
+      "purpose": "longer candidate if 1 second sounds truncated"
+    },
+    {
+      "name": "subtle_breath_yawn",
+      "prompt": "female subtle breathy yawn, realistic human mouth sound, no dialogue, no background noise, no effects, dry isolated WAV, 1 second",
+      "duration_seconds": 1,
+      "purpose": "low-intensity yawn variant"
+    }
+  ],
+  "updated_at": 1781928043.1757593,
+  "selection_policy": "Generate or choose yawn candidates from SFX only when verified movie subtitles have yawn:0; keep source_type=sfx and require manual listening before training use."
+}

@@ -1,0 +1,138 @@
+{
+  "q0": {
+    "query": "Orpheus TTS supported emotion tags laugh sigh cough yawn gasp groan",
+    "ok": true,
+    "web": {
+      "ok": true,
+      "results": [
+        {
+          "title": "GitHub - canopyai/Orpheus-TTS: Towards Human-Sounding Speech \u00b7 GitHub",
+          "description": "The options for name in order of ... You can additionally add the following emotive tags: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;</strong>. For multilingual, see this post for supported tag...",
+          "url": "https://github.com/canopyai/Orpheus-TTS"
+        },
+        {
+          "title": "GitHub - Lex-au/Orpheus-FastAPI: High-performance Text-to-Speech server with OpenAI-compatible API, 8 voices, emotion tags, and modern web UI. Optimized for RTX GPUs. \u00b7 GitHub",
+          "description": "<strong>&lt;sigh&gt;: Add a sigh \u00b7 &lt;chuckle&gt;: Add a chuckle \u00b7 &lt;cough&gt;: Add a cough sound \u00b7 &lt;sniffle&gt;: Add a sniffle sound \u00b7 &lt;groan&gt;: Add a groan \u00b7 &lt;yawn&gt;: Add a yawning sound \u00b7 &lt;gasp&gt;: Add a gasping sound</strong> \u00b7 Example: &quot;Well, that&#x27;s interesting &lt;laugh&gt; ...",
+          "url": "https://github.com/Lex-au/Orpheus-FastAPI"
+        },
+        {
+          "title": "legraphista/Orpheus",
+          "description": "Key features: - 8 distinct voice options with different characteristics - <strong>Support for emotion tags like laughter, sighs, etc.</strong>",
+          "url": "https://ollama.com/legraphista/Orpheus"
+        },
+        {
+          "title": "How to use the Emotion tags? \u00b7 Issue #66 \u00b7 canopyai/Orpheus-TTS",
+          "description": "How to format the prompt so it correctly changes the voice to the specific emotion? Like happy, disgust, longer, whisper etc.? I was only able to use the tags for short emotions like laugh, sigh etc.",
+          "url": "https://github.com/canopyai/Orpheus-TTS/issues/66"
+        },
+        {
+          "title": "GitHub - blak-code-tech/orpheus-tts: High-performance Text-to-Speech server with OpenAI-compatible API, 8 voices, emotion tags, and modern web UI. Optimized for RTX GPUs. \u00b7 GitHub",
+          "description": "<strong>&lt;laugh&gt;: Add laughter \u00b7 &lt;sigh&gt;: Add a sigh \u00b7 &lt;chuckle&gt;: Add a chuckle \u00b7 &lt;cough&gt;: Add a cough sound \u00b7 &lt;sniffle&gt;: Add a sniffle sound \u00b7 &lt;groan&gt;: Add a groan \u00b7 &lt;yawn&gt;: Add a yawning sound \u00b7 &lt;gasp&gt;: Add a gasping sound</strong> \u00b7 Example: &quot;Well, ...",
+          "url": "https://github.com/blak-code-tech/orpheus-tts"
+        }
+      ]
+    }
+  },
+  "q1": {
+    "query": "Orpheus TTS nonverbal tags laugh cough sigh gasp yawn",
+    "ok": true,
+    "web": {
+      "ok": true,
+      "results": [
+        {
+          "title": "GitHub - canopyai/Orpheus-TTS: Towards Human-Sounding Speech \u00b7 GitHub",
+          "description": "The options for name in order of ... You can additionally add the following emotive tags: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;</strong>. For multilingual, see this post for supported tag...",
+          "url": "https://github.com/canopyai/Orpheus-TTS"
+        },
+        {
+          "title": "Orpheus-TTS - Poe",
+          "description": "Optional parameters: Choose from one of the available voices (`tara`, `leah`, `jess`, `leo`, `dan`,`mia`, `zac`, `zoe`). Officially supported sound effects are: <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;, and &lt;giggle&gt;</strong>.",
+          "url": "https://poe.com/Orpheus-TTS"
+        },
+        {
+          "title": "GitHub - Lex-au/Orpheus-FastAPI: High-performance Text-to-Speech server with OpenAI-compatible API, 8 voices, emotion tags, and modern web UI. Optimized for RTX GPUs. \u00b7 GitHub",
+          "description": "<strong>&lt;laugh&gt;: Add laughter \u00b7 &lt;sigh&gt;: Add a sigh \u00b7 &lt;chuckle&gt;: Add a chuckle \u00b7 &lt;cough&gt;: Add a cough sound \u00b7 &lt;sniffle&gt;: Add a sniffle sound \u00b7 &lt;groan&gt;: Add a groan \u00b7 &lt;yawn&gt;: Add a yawning sound \u00b7 &lt;gasp&gt;: Add a gasping sound</strong> \u00b7 Example: &quot;Well, ...",
+          "url": "https://github.com/Lex-au/Orpheus-FastAPI"
+        },
+        {
+          "title": "legraphista/Orpheus",
+          "description": "You can add expressiveness to speech by inserting tags: - <strong>&lt;laugh&gt;, &lt;chuckle&gt;: For laughter sounds - &lt;sigh&gt;: For sighing sounds - &lt;cough&gt;, &lt;sniffle&gt;: For subtle interruptions - &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;: For additional emotional expression</strong>",
+          "url": "https://ollama.com/legraphista/Orpheus"
+        },
+        {
+          "title": "Text-to-Speech (TTS) Fine-tuning Guide | Unsloth Documentation",
+          "description": "Orpheus supports tags like <strong>&lt;laugh&gt;, &lt;chuckle&gt;, &lt;sigh&gt;, &lt;cough&gt;, &lt;sniffle&gt;, &lt;groan&gt;, &lt;yawn&gt;, &lt;gasp&gt;</strong>, etc. For example: &quot;I missed you &lt;laugh&gt; so much!&quot;.",
+          "url": "https://unsloth.ai/docs/basics/text-to-speech-tts-fine-tuning"
+        }
+      ]
+    }
+  },
+  "q2": {
+    "query": "ElevenLabs sound effects prompt tips isolated female yawn no background noise",
+    "ok": true,
+    "web": {
+      "ok": true,
+      "results": [
+        {
+          "title": "How do I prompt for sound effects? \u2013 ElevenLabs",
+          "description": "The prompt is the piece of text or instruction that tells the AI what kind of output is expected. The AI understands natural language as well as audio terminology.Simple PromptsThese are simple pr...",
+          "url": "https://help.elevenlabs.io/hc/en-us/articles/25735604945041-How-do-I-prompt-for-sound-effects"
+        },
+        {
+          "title": "Best Elevenlabs Prompt Examples for Audio Content Creation",
+          "description": "Stereo sound, high-quality, no thunder, no sudden loud noise, seamless loop. 35. Ocean waves crashing against rocks, seagulls crying in the distance. \ud83d\udc49 Try this: Common terminologies to enhance your sound effect prompts: Ambience: Background environmental sounds that establish atmosphere and space ... Effective prompting transforms ElevenLabs Agents from robotic to lifelike.",
+          "url": "https://clickup.com/blog/elevenlabs-prompts/"
+        },
+        {
+          "title": "Mastering the Art of Sound Effect Prompts in ElevenLabs - Audio Generation Plugin",
+          "description": "This powerful generator is crafted to help sound designers, content creators, and audio enthusiasts craft detailed, nuanced prompts that will guide ElevenLabs\u2019 AI in producing precisely the sound effects you envision.",
+          "url": "https://audio-generation-plugin.com/elevenlabs-mastering-sound-effect-prompts/"
+        },
+        {
+          "title": "Download Free Yawn MP3 Sound Effects \u2013 High-Quality SFX",
+          "description": "Download Yawn sounds and noises - perfect for creating soundboards or audio projects \u00b7 Create Free Custom Sound EffectsLog in with Google ... Can&#x27;t find what you&#x27;re looking for? Generate your own. Describe what you need and our AI will generate the perfect sound effect for you. ... Yes, with our sound effects generator you can create custom yawn sound effects from a text prompt.",
+          "url": "https://elevenlabs.io/sound-effects/yawn"
+        },
+        {
+          "title": "Sound effects | ElevenLabs Documentation",
+          "description": "Learn how to create high-quality sound effects from text with ElevenLabs.",
+          "url": "https://elevenlabs.io/docs/capabilities/sound-effects"
+        }
+      ]
+    }
+  },
+  "q3": {
+    "query": "female yawn sound effect isolated wav license",
+    "ok": true,
+    "web": {
+      "ok": true,
+      "results": [
+        {
+          "title": "Download Free Yawn Sound Effects | Gfx Sounds",
+          "description": "https://gfxsounds.com/wp-content/uploads/2024/06/Adult-female-exaggerated-yawn.mp3 \u00b7 Exclusive only to Creator or Pro Members \u00b7 MP3 \u00b7 WAV \u00b7 <strong>Standard License</strong> \u00b7 Leah Ramsay \u00b7 HumanYawn \u00b7 https://gfxsounds.com/wp-content/uploads/2024/06/Adult-female-exaggerated-yawn-2.mp3 \u00b7",
+          "url": "https://gfxsounds.com/category/yawn-sound-effects/"
+        },
+        {
+          "title": "Female yawn, 30 years old 1 Sound Effect - Download FREE - ZapSplat",
+          "description": "Free &quot;Female yawn, 30 years old 1&quot; sound effects to download plus over 150,000 other free sounds at ZapSplat. Royalty free use for all your creative projects!",
+          "url": "https://www.zapsplat.com/music/female-yawn-30-years-old-1/"
+        },
+        {
+          "title": "Yawning - female Sound Effect \u2014 Free Download",
+          "description": "Sound EffectsYawning - female \u00b7 0:03Sound Effect \u00b7 Download \u00b7 0:03 \u00b7 FemaleSleepHumanMouthAlarmCartoonCartoon SleepingYawnVoiceVoice Clips \u00b7 Man yawning \u00b7 0:03 \u00b7 Man yawning (Long) 0:02 \u00b7 Yawn - female \u00b7 0:03 \u00b7 Man yawns (Short) 0:02 \u00b7 Man yawning slowly \u00b7",
+          "url": "https://tunetank.com/sound/26077-yawning-female/"
+        },
+        {
+          "title": "Woman Yawn Sound Effect Download | Gfx Sounds",
+          "description": "https://gfxsounds.com/wp-content/uploads/2024/06/Woman-yawn.mp3 \u00b7 MP3 \u00b7 WAV \u00b7 <strong>Standard License</strong> \u00b7 Jess Fisher \u00b7 HumanYawn \u00b7 Browse Sounds \u00b7 Browse SFX Packs \u00b7 We use cookies on our website to give you the most relevant experience by remembering your preferences and repeat visits.",
+          "url": "https://gfxsounds.com/sound-effect/woman-yawn/"
+        },
+        {
+          "title": "Download Free Yawn Sound Effects | Mixkit",
+          "description": "15 Free Yawn Sound Effects. All of our sound effects are free to download and ready to use in your next video or audio project, under the <strong>Mixkit License</strong>.",
+          "url": "https://mixkit.co/free-sound-effects/yawn/"
+        }
+      ]
+    }
+  }
+}
