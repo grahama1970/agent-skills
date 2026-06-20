@@ -1,8 +1,8 @@
 {
-  "content_hash": "9b84b5d0a9fc0b41e1018fd1ee8166601582f26c7dec4299b9fd23f583b022a8",
+  "content_hash": "b89d252bb82412f3afc671d515c3270068438820738359c85b1ef4bf653cfc81",
   "counts": {
-    "agents": 4,
-    "entries": 316,
+    "agents": 5,
+    "entries": 317,
     "skills": 312
   },
   "entries": [
@@ -52,6 +52,29 @@
         "code-runner",
         "book-extractor",
         "skills"
+      ],
+      "verifier": ""
+    },
+    {
+      "content_hash": "585580dcd090a58e",
+      "handoffs_to": [],
+      "id": "hum",
+      "kind": "worker",
+      "path": "agents/hum",
+      "source_file": "agents/hum/AGENTS.md",
+      "summary": "Transport wrapper for the `hum` subagent.",
+      "title": "Hum",
+      "type": "agent",
+      "uses_skills": [
+        "memory",
+        "hum",
+        "brave-search",
+        "ingest-youtube",
+        "create-stems",
+        "surf",
+        "project-knowledge",
+        "task-monitor",
+        "best-practices-subagent"
       ],
       "verifier": ""
     },
@@ -1121,6 +1144,7 @@
       "id": "brave-search",
       "path": "skills/brave-search",
       "related_agents": [
+        "hum",
         "watch"
       ],
       "source_file": "skills/brave-search/SKILL.md",
@@ -2515,7 +2539,9 @@
       "content_hash": "b0747dfd494a3307",
       "id": "create-stems",
       "path": "skills/create-stems",
-      "related_agents": [],
+      "related_agents": [
+        "hum"
+      ],
       "source_file": "skills/create-stems/SKILL.md",
       "summary": "Audio stem separation using Demucs (4-stem or 6-stem) and optional UVR ensemble. Uses the Python API entrypoint for clean error handling. GPU-accelerated, local-first.",
       "title": "create-stems",
@@ -3693,12 +3719,14 @@
         "Read",
         "Write"
       ],
-      "content_hash": "b0bb14a4b845febc",
+      "content_hash": "1bd4ed92f9a15731",
       "id": "hum",
       "path": "skills/hum",
-      "related_agents": [],
+      "related_agents": [
+        "hum"
+      ],
       "source_file": "skills/hum/SKILL.md",
-      "summary": "Persona humming pipeline. Downloads songs, separates vocals, converts to persona voice via RVC, and caches for playback during idle conversation. Orchestrates: /ingest-youtube, /create-stems, /learn-artist, /create-music.",
+      "summary": "Experimental persona humming diagnostic workflow. Licensed song segment \u2192 melody transcription or guide carrier \u2192 Orpheus TTS reference \u2192 Seed-VC conversion attempt, or bounded ElevenLabs STS voice bakeoff for static guide artifacts. Dynam\u2026",
       "title": "hum",
       "triggers": [
         "hum",
@@ -3947,6 +3975,7 @@
       "id": "ingest-youtube",
       "path": "skills/ingest-youtube",
       "related_agents": [
+        "hum",
         "voice-segment-selector",
         "watch"
       ],
@@ -4289,6 +4318,7 @@
       "path": "skills/memory",
       "related_agents": [
         "book-extractor",
+        "hum",
         "watch"
       ],
       "source_file": "skills/memory/SKILL.md",
@@ -5660,7 +5690,9 @@
       "content_hash": "5220bbb0170f1290",
       "id": "project-knowledge",
       "path": "skills/project-knowledge",
-      "related_agents": [],
+      "related_agents": [
+        "hum"
+      ],
       "source_file": "skills/project-knowledge/SKILL.md",
       "summary": "Shared project knowledge document that human and agent can both read and update. Aggregates state from /project-state, /checkpoint, /memory into a single PROJECT_KNOWLEDGE.md file, while syncing searchable chunks into /memory. Coordinator\u2026",
       "title": "project-knowledge",
@@ -6745,7 +6777,9 @@
       "content_hash": "92f9942a832387f6",
       "id": "surf",
       "path": "skills/surf",
-      "related_agents": [],
+      "related_agents": [
+        "hum"
+      ],
       "source_file": "skills/surf/SKILL.md",
       "summary": "Unified browser automation for AI agents. Uses surf-cli extension when available (full features), falls back to CDP (zero-config). Navigate, read with element refs, click, type, screenshot.",
       "title": "surf",
@@ -6928,6 +6962,7 @@
       "id": "task-monitor",
       "path": "skills/task-monitor",
       "related_agents": [
+        "hum",
         "watch"
       ],
       "source_file": "skills/task-monitor/SKILL.md",
