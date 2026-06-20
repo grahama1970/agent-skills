@@ -1,0 +1,167 @@
+{
+  "artifact_type": "orpheus_female_sfx_prompt_bank",
+  "schema_version": "1.0",
+  "purpose": "Fallback prompts for Orpheus-TTS nonverbal emotion tags when verified movie subtitles do not provide enough clean local samples.",
+  "voice_style_boundary": {
+    "allowed": "young adult female, naturalistic, understated, slightly husky, dry close-mic performance",
+    "not_allowed": "do not claim or request a Kristen Stewart voice clone or deceptive celebrity impersonation",
+    "provenance_rule": "Generated SFX must be stored as source_type=sfx and must not be mixed into actor-specific movie evidence claims."
+  },
+  "target_tags": [
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp"
+  ],
+  "global_negative_prompt": "no words, no music, no room tone, no crowd, no ambience, no reverb, no delay, no Foley objects, no background noise, no dialogue overlap",
+  "quality_checks": [
+    "manual listen pass",
+    "single nonverbal vocalization matches target tag",
+    "clean isolated audio with no music or dialogue",
+    "duration is short enough for tag insertion",
+    "license/provenance retained",
+    "write source_type=sfx and source_model/provider into watch_orpheus_segments"
+  ],
+  "prompts": {
+    "laugh": [
+      {
+        "name": "short_natural_laugh",
+        "prompt": "young adult woman short natural laugh, understated and realistic, dry close microphone, isolated vocal sound, no words, no music, no background noise, 1 second"
+      },
+      {
+        "name": "soft_breath_laugh",
+        "prompt": "young adult female soft breathy laugh, subtle intimate close-mic vocalization, isolated dry studio sound, no speech, no ambience, 1 second"
+      },
+      {
+        "name": "awkward_small_laugh",
+        "prompt": "young woman small awkward laugh, restrained and natural, dry isolated vocal, no words, no room noise, 1 second"
+      }
+    ],
+    "chuckle": [
+      {
+        "name": "dry_chuckle",
+        "prompt": "young adult woman quiet dry chuckle, natural understated reaction, close microphone, isolated vocal only, no words, no music, 1 second"
+      },
+      {
+        "name": "low_chuckle",
+        "prompt": "young female low soft chuckle, slightly husky and realistic, isolated dry vocal sound, no dialogue, no background noise, 1 second"
+      },
+      {
+        "name": "single_chuckle",
+        "prompt": "single short female chuckle, casual natural performance, close mic, no words, no ambience, 1 second"
+      }
+    ],
+    "sigh": [
+      {
+        "name": "tired_sigh",
+        "prompt": "young adult woman tired sigh, realistic breathy exhale, close microphone, isolated dry vocal, no words, no background noise, 1 second"
+      },
+      {
+        "name": "relieved_sigh",
+        "prompt": "young female soft relieved sigh, natural nonverbal breath, clean studio close mic, no speech, no music, 1 second"
+      },
+      {
+        "name": "frustrated_sigh",
+        "prompt": "young woman quiet frustrated sigh, understated and realistic, isolated dry vocal breath, no dialogue, no ambience, 1 second"
+      }
+    ],
+    "cough": [
+      {
+        "name": "single_light_cough",
+        "prompt": "young adult woman single light cough, realistic dry vocal sound, close microphone, isolated, no words, no room noise, 1 second"
+      },
+      {
+        "name": "throat_clear_cough",
+        "prompt": "young female small throat-clearing cough, natural close-mic dry vocalization, no speech, no music, 1 second"
+      },
+      {
+        "name": "muted_cough",
+        "prompt": "young woman muted soft cough, isolated human vocal sound, clean dry studio recording, no background noise, 1 second"
+      }
+    ],
+    "sniffle": [
+      {
+        "name": "single_sniffle",
+        "prompt": "young adult woman single soft sniffle, realistic nasal inhale, close microphone, isolated dry sound, no words, no ambience, 1 second"
+      },
+      {
+        "name": "sad_sniffle",
+        "prompt": "young female quiet sad sniffle, natural subtle breath through nose, clean close-mic isolated vocal, no speech, 1 second"
+      },
+      {
+        "name": "cold_sniffle",
+        "prompt": "young woman small cold sniffle, realistic isolated nasal sound, dry close microphone, no background noise, 1 second"
+      }
+    ],
+    "groan": [
+      {
+        "name": "tired_groan",
+        "prompt": "young adult woman tired quiet groan, natural low vocal strain, dry close microphone, isolated, no words, no music, 1 second"
+      },
+      {
+        "name": "annoyed_groan",
+        "prompt": "young female annoyed subtle groan, understated realistic nonverbal vocalization, clean close mic, no speech, 1 second"
+      },
+      {
+        "name": "pain_groan_soft",
+        "prompt": "young woman soft pain groan, realistic but not theatrical, isolated dry vocal, no background noise, 1 second"
+      }
+    ],
+    "yawn": [
+      {
+        "name": "clean_yawn_short",
+        "prompt": "25-year-old woman yawning naturally, isolated dry vocal sound, no words, no music, no room noise, no reverb, close microphone, 1 second"
+      },
+      {
+        "name": "sleepy_soft_yawn",
+        "prompt": "tired young adult woman soft sleepy yawn with breath, isolated vocal, no speech, no background noise, dry studio close mic, 1 second"
+      },
+      {
+        "name": "longer_tired_yawn",
+        "prompt": "young woman tired natural yawn, single nonverbal vocalization, no words, clean close microphone, no music, no ambience, 2 seconds"
+      }
+    ],
+    "gasp": [
+      {
+        "name": "surprised_gasp",
+        "prompt": "young adult woman short surprised gasp, realistic sharp inhale, close microphone, isolated dry vocal, no words, no background noise, 1 second"
+      },
+      {
+        "name": "quiet_gasp",
+        "prompt": "young female quiet subtle gasp, natural breath intake, clean close-mic isolated vocal, no speech, no music, 1 second"
+      },
+      {
+        "name": "fear_gasp",
+        "prompt": "young woman fearful quick gasp, realistic nonverbal inhale, dry isolated close microphone, no ambience, 1 second"
+      }
+    ]
+  },
+  "extra_candidate_sounds": [
+    {
+      "name": "giggle",
+      "core_orpheus_mapping": [
+        "laugh",
+        "chuckle"
+      ],
+      "use_rule": "Use generated giggle audio as a laugh/chuckle candidate unless the downstream Orpheus runtime explicitly accepts <giggle> as a tag.",
+      "prompts": [
+        {
+          "name": "soft_giggle",
+          "prompt": "young adult woman soft brief giggle, restrained natural performance, dry close microphone, isolated vocal only, no words, no music, no background noise, 1 second"
+        },
+        {
+          "name": "nervous_giggle",
+          "prompt": "young female tiny nervous giggle, understated realistic nonverbal vocalization, isolated dry close-mic audio, no speech, no ambience, 1 second"
+        },
+        {
+          "name": "warm_small_giggle",
+          "prompt": "young woman warm small giggle, natural short human vocalization, clean dry close microphone, no dialogue, no room tone, 1 second"
+        }
+      ]
+    }
+  ]
+}

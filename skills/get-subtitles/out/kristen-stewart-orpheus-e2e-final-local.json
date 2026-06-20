@@ -977,7 +977,8 @@
         }
       ],
       "cue_count": 65,
-      "recommendation": "use_for_watch_orpheus_candidate_extraction"
+      "recommendation": "use_for_watch_orpheus_candidate_extraction",
+      "movie_file_path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv"
     },
     {
       "title": "Underwater",
@@ -1585,7 +1586,8 @@
         }
       ],
       "cue_count": 41,
-      "recommendation": "use_for_watch_orpheus_candidate_extraction"
+      "recommendation": "use_for_watch_orpheus_candidate_extraction",
+      "movie_file_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv"
     },
     {
       "title": "Charlie's Angels",
@@ -1617,7 +1619,8 @@
       ],
       "timecoded_emotion_cues": [],
       "cue_count": 0,
-      "recommendation": "do_not_use_for_orpheus_emotion_extraction_no_tags_found"
+      "recommendation": "do_not_use_for_orpheus_emotion_extraction_no_tags_found",
+      "movie_file_path": "/mnt/storage12tb/media/movies/Charlie's Angels (2019)/Charlies.Angels.2019.1080p.WEB-DL.DD5.1.x264-Rapta.mkv"
     }
   ],
   "movie_recommendations": [
@@ -1636,7 +1639,8 @@
       ],
       "cue_count": 65,
       "reason": "Verified local English SRT contains timecoded Orpheus emotion cues.",
-      "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments."
+      "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments.",
+      "movie_file_path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv"
     },
     {
       "title": "Underwater",
@@ -1654,7 +1658,8 @@
       ],
       "cue_count": 41,
       "reason": "Verified local English SRT contains timecoded Orpheus emotion cues.",
-      "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments."
+      "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments.",
+      "movie_file_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv"
     }
   ],
   "not_recommended_movies": [
@@ -1712,5 +1717,37 @@
       "source_lead_count": 10,
       "orpheus_tag_reference_count": 6
     }
-  ]
+  ],
+  "sfx_prompt_bank": {
+    "artifact_path": "skills/get-subtitles/out/orpheus-female-sfx-prompt-bank.json",
+    "purpose": "Generate candidate fallback SFX only for missing/sparse nonverbal tags; keep separate provenance from actor/movie evidence.",
+    "voice_style_boundary": "young adult female, naturalistic, understated, slightly husky, dry close-mic performance; do not request or claim a Kristen Stewart voice clone."
+  },
+  "fill_gaps_plan": {
+    "authoritative_lane": "Use local movie + English SRT cues for verified timecoded Watch extraction.",
+    "fallback_lane": "Use generated/downloaded SFX only when verified local subtitle scans have zero or too few cues for a tag.",
+    "current_missing_core_tags": [
+      "yawn"
+    ],
+    "current_sfx_assets": [
+      "/home/graham/Downloads/25-year-old_female_y_#1-1781927703466.wav",
+      "/home/graham/Downloads/25-year-old_female_y_#2-1781927711347.wav",
+      "/home/graham/Downloads/25-year-old_female_y_#3-1781927711348.wav",
+      "/home/graham/Downloads/25-year-old_female_y_#4-1781927711348.wav"
+    ],
+    "required_before_training": [
+      "manual listen pass",
+      "confirm the sound matches the target emotion tag",
+      "confirm no speech/music/background contamination",
+      "record source_type=sfx, provider, prompt, license/provenance, and accepted/rejected status in watch_orpheus_segments"
+    ],
+    "extra_candidate_sound": {
+      "name": "giggle",
+      "mapped_core_tags": [
+        "laugh",
+        "chuckle"
+      ],
+      "rule": "Treat as laugh/chuckle evidence unless Orpheus runtime explicitly supports <giggle>."
+    }
+  }
 }
