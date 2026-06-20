@@ -97,6 +97,14 @@ tool_policy:
     - runtime_cache_publication
     - destructive_cleanup
     - secret_printing
+  secrets:
+    - Prefer process environment loaded by skills/hum/run.sh.
+    - Local ElevenLabs experiments may use skills/hum/.env_temp copied from
+      skills/hum/.env_temp.example.
+    - Never print, serialize, embed, or copy API keys into HTML pages, JSON
+      receipts, logs, status packets, review artifacts, or clipboard output.
+    - Redact request headers and any environment snapshot before reporting
+      status back to the project agent.
   bash:
     tier: bash.scoped_mutate
     allowed_commands:

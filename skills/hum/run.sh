@@ -21,6 +21,14 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     source "$PROJECT_ROOT/.env"
     set +a
 fi
+
+# Load hum-local temporary secrets/overrides after project defaults. This file is
+# intentionally untracked; see .env_temp.example for the expected keys.
+if [ -f "$SCRIPT_DIR/.env_temp" ]; then
+    set -a
+    source "$SCRIPT_DIR/.env_temp"
+    set +a
+fi
 cd "$SCRIPT_DIR"
 
 # Ensure dependencies

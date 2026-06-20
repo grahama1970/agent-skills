@@ -757,6 +757,12 @@ Environment:
 
 - `ORPHEUS_INFER_URL` — default `http://127.0.0.1:8767`
 - `SEEDVC_DIR` — default `/mnt/storage12tb/tools/seed-vc`
+- `ELEVENLABS_API_KEY` — required for STS, Sound Effects, Voice Library, and
+  similar-voice calls. Store local ElevenLabs credentials in
+  `skills/hum/.env_temp`, copied from `skills/hum/.env_temp.example`; the
+  wrapper loads project root `.env` first and hum-local `.env_temp` second.
+  `.env_temp` is untracked and must never be copied into generated HTML,
+  request receipts, review pages, logs, or status packets.
 
 ## Storage Layout
 

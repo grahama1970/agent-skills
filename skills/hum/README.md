@@ -426,6 +426,13 @@ skills/hum/
 
 ## Environment
 
+For local API runs, copy `skills/hum/.env_temp.example` to
+`skills/hum/.env_temp` and set secrets there. `./run.sh` loads the project root
+`.env` first and hum-local `.env_temp` second, so a bakeoff can use temporary
+ElevenLabs credentials or overrides without changing the repo-wide environment.
+The `.env_temp` file is ignored by git. Generated review HTML, JSON receipts,
+logs, and status packets must never contain raw API keys.
+
 | Variable | Purpose |
 | --- | --- |
 | `ELEVENLABS_API_KEY` | Required for STS and Sound Effects API calls |
