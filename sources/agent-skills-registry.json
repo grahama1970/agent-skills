@@ -1,5 +1,5 @@
 {
-  "content_hash": "b89d252bb82412f3afc671d515c3270068438820738359c85b1ef4bf653cfc81",
+  "content_hash": "15300708fbe492a5fea0a5faf1e06380eccb23653fc9adda97aef6c57f57b7ea",
   "counts": {
     "agents": 5,
     "entries": 317,
@@ -3719,7 +3719,7 @@
         "Read",
         "Write"
       ],
-      "content_hash": "1bd4ed92f9a15731",
+      "content_hash": "6f93c2da21bde234",
       "id": "hum",
       "path": "skills/hum",
       "related_agents": [
