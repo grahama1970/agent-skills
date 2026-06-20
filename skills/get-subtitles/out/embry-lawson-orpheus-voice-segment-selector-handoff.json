@@ -1,0 +1,107 @@
+{
+  "artifact_type": "embry_lawson_orpheus_voice_segment_selector_handoff",
+  "schema_version": "1.0",
+  "target_skill": "voice-segment-selector",
+  "target_speaker": "embry",
+  "target_persona": "Embry Lawson",
+  "source_contract": {
+    "voice_segment_selector_contract_read": true,
+    "export_command": "skills/voice-segment-selector/run.sh export-orpheus --job-dir <JOB> --speaker embry",
+    "native_orpheus_tags_only": [
+      "<laugh>",
+      "<chuckle>",
+      "<sigh>",
+      "<cough>",
+      "<sniffle>",
+      "<groan>",
+      "<yawn>",
+      "<gasp>"
+    ],
+    "minimum_examples": 50,
+    "recommended_examples": 300,
+    "human_review_required": true,
+    "do_not_train_from_raw_auto_tags": true
+  },
+  "current_emotion_coverage_from_local_srt_scan": {
+    "laugh": 28,
+    "chuckle": 24,
+    "sigh": 12,
+    "cough": 5,
+    "sniffle": 2,
+    "groan": 26,
+    "yawn": 0,
+    "gasp": 9
+  },
+  "missing_core_tags": [
+    "yawn"
+  ],
+  "candidate_source_lanes": [
+    {
+      "lane": "movie_srt_cues",
+      "status": "timecoded_cues_found_but_not_yet_accepted_for_embry_training",
+      "purpose": "Find candidate nonverbal/emotion windows and movie clips for review/extraction.",
+      "inputs": [
+        {
+          "title": "Adventureland",
+          "year": 2009,
+          "radarr_id": 150,
+          "subtitle_path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.en.srt",
+          "verified_emotions": [
+            "laugh",
+            "chuckle",
+            "sigh",
+            "sniffle",
+            "groan",
+            "gasp"
+          ],
+          "cue_count": 65,
+          "reason": "Verified local English SRT contains timecoded Orpheus emotion cues.",
+          "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments.",
+          "movie_file_path": "/mnt/storage12tb/media/movies/Adventureland (2009)/Adventureland.2009.REPACK.1080p.PMTP.WEB-DL.DDP.5.1.H.264-PiRaTeS.mkv"
+        },
+        {
+          "title": "Underwater",
+          "year": 2020,
+          "radarr_id": 151,
+          "subtitle_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.en.srt",
+          "verified_emotions": [
+            "laugh",
+            "chuckle",
+            "sigh",
+            "cough",
+            "sniffle",
+            "groan",
+            "gasp"
+          ],
+          "cue_count": 41,
+          "reason": "Verified local English SRT contains timecoded Orpheus emotion cues.",
+          "next_step": "Use Watch to extract, listen, speaker-verify, trim, and write watch_orpheus_segments.",
+          "movie_file_path": "/mnt/storage12tb/media/movies/Underwater (2020)/Underwater.2020.1080p.DSNP.WEB-DL.Atmos.H264-GPRS.mkv"
+        }
+      ],
+      "required_next_step": "Use Watch or voice-segment-selector bounded prepare on the movie windows, then human accept/reject before export-orpheus."
+    },
+    {
+      "lane": "elevenlabs_sfx_gap_fill",
+      "status": "candidate_manifest_created_pending_manual_listen",
+      "purpose": "Fill missing/sparse nonverbal tags, currently yawn, when local SRT scan has zero verified cues.",
+      "candidate_manifest": "skills/get-subtitles/out/orpheus-yawn-sfx-candidates.json",
+      "prompt_bank": "skills/get-subtitles/out/orpheus-female-sfx-prompt-bank.json",
+      "required_next_step": "Manual listen; mark accepted/rejected; convert accepted audio to voice-segment-selector Orpheus dataset rows with source_type=sfx.",
+      "elevenlabs_prompt_set": "skills/get-subtitles/out/elevenlabs-orpheus-emotion-prompts-for-embry.json"
+    }
+  ],
+  "critical_boundary": [
+    "Do not call ElevenLabs SFX or Kristen Stewart movie clips Embry Lawson voice evidence.",
+    "Do not claim celebrity voice cloning or request a Kristen Stewart clone.",
+    "Generated SFX may fill event-tag coverage only after manual review and provenance capture.",
+    "Final Embry Lawson Orpheus readiness requires export-orpheus, train receipt, inference PASS receipt, and publish receipt per voice-segment-selector."
+  ],
+  "next_agent_actions": [
+    "Use skills/get-subtitles/out/elevenlabs-orpheus-emotion-prompts-for-embry.json to generate more <yawn> candidates first; use giggle prompts only as laugh/chuckle candidates.",
+    "Build/extend a voice-segment-selector import path for reviewed SFX candidate rows, or create a watch_orpheus_segments bridge consumed by export-orpheus.",
+    "Run manual/audio review on the 4 ElevenLabs yawn candidates.",
+    "Use movie SRT cues to extract bounded candidate clips for tags with local coverage.",
+    "Accumulate at least 50 reviewed Embry Lawson-compatible examples before calling training minimally useful."
+  ]
+}

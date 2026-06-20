@@ -1,0 +1,27 @@
+{
+  "artifact_type": "embry_lawson_elevenlabs_sfx_generation_receipt",
+  "schema_version": "1.0",
+  "target_skill": "voice-segment-selector",
+  "target_speaker": "embry",
+  "target_persona": "Embry Lawson",
+  "job_dir": "/mnt/storage12tb/skills/voice-segment-selector/jobs/embry-lawson-orpheus-elevenlabs-sfx",
+  "review_url": "http://127.0.0.1:8791",
+  "generation_manifest": "/mnt/storage12tb/skills/voice-segment-selector/jobs/embry-lawson-orpheus-elevenlabs-sfx/elevenlabs_sfx_generation_manifest.json",
+  "verify_receipt": "/mnt/storage12tb/skills/voice-segment-selector/jobs/embry-lawson-orpheus-elevenlabs-sfx/verify-receipt.json",
+  "candidate_count": 56,
+  "counts_by_emotion": {
+    "laugh": 7,
+    "chuckle": 7,
+    "sigh": 7,
+    "cough": 7,
+    "sniffle": 7,
+    "groan": 7,
+    "yawn": 7,
+    "gasp": 7
+  },
+  "verify_status": "PASS",
+  "review_api_status": "56 candidates visible via GET /api/candidates after SFX review filter patch",
+  "training_status": "BLOCKED_PENDING_HUMAN_AUDIO_REVIEW",
+  "why_training_is_blocked": "voice-segment-selector export-orpheus requires human or auto_high_confidence reviewed tts_text; generated SFX rows are pending review and should not be used for retraining until accepted.",
+  "next_command_after_review": "skills/voice-segment-selector/run.sh export-orpheus --job-dir /mnt/storage12tb/skills/voice-segment-selector/jobs/embry-lawson-orpheus-elevenlabs-sfx --speaker embry"
+}

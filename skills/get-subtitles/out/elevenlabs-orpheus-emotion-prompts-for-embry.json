@@ -1,0 +1,281 @@
+{
+  "artifact_type": "elevenlabs_orpheus_emotion_prompt_set",
+  "schema_version": "1.0",
+  "target_persona": "Embry Lawson",
+  "target_skill": "voice-segment-selector",
+  "target_speaker": "embry",
+  "purpose": "Generate reviewed SFX fallback candidates for Orpheus-native nonverbal tags when movie/SRT-derived candidates are missing or sparse.",
+  "style_reference_boundary": {
+    "do": "young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical",
+    "do_not": "Do not put Kristen Stewart or any celebrity name in ElevenLabs prompts; do not claim these are celebrity or actor evidence.",
+    "why": "We want an adjacent vocal texture for nonverbal tag coverage, not a deceptive voice clone."
+  },
+  "native_orpheus_tags": [
+    "<laugh>",
+    "<chuckle>",
+    "<sigh>",
+    "<cough>",
+    "<sniffle>",
+    "<groan>",
+    "<yawn>",
+    "<gasp>"
+  ],
+  "current_priority": [
+    "<yawn>"
+  ],
+  "global_negative_prompt": "no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley",
+  "prompts_by_tag": {
+    "<yawn>": [
+      {
+        "name": "soft_sleepy_yawn",
+        "orpheus_tag": "<yawn>",
+        "duration_seconds": 1.2,
+        "priority": "gap_fill_now",
+        "elevenlabs_prompt": "single soft sleepy yawn from a tired young woman, gentle inhale into relaxed open-mouth exhale. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "restrained_breathy_yawn",
+        "orpheus_tag": "<yawn>",
+        "duration_seconds": 1.0,
+        "priority": "gap_fill_now",
+        "elevenlabs_prompt": "brief restrained breathy yawn, intimate and realistic, not exaggerated. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "tired_end_of_sentence_yawn",
+        "orpheus_tag": "<yawn>",
+        "duration_seconds": 1.3,
+        "priority": "gap_fill_now",
+        "elevenlabs_prompt": "small tired yawn as if trying to stay awake, natural mouth breath, no speech. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "quiet_covered_yawn",
+        "orpheus_tag": "<yawn>",
+        "duration_seconds": 1.0,
+        "priority": "gap_fill_now",
+        "elevenlabs_prompt": "quiet covered yawn, soft and close, minimal volume, realistic human breath. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "longer_sleepy_yawn",
+        "orpheus_tag": "<yawn>",
+        "duration_seconds": 2.0,
+        "priority": "gap_fill_now",
+        "elevenlabs_prompt": "longer sleepy yawn with subtle breath onset and taper, clean isolated vocal. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<laugh>": [
+      {
+        "name": "dry_short_laugh",
+        "orpheus_tag": "<laugh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "short dry natural laugh, low intensity, one quick laugh burst. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "awkward_breath_laugh",
+        "orpheus_tag": "<laugh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "awkward breath-led laugh, restrained and realistic, slight rasp. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "soft_private_laugh",
+        "orpheus_tag": "<laugh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "soft private laugh under the breath, warm but understated. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<chuckle>": [
+      {
+        "name": "low_chuckle",
+        "orpheus_tag": "<chuckle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "low quiet chuckle, subtle and dry, one short nonverbal reaction. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "nervous_chuckle",
+        "orpheus_tag": "<chuckle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "small nervous chuckle, brief and slightly breathy. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "deadpan_chuckle",
+        "orpheus_tag": "<chuckle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "deadpan single chuckle, restrained and close-mic. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<sigh>": [
+      {
+        "name": "tired_sigh",
+        "orpheus_tag": "<sigh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "tired sigh, soft inhale then audible relaxed exhale. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "frustrated_sigh",
+        "orpheus_tag": "<sigh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "quiet frustrated sigh, understated and realistic. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "relieved_sigh",
+        "orpheus_tag": "<sigh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "soft relieved sigh with gentle breath release. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<cough>": [
+      {
+        "name": "single_light_cough",
+        "orpheus_tag": "<cough>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "single light dry cough, realistic throat sound. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "muted_cough",
+        "orpheus_tag": "<cough>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "muted small cough, controlled and close-mic. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "throat_clear_cough",
+        "orpheus_tag": "<cough>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "brief throat-clearing cough, natural and nonverbal. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<sniffle>": [
+      {
+        "name": "single_sniffle",
+        "orpheus_tag": "<sniffle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "single soft sniffle, realistic nasal inhale. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "sad_sniffle",
+        "orpheus_tag": "<sniffle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "quiet sad sniffle, subtle breath through nose. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "cold_sniffle",
+        "orpheus_tag": "<sniffle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "small cold sniffle, clean isolated nasal sound. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<groan>": [
+      {
+        "name": "tired_groan",
+        "orpheus_tag": "<groan>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "quiet tired groan, low nonverbal vocal strain. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "annoyed_groan",
+        "orpheus_tag": "<groan>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "soft annoyed groan, restrained and realistic. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "pain_groan_soft",
+        "orpheus_tag": "<groan>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "soft discomfort groan, realistic but not dramatic. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "<gasp>": [
+      {
+        "name": "small_surprised_gasp",
+        "orpheus_tag": "<gasp>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "short surprised gasp, quick sharp inhale. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "quiet_realization_gasp",
+        "orpheus_tag": "<gasp>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "quiet realization gasp, subtle breath intake. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "fear_gasp",
+        "orpheus_tag": "<gasp>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "brief fearful gasp, realistic nonverbal inhale. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ],
+    "giggle_as_<laugh_or_chuckle>": [
+      {
+        "name": "soft_giggle_laugh_candidate",
+        "orpheus_tag": "<laugh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "soft tiny giggle, restrained natural reaction, one short vocalization. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "nervous_giggle_chuckle_candidate",
+        "orpheus_tag": "<chuckle>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "nervous small giggle, breath-led and understated. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      },
+      {
+        "name": "warm_giggle_laugh_candidate",
+        "orpheus_tag": "<laugh>",
+        "duration_seconds": 1.0,
+        "priority": "normal",
+        "elevenlabs_prompt": "warm small giggle, brief and natural, not cartoonish. Vocal style: young adult female voice, low-key and naturalistic, slightly husky texture, dry close-mic recording, understated emotional delivery, breath-led rather than theatrical. Constraints: no words, no celebrity name, no imitation claim, no music, no ambience, no crowd, no room tone, no reverb, no delay, no dialogue, no Foley.",
+        "review_gate": "Accept only if the sound is a clean isolated nonverbal vocalization matching the tag."
+      }
+    ]
+  },
+  "storage_rule": "Each generated WAV must be cataloged with provider, prompt, file_path, sha256, duration, audio_peaks, source_type=sfx, and pending/accepted/rejected review_status before export-orpheus.",
+  "training_rule": "Do not export to Embry Lawson Orpheus training until human review accepts the sound and provenance."
+}
