@@ -1715,7 +1715,9 @@
       ],
       "brave_search_artifact": "skills/get-subtitles/out/brave-yawn-sfx-and-orpheus-tags.json",
       "source_lead_count": 10,
-      "orpheus_tag_reference_count": 6
+      "orpheus_tag_reference_count": 6,
+      "candidate_manifest": "skills/get-subtitles/out/orpheus-yawn-sfx-candidates.json",
+      "candidate_status": "pending_manual_listen"
     }
   ],
   "sfx_prompt_bank": {
@@ -1748,6 +1750,8 @@
         "chuckle"
       ],
       "rule": "Treat as laugh/chuckle evidence unless Orpheus runtime explicitly supports <giggle>."
-    }
+    },
+    "sfx_candidate_manifest": "skills/get-subtitles/out/orpheus-yawn-sfx-candidates.json",
+    "current_sfx_candidate_count": 4
   }
 }
