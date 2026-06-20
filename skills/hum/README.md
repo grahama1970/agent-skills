@@ -1,5 +1,7 @@
 # /hum - Persona Humming Diagnostics and STS Bakeoffs
 
+![Embry humming diagnostics header](assets/hum-header.webp)
+
 `/hum` is the workflow for finding, preparing, and reviewing static persona
 humming or chant candidates. It does not prove Embry can dynamically hum any
 song on demand. It gives agents a disciplined way to discover source audio,
