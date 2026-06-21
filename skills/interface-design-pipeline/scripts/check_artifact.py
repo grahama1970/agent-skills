@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -76,6 +77,13 @@ def check_mockup(args: argparse.Namespace) -> int:
         if re.search(rf"\b{re.escape(forbidden.lower())}\b", lowered):
             findings.append(f"forbidden UI term present: {forbidden}")
 
+    if args.screenshot:
+        screenshot = Path(args.screenshot)
+        if not screenshot.is_file():
+            findings.append(f"missing rendered screenshot: {screenshot}")
+        elif screenshot.stat().st_size < 1000:
+            findings.append(f"rendered screenshot is unexpectedly small: {screenshot}")
+
     remote_assets = re.findall(r"(?:src|href)=[\"']https?://", text, flags=re.IGNORECASE)
     if remote_assets and not args.allow_remote_assets:
         findings.append("remote script/style/image dependencies are not allowed in a self-contained mockup")
@@ -131,6 +139,7 @@ def build_parser() -> argparse.ArgumentParser:
     mockup.add_argument("--path", required=True)
     mockup.add_argument("--required-text", action="append", default=[])
     mockup.add_argument("--forbid", action="append", default=[])
+    mockup.add_argument("--screenshot")
     mockup.add_argument("--allow-remote-assets", action="store_true")
     mockup.set_defaults(func=check_mockup)
 

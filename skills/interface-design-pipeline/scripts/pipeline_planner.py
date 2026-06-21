@@ -52,7 +52,7 @@ def mockup_node(manifest: dict[str, Any], run_dir: Path, competitor: dict[str, A
     cfg = manifest["mockups"]
     candidate = run_dir / "phases/03-mockup-tournament/candidates" / competitor["id"]
     candidate_rel = path_for_node(candidate)
-    check = [sys.executable, "skills/interface-design-pipeline/scripts/check_artifact.py", "mockup", "--path", f"{candidate_rel}/index.html"]
+    check = [sys.executable, "skills/interface-design-pipeline/scripts/check_artifact.py", "mockup", "--path", f"{candidate_rel}/index.html", "--screenshot", f"{candidate_rel}/screenshot.png"]
     for state in cfg.get("required_states", []):
         check += ["--required-text", state]
     for term in manifest["surface"].get("forbidden_ui_terms", []):
@@ -63,7 +63,7 @@ def mockup_node(manifest: dict[str, Any], run_dir: Path, competitor: dict[str, A
         "objective": (
             f"Build the {competitor['id']} HTML/CSS candidate. Strategy: {competitor['strategy']}\n"
             f"Read {path_for_node(run_dir / 'brief.md')} and the research/reference packets. "
-            f"Write index.html, rationale.md, and states.md only under {candidate_rel}. "
+            f"Write index.html, screenshot.png, rationale.md, and states.md only under {candidate_rel}. "
             "Use interface-designer; interface-reviewer is read-only."
         ),
         "allowed_globs": [f"{candidate_rel}/**"],
@@ -71,7 +71,7 @@ def mockup_node(manifest: dict[str, Any], run_dir: Path, competitor: dict[str, A
         "checks": [shlex.join(check)],
         "max_attempts": int(cfg.get("max_rounds", 3)),
         "check_timeout": int(cfg.get("check_timeout", 180)),
-        "agent_config": "skills/interface-design-pipeline/examples/agents.mockup.toml",
+        "agent_config": str(SKILL_DIR / "examples/agents.mockup.toml"),
         "run_root": f"{path_for_node(run_dir / 'loop-runs')}/mockups/{competitor['id']}",
         "require_clean": False,
         "worktree": {"mode": "existing"},
@@ -99,7 +99,7 @@ def implementation_node(manifest: dict[str, Any], run_dir: Path, competitor: dic
         "checks": checks,
         "max_attempts": int(cfg.get("max_rounds", 3)),
         "check_timeout": int(cfg.get("check_timeout", 600)),
-        "agent_config": "skills/interface-design-pipeline/examples/agents.implementation.toml",
+        "agent_config": str(SKILL_DIR / "examples/agents.implementation.toml"),
         "run_root": ".loop/runs/interface-implementation",
         "require_clean": True,
         "worktree": {"mode": "existing"},
