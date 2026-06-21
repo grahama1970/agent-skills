@@ -1,0 +1,14 @@
+[explorer]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-researcher", "--role", "explorer"]
+writes = false
+timeout_seconds = 960
+
+[coder]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-designer", "--role", "coder"]
+writes = true
+timeout_seconds = 1260
+
+[code-reviewer]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-reviewer", "--role", "code-reviewer"]
+writes = false
+timeout_seconds = 960
