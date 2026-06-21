@@ -1,14 +1,14 @@
 [explorer]
-cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-researcher", "--role", "explorer"]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-researcher", "--role", "explorer", "--surface", "exec", "--exec-profile", "codex-gpt-5.5", "--sandbox", "read-only", "--reasoning-effort", "high", "--caller-skill", "interface-design-pipeline", "--timeout", "900"]
 writes = false
 timeout_seconds = 960
 
 [coder]
-cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-designer", "--role", "coder"]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-designer", "--role", "coder", "--surface", "opencode", "--opencode-agent", "build", "--opencode-skills", "ux-lab,best-practices-design,best-practices-react,best-practices-d3,best-practices-chat,best-practices-chat-ux,test-interactions,scillm", "--caller-skill", "interface-design-pipeline", "--timeout", "1800"]
 writes = true
 timeout_seconds = 1860
 
 [code-reviewer]
-cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-reviewer", "--role", "code-reviewer"]
+cmd = ["{python}", "skills/interface-design-pipeline/scripts/interface_loop_agent.py", "--agent", "interface-reviewer", "--role", "code-reviewer", "--surface", "exec", "--exec-profile", "codex-vision", "--sandbox", "read-only", "--reasoning-effort", "high", "--caller-skill", "interface-design-pipeline", "--timeout", "1200"]
 writes = false
 timeout_seconds = 1260
