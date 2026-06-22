@@ -1,9 +1,12 @@
+import json
 import numpy as np
 import pytest
+import sys
+import types
 
 from lib.audio_io import write_clip_array
 from lib.bundle import build_bundle, select_collection
-from lib.export import export_dataset
+from lib.export import _literal_tag_asr_check_clip, export_dataset, export_orpheus_dataset
 from lib.prepare import _process_span_range
 from lib.review import render_review_html, save_selection
 from lib.score import score_clip
@@ -102,6 +105,73 @@ def test_export_dataset_rejects_missing_transcripts_by_default(tmp_path):
     assert summary["rejected_clips"] == 1
     assert "clean words" in (tmp_path / "dataset" / "metadata.jsonl").read_text(encoding="utf-8")
     assert "missing_transcript" in (tmp_path / "dataset" / "rejected.jsonl").read_text(encoding="utf-8")
+
+
+def test_literal_tag_asr_check_rejects_spoken_event_word(tmp_path, monkeypatch):
+    wav = tmp_path / "clip.wav"
+    write_clip_array(np.zeros(16000, dtype=np.float32), 16000, wav)
+    fake_transcribe = types.ModuleType("lib.transcribe")
+    fake_transcribe.transcribe_clip = lambda path: ("I've got a bad cold. Cough. Continue.", 0.51)
+    monkeypatch.setitem(sys.modules, "lib.transcribe", fake_transcribe)
+
+    check = _literal_tag_asr_check_clip(wav, ["<cough>"])
+
+    assert check["status"] == "FAIL"
+    assert check["reason"] == "literal_tag_spoken"
+    assert check["spoken_literal_tags"] == ["cough"]
+
+
+def test_literal_tag_asr_check_allows_tag_word_already_in_spoken_text(tmp_path, monkeypatch):
+    wav = tmp_path / "clip.wav"
+    write_clip_array(np.zeros(16000, dtype=np.float32), 16000, wav)
+    fake_transcribe = types.ModuleType("lib.transcribe")
+    fake_transcribe.transcribe_clip = lambda path: ("I can't stop coughing.", 0.61)
+    monkeypatch.setitem(sys.modules, "lib.transcribe", fake_transcribe)
+
+    check = _literal_tag_asr_check_clip(wav, ["<cough>"], "I can't stop coughing.")
+
+    assert check["status"] == "PASS"
+    assert check["spoken_literal_tags"] == []
+
+
+def test_export_orpheus_rejects_literal_spoken_tag_before_training_manifest(tmp_path, monkeypatch):
+    pytest.importorskip("datasets")
+    job_dir = tmp_path / "job"
+    raw_dir = job_dir / "clips" / "raw"
+    raw_dir.mkdir(parents=True)
+    write_clip_array(np.zeros(16000, dtype=np.float32), 16000, raw_dir / "0001.wav")
+    (job_dir / "candidates.jsonl").write_text(
+        json.dumps(
+            {
+                "id": "0001",
+                "clip": "clips/raw/0001.wav",
+                "source": "fixture",
+                "start_sec": 0,
+                "end_sec": 1,
+                "duration_sec": 1,
+                "quality_score": 0.9,
+                "rank_score": 0.9,
+                "plain_caption": "Continue.",
+                "tts_text": "<cough> Continue.",
+                "emotion_tags": ["<cough>"],
+                "review_status": "human",
+                "status": "accepted",
+                "accepted_by": "human",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    fake_transcribe = types.ModuleType("lib.transcribe")
+    fake_transcribe.transcribe_clip = lambda path: ("Cough. Continue.", 0.51)
+    monkeypatch.setitem(sys.modules, "lib.transcribe", fake_transcribe)
+
+    summary = export_orpheus_dataset(job_dir=job_dir, out_dir=tmp_path / "orpheus", speaker="fixture")
+
+    assert summary["example_count"] == 0
+    rejected = (tmp_path / "orpheus" / "rejected.jsonl").read_text(encoding="utf-8")
+    assert "literal_tag_spoken" in rejected
+    assert "Cough. Continue." in rejected
 
 
 def test_render_review_html_exposes_audio_selection_and_exports(tmp_path):

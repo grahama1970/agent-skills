@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orpheus TTS Voice Trainer"
+  short_description: "Train persona Orpheus voices with reviewed emotion tags"
+  default_prompt: "Use Orpheus TTS Voice Trainer to build reviewed Orpheus emotion-tag examples for a persona and hand them to voice-segment-selector for export, training, inference proof, and publish."
