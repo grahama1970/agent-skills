@@ -11,8 +11,23 @@ from lib.constants import DEFAULT_MIN_SCORE, SAMPLE_RATE
 from lib.score import rank_score
 
 
-def select_collection(rows: list[dict], target_sec: float, gender: str | None, min_score: float) -> list[dict]:
+def load_selection_order(job_dir: Path) -> list[str]:
+    path = job_dir / "selection.json"
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return [str(item) for item in payload.get("ordered_ids", payload.get("ids", []))]
+
+
+def select_collection(
+    rows: list[dict],
+    target_sec: float,
+    gender: str | None,
+    min_score: float,
+    ordered_ids: list[str] | None = None,
+) -> list[dict]:
     filtered = []
+    id_order = {clip_id: index for index, clip_id in enumerate(ordered_ids or [])}
     for row in rows:
         if gender and row.get("gender_label") != gender:
             continue
@@ -21,7 +36,11 @@ def select_collection(rows: list[dict], target_sec: float, gender: str | None, m
         if row.get("gender_label") == "unknown":
             continue
         filtered.append(row)
-    filtered.sort(key=lambda row: rank_score(row), reverse=True)
+    if ordered_ids:
+        filtered.sort(key=lambda row: id_order.get(str(row.get("id")), len(id_order) + 1))
+        filtered = [row for row in filtered if str(row.get("id")) in id_order]
+    else:
+        filtered.sort(key=lambda row: rank_score(row), reverse=True)
 
     chosen: list[dict] = []
     total = 0.0
@@ -56,7 +75,8 @@ def build_bundle(
     for line in (job_dir / "candidates.jsonl").read_text(encoding="utf-8").splitlines():
         if line.strip():
             rows.append(json.loads(line))
-    chosen = select_collection(rows, target_sec, gender, min_score)
+    ordered_ids = load_selection_order(job_dir)
+    chosen = select_collection(rows, target_sec, gender, min_score, ordered_ids=ordered_ids)
     if sum(row["use_duration_sec"] for row in chosen) < target_sec:
         raise RuntimeError("Not enough high-quality clips to reach target duration.")
 
@@ -88,8 +108,11 @@ def build_bundle(
         "gender": gender,
         "target_sec": target_sec,
         "achieved_sec": round(sum(row["use_duration_sec"] for row in chosen), 3),
+        "selection_source": "selection.json" if ordered_ids else "rank_score",
+        "ordered_ids": ordered_ids,
         "parts": chosen,
         "output_wav": str(out_path.resolve()),
+        "status": "CLONE_REFERENCE_CANDIDATE_NOT_PROVIDER_READY",
     }
     (out_path.with_suffix(".json")).write_text(json.dumps(payload, indent=2))
     return payload
