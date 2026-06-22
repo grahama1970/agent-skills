@@ -1,9 +1,9 @@
 {
-  "content_hash": "15300708fbe492a5fea0a5faf1e06380eccb23653fc9adda97aef6c57f57b7ea",
+  "content_hash": "84d99391ae773456c20a01bd299a8f358af604dcced4b864e25e507db250e4e3",
   "counts": {
     "agents": 5,
-    "entries": 317,
-    "skills": 312
+    "entries": 318,
+    "skills": 313
   },
   "entries": [
     {
@@ -5387,6 +5387,27 @@
         "with codex",
         "with gemini",
         "with deepseek"
+      ],
+      "type": "skill"
+    },
+    {
+      "allowed_tools": [],
+      "content_hash": "430edbfde10fceb5",
+      "id": "orpheus-tts-voice-trainer",
+      "path": "skills/orpheus-tts-voice-trainer",
+      "related_agents": [],
+      "source_file": "skills/orpheus-tts-voice-trainer/SKILL.md",
+      "summary": "Persona-level Orpheus TTS voice training orchestrator. Use when the human asks to train or improve an Orpheus persona voice, collect Orpheus-native emotion tags, generate ElevenLabs voice_id-backed nonverbal examples, fill missing laugh/ch\u2026",
+      "title": "orpheus-tts-voice-trainer",
+      "triggers": [
+        "orpheus tts voice trainer",
+        "/orpheus-tts-voice-trainer",
+        "train orpheus persona voice",
+        "collect orpheus emotion tags",
+        "generate elevenlabs orpheus emotion tags",
+        "fill missing orpheus tags",
+        "horus lupercal orpheus emotion tags",
+        "embry orpheus emotion tags"
       ],
       "type": "skill"
     },

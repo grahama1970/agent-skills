@@ -18,10 +18,10 @@ Machine-readable companion: `sources/agent-skills-registry.json`.
 
 - Repository: `grahama1970/agent-skills`
 - Schema version: `1.0`
-- Content hash: `15300708fbe492a5fea0a5faf1e06380eccb23653fc9adda97aef6c57f57b7ea`
-- Skill entries: `312`
+- Content hash: `84d99391ae773456c20a01bd299a8f358af604dcced4b864e25e507db250e4e3`
+- Skill entries: `313`
 - Agent entries: `5`
-- Total entries: `317`
+- Total entries: `318`
 
 ## Skills
 
@@ -259,6 +259,7 @@ Machine-readable companion: `sources/agent-skills-registry.json`.
 | `ops-streamdeck` | `skills/ops-streamdeck/SKILL.md` | Stream Deck control skill for agents. Provides ability to restart streamdeck daemons, execute button tasks, query status, and manage Stream Deck hardware through a persistent daemon interface. Works with the streamdeck… | `restart streamdeck`, `streamdeck button`, `execute streamdeck task`, `streamdeck status`, `streamdeck daemon`, `start streamdeck`, +4 more | — |
 | `ops-workstation` | `skills/ops-workstation/SKILL.md` | Workstation diagnostics, health monitoring, and maintenance. Knows this machine and can help troubleshoot, clean up, and maintain it. | `check system`, `memory usage`, `memory leak`, `gpu status`, `disk space`, `drive health`, +43 more | — |
 | `orchestrate` | `skills/orchestrate/SKILL.md` | Stabilized async task executor. Dispatches plan YAML tasks to local shell commands or code-runner patch runs by default, with broader runners and brittle gates behind explicit opt-in flags. Use when user says "run these… | `orchestrate this`, `run these tasks`, `execute the plan`, `run the task file`, `execute tasks`, `start orchestration`, +6 more | — |
+| `orpheus-tts-voice-trainer` | `skills/orpheus-tts-voice-trainer/SKILL.md` | Persona-level Orpheus TTS voice training orchestrator. Use when the human asks to train or improve an Orpheus persona voice, collect Orpheus-native emotion tags, generate ElevenLabs voice_id-backed nonverbal examples, f… | `orpheus tts voice trainer`, `/orpheus-tts-voice-trainer`, `train orpheus persona voice`, `collect orpheus emotion tags`, `generate elevenlabs orpheus emotion tags`, `fill missing orpheus tags`, +2 more | — |
 | `paper-lab` | `skills/paper-lab/SKILL.md` | Self-improving documentation convergence loop. Computes quality deltas between review rounds, identifies recurring issues, applies targeted fixes, and converges on quality thresholds. Uses /review-paper as the quality s… | `paper lab`, `improve documentation`, `converge documentation`, `self improve docs`, `iterate on docs`, `documentation convergence`, +6 more | — |
 | `pdf-lab` | `skills/pdf-lab/SKILL.md` | Self-improving PDF extraction convergence loop. Diagnoses extraction failures by computing the delta between S00 estimates and actual extraction, reproduces issues on synthetic PDFs, discovers optimal parameters, and wr… | `pdf lab`, `tune pdf extraction`, `improve pdf extraction`, `converge extraction parameters`, `fix extraction delta`, `self improve extractor`, +1 more | — |
 | `pdf-screenshot` | `skills/pdf-screenshot/SKILL.md` | Render PDF pages or cropped regions to PNG images for visual verification. | `screenshot pdf`, `snapshot pdf`, `render pdf page`, `show me the pdf`, `verify pdf element`, `calibrate pdf extraction`, +3 more | — |
