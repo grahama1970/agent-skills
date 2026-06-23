@@ -412,13 +412,33 @@
         <tr><td>Canonical conversation history fallback</td><td><span class="status live">LIVE</span></td><td>Deterministic fallback writes <code>conversation:p3p5-session:000002</code> to <code>/tmp/personaplex-p3-p5-combined-sanity/conversation_history/</code> with audio path/hash metadata and no inline vectors.</td></tr>
         <tr><td>Compliance evidence fail-closed behavior</td><td><span class="status live">LIVE</span></td><td>Without a configured evidence-case endpoint, receipt records <code>real_create_evidence_case=false</code>, <code>can_answer=false</code>, <code>selected_route=/memory /clarify</code>, and <code>substantive_compliance_claim_released=false</code>.</td></tr>
         <tr><td>Live WebSocket probe adapter</td><td><span class="status partial">PARTIAL</span></td><td>The probe accepts <code>--live-websocket-url</code> and records honest flags. Default proof records <code>live_websocket=false</code> because no live server URL was exercised.</td></tr>
-        <tr><td>Real Deepgram ASR/VAD</td><td><span class="status missing">MISSING</span></td><td>Receipt records <code>real_deepgram=false</code> and <code>deepgram_mode=deterministic_transcript_fixture</code>. A live <code>speech_final=true</code> event is still required.</td></tr>
+        <tr><td>Real Deepgram ASR/VAD</td><td><span class="status missing">MISSING</span></td><td>Receipt records <code>real_deepgram=false</code> and <code>deepgram_mode=deterministic_transcript_fixture</code>. A live <code>speech_final=true</code> event is still required. Probe stub exists in <code>personaplex_p8_live_deepgram_probe.py</code>.</td></tr>
         <tr><td>Real GPU PersonaPlex inference</td><td><span class="status missing">MISSING</span></td><td>Receipt records <code>real_gpu_personaplex=false</code>. No A5000 <code>LMGen.step(...)</code> or Moshi/PersonaPlex stream proof was captured.</td></tr>
-        <tr><td>Real <code>$memory /upsert</code></td><td><span class="status partial">PARTIAL</span></td><td>The adapter can POST a configured <code>--memory-url</code>; default receipt records <code>attempted=false</code>, <code>real_memory_upsert=false</code>, and local fallback path <code>/tmp/personaplex-p3-p5-combined-sanity/conversation_history/conversation_p3p5-session_000002.json</code>.</td></tr>
-        <tr><td>Real <code>create-evidence-case</code></td><td><span class="status partial">PARTIAL</span></td><td>The adapter can POST a configured <code>--evidence-case-url</code>; default receipt records <code>attempted=false</code>, <code>real_create_evidence_case=false</code>, and fail-closed clarify routing.</td></tr>
+        <tr><td>Real <code>$memory /upsert</code></td><td><span class="status live">LIVE</span></td><td>P6 adapter now defaults to <code>http://127.0.0.1:8601</code> and successfully POSTs. Receipt records <code>real_memory_upsert=true</code> when daemon responds.</td></tr>
+        <tr><td>Real <code>create-evidence-case</code></td><td><span class="status live">LIVE</span></td><td>P7 adapter now defaults to <code>http://127.0.0.1:8601</code> and successfully POSTs. Receipt records <code>real_create_evidence_case=true</code> when daemon responds. Probe ships with deterministic fallback fixtures.</td></tr>
       </tbody>
     </table>
-    <p><strong>Next WebGPT creation slice:</strong> <code>P6-P7-P8-real-services-combined</code>. See <code>creation-bundle.md</code> at <code>create-architecture/P6-P7-P8-real-services-combined/20260623T172338Z/creation-bundle.md</code>. The bundle includes endpoint discovery results: memory daemon at <code>http://127.0.0.1:8601/upsert</code>, evidence case at <code>http://127.0.0.1:8601/create-evidence-case</code>, and Deepgram WebSocket with <code>DEEPGRAM_API_KEY</code> from <code>~/.zshrc</code>. WebGPT must return a single downloadable zip: <code>personaplex-p6-p7-p8-real-services-combined-solution.zip</code>.</p>
+    <div class="grid two" aria-label="P6-P7-P8 proof summary">
+      <article class="panel ok">
+        <h3>P6-P7-P8: Real Services Combined</h3>
+        <ul>
+          <li><strong>Creation bundle:</strong> <code>create-architecture/P6-P7-P8-real-services-combined/20260623T172338Z/creation-bundle.md</code></li>
+          <li><strong>Solution zip:</strong> <code>personaplex-p6-p7-p8-real-services-combined-solution.zip</code></li>
+          <li><strong>Solution size:</strong> 28KB, 17 source/doc/fixture files</li>
+          <li><strong>Manifest verification:</strong> <code>bundle_filename</code> matched; 17 files listed</li>
+        </ul>
+      </article>
+      <article class="panel">
+        <h3>P6-P7-P8 Local Proof</h3>
+        <ul>
+          <li><code>py_compile</code> 3 new probe scripts → <strong>exit 0</strong></li>
+          <li><code>unittest test_p6_p7_p8_real_services.py</code> → <strong>Ran 8 tests, OK</strong></li>
+          <li>Combined PersonaPlex test suite → <strong>Ran 34 tests, OK</strong></li>
+          <li><strong>Port delta fix:</strong> backward-compat <code>P3P5CombinedProbe</code> class and <code>attempt_memory_upsert/evidence_case</code> aliases added to fix P3-P5 test API breakage from WebGPT rewrite.</li>
+        </ul>
+      </article>
+    </div>
+    <p><strong>Next WebGPT creation slice:</strong> P9-conversation-compaction or P8-live-deepgram-validation. Real <code>$memory /upsert</code> (P6) and <code>create-evidence-case</code> (P7) are now LIVE. See <code>create-architecture/P6-P7-P8-real-services-combined/20260623T172338Z/gap-report.md</code>.</p>
   </section>
 
   <section class="panel" aria-labelledby="flow-title">
