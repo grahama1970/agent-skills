@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PersonaPlex Interactive Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <style>
+    :root { color-scheme: dark; --bg:#0f172a; --panel:rgba(15,23,42,.84); --line:rgba(148,163,184,.24); --text:#e5eefc; --muted:#94a3b8; --accent:#bfdbfe; --good:#bbf7d0; --bad:#fecaca; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: 'Google Sans', Inter, system-ui, sans-serif; color: var(--text); background: radial-gradient(circle at 0 0, rgba(56,189,248,.18), transparent 32%), var(--bg); }
+    .shell { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .eyebrow { margin:0 0 4px; color:#93c5fd; font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { margin:0; font-size:30px; letter-spacing:-.03em; }
+    .sub { margin:6px 0 0; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:minmax(0,1fr) 390px; gap:18px; }
+    .card { border:1px solid var(--line); border-radius:24px; background:var(--panel); box-shadow:0 24px 80px rgba(2,6,23,.36); overflow:hidden; }
+    .messages { min-height:460px; max-height:58vh; overflow:auto; padding:20px; }
+    .msg { width:min(720px,86%); margin:0 0 14px; padding:14px 16px; border-radius:18px; background:rgba(30,41,59,.9); line-height:1.55; }
+    .msg.user { margin-left:auto; background:rgba(37,99,235,.28); }
+    .msg.assistant { background:rgba(20,184,166,.18); }
+    .role { margin-bottom:4px; color:#93c5fd; font-size:12px; font-weight:800; text-transform:uppercase; }
+    .input { display:flex; align-items:center; gap:10px; border-top:1px solid var(--line); padding:14px; }
+    textarea,input { border:1px solid var(--line); border-radius:14px; padding:11px 12px; color:var(--text); background:rgba(2,6,23,.48); outline:none; }
+    textarea { flex:1; min-height:46px; resize:vertical; }
+    button { border:0; border-radius:14px; min-height:44px; color:#0f172a; background:var(--accent); padding:0 14px; font-weight:800; cursor:pointer; }
+    button.icon { width:46px; padding:0; }
+    button.recording { background:#fda4af; }
+    .trace { padding:18px; }
+    .trace h2 { margin:0 0 12px; font-size:18px; }
+    .row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:10px 12px; margin-bottom:8px; background:rgba(15,23,42,.74); }
+    .row code { border-radius:999px; padding:4px 7px; font-size:11px; background:rgba(220,38,38,.16); color:var(--bad); }
+    .row.real code { background:rgba(22,163,74,.24); color:var(--good); }
+    .settings { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+    .settings input { width: min(440px, 100%); }
+    .error { margin:10px 14px; border-radius:14px; padding:10px 12px; color:var(--bad); background:rgba(127,29,29,.34); }
+    .partial { margin:10px 14px; border-radius:14px; padding:10px 12px; color:#dbeafe; background:rgba(30,64,175,.22); }
+    @media(max-width: 900px) { .grid { grid-template-columns:1fr; } header { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <noscript>Open <a href="http://127.0.0.1:3002/#sparta-explorer/final-site/personaplex-chat">ux-lab PersonaPlex chat</a></noscript>
+  <main class="shell">
+    <header>
+  <p style="margin:0 0 16px;padding:12px 14px;border-radius:14px;background:rgba(30,64,175,.22);color:#dbeafe;font-size:14px;">
+    Preferred shared UX: <a href="http://127.0.0.1:3002/#sparta-explorer/final-site/personaplex-chat" style="color:#bfdbfe">ux-lab PersonaPlex chat</a>
+    (uses <code>shared-chat/ChatWell</code> + live tool trace). This static page remains for offline review.
+  </p>
+      <div>
+        <p class="eyebrow">Unified ChatWell static build</p>
+        <h1>PersonaPlex Embry Voice + SPARTA Compliance</h1>
+        <p class="sub">This static page sends speech_final to ws://127.0.0.1:8788/ws and displays real_* rows from live events.</p>
+      </div>
+    </header>
+    <div class="settings">
+      <label>Deepgram key <input id="dgKey" type="password" placeholder="VITE_DEEPGRAM_API_KEY or paste key for local test" /></label>
+      <label>PersonaPlex WS <input id="ppxWs" value="ws://127.0.0.1:8788/ws" /></label>
+    </div>
+    <div class="grid">
+      <section class="card">
+        <div id="messages" class="messages">
+          <div class="msg"><div class="role">system</div>Type or record. On send, this page emits {"type":"speech_final","session_id":"...","text":"...","persona_id":"embry","turn_id":N}.</div>
+        </div>
+        <div id="partial" class="partial" hidden></div>
+        <div id="error" class="error" hidden></div>
+        <form id="form" class="input">
+          <button id="mic" type="button" class="icon" aria-label="Start microphone"><span class="material-symbols-rounded">mic</span></button>
+          <textarea id="text" placeholder="Speak or type to Embry…"></textarea>
+          <button type="submit"><span class="material-symbols-rounded">send</span> Send</button>
+        </form>
+      </section>
+      <aside class="card trace">
+        <h2>Tool trace</h2>
+        <div id="trace"></div>
+      </aside>
+    </div>
+  </main>
+  <script>
+    const state = { turn: 0, sessionId: `static-${Date.now()}-${Math.random().toString(36).slice(2)}`, recorder: null, stream: null, dg: null }
+    const requiredFlags = ['real_personaplex_ws','real_turn_gate','real_memory_intent','real_memory_recall','real_evidence_case','real_gpu_personaplex','real_memory_upsert','real_session_compaction']
+    const messages = document.getElementById('messages')
+    const trace = document.getElementById('trace')
+    const form = document.getElementById('form')
+    const text = document.getElementById('text')
+    const mic = document.getElementById('mic')
+    const partial = document.getElementById('partial')
+    const error = document.getElementById('error')
+    const wsInput = document.getElementById('ppxWs')
+    const dgKey = document.getElementById('dgKey')
+    function setError(msg) { error.hidden = !msg; error.textContent = msg || '' }
+    function addMessage(role, content, audioUrl) { const el = document.createElement('div'); el.className = `msg ${role}`; el.innerHTML = `<div class="role"></div><div class="body"></div>`; el.querySelector('.role').textContent = role; el.querySelector('.body').textContent = content; if (audioUrl) { const a = document.createElement('audio'); a.controls = true; a.src = audioUrl; el.appendChild(a) } messages.appendChild(el); messages.scrollTop = messages.scrollHeight }
+    function renderTrace(flags = {}, detail = '') { trace.innerHTML = ''; for (const f of requiredFlags) { const real = Boolean(flags[f]); const row = document.createElement('div'); row.className = `row ${real ? 'real' : ''}`; row.innerHTML = `<span>${f.replace(/^real_/, '').replaceAll('_',' ')}</span><code>${f}=${real}</code>`; if (detail) row.title = detail; trace.appendChild(row) } }
+    renderTrace()
+    function parseEvent(data) { try { return typeof data === 'string' ? JSON.parse(data) : { type: 'binary_audio' } } catch { return { type: 'text', text: String(data) } } }
+    function mergeFlags(current, next) { return Object.assign(current, next || {}) }
+    function generatedText(evt) { return [evt.answer, evt.response, evt.text, evt.transcript].find(v => typeof v === 'string' && v.trim()) }
+    form.addEventListener('submit', (ev) => { ev.preventDefault(); const value = text.value.trim(); if (!value) return; text.value = ''; addMessage('user', value); sendSpeechFinal(value) })
+    function applyStageFlags(flags, evt) {
+      if (evt.type === 'grounding_stage_complete' || evt.status === 'complete') {
+        const stage = String(evt.stage || evt.endpoint || evt.tool_name || '')
+        if (stage.includes('intent')) flags.real_memory_intent = true
+        if (stage.includes('recall')) flags.real_memory_recall = true
+        if (stage.includes('evidence')) flags.real_evidence_case = true
+        if (stage.includes('answer') || stage.includes('clarify') || stage.includes('deflect')) flags.real_turn_gate = true
+        if (stage.includes('voice_output')) flags.real_gpu_personaplex = true
+      }
+      if (evt.type === 'personaplex_turn_complete' && evt.payload?.ok) flags.real_turn_gate = true
+    }
+    function sendSpeechFinal(value) { setError(''); const flags = { real_personaplex_ws: false }; const ws = new WebSocket(wsInput.value || 'ws://127.0.0.1:8788/ws'); const turnId = ++state.turn; const timer = setTimeout(() => { try { ws.close() } catch {} ; setError('PersonaPlex WS timed out before generated output arrived') }, 30000); ws.onopen = () => { flags.real_personaplex_ws = true; renderTrace(flags, 'speech_final sent'); ws.send(JSON.stringify({ type:'speech_final', session_id:state.sessionId, text:value, persona_id:'embry', turn_id:turnId })) }; ws.onerror = () => setError('PersonaPlex WebSocket failed'); ws.onmessage = (msg) => { const evt = parseEvent(msg.data); mergeFlags(flags, evt.real_flags); applyStageFlags(flags, evt); renderTrace(flags, evt.stage || evt.type || 'event'); const payload = evt.payload && typeof evt.payload === 'object' ? evt.payload : {}; const out = generatedText(evt) || payload.speakable_text || payload.spoken_text; const audio = evt.audio_url || evt.audioUrl; if (out || audio) addMessage('assistant', out || 'Embry audio response received.', audio); if (evt.type === 'personaplex_turn_complete' || evt.status === 'complete' && evt.stage === 'voice_output' || audio || evt.type === 'assistant_response') { clearTimeout(timer); try { ws.close() } catch {} }; if (evt.type === 'grounding_stage_error') setError(evt.error || evt.output_summary || 'PersonaPlex grounding failed') } }
+    mic.addEventListener('click', async () => { if (state.recorder) { state.recorder.stop(); state.stream.getTracks().forEach(t => t.stop()); try { state.dg.send(JSON.stringify({ type:'CloseStream' })); state.dg.close() } catch {}; state.recorder = null; mic.classList.remove('recording'); mic.innerHTML='<span class="material-symbols-rounded">mic</span>'; return } const key = dgKey.value.trim(); if (!key) return setError('Paste a Deepgram key or set VITE_DEEPGRAM_API_KEY in the React build.'); state.stream = await navigator.mediaDevices.getUserMedia({ audio:true }); state.dg = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&interim_results=true&endpointing=300&vad_events=true', ['token', key]); state.dg.onmessage = (event) => { const data = JSON.parse(event.data); const t = data?.channel?.alternatives?.[0]?.transcript || ''; if (!t) return; if (data.is_final || data.speech_final) { text.value = `${text.value} ${t}`.trim(); partial.hidden = true } else { partial.hidden = false; partial.textContent = t } }; state.dg.onopen = () => { state.recorder = new MediaRecorder(state.stream, MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? { mimeType:'audio/webm;codecs=opus' } : undefined); state.recorder.ondataavailable = async e => { if (e.data.size && state.dg.readyState === WebSocket.OPEN) state.dg.send(await e.data.arrayBuffer()) }; state.recorder.start(250); mic.classList.add('recording'); mic.innerHTML='<span class="material-symbols-rounded">stop_circle</span>' }; })
+  </script>
+</body>
+</html>

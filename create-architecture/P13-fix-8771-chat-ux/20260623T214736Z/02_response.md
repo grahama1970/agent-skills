@@ -1,0 +1,1 @@
+I’ve read the bundle files, including the “bad” static page and the React ChatWell references. The replacement will avoid the paste-key field entirely, use a small Python server to inject DEEPGRAM_API_KEY, and keep the HTML standalone because the React build is explicitly out of scope.

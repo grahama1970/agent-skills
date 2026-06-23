@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/request_prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260623T223126Z:07abb5be>>>",
+  "requested_tab_id": "837355340",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-06-23T22:31:48Z"
+}

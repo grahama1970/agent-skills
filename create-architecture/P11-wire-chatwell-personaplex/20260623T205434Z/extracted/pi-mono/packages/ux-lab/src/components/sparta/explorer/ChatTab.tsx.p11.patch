@@ -1,0 +1,13 @@
+diff --git a/pi-mono/packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx b/pi-mono/packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx
+--- a/pi-mono/packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx
++++ b/pi-mono/packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx
+@@
+ import { PersonaPlexVoiceTracePanel } from './PersonaPlexVoiceTracePanel'
++import { sendPersonaPlexSpeechFinalBestEffort } from './personaplexSpeechFinalClient'
+@@
+-    piChat.send(query, type)
++    piChat.send(query, type)
++    void sendPersonaPlexSpeechFinalBestEffort(query, {
++      wsUrl: 'ws://127.0.0.1:8788/ws',
++      personaId: 'embry',
++    })

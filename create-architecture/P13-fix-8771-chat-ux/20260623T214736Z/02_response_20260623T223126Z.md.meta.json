@@ -1,0 +1,69 @@
+{
+  "status": "missing_sentinel",
+  "failure": "missing_sentinel",
+  "input": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/request_prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response_20260623T223126Z.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.0WtLz3.log",
+  "sentinel": "<<<WEBGPT_DONE:20260623T223126Z:07abb5be>>>",
+  "requested_tab_id": "837355340",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837355340",
+    "tab": {
+      "id": "837355340",
+      "title": "ChatGPT - Orpheus-Persona-Plex",
+      "url": "https://chatgpt.com/g/g-p-6a3925407da08191a9a7c47ebd2bc948-orpheus-persona-plex/c/6a3b0851-bfc0-83ea-bf53-980f22d6f45d"
+    },
+    "chatgpt_tabs_count": 12,
+    "expected_url": null,
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837355340"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "allowed"
+      }
+    ]
+  },
+  "roundtrip_preflight_required": false,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight": null,
+  "controlled_tab_id": "837355340",
+  "conversation_url": "https://chatgpt.com/g/g-p-6a3925407da08191a9a7c47ebd2bc948-orpheus-persona-plex/c/6a3b0851-bfc0-83ea-bf53-980f22d6f45d",
+  "response_source": "webgpt-extract-fallback",
+  "response_timed_out": true,
+  "timeout_error": "Response timeout",
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": true,
+  "raw_chars": 201,
+  "clean_chars": 201,
+  "raw_response_advisory": true,
+  "extract_fallback_used": true,
+  "extract_fallback_reason": "missing_sentinel",
+  "extract_fallback_raw": "/tmp/surf-webgpt-submit-extract-raw.WIG4Es.md",
+  "extract_fallback_meta": "/tmp/surf-webgpt-submit-extract-meta.XohmKx.json",
+  "started_at": "2026-06-23T22:31:27Z",
+  "finished_at": "2026-06-23T22:36:48Z",
+  "proof_status": "submitted_no_response_proof",
+  "agent_diagnosis": "Surf captured response text, but it did not contain the current completion sentinel in assistant output.",
+  "agent_action": "Do not use output as proof. If ChatGPT visibly completed, run webgpt.extract with the exact sentinel; otherwise resubmit to a clean verified tab.",
+  "submitted_to_chatgpt": true
+}

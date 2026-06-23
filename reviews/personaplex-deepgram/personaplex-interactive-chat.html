@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>PersonaPlex Interactive Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <script id="personaplex-env" type="application/json">__PERSONAPLEX_ENV_JSON__</script>
+  <script>
+    try {
+      window.__ENV__ = window.__ENV__ || JSON.parse(document.getElementById("personaplex-env").textContent || "{}");
+    } catch (_) {
+      window.__ENV__ = window.__ENV__ || {};
+    }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ppx-bg: #050b16;
+      --ppx-bg-2: #08111f;
+      --ppx-surface: rgba(10, 18, 32, .92);
+      --ppx-surface-2: rgba(15, 23, 42, .78);
+      --ppx-surface-3: rgba(30, 41, 59, .62);
+      --ppx-border: rgba(148, 163, 184, .18);
+      --ppx-border-strong: rgba(148, 163, 184, .32);
+      --ppx-white: #edf5ff;
+      --ppx-muted: #8ea2bd;
+      --ppx-subtle: #60718a;
+      --ppx-blue: #60a5fa;
+      --ppx-blue-soft: rgba(96, 165, 250, .16);
+      --ppx-green: #34d399;
+      --ppx-green-soft: rgba(52, 211, 153, .14);
+      --ppx-amber: #fbbf24;
+      --ppx-amber-soft: rgba(251, 191, 36, .13);
+      --ppx-red: #f87171;
+      --ppx-red-soft: rgba(248, 113, 113, .14);
+      --ppx-purple: #c084fc;
+      --ppx-shadow: 0 24px 80px rgba(0, 0, 0, .45);
+      --ppx-radius: 18px;
+      --ppx-radius-lg: 28px;
+      --ppx-font: "Google Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --ppx-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: var(--ppx-font);
+      color: var(--ppx-white);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(96, 165, 250, .20), transparent 30%),
+        radial-gradient(circle at 88% 4%, rgba(192, 132, 252, .16), transparent 28%),
+        linear-gradient(135deg, var(--ppx-bg) 0%, var(--ppx-bg-2) 46%, #020617 100%);
+      overflow-x: hidden;
+    }
+
+    button,
+    textarea,
+    input { font: inherit; }
+
+    button { cursor: pointer; }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+    }
+
+    .material-symbols-rounded {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: "liga";
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    .ppx-chat-shell {
+      width: min(1420px, calc(100vw - 36px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    .ppx-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      color: var(--ppx-subtle);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .ppx-breadcrumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ppx-breadcrumb strong {
+      color: #bfdbfe;
+      font-weight: 800;
+    }
+
+    .ppx-chat-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 24px;
+      border: 1px solid var(--ppx-border);
+      border-radius: var(--ppx-radius-lg);
+      background: linear-gradient(180deg, rgba(15, 23, 42, .82), rgba(15, 23, 42, .58));
+      box-shadow: var(--ppx-shadow);
+      backdrop-filter: blur(18px);
+      margin-bottom: 18px;
+    }
+
+    .ppx-eyebrow {
+      margin: 0 0 6px;
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .ppx-chat-header h1 {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 42px);
+      line-height: 1.03;
+      letter-spacing: -.045em;
+    }
+
+    .ppx-subtitle {
+      max-width: 820px;
+      margin: 9px 0 0;
+      color: var(--ppx-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .ppx-mode-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      flex: 0 0 auto;
+    }
+
+    .ppx-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--ppx-border);
+      border-radius: 999px;
+      background: rgba(2, 6, 23, .52);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .ppx-mode-toggle button {
+      min-height: 36px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 14px;
+      color: var(--ppx-muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .ppx-mode-toggle button.active {
+      color: #051320;
+      background: #bfdbfe;
+      box-shadow: 0 10px 30px rgba(96, 165, 250, .22);
+    }
+
+    .ppx-pill-stack {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 480px;
+    }
+
+    .ppx-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--ppx-border);
+      border-radius: 999px;
+      background: rgba(2, 6, 23, .38);
+      color: var(--ppx-muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .ppx-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--ppx-subtle);
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, .08);
+    }
+
+    .ppx-pill.ok { color: #bbf7d0; border-color: rgba(52, 211, 153, .26); background: rgba(5, 46, 22, .18); }
+    .ppx-pill.ok .dot { background: var(--ppx-green); box-shadow: 0 0 0 4px rgba(52, 211, 153, .12); }
+    .ppx-pill.warn { color: #fde68a; border-color: rgba(251, 191, 36, .28); background: rgba(113, 63, 18, .17); }
+    .ppx-pill.warn .dot { background: var(--ppx-amber); box-shadow: 0 0 0 4px rgba(251, 191, 36, .10); }
+    .ppx-pill.bad { color: #fecaca; border-color: rgba(248, 113, 113, .30); background: rgba(127, 29, 29, .16); }
+    .ppx-pill.bad .dot { background: var(--ppx-red); box-shadow: 0 0 0 4px rgba(248, 113, 113, .10); }
+
+    .ppx-chat-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .ppx-card {
+      position: relative;
+      min-width: 0;
+      border: 1px solid var(--ppx-border);
+      border-radius: var(--ppx-radius-lg);
+      background: linear-gradient(180deg, rgba(15, 23, 42, .82), rgba(15, 23, 42, .66));
+      box-shadow: var(--ppx-shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .ppx-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 18%);
+    }
+
+    .ppx-conversation {
+      display: grid;
+      grid-template-rows: minmax(460px, 64vh) auto;
+    }
+
+    .ppx-message-list {
+      position: relative;
+      z-index: 1;
+      overflow-y: auto;
+      padding: 22px;
+      scroll-behavior: smooth;
+    }
+
+    .ppx-empty-state {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--ppx-muted);
+      border: 1px dashed rgba(148, 163, 184, .22);
+      border-radius: 22px;
+      background: rgba(2, 6, 23, .22);
+    }
+
+    .ppx-empty-state .material-symbols-rounded {
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 12px;
+      border-radius: 18px;
+      color: var(--ppx-amber);
+      background: var(--ppx-amber-soft);
+      border: 1px solid rgba(251, 191, 36, .22);
+      font-size: 30px;
+    }
+
+    .ppx-empty-state strong {
+      display: block;
+      color: var(--ppx-white);
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .ppx-empty-state p {
+      max-width: 420px;
+      margin: 0 auto;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .ppx-message-shell {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+    }
+
+    .ppx-message-shell.user {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .ppx-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--ppx-amber);
+      background: var(--ppx-amber-soft);
+      border: 1px solid var(--ppx-border);
+      flex: 0 0 auto;
+    }
+
+    .ppx-avatar.user {
+      color: #bfdbfe;
+      background: var(--ppx-blue-soft);
+      border-color: rgba(96, 165, 250, .30);
+    }
+
+    .ppx-message {
+      max-width: min(82%, 760px);
+      min-width: 0;
+      color: var(--ppx-white);
+      font-size: 13px;
+      line-height: 1.66;
+    }
+
+    .ppx-message.assistant,
+    .ppx-message.system {
+      padding: 12px 14px;
+      margin: 0;
+      border-left: 3px solid var(--ppx-green);
+      border-radius: 10px;
+      background: rgba(52, 211, 153, .055);
+      border-top: 1px solid rgba(52, 211, 153, .12);
+      border-right: 1px solid rgba(52, 211, 153, .10);
+      border-bottom: 1px solid rgba(52, 211, 153, .10);
+    }
+
+    .ppx-message.system {
+      border-left-color: var(--ppx-amber);
+      background: rgba(251, 191, 36, .055);
+      border-top-color: rgba(251, 191, 36, .12);
+      border-right-color: rgba(251, 191, 36, .10);
+      border-bottom-color: rgba(251, 191, 36, .10);
+    }
+
+    .ppx-message.user {
+      padding: 11px 15px;
+      border-radius: 16px 16px 5px 16px;
+      background: var(--ppx-blue-soft);
+      border: 1px solid rgba(96, 165, 250, .30);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, .22);
+    }
+
+    .ppx-message-role {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      color: #93c5fd;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .ppx-message.assistant .ppx-message-role { color: #86efac; }
+    .ppx-message.system .ppx-message-role { color: #fde68a; }
+
+    .ppx-message p {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .ppx-message audio {
+      width: 100%;
+      margin-top: 12px;
+      filter: invert(1) hue-rotate(180deg) saturate(.7);
+    }
+
+    .ppx-status-band {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      padding: 0 18px 14px;
+    }
+
+    .ppx-transcript,
+    .ppx-error,
+    .ppx-pulse {
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .ppx-transcript {
+      color: #dbeafe;
+      border: 1px solid rgba(96, 165, 250, .18);
+      background: rgba(37, 99, 235, .16);
+    }
+
+    .ppx-error {
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, .24);
+      background: rgba(127, 29, 29, .22);
+    }
+
+    .ppx-pulse {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      color: #bfdbfe;
+      border: 1px solid rgba(96, 165, 250, .18);
+      background: rgba(30, 64, 175, .16);
+    }
+
+    .ppx-pulse::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--ppx-blue);
+      box-shadow: 0 0 0 0 rgba(96, 165, 250, .48);
+      animation: ppx-pulse 1.3s infinite;
+    }
+
+    @keyframes ppx-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, .48); }
+      100% { box-shadow: 0 0 0 13px rgba(96, 165, 250, 0); }
+    }
+
+    .ppx-input-row {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      padding: 15px;
+      border-top: 1px solid var(--ppx-border);
+      background: rgba(2, 6, 23, .30);
+    }
+
+    .ppx-icon-button,
+    .ppx-send-button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 14px;
+      font-weight: 800;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .ppx-icon-button {
+      width: 48px;
+      display: grid;
+      place-items: center;
+      color: #dbeafe;
+      background: rgba(30, 41, 59, .74);
+      border: 1px solid var(--ppx-border);
+    }
+
+    .ppx-icon-button:hover,
+    .ppx-send-button:hover:not(:disabled) { transform: translateY(-1px); }
+
+    .ppx-icon-button.recording {
+      color: #fff1f2;
+      background: rgba(225, 29, 72, .22);
+      border-color: rgba(251, 113, 133, .42);
+      box-shadow: 0 0 0 4px rgba(225, 29, 72, .08);
+    }
+
+    .ppx-input-row textarea {
+      width: 100%;
+      min-height: 46px;
+      max-height: 160px;
+      resize: vertical;
+      border: 1px solid var(--ppx-border);
+      border-radius: 14px;
+      outline: none;
+      padding: 12px 13px;
+      color: var(--ppx-white);
+      background: rgba(2, 6, 23, .48);
+      line-height: 1.45;
+    }
+
+    .ppx-input-row textarea:focus {
+      border-color: rgba(96, 165, 250, .50);
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, .08);
+    }
+
+    .ppx-send-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 104px;
+      padding: 0 15px;
+      color: #06111f;
+      background: #bfdbfe;
+      box-shadow: 0 12px 36px rgba(96, 165, 250, .24);
+    }
+
+    .ppx-tool-trace {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      min-height: 100%;
+    }
+
+    .ppx-trace-heading {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px 20px 12px;
+    }
+
+    .ppx-trace-heading h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .ppx-trace-heading span {
+      color: var(--ppx-muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .ppx-trace-table {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 9px;
+      padding: 0 16px 16px;
+    }
+
+    .ppx-trace-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 10px;
+      align-items: center;
+      min-height: 54px;
+      padding: 10px 11px;
+      border: 1px solid rgba(148, 163, 184, .16);
+      border-radius: 15px;
+      background: rgba(2, 6, 23, .34);
+    }
+
+    .ppx-trace-row > span {
+      min-width: 0;
+      color: var(--ppx-white);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: capitalize;
+    }
+
+    .ppx-trace-row code {
+      border-radius: 999px;
+      padding: 4px 7px;
+      color: #fecaca;
+      background: var(--ppx-red-soft);
+      font-family: var(--ppx-mono);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .ppx-trace-row small {
+      grid-column: 1 / -1;
+      color: var(--ppx-muted);
+      font-size: 11px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .ppx-trace-row.running code {
+      color: #fde68a;
+      background: var(--ppx-amber-soft);
+    }
+
+    .ppx-trace-row.real {
+      border-color: rgba(52, 211, 153, .22);
+      background: rgba(6, 78, 59, .16);
+    }
+
+    .ppx-trace-row.real code {
+      color: #bbf7d0;
+      background: var(--ppx-green-soft);
+    }
+
+    .ppx-trace-row.failed {
+      border-color: rgba(248, 113, 113, .28);
+      background: rgba(127, 29, 29, .18);
+    }
+
+    .ppx-native-trace-panel {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+      padding: 16px;
+      border-top: 1px solid var(--ppx-border);
+      background: rgba(2, 6, 23, .18);
+      overflow: hidden;
+    }
+
+    .ppx-native-trace-panel h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--ppx-white);
+      font-size: 13px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .ppx-event-log {
+      min-height: 0;
+      max-height: 280px;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    .ppx-event {
+      padding: 9px 10px;
+      border: 1px solid rgba(148, 163, 184, .14);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, .58);
+    }
+
+    .ppx-event-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #dbeafe;
+      font-family: var(--ppx-mono);
+      font-size: 11px;
+    }
+
+    .ppx-event pre {
+      margin: 6px 0 0;
+      color: var(--ppx-muted);
+      font-family: var(--ppx-mono);
+      font-size: 10px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .ppx-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .ppx-chat-shell { width: min(100vw - 24px, 760px); padding-top: 14px; }
+      .ppx-chat-header { flex-direction: column; }
+      .ppx-mode-block { align-items: flex-start; }
+      .ppx-chat-grid { grid-template-columns: 1fr; }
+      .ppx-conversation { grid-template-rows: minmax(420px, 58vh) auto; }
+      .ppx-input-row { grid-template-columns: 48px minmax(0, 1fr); }
+      .ppx-send-button { grid-column: 1 / -1; width: 100%; }
+      .ppx-message { max-width: min(90%, 720px); }
+    }
+  </style>
+</head>
+<body>
+  <noscript>This PersonaPlex chat page requires JavaScript for Deepgram voice input and the golden_state_server WebSocket.</noscript>
+  <section class="ppx-chat-shell" data-testid="personaplex-chat-well" data-mode="personaplex">
+    <div class="ppx-topline" aria-hidden="true">
+      <span class="ppx-breadcrumb"><strong>SPARTA</strong><span>/</span><span>shared-chat</span><span>/</span><span>PersonaPlex</span></span>
+      <span>Static ChatWell parity page · no React build</span>
+    </div>
+
+    <header class="ppx-chat-header">
+      <div>
+        <p class="ppx-eyebrow">Unified ChatWell</p>
+        <h1>PersonaPlex + SPARTA Chat</h1>
+        <p class="ppx-subtitle" id="headerDetail">PersonaPlex voice · Embry · ws://127.0.0.1:8788/ws</p>
+      </div>
+      <div class="ppx-mode-block">
+        <div class="ppx-mode-toggle" role="tablist" aria-label="Chat mode">
+          <button type="button" role="tab" aria-selected="false" title="Compliance mode visual parity only on this static page">Compliance</button>
+          <button type="button" role="tab" aria-selected="true" class="active">PersonaPlex</button>
+        </div>
+        <div class="ppx-pill-stack" aria-live="polite">
+          <span id="deepgramStatus" class="ppx-pill warn"><span class="dot"></span>Deepgram key pending</span>
+          <span id="goldenStatus" class="ppx-pill warn"><span class="dot"></span>golden_state_server connecting</span>
+          <span id="sessionStatus" class="ppx-pill"><span class="dot"></span>session starting</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="ppx-chat-grid">
+      <main class="ppx-card ppx-conversation" aria-label="Conversation">
+        <div id="messages" class="ppx-message-list">
+          <div class="ppx-message-shell system">
+            <div class="ppx-avatar" aria-hidden="true"><span class="material-symbols-rounded">security</span></div>
+            <article class="ppx-message system">
+              <div class="ppx-message-role"><span class="material-symbols-rounded" aria-hidden="true">forum</span>System</div>
+              <p>This standalone page mirrors the shared ChatWell PersonaPlex surface. The microphone streams to Deepgram, speech_final turns are sent to golden_state_server, and live real_* flags appear in the tool trace panel.</p>
+            </article>
+          </div>
+        </div>
+
+        <div id="statusBand" class="ppx-status-band" aria-live="polite">
+          <div id="busy" class="ppx-pulse" hidden>Streaming PersonaPlex turn…</div>
+          <div id="partial" class="ppx-transcript" hidden></div>
+          <div id="error" class="ppx-error" role="alert" hidden></div>
+        </div>
+
+        <form id="form" class="ppx-input-row" autocomplete="off">
+          <button id="mic" type="button" class="ppx-icon-button" aria-label="Start microphone" title="Start microphone">
+            <span class="material-symbols-rounded" aria-hidden="true">mic</span>
+          </button>
+          <label class="ppx-sr-only" for="text">Message</label>
+          <textarea id="text" rows="2" placeholder="Speak or type to Embry…"></textarea>
+          <button id="send" type="submit" class="ppx-send-button">
+            <span class="material-symbols-rounded" aria-hidden="true">send</span>
+            Send
+          </button>
+        </form>
+      </main>
+
+      <aside class="ppx-card ppx-tool-trace" aria-label="Tool trace">
+        <div class="ppx-trace-heading">
+          <div>
+            <h2>Tool trace</h2>
+            <span>live PersonaPlex</span>
+          </div>
+          <span id="turnLabel">turn 0</span>
+        </div>
+
+        <div id="trace" class="ppx-trace-table" data-testid="real-flag-table"></div>
+
+        <div class="ppx-native-trace-panel" data-testid="personaplex-voice-trace-panel">
+          <h3><span class="material-symbols-rounded" aria-hidden="true">account_tree</span>PersonaPlex Voice Trace Panel</h3>
+          <div id="eventLog" class="ppx-event-log"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const ENV = window.__ENV__ || {};
+      const REQUIRED_FLAGS = [
+        "real_personaplex_ws",
+        "real_turn_gate",
+        "real_memory_intent",
+        "real_memory_recall",
+        "real_evidence_case",
+        "real_gpu_personaplex",
+        "real_memory_upsert",
+        "real_session_compaction",
+      ];
+
+      const STAGE_FLAG_MAP = new Map([
+        ["intent", "real_memory_intent"],
+        ["memory_intent", "real_memory_intent"],
+        ["recall", "real_memory_recall"],
+        ["memory_recall", "real_memory_recall"],
+        ["evidence", "real_evidence_case"],
+        ["evidence_case", "real_evidence_case"],
+        ["turn_gate", "real_turn_gate"],
+        ["answer", "real_turn_gate"],
+        ["clarify", "real_turn_gate"],
+        ["deflect", "real_turn_gate"],
+        ["gpu", "real_gpu_personaplex"],
+        ["personaplex", "real_gpu_personaplex"],
+        ["voice_output", "real_gpu_personaplex"],
+        ["upsert", "real_memory_upsert"],
+        ["memory_upsert", "real_memory_upsert"],
+        ["compaction", "real_session_compaction"],
+        ["session_compaction", "real_session_compaction"],
+      ]);
+
+      const dom = {
+        messages: document.getElementById("messages"),
+        trace: document.getElementById("trace"),
+        eventLog: document.getElementById("eventLog"),
+        form: document.getElementById("form"),
+        text: document.getElementById("text"),
+        send: document.getElementById("send"),
+        mic: document.getElementById("mic"),
+        partial: document.getElementById("partial"),
+        error: document.getElementById("error"),
+        busy: document.getElementById("busy"),
+        deepgramStatus: document.getElementById("deepgramStatus"),
+        goldenStatus: document.getElementById("goldenStatus"),
+        sessionStatus: document.getElementById("sessionStatus"),
+        headerDetail: document.getElementById("headerDetail"),
+        turnLabel: document.getElementById("turnLabel"),
+      };
+
+      const state = {
+        personaId: ENV.PERSONAPLEX_PERSONA_ID || ENV.PERSONA_ID || "embry",
+        wsUrl: ENV.PERSONAPLEX_WS_URL || ENV.GOLDEN_STATE_WS_URL || "ws://127.0.0.1:8788/ws",
+        sessionId: ENV.PERSONAPLEX_SESSION_ID || makeSessionId(),
+        turn: 0,
+        pendingSends: [],
+        goldenWs: null,
+        goldenReconnectTimer: null,
+        goldenShouldReconnect: true,
+        activeTurn: null,
+        flags: Object.fromEntries(REQUIRED_FLAGS.map((flag) => [flag, {
+          realFlag: flag,
+          real: false,
+          status: "pending",
+          detail: "waiting for live turn",
+          updatedAt: null,
+        }])),
+        events: [],
+        mediaStream: null,
+        mediaRecorder: null,
+        deepgramWs: null,
+        deepgramFinalSegments: [],
+        deepgramLastSpeechFinal: "",
+        deepgramKey: ENV.DEEPGRAM_API_KEY || ENV.VITE_DEEPGRAM_API_KEY || "",
+        recording: false,
+        connectingMic: false,
+      };
+
+      dom.headerDetail.textContent = `PersonaPlex voice • ${state.personaId} • ${state.wsUrl}`;
+      dom.sessionStatus.innerHTML = `<span class="dot"></span>${state.sessionId}`;
+      setPill(dom.deepgramStatus, state.deepgramKey ? "ok" : "bad", state.deepgramKey ? "Deepgram key injected" : "DEEPGRAM_API_KEY missing");
+      renderTrace();
+      logEvent("static_page_ready", { session_id: state.sessionId, persona_id: state.personaId, ws_url: state.wsUrl });
+      connectGoldenState();
+
+      dom.form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = dom.text.value.trim();
+        if (!value) return;
+        dom.text.value = "";
+        void submitUserText(value, "typed");
+      });
+
+      dom.text.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          dom.form.requestSubmit();
+        }
+      });
+
+      dom.mic.addEventListener("click", () => {
+        if (state.recording || state.connectingMic) {
+          stopMic();
+          return;
+        }
+        void startMic();
+      });
+
+      window.addEventListener("beforeunload", () => {
+        state.goldenShouldReconnect = false;
+        stopMic();
+        try { state.goldenWs?.close(1000, "page unload"); } catch (_) { /* noop */ }
+      });
+
+      function makeSessionId() {
+        return `static-chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      function setPill(el, mode, label) {
+        el.classList.remove("ok", "warn", "bad");
+        el.classList.add(mode);
+        el.innerHTML = `<span class="dot"></span>${escapeHtml(label)}`;
+      }
+
+      function setError(message) {
+        dom.error.hidden = !message;
+        dom.error.textContent = message || "";
+      }
+
+      function setBusy(isBusy, label = "Streaming PersonaPlex turn…") {
+        dom.busy.hidden = !isBusy;
+        dom.busy.textContent = label;
+        dom.send.disabled = isBusy;
+      }
+
+      function addMessage(role, content, options = {}) {
+        const shell = document.createElement("div");
+        shell.className = `ppx-message-shell ${role}`;
+
+        const message = document.createElement("article");
+        message.className = `ppx-message ${role}`;
+        message.dataset.createdAt = new Date().toISOString();
+
+        const roleLine = document.createElement("div");
+        roleLine.className = "ppx-message-role";
+        const icon = document.createElement("span");
+        icon.className = "material-symbols-rounded";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = role === "user" ? "person" : role === "assistant" ? "psychology" : "forum";
+        roleLine.appendChild(icon);
+        roleLine.appendChild(document.createTextNode(role));
+
+        const body = document.createElement("p");
+        body.textContent = content || "";
+        message.append(roleLine, body);
+
+        if (options.audioUrl) {
+          const audio = document.createElement("audio");
+          audio.controls = true;
+          audio.src = options.audioUrl;
+          message.appendChild(audio);
+        }
+
+        if (role === "user") {
+          shell.appendChild(message);
+          const avatar = document.createElement("div");
+          avatar.className = "ppx-avatar user";
+          avatar.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">person</span>`;
+          shell.appendChild(avatar);
+        } else {
+          const avatar = document.createElement("div");
+          avatar.className = "ppx-avatar";
+          avatar.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">${role === "assistant" ? "shield" : "security"}</span>`;
+          shell.append(avatar, message);
+        }
+
+        dom.messages.appendChild(shell);
+        dom.messages.scrollTop = dom.messages.scrollHeight;
+      }
+
+      function renderTrace() {
+        dom.trace.textContent = "";
+        for (const flag of REQUIRED_FLAGS) {
+          const row = state.flags[flag];
+          const el = document.createElement("div");
+          el.className = `ppx-trace-row ${row.real ? "real" : row.status === "running" ? "running" : row.status === "failed" ? "failed" : "fallback"}`;
+          const label = document.createElement("span");
+          label.textContent = flag.replace(/^real_/, "").replaceAll("_", " ");
+          const code = document.createElement("code");
+          code.textContent = `${flag}=${row.real ? "true" : "false"}`;
+          const small = document.createElement("small");
+          small.textContent = row.detail;
+          el.append(label, code, small);
+          dom.trace.appendChild(el);
+        }
+      }
+
+      function updateFlag(flag, real, detail, status) {
+        if (!REQUIRED_FLAGS.includes(flag)) return;
+        const row = state.flags[flag];
+        row.real = Boolean(real);
+        row.status = status || (row.real ? "done" : "running");
+        row.detail = detail || row.detail;
+        row.updatedAt = new Date().toISOString();
+        renderTrace();
+      }
+
+      function markStage(stageLike, evt) {
+        const stage = String(stageLike || "").toLowerCase();
+        if (!stage) return;
+        for (const [needle, flag] of STAGE_FLAG_MAP.entries()) {
+          if (stage.includes(needle)) {
+            const failed = String(evt.status || evt.type || "").toLowerCase().includes("error") || String(evt.status || "").toLowerCase() === "failed";
+            updateFlag(flag, !failed, summarizeEvent(evt), failed ? "failed" : "done");
+          }
+        }
+      }
+
+      function parseEvent(raw) {
+        if (typeof raw !== "string") return { type: "binary_audio", byte_length: raw?.byteLength || 0 };
+        try {
+          return JSON.parse(raw);
+        } catch (_) {
+          return { type: "text", text: raw };
+        }
+      }
+
+      function connectGoldenState() {
+        clearTimeout(state.goldenReconnectTimer);
+        setPill(dom.goldenStatus, "warn", "golden_state_server connecting");
+        try {
+          state.goldenWs = new WebSocket(state.wsUrl);
+        } catch (err) {
+          setPill(dom.goldenStatus, "bad", "golden_state_server unavailable");
+          setError(`Could not create golden_state_server WebSocket: ${String(err)}`);
+          scheduleGoldenReconnect();
+          return;
+        }
+
+        state.goldenWs.addEventListener("open", () => {
+          setPill(dom.goldenStatus, "ok", "golden_state_server connected");
+          updateFlag("real_personaplex_ws", true, "WebSocket open", "done");
+          logEvent("personaplex_ws_open", { ws_url: state.wsUrl });
+          bestEffortSend({
+            type: "subscribe",
+            topic: "personaplex_tool_trace",
+            topics: ["personaplex_tool_trace"],
+            session_id: state.sessionId,
+            persona_id: state.personaId,
+          });
+          flushPendingSends();
+        });
+
+        state.goldenWs.addEventListener("message", (message) => {
+          const evt = parseEvent(message.data);
+          onGoldenEvent(evt);
+        });
+
+        state.goldenWs.addEventListener("error", () => {
+          setPill(dom.goldenStatus, "bad", "golden_state_server error");
+          setError("golden_state_server WebSocket emitted an error. Verify ws://127.0.0.1:8788/ws is running.");
+          updateFlag("real_personaplex_ws", false, "WebSocket error", "failed");
+        });
+
+        state.goldenWs.addEventListener("close", () => {
+          setPill(dom.goldenStatus, "warn", "golden_state_server disconnected");
+          logEvent("personaplex_ws_closed", {});
+          if (state.goldenShouldReconnect) scheduleGoldenReconnect();
+        });
+      }
+
+      function scheduleGoldenReconnect() {
+        clearTimeout(state.goldenReconnectTimer);
+        state.goldenReconnectTimer = setTimeout(connectGoldenState, 1500);
+      }
+
+      function bestEffortSend(payload) {
+        const ws = state.goldenWs;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+        ws.send(JSON.stringify(payload));
+        return true;
+      }
+
+      function flushPendingSends() {
+        const pending = [...state.pendingSends];
+        state.pendingSends.length = 0;
+        for (const payload of pending) bestEffortSend(payload);
+      }
+
+      async function submitUserText(text, source) {
+        const normalized = text.trim();
+        if (!normalized) return;
+        setError("");
+        state.turn += 1;
+        state.activeTurn = state.turn;
+        dom.turnLabel.textContent = `turn ${state.turn}`;
+        setBusy(true, source === "voice" ? "speech_final → golden_state_server…" : "Sending turn to golden_state_server…");
+        addMessage("user", normalized);
+        resetTurnFlags();
+
+        const payload = {
+          type: "speech_final",
+          topic: "personaplex_tool_trace",
+          session_id: state.sessionId,
+          text: normalized,
+          transcript: normalized,
+          persona_id: state.personaId,
+          turn_id: state.turn,
+          source,
+        };
+
+        logEvent("speech_final", payload);
+        const sent = bestEffortSend(payload);
+        if (!sent) {
+          state.pendingSends.push(payload);
+          connectGoldenState();
+          setError("Waiting for golden_state_server WebSocket before sending speech_final.");
+        }
+      }
+
+      function resetTurnFlags() {
+        for (const flag of REQUIRED_FLAGS) {
+          if (flag === "real_personaplex_ws" && state.goldenWs?.readyState === WebSocket.OPEN) {
+            state.flags[flag] = {
+              realFlag: flag,
+              real: true,
+              status: "done",
+              detail: "WebSocket open",
+              updatedAt: new Date().toISOString(),
+            };
+          } else {
+            state.flags[flag] = {
+              realFlag: flag,
+              real: false,
+              status: "pending",
+              detail: "waiting for this turn",
+              updatedAt: null,
+            };
+          }
+        }
+        renderTrace();
+      }
+
+      function onGoldenEvent(evt) {
+        const payload = isPlainObject(evt.payload) ? evt.payload : {};
+        const type = String(evt.type || payload.type || evt.event || "event");
+        logEvent(type, evt);
+
+        const realFlags = extractRealFlags(evt);
+        for (const [flag, value] of Object.entries(realFlags)) {
+          updateFlag(flag, Boolean(value), summarizeEvent(evt), Boolean(value) ? "done" : "failed");
+        }
+
+        markStage(evt.stage || evt.endpoint || evt.tool_name || evt.name || payload.stage || payload.endpoint || payload.tool_name, evt);
+
+        if (type === "personaplex_tool_trace" || type === "tool_trace") {
+          const traceRows = Array.isArray(payload.rows) ? payload.rows : Array.isArray(evt.rows) ? evt.rows : [];
+          for (const row of traceRows) {
+            if (row.realFlag || row.real_flag) updateFlag(row.realFlag || row.real_flag, Boolean(row.real), row.detail || row.status || type, row.real ? "done" : row.status || "running");
+          }
+        }
+
+        if (type.includes("error") || String(evt.status || "").toLowerCase() === "failed") {
+          setError(evt.error || payload.error || evt.output_summary || "PersonaPlex grounding stage failed.");
+        }
+
+        const output = generatedText(evt);
+        const audioUrl = generatedAudio(evt);
+        if (output || audioUrl) {
+          addMessage("assistant", output || "Embry audio response received.", { audioUrl });
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            void audio.play().catch(() => undefined);
+          }
+        }
+
+        if (isTurnComplete(evt, type) || output || audioUrl) {
+          updateFlag("real_turn_gate", true, summarizeEvent(evt), "done");
+          setBusy(false);
+        }
+      }
+
+      function isTurnComplete(evt, type) {
+        const status = String(evt.status || evt.payload?.status || "").toLowerCase();
+        return type === "personaplex_turn_complete" || type === "assistant_response" || status === "complete" || status === "done";
+      }
+
+      function generatedText(evt) {
+        const payload = isPlainObject(evt.payload) ? evt.payload : {};
+        const candidates = [
+          evt.answer,
+          evt.response,
+          evt.generated_text,
+          evt.generatedText,
+          evt.text,
+          payload.answer,
+          payload.response,
+          payload.generated_text,
+          payload.generatedText,
+          payload.speakable_text,
+          payload.spoken_text,
+          payload.text,
+        ];
+        for (const candidate of candidates) {
+          if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+        }
+        return "";
+      }
+
+      function generatedAudio(evt) {
+        const payload = isPlainObject(evt.payload) ? evt.payload : {};
+        const candidates = [evt.audio_url, evt.audioUrl, payload.audio_url, payload.audioUrl, payload.wav_url];
+        for (const candidate of candidates) {
+          if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+        }
+        return "";
+      }
+
+      function extractRealFlags(obj) {
+        const out = {};
+        const seen = new Set();
+        walk(obj, 0);
+        return out;
+
+        function walk(value, depth) {
+          if (!isPlainObject(value) || depth > 5 || seen.has(value)) return;
+          seen.add(value);
+          for (const [key, inner] of Object.entries(value)) {
+            if (key.startsWith("real_") && REQUIRED_FLAGS.includes(key)) out[key] = Boolean(inner);
+            if (["real_flags", "realFlags", "flags", "payload", "data", "trace"].includes(key)) walk(inner, depth + 1);
+          }
+        }
+      }
+
+      function summarizeEvent(evt) {
+        const pieces = [];
+        const payload = isPlainObject(evt.payload) ? evt.payload : {};
+        for (const key of ["type", "stage", "status", "tool_name", "endpoint", "output_summary"]) {
+          const value = evt[key] ?? payload[key];
+          if (typeof value === "string" && value.trim()) pieces.push(`${key}: ${value.trim()}`);
+        }
+        return pieces.slice(0, 3).join(" · ") || "live event received";
+      }
+
+      async function startMic() {
+        setError("");
+        if (!state.deepgramKey) {
+          setError("DEEPGRAM_API_KEY is not injected. Start the provided server with DEEPGRAM_API_KEY exported; this page never asks for pasted keys.");
+          setPill(dom.deepgramStatus, "bad", "DEEPGRAM_API_KEY missing");
+          return;
+        }
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setError("This browser does not expose navigator.mediaDevices.getUserMedia.");
+          return;
+        }
+
+        state.connectingMic = true;
+        dom.mic.disabled = true;
+        setPill(dom.deepgramStatus, "warn", "Deepgram connecting");
+        try {
+          state.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const deepgramUrl = ENV.DEEPGRAM_WS_URL || "wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&interim_results=true&endpointing=300&vad_events=true";
+          state.deepgramWs = new WebSocket(deepgramUrl, ["token", state.deepgramKey]);
+
+          state.deepgramWs.addEventListener("open", () => {
+            const mimeType = preferredAudioMimeType();
+            state.mediaRecorder = mimeType
+              ? new MediaRecorder(state.mediaStream, { mimeType })
+              : new MediaRecorder(state.mediaStream);
+            state.mediaRecorder.addEventListener("dataavailable", async (event) => {
+              if (!event.data?.size || state.deepgramWs?.readyState !== WebSocket.OPEN) return;
+              state.deepgramWs.send(await event.data.arrayBuffer());
+            });
+            state.mediaRecorder.start(250);
+            state.recording = true;
+            state.connectingMic = false;
+            dom.mic.disabled = false;
+            dom.mic.classList.add("recording");
+            dom.mic.setAttribute("aria-label", "Stop microphone");
+            dom.mic.setAttribute("title", "Stop microphone");
+            dom.mic.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">stop_circle</span>`;
+            setPill(dom.deepgramStatus, "ok", "Deepgram streaming");
+            logEvent("deepgram_open", { url: deepgramUrl.replace(/token=[^&]+/g, "token=redacted") });
+          });
+
+          state.deepgramWs.addEventListener("message", (event) => onDeepgramEvent(event.data));
+          state.deepgramWs.addEventListener("error", () => {
+            setError("Deepgram WebSocket emitted an error. Verify DEEPGRAM_API_KEY is valid.");
+            setPill(dom.deepgramStatus, "bad", "Deepgram error");
+          });
+          state.deepgramWs.addEventListener("close", () => {
+            state.connectingMic = false;
+            state.recording = false;
+            dom.mic.disabled = false;
+            dom.mic.classList.remove("recording");
+            dom.mic.setAttribute("aria-label", "Start microphone");
+            dom.mic.setAttribute("title", "Start microphone");
+            dom.mic.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">mic</span>`;
+            setPill(dom.deepgramStatus, state.deepgramKey ? "ok" : "bad", state.deepgramKey ? "Deepgram key injected" : "DEEPGRAM_API_KEY missing");
+            logEvent("deepgram_closed", {});
+          });
+        } catch (err) {
+          state.connectingMic = false;
+          dom.mic.disabled = false;
+          setPill(dom.deepgramStatus, state.deepgramKey ? "ok" : "bad", state.deepgramKey ? "Deepgram key injected" : "DEEPGRAM_API_KEY missing");
+          setError(err instanceof Error ? err.message : String(err));
+          stopMic();
+        }
+      }
+
+      function stopMic() {
+        try {
+          if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") state.mediaRecorder.stop();
+        } catch (_) { /* noop */ }
+        try { state.deepgramWs?.send(JSON.stringify({ type: "CloseStream" })); } catch (_) { /* noop */ }
+        try { state.deepgramWs?.close(1000, "mic stopped"); } catch (_) { /* noop */ }
+        try { state.mediaStream?.getTracks().forEach((track) => track.stop()); } catch (_) { /* noop */ }
+        state.mediaRecorder = null;
+        state.mediaStream = null;
+        state.deepgramWs = null;
+        state.recording = false;
+        state.connectingMic = false;
+        state.deepgramFinalSegments = [];
+        dom.partial.hidden = true;
+        dom.partial.textContent = "";
+        dom.mic.disabled = false;
+        dom.mic.classList.remove("recording");
+        dom.mic.setAttribute("aria-label", "Start microphone");
+        dom.mic.setAttribute("title", "Start microphone");
+        dom.mic.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">mic</span>`;
+      }
+
+      function onDeepgramEvent(raw) {
+        let data;
+        try { data = JSON.parse(raw); }
+        catch (_) { return; }
+
+        const transcript = data?.channel?.alternatives?.[0]?.transcript || "";
+        if (transcript) {
+          if (data.is_final) {
+            state.deepgramFinalSegments.push(transcript);
+            dom.partial.hidden = true;
+            dom.partial.textContent = "";
+          } else {
+            dom.partial.hidden = false;
+            dom.partial.textContent = transcript;
+          }
+        }
+
+        if (data.speech_final) {
+          const finalText = normalizeWhitespace(state.deepgramFinalSegments.join(" ") || transcript);
+          state.deepgramFinalSegments = [];
+          dom.partial.hidden = true;
+          dom.partial.textContent = "";
+          if (!finalText) return;
+          if (finalText === state.deepgramLastSpeechFinal) return;
+          state.deepgramLastSpeechFinal = finalText;
+          dom.text.value = "";
+          void submitUserText(finalText, "voice");
+        }
+      }
+
+      function preferredAudioMimeType() {
+        const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+        return candidates.find((candidate) => window.MediaRecorder && MediaRecorder.isTypeSupported(candidate)) || "";
+      }
+
+      function logEvent(type, payload) {
+        const safe = redactSecrets(payload);
+        const entry = { type, ts: new Date().toISOString(), payload: safe };
+        state.events.unshift(entry);
+        state.events = state.events.slice(0, 40);
+        renderEventLog();
+      }
+
+      function renderEventLog() {
+        dom.eventLog.textContent = "";
+        for (const entry of state.events) {
+          const el = document.createElement("div");
+          el.className = "ppx-event";
+          const title = document.createElement("div");
+          title.className = "ppx-event-title";
+          title.innerHTML = `<span>${escapeHtml(entry.type)}</span><span>${escapeHtml(entry.ts.slice(11, 19))}</span>`;
+          const pre = document.createElement("pre");
+          pre.textContent = JSON.stringify(entry.payload, null, 2).slice(0, 1200);
+          el.append(title, pre);
+          dom.eventLog.appendChild(el);
+        }
+      }
+
+      function redactSecrets(value) {
+        if (Array.isArray(value)) return value.map(redactSecrets);
+        if (!isPlainObject(value)) return value;
+        const out = {};
+        for (const [key, inner] of Object.entries(value)) {
+          if (/key|token|secret|authorization/i.test(key)) out[key] = "[redacted]";
+          else out[key] = redactSecrets(inner);
+        }
+        return out;
+      }
+
+      function isPlainObject(value) {
+        return value !== null && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function normalizeWhitespace(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+    })();
+  </script>
+</body>
+</html>

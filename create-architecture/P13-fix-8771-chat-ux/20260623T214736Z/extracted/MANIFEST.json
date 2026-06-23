@@ -1,0 +1,119 @@
+{
+  "bundle_filename": "personaplex-p13-fix-8771-chat-ux-solution.zip",
+  "created_at_utc": "2026-06-23T22:37:43Z",
+  "slice": "personaplex-p13-fix-8771-chat-ux",
+  "request_type": "create_solution_zip",
+  "summary": "Standalone ChatWell-style PersonaPlex static page for port 8771 with server-side DEEPGRAM_API_KEY injection, Deepgram mic streaming, golden_state_server speech_final WebSocket flow, Embry response rendering, and real_* tool trace panel.",
+  "source_bundle": {
+    "uploaded_name": "creation-bundle-attachment.zip",
+    "sandbox_path": "/mnt/data/creation-bundle-attachment.zip",
+    "inspected_files": [
+      "CREATION_BRIEF.md",
+      "01_bespoke_bad.html",
+      "02_chatwell_ref.tsx",
+      "03_personaplex_chatwell_ref.tsx",
+      "04_compliance_chatwell_ref.tsx"
+    ]
+  },
+  "repo_relative_entrypoints": {
+    "html": "reviews/personaplex-deepgram/personaplex-interactive-chat.html",
+    "server": "reviews/personaplex-deepgram/serve_personaplex_interactive_chat.py",
+    "tests": "tests/personaplex-deepgram/test_static_chat_solution.py"
+  },
+  "acceptance_coverage": [
+    {
+      "requirement": "Looks like real SPARTA ChatWell design",
+      "evidence": "Google Sans, Material Symbols, ppx ChatWell class surface, right-aligned user bubbles, left system/assistant surfaces, dark slate grid and tool trace panel."
+    },
+    {
+      "requirement": "Auto-injects DEEPGRAM_API_KEY from env",
+      "evidence": "serve_personaplex_interactive_chat.py injects runtime window.__ENV__; HTML has no pasted-key input."
+    },
+    {
+      "requirement": "Mic button -> Deepgram -> speech_final",
+      "evidence": "HTML uses getUserMedia, MediaRecorder, Deepgram WS, and sends speech_final automatically on Deepgram speech_final."
+    },
+    {
+      "requirement": "speech_final -> golden_state_server WS",
+      "evidence": "Persistent WS to PERSONAPLEX_WS_URL/default ws://127.0.0.1:8788/ws; sends subscribe and speech_final payloads."
+    },
+    {
+      "requirement": "Tool traces + Embry response",
+      "evidence": "HTML extracts real_flags and stage-derived flags, renders required real_* rows, event log, assistant text/audio."
+    },
+    {
+      "requirement": "No React build required",
+      "evidence": "No framework bundle; standalone HTML/JS plus Python server."
+    }
+  ],
+  "commands": {
+    "run_server": "python3 reviews/personaplex-deepgram/serve_personaplex_interactive_chat.py --host 127.0.0.1 --port 8771",
+    "open_url": "http://127.0.0.1:8771/reviews/personaplex-deepgram/personaplex-interactive-chat.html",
+    "test": "python3 -m pytest tests/personaplex-deepgram/test_static_chat_solution.py"
+  },
+  "verification": [
+    {
+      "command": "python3 -m py_compile reviews/personaplex-deepgram/serve_personaplex_interactive_chat.py",
+      "exit_status": 0
+    },
+    {
+      "command": "python3 -m pytest -q tests/personaplex-deepgram/test_static_chat_solution.py",
+      "exit_status": 0,
+      "stdout": "6 passed in 0.20s"
+    },
+    {
+      "command": "server injection smoke on port 18771 with DEEPGRAM_API_KEY=dg-test-secret",
+      "exit_status": 0,
+      "stdout": "server injection smoke: PASS"
+    }
+  ],
+  "rollback": [
+    "git checkout -- reviews/personaplex-deepgram/personaplex-interactive-chat.html",
+    "rm -f reviews/personaplex-deepgram/serve_personaplex_interactive_chat.py",
+    "rm -f tests/personaplex-deepgram/test_static_chat_solution.py",
+    "rm -rf fixtures/personaplex-deepgram"
+  ],
+  "known_limitations": [
+    "Live end-to-end proof still requires golden_state_server, memory daemon, PersonaPlex GPU service, and a valid Deepgram key to be running locally.",
+    "The browser necessarily receives the Deepgram key at runtime to open Deepgram WebSocket; the key is not committed and is not requested through the UI.",
+    "Golden_state_server event parsing is tolerant because the exact event schema was not included in the bundle."
+  ],
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "bytes": 4255,
+      "sha256": "1f73a139e02ba8a0413aaba0fdf305a51838cd4dcc161db6e7ff2dbfa8777472",
+      "role": "architecture_and_runbook"
+    },
+    {
+      "path": "fixtures/personaplex-deepgram/sample_tool_trace_event.json",
+      "bytes": 587,
+      "sha256": "da2f3ac819161c3741bd0b876e11f236d73b974bc5d79e8f1ac907b10af0c791",
+      "role": "fixture"
+    },
+    {
+      "path": "prompt_improvements.md",
+      "bytes": 643,
+      "sha256": "854fed4e2897c6464e8c91deb8ede40ee2d7bd6dad1705eb370461066432986f",
+      "role": "prompt_improvements"
+    },
+    {
+      "path": "reviews/personaplex-deepgram/personaplex-interactive-chat.html",
+      "bytes": 47400,
+      "sha256": "bbbeefd1a0fb9f1cdf0960f6bc19b5382de580e04eb5a1cd19e4a9cfadf8a11c",
+      "role": "runtime_static_html"
+    },
+    {
+      "path": "reviews/personaplex-deepgram/serve_personaplex_interactive_chat.py",
+      "bytes": 7242,
+      "sha256": "571e0a1587e446c0ce34c2e3fbffc1556b6ede82d328178d8fad48bdc6363afe",
+      "role": "runtime_server_env_injection"
+    },
+    {
+      "path": "tests/personaplex-deepgram/test_static_chat_solution.py",
+      "bytes": 2832,
+      "sha256": "3d0843d60a2173c3cabc2ff1d663dae60789cf480af06b82cf14204944248c1c",
+      "role": "deterministic_tests"
+    }
+  ]
+}

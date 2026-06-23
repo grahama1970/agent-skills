@@ -1,0 +1,12 @@
+{
+  "type": "personaplex_tool_trace",
+  "session_id": "static-chat-example",
+  "turn_id": 1,
+  "payload": {
+    "rows": [
+      { "id": "intent", "label": "memory intent", "realFlag": "real_memory_intent", "real": true, "detail": "intent endpoint returned live result" },
+      { "id": "recall", "label": "memory recall", "realFlag": "real_memory_recall", "real": true, "detail": "recall endpoint returned live memories" },
+      { "id": "evidence", "label": "evidence case", "realFlag": "real_evidence_case", "real": true, "detail": "evidence endpoint returned citations" }
+    ]
+  }
+}

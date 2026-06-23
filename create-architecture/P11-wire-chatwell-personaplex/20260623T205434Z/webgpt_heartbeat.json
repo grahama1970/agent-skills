@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-06-23T20:58:35Z",
+  "submitted_at": "2026-06-23T20:55:13Z",
+  "last_browser_observation_at": "2026-06-23T20:58:35Z",
+  "phase": "failed",
+  "page_state": "stalled",
+  "last_artifact_written": "/tmp/surf-webgpt-submit-stderr.dLy48e.log",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z/02_response.md.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260623T205513Z:7167f62b>>>",
+  "prepared_prompt_is_transport_proof": false
+}

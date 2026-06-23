@@ -1,0 +1,71 @@
+{
+  "status": "failed",
+  "failure": "submit_failed",
+  "chatgpt_ready_error": null,
+  "exit_code": 1,
+  "input": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/request_prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/create-architecture/P13-fix-8771-chat-ux/20260623T214736Z/02_response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.dhRBKB.log",
+  "sentinel": "<<<WEBGPT_DONE:20260623T215823Z:f23ad40c>>>",
+  "requested_tab_id": "837355270",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837355270",
+    "tab": {
+      "id": "837355270",
+      "title": "ChatGPT - Agentic Research",
+      "url": "https://chatgpt.com/g/g-p-6a281654ec48819181f5c359c11d9561-agentic-research/project"
+    },
+    "chatgpt_tabs_count": 10,
+    "expected_url": null,
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837355270"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "allowed"
+      }
+    ]
+  },
+  "roundtrip_preflight_required": false,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight": null,
+  "controlled_tab_id": null,
+  "conversation_url": null,
+  "response_source": null,
+  "response_timed_out": null,
+  "timeout_error": null,
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 0,
+  "clean_chars": 287,
+  "raw_response_advisory": false,
+  "extract_fallback_used": false,
+  "extract_fallback_reason": "submit_failed",
+  "extract_fallback_raw": null,
+  "extract_fallback_meta": null,
+  "started_at": "2026-06-23T21:58:24Z",
+  "finished_at": "2026-06-23T22:03:24Z",
+  "proof_status": "submitted_no_response_proof",
+  "agent_diagnosis": "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response.",
+  "agent_action": "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately.",
+  "submitted_to_chatgpt": true
+}

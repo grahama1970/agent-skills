@@ -1,0 +1,28 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z",
+  "requested_tab_id": "837355270",
+  "requested_url": null,
+  "controlled_tab_id": "837355270",
+  "submit_receipt_status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z/02_response.md.raw.md",
+  "response_meta_path": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z/02_response.md.meta.json",
+  "response_receipt_path": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z/02_response.md.receipt.json",
+  "submitted_path": "/home/graham/workspace/experiments/agent-skills/create-architecture/P11-wire-chatwell-personaplex/20260623T205434Z/02_response.md.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260623T205513Z:7167f62b>>>",
+  "raw_sentinel_present": true,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": true,
+  "final_transport_state": "failed",
+  "proof_status": "submitted_no_response_proof",
+  "agent_diagnosis": "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response.",
+  "agent_action": "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately.",
+  "next_command": "surf webgpt.preflight --tab-id 837355270",
+  "do_not_do": [
+    "do_not_retry_submit_without_preflight"
+  ],
+  "needs_attention": null
+}
