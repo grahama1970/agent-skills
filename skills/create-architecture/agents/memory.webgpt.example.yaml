@@ -1,0 +1,15 @@
+# Example WebGPT binding for memory-project creation rounds.
+# Copy relevant fields into ~/.pi/webgpt-projects/memory.json after preflight.
+# Tab ids change — always verify with surf webgpt.preflight before submit.
+
+name: memory
+backend: webgpt
+tab_id: "837354858"
+conversation_url: "https://chatgpt.com/g/g-p-6a2421e493588191b3cdba22b035ed3d-memory/c/6a3a9e94-954c-83ea-a90c-e9b69993ca9c"
+kde_desktop_index: "2"
+bound_manually: true
+
+# Invoke:
+# cd skills/ask
+# ./run.sh ask "webgpt …" --webgpt-project memory --webgpt-tab-id 837354858 \
+#   --webgpt-url "<conversation_url>" --json

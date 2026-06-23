@@ -1,0 +1,36 @@
+# Example rendered-goal binding for the memory project (SPARTA routing).
+# Copy fields into GOAL.md and creation-bundle.md for each slice.
+
+project: memory
+repo_root: /home/graham/workspace/experiments/memory
+
+rendered_goal:
+  repo_path: docs/SPARTA_ROUTING_EVIDENCE_CASE_FLOW.html
+  bundle_slot: GOAL_PAGE.html
+  description: v3 gaps-first routing + evidence-case flow (living progress page)
+
+engagement_root: docs/create-architecture
+slices:
+  - id: sparta-routing-P0
+    goal: docs/create-architecture/sparta-routing-P0/GOAL.md
+    gap_report: docs/create-architecture/sparta-routing-P0/gap-report.md
+    status: CLOSED_LIVE
+  - id: sparta-routing-P1
+    goal: docs/create-architecture/sparta-routing-P1/GOAL.md
+    gap_report: docs/create-architecture/sparta-routing-P1/gap-report.md
+    status: CLOSED_LIVE
+
+live_proof:
+  script: scripts/sanity/domain_recall_live.sh
+  key_tests:
+    - test_sparta_answer_from_evidence_packet_cwe287
+    - test_sparta_disjoint_technique_clarify_live
+
+webgpt:
+  example_tab: agents/memory.webgpt.example.yaml
+
+solution_zip_naming:
+  pattern: "{project}-{slice-id}-solution.zip"
+  examples:
+    - memory-sparta-routing-P0-solution.zip
+    - memory-sparta-routing-P2-P4-combined-solution.zip

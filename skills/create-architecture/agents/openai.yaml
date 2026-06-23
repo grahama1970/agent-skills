@@ -1,0 +1,6 @@
+interface:
+  display_name: "Create Architecture"
+  short_description: "WebGPT clarifies then creates scoped finished-file bundle"
+  default_prompt: "Use $create-architecture: supply repo evidence, run $ask WebGPT questions-only rounds, then get a finished-file zip for the scoped slice (module/function/project), sanity-check it, and port into the real tree."
+policy:
+  allow_implicit_invocation: true
