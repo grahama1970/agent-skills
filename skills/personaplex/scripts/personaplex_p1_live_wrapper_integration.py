@@ -271,6 +271,12 @@ def normalize_memory_intent(question: str, raw: dict[str, Any], token: TurnToken
             normalized["tool_calls"] = [{"tool": "memory.clarify", "endpoint": "/clarify", "arguments": {"q": question}}]
         if not normalized["tool_calls"] and normalized["action"] in {"DEFLECT", "NO_MATCH"}:
             normalized["tool_calls"] = [{"tool": "memory.deflect", "endpoint": "/deflect", "arguments": {"q": question}}]
+        allowed = set(normalized.get("allowed_tools") or [])
+        for call in normalized.get("tool_calls") or []:
+            tool = call.get("tool") or _tool_from_endpoint(call.get("endpoint") or call.get("skill"))
+            if tool:
+                allowed.add(str(tool))
+        normalized["allowed_tools"] = sorted(allowed)
     product = {"ok": bool(raw.get("ok", True)), "route_endpoint": "/memory /intent", "turn_id": token.turn_id, "generation": token.generation, "authority_key": token.authority_key, "json": normalized, "raw_memory_intent": raw, "created_at_utc": utc_now()}
     product["receipt_hash"] = sha256_json(product)
     return product
@@ -536,8 +542,21 @@ def _tool_from_endpoint(endpoint: Any) -> str | None:
     if endpoint is None:
         return None
     e = str(endpoint)
-    mapping = {"/recall": "memory.recall", "/answer": "memory.answer", "/clarify": "memory.clarify", "/deflect": "memory.deflect", "create-evidence-case": "create-evidence-case"}
-    return mapping.get(e, e if "." in e or e == "fixed_fallback" else None)
+    mapping = {
+        "/recall": "memory.recall",
+        "/answer": "memory.answer",
+        "/clarify": "memory.clarify",
+        "/deflect": "memory.deflect",
+        "create-evidence-case": "create-evidence-case",
+        "brave-search": "brave-search",
+    }
+    if e in mapping:
+        return mapping[e]
+    if e.startswith("/"):
+        return mapping.get(e)
+    if e in {"fixed_fallback"} or "." in e or "-" in e:
+        return e
+    return None
 
 
 def _payload_for_tool(data: dict[str, Any], tool: str) -> dict[str, Any] | None:

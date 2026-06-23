@@ -26,7 +26,8 @@ ROOT = Path("/home/graham/workspace/experiments/agent-skills")
 PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
 PERSONAPLEX_PYTHON = PERSONAPLEX_ROOT / ".venv/bin/python"
 if PERSONAPLEX_PYTHON.exists() and Path(sys.executable).resolve() != PERSONAPLEX_PYTHON.resolve():
-    os.execv(str(PERSONAPLEX_PYTHON), [str(PERSONAPLEX_PYTHON), __file__, *sys.argv[1:]])
+    if sys.argv[0].endswith(".py") and not any("unittest" in a for a in sys.argv):
+        os.execv(str(PERSONAPLEX_PYTHON), [str(PERSONAPLEX_PYTHON), __file__, *sys.argv[1:]])
 
 _nvidia_libs = sorted(Path(PERSONAPLEX_PYTHON).parents[1].glob("lib/python*/site-packages/nvidia/*/lib"))
 if _nvidia_libs and "nvidia/cudnn/lib" not in os.environ.get("LD_LIBRARY_PATH", ""):

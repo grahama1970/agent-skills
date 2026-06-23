@@ -375,32 +375,5 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-class OutputGate:
-    def __init__(self) -> None:
-        self._open = False
-        self._reason: str | None = None
-    def open(self) -> None:
-        self._open = True
-    def close(self, reason: str = "") -> None:
-        self._open = False
-        self._reason = reason
-    def snapshot(self) -> dict[str, Any]:
-        return {"open": self._open, "reason": self._reason}
-
-
-class DeepgramLiveClient:
-    def __init__(self, sample_rate: float = 16000, model: str = "nova-3", enabled: bool = True) -> None:
-        self.sample_rate = int(sample_rate)
-        self.model = model
-        self.enabled = enabled
-        self.turn_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
-    def enqueue_pcm(self, chunk: bytes) -> None:
-        pass
-    async def run(self) -> None:
-        self.turn_queue.put_nowait({"speech_final": True, "transcript": "Deepgram stub transcript"})
-    async def close(self) -> None:
-        pass
-
-
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())

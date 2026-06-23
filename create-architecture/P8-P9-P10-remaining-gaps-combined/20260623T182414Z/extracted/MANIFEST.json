@@ -1,0 +1,178 @@
+{
+  "bundle_filename": "personaplex-p8-p9-p10-remaining-gaps-combined-solution.zip",
+  "claim_boundary": "This bundle provides implementation files, tests, fixtures, and sanity probes. Deterministic fallback receipts are not live-service proof unless the relevant real_* flag is true.",
+  "commands": [
+    {
+      "command": "PYTHONPATH=\"$PWD/skills/personaplex/scripts:${PYTHONPATH:-}\" python3 -m unittest discover -s skills/personaplex/tests -p 'test_p8_p9_p10_remaining_gaps.py' -v",
+      "expected_exit_code": 0,
+      "name": "offline_unit_tests",
+      "notes": "Runs offline tests for Deepgram fallback/WAV handling, P9 memory upsert contracts, CAS fail-closed behavior, P10 fake-hook validation, and combined fallback honesty."
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p8_live_deepgram_real_audio.sh",
+      "expected_exit_code": 0,
+      "name": "p8_deepgram_non_strict",
+      "notes": "Falls back with real_deepgram=false if DEEPGRAM_API_KEY, websockets, network, or speech audio is unavailable."
+    },
+    {
+      "command": "DEEPGRAM_API_KEY=<key> PERSONAPLEX_P8_AUDIO_PATH=\"$PWD/assets/test/input_assistant.wav\" PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p8_live_deepgram_real_audio.sh",
+      "expected_exit_code": "0 only if real_deepgram=true and speech_final=true is observed; otherwise 2",
+      "name": "p8_deepgram_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p9_conversation_compaction.sh",
+      "expected_exit_code": 0,
+      "name": "p9_compaction_non_strict",
+      "notes": "Attempts http://127.0.0.1:8601/upsert and writes deterministic fallback files if unavailable."
+    },
+    {
+      "command": "PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p9_conversation_compaction.sh",
+      "expected_exit_code": "0 only if real_conversation_compaction=true; otherwise 2",
+      "name": "p9_compaction_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p10_gpu_personaplex_inference.sh",
+      "expected_exit_code": 0,
+      "name": "p10_gpu_non_strict",
+      "notes": "Falls back with real_gpu_personaplex=false if server/GPU/LMGen hook is unavailable."
+    },
+    {
+      "command": "PERSONAPLEX_ROOT=/path/to/PersonaPlex PERSONAPLEX_GOLDEN_STATE_SERVER=/path/to/personaplex_golden_state_server.py PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p10_gpu_personaplex_inference.sh",
+      "expected_exit_code": "0 only if real_gpu_personaplex=true with validated LMGen.step GPU proof; otherwise 2",
+      "name": "p10_gpu_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p8_p9_p10_combined.sh",
+      "expected_exit_code": 0,
+      "name": "combined_p8_p9_p10_non_strict",
+      "notes": "Writes /tmp/personaplex-p8-p9-p10-sanity/p8-p9-p10-final-receipt.json; individual real flags may be false."
+    },
+    {
+      "command": "DEEPGRAM_API_KEY=<key> PERSONAPLEX_P8_AUDIO_PATH=\"$PWD/assets/test/input_assistant.wav\" PERSONAPLEX_ROOT=/path/to/PersonaPlex PERSONAPLEX_GOLDEN_STATE_SERVER=/path/to/personaplex_golden_state_server.py PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p8_p9_p10_combined.sh",
+      "expected_exit_code": "0 only if real_deepgram=true, real_conversation_compaction=true, and real_gpu_personaplex=true; otherwise 2",
+      "name": "combined_p8_p9_p10_strict_real"
+    }
+  ],
+  "constraints_satisfied": [
+    "Keeps existing P0-P8 adapter seam and extends modules under skills/personaplex.",
+    "Receipts honestly record real_* flags per target.",
+    "No inline vectors are accepted in memory payloads.",
+    "Audio artifacts are path/hash/format metadata only; no raw audio bytes are embedded.",
+    "Deterministic fallback fixtures are provided for unavailable services."
+  ],
+  "created_at_utc": "2026-06-23T18:34:14.832939Z",
+  "default_endpoints": {
+    "deepgram": "wss://api.deepgram.com/v1/listen?model=nova-3&encoding=linear16&sample_rate=16000&channels=1&interim_results=false&smart_format=false&endpointing=1000",
+    "evidence_case": "POST /create-evidence-case",
+    "memory_daemon": "http://127.0.0.1:8601",
+    "memory_upsert": "POST /upsert"
+  },
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "060d314354954b0bf6a88b5f5ecb504df44fc51b4139f14e7bf2bc3611e05762",
+      "size_bytes": 9712
+    },
+    {
+      "path": "TEST_RESULTS.md",
+      "sha256": "6acb5adf18db73199fc4da8fa2b3021ebc3e1e67185b9fe4ee7741dad92e6cfe",
+      "size_bytes": 1185
+    },
+    {
+      "path": "prompt_improvements.md",
+      "sha256": "cf8712c45a337942c34d9f0f557c90508d32012038d7397677761af6f2e41986",
+      "size_bytes": 1451
+    },
+    {
+      "path": "skills/personaplex/fixtures/p8_p9_p10/conversation_turns_fixture.json",
+      "sha256": "dca213e5ddb8e1f1a232580ee376bbceee66d7054c44007ebf9a75c330b93a54",
+      "size_bytes": 957
+    },
+    {
+      "path": "skills/personaplex/fixtures/p8_p9_p10/deterministic_transcript_fixture.json",
+      "sha256": "bb1b96893f73546e6d4a073a92d426aaf70a32481fcbb8d2f489316e6e1aba9f",
+      "size_bytes": 301
+    },
+    {
+      "path": "skills/personaplex/fixtures/p8_p9_p10/gpu_inference_fallback.json",
+      "sha256": "9a65d87ccab9623d81e228452436a29939c57a3108d1ce8aade28de959845700",
+      "size_bytes": 253
+    },
+    {
+      "path": "skills/personaplex/sanity_p10_gpu_personaplex_inference.sh",
+      "sha256": "601f80110103fda67b2c743104b039c6fa36a44ebac078e5496690feefc9a0e1",
+      "size_bytes": 893
+    },
+    {
+      "path": "skills/personaplex/sanity_p8_live_deepgram_real_audio.sh",
+      "sha256": "752234db39175283104c08aa181678df38d758035185b20170b3cedd9121bb65",
+      "size_bytes": 802
+    },
+    {
+      "path": "skills/personaplex/sanity_p8_p9_p10_combined.sh",
+      "sha256": "2800deaf732d74d57a2e7838036d3c8286afb3e44b786d67e47be6c119fee824",
+      "size_bytes": 1386
+    },
+    {
+      "path": "skills/personaplex/sanity_p9_conversation_compaction.sh",
+      "sha256": "e5fc532bcb154ccdbc60b749fd218bddb179a71145e26e44976c956d8d37c181",
+      "size_bytes": 1057
+    },
+    {
+      "path": "skills/personaplex/scripts/__init__.py",
+      "sha256": "cd66270232c16943737dfd034e2cda920ef22778b41b124c457dcfb61889570a",
+      "size_bytes": 75
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_conversation_compaction.py",
+      "sha256": "0d838d277067702a27385ecff88962d6d1311cea4d19adb52fb0cc3aa310cda3",
+      "size_bytes": 21100
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_deepgram_live.py",
+      "sha256": "8c04360037d162d328434e53d2bc9ef08841bad75ee0260ef6196df96f0ad165",
+      "size_bytes": 13951
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_gpu_inference_probe.py",
+      "sha256": "2777dc494cafff07017dcc6a0e5de740e04fe04ee98e000de9c7a8713182ef11",
+      "size_bytes": 16070
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p10_gpu_inference_probe.py",
+      "sha256": "5859725601d537b15abef26d227f994ebc83728b9d0a730508c9448816369c85",
+      "size_bytes": 129
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_combined_probe.py",
+      "sha256": "586894015cc5f40ca9bdfac0e936a11e7496a5763b76b6ec67b75b4f0e6b3f2f",
+      "size_bytes": 12738
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_live_services.py",
+      "sha256": "7684affdb1f8baa56b7b5f8dbaf67ecd744bcf010e3d2f94ea70ed15faf24c95",
+      "size_bytes": 16172
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p8_live_deepgram_probe.py",
+      "sha256": "2bc524570a4413f63ec78049609b5a45b4b065c24dfa53e8796f0fdbea8084f1",
+      "size_bytes": 123
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p9_compaction_probe.py",
+      "sha256": "b5567dbe870218faf27d8ad1f105168d215712a2920b4be16c8b5595c1a2249e",
+      "size_bytes": 133
+    },
+    {
+      "path": "skills/personaplex/tests/test_p8_p9_p10_remaining_gaps.py",
+      "sha256": "85a80dfeda2a77805a0fb405f5a6a9bc80675227a2833eddd907be8ade01d643",
+      "size_bytes": 12939
+    }
+  ],
+  "objective": "PersonaPlex P8 live Deepgram validation, P9 conversation compaction persistence, and P10 GPU PersonaPlex inference proof overlay.",
+  "real_flags": {
+    "p10": "real_gpu_personaplex",
+    "p8": "real_deepgram",
+    "p9": "real_conversation_compaction"
+  }
+}

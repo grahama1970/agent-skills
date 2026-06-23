@@ -363,7 +363,15 @@ def build_conversation_history_record(
 
 
 def _retrieval_text(token: TurnToken, transcript: str, route_action: str, intent_json: dict[str, Any], response_text: str) -> str:
-    entities = ", ".join(str(item.get("text")) for item in (intent_json.get("extracted_entities") or []) if item.get("text"))
+    entity_bits: list[str] = []
+    for item in intent_json.get("extracted_entities") or []:
+        if isinstance(item, str) and item.strip():
+            entity_bits.append(item.strip())
+        elif isinstance(item, dict):
+            label = item.get("text") or item.get("entity") or item.get("id")
+            if label:
+                entity_bits.append(str(label))
+    entities = ", ".join(entity_bits)
     return (
         f"PersonaPlex session {token.session_id} turn {token.turn_id} for persona {token.persona_id}. "
         f"User asked: {transcript}. Route action: {route_action}. Entities: {entities or 'none'}. "

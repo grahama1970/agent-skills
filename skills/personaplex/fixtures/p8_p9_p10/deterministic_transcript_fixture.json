@@ -1,0 +1,8 @@
+{
+  "schema": "personaplex.p8.deepgram_fixture.v2",
+  "source": "deterministic_fixture",
+  "transcript": "Focus on the west gateway.",
+  "speech_final": true,
+  "real_deepgram": false,
+  "claim_boundary": "This transcript fixture is deterministic fallback data only and is not live Deepgram proof."
+}

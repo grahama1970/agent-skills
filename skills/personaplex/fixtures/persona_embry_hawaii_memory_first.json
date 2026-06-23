@@ -1,0 +1,13 @@
+{
+  "session_id": "embry-hawaii-memory-first",
+  "persona_id": "embry",
+  "turns": [
+    {
+      "transcript": "Embry, what is the weather like in Hawaii today, and how would that make you feel about surfing with Kai?",
+      "source": "memory_first_fixture",
+      "start_after_ms": 0,
+      "route_delay_ms": 0,
+      "user_audio_marker": "fixture-embry-hawaii-kai"
+    }
+  ]
+}

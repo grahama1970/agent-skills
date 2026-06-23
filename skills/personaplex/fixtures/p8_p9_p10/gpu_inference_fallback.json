@@ -1,0 +1,7 @@
+{
+  "schema": "personaplex.p10.gpu_inference_fallback.v1",
+  "real_gpu_personaplex": false,
+  "lmgen_step_called": false,
+  "fallback_used": true,
+  "claim_boundary": "This fixture is deterministic fallback data only and is not LMGen.step GPU proof."
+}

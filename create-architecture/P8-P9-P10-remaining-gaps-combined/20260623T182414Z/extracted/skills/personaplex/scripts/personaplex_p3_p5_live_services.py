@@ -418,52 +418,5 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-# --- backward-compat aliases for old P3-P5 tests ---
-
-def validate_no_inline_vectors(doc: Mapping[str, Any]) -> None:
-    paths = find_inline_vector_paths(doc)
-    if paths:
-        raise ValueError(f"inline vector fields not allowed: {paths}")
-
-
-def deterministic_intent(question: str, turn_id: int, generation: int, session_id: str, persona_id: str) -> dict[str, Any]:
-    return {"action": "COMPLIANCE", "turn_id": turn_id, "generation": generation, "session_id": session_id, "persona_id": persona_id, "route_endpoint": "/compliance", "allowed_tools": ["recall", "clarify", "deflect"]}
-
-
-def deterministic_recall(question: str, intent: dict[str, Any]) -> dict[str, Any]:
-    return {"items": [{"_key": f"recall:{intent['session_id']}:{intent['turn_id']}", "text": question, "score": 1.0}], "confidence": 0.95, "intent_authority_hash": sha256_json(intent)}
-
-
-def build_response_packet(session_id: str, turn_id: int, generation: int, route_endpoint: str, text: str, factual_claims_allowed: bool, source_product_hash: str, current_intent_authority_hash: str) -> dict[str, Any]:
-    return {"_key": f"conversation:{session_id}:{turn_id:06d}", "session_id": session_id, "turn_id": turn_id, "generation": generation, "transcript": text, "route_endpoint": route_endpoint, "factual_claims_allowed": factual_claims_allowed, "source_product_hash": source_product_hash, "current_intent_authority_hash": current_intent_authority_hash, "bounded": True, "packet_hash": sha256_json({"session_id": session_id, "turn_id": turn_id, "text": text})}
-
-
-def _p3p5_fallback_memory_record(memory_url: str | None, record: Mapping[str, Any], run_root: Path) -> dict[str, Any]:
-    validate_no_inline_vectors(record)
-    safe_path = run_root / "conversation_history" / f"{_safe_filename(str(record.get('_key', 'unknown')))}.json"
-    safe_path.parent.mkdir(parents=True, exist_ok=True)
-    write_json(safe_path, dict(record))
-    return {"real_memory_upsert": False, "unavailable_reason": "memory_url_not_configured", "local_fallback_path": str(safe_path), "collection": record.get("collection"), "attempted": False, "no_inline_vectors": True, "created_at_utc": utc_now_iso()}
-
-
-def _p3p5_fallback_evidence_packet(question: str) -> dict[str, Any]:
-    return {"real_create_evidence_case": False, "can_answer": False, "selected_route": "/memory /clarify", "substantive_compliance_claim_released": False, "attempted": False, "fail_closed": True, "no_inline_vectors": True, "created_at_utc": utc_now_iso(), "question": question, "unavailable_reason": "evidence_case_url_not_configured"}
-
-
-def attempt_memory_upsert(memory_url: str | None, endpoint: str, record: Mapping[str, Any], run_root: Path) -> dict[str, Any]:
-    if memory_url is None:
-        return _p3p5_fallback_memory_record(None, record, run_root)
-    return memory_upsert(documents=[record], memory_url=memory_url, out_dir=run_root, timeout=DEFAULT_TIMEOUT_SECONDS)
-
-
-def attempt_evidence_case(evidence_case_url: str | None, transcript: str, intent: Mapping[str, Any], recall: Mapping[str, Any]) -> dict[str, Any]:
-    if evidence_case_url is None:
-        return _p3p5_fallback_evidence_packet(transcript)
-    result = create_evidence_case(question=transcript, evidence_case_url=evidence_case_url, out_dir=Path(DEFAULT_SANITY_ROOT), timeout=DEFAULT_TIMEOUT_SECONDS)
-    if "fail_closed" not in result:
-        result["fail_closed"] = not result.get("can_answer", True)
-    return result
-
-
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())

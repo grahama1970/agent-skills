@@ -1,0 +1,29 @@
+[
+  {
+    "_key": "conversation:p9-fixture-session:000001",
+    "schema": "personaplex.conversation_history.v1",
+    "session_id": "p9-fixture-session",
+    "turn_id": 1,
+    "persona_id": "embry",
+    "route_action": "COMPLIANCE",
+    "transcript": "Focus on the west gateway.",
+    "retrieval_text": "PersonaPlex turn 1 for embry: Focus on the west gateway.",
+    "audio_metadata": {
+      "path": "assets/test/input_assistant.wav",
+      "turn_id": 1,
+      "format": "wav",
+      "sample_rate_hz": 16000,
+      "channels": 1
+    }
+  },
+  {
+    "_key": "conversation:p9-fixture-session:000002",
+    "schema": "personaplex.conversation_history.v1",
+    "session_id": "p9-fixture-session",
+    "turn_id": 2,
+    "persona_id": "embry",
+    "route_action": "COMPLIANCE",
+    "transcript": "The response packet is sealed before memory routing.",
+    "retrieval_text": "PersonaPlex turn 2 for embry: The response packet is sealed before memory routing."
+  }
+]
