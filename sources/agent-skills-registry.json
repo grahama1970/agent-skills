@@ -1,8 +1,8 @@
 {
-  "content_hash": "84d99391ae773456c20a01bd299a8f358af604dcced4b864e25e507db250e4e3",
+  "content_hash": "a4ea7c627d6650e18ff3b82a571c07963fb89cc7f33ae47dc608fbc7c7d7f361",
   "counts": {
-    "agents": 5,
-    "entries": 318,
+    "agents": 6,
+    "entries": 319,
     "skills": 313
   },
   "entries": [
@@ -75,6 +75,27 @@
         "project-knowledge",
         "task-monitor",
         "best-practices-subagent"
+      ],
+      "verifier": ""
+    },
+    {
+      "content_hash": "fa98edc6cd2cdbcf",
+      "handoffs_to": [],
+      "id": "ui-reviewer",
+      "kind": "worker",
+      "path": "agents/ui-reviewer",
+      "source_file": "agents/ui-reviewer/AGENTS.md",
+      "summary": "Transport wrapper for the `ui-reviewer` subagent.",
+      "title": "UI Reviewer",
+      "type": "agent",
+      "uses_skills": [
+        "memory",
+        "test-interactions",
+        "review-design",
+        "best-practices-react",
+        "best-practices-cots",
+        "best-practices-subagent",
+        "scillm"
       ],
       "verifier": ""
     },
@@ -753,7 +774,9 @@
       "content_hash": "e516f8904c4a2ab7",
       "id": "best-practices-cots",
       "path": "skills/best-practices-cots",
-      "related_agents": [],
+      "related_agents": [
+        "ui-reviewer"
+      ],
       "source_file": "skills/best-practices-cots/SKILL.md",
       "summary": "Automated COTS defense UX compliance scanner. Tests against WCAG 2.1 AA, Section 508, MIL-STD-1472H, and NIST 800-53 UI controls via CDP interaction + VLM visual analysis.",
       "title": "best-practices-cots",
@@ -932,7 +955,9 @@
       "content_hash": "7c7056080109ff05",
       "id": "best-practices-react",
       "path": "skills/best-practices-react",
-      "related_agents": [],
+      "related_agents": [
+        "ui-reviewer"
+      ],
       "source_file": "skills/best-practices-react/SKILL.md",
       "summary": "React, Next.js, React Native, and web design best practices from Vercel Engineering. Use when writing, reviewing, or refactoring React/Next.js/React Native components, optimizing performance, auditing UI accessibility, or designing compone\u2026",
       "title": "best-practices-react",
@@ -4319,6 +4344,7 @@
       "related_agents": [
         "book-extractor",
         "hum",
+        "ui-reviewer",
         "watch"
       ],
       "source_file": "skills/memory/SKILL.md",
@@ -6064,7 +6090,9 @@
       "content_hash": "cf60542ad965418c",
       "id": "review-design",
       "path": "skills/review-design",
-      "related_agents": [],
+      "related_agents": [
+        "ui-reviewer"
+      ],
       "source_file": "skills/review-design/SKILL.md",
       "summary": "Multi-provider AI design review of UI screenshots and design tokens for UX audits.",
       "title": "review-design",
@@ -6443,6 +6471,7 @@
       "id": "scillm",
       "path": "skills/scillm",
       "related_agents": [
+        "ui-reviewer",
         "watch"
       ],
       "source_file": "skills/scillm/SKILL.md",
@@ -7052,7 +7081,9 @@
       "content_hash": "5a01c90edcb8f4db",
       "id": "test-interactions",
       "path": "skills/test-interactions",
-      "related_agents": [],
+      "related_agents": [
+        "ui-reviewer"
+      ],
       "source_file": "skills/test-interactions/SKILL.md",
       "summary": "Deterministic UI interaction testing against LIVE DOM via CDP. All interactions target [data-qid] selectors. PASS/FAIL from thresholds, not LLM. Batched VLM review at the end only \u2014 never in the test loop.",
       "title": "test-interactions",
