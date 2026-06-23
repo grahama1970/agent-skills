@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PersonaPlex Goal</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --panel: #171c23;
+      --panel-2: #1d2530;
+      --line: #334052;
+      --text: #e6edf3;
+      --muted: #9aa7b5;
+      --accent: #6bb6ff;
+      --good: #56d364;
+      --warn: #d29922;
+      --bad: #ff7b72;
+      --violet: #d2a8ff;
+      --cyan: #76e4f7;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: var(--accent); }
+    code {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 4px;
+      padding: 0 .28rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .9em;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 18px 60px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .source-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .source-row a,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 5px 10px;
+      text-decoration: none;
+      font-size: .82rem;
+    }
+
+    section { margin-top: 28px; }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.25rem;
+      color: var(--accent);
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      color: var(--violet);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .card p { margin: 0; color: var(--muted); }
+    .card ul,
+    .card ol { margin: 8px 0 0 1.1rem; padding: 0; }
+    .card li { margin: 4px 0; color: var(--muted); }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--panel-2);
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: var(--muted);
+    }
+
+    .callout strong { color: var(--text); }
+    .warn { border-left-color: var(--warn); }
+    .bad { border-left-color: var(--bad); }
+
+    .mermaid {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      font-size: .92rem;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: var(--panel-2);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    td { color: var(--muted); }
+
+    .status {
+      display: inline-block;
+      min-width: 96px;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-weight: 700;
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .implemented { background: rgba(86,211,100,.14); color: var(--good); border: 1px solid rgba(86,211,100,.4); }
+    .partial { background: rgba(210,153,34,.14); color: var(--warn); border: 1px solid rgba(210,153,34,.45); }
+    .missing { background: rgba(255,123,114,.12); color: var(--bad); border: 1px solid rgba(255,123,114,.45); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      gap: 8px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .step {
+      min-width: 130px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 10px;
+      position: relative;
+    }
+
+    .step:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .step b {
+      display: block;
+      color: var(--text);
+      font-size: .86rem;
+      margin-bottom: 5px;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: .78rem;
+      display: block;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+
+    .check {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .check strong { color: var(--text); display: block; margin-bottom: 5px; }
+    .check p { color: var(--muted); margin: 0; font-size: .9rem; }
+
+    footer {
+      margin-top: 36px;
+      color: var(--muted);
+      font-size: .84rem;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+  </style>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      if (window.mermaid) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "dark",
+          securityLevel: "loose",
+          flowchart: { curve: "basis", htmlLabels: true }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>PersonaPlex Goal</h1>
+      <p class="subtitle">
+        Source-derived target state for the PersonaPlex bridge: native voice prompt generation,
+        live Deepgram turn detection, memory-first routing, gated grounding, evidence-case
+        fail-closed behavior, and persistent conversation receipts.
+      </p>
+      <div class="source-row">
+        <a href="../SKILL.md">SKILL.md</a>
+        <a href="../PROJECT_KNOWLEDGE.md">PROJECT_KNOWLEDGE.md</a>
+        <a href="../GOAL.md">GOAL.md</a>
+        <span class="pill">status: implementation target, not closure proof</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>Primary Question</h2>
+      <div class="callout">
+        <strong>Can Embry sound live and conversational while still obeying current-turn memory,
+        evidence, and compliance routing constraints?</strong>
+        PersonaPlex owns voice and live interaction. Memory, search, and evidence-case products own
+        factual authority.
+      </div>
+    </section>
+
+    <section>
+      <h2>Memory-Routed Target Flow</h2>
+      <div class="mermaid">
+flowchart TD
+  A[Browser Opus frames] --> B[Wrapper decodes audio once]
+  B --> C[PersonaPlex listen loop]
+  B --> D[Deepgram ASR/VAD]
+  D --> E{speech_final?}
+  E -->|yes| F[New turn gate: turn_id, close gate, cancel/fence stale work]
+  F --> G[$memory intent: route, entities, tools, recall_profile]
+  G --> H{action / lane}
+  H -->|DEFLECT or NO_MATCH| I[$memory deflect]
+  H -->|CLARIFY or ambiguous| J[$memory clarify]
+  H -->|persona current-fact blend| K[Brave/current facts + $memory recall persona scope]
+  H -->|compliance/security| L[create-evidence-case judge]
+  K --> M[$memory answer with recall_snapshot + external_sources]
+  L --> N{can_answer?}
+  N -->|true| O[$memory answer or controlled evidence response]
+  N -->|false| P[$memory clarify from evidence packet]
+  I --> Q[Controlled non-factual response]
+  J --> Q
+  M --> R[Inject compact grounding while output gate closed]
+  O --> R
+  P --> R
+  R --> S[Open gate only for active turn]
+  S --> T[Write conversation_history + audio refs + receipts]
+      </div>
+    </section>
+
+    <section>
+      <h2>Persistence Ownership Flow</h2>
+      <div class="mermaid">
+flowchart LR
+  T[Sealed active turn] --> C[(conversation_history canonical immutable ledger)]
+  T --> A[(audio artifact store by hash/path)]
+  C --> V[Qdrant semantic sync pointer metadata]
+  C --> S[(conversation_history_summaries immutable rolling summaries)]
+  C --> P[(personaplex_turns optional rebuildable projection)]
+  S --> H[(personaplex_sessions mutable session head)]
+  C --> H
+  H --> PI[bounded pre-intent context]
+  PI --> I[$memory intent current-turn authority]
+      </div>
+    </section>
+
+    <section>
+      <h2>Memory Contract Reassessment</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Route Authority</h3>
+          <ul>
+            <li><code>$memory intent</code> is the current-turn front door.</li>
+            <li><code>$memory answer</code>, <code>clarify</code>, and <code>deflect</code> are structured products.</li>
+            <li>The wrapper must not invent local answerability or ambiguity thresholds.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Recall Contract</h3>
+          <ul>
+            <li>Recall returns <code>items</code>, not <code>results</code>.</li>
+            <li>Proof reads <code>confidence</code> plus <code>scores.bm25</code>, <code>scores.dense</code>, and <code>scores.graph</code>.</li>
+            <li>Persona recall must be question-shaped and scoped, for example <code>persona:embry</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Persistence Contract</h3>
+          <ul>
+            <li><code>/upsert</code> writes canonical Arango documents.</li>
+            <li>Do not write inline vector arrays into Arango.</li>
+            <li>Qdrant owns semantic vectors; Arango stores pointer metadata and text hashes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout warn" style="margin-top:12px">
+        <strong>Memory project caveat:</strong> SPARTA compliance answer-from-evidence-packet,
+        multi-turn judge state, QRA conflict gates, and disjoint-technique live E2E are still
+        known gaps. PersonaPlex must fail closed around those gaps rather than smooth them over.
+      </div>
+    </section>
+
+    <section>
+      <h2>Ownership Boundaries</h2>
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Owns</th><th>Boundary</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>orpheus-tts-voice-trainer</code></td><td>Reference WAVs, emotion tags, inference receipts</td><td>Upstream only</td></tr>
+          <tr><td><code>personaplex</code></td><td>PersonaPlex `.pt`, replay proof, live wrapper receipts</td><td>Does not author persona memory</td></tr>
+          <tr><td><code>create-persona</code></td><td>Persona profile, memory, BDI, mannerism data</td><td>Does not prove runtime readiness</td></tr>
+          <tr><td><code>$memory</code></td><td>Intent, recall, answer, clarify, deflect, upsert</td><td>Current intent is the routing authority</td></tr>
+          <tr><td><code>$brave-search</code></td><td>Current external facts</td><td>Only when current facts are required</td></tr>
+          <tr><td><code>create-evidence-case</code></td><td>Compliance/security evidence and uncertainty gates</td><td>Vibe cannot override it</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Implemented vs Missing</h2>
+      <table>
+        <thead>
+          <tr><th>Status</th><th>Capability</th><th>Source-Derived Note</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="status implemented">implemented</span></td>
+            <td>Native PersonaPlex cache replay gate</td>
+            <td>Technical `CACHE_REPLAY_PASS` path exists, but it is not publication or live full-duplex proof.</td>
+          </tr>
+          <tr>
+            <td><span class="status implemented">implemented</span></td>
+            <td>Golden-state wrapper spike</td>
+            <td>Uses repo-native `LMGen.step(...)` and clones streaming state for faster session setup.</td>
+          </tr>
+          <tr>
+            <td><span class="status partial">partial</span></td>
+            <td>Deepgram ASR/VAD live path</td>
+            <td>Single-turn proof exists. Multi-turn interruption and stale-work proof are missing.</td>
+          </tr>
+          <tr>
+            <td><span class="status partial">partial</span></td>
+            <td>Memory-backed routing</td>
+            <td>Intent, recall, and answer have proof. Clarify and deflect still need explicit live smoke receipts.</td>
+          </tr>
+          <tr>
+            <td><span class="status missing">missing</span></td>
+            <td>Turn-aware gate and queue</td>
+            <td>Known receipt reported `queue_depth=268`; release needs bounded drain and active-turn checks.</td>
+          </tr>
+          <tr>
+            <td><span class="status missing">missing</span></td>
+            <td>Conversation-history persistence</td>
+            <td>Canonical turn ledger, audio artifacts, summaries, and session head are not implemented as live-wrapper proof.</td>
+          </tr>
+          <tr>
+            <td><span class="status missing">missing</span></td>
+            <td>Evidence-case integration proof</td>
+            <td>Compliance gate must produce real evidence/clarify behavior before factual answer release.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Target Runtime Flow</h2>
+      <div class="flow" aria-label="Target runtime flow">
+        <div class="step"><b>01 Browser Audio</b><span>Opus frames arrive over WebSocket.</span></div>
+        <div class="step"><b>02 Split Stream</b><span>PCM feeds PersonaPlex and Deepgram.</span></div>
+        <div class="step"><b>03 Final Turn</b><span>Deepgram `speech_final` creates a new `turn_id`.</span></div>
+        <div class="step"><b>04 Gate Closed</b><span>Cancel or fence stale work; clear injection state.</span></div>
+        <div class="step"><b>05 Memory Intent</b><span>Current transcript decides route, tools, entities.</span></div>
+        <div class="step"><b>06 Grounding</b><span>Recall, search, clarify, deflect, answer, evidence case.</span></div>
+        <div class="step"><b>07 Release</b><span>Inject compact context, open only for active turn, write receipts.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Required Invariants</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Turn Safety</h3>
+          <ul>
+            <li>Every user turn has a monotonic `turn_id`.</li>
+            <li>Every callback verifies the active `turn_id` before mutating state.</li>
+            <li>Stale tasks cannot enqueue, open the gate, write receipts, or update memory.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Authority</h3>
+          <ul>
+            <li>Current `$memory intent` is the only routing authority.</li>
+            <li>Historical tool calls are context only.</li>
+            <li>Compliance uncertainty fails closed.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Persistence</h3>
+          <ul>
+            <li>`conversation_history` is canonical.</li>
+            <li>Summaries and voice projections are rebuildable.</li>
+            <li>Audio artifacts are stored by hash/path and linked from the turn.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Acceptance Gates</h2>
+      <div class="checks">
+        <div class="check">
+          <strong>Native Cache Gate</strong>
+          <p>Create native `.pt`, replay in a fresh process, and write valid WAV/text/runtime receipts.</p>
+        </div>
+        <div class="check">
+          <strong>Single-Turn Research Gate</strong>
+          <p>Show intent, recall/search, route product, gated injection, and grounded PersonaPlex output.</p>
+        </div>
+        <div class="check">
+          <strong>Multi-Turn Live Gate</strong>
+          <p>Prove Turn 2 supersedes Turn 1 and stale callbacks cannot release or persist current state.</p>
+        </div>
+        <div class="check">
+          <strong>Compliance Memory Gate</strong>
+          <p>Prove evidence-case/clarify/deflect/answer receipts and fail-closed behavior.</p>
+        </div>
+        <div class="check">
+          <strong>Persistence Gate</strong>
+          <p>Write deterministic conversation turns, retrieval text, source hashes, and audio artifact references.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Next Artifact</h2>
+      <div class="callout warn">
+        The next smallest useful artifact is a `$create-architecture` WebGPT request for a finished-file
+        multi-turn PersonaPlex/Deepgram/memory compliance MVP harness. The project agent should download the
+        returned zip, inspect it in an isolated sanity directory, run/repair its checks, report gaps, and only
+        then port the working slice into the larger codebase.
+      </div>
+    </section>
+
+    <footer>
+      Generated from `skills/personaplex/SKILL.md` and `skills/personaplex/PROJECT_KNOWLEDGE.md`.
+      This page is an implementation target and does not claim that missing gates have passed.
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "latest_tests": "/mnt/storage12tb/skills/personaplex/outputs/deepgram-live-probe/embry/20260622T203618Z/personaplex-deepgram-live-probe-receipt.json",
+  "latest_verdict": "/home/graham/workspace/experiments/agent-skills/reviews/personaplex-deepgram/code-loop/rounds/001/summary.json",
+  "next_action": "patch",
+  "round": 1,
+  "state": "needs_patch",
+  "target": "skills/personaplex Deepgram live ASR/VAD wrapper"
+}

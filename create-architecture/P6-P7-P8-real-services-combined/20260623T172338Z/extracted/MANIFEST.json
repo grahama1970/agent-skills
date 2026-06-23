@@ -1,0 +1,181 @@
+{
+  "bundle_filename": "personaplex-p6-p7-p8-real-services-combined-solution.zip",
+  "claim_boundary": "This zip contains implementation overlay, tests, fixtures, and sanity probes. Deterministic fallback receipts are not real-service proof unless each target receipt has the corresponding real_* flag set to true.",
+  "commands": [
+    {
+      "command": "python3 -m unittest discover -s skills/personaplex/tests -p 'test_p6_p7_p8_real_services.py'",
+      "expected_exit_code": 0,
+      "name": "offline_unit_tests",
+      "notes": "Runs offline using local HTTP test servers and deterministic Deepgram fallback."
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p6_real_memory_upsert.sh",
+      "expected_exit_code": 0,
+      "name": "p6_memory_sanity_non_strict",
+      "notes": "Attempts http://127.0.0.1:8601/upsert, falls back if unavailable."
+    },
+    {
+      "command": "PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p6_real_memory_upsert.sh",
+      "expected_exit_code": "0 if real_memory_upsert=true, otherwise 2",
+      "name": "p6_memory_sanity_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p7_real_evidence_case.sh",
+      "expected_exit_code": 0,
+      "name": "p7_evidence_case_sanity_non_strict",
+      "notes": "Attempts http://127.0.0.1:8601/create-evidence-case, falls back to /memory /clarify if unavailable."
+    },
+    {
+      "command": "PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p7_real_evidence_case.sh",
+      "expected_exit_code": "0 if real_create_evidence_case=true, otherwise 2",
+      "name": "p7_evidence_case_sanity_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p8_live_deepgram.sh",
+      "expected_exit_code": 0,
+      "name": "p8_deepgram_sanity_non_strict",
+      "notes": "Reads DEEPGRAM_API_KEY from env or ~/.zshrc via zsh; falls back if key/dependency/audio/endpoint is unavailable."
+    },
+    {
+      "command": "PERSONAPLEX_P8_AUDIO_PATH=/path/to/16khz-mono-linear16-speech.wav PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p8_live_deepgram.sh",
+      "expected_exit_code": "0 if real_deepgram=true, otherwise 2",
+      "name": "p8_deepgram_sanity_strict_real"
+    },
+    {
+      "command": "bash skills/personaplex/sanity_p6_p7_p8_combined.sh",
+      "expected_exit_code": 0,
+      "name": "combined_p6_p7_p8_sanity_non_strict",
+      "notes": "Writes /tmp/personaplex-p6-p7-p8-sanity/p6-p7-p8-final-receipt.json."
+    },
+    {
+      "command": "PERSONAPLEX_P8_AUDIO_PATH=/path/to/16khz-mono-linear16-speech.wav PERSONAPLEX_REQUIRE_REAL=1 bash skills/personaplex/sanity_p6_p7_p8_combined.sh",
+      "expected_exit_code": "0 if all P6/P7/P8 real flags are true, otherwise 2",
+      "name": "combined_p6_p7_p8_sanity_strict_real"
+    }
+  ],
+  "created_at_utc": "2026-06-23T17:49:13.563098Z",
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "588c60d6a9d5465ed4860d5c77affea9af2cb9bcc2178bb22f0e97d002923915",
+      "size_bytes": 6341
+    },
+    {
+      "path": "prompt_improvements.md",
+      "sha256": "019c0a63ede56276fc3e1f05447150c6e48f229f1789b9a36ef9364a2d1822ca",
+      "size_bytes": 1638
+    },
+    {
+      "path": "skills/personaplex/fixtures/p6_p7_p8/deterministic_transcript_fixture.json",
+      "sha256": "6434309724cdfeeb27bf4e2f3a09252772f146e3b6f4db112a001a70c5d5f623",
+      "size_bytes": 320
+    },
+    {
+      "path": "skills/personaplex/fixtures/p6_p7_p8/evidence_case_clarify_fallback.json",
+      "sha256": "c7fad6e0725549ac073700a4f086aca8d9e89720eb933a2b9751cb375d816ef2",
+      "size_bytes": 423
+    },
+    {
+      "path": "skills/personaplex/fixtures/p6_p7_p8/memory_upsert_document_fixture.json",
+      "sha256": "8c3a845c86523aa750492656da35b4b648d30beb1496c6692dc2deb81c3824be",
+      "size_bytes": 602
+    },
+    {
+      "path": "skills/personaplex/sanity_p6_p7_p8_combined.sh",
+      "sha256": "6897c1ab520fb6cc8fc7a33966a2fee2c9651d57e10700e49bc7b3fbb1b39e61",
+      "size_bytes": 1254
+    },
+    {
+      "path": "skills/personaplex/sanity_p6_real_memory_upsert.sh",
+      "sha256": "c1ad381e3d0081dbf7d7feb19f95d3232c600a7d4d26a36a4ade14c0d1772031",
+      "size_bytes": 587
+    },
+    {
+      "path": "skills/personaplex/sanity_p7_real_evidence_case.sh",
+      "sha256": "21077ed22e94f1f43c7e93c71dcb2417b98ad09dc464a77160a814b78dc2c08f",
+      "size_bytes": 622
+    },
+    {
+      "path": "skills/personaplex/sanity_p8_live_deepgram.sh",
+      "sha256": "c811d0cc5c9283328c99fd098172ba23ca70b940a30608effb3c7c0f91190810",
+      "size_bytes": 1084
+    },
+    {
+      "path": "skills/personaplex/scripts/__init__.py",
+      "sha256": "139d4e9eff40ee3c177a86d40dc626b8f06ace3c5b38d66458367d1b3dd80215",
+      "size_bytes": 67
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_deepgram_live.py",
+      "sha256": "3d9541b7fac6a8192d385bf4fc6cf56930c03850f14845504e3ac3ea08af4287",
+      "size_bytes": 11407
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_combined_probe.py",
+      "sha256": "94ab9196467ada8725d43ebb72fdc00004664e379094eca09ea374a89a0fc149",
+      "size_bytes": 9108
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_live_services.py",
+      "sha256": "2d363251bae9e6d92a6f209c6e82e38e0a450e75d7de3a4e7e2edc3f6e69c64e",
+      "size_bytes": 16392
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p6_real_memory_upsert_probe.py",
+      "sha256": "98234db5efd796e0bfb5e5b681615afdca8a85add102b6a86210f3b82ecfa564",
+      "size_bytes": 1743
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p7_real_evidence_case_probe.py",
+      "sha256": "476ffd9965e49ed212f0ce59aa010d90da4b9e268bea967f2bd66d0996e573d9",
+      "size_bytes": 1643
+    },
+    {
+      "path": "skills/personaplex/scripts/personaplex_p8_live_deepgram_probe.py",
+      "sha256": "7cce5d764e027d59b380d33994ff618747743436fc840442b436aeb8555dcd23",
+      "size_bytes": 159
+    },
+    {
+      "path": "skills/personaplex/tests/test_p6_p7_p8_real_services.py",
+      "sha256": "c30ac1837236070b94988b300c03f4ca1fa56d9d1179e5aaf0936bc79997fbda",
+      "size_bytes": 10079
+    }
+  ],
+  "local_generation_sanity": {
+    "fallback_sanity_scripts": "p6, p7, p8, and combined scripts exited 0 in non-strict fallback mode in the artifact build sandbox",
+    "real_service_proof_claimed": false,
+    "unit_tests": "Ran 8 tests, OK"
+  },
+  "real_service_targets": {
+    "p6_memory_upsert": {
+      "default_base_url": "http://127.0.0.1:8601",
+      "endpoint": "POST /upsert",
+      "real_flag": "real_memory_upsert"
+    },
+    "p7_evidence_case": {
+      "default_base_url": "http://127.0.0.1:8601",
+      "endpoint": "POST /create-evidence-case",
+      "real_flag": "real_create_evidence_case"
+    },
+    "p8_deepgram": {
+      "audio_env": "PERSONAPLEX_P8_AUDIO_PATH",
+      "auth_env": "DEEPGRAM_API_KEY",
+      "default_url": "wss://api.deepgram.com/v1/listen",
+      "real_condition": "live websocket receives at least one speech_final=true event",
+      "real_flag": "real_deepgram"
+    }
+  },
+  "schema": "personaplex.p6_p7_p8.real_services_solution_manifest.v1",
+  "source_bundle": {
+    "files_read": [
+      "CREATION_BRIEF.md",
+      "HANDOFF.md",
+      "GOAL.md",
+      "P3P5_RECEIPT.json",
+      "SNIPPETS.md"
+    ],
+    "sandbox_path": "/mnt/data/creation-bundle-attachment.zip",
+    "sha256": "751838e2f8297fb55a2f6625cce71d46589e9e1eb4ca9b0c1255e8924550b05e",
+    "uploaded_name": "creation-bundle-attachment.zip"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "personaplex.p7.evidence_case_fallback.v1",
+  "selected_route": "/memory /clarify",
+  "can_answer": false,
+  "clarify_packet": {
+    "reason": "evidence_case_service_unavailable",
+    "message": "Create a SPARTA evidence case before releasing a substantive compliance claim."
+  },
+  "claim_boundary": "Fallback clarify packets are deterministic safety behavior, not proof of a real evidence-case response."
+}

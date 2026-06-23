@@ -1,0 +1,32 @@
+{
+  "bundle_name": "personaplex-decision-tree-prompt-improvements-update-bundle",
+  "generated_at_utc": "2026-06-23T14:13:18+00:00",
+  "scope": "Greenfield finished-file chart/doc sanity artifact bundle only; not live PersonaPlex wrapper implementation proof.",
+  "source_zip_sha256": "d28ae4b1be74f2b2874a8bb4c807382af205fc2845ea8b419607c3e8d6504841",
+  "prompt_improvements": {
+    "included": true,
+    "primary_location": "scratch.md#prompt-improvements-for-next-turn",
+    "visible_chart_note": "reviews/personaplex-deepgram/compliance-memory-decision-tree.html includes a Prompt Improvements Loop section.",
+    "required_next_turn_behavior": "Read prompt_improvements before the next WebGPT round or implementation turn."
+  },
+  "files": [
+    {
+      "path": "reviews/personaplex-deepgram/compliance-memory-decision-tree.dag.json",
+      "purpose": "Complete replacement DAG JSON source model for the PersonaPlex compliance memory routing decision tree.",
+      "bytes": 13623,
+      "sha256": "5f34ead401f95b0b7ac275281a546b32ff90eea7664ecb1c339574bfb93fb06c"
+    },
+    {
+      "path": "reviews/personaplex-deepgram/compliance-memory-decision-tree.html",
+      "purpose": "Complete replacement standalone HTML chart for the decision tree, persistence/authority contract, and prompt-improvement loop.",
+      "bytes": 17581,
+      "sha256": "6aa66b7a6e4806771b80efa11ed2273df5fc4712fa63464d9797409b7bbcc354"
+    },
+    {
+      "path": "scratch.md",
+      "purpose": "Complete replacement source-model notes, route contract, persistence contract, MVP patch focus, later verification stop condition, and prompt_improvements section.",
+      "bytes": 19418,
+      "sha256": "da9defb3ca529fb254a5c36509f71f2c01b9b245b872d00f56ccdce77c639d70"
+    }
+  ]
+}

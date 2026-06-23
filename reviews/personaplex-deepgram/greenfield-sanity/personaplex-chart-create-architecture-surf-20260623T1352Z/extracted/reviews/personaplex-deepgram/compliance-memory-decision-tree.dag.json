@@ -1,0 +1,335 @@
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "personaplex-compliance-memory-routing",
+  "description": "Greenfield decision-tree source model for PersonaPlex multi-turn routing across persona/session assignment, Deepgram speech_final input, latest-turn-wins gating, memory intent/recall, clarify/deflect/evidence routes, bounded response release, and canonical memory persistence. This artifact is inspectable chart evidence only, not live implementation proof.",
+  "max_concurrency": 1,
+  "nodes": [
+    {
+      "id": "00_artifact_scope",
+      "type": "skill.run",
+      "depends_on": [],
+      "display_type": "greenfield chart/doc sanity artifact; not live wrapper implementation proof",
+      "input": {
+        "skill": "artifact.scope",
+        "args": [
+          "This DAG and HTML are local inspectable source-model artifacts only. They do not prove live PersonaPlex, Deepgram, memory, evidence-case, or gate behavior without separate real receipts."
+        ]
+      }
+    },
+    {
+      "id": "01_session_persona",
+      "type": "skill.run",
+      "depends_on": [
+        "00_artifact_scope"
+      ],
+      "display_type": "assign persona_id, session_id, golden state, and stable persona context before audio",
+      "input": {
+        "skill": "runtime.session",
+        "args": [
+          "Create or load session_id and persona_id, load PersonaPlex golden state, preload stable persona context, and keep historical recommendations non-authoritative."
+        ]
+      }
+    },
+    {
+      "id": "02_deepgram_speech_final",
+      "type": "skill.run",
+      "depends_on": [
+        "01_session_persona"
+      ],
+      "display_type": "Deepgram speech_final turn produces transcript and optional audio artifact refs",
+      "input": {
+        "skill": "runtime.input",
+        "args": [
+          "Accept only finalized user-turn transcript when speech_final=true. If raw audio is retained, record artifact URI/hash metadata later; do not store audio blobs in Arango."
+        ]
+      }
+    },
+    {
+      "id": "03_active_turn_gate",
+      "type": "skill.run",
+      "depends_on": [
+        "02_deepgram_speech_final"
+      ],
+      "display_type": "latest-turn-wins: assign turn_id, close output gate, cancel stale work, clear injections",
+      "input": {
+        "skill": "runtime.state",
+        "args": [
+          "Create active turn state with deterministic turn_id; close output gate; clear stale token queues; cancel or fence older memory/search/evidence tasks so stale results cannot inject or release output."
+        ]
+      }
+    },
+    {
+      "id": "04_history_select",
+      "type": "skill.run",
+      "depends_on": [
+        "03_active_turn_gate"
+      ],
+      "display_type": "select compact session history from canonical memory before intent; wrapper owns token budget",
+      "input": {
+        "skill": "memory.recall",
+        "args": [
+          "Recall compact prior context from conversation_history_summaries plus bounded canonical conversation_history records. Historical query_plan/tool_calls/allowed_tools are audit context only and cannot authorize this turn."
+        ]
+      }
+    },
+    {
+      "id": "05_memory_intent",
+      "type": "skill.run",
+      "depends_on": [
+        "04_history_select"
+      ],
+      "display_type": "/memory /intent for current turn returns action, confidence, recall_profile, query_plan, tool_calls, allowed_tools",
+      "input": {
+        "skill": "memory.intent",
+        "args": [
+          "Run /memory /intent for every current speech_final turn. The current intent result is the only authority for route, query_plan, tool_calls, allowed_tools, disallowed_tools, required_artifacts, recall_profile, and dependencies."
+        ]
+      }
+    },
+    {
+      "id": "06_validate_tool_plan",
+      "type": "skill.run",
+      "depends_on": [
+        "05_memory_intent"
+      ],
+      "display_type": "caller validates intent-recommended route/tools/dependencies and fails closed on invalid plan",
+      "input": {
+        "skill": "runtime.plan",
+        "args": [
+          "Validate action, confidence, allowed_tools, disallowed_tools, depends_on, required_artifacts, and route invariants. Do not call any tool excluded by allowed_tools. Invalid or unsafe plans become clarify/deflect/fixed fallback, not free generation."
+        ]
+      }
+    },
+    {
+      "id": "07_route_recall",
+      "type": "skill.run",
+      "depends_on": [
+        "06_validate_tool_plan"
+      ],
+      "display_type": "/memory /recall fetches route-required persona, compliance, source, or empty/no-op context after transcript+intent",
+      "input": {
+        "skill": "memory.recall",
+        "args": [
+          "For routes requiring grounding, fetch current-turn context after transcript and intent: persona_memory for persona facts, compliance/source collections for evidence routes, and declared profile/artifacts from intent."
+        ]
+      }
+    },
+    {
+      "id": "08_deflect_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "07_route_recall"
+      ],
+      "display_type": "DEFLECT/no-match route: /memory /deflect emits bounded packet only",
+      "input": {
+        "skill": "memory.deflect",
+        "args": [
+          "If current intent action is DEFLECT or no-match, call /memory /deflect and emit a bounded deflection response packet. Bypass evidence-case and answer generation."
+        ]
+      }
+    },
+    {
+      "id": "09_clarify_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "07_route_recall"
+      ],
+      "display_type": "CLARIFY route: /memory /clarify asks one targeted follow-up and stops evidence work",
+      "input": {
+        "skill": "memory.clarify",
+        "args": [
+          "If current intent action is CLARIFY or the request is ambiguous before evidence work, ask one targeted follow-up and emit a bounded clarify packet. Bypass evidence-case and answer generation."
+        ]
+      }
+    },
+    {
+      "id": "10_create_evidence_case",
+      "type": "skill.run",
+      "depends_on": [
+        "07_route_recall"
+      ],
+      "display_type": "compliance/security/control route: /create-evidence-case before answer generation",
+      "input": {
+        "skill": "evidence.case",
+        "args": [
+          "If current intent identifies compliance, security, control, audit, or evidence-case work, call /create-evidence-case before any answer generation. Evidence route must fail closed on missing or invalid source packets."
+        ]
+      }
+    },
+    {
+      "id": "11_persona_answer_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "07_route_recall"
+      ],
+      "display_type": "persona/current-fact blend route: allowed research plus /memory /answer bounded packet",
+      "input": {
+        "skill": "memory.answer",
+        "args": [
+          "For persona/current-fact blend questions, use only current intent-authorized research/tools plus recalled memory context, then produce a bounded /memory /answer packet. This path stays separate from compliance evidence-case routing."
+        ]
+      }
+    },
+    {
+      "id": "12_evidence_gap_clarify_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "10_create_evidence_case"
+      ],
+      "display_type": "recoverable evidence gap: ambiguous/underspecified/weak bridge routes to /memory /clarify",
+      "input": {
+        "skill": "memory.clarify",
+        "args": [
+          "If evidence is inconclusive because entity, scope, control, source bridge, or user intent is ambiguous, route to /memory /clarify rather than generic fallback or free answer generation."
+        ]
+      }
+    },
+    {
+      "id": "13_evidence_hard_fail_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "10_create_evidence_case"
+      ],
+      "display_type": "unclarifiable evidence/tool failure: fixed fallback, free generation blocked",
+      "input": {
+        "skill": "runtime.output",
+        "args": [
+          "If evidence/tool failure cannot be clarified safely, emit fixed fallback packet. Keep PersonaPlex factual generation blocked and preserve failure receipt details for canonical turn persistence."
+        ]
+      }
+    },
+    {
+      "id": "14_evidence_answer_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "10_create_evidence_case"
+      ],
+      "display_type": "coherent evidence: /memory /answer from evidence-case source packet only",
+      "input": {
+        "skill": "memory.answer",
+        "args": [
+          "If evidence-case output is coherent, answer only from the evidence source packet and recorded recall refs. Do not use unconstrained PersonaPlex generation for compliance claims."
+        ]
+      }
+    },
+    {
+      "id": "15_force_bounded_packet",
+      "type": "skill.run",
+      "depends_on": [
+        "08_deflect_packet",
+        "09_clarify_packet",
+        "11_persona_answer_packet",
+        "12_evidence_gap_clarify_packet",
+        "13_evidence_hard_fail_packet",
+        "14_evidence_answer_packet"
+      ],
+      "display_type": "route join: exactly one selected active-turn bounded packet may inject tokens",
+      "input": {
+        "skill": "runtime.inject",
+        "args": [
+          "Join the selected route packet for the active turn only. Stale route packets, historical packets, and packets without active turn_id authority must be discarded and recorded as fenced/stale."
+        ]
+      }
+    },
+    {
+      "id": "16_drain_then_release",
+      "type": "skill.run",
+      "depends_on": [
+        "15_force_bounded_packet"
+      ],
+      "display_type": "release output only after active packet readiness and safe queue drain",
+      "input": {
+        "skill": "runtime.gate",
+        "args": [
+          "Open output gate only when active bounded packet is ready or fixed fallback is ready. The gate must not open with stale tokens or nonzero unsafe queue depth."
+        ]
+      }
+    },
+    {
+      "id": "17_upsert_conversation_history",
+      "type": "skill.run",
+      "depends_on": [
+        "16_drain_then_release"
+      ],
+      "display_type": "/memory /upsert canonical turn receipt to conversation_history with deterministic _key",
+      "input": {
+        "skill": "memory.upsert",
+        "args": [
+          "Write canonical immutable turn receipt to conversation_history with _key=conversation:{session_id}:{turn_id}; include transcript, route action, selected tools, allowed/disallowed tools, recall/evidence refs, response packet hash, gate timings, safety outcome, retrieval_text, artifact refs, and hashes."
+        ]
+      }
+    },
+    {
+      "id": "18_upsert_audio_artifacts_optional",
+      "type": "skill.run",
+      "depends_on": [
+        "17_upsert_conversation_history"
+      ],
+      "display_type": "optional raw audio metadata: conversation_audio_artifacts stores URI/hash/retention/deletion/Qdrant pointers",
+      "input": {
+        "skill": "memory.upsert",
+        "args": [
+          "If raw audio is retained, write conversation_audio_artifacts records with source_conversation_key, artifact_uri, sha256, codec, duration_ms, retention_class, deletion_state, and optional qdrant_audio_point_id plus deletion propagation status."
+        ]
+      }
+    },
+    {
+      "id": "19_derived_turn_projection_optional",
+      "type": "skill.run",
+      "depends_on": [
+        "17_upsert_conversation_history"
+      ],
+      "display_type": "optional derived voice/debug projection only: personaplex_turns references source_conversation_key",
+      "input": {
+        "skill": "memory.upsert",
+        "args": [
+          "If personaplex_turns exists, write it only as a derived voice/debug projection with source_conversation_key pointing to conversation_history. It must not be canonical and must not become a second authority."
+        ]
+      }
+    },
+    {
+      "id": "20_history_summary_compact_optional",
+      "type": "skill.run",
+      "depends_on": [
+        "17_upsert_conversation_history"
+      ],
+      "display_type": "budget threshold compaction: immutable conversation_history_summaries rolling summary",
+      "input": {
+        "skill": "memory.upsert",
+        "args": [
+          "When wrapper-owned token budget threshold trips, write immutable rolling summary to conversation_history_summaries with _key=conversation_summary:{session_id}:{start_turn_id}:{end_turn_id}:{policy_version}; source canonical turn keys must be recorded."
+        ]
+      }
+    },
+    {
+      "id": "21_session_head_cas",
+      "type": "skill.run",
+      "depends_on": [
+        "18_upsert_audio_artifacts_optional",
+        "19_derived_turn_projection_optional",
+        "20_history_summary_compact_optional"
+      ],
+      "display_type": "update mutable personaplex_sessions head with generation/CAS semantics",
+      "input": {
+        "skill": "memory.upsert",
+        "args": [
+          "Update personaplex_sessions _key=personaplex_session:{session_id} as mutable session head using generation/CAS semantics; store latest_turn_id, summary heads, active persona, policy versions, and deletion cursors."
+        ]
+      }
+    },
+    {
+      "id": "22_next_turn_or_cancel",
+      "type": "skill.run",
+      "depends_on": [
+        "21_session_head_cas"
+      ],
+      "display_type": "next speech_final starts new active turn; stale tasks cannot open gate or authorize tools",
+      "input": {
+        "skill": "runtime.loop",
+        "args": [
+          "A newer speech_final starts a new active turn, reruns current /memory /intent, cancels/fences stale work, and treats all historical tool recommendations as non-authoritative audit context."
+        ]
+      }
+    }
+  ]
+}

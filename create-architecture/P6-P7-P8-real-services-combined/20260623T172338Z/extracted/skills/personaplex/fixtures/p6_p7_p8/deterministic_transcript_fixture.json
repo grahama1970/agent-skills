@@ -1,0 +1,7 @@
+{
+  "schema": "personaplex.p8.deepgram_fixture.v1",
+  "source": "deterministic_fallback_fixture",
+  "transcript": "Focus on the west gateway.",
+  "speech_final": true,
+  "claim_boundary": "This fixture may drive deterministic routing tests, but it is not live Deepgram proof because receipts set real_deepgram=false."
+}

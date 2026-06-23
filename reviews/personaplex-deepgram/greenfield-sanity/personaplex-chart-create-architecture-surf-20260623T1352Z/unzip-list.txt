@@ -1,0 +1,9 @@
+Archive:  /home/graham/workspace/experiments/agent-skills/reviews/personaplex-deepgram/greenfield-sanity/personaplex-chart-create-architecture-surf-20260623T1352Z/source.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+    13623  2026-06-23 13:50   reviews/personaplex-deepgram/compliance-memory-decision-tree.dag.json
+    16224  2026-06-23 13:50   reviews/personaplex-deepgram/compliance-memory-decision-tree.html
+    15081  2026-06-23 13:50   scratch.md
+     1207  2026-06-23 13:50   MANIFEST.json
+---------                     -------
+    46135                     4 files

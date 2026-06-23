@@ -1,0 +1,20 @@
+{
+  "session_id": "p1-session",
+  "persona_id": "embry",
+  "turns": [
+    {
+      "transcript": "Are any of our internet-facing Ivanti Connect Secure gateways exposed to CVE-2025-0282, and have we seen signs of exploitation?",
+      "source": "deepgram_fixture",
+      "start_after_ms": 0,
+      "route_delay_ms": 240,
+      "user_audio_marker": "fixture-opus-turn-1"
+    },
+    {
+      "transcript": "Focus on the west gateway.",
+      "source": "deepgram_fixture",
+      "start_after_ms": 50,
+      "route_delay_ms": 0,
+      "user_audio_marker": "fixture-opus-turn-2"
+    }
+  ]
+}

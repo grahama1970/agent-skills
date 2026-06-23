@@ -1,0 +1,126 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import tempfile
+import unittest
+from pathlib import Path
+import sys
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+COMPAT = SCRIPTS / "_p2_compat"
+sys.path.insert(0, str(SCRIPTS))
+if COMPAT.exists():
+    sys.path.append(str(COMPAT))
+
+from personaplex_p2_server_callsite import P1ModelOwnerLoop, P2ServerCallsite, run_p2_server_callsite_smoke
+
+
+class P2ServerCallsiteIntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_callsite_routes_speech_final_through_p1_controller(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            callsite = P2ServerCallsite.deterministic(session_id="p2-test", persona_id="embry", run_root=Path(tmp))
+            receipt = await callsite.route_speech_final("Tell me what Embry remembers about Kai.", source="deepgram_fixture")
+            self.assertEqual(receipt["event"], "p2_speech_final_callsite_routed")
+            self.assertEqual(receipt["status"], "sealed")
+            self.assertEqual(receipt["route_endpoint"], "/memory /answer")
+            self.assertTrue(receipt["sealed_key"].startswith("conversation:p2-test:"))
+            final = callsite.final_receipt()
+            self.assertTrue(final["p2_callsite_used_p1_controller"])
+            self.assertEqual(final["release_receipts"][0]["queue_depth_at_release"], 0)
+
+    async def test_two_turn_server_callsite_supersession_keeps_stale_turn_out_of_current_receipts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            callsite = P2ServerCallsite.deterministic(session_id="p2-test", persona_id="embry", run_root=Path(tmp))
+            task1 = callsite.start_speech_final_task(
+                "Are any of our internet-facing Ivanti Connect Secure gateways exposed to CVE-2025-0282?",
+                source="deepgram_fixture",
+                user_audio_bytes=b"turn-1",
+                route_delay_ms=220,
+            )
+            await asyncio.sleep(0.04)
+            task2 = callsite.start_speech_final_task("Focus on the west gateway.", source="deepgram_fixture", user_audio_bytes=b"turn-2")
+            r1, r2 = await asyncio.gather(task1, task2)
+            final = callsite.final_receipt()
+            self.assertEqual(r1["status"], "stale_fenced")
+            self.assertEqual(r2["status"], "sealed")
+            self.assertEqual(final["sealed_turn_keys"], ["conversation:p2-test:000002"])
+            self.assertGreaterEqual(final["stale_rejection_count"], 1)
+            self.assertEqual(final["release_receipts"][0]["turn_id"], 2)
+            self.assertEqual(final["release_receipts"][0]["queue_depth_at_release"], 0)
+
+    async def test_output_boundary_is_data_stop_until_active_packet_is_ready(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            callsite = P2ServerCallsite.deterministic(session_id="p2-test", persona_id="embry", run_root=Path(tmp))
+            task = callsite.start_speech_final_task("Which asset should I use?", source="deepgram_fixture", route_delay_ms=50)
+            await asyncio.sleep(0)
+            self.assertTrue(callsite.output_blocked())
+            self.assertFalse(callsite.should_emit_model_output("free factual text while gate is closed", factual=True))
+            receipt = await task
+            self.assertEqual(receipt["status"], "sealed")
+            self.assertFalse(callsite.output_blocked())
+            final = callsite.final_receipt()
+            self.assertEqual(final["release_receipts"][0]["queue_depth_at_release"], 0)
+
+    async def test_ivanti_general_math_misroute_is_preserved_as_fail_closed_receipt(self):
+        fixture = {
+            "session_id": "p2-misroute",
+            "persona_id": "embry",
+            "turns": [
+                {"transcript": "Are any of our internet-facing Ivanti Connect Secure gateways exposed to CVE-2025-0282?", "start_after_ms": 0, "route_delay_ms": 0}
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            final = await run_p2_server_callsite_smoke(fixture, Path(tmp), force_ivanti_general_math=True)
+            self.assertTrue(final["ok"])
+            records = list((Path(tmp) / "conversation_history").glob("*.json"))
+            self.assertEqual(len(records), 1)
+            record = json.loads(records[0].read_text())
+            self.assertEqual(record["route_action"], "COMPLIANCE_ENDPOINT_MISMATCH")
+            self.assertEqual(record["response_packet"]["route_endpoint"], "fixed_fallback.intent_endpoint_mismatch")
+            self.assertFalse(record["response_packet"]["factual_claims_allowed"])
+
+    async def test_model_owner_loop_serializes_server_model_work(self):
+        order = []
+        async def step(op):
+            order.append(("start", op["id"]))
+            await asyncio.sleep(0.01)
+            order.append(("end", op["id"]))
+            return op["id"]
+        owner = P1ModelOwnerLoop(step)
+        results = await asyncio.gather(owner.submit({"id": 1}), owner.submit({"id": 2}), owner.submit({"id": 3}))
+        await owner.close()
+        self.assertEqual(results, [1, 2, 3])
+        self.assertEqual(owner.max_parallel_calls, 1)
+        self.assertEqual(order, [("start", 1), ("end", 1), ("start", 2), ("end", 2), ("start", 3), ("end", 3)])
+
+    async def test_server_level_smoke_writes_raw_p2_receipts(self):
+        fixture = {
+            "session_id": "p2-smoke",
+            "persona_id": "embry",
+            "turns": [
+                {"transcript": "Are any of our internet-facing Ivanti Connect Secure gateways exposed to CVE-2025-0282?", "start_after_ms": 0, "route_delay_ms": 180, "user_audio_marker": "one"},
+                {"transcript": "Focus on the west gateway.", "start_after_ms": 40, "route_delay_ms": 0, "user_audio_marker": "two"},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            final = await run_p2_server_callsite_smoke(fixture, Path(tmp))
+            self.assertTrue(final["ok"])
+            self.assertTrue(final["p2_callsite_used_p1_controller"])
+            self.assertEqual(final["sealed_turn_keys"], ["conversation:p2-smoke:000002"])
+            self.assertGreaterEqual(final["stale_rejection_count"], 1)
+            self.assertTrue(final["p2_speech_final_receipts"])
+
+    def test_patched_golden_state_server_contains_p2_callsite_markers(self):
+        server_path = SCRIPTS / "personaplex_golden_state_server.py"
+        if not server_path.exists():
+            self.skipTest("server replacement not present in isolated test path")
+        text = server_path.read_text(encoding="utf-8")
+        self.assertIn("make_p2_callsite_for_server", text)
+        self.assertIn("p2_callsite.route_speech_final", text)
+        self.assertIn("p2_callsite.output_blocked", text)
+        self.assertIn("--p2-run-root", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

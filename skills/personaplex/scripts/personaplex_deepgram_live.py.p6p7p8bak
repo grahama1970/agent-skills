@@ -1,0 +1,135 @@
+"""Deepgram live ASR bridge for the PersonaPlex golden-state wrapper."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import time
+from dataclasses import dataclass
+from typing import Any
+
+import aiohttp
+import numpy as np
+
+
+def ms_since(start: float) -> float:
+    return round((time.monotonic() - start) * 1000, 2)
+
+
+@dataclass
+class TranscriptTurn:
+    text: str
+    elapsed_ms: float
+    speech_final: bool
+    is_final: bool
+
+
+class OutputGate:
+    def __init__(self) -> None:
+        self.active = False
+        self.reason = ""
+        self.started_at = 0.0
+        self.released_at = 0.0
+
+    def close(self, reason: str) -> None:
+        self.active = True
+        self.reason = reason
+        self.started_at = time.monotonic()
+
+    def open(self) -> None:
+        self.active = False
+        self.released_at = time.monotonic()
+
+    def snapshot(self) -> dict[str, Any]:
+        return {
+            "active": self.active,
+            "reason": self.reason,
+            "elapsed_ms": ms_since(self.started_at) if self.active else 0.0,
+        }
+
+
+class DeepgramLiveClient:
+    def __init__(self, *, sample_rate: int, model: str = "nova-3", enabled: bool = True):
+        self.sample_rate = sample_rate
+        self.model = model
+        self.enabled = enabled and bool(os.environ.get("DEEPGRAM_API_KEY"))
+        self.audio_queue: asyncio.Queue[np.ndarray | None] = asyncio.Queue(maxsize=128)
+        self.turn_queue: asyncio.Queue[TranscriptTurn] = asyncio.Queue()
+        self.started_at = time.monotonic()
+        self._final_parts: list[str] = []
+
+    def enqueue_pcm(self, pcm: np.ndarray) -> None:
+        if not self.enabled:
+            return
+        try:
+            self.audio_queue.put_nowait(np.asarray(pcm, dtype=np.float32).copy())
+        except asyncio.QueueFull:
+            _ = self.audio_queue.get_nowait()
+            self.audio_queue.put_nowait(np.asarray(pcm, dtype=np.float32).copy())
+
+    async def close(self) -> None:
+        if self.enabled:
+            await self.audio_queue.put(None)
+
+    async def run(self) -> None:
+        if not self.enabled:
+            return
+        params = {
+            "model": self.model,
+            "encoding": "linear16",
+            "sample_rate": str(self.sample_rate),
+            "channels": "1",
+            "punctuate": "true",
+            "smart_format": "true",
+            "interim_results": "true",
+            "vad_events": "true",
+            "endpointing": "300",
+        }
+        url = "wss://api.deepgram.com/v1/listen?" + "&".join(f"{k}={v}" for k, v in params.items())
+        headers = {"Authorization": f"Token {os.environ['DEEPGRAM_API_KEY']}"}
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=None, connect=5)) as session:
+            async with session.ws_connect(url, headers=headers, heartbeat=10) as ws:
+                sender = asyncio.create_task(self._send_audio(ws))
+                try:
+                    async for message in ws:
+                        if message.type == aiohttp.WSMsgType.TEXT:
+                            self._handle_message(json.loads(message.data))
+                        elif message.type in {aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR}:
+                            break
+                finally:
+                    sender.cancel()
+
+    async def _send_audio(self, ws: aiohttp.ClientWebSocketResponse) -> None:
+        while True:
+            pcm = await self.audio_queue.get()
+            if pcm is None:
+                await ws.send_str(json.dumps({"type": "CloseStream"}))
+                return
+            pcm16 = np.clip(pcm, -1.0, 1.0)
+            await ws.send_bytes((pcm16 * 32767.0).astype("<i2").tobytes())
+
+    def _handle_message(self, payload: dict[str, Any]) -> None:
+        if payload.get("type") != "Results":
+            return
+        channel = payload.get("channel") or {}
+        alternatives = channel.get("alternatives") or []
+        is_final = bool(payload.get("is_final"))
+        speech_final = bool(payload.get("speech_final"))
+        transcript = (alternatives[0].get("transcript") if alternatives else "") or ""
+        transcript = transcript.strip()
+        if not transcript and not (speech_final and self._final_parts):
+            return
+        if is_final:
+            self._final_parts.append(transcript)
+        if speech_final:
+            full_transcript = " ".join(self._final_parts).strip() or transcript
+            self._final_parts.clear()
+            self.turn_queue.put_nowait(
+                TranscriptTurn(
+                    text=full_transcript,
+                    elapsed_ms=ms_since(self.started_at),
+                    speech_final=speech_final,
+                    is_final=is_final,
+                )
+            )

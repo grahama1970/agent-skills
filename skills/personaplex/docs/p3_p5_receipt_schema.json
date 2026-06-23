@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "claim_boundary": {
+      "type": "string"
+    },
+    "live_websocket": {
+      "type": "boolean"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "queue_depth_at_release": {
+      "type": "integer"
+    },
+    "real_create_evidence_case": {
+      "type": "boolean"
+    },
+    "real_deepgram": {
+      "type": "boolean"
+    },
+    "real_gpu_personaplex": {
+      "type": "boolean"
+    },
+    "real_memory_upsert": {
+      "type": "boolean"
+    },
+    "schema": {
+      "const": "personaplex.p3_p5_combined.final_receipt.v1"
+    },
+    "sealed_turn_keys": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "stale_rejection_count": {
+      "type": "integer"
+    },
+    "turn_count": {
+      "minimum": 2,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "ok",
+    "turn_count",
+    "live_websocket",
+    "real_deepgram",
+    "real_gpu_personaplex",
+    "real_memory_upsert",
+    "real_create_evidence_case",
+    "sealed_turn_keys",
+    "stale_rejection_count",
+    "memory_upsert_attempts",
+    "evidence_case_attempts"
+  ],
+  "title": "PersonaPlex P3-P5 Combined Final Receipt",
+  "type": "object"
+}

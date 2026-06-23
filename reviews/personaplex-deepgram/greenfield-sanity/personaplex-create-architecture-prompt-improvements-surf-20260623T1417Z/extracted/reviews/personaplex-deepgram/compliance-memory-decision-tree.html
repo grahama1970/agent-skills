@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PersonaPlex Compliance Memory Routing Decision Tree</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f5ef;
+      --panel: #fffdf8;
+      --ink: #191813;
+      --muted: #626057;
+      --line: #d9d2c4;
+      --soft: #eee7d8;
+      --accent: #5f5a43;
+      --danger: #7f1d1d;
+      --ok: #365314;
+      --blue: #1e3a5f;
+      --purple: #553c6b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(95, 90, 67, 0.10), transparent 36rem),
+        linear-gradient(180deg, #faf8f2 0%, var(--bg) 100%);
+      color: var(--ink);
+      font: 15px/1.5 var(--sans);
+    }
+
+    main {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    header.hero {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.92);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 18px 50px rgba(25, 24, 19, 0.08);
+    }
+
+    h1, h2, h3 { line-height: 1.15; margin: 0; }
+    h1 { font-size: clamp(30px, 5vw, 58px); letter-spacing: -0.05em; max-width: 980px; }
+    h2 { font-size: 22px; letter-spacing: -0.02em; }
+    h3 { font-size: 16px; letter-spacing: -0.01em; }
+    p { margin: 0; }
+    code { font-family: var(--mono); font-size: 0.93em; background: #f0ebdf; padding: 0.12em 0.35em; border-radius: 0.4em; }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 980px;
+      margin-top: 14px;
+      font-size: 18px;
+    }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .badge {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 13px;
+    }
+
+    .grid { display: grid; gap: 18px; margin-top: 18px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 860px) { .grid.two, .grid.three { grid-template-columns: 1fr; } }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.95);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(25, 24, 19, 0.05);
+    }
+    .panel h2, .panel h3 { margin-bottom: 10px; }
+    .panel p, .panel li { color: var(--muted); }
+    .panel strong { color: var(--ink); }
+    .warning { border-color: #e0b4a8; background: #fff7f2; }
+    .warning h2, .warning strong { color: var(--danger); }
+    .ok { border-color: #becda9; background: #f8fbf1; }
+    .ok h2, .ok strong { color: var(--ok); }
+
+    .flow-wrap {
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .flow {
+      min-width: 1080px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .stage {
+      position: relative;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 130px;
+    }
+    .stage::after {
+      content: "→";
+      position: absolute;
+      right: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9a927f;
+      font-weight: 900;
+      z-index: 1;
+    }
+    .stage.no-arrow::after, .lane .stage::after { content: none; }
+    .num { font-family: var(--mono); color: #817968; font-size: 12px; font-weight: 800; }
+    .stage h3 { margin: 5px 0 8px; }
+    .stage p { font-size: 13px; color: var(--muted); }
+
+    .branch-panel {
+      grid-column: 1 / -1;
+      border: 1px dashed #b7ad99;
+      background: rgba(255, 253, 248, 0.75);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .branch-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+    .lanes {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .lane {
+      border: 1px solid var(--line);
+      background: #fffdfa;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 160px;
+    }
+    .lane.deflect { border-left: 5px solid #6b7280; }
+    .lane.clarify { border-left: 5px solid #92400e; }
+    .lane.evidence { border-left: 5px solid #1e3a5f; }
+    .lane.persona { border-left: 5px solid #553c6b; }
+    .subroute {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 860px) {
+      .flow { min-width: 820px; }
+      .lanes { grid-template-columns: 1fr 1fr; }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    th, td { border-bottom: 1px solid var(--line); padding: 11px 10px; text-align: left; vertical-align: top; }
+    th { color: var(--accent); background: #f0ebdf; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    tr:last-child td { border-bottom: 0; }
+    td { color: var(--muted); }
+
+    ul { margin: 0; padding-left: 20px; }
+    li + li { margin-top: 8px; }
+
+    .file-note {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: #fbf8ef;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <h1>PersonaPlex Compliance Memory Routing Decision Tree</h1>
+    <p class="subtitle">Greenfield sanity chart for realistic multi-turn voice use: persona/session context is assigned before audio, compact canonical history is selected before intent, current memory intent authorizes route/tools, compliance questions fail closed through evidence-case gates, bounded packets control output, and completed turns persist to the canonical conversation ledger.</p>
+    <div class="badge-row" aria-label="Architecture badges">
+      <span class="badge">Chart/doc artifact only</span>
+      <span class="badge">Latest-turn-wins</span>
+      <span class="badge">Fail-closed compliance</span>
+      <span class="badge"><code>conversation_history</code> canonical</span>
+      <span class="badge">Historical tool plans non-authoritative</span>
+    </div>
+  </header>
+
+  <section class="grid two" aria-label="Scope and question">
+    <article class="panel warning">
+      <h2>Source Model Boundary</h2>
+      <p><strong>This page is not implementation proof.</strong> It is a local, inspectable chart/doc artifact created to describe the agreed architecture. Live readiness still requires real receipts, command output, endpoint responses, screenshots/CDP artifacts, logs, hashes, and route-specific validation evidence.</p>
+    </article>
+    <article class="panel ok">
+      <h2>Primary Route Question</h2>
+      <p>Does every realistic multi-turn compliance conversation pass through persona assignment, history selection, current-turn intent/tool authorization, recall, clarify/deflect/evidence gates, bounded output gating, and canonical memory persistence before PersonaPlex is allowed to continue?</p>
+    </article>
+  </section>
+
+  <section class="panel" aria-labelledby="flow-title">
+    <h2 id="flow-title">Decision Flow</h2>
+    <div class="flow-wrap" role="img" aria-label="PersonaPlex memory routing decision flow">
+      <div class="flow">
+        <div class="stage"><span class="num">00</span><h3>Artifact scope</h3><p>Greenfield chart/doc sanity artifact. Not live wrapper implementation proof.</p></div>
+        <div class="stage"><span class="num">01</span><h3>Session + persona</h3><p>Assign <code>session_id</code>, <code>persona_id</code>, golden state, and stable context before audio.</p></div>
+        <div class="stage"><span class="num">02</span><h3>Deepgram turn</h3><p>Accept transcript only on <code>speech_final=true</code>. Audio blob storage is not an Arango concern.</p></div>
+        <div class="stage"><span class="num">03</span><h3>Active turn gate</h3><p>Create <code>turn_id</code>, close output, cancel/fence stale work, clear stale injections.</p></div>
+        <div class="stage"><span class="num">04</span><h3>History select</h3><p>Recall compact history from canonical ledger/summaries. Wrapper owns token budget.</p></div>
+        <div class="stage no-arrow"><span class="num">05</span><h3>Memory intent</h3><p>Current <code>/memory /intent</code> returns action, confidence, recall profile, tool calls, dependencies.</p></div>
+
+        <div class="stage"><span class="num">06</span><h3>Validate plan</h3><p>Caller validates <code>allowed_tools</code>, <code>disallowed_tools</code>, required artifacts, and route invariants.</p></div>
+        <div class="stage"><span class="num">07</span><h3>Route recall</h3><p>Fetch route-required persona, compliance, source, or empty/no-op context after transcript and intent.</p></div>
+        <div class="stage no-arrow" style="grid-column: span 4;"><span class="num">08-14</span><h3>Route-selected branch</h3><p>Exactly one route family should create the active bounded packet. Deflect/clarify bypass evidence-case. Compliance enters evidence-case before answer generation.</p></div>
+
+        <div class="branch-panel">
+          <div class="branch-title"><span>Route-selected branch family</span><span>Only current-turn intent can authorize tools</span></div>
+          <div class="lanes">
+            <div class="lane deflect"><span class="num">08</span><h3>DEFLECT</h3><p><code>/memory /deflect</code> emits a bounded deflection packet. No free PersonaPlex generation.</p></div>
+            <div class="lane clarify"><span class="num">09</span><h3>CLARIFY</h3><p><code>/memory /clarify</code> asks one targeted follow-up and stops evidence work.</p></div>
+            <div class="lane evidence"><span class="num">10, 12-14</span><h3>Compliance evidence</h3><p><code>/create-evidence-case</code> is mandatory for compliance/security/control routes before answer generation.</p><div class="subroute"><span><strong>Recoverable gap:</strong> route to <code>/memory /clarify</code>.</span><span><strong>Hard failure:</strong> fixed fallback; free generation blocked.</span><span><strong>Coherent evidence:</strong> <code>/memory /answer</code> from source packet only.</span></div></div>
+            <div class="lane persona"><span class="num">11</span><h3>Persona/current fact</h3><p>Use current intent-authorized research plus memory context, then bounded <code>/memory /answer</code>. Separate from compliance evidence-case.</p></div>
+          </div>
+        </div>
+
+        <div class="stage"><span class="num">15</span><h3>Bounded packet join</h3><p>Exactly one selected active-turn packet may inject tokens. Stale packets are discarded.</p></div>
+        <div class="stage"><span class="num">16</span><h3>Drain then release</h3><p>Output opens only after active packet readiness and safe queue drain. No stale or unsafe queue release.</p></div>
+        <div class="stage"><span class="num">17</span><h3>Canonical turn upsert</h3><p><code>/memory /upsert</code> writes immutable receipt to <code>conversation_history</code>.</p></div>
+        <div class="stage"><span class="num">18-20</span><h3>Optional projections</h3><p>Audio metadata, derived debug turn projection, and rolling summaries are written only in their proper stores.</p></div>
+        <div class="stage"><span class="num">21</span><h3>Session head CAS</h3><p>Update <code>personaplex_sessions</code> as mutable head using generation/CAS semantics.</p></div>
+        <div class="stage no-arrow"><span class="num">22</span><h3>Next turn</h3><p>New <code>speech_final</code> starts a fresh active turn and reruns current intent authorization.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid two" aria-label="Persistence and authority">
+    <article class="panel">
+      <h2>Canonical Persistence Model</h2>
+      <table>
+        <thead><tr><th>Store</th><th>Authority</th><th>Required semantics</th></tr></thead>
+        <tbody>
+          <tr><td><code>conversation_history</code></td><td>Canonical immutable turn ledger</td><td><code>conversation:{session_id}:{turn_id}</code>; transcript, route, selected tools, recall/evidence refs, response packet hash, gate timings, safety outcome, retrieval text, artifact refs, hashes.</td></tr>
+          <tr><td><code>conversation_history_summaries</code></td><td>Immutable rolling summaries</td><td><code>conversation_summary:{session_id}:{start_turn_id}:{end_turn_id}:{policy_version}</code>; source canonical turn keys recorded.</td></tr>
+          <tr><td><code>personaplex_sessions</code></td><td>Mutable session head</td><td><code>personaplex_session:{session_id}</code>; generation/CAS update; latest turn, summary head, persona, policy versions, deletion cursors.</td></tr>
+          <tr><td><code>conversation_audio_artifacts</code></td><td>Optional raw audio metadata</td><td>Artifact URI, sha256, codec, duration, retention class, deletion state, optional Qdrant audio point ID and deletion propagation status.</td></tr>
+          <tr><td><code>personaplex_turns</code></td><td>Optional derived projection only</td><td>Voice/debug convenience view with <code>source_conversation_key</code>; never canonical and never a second authority.</td></tr>
+        </tbody>
+      </table>
+    </article>
+    <article class="panel">
+      <h2>Authority Boundaries</h2>
+      <ul>
+        <li><strong>Current intent only:</strong> <code>/memory /intent</code> must run for every current <code>speech_final</code> turn.</li>
+        <li><strong>Historical recommendations are context only:</strong> old <code>query_plan</code>, <code>tool_calls</code>, <code>allowed_tools</code>, and <code>disallowed_tools</code> are audit records, not authorization.</li>
+        <li><strong>Allowed tools are binding:</strong> the wrapper must not call tools excluded by the current intent result.</li>
+        <li><strong>Compliance fails closed:</strong> ambiguous evidence clarifies; unclarifiable evidence/tool failure uses fixed fallback; coherent evidence answers only from the source packet.</li>
+        <li><strong>Latest-turn-wins:</strong> stale tasks cannot enqueue tokens, open the gate, or authorize tool execution.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid three" aria-label="MVP focus">
+    <article class="panel"><h2>MVP Patch Focus</h2><ul><li>Per-turn <code>turn_id</code> state and closed output gate on user audio.</li><li>Memory-backed history selection with wrapper-owned budget.</li><li>Intent-selected route/tool validation.</li><li>Bounded packet injection and safe queue release.</li><li>Canonical persistence and CAS session head.</li></ul></article>
+    <article class="panel"><h2>Proof Needed Later</h2><ul><li>DAG validation output.</li><li>Fresh HTML screenshot/CDP proof.</li><li>Live <code>speech_final=true</code> receipt.</li><li>Persona answer, clarify/deflect, evidence-case, persistence, and two-turn stale-cancel receipts.</li><li>Gate release proof with no stale tokens or unsafe queue depth.</li></ul></article>
+    <article class="panel"><h2>Explicit Non-Claims</h2><ul><li>This chart does not prove Deepgram integration.</li><li>This chart does not prove memory or evidence-case endpoints.</li><li>This chart does not prove production rollback, migration, cleanup, or browser behavior.</li><li>This chart is suitable for inspectable architecture sanity review only.</li></ul></article>
+  </section>
+
+
+  <section class="grid two" aria-label="Prompt improvements loop">
+    <article class="panel">
+      <h2>Prompt Improvements Loop</h2>
+      <p>The source notes include a required <code>prompt_improvements</code> section. The project agent must read it before the next WebGPT round or implementation turn.</p>
+      <ul>
+        <li>Include the downloaded zip checksum and isolated sanity report before asking for another creation round.</li>
+        <li>Name the exact missing contract item instead of asking for a general evaluation.</li>
+        <li>Ask for a replacement or update zip bundle, not prose, when files are required.</li>
+        <li>Ask clarifying questions only when material ambiguity remains.</li>
+      </ul>
+    </article>
+    <article class="panel">
+      <h2>Next Prompt Hygiene</h2>
+      <ul>
+        <li>Include the current create-architecture contract excerpt that requires <code>prompt_improvements</code>.</li>
+        <li>Include exact facts, files, checksums, and local command output needed for the next turn.</li>
+        <li>Avoid review-gate words such as PASS, NEEDS_CHANGES, verdict, audit, code review, or gate until there is implementation evidence to evaluate.</li>
+        <li>Keep this chart bounded as greenfield sanity evidence, not live PersonaPlex wrapper proof.</li>
+      </ul>
+    </article>
+  </section>
+
+  <div class="file-note">
+    Source files: reviews/personaplex-deepgram/compliance-memory-decision-tree.dag.json, reviews/personaplex-deepgram/compliance-memory-decision-tree.html, scratch.md
+  </div>
+</main>
+</body>
+</html>

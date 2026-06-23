@@ -1,0 +1,26 @@
+{
+  "ask_run_dir": "/mnt/storage12tb/skills/ask/outputs/personaplex-deepgram-review-code/personaplex-deepgram-round1-zip-20260622T2056Z",
+  "ask_status": "/mnt/storage12tb/skills/ask/outputs/personaplex-deepgram-review-code/personaplex-deepgram-round1-zip-20260622T2056Z/status.json",
+  "ask_wrapper_state": "completed_degraded_parser",
+  "ask_wrapper_verdict": "BLOCKED",
+  "blocking_count": 10,
+  "blocking_ids": [
+    "PPX-LIVE-001",
+    "PPX-LIVE-002",
+    "PPX-LIVE-003",
+    "PPX-LIVE-004",
+    "PPX-LIVE-005",
+    "PPX-LIVE-006",
+    "PPX-LIVE-007",
+    "PPX-LIVE-008",
+    "PPX-LIVE-009",
+    "PPX-LIVE-010"
+  ],
+  "local_reviewer_copy": "/home/graham/workspace/experiments/agent-skills/reviews/personaplex-deepgram/code-loop/rounds/001/reviewer.md",
+  "next_action": "patch accepted blocking findings, rerun deterministic probes, then submit round 2",
+  "parser_note": "Raw response contains sentinel and readable reviewer findings, but is not strict JSON; preserved as advisory reviewer evidence.",
+  "raw_response": "/mnt/storage12tb/skills/ask/outputs/personaplex-deepgram-review-code/personaplex-deepgram-round1-zip-20260622T2056Z/round-1/02_response.raw.md",
+  "reviewer_raw_verdict": "NEEDS_CHANGES",
+  "round": 1,
+  "state": "needs_patch"
+}

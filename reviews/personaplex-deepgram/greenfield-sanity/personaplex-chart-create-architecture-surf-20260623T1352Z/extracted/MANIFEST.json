@@ -1,0 +1,25 @@
+{
+  "bundle_name": "personaplex-decision-tree-update-bundle",
+  "generated_at_utc": "2026-06-23T13:50:44+00:00",
+  "scope": "Greenfield finished-file chart/doc sanity artifact bundle only; not live wrapper implementation proof.",
+  "files": [
+    {
+      "path": "reviews/personaplex-deepgram/compliance-memory-decision-tree.dag.json",
+      "purpose": "Complete replacement DAG JSON source model for the PersonaPlex compliance memory routing decision tree.",
+      "bytes": 13623,
+      "sha256": "5f34ead401f95b0b7ac275281a546b32ff90eea7664ecb1c339574bfb93fb06c"
+    },
+    {
+      "path": "reviews/personaplex-deepgram/compliance-memory-decision-tree.html",
+      "purpose": "Complete replacement standalone HTML review chart for the decision tree and persistence/authority contract.",
+      "bytes": 16224,
+      "sha256": "25e8011e2fcfb0fbe5d51f8301aa80858d0661f0f463341ff4b3caf10a632135"
+    },
+    {
+      "path": "scratch.md",
+      "purpose": "Complete replacement source-model notes, route contract, persistence contract, MVP patch focus, and later verification stop condition.",
+      "bytes": 15081,
+      "sha256": "76afa64ba5ab6bf438298807ab8ebd96c3e4ccd16dc696f38791538d84f7d138"
+    }
+  ]
+}

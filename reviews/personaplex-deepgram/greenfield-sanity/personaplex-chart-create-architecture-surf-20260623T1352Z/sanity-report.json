@@ -1,0 +1,40 @@
+{
+  "schema": "create_architecture.greenfield_sanity.v1",
+  "run_id": "personaplex-chart-create-architecture-surf-20260623T1352Z",
+  "scope": "greenfield_sanity_only_not_live_wrapper_proof",
+  "webgpt": {
+    "tab_id": "837354889",
+    "url": "https://chatgpt.com/g/g-p-6a3925407da08191a9a7c47ebd2bc948-orpheus-persona-plex/c/6a3a8d6e-9544-83ea-8287-c7653b6a42aa",
+    "surf_run_dir": "/mnt/storage12tb/skills/ask/outputs/personaplex-chart-create-architecture-surf/personaplex-chart-create-architecture-surf-20260623T1352Z",
+    "transport_status": "recovered_focus_changed",
+    "transport_degraded": true,
+    "raw_contains_sentinel": true,
+    "controlled_tab_id": "837354889"
+  },
+  "bundle": {
+    "downloaded_path": "/home/graham/Downloads/personaplex-decision-tree-update-bundle.zip",
+    "local_source_zip": "source.zip",
+    "sha256": "d28ae4b1be74f2b2874a8bb4c807382af205fc2845ea8b419607c3e8d6504841",
+    "file_count": 4
+  },
+  "checks": {
+    "zip_downloaded": true,
+    "zip_extracted": true,
+    "manifest_checksums_match": true,
+    "dag_validate_ok": true,
+    "dag_node_count": 23,
+    "dag_layer_count": 16,
+    "dag_warnings": [],
+    "dag_errors": [],
+    "no_todo_implement": true,
+    "no_personaplex_turns_as_canonical": true,
+    "html_required_anchors_present": [
+      "conversation_history",
+      "conversation_history_summaries",
+      "personaplex_sessions",
+      "conversation_audio_artifacts",
+      "non-authoritative"
+    ]
+  },
+  "next_gate": "human_alignment_then_port_extracted_files_and_run_browser_verification"
+}

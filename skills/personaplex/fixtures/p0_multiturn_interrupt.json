@@ -1,0 +1,37 @@
+{
+  "fixture_id": "p0-multiturn-ivanti-west-gateway-interrupt",
+  "session_id": "p0-session",
+  "persona_id": "embry",
+  "description": "Turn 2 supersedes a compliance/security question while Turn 1 route work finishes late. Late Turn 1 callbacks must be fenced from output, receipts, memory writes, and session-head updates.",
+  "turns": [
+    {
+      "turn_name": "turn-1-superseded-compliance-question",
+      "start_after_ms": 0,
+      "transcript": "Are any of our internet-facing Ivanti Connect Secure gateways exposed to CVE-2025-0282, and have we seen signs of exploitation?",
+      "user_audio_marker": "opus-fixture-turn-1-ivanti-cve-2025-0282",
+      "intent_delay_ms": 0,
+      "route_delay_ms": 250,
+      "recall_delay_ms": 0,
+      "evidence_delay_ms": 0,
+      "answer_delay_ms": 0
+    },
+    {
+      "turn_name": "turn-2-active-west-gateway-focus",
+      "start_after_ms": 50,
+      "transcript": "Focus on the west gateway.",
+      "user_audio_marker": "opus-fixture-turn-2-west-gateway",
+      "intent_delay_ms": 0,
+      "route_delay_ms": 0,
+      "recall_delay_ms": 0,
+      "evidence_delay_ms": 0,
+      "answer_delay_ms": 0
+    }
+  ],
+  "expected": {
+    "sealed_turn_keys": ["conversation:p0-session:000002"],
+    "stale_turn_ids": [1],
+    "latest_turn_id": 2,
+    "queue_depth_at_release": 0,
+    "historical_tool_recommendations_authoritative": false
+  }
+}

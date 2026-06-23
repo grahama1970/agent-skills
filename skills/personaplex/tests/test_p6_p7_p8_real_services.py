@@ -1,0 +1,217 @@
+from __future__ import annotations
+
+import json
+import os
+import socket
+import sys
+import tempfile
+import threading
+import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any, ClassVar
+
+SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from personaplex_deepgram_live import deepgram_websocket_probe  # noqa: E402
+from personaplex_p3_p5_combined_probe import run_combined_probe  # noqa: E402
+from personaplex_p3_p5_live_services import (  # noqa: E402
+    build_conversation_document,
+    create_evidence_case,
+    find_inline_vector_paths,
+    memory_upsert,
+)
+
+
+class CapturingHandler(BaseHTTPRequestHandler):
+    captures: ClassVar[list[dict[str, Any]]] = []
+    response_status: ClassVar[int] = 200
+    response_body: ClassVar[dict[str, Any]] = {"ok": True}
+
+    def log_message(self, fmt: str, *args: Any) -> None:  # suppress noisy test output
+        return
+
+    def do_POST(self) -> None:  # noqa: N802 - http.server API
+        length = int(self.headers.get("Content-Length", "0"))
+        raw = self.rfile.read(length)
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except json.JSONDecodeError:
+            payload = {"raw": raw.decode("utf-8", errors="replace")}
+        self.__class__.captures.append({"path": self.path, "payload": payload})
+        body = json.dumps(self.__class__.response_body).encode("utf-8")
+        self.send_response(self.__class__.response_status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+class LocalHttpServer:
+    def __init__(self, response_status: int = 200, response_body: dict[str, Any] | None = None) -> None:
+        self.response_status = response_status
+        self.response_body = response_body if response_body is not None else {"ok": True}
+        self.server: ThreadingHTTPServer | None = None
+        self.thread: threading.Thread | None = None
+
+    def __enter__(self) -> "LocalHttpServer":
+        CapturingHandler.captures = []
+        CapturingHandler.response_status = self.response_status
+        CapturingHandler.response_body = self.response_body
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), CapturingHandler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if self.server:
+            self.server.shutdown()
+            self.server.server_close()
+        if self.thread:
+            self.thread.join(timeout=2)
+
+    @property
+    def url(self) -> str:
+        assert self.server is not None
+        host, port = self.server.server_address
+        return f"http://{host}:{port}"
+
+    @property
+    def captures(self) -> list[dict[str, Any]]:
+        return CapturingHandler.captures
+
+
+def unused_local_url() -> str:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", 0))
+    host, port = sock.getsockname()
+    sock.close()
+    return f"http://{host}:{port}"
+
+
+class P6P7P8RealServicesTests(unittest.TestCase):
+    def test_memory_upsert_hits_real_local_http_and_omits_vectors(self) -> None:
+        with tempfile.TemporaryDirectory() as td, LocalHttpServer(response_body={"ok": True, "stored": 1}) as server:
+            doc = build_conversation_document(session_id="s", turn_id=1, transcript="Focus on the west gateway.")
+            receipt = memory_upsert(documents=[doc], memory_url=server.url, out_dir=td, timeout=1)
+
+            self.assertTrue(receipt["attempted"])
+            self.assertTrue(receipt["real_memory_upsert"])
+            self.assertFalse(receipt["fallback_used"])
+            self.assertTrue(receipt["no_inline_vectors"])
+            self.assertEqual(server.captures[0]["path"], "/upsert")
+            payload = server.captures[0]["payload"]
+            self.assertEqual(payload["collection"], "conversation_history")
+            self.assertIn("retrieval_text", payload["documents"][0])
+            self.assertEqual(find_inline_vector_paths(payload), [])
+
+    def test_memory_upsert_falls_back_when_unreachable(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            doc = build_conversation_document(session_id="s", turn_id=2, transcript="Focus on the west gateway.")
+            receipt = memory_upsert(documents=[doc], memory_url=unused_local_url(), out_dir=td, timeout=0.2)
+
+            self.assertTrue(receipt["attempted"])
+            self.assertFalse(receipt["real_memory_upsert"])
+            self.assertTrue(receipt["fallback_used"])
+            self.assertTrue(receipt["local_fallback_paths"])
+            self.assertTrue(Path(receipt["local_fallback_paths"][0]).exists())
+
+    def test_memory_upsert_rejects_inline_vectors_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            doc = build_conversation_document(session_id="s", turn_id=3, transcript="bad")
+            doc["embedding"] = [0.1, 0.2]
+            receipt = memory_upsert(documents=[doc], memory_url=unused_local_url(), out_dir=td, timeout=0.2)
+
+            self.assertFalse(receipt["attempted"])
+            self.assertFalse(receipt["real_memory_upsert"])
+            self.assertFalse(receipt["no_inline_vectors"])
+            self.assertEqual(receipt["unavailable_reason"], "inline_vectors_rejected")
+            self.assertTrue(receipt["fail_closed"])
+
+    def test_evidence_case_hits_real_local_http_with_required_payload(self) -> None:
+        response = {"ok": True, "case_id": "case-1", "can_answer": False}
+        with tempfile.TemporaryDirectory() as td, LocalHttpServer(response_body=response) as server:
+            receipt = create_evidence_case(question="Focus on the west gateway.", evidence_case_url=server.url, out_dir=td, timeout=1)
+
+            self.assertTrue(receipt["attempted"])
+            self.assertTrue(receipt["real_create_evidence_case"])
+            self.assertFalse(receipt["fallback_used"])
+            self.assertEqual(server.captures[0]["path"], "/create-evidence-case")
+            payload = server.captures[0]["payload"]
+            self.assertEqual(payload["context_framework"], "SPARTA")
+            self.assertFalse(payload["enable_llm"])
+            self.assertFalse(payload["include_cae_tree"])
+            self.assertFalse(payload["fail_on_degraded_evidence"])
+
+    def test_evidence_case_falls_back_to_clarify_when_unreachable(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            receipt = create_evidence_case(question="Focus on the west gateway.", evidence_case_url=unused_local_url(), out_dir=td, timeout=0.2)
+
+            self.assertTrue(receipt["attempted"])
+            self.assertFalse(receipt["real_create_evidence_case"])
+            self.assertEqual(receipt["selected_route"], "/memory /clarify")
+            self.assertFalse(receipt["substantive_compliance_claim_released"])
+            self.assertTrue(Path(receipt["local_fallback_path"]).exists())
+
+    def test_deepgram_missing_key_uses_deterministic_fixture_not_real(self) -> None:
+        old_key = os.environ.pop("DEEPGRAM_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                receipt = deepgram_websocket_probe(api_key="", out_dir=td)
+                self.assertFalse(receipt["attempted"])
+                self.assertFalse(receipt["real_deepgram"])
+                self.assertEqual(receipt["deepgram_mode"], "deterministic_transcript_fixture")
+                self.assertEqual(receipt["unavailable_reason"], "missing_deepgram_api_key")
+                self.assertTrue(Path(receipt["fixture_path"]).exists())
+        finally:
+            if old_key is not None:
+                os.environ["DEEPGRAM_API_KEY"] = old_key
+
+    def test_combined_probe_records_honest_false_flags_for_unavailable_services(self) -> None:
+        old_key = os.environ.pop("DEEPGRAM_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                receipt = run_combined_probe(
+                    out_dir=td,
+                    memory_url=unused_local_url(),
+                    evidence_case_url=unused_local_url(),
+                    skip_deepgram=False,
+                    timeout=0.2,
+                    deepgram_timeout=0.2,
+                )
+                self.assertTrue(receipt["ok"])
+                self.assertFalse(receipt["real_memory_upsert"])
+                self.assertFalse(receipt["real_create_evidence_case"])
+                self.assertFalse(receipt["real_deepgram"])
+                self.assertEqual(receipt["stale_rejection_count"], 1)
+                self.assertEqual(receipt["queue_depth_at_release"], 0)
+                self.assertTrue(Path(receipt["final_receipt_path"]).exists())
+        finally:
+            if old_key is not None:
+                os.environ["DEEPGRAM_API_KEY"] = old_key
+
+    def test_combined_probe_records_real_p6_p7_when_local_services_succeed(self) -> None:
+        old_key = os.environ.pop("DEEPGRAM_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as td, LocalHttpServer(response_body={"ok": True}) as server:
+                receipt = run_combined_probe(
+                    out_dir=td,
+                    memory_url=server.url,
+                    evidence_case_url=server.url,
+                    skip_deepgram=True,
+                    timeout=1,
+                )
+            self.assertTrue(receipt["real_memory_upsert"])
+            self.assertTrue(receipt["real_create_evidence_case"])
+            self.assertFalse(receipt["real_deepgram"])
+            paths = [capture["path"] for capture in server.captures]
+            self.assertIn("/upsert", paths)
+            self.assertIn("/create-evidence-case", paths)
+        finally:
+            if old_key is not None:
+                os.environ["DEEPGRAM_API_KEY"] = old_key
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

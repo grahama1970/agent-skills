@@ -1,0 +1,48 @@
+{
+  "schema": "create_architecture.greenfield_sanity.v1",
+  "run_id": "personaplex-create-architecture-prompt-improvements-surf-20260623T1417Z",
+  "scope": "greenfield_sanity_only_not_live_wrapper_proof",
+  "webgpt": {
+    "tab_id": "837354889",
+    "url": "https://chatgpt.com/g/g-p-6a3925407da08191a9a7c47ebd2bc948-orpheus-persona-plex/c/6a3a8d6e-9544-83ea-8287-c7653b6a42aa",
+    "surf_run_dir": "/mnt/storage12tb/skills/ask/outputs/personaplex-create-architecture-surf/personaplex-create-architecture-prompt-improvements-surf-20260623T1417Z",
+    "transport_status": "recovered_focus_changed",
+    "transport_degraded": true,
+    "raw_contains_sentinel": true,
+    "controlled_tab_id": "837354889"
+  },
+  "bundle": {
+    "downloaded_path": "/home/graham/Downloads/personaplex-decision-tree-prompt-improvements-update-bundle.zip",
+    "local_source_zip": "source.zip",
+    "sha256": "36086a6c370007dc57acd87f6e3eae225125753df02156f082b6ccc1e7c08e44",
+    "file_count": 4
+  },
+  "checks": {
+    "zip_downloaded": true,
+    "zip_extracted": true,
+    "manifest_payload_checksums_match": true,
+    "dag_validate_ok": true,
+    "dag_node_count": 23,
+    "dag_layer_count": 16,
+    "dag_warnings": [],
+    "dag_errors": [],
+    "prompt_improvements_present": true,
+    "html_prompt_improvements_visible": true,
+    "no_todo_implement": true,
+    "no_personaplex_turns_as_canonical": true,
+    "html_http_200": true,
+    "ui_cdp_verified": true,
+    "ui_marker": ".codex/ui-verification/latest.json",
+    "ui_screenshot": "/tmp/codex-ui-verification/agent-skills/personaplex-compliance-memory-decision-tree/20260623T141602Z.png"
+  },
+  "local_port": {
+    "url": "http://127.0.0.1:8771/reviews/personaplex-deepgram/compliance-memory-decision-tree.html",
+    "server_command": "python3 -m http.server 8771 --bind 127.0.0.1"
+  },
+  "known_limits": [
+    "This proves chart/doc artifact sanity only, not live PersonaPlex wrapper implementation.",
+    "Surf transport for the WebGPT response is degraded because browser focus changed during no-activate mode, though controlled tab and sentinel proof matched.",
+    "The bundle manifest lists payload file checksums and prompt_improvements metadata; WebGPT response supplied the MANIFEST.json checksum separately."
+  ],
+  "next_gate": "Use this chart/doc artifact as inspectable architecture reference; live wrapper implementation still requires endpoint receipts and multi-turn voice harness proof."
+}

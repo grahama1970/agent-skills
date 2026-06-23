@@ -1,0 +1,568 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+"""P3-P5 live-service adapters and deterministic receipt helpers.
+
+This module is intentionally stdlib-first. It can attempt configured HTTP
+services, but the default path is deterministic fallback with explicit
+live-vs-fallback claim boundaries.
+"""
+
+from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+import asyncio
+import hashlib
+import json
+import os
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+
+VECTOR_KEYS = {"vector", "vectors", "embedding", "embeddings", "dense_vector", "audio_vector"}
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def stable_json(data: Any) -> str:
+    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sha256_json(data: Any) -> str:
+    return sha256_text(stable_json(data))
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def safe_key(key: str) -> str:
+    return key.replace(":", "_").replace("/", "_")
+
+
+def write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def append_jsonl(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    row = dict(data)
+    row.setdefault("created_at_utc", utc_now())
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, sort_keys=True, ensure_ascii=False) + "\n")
+
+
+def validate_no_inline_vectors(data: Any, path: str = "$") -> None:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if str(key).lower() in VECTOR_KEYS and isinstance(value, list):
+                raise ValueError(f"inline vector-like array is not allowed at {path}.{key}")
+            validate_no_inline_vectors(value, f"{path}.{key}")
+    elif isinstance(data, list):
+        if len(data) >= 8 and all(isinstance(item, float) for item in data):
+            raise ValueError(f"inline float vector is not allowed at {path}")
+        for idx, value in enumerate(data):
+            validate_no_inline_vectors(value, f"{path}[{idx}]")
+
+
+def http_post_json(url: str, payload: dict[str, Any], *, timeout: float = 10.0) -> dict[str, Any]:
+    started = time.monotonic()
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={"content-type": "application/json", "accept": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = response.read().decode("utf-8", errors="replace")
+            status_code = int(response.status)
+            headers = dict(response.headers.items())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        return {
+            "ok": False,
+            "status_code": int(exc.code),
+            "elapsed_ms": round((time.monotonic() - started) * 1000, 2),
+            "error_type": "HTTPError",
+            "body_excerpt": body[:2000],
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "status_code": None,
+            "elapsed_ms": round((time.monotonic() - started) * 1000, 2),
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        }
+    try:
+        parsed = json.loads(body)
+    except json.JSONDecodeError:
+        parsed = None
+    return {
+        "ok": 200 <= status_code < 300,
+        "status_code": status_code,
+        "elapsed_ms": round((time.monotonic() - started) * 1000, 2),
+        "json": parsed,
+        "body_excerpt": None if parsed is not None else body[:2000],
+        "headers": headers,
+    }
+
+
+@dataclass
+class AudioArtifactRef:
+    artifact_id: str
+    role: str
+    uri: str
+    path: str
+    sha256: str
+    codec: str
+    duration_ms: int | None
+    retention_class: str
+    deletion_state: str
+    qdrant_audio_embedding: dict[str, Any]
+    created_at_utc: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def write_audio_artifact(
+    run_root: Path,
+    *,
+    session_id: str,
+    turn_id: int,
+    role: str,
+    data: bytes,
+    codec: str,
+    retention_class: str = "p3_p5_combined_probe",
+) -> AudioArtifactRef:
+    digest = sha256_bytes(data)
+    safe_codec = codec.replace("/", "_").replace(".", "_")
+    rel = Path("conversation_audio_artifacts") / f"{session_id}-{turn_id:06d}-{role}-{digest[:16]}.{safe_codec}.bin"
+    out = run_root / rel
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(data)
+    ref = AudioArtifactRef(
+        artifact_id=f"audio:{digest}",
+        role=role,
+        uri=f"file://{out}",
+        path=str(rel),
+        sha256=digest,
+        codec=codec,
+        duration_ms=None,
+        retention_class=retention_class,
+        deletion_state="active",
+        qdrant_audio_embedding={
+            "available": False,
+            "qdrant_collection": None,
+            "qdrant_point_id": None,
+            "embedding_model": None,
+            "embedding_version": None,
+            "text_hash": None,
+            "semantic_sync_state": "not_synced",
+            "deletion_propagation_required": False,
+        },
+        created_at_utc=utc_now(),
+    )
+    write_json(run_root / "conversation_audio_artifacts" / f"{digest}.json", ref.to_dict())
+    return ref
+
+
+def deterministic_intent(transcript: str, *, turn_id: int, generation: int, session_id: str, persona_id: str) -> dict[str, Any]:
+    lower = transcript.lower()
+    compliance = any(term in lower for term in ("ivanti", "cve-", "gateway", "security", "compliance", "exploit"))
+    if compliance:
+        action = "COMPLIANCE"
+        allowed = ["memory.recall", "create-evidence-case", "memory.clarify", "memory.answer"]
+        tools = [
+            {"tool": "memory.recall", "endpoint": "/recall", "arguments": {"q": transcript, "scope": "sparta", "k": 8}},
+            {"tool": "create-evidence-case", "endpoint": "create-evidence-case", "arguments": {"q": transcript}},
+            {"tool": "memory.clarify", "endpoint": "/clarify", "arguments": {"q": transcript, "scope": "sparta"}},
+        ]
+        profile = "compliance.security.sparta.qra"
+        required = ["recall_snapshot", "evidence_case"]
+    else:
+        action = "ANSWER"
+        allowed = ["memory.recall", "memory.answer"]
+        tools = [
+            {"tool": "memory.recall", "endpoint": "/recall", "arguments": {"q": transcript, "scope": "persona_memory"}},
+            {"tool": "memory.answer", "endpoint": "/answer", "arguments": {"q": transcript, "scope": "persona_memory"}},
+        ]
+        profile = "persona.embry.current_fact_blend"
+        required = ["recall_snapshot", "answer_packet"]
+    entities = []
+    if "ivanti" in lower:
+        entities.append({"type": "product", "text": "Ivanti Connect Secure"})
+    if "cve-2025-0282" in lower:
+        entities.append({"type": "vulnerability", "text": "CVE-2025-0282"})
+    if "west gateway" in lower:
+        entities.append({"type": "asset_scope", "text": "west gateway"})
+    data = {
+        "ok": True,
+        "route_endpoint": "/memory /intent",
+        "turn_id": turn_id,
+        "generation": generation,
+        "authority_key": sha256_json({
+            "session_id": session_id,
+            "persona_id": persona_id,
+            "turn_id": turn_id,
+            "generation": generation,
+            "transcript_hash": sha256_text(transcript),
+        }),
+        "json": {
+            "action": action,
+            "confidence": 0.95 if compliance else 0.88,
+            "recall_profile": profile,
+            "query_plan": {"question_shaped_query": transcript, "requires_current_turn_authority": True},
+            "tool_calls": tools,
+            "allowed_tools": allowed,
+            "disallowed_tools": ["historical_tool_replay", "unbounded_personaplex_generation"],
+            "required_artifacts": required,
+            "extracted_entities": entities,
+            "depends_on": ["speech_final", "current_intent_authority"],
+        },
+        "created_at_utc": utc_now(),
+    }
+    data["receipt_hash"] = sha256_json(data)
+    return data
+
+
+def deterministic_recall(transcript: str, intent: dict[str, Any]) -> dict[str, Any]:
+    items = [
+        {
+            "id": "memory:west-gateway-candidate",
+            "collection": "conversation_history",
+            "text": "West gateway scope is referenced, but the exact canonical asset and scan window are not fully bridged in deterministic fallback.",
+            "source_hash": "deterministic-west-gateway",
+            "scores": {"bm25": 0.74, "dense": 0.70, "graph": 0.41, "freshness": 0.55},
+        },
+        {
+            "id": "memory:cve-2025-0282",
+            "collection": "compliance_sources",
+            "text": "Ivanti Connect Secure CVE-2025-0282 requires evidence-case handling before exposure claims.",
+            "source_hash": "deterministic-cve-2025-0282",
+            "scores": {"bm25": 0.86, "dense": 0.81, "graph": 0.52, "freshness": 0.77},
+        },
+    ]
+    data = {
+        "ok": True,
+        "route_endpoint": "/memory /recall",
+        "recall_profile": (intent.get("json") or {}).get("recall_profile"),
+        "confidence": 0.78,
+        "items": items,
+        "created_at_utc": utc_now(),
+    }
+    data["receipt_hash"] = sha256_json(data)
+    return data
+
+
+def build_response_packet(
+    *,
+    session_id: str,
+    turn_id: int,
+    generation: int,
+    route_endpoint: str,
+    text: str,
+    factual_claims_allowed: bool,
+    source_product_hash: str,
+    current_intent_authority_hash: str,
+) -> dict[str, Any]:
+    packet = {
+        "session_id": session_id,
+        "turn_id": turn_id,
+        "generation": generation,
+        "route_endpoint": route_endpoint,
+        "text": text,
+        "factual_claims_allowed": factual_claims_allowed,
+        "source_product_hash": source_product_hash,
+        "current_intent_authority_hash": current_intent_authority_hash,
+        "bounded": True,
+        "created_at_utc": utc_now(),
+    }
+    packet["packet_hash"] = sha256_json(packet)
+    return packet
+
+
+def build_conversation_history_record(
+    *,
+    run_root: Path,
+    session_id: str,
+    persona_id: str,
+    turn_id: int,
+    generation: int,
+    transcript: str,
+    intent: dict[str, Any],
+    recall: dict[str, Any],
+    evidence_attempt: dict[str, Any],
+    response_packet: dict[str, Any],
+    gate_receipt: dict[str, Any],
+    historical_tool_recommendations: list[dict[str, Any]],
+    source: str,
+    user_audio_bytes: bytes,
+) -> dict[str, Any]:
+    user_audio = write_audio_artifact(
+        run_root,
+        session_id=session_id,
+        turn_id=turn_id,
+        role="user",
+        data=user_audio_bytes or transcript.encode("utf-8"),
+        codec="live/opus" if source == "deepgram" else "fixture/text",
+    )
+    assistant_audio = write_audio_artifact(
+        run_root,
+        session_id=session_id,
+        turn_id=turn_id,
+        role="assistant",
+        data=response_packet["text"].encode("utf-8"),
+        codec="bounded/text-as-audio",
+    )
+    intent_json = intent.get("json") or {}
+    text_hash = sha256_json({"transcript": transcript, "response": response_packet["text"]})
+    record = {
+        "_key": f"conversation:{session_id}:{turn_id:06d}",
+        "collection": "conversation_history",
+        "schema_version": "personaplex.conversation_history.v1",
+        "policy_version": "p3-p5-live-websocket-memory-evidence-combined.v1",
+        "session_id": session_id,
+        "persona_id": persona_id,
+        "turn_id": turn_id,
+        "generation": generation,
+        "transcript": transcript,
+        "transcript_hash": sha256_text(transcript),
+        "route_action": intent_json.get("action"),
+        "current_intent_authority": {
+            "authoritative": True,
+            "turn_id": turn_id,
+            "generation": generation,
+            "authority_key": intent.get("authority_key"),
+            "intent_hash": intent.get("receipt_hash"),
+            "allowed_tools": intent_json.get("allowed_tools") or [],
+            "tool_calls": intent_json.get("tool_calls") or [],
+            "query_plan": intent_json.get("query_plan") or {},
+            "note": "only this current-turn intent product authorized route/tool execution",
+        },
+        "historical_tool_recommendations": [
+            {**item, "authoritative": False, "non_authoritative": True}
+            for item in historical_tool_recommendations
+        ],
+        "selected_tools": sorted({call.get("tool") for call in intent_json.get("tool_calls", []) if call.get("tool")}),
+        "extracted_entities": intent_json.get("extracted_entities") or [],
+        "recall_snapshot": recall,
+        "evidence_case_attempt": evidence_attempt,
+        "route_product_receipts": [recall, evidence_attempt],
+        "response_packet": response_packet,
+        "gate_receipt": gate_receipt,
+        "audio_artifacts": {"user": user_audio.to_dict(), "assistant": assistant_audio.to_dict()},
+        "qdrant_pointer_metadata": {
+            "semantic_text_available": True,
+            "qdrant_collection": None,
+            "qdrant_point_id": None,
+            "embedding_model": None,
+            "embedding_version": None,
+            "text_hash": text_hash,
+            "semantic_sync_state": "pending",
+        },
+        "retrieval_text": (
+            f"PersonaPlex session {session_id} turn {turn_id} for persona {persona_id}. "
+            f"User asked: {transcript}. Route action: {intent_json.get('action')}. "
+            f"Bounded response: {response_packet['text']}"
+        ),
+        "source_hashes": sorted({
+            *(str(item.get("source_hash")) for item in recall.get("items", []) if item.get("source_hash")),
+            str(evidence_attempt.get("receipt_hash", "")),
+        } - {""}),
+        "safety_outcome": "clarify_before_answer" if not response_packet["factual_claims_allowed"] else "bounded_answer",
+        "p3_p5_claim_boundary": {
+            "source_callback": source,
+            "local_record_written": True,
+            "real_memory_upsert_requires_receipt_flag": "real_memory_upsert",
+            "real_evidence_case_requires_receipt_flag": "real_create_evidence_case",
+        },
+        "created_at_utc": utc_now(),
+        "sealed_at_utc": utc_now(),
+    }
+    validate_no_inline_vectors(record)
+    return record
+
+
+async def maybe_probe_live_websocket(live_websocket_url: str | None, fixture: dict[str, Any]) -> dict[str, Any]:
+    if not live_websocket_url:
+        return {
+            "attempted": False,
+            "live_websocket": False,
+            "real_deepgram": False,
+            "real_gpu_personaplex": False,
+            "deepgram_mode": "deterministic_transcript_fixture",
+            "unavailable_reason": "live_websocket_url_not_configured",
+        }
+    # Keep this opportunistic. We only use aiohttp if already installed; otherwise
+    # deterministic fallback remains the truthful proof.
+    try:
+        import aiohttp  # type: ignore
+    except Exception as exc:
+        return {
+            "attempted": True,
+            "live_websocket": False,
+            "real_deepgram": False,
+            "real_gpu_personaplex": False,
+            "deepgram_mode": "deterministic_transcript_fixture",
+            "unavailable_reason": "aiohttp_not_available",
+            "error": str(exc),
+        }
+    events: list[dict[str, Any]] = []
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(live_websocket_url, timeout=10, receive_timeout=5) as ws:
+                # Receive a small number of control messages; the current server
+                # may need real audio to create turns, so absence is not success.
+                started = time.monotonic()
+                while time.monotonic() - started < 5:
+                    msg = await ws.receive(timeout=1)
+                    if msg.type == aiohttp.WSMsgType.BINARY and msg.data:
+                        kind = msg.data[0]
+                        payload = bytes(msg.data[1:])
+                        if kind == 4:
+                            try:
+                                events.append(json.loads(payload.decode("utf-8", errors="replace")))
+                            except Exception:
+                                events.append({"event": "control_unparseable", "bytes": len(payload)})
+                    if len(events) >= 5:
+                        break
+                await ws.close()
+    except Exception as exc:
+        return {
+            "attempted": True,
+            "live_websocket": False,
+            "real_deepgram": False,
+            "real_gpu_personaplex": False,
+            "deepgram_mode": "deterministic_transcript_fixture",
+            "unavailable_reason": "live_websocket_connection_failed",
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        }
+    asr = [e for e in events if e.get("event") == "asr_turn_final" and e.get("speech_final") is True]
+    p2_final = [e for e in events if e.get("event") in {"p2_session_final_receipt", "p3_p5_session_final_receipt"}]
+    return {
+        "attempted": True,
+        "live_websocket": len(asr) >= 2 or bool(p2_final),
+        "real_deepgram": len(asr) >= 2,
+        "real_gpu_personaplex": any(e.get("real_gpu_personaplex") is True for e in events),
+        "deepgram_mode": "real_deepgram" if len(asr) >= 2 else "deterministic_transcript_fixture",
+        "observed_event_count": len(events),
+        "observed_event_names": [e.get("event") for e in events],
+        "events": events,
+    }
+
+
+def attempt_memory_upsert(
+    *,
+    memory_url: str | None,
+    endpoint: str,
+    record: dict[str, Any],
+    run_root: Path,
+) -> dict[str, Any]:
+    validate_no_inline_vectors(record)
+    local_path = run_root / "conversation_history" / f"{safe_key(record['_key'])}.json"
+    write_json(local_path, record)
+    request_payload = {"collection": "conversation_history", "documents": [record], "mode": "upsert"}
+    validate_no_inline_vectors(request_payload)
+    attempt = {
+        "deterministic_key": record["_key"],
+        "collection": "conversation_history",
+        "request_payload_sha256": sha256_json(request_payload),
+        "no_inline_vectors": True,
+        "local_fallback_path": str(local_path),
+        "created_at_utc": utc_now(),
+    }
+    if not memory_url:
+        attempt.update({
+            "attempted": False,
+            "real_memory_upsert": False,
+            "endpoint": None,
+            "unavailable_reason": "memory_url_not_configured",
+        })
+        return attempt
+    url = memory_url.rstrip("/") + (endpoint if endpoint.startswith("/") else "/" + endpoint)
+    response = http_post_json(url, request_payload, timeout=10.0)
+    attempt.update({
+        "attempted": True,
+        "endpoint": url,
+        "response_status_code": response.get("status_code"),
+        "response_elapsed_ms": response.get("elapsed_ms"),
+        "response_body_excerpt": response.get("body_excerpt"),
+        "response_json_excerpt": response.get("json") if isinstance(response.get("json"), dict) else None,
+        "real_memory_upsert": bool(response.get("ok")),
+        "error_type": response.get("error_type"),
+        "error": response.get("error"),
+    })
+    return attempt
+
+
+def attempt_evidence_case(
+    *,
+    evidence_case_url: str | None,
+    transcript: str,
+    intent: dict[str, Any],
+    recall: dict[str, Any],
+) -> dict[str, Any]:
+    payload = {
+        "q": transcript,
+        "intent": intent,
+        "recall_snapshot": recall,
+        "source_refs": recall.get("items", []),
+        "requested_route": "create-evidence-case",
+    }
+    validate_no_inline_vectors(payload)
+    base = {
+        "route_endpoint": "create-evidence-case",
+        "question": transcript,
+        "request_payload_sha256": sha256_json(payload),
+        "no_inline_vectors": True,
+        "created_at_utc": utc_now(),
+    }
+    if not evidence_case_url:
+        base.update({
+            "attempted": False,
+            "real_create_evidence_case": False,
+            "can_answer": False,
+            "selected_route": "/memory /clarify",
+            "unavailable_reason": "evidence_case_url_not_configured",
+            "substantive_compliance_claim_released": False,
+            "fail_closed": True,
+        })
+        base["receipt_hash"] = sha256_json(base)
+        return base
+    response = http_post_json(evidence_case_url, payload, timeout=20.0)
+    body = response.get("json") if isinstance(response.get("json"), dict) else {}
+    can_answer = bool(body.get("can_answer") or body.get("review_status") == "passed")
+    selected = "/memory /answer" if can_answer else "/memory /clarify"
+    base.update({
+        "attempted": True,
+        "endpoint": evidence_case_url,
+        "real_create_evidence_case": bool(response.get("ok")),
+        "response_status_code": response.get("status_code"),
+        "response_elapsed_ms": response.get("elapsed_ms"),
+        "response_body_excerpt": response.get("body_excerpt"),
+        "response_json_excerpt": body if body else None,
+        "can_answer": can_answer,
+        "selected_route": selected,
+        "substantive_compliance_claim_released": False if not can_answer else bool(body.get("answer_packet_ready")),
+        "fail_closed": not can_answer,
+        "error_type": response.get("error_type"),
+        "error": response.get("error"),
+    })
+    base["receipt_hash"] = sha256_json(base)
+    return base
