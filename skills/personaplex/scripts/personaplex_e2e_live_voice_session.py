@@ -434,9 +434,8 @@ def run_e2e_live_voice_session(
     else:
         gpu = run_gpu_personaplex_probe(
             out_dir=out,
-            server_path=p10_server_path,
-            personaplex_root=personaplex_root,
-            command=p10_command,
+            container_name="personaplex-personaplex-1",
+            base_url="https://127.0.0.1:8998",
             timeout=gpu_timeout,
         )
     embry_response, response_source = extract_embry_response(gpu, evidence_summary, transcript)

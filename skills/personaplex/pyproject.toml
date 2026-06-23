@@ -12,6 +12,7 @@ dependencies = [
   "soundfile>=0.12",
   "pyyaml>=6.0",
   "websockets>=16.0",
+  "websocket-client>=1.9.0",
 ]
 
 [project.optional-dependencies]

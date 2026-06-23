@@ -1,0 +1,24 @@
+{
+  "bundle_filename": "personaplex-p10-gpu-docker-fix-solution.zip",
+  "created_for": "PersonaPlex P10 GPU Docker container probe fix",
+  "files": [
+    {
+      "path": "skills/personaplex/scripts/personaplex_gpu_inference_probe.py",
+      "purpose": "Replace local LMGen import probing with Docker container HTTPS/WebSocket API probing against personaplex-personaplex-1 on https://127.0.0.1:8998. Records real_gpu_personaplex=true only after docker ps + root HTTPS + generated output success."
+    }
+  ],
+  "commands": [
+    {
+      "command": "python skills/personaplex/scripts/personaplex_gpu_inference_probe.py --out-dir artifacts/personaplex_p10_gpu --require-real",
+      "expected_exit_code_when_live": 0,
+      "expected_exit_code_when_service_unavailable": 2
+    },
+    {
+      "command": "python skills/personaplex/scripts/personaplex_gpu_inference_probe.py --out-dir artifacts/personaplex_p10_gpu",
+      "expected_exit_code": 0,
+      "note": "Writes fallback receipt with real_gpu_personaplex=false when Docker/API proof is unavailable."
+    }
+  ],
+  "receipt_path": "artifacts/personaplex_p10_gpu/p10-gpu-personaplex-receipt.json",
+  "real_proof_boundary": "real_gpu_personaplex=true requires docker ps running container, successful HTTPS root response, and generated text/audio/token output from a bounded container API request."
+}
