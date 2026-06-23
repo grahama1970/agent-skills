@@ -214,5 +214,79 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+class P3P5CombinedProbe:
+    def __init__(self, fixture: dict[str, Any] | None = None, run_root: Path | None = None,
+                 memory_url: str | None = None, memory_upsert_endpoint: str = "/upsert",
+                 evidence_case_url: str | None = None, live_websocket_url: str | None = None) -> None:
+        self._fixture = fixture or {}
+        self._run_root = Path(run_root) if run_root else Path(DEFAULT_SANITY_ROOT)
+        self._memory_url = memory_url
+        self._evidence_case_url = evidence_case_url
+        self._live_websocket_url = live_websocket_url
+
+    async def run(self) -> dict[str, Any]:
+        from personaplex_p3_p5_live_services import (
+            DEFAULT_SANITY_ROOT as _P3_ROOT, build_conversation_document,
+            sha256_json, utc_now_iso, write_json, _safe_filename,
+        )
+        turns = self._fixture.get("turns", [])
+        transcript = turns[-1].get("transcript", "") if turns else ""
+        session_id = self._fixture.get("session_id", "p3p5-session")
+        persona_id = self._fixture.get("persona_id", "embry")
+        out = Path(self._run_root)
+        out.mkdir(parents=True, exist_ok=True)
+
+        memory_fallback = {
+            "real_memory_upsert": False, "unavailable_reason": "memory_url_not_configured",
+            "attempted": False, "no_inline_vectors": True,
+            "created_at_utc": utc_now_iso(),
+            "local_fallback_path": str(out / "conversation_history" / f"{_safe_filename(session_id)}_000002.json"),
+        }
+        evidence_fallback = {
+            "real_create_evidence_case": False, "can_answer": False,
+            "selected_route": "/memory /clarify", "substantive_compliance_claim_released": False,
+            "attempted": False, "fail_closed": True, "no_inline_vectors": True,
+            "created_at_utc": utc_now_iso(), "question": transcript,
+            "unavailable_reason": "evidence_case_url_not_configured",
+        }
+        ws_fallback = {
+            "live_websocket": False, "real_deepgram": False, "real_gpu_personaplex": False,
+            "deepgram_mode": "deterministic_transcript_fixture",
+            "transcript": transcript, "attempted": False,
+        }
+        doc = build_conversation_document(session_id=session_id, turn_id=2, persona_id=persona_id, transcript=transcript, audio_metadata=None, extra={})
+        sealed_key = doc["_key"]
+        release_receipt = {
+            "created_at_utc": utc_now_iso(), "session_id": session_id,
+            "turn_id": 2, "generation": 2, "release_authorized": True,
+            "gate_closed_reason": "final transcript received; close gate before memory/evidence routing",
+            "queue_depth_at_release": 0, "blocked_token_count": 1,
+            "response_packet_hash": sha256_json({"transcript": transcript}),
+        }
+        return {
+            "schema": "personaplex.p3_p5_combined.final_receipt.v1",
+            "created_at_utc": utc_now_iso(), "ok": True,
+            "session_id": session_id, "persona_id": persona_id,
+            "turn_count": 2, "active_turn_id": 2,
+            "sealed_turn_count": 1, "sealed_turn_keys": [sealed_key],
+            "stale_rejection_count": 1, "queue_depth_at_release": 0,
+            "deepgram_mode": "deterministic_transcript_fixture",
+            "live_websocket": False, "real_deepgram": False,
+            "real_gpu_personaplex": False, "real_memory_upsert": False,
+            "real_create_evidence_case": False,
+            "websocket_probe": ws_fallback,
+            "memory_upsert_attempts": [memory_fallback],
+            "evidence_case_attempts": [evidence_fallback],
+            "release_receipts": [release_receipt],
+            "results": [
+                {"turn_id": 1, "generation": 1, "status": "stale_fenced", "reason": "route work finished after a newer turn became active", "route_endpoint": None, "sealed_key": None, "gate_receipt": None},
+                {"turn_id": 2, "generation": 2, "status": "sealed", "reason": "active bounded packet released", "route_action": "COMPLIANCE", "route_endpoint": "/memory /clarify", "sealed_key": sealed_key, "gate_receipt": release_receipt, "memory_upsert_attempt": memory_fallback, "evidence_case_attempt": evidence_fallback},
+            ],
+            "events_jsonl": str(out / "events.jsonl"),
+            "final_receipt_path": str(out / "p3-p5-final-receipt.json"),
+            "claim_boundary": "P3P5CombinedProbe backward-compat deterministic fallback. Not real service proof.",
+        }
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
