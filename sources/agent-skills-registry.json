@@ -1,8 +1,8 @@
 {
-  "content_hash": "a4ea7c627d6650e18ff3b82a571c07963fb89cc7f33ae47dc608fbc7c7d7f361",
+  "content_hash": "9366f611b2572b956a1a12469aa9299e1dc76ceb8559146a8f6558309e71ba39",
   "counts": {
-    "agents": 6,
-    "entries": 319,
+    "agents": 7,
+    "entries": 320,
     "skills": 313
   },
   "entries": [
@@ -75,6 +75,33 @@
         "project-knowledge",
         "task-monitor",
         "best-practices-subagent"
+      ],
+      "verifier": ""
+    },
+    {
+      "content_hash": "ed16c0608cc3559c",
+      "handoffs_to": [],
+      "id": "ui-coder",
+      "kind": "worker",
+      "path": "agents/ui-coder",
+      "source_file": "agents/ui-coder/AGENTS.md",
+      "summary": "Transport wrapper for the `ui-coder` subagent.",
+      "title": "UI Coder",
+      "type": "agent",
+      "uses_skills": [
+        "memory",
+        "code-runner",
+        "test-interactions",
+        "debugger",
+        "brave-search",
+        "github-search",
+        "best-practices-react",
+        "best-practices-d3",
+        "best-practices-cots",
+        "best-practices-design",
+        "best-practices-chat-ux",
+        "treesitter",
+        "scillm"
       ],
       "verifier": ""
     },
@@ -748,7 +775,9 @@
       "content_hash": "cbc9436799af9c80",
       "id": "best-practices-chat-ux",
       "path": "skills/best-practices-chat-ux",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/best-practices-chat-ux/SKILL.md",
       "summary": "Best practices for designing, reviewing, and implementing operator chat, evidence chat, run-card chat, artifact-inspector chat, and compliance-review chat surfaces. Use when users ask for chat UX, operator console UX, agent run UX, evidenc\u2026",
       "title": "best-practices-chat-ux",
@@ -775,6 +804,7 @@
       "id": "best-practices-cots",
       "path": "skills/best-practices-cots",
       "related_agents": [
+        "ui-coder",
         "ui-reviewer"
       ],
       "source_file": "skills/best-practices-cots/SKILL.md",
@@ -796,7 +826,9 @@
       "content_hash": "df605554f5444e7b",
       "id": "best-practices-d3",
       "path": "skills/best-practices-d3",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/best-practices-d3/SKILL.md",
       "summary": "D3.js visualization best practices for performant, responsive, accessible data visualizations. Covers data joins, scales, axes, transitions, responsive SVG, interaction patterns, and accessibility. Use when writing, reviewing, or refactori\u2026",
       "title": "best-practices-d3",
@@ -817,7 +849,9 @@
       "content_hash": "95023629780d0ae8",
       "id": "best-practices-design",
       "path": "skills/best-practices-design",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/best-practices-design/SKILL.md",
       "summary": "Product UX and design-practice guardrails for classifying design work, selecting applicable best-practices-* skills, preventing dashboard theater, defining mockup-first acceptance criteria, and deciding when to involve memory, dogpile, ask\u2026",
       "title": "best-practices-design",
@@ -956,6 +990,7 @@
       "id": "best-practices-react",
       "path": "skills/best-practices-react",
       "related_agents": [
+        "ui-coder",
         "ui-reviewer"
       ],
       "source_file": "skills/best-practices-react/SKILL.md",
@@ -1170,6 +1205,7 @@
       "path": "skills/brave-search",
       "related_agents": [
         "hum",
+        "ui-coder",
         "watch"
       ],
       "source_file": "skills/brave-search/SKILL.md",
@@ -1465,7 +1501,8 @@
       "path": "skills/code-runner",
       "related_agents": [
         "audiobook-extractor",
-        "book-extractor"
+        "book-extractor",
+        "ui-coder"
       ],
       "source_file": "skills/code-runner/SKILL.md",
       "summary": "Minimal deterministic code runner for bounded implementation tasks. Runs one LLM backend through /scillm inside a disposable git worktree, enforces a write allowlist, runs a deterministic definition of done, and returns an allowlist-scoped\u2026",
@@ -2879,7 +2916,9 @@
       "content_hash": "9300a249e5189f13",
       "id": "debugger",
       "path": "skills/debugger",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/debugger/SKILL.md",
       "summary": "Force the project-agent to use a real debugger instead of guessing: set breakpoints where the problem might be, stop execution at those breakpoints, inspect live variable state, and analyze the observed runtime state before patching. Use w\u2026",
       "title": "debugger",
@@ -3591,7 +3630,9 @@
       "content_hash": "8f16bdf26fef18bf",
       "id": "github-search",
       "path": "skills/github-search",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/github-search/SKILL.md",
       "summary": "Deep multi-strategy GitHub search for repositories and code. Uses gh CLI with advanced qualifiers (symbol:, path:, language:). Integrates with /treesitter for code parsing and /taxonomy for classification.",
       "title": "github-search",
@@ -4344,6 +4385,7 @@
       "related_agents": [
         "book-extractor",
         "hum",
+        "ui-coder",
         "ui-reviewer",
         "watch"
       ],
@@ -6471,6 +6513,7 @@
       "id": "scillm",
       "path": "skills/scillm",
       "related_agents": [
+        "ui-coder",
         "ui-reviewer",
         "watch"
       ],
@@ -7082,6 +7125,7 @@
       "id": "test-interactions",
       "path": "skills/test-interactions",
       "related_agents": [
+        "ui-coder",
         "ui-reviewer"
       ],
       "source_file": "skills/test-interactions/SKILL.md",
@@ -7217,7 +7261,9 @@
       "content_hash": "c168d2145914cd6e",
       "id": "treesitter",
       "path": "skills/treesitter",
-      "related_agents": [],
+      "related_agents": [
+        "ui-coder"
+      ],
       "source_file": "skills/treesitter/SKILL.md",
       "summary": "Parse and extract code symbols using tree-sitter. Use when you need to extract functions, classes, or understand code structure from files or code blocks.",
       "title": "treesitter",
