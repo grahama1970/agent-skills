@@ -1,0 +1,18 @@
+{
+  "bundle_filename": "personaplex-p10c-gpu-golden-state-server-solution.zip",
+  "claim_boundary": "This zip does not claim live GPU proof; it provides the corrected probe and deterministic tests. Live proof must be generated on the target PersonaPlex machine.",
+  "created_at_utc": "2026-06-23T19:53:38Z",
+  "fallback_policy": "When the venv, server, CUDA, or generated output is unavailable, the probe writes real_gpu_personaplex=false and exits 0 unless --require-real is supplied.",
+  "files": [
+    "ARCHITECTURE.md",
+    "TEST_RESULTS.md",
+    "skills/personaplex/fixtures/p10c/golden_state_gpu_fallback.json",
+    "skills/personaplex/sanity_p10c_gpu_golden_state_server.sh",
+    "skills/personaplex/scripts/personaplex_gpu_inference_probe.py",
+    "skills/personaplex/tests/test_p10c_gpu_golden_state_server_probe.py"
+  ],
+  "purpose": "Fix PersonaPlex P10 GPU probe to call personaplex_golden_state_server.py under the PersonaPlex venv with --probe-lmgen-step --json, rather than Docker REST or Moshi/Opus WebSocket.",
+  "real_proof_condition": "p10-gpu-personaplex-receipt.json has real_gpu_personaplex=true, valid_cuda_device=true, valid_generated_output=true, returncode=0, and command includes --probe-lmgen-step --json",
+  "required_live_command": "bash skills/personaplex/sanity_p10c_gpu_golden_state_server.sh",
+  "updated_file": "skills/personaplex/scripts/personaplex_gpu_inference_probe.py"
+}

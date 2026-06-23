@@ -533,23 +533,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-def run_gpu_personaplex_probe(**kwargs: Any) -> dict[str, Any]:
-    root = kwargs.get("personaplex_root") or kwargs.get("out_dir") and Path(str(kwargs["out_dir"])).parents[3] or discover_root(None)
-    venv_python = kwargs.get("venv_python") or discover_venv_python(None, root)
-    server = kwargs.get("server_path") or discover_golden_state_server(None, root)
-    timeout = kwargs.get("timeout", 15.0)
-    docker_container = kwargs.get("container_name", "personaplex-personaplex-1")
-    base_url = kwargs.get("base_url", "https://127.0.0.1:8998")
-    if not venv_python or not server:
-        return deterministic_fallback("run_gpu_personaplex_probe_backward_compat_skipped",
-            {"reason": "venv_python_or_golden_state_server_not_discovered", "root": str(root)})
-    return run_golden_state_probe(
-        venv_python=venv_python,
-        golden_state_server=server,
-        root=root,
-        timeout_seconds=timeout,
-    )
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

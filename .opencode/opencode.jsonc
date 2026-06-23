@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash .opencode/hooks/personaplex-goal-check.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

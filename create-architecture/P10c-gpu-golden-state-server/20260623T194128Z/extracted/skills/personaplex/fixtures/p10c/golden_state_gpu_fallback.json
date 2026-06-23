@@ -1,0 +1,12 @@
+{
+  "schema": "personaplex.p10c.gpu_golden_state_server_receipt.v1",
+  "phase": "P10c",
+  "probe_strategy": "golden_state_server_subprocess_lmgen_step",
+  "real_gpu_personaplex": false,
+  "golden_state_subprocess_attempted": false,
+  "valid_generated_output": false,
+  "valid_cuda_device": false,
+  "fallback_used": true,
+  "fallback_reason": "deterministic_fixture_only",
+  "claim_boundary": "This fixture is not live GPU PersonaPlex proof."
+}
