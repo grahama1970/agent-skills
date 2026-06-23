@@ -1,5 +1,5 @@
 {
-  "content_hash": "9366f611b2572b956a1a12469aa9299e1dc76ceb8559146a8f6558309e71ba39",
+  "content_hash": "1fffd4a70db90f53a3e546c9c3a54e18188dc732c69d47d5fdb35c1fc41e367e",
   "counts": {
     "agents": 7,
     "entries": 320,
@@ -1807,21 +1807,14 @@
         "Write",
         "Edit"
       ],
-      "content_hash": "d8d635e169bc7ecc",
+      "content_hash": "cbe553782b13e87c",
       "id": "create-architecture",
       "path": "skills/create-architecture",
       "related_agents": [],
       "source_file": "skills/create-architecture/SKILL.md",
-      "summary": "Create and update architecture diagrams programmatically in UX Lab's Architecture Editor. Agents define pipeline components, connections, and file attachments \u2014 the skill generates proper Excalidraw elements and saves via the Express API.\u2026",
+      "summary": "Drive a WebGPT clarification-then-creation loop. The project agent supplies a HANDOFF.md, GOAL.md, rendered HTML/CSS progress report (required brownfield), and scoped creation brief, answers WebGPT clarifying questions until WebGPT decides\u2026",
       "title": "create-architecture",
-      "triggers": [
-        "create architecture",
-        "architecture diagram",
-        "draw pipeline",
-        "update architecture",
-        "add component to architecture",
-        "create pipeline diagram"
-      ],
+      "triggers": [],
       "type": "skill"
     },
     {

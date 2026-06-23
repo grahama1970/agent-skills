@@ -18,7 +18,7 @@ Machine-readable companion: `sources/agent-skills-registry.json`.
 
 - Repository: `grahama1970/agent-skills`
 - Schema version: `1.0`
-- Content hash: `9366f611b2572b956a1a12469aa9299e1dc76ceb8559146a8f6558309e71ba39`
+- Content hash: `1fffd4a70db90f53a3e546c9c3a54e18188dc732c69d47d5fdb35c1fc41e367e`
 - Skill entries: `313`
 - Agent entries: `7`
 - Total entries: `320`
@@ -103,7 +103,7 @@ Machine-readable companion: `sources/agent-skills-registry.json`.
 | `converse` | `skills/converse/SKILL.md` | Real-time two-way voice conversation with persona. Full-duplex audio via PersonaPlex (Moshi-based) with barge-in, backchannels, emotional state tracking, humming (Federated Taxonomy-driven song selection from /consume-m… | `converse`, `voice conversation`, `talk to embry`, `real-time voice`, `full duplex`, `barge-in`, +4 more | — |
 | `corpus-report` | `skills/corpus-report/SKILL.md` | Report on the continuous PDF extraction learning system. Shows corpus statistics, S00/S04 section estimation quality, failure patterns, pipeline bottlenecks, and trends over time. Reads manifest.jsonl and pattern_regist… | `corpus report`, `corpus status`, `corpus stats`, `extraction quality`, `pipeline bottlenecks`, `corpus patterns`, +2 more | — |
 | `create-annotated-pdf` | `skills/create-annotated-pdf/SKILL.md` | Generate annotated PDFs from extraction pipeline run data. Overlays color-coded bounding boxes (text, tables, figures, equations) from S02/S05/S06 onto the original PDF. Supports single PDF, run directory, batch from bl… | `annotate pdf`, `annotated pdf`, `show me the annotations`, `show extraction boxes`, `give me the annotated pdf`, `review extraction`, +7 more | — |
-| `create-architecture` | `skills/create-architecture/SKILL.md` | Create and update architecture diagrams programmatically in UX Lab's Architecture Editor. Agents define pipeline components, connections, and file attachments — the skill generates proper Excalidraw elements and saves v… | `create architecture`, `architecture diagram`, `draw pipeline`, `update architecture`, `add component to architecture`, `create pipeline diagram` | — |
+| `create-architecture` | `skills/create-architecture/SKILL.md` | Drive a WebGPT clarification-then-creation loop. The project agent supplies a HANDOFF.md, GOAL.md, rendered HTML/CSS progress report (required brownfield), and scoped creation brief, answers WebGPT clarifying questions… | — | — |
 | `create-cast` | `skills/create-cast/SKILL.md` | Multi-round character casting orchestrator for the Horus movie pipeline. Extracts characters from scripts, discovers reference actors, generates identity images, and assigns voices. Runs as Phase 2.5 in create-movie. | `cast characters`, `create cast`, `character casting`, `identity pack`, `cast the movie`, `assign actors` | — |
 | `create-classifier` | `skills/create-classifier/SKILL.md` | Train task-specific classifiers for the extractor pipeline. Supports vision, text, and hybrid classifiers with GRPO training and execution feedback. Includes data collection, confidence-based routing, and shadow deploym… | `train classifier`, `create classifier`, `classifier training`, `document type classifier`, `ml model training` | — |
 | `create-claude` | `skills/create-claude/README.md` | `/create-claude` was a FastAPI wrapper around `claude -p` subprocess calls. Headless `claude -p` is unreliable (0% file write success). All LLM calls now route through `/scillm` httpx API. | — | — |
