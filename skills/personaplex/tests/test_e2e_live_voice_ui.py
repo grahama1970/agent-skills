@@ -1,0 +1,115 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from personaplex_e2e_live_voice_session import derive_recall_items, run_e2e_live_voice_session
+from personaplex_e2e_ui_render import render_receipt_html, write_receipt_ui
+
+FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "e2e_live_voice_ui"
+
+
+class PersonaPlexE2ELiveVoiceUITests(unittest.TestCase):
+    def load_fixture(self, name: str) -> dict:
+        return json.loads((FIXTURE_DIR / name).read_text(encoding="utf-8"))
+
+    def test_renderer_outputs_chat_trace_and_real_tool_rows(self) -> None:
+        receipt = self.load_fixture("real_tool_data_render_fixture.json")
+        html = render_receipt_html(receipt)
+
+        self.assertIn("PersonaPlex E2E live voice verification", html)
+        self.assertIn("Focus on the west gateway.", html)
+        self.assertIn("The west gateway needs a grounded evidence check", html)
+        self.assertIn("intent → COMPLIANCE (0.94)", html)
+        self.assertIn("recall → 2 item(s) (BM25 0.52, dense 0.48)", html)
+        self.assertIn("evidence-case → can_answer=true, route=/answer", html)
+        self.assertIn("upsert → conversation_history:conversation:fixture-e2e-embry-session:000003 → 201", html)
+        for flag in (
+            "real_deepgram",
+            "real_turn_gate",
+            "real_memory_intent",
+            "real_recall_evidence",
+            "real_gpu_personaplex",
+            "real_persistence_upsert",
+            "real_session_compaction",
+        ):
+            self.assertIn(f'data-real-flag-name="{flag}"', html)
+            self.assertIn(f"{flag}=true", html)
+        # The test fixture renders real-shaped data but is explicitly not live proof.
+        self.assertIn("RENDERING FIXTURE", html)
+
+    def test_renderer_marks_false_flags_and_does_not_claim_live_proof(self) -> None:
+        receipt = self.load_fixture("fallback_render_fixture.json")
+        html = render_receipt_html(receipt)
+
+        self.assertIn('data-real-flag-value="false"', html)
+        self.assertIn("real_deepgram=false", html)
+        self.assertNotIn("ALL LIVE TOOL ROWS REAL=TRUE", html)
+        self.assertIn("RENDERING FIXTURE", html)
+
+    def test_write_receipt_ui_creates_local_html_file(self) -> None:
+        receipt = self.load_fixture("real_tool_data_render_fixture.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "personaplex-e2e-live-voice-ui.html"
+            path = write_receipt_ui(receipt, out)
+            self.assertTrue(path.exists())
+            text = path.read_text(encoding="utf-8")
+            self.assertIn('data-testid="personaplex-e2e-ui"', text)
+            self.assertIn('data-testid="tool-row"', text)
+
+    def test_derive_recall_items_from_live_evidence_shape(self) -> None:
+        evidence = {
+            "real_create_evidence_case": True,
+            "response_json": {
+                "can_answer": True,
+                "route": "/answer",
+                "items": [
+                    {
+                        "_key": "control-1",
+                        "title": "Control 1",
+                        "snippet": "Grounded snippet",
+                        "bm25_score": 0.82,
+                        "dense_score": 0.91,
+                        "score": 0.93,
+                    }
+                ],
+            },
+        }
+        intent = {"recall_profile": {"bm25_weight": 0.52, "dense_weight": 0.48}}
+        items = derive_recall_items(evidence, intent)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["key"], "control-1")
+        self.assertEqual(items[0]["bm25_score"], 0.82)
+        self.assertEqual(items[0]["dense_score"], 0.91)
+
+    def test_e2e_probe_fallback_receipt_and_ui_are_honest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            receipt = run_e2e_live_voice_session(
+                out_dir=tmp,
+                session_id="unit-fallback-session",
+                previous_turn_id=2,
+                memory_url="http://127.0.0.1:9",
+                evidence_case_url="http://127.0.0.1:9",
+                skip_deepgram=True,
+                skip_gpu=True,
+                timeout=0.01,
+                deepgram_timeout=0.01,
+                gpu_timeout=0.01,
+            )
+            self.assertFalse(receipt["all_real_true"])
+            self.assertFalse(receipt["real_flags"]["real_deepgram"])
+            self.assertTrue(receipt["real_flags"]["real_turn_gate"])
+            self.assertTrue(receipt["real_flags"]["real_memory_intent"])
+            self.assertFalse(receipt["real_flags"]["real_gpu_personaplex"])
+            self.assertTrue(Path(receipt["ui_path"]).exists())
+            rendered = Path(receipt["ui_path"]).read_text(encoding="utf-8")
+            self.assertIn("real_deepgram=false", rendered)
+            self.assertIn("NOT A FULL LIVE PROOF", rendered)
+            self.assertTrue(receipt["component_receipts"]["persistence_upsert"]["no_inline_vectors"])
+            self.assertIn("audio_metadata", receipt)
+
+
+if __name__ == "__main__":
+    unittest.main()

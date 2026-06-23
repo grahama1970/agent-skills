@@ -1,0 +1,39 @@
+{
+  "schema": "personaplex.e2e_live_voice_ui.final_receipt.v1",
+  "fixture_only": true,
+  "created_at_utc": "2026-06-23T18:55:52Z",
+  "session_id": "fixture-fallback-session",
+  "turn_id": 3,
+  "transcript": "Focus on the west gateway.",
+  "embry_response": "Embry: deterministic fallback text.",
+  "conversation": [
+    {"role": "user", "speaker": "User", "text": "Focus on the west gateway."},
+    {"role": "assistant", "speaker": "Embry", "text": "deterministic fallback text."}
+  ],
+  "gate_state": {"state": "OPEN", "queue_depth": 0, "turn_id": 3, "generation": 3},
+  "intent": {"route": "COMPLIANCE", "confidence": 0.94},
+  "evidence_summary": {"can_answer": false, "route": "/memory /clarify", "verdict": "clarify"},
+  "recall_items": [],
+  "upsert_summary": "upsert fallback → conversation_history:conversation:fixture-fallback-session:000003 → real_memory_upsert=false",
+  "real_flags": {
+    "real_deepgram": false,
+    "real_turn_gate": true,
+    "real_memory_intent": true,
+    "real_recall_evidence": false,
+    "real_gpu_personaplex": false,
+    "real_persistence_upsert": false,
+    "real_session_compaction": false
+  },
+  "tool_trace": [
+    {"step": "deepgram_asr", "label": "Deepgram ASR", "summary": "speech_final not proven", "real_flag_name": "real_deepgram", "real_flag_value": false},
+    {"step": "turn_gate", "label": "Turn gate", "summary": "gate: OPEN | queue: 0 | turn: 3", "real_flag_name": "real_turn_gate", "real_flag_value": true},
+    {"step": "memory_intent", "label": "Memory intent", "summary": "intent → COMPLIANCE (0.94)", "real_flag_name": "real_memory_intent", "real_flag_value": true},
+    {"step": "recall_evidence", "label": "Recall / evidence case", "summary": "fallback", "real_flag_name": "real_recall_evidence", "real_flag_value": false},
+    {"step": "gpu_personaplex", "label": "PersonaPlex GPU inference", "summary": "fallback", "real_flag_name": "real_gpu_personaplex", "real_flag_value": false},
+    {"step": "persistence_upsert", "label": "Persistence upsert", "summary": "fallback", "real_flag_name": "real_persistence_upsert", "real_flag_value": false},
+    {"step": "session_compaction", "label": "Session compaction", "summary": "fallback", "real_flag_name": "real_session_compaction", "real_flag_value": false}
+  ],
+  "all_real_true": false,
+  "fallback_used": true,
+  "claim_boundary": "UI fallback fixture only. Not live service proof."
+}

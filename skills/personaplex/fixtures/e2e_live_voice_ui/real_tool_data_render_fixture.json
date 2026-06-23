@@ -1,0 +1,45 @@
+{
+  "schema": "personaplex.e2e_live_voice_ui.final_receipt.v1",
+  "fixture_only": true,
+  "created_at_utc": "2026-06-23T18:55:52Z",
+  "session_id": "fixture-e2e-embry-session",
+  "persona_id": "embry",
+  "turn_id": 3,
+  "generation": 3,
+  "transcript": "Focus on the west gateway.",
+  "embry_response": "Embry: The west gateway needs a grounded evidence check before we release a compliance claim.",
+  "conversation": [
+    {"role": "user", "speaker": "User", "text": "Focus on the west gateway."},
+    {"role": "assistant", "speaker": "Embry", "text": "The west gateway needs a grounded evidence check before we release a compliance claim."}
+  ],
+  "gate_state": {"state": "OPEN", "queue_depth": 0, "turn_id": 3, "generation": 3},
+  "intent": {"route": "COMPLIANCE", "confidence": 0.94, "tools": ["/memory /create-evidence-case", "/memory /upsert"], "recall_profile": {"bm25_weight": 0.52, "dense_weight": 0.48, "top_k": 3}},
+  "evidence_summary": {"can_answer": true, "route": "/answer", "verdict": "can_answer", "status": 200},
+  "recall_items": [
+    {"rank": 1, "key": "sparta-control-west-gateway", "title": "West gateway control evidence", "snippet": "Evidence links the west gateway to SPARTA control coverage.", "score": 0.91, "bm25_score": 0.82, "dense_score": 0.91},
+    {"rank": 2, "key": "memory-case-003", "title": "Evidence case 003", "snippet": "Prior evidence case includes gateway acceptance criteria.", "score": 0.86, "bm25_score": 0.77, "dense_score": 0.88}
+  ],
+  "upsert_summary": "upsert → conversation_history:conversation:fixture-e2e-embry-session:000003 → 201",
+  "real_flags": {
+    "real_deepgram": true,
+    "real_turn_gate": true,
+    "real_memory_intent": true,
+    "real_recall_evidence": true,
+    "real_gpu_personaplex": true,
+    "real_persistence_upsert": true,
+    "real_session_compaction": true
+  },
+  "tool_trace": [
+    {"step": "deepgram_asr", "label": "Deepgram ASR", "summary": "speech_final=true · transcript=\"Focus on the west gateway.\"", "real_flag_name": "real_deepgram", "real_flag_value": true, "details": {"live_websocket": true, "message_count": 3, "audio_sha256": "fixture-audio-sha", "deepgram_mode": "live_deepgram_websocket"}},
+    {"step": "turn_gate", "label": "Turn gate", "summary": "gate: OPEN | queue: 0 | turn: 3", "real_flag_name": "real_turn_gate", "real_flag_value": true, "details": {"generation": 3, "output_closed_before_mutation": true, "stale_work_fenced": true}},
+    {"step": "memory_intent", "label": "Memory intent", "summary": "intent → COMPLIANCE (0.94)", "real_flag_name": "real_memory_intent", "real_flag_value": true, "details": {"tools": ["/memory /create-evidence-case", "/memory /upsert"], "recall_profile": {"bm25_weight": 0.52, "dense_weight": 0.48, "top_k": 3}}},
+    {"step": "recall_evidence", "label": "Recall / evidence case", "summary": "recall → 2 item(s) (BM25 0.52, dense 0.48); evidence-case → can_answer=true, route=/answer", "real_flag_name": "real_recall_evidence", "real_flag_value": true, "details": {"status": 200, "verdict": "can_answer", "endpoint": "http://127.0.0.1:8601/create-evidence-case"}},
+    {"step": "gpu_personaplex", "label": "PersonaPlex GPU inference", "summary": "LMGen.step called=true · mode=import_hook", "real_flag_name": "real_gpu_personaplex", "real_flag_value": true, "details": {"server_path": "personaplex_golden_state_server.py", "device": "cuda:0", "output_hash": "fixture-step-output"}},
+    {"step": "persistence_upsert", "label": "Persistence upsert", "summary": "upsert → conversation_history:conversation:fixture-e2e-embry-session:000003 → 201", "real_flag_name": "real_persistence_upsert", "real_flag_value": true, "details": {"collection": "conversation_history", "status": 201, "no_inline_vectors": true}},
+    {"step": "session_compaction", "label": "Session compaction", "summary": "rolling summaries + CAS session head → real=true", "real_flag_name": "real_session_compaction", "real_flag_value": true, "details": {"cas_update_applied": true, "summary_count": 1, "projection_count": 1}}
+  ],
+  "all_real_true": true,
+  "fallback_used": false,
+  "receipt_sha256": "fixture-not-live-proof",
+  "claim_boundary": "UI rendering fixture only. Not live service proof."
+}

@@ -1,0 +1,252 @@
+{
+  "architecture_kept": "P0-P10 adapter seam preserved; final E2E orchestration and UI added as overlay.",
+  "bundle_filename": "personaplex-e2e-live-voice-ui-combined-solution.zip",
+  "commands": [
+    {
+      "command": "PYTHONPATH=\"$PWD/skills/personaplex/scripts:${PYTHONPATH:-}\" python3 -m unittest discover -s skills/personaplex/tests -v",
+      "expected_exit_code": 0,
+      "name": "all_tests"
+    },
+    {
+      "command": "./skills/personaplex/sanity_e2e_live_voice_fallback.sh",
+      "expected_exit_code": 0,
+      "expected_result": "Writes fallback receipt/UI and proves all_real_true=false.",
+      "name": "fallback_sanity"
+    },
+    {
+      "command": "DEEPGRAM_API_KEY=... PERSONAPLEX_ROOT=... PYTHONPATH=\"$PWD/skills/personaplex/scripts:${PYTHONPATH:-}\" python3 skills/personaplex/scripts/personaplex_e2e_live_voice_session.py --out-dir /tmp/personaplex-e2e-live-voice-ui --memory-url http://127.0.0.1:8601 --evidence-case-url http://127.0.0.1:8601 --deepgram-audio-path \"$PERSONAPLEX_ROOT/assets/test/input_assistant.wav\" --require-real",
+      "expected_exit_code": 0,
+      "failure_exit_code_when_any_real_flag_false": 2,
+      "name": "final_live_e2e"
+    },
+    {
+      "command": "python3 -m http.server 8765 --directory /tmp/personaplex-e2e-live-voice-ui",
+      "expected_exit_code": "runs_until_interrupted",
+      "name": "view_generated_ui"
+    }
+  ],
+  "created_at_utc": "2026-06-23T19:03:27.846947Z",
+  "creation_bundle_files_read": [
+    "CREATION_BRIEF.md",
+    "GOAL.md"
+  ],
+  "files": [
+    {
+      "bytes": 9206,
+      "path": "ARCHITECTURE.md",
+      "sha256": "72d8aa8b5a32008209c51e034a86fac43f2fedbed5e77ce74ceb358cd8191938"
+    },
+    {
+      "bytes": 1572,
+      "path": "TEST_RESULTS.md",
+      "sha256": "e5e22eac0eb5c10c686418c72fb71bb2d1f99f26f7d24024b83227ac12cf9bb2"
+    },
+    {
+      "bytes": 1706,
+      "path": "prompt_improvements.md",
+      "sha256": "01786500e95c064fef0eb795a10e9633e5c4af20c5d7fefe37b689fb1e7ee0fe"
+    },
+    {
+      "bytes": 6356,
+      "path": "reviews/personaplex-deepgram/personaplex-e2e-live-voice-ui.html",
+      "sha256": "3613ffea09a12d2bc95a3f9ed4d59c0b8cffb61345531a7c85440dda3ee52dbe"
+    },
+    {
+      "bytes": 2405,
+      "path": "skills/personaplex/fixtures/e2e_live_voice_ui/fallback_render_fixture.json",
+      "sha256": "74d54ba3fce8c7638cafbb27fcd3a9c100aceb456326d889e6e50f0fff590d06"
+    },
+    {
+      "bytes": 4225,
+      "path": "skills/personaplex/fixtures/e2e_live_voice_ui/real_tool_data_render_fixture.json",
+      "sha256": "2a2874dea69e186641cf2cf9808a67b24b9478e2c1d8e9f05eb647d39e69d6d9"
+    },
+    {
+      "bytes": 957,
+      "path": "skills/personaplex/fixtures/p8_p9_p10/conversation_turns_fixture.json",
+      "sha256": "dca213e5ddb8e1f1a232580ee376bbceee66d7054c44007ebf9a75c330b93a54"
+    },
+    {
+      "bytes": 301,
+      "path": "skills/personaplex/fixtures/p8_p9_p10/deterministic_transcript_fixture.json",
+      "sha256": "bb1b96893f73546e6d4a073a92d426aaf70a32481fcbb8d2f489316e6e1aba9f"
+    },
+    {
+      "bytes": 253,
+      "path": "skills/personaplex/fixtures/p8_p9_p10/gpu_inference_fallback.json",
+      "sha256": "9a65d87ccab9623d81e228452436a29939c57a3108d1ce8aade28de959845700"
+    },
+    {
+      "bytes": 1242,
+      "path": "skills/personaplex/sanity_e2e_live_voice_fallback.sh",
+      "sha256": "5130094c68d3fa01246c96a0f57ccb2aff5ed9de994ee169a1cb07e4a4dc5ba4"
+    },
+    {
+      "bytes": 947,
+      "path": "skills/personaplex/sanity_e2e_live_voice_ui.sh",
+      "sha256": "b4b64354afdde1cc2f7624626c1c7a311dc3915b1575c7690cc998af5b3fe3d0"
+    },
+    {
+      "bytes": 893,
+      "path": "skills/personaplex/sanity_p10_gpu_personaplex_inference.sh",
+      "sha256": "601f80110103fda67b2c743104b039c6fa36a44ebac078e5496690feefc9a0e1"
+    },
+    {
+      "bytes": 802,
+      "path": "skills/personaplex/sanity_p8_live_deepgram_real_audio.sh",
+      "sha256": "752234db39175283104c08aa181678df38d758035185b20170b3cedd9121bb65"
+    },
+    {
+      "bytes": 1386,
+      "path": "skills/personaplex/sanity_p8_p9_p10_combined.sh",
+      "sha256": "2800deaf732d74d57a2e7838036d3c8286afb3e44b786d67e47be6c119fee824"
+    },
+    {
+      "bytes": 1057,
+      "path": "skills/personaplex/sanity_p9_conversation_compaction.sh",
+      "sha256": "e5fc532bcb154ccdbc60b749fd218bddb179a71145e26e44976c956d8d37c181"
+    },
+    {
+      "bytes": 75,
+      "path": "skills/personaplex/scripts/__init__.py",
+      "sha256": "cd66270232c16943737dfd034e2cda920ef22778b41b124c457dcfb61889570a"
+    },
+    {
+      "bytes": 21951,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_conversation_compaction.cpython-313.pyc",
+      "sha256": "f4338575526cb40f2f688fc5a9efd749ff01f733b4559888766490d7bd2a3c30"
+    },
+    {
+      "bytes": 17842,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_deepgram_live.cpython-313.pyc",
+      "sha256": "ba2525d4a68a81089cc9707445b87f044dbddf68f43d52c6bf1e43a9ff45a18f"
+    },
+    {
+      "bytes": 32748,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_e2e_live_voice_session.cpython-313.pyc",
+      "sha256": "b21d80766a33396c59cebb74d0b8ce802d999ae51261eb6b13b7f1ae7eefdecf"
+    },
+    {
+      "bytes": 23671,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_e2e_ui_render.cpython-313.pyc",
+      "sha256": "ea12343d39da254a290029637b6401cdf848fa5f56a62e8bb943c5513149c5f9"
+    },
+    {
+      "bytes": 18098,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_gpu_inference_probe.cpython-313.pyc",
+      "sha256": "ba233a4266594d980b71e814630854ba32dbbec4275fc0efb9c39e718fe0c6d0"
+    },
+    {
+      "bytes": 12450,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_p3_p5_combined_probe.cpython-313.pyc",
+      "sha256": "249178381443448de6a3fe2166ebdb0ecccd674622decf9d2309a2feb841e400"
+    },
+    {
+      "bytes": 20841,
+      "path": "skills/personaplex/scripts/__pycache__/personaplex_p3_p5_live_services.cpython-313.pyc",
+      "sha256": "3316f14410fbc9db2a47fb1c89d8a3f3a37bca859722e1a6ced0beaecc0e10e1"
+    },
+    {
+      "bytes": 21100,
+      "path": "skills/personaplex/scripts/personaplex_conversation_compaction.py",
+      "sha256": "0d838d277067702a27385ecff88962d6d1311cea4d19adb52fb0cc3aa310cda3"
+    },
+    {
+      "bytes": 13951,
+      "path": "skills/personaplex/scripts/personaplex_deepgram_live.py",
+      "sha256": "8c04360037d162d328434e53d2bc9ef08841bad75ee0260ef6196df96f0ad165"
+    },
+    {
+      "bytes": 29095,
+      "path": "skills/personaplex/scripts/personaplex_e2e_live_voice_session.py",
+      "sha256": "bbe2d52fc9ebd8501fc4d2e178c69b9b88025196689f9a94b4abce771ef86f7c"
+    },
+    {
+      "bytes": 17366,
+      "path": "skills/personaplex/scripts/personaplex_e2e_ui_render.py",
+      "sha256": "56d590d5d1dc7bc0e4026c2581de540ae52774fde58c40979c9365c67edfa0dd"
+    },
+    {
+      "bytes": 16070,
+      "path": "skills/personaplex/scripts/personaplex_gpu_inference_probe.py",
+      "sha256": "2777dc494cafff07017dcc6a0e5de740e04fe04ee98e000de9c7a8713182ef11"
+    },
+    {
+      "bytes": 129,
+      "path": "skills/personaplex/scripts/personaplex_p10_gpu_inference_probe.py",
+      "sha256": "5859725601d537b15abef26d227f994ebc83728b9d0a730508c9448816369c85"
+    },
+    {
+      "bytes": 12738,
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_combined_probe.py",
+      "sha256": "586894015cc5f40ca9bdfac0e936a11e7496a5763b76b6ec67b75b4f0e6b3f2f"
+    },
+    {
+      "bytes": 16172,
+      "path": "skills/personaplex/scripts/personaplex_p3_p5_live_services.py",
+      "sha256": "7684affdb1f8baa56b7b5f8dbaf67ecd744bcf010e3d2f94ea70ed15faf24c95"
+    },
+    {
+      "bytes": 123,
+      "path": "skills/personaplex/scripts/personaplex_p8_live_deepgram_probe.py",
+      "sha256": "2bc524570a4413f63ec78049609b5a45b4b065c24dfa53e8796f0fdbea8084f1"
+    },
+    {
+      "bytes": 133,
+      "path": "skills/personaplex/scripts/personaplex_p9_compaction_probe.py",
+      "sha256": "b5567dbe870218faf27d8ad1f105168d215712a2920b4be16c8b5595c1a2249e"
+    },
+    {
+      "bytes": 7238,
+      "path": "skills/personaplex/tests/__pycache__/test_e2e_live_voice_ui.cpython-313.pyc",
+      "sha256": "684d5b7c9c3fd5b0dfb5090e0753ab26606578dcb034a8e0f5dfa5e5acf4d386"
+    },
+    {
+      "bytes": 23760,
+      "path": "skills/personaplex/tests/__pycache__/test_p8_p9_p10_remaining_gaps.cpython-313.pyc",
+      "sha256": "5b6d93f789610294581b9e7bd5bc40b7d320fcec7830952c036a3637aa5829fb"
+    },
+    {
+      "bytes": 5122,
+      "path": "skills/personaplex/tests/test_e2e_live_voice_ui.py",
+      "sha256": "07794d9f2c307da68104adc8bd27311adaadcfda785cea7e65a9077ac9b10463"
+    },
+    {
+      "bytes": 12939,
+      "path": "skills/personaplex/tests/test_p8_p9_p10_remaining_gaps.py",
+      "sha256": "85a80dfeda2a77805a0fb405f5a6a9bc80675227a2833eddd907be8ade01d643"
+    }
+  ],
+  "live_targets": [
+    "Deepgram ASR WebSocket with speech_final=true",
+    "turn gate generation/state/fence receipt",
+    "memory intent route/tools/recall profile",
+    "memory daemon recall/evidence via POST /create-evidence-case",
+    "PersonaPlex GPU inference proof via LMGen.step(...)",
+    "memory daemon persistence via POST /upsert to conversation_history",
+    "session compaction via rolling summaries, audio metadata, projections, CAS session head"
+  ],
+  "material_ambiguity_remaining": false,
+  "objective": "Final PersonaPlex live voice session with Embry verified through visual UI showing every tool in real time.",
+  "primary_files": {
+    "e2e_probe": "skills/personaplex/scripts/personaplex_e2e_live_voice_session.py",
+    "fallback_sanity_script": "skills/personaplex/sanity_e2e_live_voice_fallback.sh",
+    "live_sanity_script": "skills/personaplex/sanity_e2e_live_voice_ui.sh",
+    "tests": "skills/personaplex/tests/test_e2e_live_voice_ui.py",
+    "ui_renderer": "skills/personaplex/scripts/personaplex_e2e_ui_render.py",
+    "ui_shell": "reviews/personaplex-deepgram/personaplex-e2e-live-voice-ui.html"
+  },
+  "schema": "personaplex.e2e_live_voice_ui.solution_manifest.v1",
+  "test_results_summary": {
+    "fallback_sanity": "exit 0, all_real_true=false confirmed",
+    "live_service_proof": "not executed in offline build environment; --require-real gate included",
+    "py_compile": "exit 0",
+    "unit_tests": "Ran 15 tests, OK, exit 0"
+  },
+  "truthfulness_contract": [
+    "Receipts must set real_* true only for proven live adapter/service execution.",
+    "Deterministic fallback is allowed but must set related real_* flags false.",
+    "UI banner shows ALL LIVE TOOL ROWS REAL=TRUE only when every row is true and receipt is not fixture_only.",
+    "No inline vectors are allowed in memory payloads; audio is path/hash metadata only."
+  ]
+}
