@@ -534,22 +534,61 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def run_gpu_personaplex_probe(**kwargs: Any) -> dict[str, Any]:
-    root = kwargs.get("personaplex_root") or kwargs.get("out_dir") and Path(str(kwargs["out_dir"])).parents[3] or discover_root(None)
-    venv_python = kwargs.get("venv_python") or discover_venv_python(None, root)
-    server = kwargs.get("server_path") or discover_golden_state_server(None, root)
     timeout = kwargs.get("timeout", 15.0)
-    docker_container = kwargs.get("container_name", "personaplex-personaplex-1")
     base_url = kwargs.get("base_url", "https://127.0.0.1:8998")
-    if not venv_python or not server:
-        return deterministic_fallback("run_gpu_personaplex_probe_backward_compat_skipped",
-            {"reason": "venv_python_or_golden_state_server_not_discovered", "root": str(root)})
-    return run_golden_state_probe(
-        venv_python=venv_python,
-        golden_state_server=server,
-        root=root,
-        timeout_seconds=timeout,
+    voice_prompt = kwargs.get("voice_prompt", "embry-current.pt")
+    text_prompt = kwargs.get("text_prompt", "Focus on the west gateway.")
+    return probe_container_websocket(
+        base_url=base_url,
+        voice_prompt=voice_prompt,
+        text_prompt=text_prompt,
+        timeout=timeout,
     )
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+def probe_container_websocket(
+    base_url: str = "https://127.0.0.1:8998",
+    voice_prompt: str = "embry-current.pt",
+    text_prompt: str = "Focus on the west gateway.",
+    timeout: float = 15.0,
+) -> dict:
+    import urllib.parse, time, ssl, json
+    from pathlib import Path
+    ws_url = f"wss://{urllib.parse.urlparse(base_url).hostname}:{urllib.parse.urlparse(base_url).port or 8998}/api/chat"
+    ws_url += f"?text_prompt={urllib.parse.quote(text_prompt)}&voice_prompt={urllib.parse.quote(voice_prompt)}"
+    try:
+        import websocket as _ws
+    except ImportError:
+        return {"real_gpu_personaplex": False, "error": "websocket_client_not_available", "fallback_used": True}
+
+    try:
+        ws = _ws.create_connection(ws_url, sslopt={"cert_reqs": ssl.CERT_NONE}, timeout=timeout)
+        ws.settimeout(timeout)
+        ws.send_binary(bytes([1, 0x78, 0x9c, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01]))
+        audio_responses = []
+        text_responses = []
+        start = time.monotonic()
+        while time.monotonic() - start < timeout:
+            try:
+                data = ws.recv()
+                if isinstance(data, bytes) and len(data) > 0:
+                    if data[0] == 1: audio_responses.append(len(data[1:]))
+                    elif data[0] == 2: text_responses.append(data[1:].decode("utf-8", errors="replace"))
+            except Exception:
+                break
+        ws.close()
+        got_audio = len(audio_responses) > 0
+        return {
+            "real_gpu_personaplex": got_audio,
+            "container_inference_observed": got_audio,
+            "audio_chunks_received": len(audio_responses),
+            "audio_bytes_total": sum(audio_responses),
+            "text_responses": text_responses,
+            "fallback_used": not got_audio,
+            "duration_seconds": round(time.monotonic() - start, 3),
+        }
+    except Exception as e:
+        return {"real_gpu_personaplex": False, "error": str(e)[:200], "fallback_used": True}
