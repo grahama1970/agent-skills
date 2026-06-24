@@ -1,0 +1,146 @@
+{
+  "schema": "interface_design_pipeline.v1",
+  "name": "sparta-chat",
+  "brief": "SPARTA_CHAT_BRIEF.md",
+  "output_root": ".interface-design/runs",
+  "surface": {
+    "kind": "chat",
+    "user_job": "Ask an evidence-sensitive question, understand the answer first, then inspect proof or artifacts on demand.",
+    "primary_object": "An evidence-backed conversation turn with compact receipts.",
+    "primary_decision": "Trust the answer, clarify the question, open the evidence workspace, or inspect an artifact.",
+    "keywords": [
+      "chat",
+      "evidence receipt",
+      "artifact inspector",
+      "operator interface",
+      "progressive disclosure"
+    ],
+    "constraints": [
+      "answer-first message hierarchy",
+      "compact evidence receipt",
+      "full proof in EvidenceWorkspace",
+      "full previews in ArtifactPanel",
+      "stable qids and keyboard navigation",
+      "NVIS/Embry dark tactical visual system",
+      "COTS and accessibility review"
+    ],
+    "anti_goals": [
+      "dashboard-first chat",
+      "audit-console wall in the thread",
+      "generic SaaS KPI cards",
+      "copied commercial product chrome",
+      "invented operational truth"
+    ],
+    "forbidden_ui_terms": [
+      "KPI"
+    ]
+  },
+  "research": {
+    "github_queries": [
+      "open source React AI chat interface artifact panel evidence citations",
+      "React Tailwind shadcn chat workspace inspector drawer",
+      "D3 knowledge graph chat interface React"
+    ],
+    "brave_queries": [
+      "modern operator chat interface progressive disclosure artifact inspector",
+      "evidence backed AI chat UX receipt card interface",
+      "compliance review chat workspace UX"
+    ],
+    "github_limit": 8,
+    "brave_count": 10,
+    "required_sources": [
+      "github",
+      "brave"
+    ],
+    "license_allowlist": [
+      "MIT",
+      "Apache-2.0",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "ISC"
+    ]
+  },
+  "mockups": {
+    "competitors": [
+      {
+        "id": "conversation-first",
+        "strategy": "Make the conversation and composer visually dominant. Render evidence and artifacts as compact receipts with a quiet inspector handoff."
+      },
+      {
+        "id": "operator-thread",
+        "strategy": "Treat delegated work, evidence receipts, and failures as typed operational objects in a calm chat thread; use a contextual right inspector."
+      },
+      {
+        "id": "distance-aware",
+        "strategy": "Design one responsive chat surface that visibly supports 10ft glance, 5ft triage, and lean-in drilldown without becoming a dashboard."
+      }
+    ],
+    "required_states": [
+      "default conversation",
+      "running",
+      "satisfied",
+      "inconclusive",
+      "blocked",
+      "artifact preview",
+      "evidence workspace",
+      "drawer"
+    ],
+    "reviewer_agent": "interface-reviewer",
+    "max_rounds": 3,
+    "minimum_score": 85,
+    "check_timeout": 180
+  },
+  "implementation": {
+    "target_repo": "/home/graham/workspace/experiments/pi-mono",
+    "target_surface": "packages/ux-lab/src/components/sparta/query/ChatWell.tsx",
+    "component_roots": [
+      "packages/ux-lab/src/components",
+      "packages/ux-lab/component-manifest.json",
+      "packages/web-ui/src"
+    ],
+    "stack": [
+      "React",
+      "Tailwind",
+      "shadcn",
+      "D3"
+    ],
+    "competitors": [
+      {
+        "id": "reuse-first",
+        "strategy": "Reuse the largest coherent set of existing chat, card, drawer, tooltip, and graph primitives; add the fewest new components."
+      },
+      {
+        "id": "state-machine-first",
+        "strategy": "Prioritize explicit typed turn states, qids, keyboard behavior, and testable evidence/artifact handoffs while preserving the selected mockup."
+      },
+      {
+        "id": "responsive-inspector-first",
+        "strategy": "Prioritize the desktop inspector-to-mobile-drawer transition and distance modes, reusing existing layout and D3 components."
+      }
+    ],
+    "reviewer_agent": "interface-reviewer",
+    "max_rounds": 3,
+    "check_timeout": 600,
+    "worktree_policy": "disposable",
+    "allowed_globs": [
+      "packages/ux-lab/src/components/sparta/query/**",
+      "packages/ux-lab/src/components/sparta/common/**",
+      "packages/ux-lab/src/components/gallery/**",
+      "packages/ux-lab/component-manifest.json",
+      "packages/ux-lab/tests/**"
+    ],
+    "required_changed_globs": [
+      "packages/ux-lab/src/components/sparta/query/ChatWell.tsx"
+    ],
+    "checks": [
+      "cd packages/ux-lab && npx tsc --noEmit",
+      "cd packages/ux-lab && npm test -- --run"
+    ]
+  },
+  "promotion": {
+    "human_gate": true,
+    "require_screenshots": true,
+    "require_interaction_tests": true,
+    "require_component_reuse_receipt": true
+  }
+}

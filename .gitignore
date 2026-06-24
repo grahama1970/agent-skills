@@ -37,6 +37,7 @@ skills/dogpile/run/fetch_cache/
 skills/ask/.ask_artifacts/
 skills/ask/ask_task_state.json
 skills/ask/src/ask/ask_task_state.json
+.interface-design/
 *.safetensors
 *.pt
 .venv/
