@@ -419,6 +419,42 @@ if [[ "$1" == "extension.build" ]]; then
     exec "$SKILL_DIR/scripts/ensure-surf-cli.sh" "${@:2}"
 fi
 
+# ── go URL guard ────────────────────────────────────────────
+# Before navigating, verify the current tab URL matches --expect-url.
+if [[ "$1" == "go" ]]; then
+    _expect_url=""
+    _tab_id=""
+    _args=("$@")
+    _idx=0
+    while [[ $_idx -lt ${#_args[@]} ]]; do
+        _a="${_args[$_idx]}"
+        if [[ "$_a" == "--expect-url" ]]; then
+            _idx=$((_idx + 1))
+            _expect_url="${_args[$_idx]:-}"
+        elif [[ "$_a" == "--tab-id" ]]; then
+            _idx=$((_idx + 1))
+            _tab_id="${_args[$_idx]:-}"
+        fi
+        _idx=$((_idx + 1))
+    done
+    if [[ -n "$_expect_url" && -n "$_tab_id" ]]; then
+        echo "Checking tab $_tab_id URL before navigating..." >&2
+        _js_out="$("$RUN_SH" js "return document.URL" --tab-id "$_tab_id" 2>/dev/null || true)"
+        _current_url="$(printf '%s' "$_js_out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0] if isinstance(d,list) else d)' 2>/dev/null || printf '%s' "$_js_out" | tr -d '[]"')"
+        if [[ -z "$_current_url" ]]; then
+            echo "WARNING: Could not read tab $_tab_id URL — proceeding without guard (no surf-cli?)." >&2
+        elif [[ "$_current_url" != "$_expect_url" ]]; then
+            echo "ERROR: Tab $_tab_id current URL does not match --expect-url" >&2
+            echo "  Current: $_current_url" >&2
+            echo "  Expected: $_expect_url" >&2
+            echo "  Navigation BLOCKED. Use 'surf go' without --expect-url to force navigation." >&2
+            exit 10
+        else
+            echo "URL check passed." >&2
+        fi
+    fi
+fi
+
 # Higher-level WebGPT handoff helpers. These intentionally live in the skill
 # wrapper because they own file artifacts and completion proof, while surf-cli
 # owns browser mechanics.
@@ -454,8 +490,28 @@ if [[ "$1" == "webgpt.extract" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-extract.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.prompt-preflight" ]]; then
+    exec python3 "$SKILL_DIR/scripts/lib/webgpt_prompt_preflight.py" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.heartbeat" ]]; then
+    exec python3 "$SKILL_DIR/scripts/lib/webgpt_heartbeat.py" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.recover" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-recover.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.e2e-sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-e2e-sanity.sh" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.live-sanity" || "$1" == "live-sanity" ]]; then
+    exec "$SKILL_DIR/sanity-e2e.sh" "${@:2}"
 fi
 
 if [[ "$1" == "cursor-browser.submit" ]]; then
@@ -479,6 +535,26 @@ if [[ "$1" == "webgpt.preflight" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-preflight.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.download" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-download.sh" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.roundtrip-preflight" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-roundtrip-preflight.sh" "${@:2}"
+fi
+
+if [[ "$1" == "kde.spaces" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" inventory "${@:2}"
+fi
+
+if [[ "$1" == "kde.helper" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" serve "${@:2}"
+fi
+
+if [[ "$1" == "kde.helper.health" ]]; then
+    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" health "${@:2}"
+fi
+
 # Handle help
 if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "surf - Unified browser automation for AI agents"
@@ -498,7 +574,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf tab.activate <id>  Switch to tab"
     echo ""
     echo "Browser Automation:"
-    echo "  surf go <url>           Navigate to URL"
+    echo "  surf go <url>           Navigate to URL (add --expect-url URL --tab-id ID to guard against wrong tab)"
     echo "  surf read               Read page with element refs (e1, e2...)"
     echo "  surf click <ref|selector> Click element by ref (e5) or CSS selector"
     echo "  surf type <text>        Type text (--ref <ref> to target element)"
@@ -512,10 +588,22 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "WebGPT Handoff:"
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf webgpt.extract --tab-id ID --output response.md"
+    echo "  surf webgpt.prompt-preflight --input FILE --json  Block unreadable local-path prompts"
+    echo "  surf webgpt.heartbeat read --artifact-dir DIR  Long-run progress JSON"
+    echo "  surf webgpt.recover --artifact-dir DIR  Deterministic next command from artifacts"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
+    echo "  surf webgpt.e2e-sanity  Fail-closed WebGPT transport sanity matrix"
+    echo "  surf webgpt.live-sanity [--profile release]  11-check live WebGPT transport gate (opt-in)"
     echo "  surf webgpt.tab-id-background-sanity [--tab-id|--url]  Fast tab-id + focus proof"
     echo "  surf webgpt.no-activate-sanity --tab-id ID|--url URL  Full sentinel + background proof"
+    echo "  surf webgpt.download --match PATTERN [--tab-id ID] [--output PATH]  Download attached file by button text match"
+    echo "  surf webgpt.submit --auto-download PATTERN  Submit and auto-download matched file attachments"
     echo "  surf webgpt.preflight --tab-id ID [--no-activate]  Pre-submit tab/focus checks"
+    echo ""
+    echo "KDE Workspace Tracking:"
+    echo "  surf kde.spaces        Inventory KDE desktops/windows (helper-first)"
+    echo "  surf kde.helper        Serve KDE desktop/window metadata from the desktop session"
+    echo "  surf kde.helper.health Check the local KDE helper"
     echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
@@ -532,6 +620,44 @@ fi
 
 LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
+
+if [[ "$1" == "tab.list" ]]; then
+    _with_kde=0
+    _want_json=0
+    _args=()
+    for _arg in "$@"; do
+        if [[ "$_arg" == "--with-kde" ]]; then
+            _with_kde=1
+            continue
+        fi
+        if [[ "$_arg" == "--json" ]]; then
+            _want_json=1
+        fi
+        _args+=("$_arg")
+    done
+    if [[ "$_with_kde" == "1" ]]; then
+        if ! surf_cli_available; then
+            echo "Error: tab.list --with-kde requires surf-cli extension." >&2
+            exit 1
+        fi
+        if [[ ! -f "$LOCAL_CLI" ]]; then
+            echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2
+            exit 1
+        fi
+        _json="$(node "$LOCAL_CLI" "${_args[@]}" --json)"
+        _annotated="$(printf '%s' "$_json" | python3 "$SKILL_DIR/scripts/kde_spaces.py" annotate-tabs)"
+        if [[ "$_want_json" == "1" ]]; then
+            printf '%s\n' "$_annotated"
+        else
+            printf '%s\n' "$_annotated" | python3 -c 'import json,sys
+data=json.load(sys.stdin)
+for tab in data.get("tabs", []):
+    kde=tab.get("kde", {})
+    print(f"{tab.get(\"id\", \"\")}\t{tab.get(\"title\", \"\")}\t{tab.get(\"url\", \"\")}\twindow={tab.get(\"windowId\", \"\")}\tdesktop={kde.get(\"desktop_index\")}")'
+        fi
+        exit 0
+    fi
+fi
 
 # If surf-cli socket is available, route ALL commands through it
 if surf_cli_available; then

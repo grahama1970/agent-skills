@@ -205,6 +205,11 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 
 In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
 
+`$ask webgpt ...` defaults to a 900 second WebGPT browser timeout
+(`ASK_WEBGPT_TIMEOUT`) unless the caller supplies `--oracle-timeout`, and
+defaults the ChatGPT reasoning selector to `Pro` (`ASK_WEBGPT_REASONING`) unless
+the caller explicitly overrides the WebGPT reasoning label.
+
 ---
 
 ### WebGPT Completion-Sentinel Handoff
@@ -217,10 +222,13 @@ In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-bro
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
+| "is WebGPT transport safe to use", "run e2e WebGPT sanity", "debug brittle Surf" | `surf webgpt.e2e-sanity [--tab-id <id> --expect-url <url>] --json` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
 | "prove tab id targeting while I work elsewhere", "Tab ID Viewer" | `surf webgpt.tab-id-background-sanity --tab-id <id>` |
 | "what tab/window am I focused on" | `surf focus.state --json` |
 | "preflight WebGPT tab before submit" | `surf webgpt.preflight --tab-id <id> --expect-url <conversation-url> [--no-activate]` |
+| "test a background WebGPT tab before a long review" | `surf webgpt.roundtrip-preflight --tab-id <id> --expect-url <conversation-url> --no-activate --json` |
+| "track KDE desktop spaces for Surf tabs" | `surf kde.spaces`, `surf kde.helper`, and `surf tab.list --json --with-kde` |
 
 
 Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab),
@@ -255,7 +263,10 @@ sessions are open. A valid tab id is not enough; it must be the right session.
 3. Confirm the id with the tab identity preflight above.
 4. Run `surf webgpt.submit ... --tab-id <ID> --expect-url <URL> --no-activate`
    (add `--no-remember` if you must not touch `/tmp/surf-webgpt-controlled-tab-id`).
-5. Confirm meta: `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
+5. Confirm meta: `controlled_tab_id` == `requested_tab_id` and the current
+   sentinel is present in raw assistant output. Clean background proof also has
+   `focus_changed: false`; `status: recovered_focus_changed` is usable degraded
+   transport evidence only when tab identity and sentinel proof remain intact.
 
 Do not rely on `/tmp/surf-webgpt-controlled-tab-id` alone — it may point at your
 foreground ChatGPT tab after an earlier successful run. Explicit `--tab-id`
@@ -270,6 +281,36 @@ For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
 injection, completion waiting, stability polling, cleaned output, raw output,
 and proof metadata.
+
+#### Project-Agent Anti-Drift Protocol
+
+When a project agent is using WebGPT, follow exactly one layer until it produces
+proof or fails closed:
+
+1. Preferred review path: `$ask webgpt-review` with a readable bundle.
+2. Transport path: `surf webgpt.submit` with `--url` or `--tab-id` plus
+   `--expect-url`/`--expect-title`.
+3. Recovery path: `surf webgpt.extract` with the exact sentinel from the failed
+   round.
+4. Diagnostics only: `surf read`, `surf js`, `surf type`, `surf click`, and
+   screenshots.
+
+Do not mix these layers in one round. In particular:
+
+- `submitted.md` only means the wrapper prepared the prompt; it is not evidence
+  that ChatGPT accepted, ran, or answered.
+- A running process, visible draft text, or "Stop answering" button is not
+  progress proof.
+- If `response.meta.json` or `response.raw.md` is missing, stop and report
+  `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`.
+- If the page shows an old answer, a visible draft, or `Stop answering`, do not
+  keep typing into the page. Use `webgpt.extract` if the old round has the
+  sentinel; otherwise wait for the busy page to finish, activate/clean the
+  reviewer tab, or create a fresh reviewer tab.
+- Do not use low-level `surf type`/`surf click` as a substitute for
+  `webgpt.submit`. Element refs are ephemeral and can change after every read.
+  Low-level commands are allowed only to gather diagnostics or prove why the
+  transport gate is blocked.
 
 ```bash
 surf webgpt.submit \
@@ -313,9 +354,14 @@ Behavior:
   `<<<WEBGPT_DONE:20260510T123456Z:8f41c2ab>>>`.
 - `$surf` appends a non-optional final-marker instruction to the submitted
   prompt.
+- `$surf` writes a separate submit receipt JSON (`--receipt-output`, default
+  `<output>.receipt.json`). `status: prepared_prompt` means only the prompt file
+  was prepared and is not transport proof. `status: submitted_to_chatgpt` means
+  the native helper observed ChatGPT accept the prompt for the current sentinel.
 - `--model` selects the ChatGPT model dropdown before submit.
-- `--reasoning` selects the ChatGPT reasoning dropdown before submit; use labels
-  exactly as shown in ChatGPT, such as `Pro` or `Heavy Reasoning`.
+- `--reasoning` selects the ChatGPT reasoning dropdown before submit; it
+  defaults to `SURF_WEBGPT_REASONING` or `Pro`. Use labels exactly as shown in
+  ChatGPT, such as `Pro` or `Heavy Reasoning`.
 - `$surf` waits for the final assistant DOM message to contain the marker and
   then remain unchanged for `--stable-polls` polls.
 - Whole-page text is diagnostic only. It must never satisfy the completion
@@ -323,6 +369,20 @@ Behavior:
 - Raw output keeps the marker. Clean output strips the marker. Metadata records
   the sentinel, output paths, timeout, stability policy, and whether the marker
   appeared only in the raw output.
+- `response.meta.json` includes agent-facing proof fields:
+  `proof_status`, `agent_diagnosis`, `agent_action`, and
+  `submitted_to_chatgpt`. Project agents must key their next step off
+  `proof_status`, not off vague stderr text or file existence.
+- `proof_status: response_proven` means the controlled tab returned the current
+  sentinel-bearing assistant response. `not_submitted` means Surf failed before
+  the main prompt was submitted. `delivery_not_proven` means prompt delivery was
+  not proven. `submitted_no_response_proof` means ChatGPT accepted the prompt
+  but Surf did not capture sentinel-bearing assistant output. `wrong_tab`,
+  `degraded_focus`, and `project_session_unproven` are hard stop states unless
+  the caller is explicitly doing recovery.
+- If only `.submitted.md` exists, treat the round as
+  `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`. If the receipt still
+  says `prepared_prompt`, ChatGPT acceptance has not been proven.
 - `raw_contains_sentinel: true` with `clean_contains_sentinel: false` is normal
   when clean output correctly stripped the terminal marker. Do not diagnose this
   as Surf failure.
@@ -348,25 +408,44 @@ Behavior:
   recovery only. Do not use it for normal project-agent review handoffs.
 - Set `SURF_WEBGPT_TAB_STATE=/path/to/state` for an alternate state file, or
   pass a `--tab-id` through lower-level `surf chatgpt` commands when debugging.
-- `--create-tab` opens `https://chatgpt.com/` via `tab.new` (inactive), then
-  submits on that id — use for isolated reviewer rounds.
+- `--create-tab` opens `https://chatgpt.com/` via `tab.new` when no `--project`
+  is set. With `--project`, it provisions `browser-oracle open-bind --window`
+  instead (single-tab reviewer window on Desktop 2). Use for isolated reviewer rounds.
+- Opening a ChatGPT **project home** URL such as
+  `https://chatgpt.com/g/<project>/project` is not proof that a new independent
+  project conversation exists. If a project-shell target completes without a
+  proven `conversation_url` containing `/c/<id>`, Surf marks the round
+  `project_session_unproven` and exits nonzero. Bind or target the real
+  conversation URL for concurrent project-agent work.
 - `--no-remember` skips reading and writing the controlled-tab state file.
 - Explicit `--tab-id` or `--url` automatically implies `--no-remember` (do not
   overwrite `/tmp/surf-webgpt-controlled-tab-id` with a reviewer tab).
 - `--url` matching is normalized (host, trailing slash) and conversation-uuid aware;
   multiple open tabs with the same conversation id fail closed as `ambiguous_url`.
-- `--allow-foreground-controlled` opts out of the pre-submit guard that rejects
-  `--no-activate` when the controlled tab is already your foreground active tab.
+- If the controlled tab is already your foreground active tab, `--no-activate`
+  is allowed: Surf does not need to activate anything. This is user-visible
+  same-tab operation, not background proof. Avoid typing or clicking in that
+  ChatGPT page while the submit is running.
+- `--allow-foreground-controlled` is retained for compatibility with older
+  scripts; current Surf no longer rejects the already-active controlled tab.
 - Long submits poll focus every `SURF_WEBGPT_FOCUS_POLL_INTERVAL` seconds (default
   `15`). Mid-run tab switches set `focus_stolen_mid_submit` in meta. Optional
   `SURF_WEBGPT_ABORT_ON_FOCUS_STEAL=1` kills the in-flight submit when focus drifts.
+- ChatGPT/browser response notifications are advisory wake signals only. Passing
+  `--notification-assisted-wait` or setting
+  `SURF_WEBGPT_NOTIFICATION_ASSISTED_WAIT=1` records that notification-assisted
+  waiting was requested, but `$surf` still accepts completion only from the
+  controlled tab's current sentinel-bearing assistant response, or from the
+  explicit image-artifact proof path for image jobs.
 - **No auto-retry** after human tab switches: use `webgpt.extract` if ChatGPT already
   finished, otherwise re-run the same `--tab-id` / `--url` deliberately.
 
 
 Do not infer WebGPT completion from spinner absence, button state, visual
-stillness, or page text outside the final assistant response. Use the sentinel
-contract for any workflow that copies WebGPT output into files.
+stillness, page text outside the final assistant response, or desktop/mobile
+notification text. Notifications can help wake polling or human attention, but
+they are not tab-bound, prompt-bound, or assistant-output proof. Use the
+sentinel contract for any workflow that copies WebGPT output into files.
 
 #### Transport vs parser failures
 
@@ -389,11 +468,16 @@ wrapper that consumes it:
   with the current sentinel and clean output is uncontaminated, but focus changed
   during or after the run, Surf writes the raw/clean/meta artifacts and reports
   `status: recovered_focus_changed`, `transport_degraded: true`, and
-  `focus_invariant_ok: false`. The response is usable, but it is not clean
-  background-mode proof.
+  `focus_invariant_ok: false`. The response is usable degraded transport
+  evidence, but it is not clean background-mode proof.
 - **Transport failure:** missing/invalid controlled tab, failed preflight,
   `controlled_tab_id` mismatch, timeout without the current sentinel in raw
   assistant text, or page chrome/prompt echo in clean output.
+- **Notification-assisted wait:** metadata may include
+  `notification_assisted_wait_requested: true`, but
+  `notification_assisted_wait_completion_proof` must remain `false`. A
+  notification can reduce passive waiting, not satisfy the WebGPT completion
+  contract.
 
 When a completed answer is visible in the controlled tab but the submit wrapper
 was interrupted or did not parse it, use `webgpt.extract` with the exact
@@ -474,6 +558,90 @@ If an image prompt was submitted through `webgpt.submit` and hangs after the
 image appears, stop the lingering submit process, then use same-tab image
 extraction. Report that the image path used artifact proof rather than a text
 sentinel.
+
+#### WebGPT downloadable file artifacts
+
+When ChatGPT/WebGPT says it created a downloadable file such as a `.zip`, `.json`,
+`.html`, `.md`, `.png`, or bundle artifact, the assistant text is not enough.
+Project agents must download or capture the file from the same controlled tab
+and verify it locally before implementing, extracting, or reporting that a
+bundle exists.
+
+Use this path after `webgpt.submit` has produced a sentinel-proven response that
+names a downloadable artifact:
+
+```bash
+# 1. Confirm the controlled tab still matches the intended conversation.
+surf webgpt.preflight \
+  --tab-id <CHATGPT_TAB_ID> \
+  --expect-url "<CHATGPT_CONVERSATION_URL>" \
+  --no-activate \
+  --json
+
+# 2. Inspect candidate generated-file controls in the same tab.
+surf js "return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=button]')).map((e,i)=>({
+  i,
+  tag:e.tagName,
+  text:(e.innerText||e.textContent||'').trim().slice(0,200),
+  href:e.href||'',
+  download:e.getAttribute('download')||'',
+  aria:e.getAttribute('aria-label')||'',
+  role:e.getAttribute('role')||'',
+  cls:String(e.className||'')
+})).filter(x=>/zip|download|bundle|\\.json|\\.html|\\.md|\\.png/i.test([x.text,x.href,x.download,x.aria].join(' '))), null, 2)" \
+  --tab-id <CHATGPT_TAB_ID>
+
+# 3. Click the exact generated-file control in that controlled tab.
+surf js "const name='personaplex-decision-tree-update-bundle.zip';
+const e=Array.from(document.querySelectorAll('a,button,[role=button]'))
+  .find(x=>(x.innerText||x.textContent||'').includes(name));
+if(!e) throw new Error('generated artifact control not found: '+name);
+e.scrollIntoView({block:'center'});
+e.click();
+return JSON.stringify({
+  clicked:true,
+  tag:e.tagName,
+  text:(e.innerText||e.textContent||'').trim(),
+  href:e.href||'',
+  download:e.getAttribute('download')||''
+});" \
+  --tab-id <CHATGPT_TAB_ID>
+
+# 4. Verify the browser download landed locally.
+find "$HOME/Downloads" /tmp -maxdepth 1 -type f \
+  \( -name 'personaplex-decision-tree-update-bundle.zip' -o -name '*.zip' \) \
+  -mmin -30 -printf '%TY-%Tm-%Td %TH:%TM:%TS %s %p\n'
+
+# 5. Copy into an artifact directory, checksum, list, and extract.
+mkdir -p reviews/<project>/greenfield-sanity/<run-id>/extracted
+cp "$HOME/Downloads/personaplex-decision-tree-update-bundle.zip" \
+  reviews/<project>/greenfield-sanity/<run-id>/source.zip
+sha256sum reviews/<project>/greenfield-sanity/<run-id>/source.zip \
+  | tee reviews/<project>/greenfield-sanity/<run-id>/source.sha256
+unzip -l reviews/<project>/greenfield-sanity/<run-id>/source.zip \
+  | tee reviews/<project>/greenfield-sanity/<run-id>/unzip-list.txt
+unzip -o reviews/<project>/greenfield-sanity/<run-id>/source.zip \
+  -d reviews/<project>/greenfield-sanity/<run-id>/extracted
+```
+
+Important details:
+
+- Always pass the explicit `--tab-id` or `--url`; do not click the active tab by
+  accident.
+- Some ChatGPT generated-file controls are `button` elements with no `href` or
+  `download` attribute. They can still trigger a browser download when clicked.
+- A response line like `Created the finished-file zip bundle: file.zip` is not
+  proof that the file exists locally. The proof is the downloaded file path,
+  checksum, and a successful format-specific sanity check such as `unzip -l`.
+- If no local file appears after clicking the controlled-tab artifact control,
+  report `NEEDS_ATTENTION: missing_webgpt_download_artifact` and do not
+  implement from the prose description.
+- If the downloaded checksum does not match WebGPT's stated checksum or the
+  manifest checksums, quarantine the download and ask WebGPT to regenerate the
+  bundle.
+- If transport metadata says `recovered_focus_changed`, preserve that as
+  degraded transport evidence. The downloaded artifact can still be sanity
+  checked, but it is not clean background-mode proof.
 
 #### Bounded reviewer/executor loops
 
@@ -601,9 +769,18 @@ it attaches CDP to the tab id you name.
 | --- | --- |
 | Can I work in **another Chrome tab** while surf controls ChatGPT? | **Yes** — pass `--tab-id <reviewer-tab>` and `--no-activate` on `webgpt.submit`, `js`, `click`, etc. |
 | Must I pass `--tab-id` every time? | **Yes** for background/reviewer work. Without it, `surf read` / `surf click` use the **active** tab in the last-focused Chrome window. |
-| Does surf work across **KDE desktop spaces**? | **Not proven here.** Tab ids are per Chrome tab. If the tab stays loaded in your profile, CDP usually still works; space switches are not part of the sanity gate. |
-| Will a long `webgpt.submit` pass if I **switch Chrome tabs** mid-run? | **No** — meta requires `focus_changed: false` for the whole submit. Stay on your work tab until the round finishes. |
-| What fails with `focus_stolen_despite_no_activate`? | Chrome's active tab or focused window changed during the run, or the controlled tab was your foreground work tab. Use a **dedicated reviewer tab** + explicit `--tab-id`. |
+| Does surf work across **KDE desktop spaces**? | Surf can inventory KDE workspace state with `surf kde.spaces` and annotate Chrome tabs with best-effort workspace metadata via `surf tab.list --json --with-kde`. For tmux/SSH sessions without `DISPLAY`, run `surf kde.helper` from inside the KDE desktop session and point tmux-side Surf at it with `SURF_KDE_HELPER_URL`. If KDE/OS window metadata is unavailable, callers must treat tab visibility as ambiguous and avoid destructive stale-binding cleanup. |
+| Will a long `webgpt.submit` pass if I **switch Chrome tabs** mid-run? | **It can pass as degraded transport evidence** if the controlled tab returns the current sentinel-bearing assistant response and clean output is uncontaminated. Clean background proof still requires `focus_changed: false`. |
+| Can Surf use the ChatGPT tab I am currently looking at? | **Yes** — pass the explicit `--tab-id`/`--url`. Do not type or click in that page while Surf is submitting. |
+| What fails with `focus_stolen_despite_no_activate`? | Chrome's active tab or focused window changed during the run. Use a **dedicated reviewer tab** + explicit `--tab-id` when you want to keep working elsewhere. |
+
+KDE workspace metadata is advisory. Chrome extension `windowId` is not the same
+as the KDE/X11 window id, so Surf correlates by active tab title when OS window
+metadata is available. Use it for diagnostics, routing, and fail-closed stale
+binding decisions; do not treat it as proof that a tab is closed. `surf kde.helper`
+serves `GET /spaces`, `GET /windows`, and `POST /annotate-tabs` on localhost so
+terminal sessions on other KDE spaces can consume desktop-session window state
+without direct X11 access.
 
 
 #### Chrome Google/Gemini side panel is browser UI
@@ -656,6 +833,22 @@ Required proof for this path:
 
 
 
+#### WebGPT reviewer window policy
+
+For `/ask webgpt` and `webgpt-review`, treat each named project as **one isolated
+Chrome window with one ChatGPT tab** on the reviewer KDE desktop (Desktop 2 by
+default). Do not add reviewer tabs to the daily Chrome window on Desktop 1.
+
+| Situation | Behavior |
+| --- | --- |
+| First `--webgpt-project mustard` | `$ask` calls `browser-oracle open-bind mustard --window` in the background |
+| Missing stale binding (`CREATE_MISSING`) | `webgpt.submit` recreates via `open-bind --window`, not `tab.new` |
+| `--create-tab` with `--project` | Same window provisioning path |
+| Human label | Tab title set to `mustard · WebGPT reviewer` |
+
+Verify placement with `surf tab.list --json --with-kde` and bind with
+`browser-oracle doctor --project <name>`.
+
 #### Project binding via `$browser-oracle`
 
 `surf webgpt.submit` tab binding flags (same resolution order via `$browser-oracle`):
@@ -672,6 +865,19 @@ Required proof for this path:
 | `--no-activate` | Background controlled tab (required for reviewer work) |
 | `--no-remember` | Do not touch `/tmp/surf-webgpt-controlled-tab-id` |
 
+When Surf resolves a project through `$browser-oracle`, it reconciles the stored
+tab id against live `surf tab.list --json --with-kde` before using it. A stale
+or URL-mismatched binding is ignored fail-closed unless explicit repair is
+enabled:
+
+| Environment | Role |
+|-------------|------|
+| `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` | Delete stored bindings whose tab id no longer exists after a complete live scan |
+| `SURF_BROWSER_ORACLE_CREATE_MISSING=1` | For a missing stored tab with a known URL, open a fresh **reviewer window** (`open-bind --window` on Desktop 2) and rebind |
+| `BROWSER_ORACLE_OPEN_BIND_WINDOW=1` | Default for webgpt `open-bind` and CREATE_MISSING recreation: isolated single-tab Chrome window on reviewer desktop |
+| `BROWSER_ORACLE_OPEN_BIND_UNFOCUSED=1` | Open reviewer windows unfocused so Desktop 1 work is not stolen |
+| `BROWSER_ORACLE_REVIEWER_KDE_DESKTOP=1` | KDE desktop index for reviewer windows (1 = human "Desktop 2") |
+
 ```bash
 # Zero-flag from a registered directory
 surf webgpt.submit --input REQ.md --output RESP.md --no-activate
@@ -680,7 +886,99 @@ surf webgpt.submit --input REQ.md --output RESP.md --no-activate
 surf webgpt.submit --input REQ.md --output RESP.md --project oc-subagent-personas --no-activate
 surf webgpt.submit --input REQ.md --output RESP.md --browser-oracle-from agents/mathematics --no-activate
 surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id> --expect-url <url> --no-activate
+
+# Repair stale browser-oracle state before a submit
+SURF_BROWSER_ORACLE_PRUNE_MISSING=1 \
+  surf webgpt.submit --input REQ.md --output RESP.md --project oc-subagent-personas --no-activate
 ```
+
+#### Tab navigation guard (`go --expect-url`)
+
+`surf go` supports `--expect-url URL --tab-id ID` to verify the tab's current URL
+before navigating. This prevents accidentally navigating the wrong tab away from
+a conversation:
+
+```bash
+surf go "https://chatgpt.com/c/<uuid>" --expect-url "https://chatgpt.com/c/<uuid>" --tab-id 837355486
+```
+
+If the tab's current URL doesn't match `--expect-url`, navigation is blocked with
+exit code 10. Without `--expect-url`, `go` works as before.
+
+#### File attachment download (`webgpt.download`)
+
+Downloads a file attachment from a ChatGPT conversation by finding and clicking
+the download button whose text matches a pattern:
+
+```bash
+surf webgpt.download --match "solution.zip" --tab-id 837355486 --output ./round-1/solution.zip
+```
+
+Options:
+- `--match PATTERN` — text pattern to match the download button (required)
+- `--output PATH` — destination path for the downloaded file
+- `--output-dir DIR` — destination directory (preserves original filename)
+- `--timeout SECONDS` — max wait for download (default: 60)
+
+#### Submit and auto-download (`webgpt.submit --auto-download`)
+
+Combines submit and file download into one command:
+
+```bash
+surf webgpt.submit \
+  --input creation-prompt.md \
+  --tab-id 837355486 \
+  --url "https://chatgpt.com/g/g-.../c/..." \
+  --expect-url "https://chatgpt.com/g/g-.../c/..." \
+  --attach-file creation-bundle.zip \
+  --auto-download "solution.zip" \
+  --output ./round-1/response.md
+```
+
+After the response is received, `--auto-download` finds the download button
+matching the pattern, clicks it, and waits for the file to land in `~/Downloads`.
+If no download button is found, it sends a follow-up asking for a real file
+attachment and retries. Can be specified multiple times for multiple attachments.
+
+#### Require attachment (`--require-attachment`)
+
+Fails the submit if the response doesn't contain a downloadable file button
+matching the pattern:
+
+```bash
+surf webgpt.submit \
+  --input bundle.md \
+  --require-attachment "solution.zip" \
+  --output ./round-1/response.md
+```
+
+Useful when you want to detect WebGPT returning text instead of a real file,
+without triggering an automatic retry.
+
+#### Optional: verify after download (`--verify-cmd`)
+
+After auto-download, extract the zip and run a typecheck/test command against
+the repo:
+
+```bash
+surf webgpt.submit \
+  --input bundle.md \
+  --auto-download "solution.zip" \
+  --verify-cmd "npx tsc --noEmit" \
+  --repo /home/graham/workspace/experiments/pi-mono/packages/ux-lab \
+  --output ./round-1/response.md
+```
+
+If `--verify-cmd` is omitted or set to `auto`, surf auto-detects from the repo
+(`npm run typecheck` → `npx tsc --noEmit` → `npm run lint` for JS/TS repos;
+`python -m pytest` for Python repos).
+
+#### Preflight warnings default to warn (not block)
+
+By default, `webgpt.submit` runs a preflight check that detects local filesystem
+paths in the prompt (e.g. `/api/memory/recall` in documentation text). These
+no longer block submission — they print a warning and proceed. Pass
+`--no-warn-only` to restore strict blocking if needed.
 
 #### Pre-submit checks (`webgpt.preflight`)
 
@@ -695,9 +993,11 @@ surf webgpt.preflight --url "https://chatgpt.com/c/<uuid>" --no-activate --json
 ```
 
 Fails fast when the extension socket is missing, `focus.state` is unavailable, the tab
-is not an open `chatgpt.com` tab, URL resolution is ambiguous, multiple ChatGPT
-tabs are open and a bare `--tab-id` has no `--expect-url`/`--expect-title`, or
-(with `--no-activate`) the controlled tab is your foreground work tab.
+is not an open `chatgpt.com` tab, URL resolution is ambiguous, or multiple ChatGPT
+tabs are open and a bare `--tab-id` has no `--expect-url`/`--expect-title`.
+With `--no-activate`, an already-active controlled tab is allowed and reported as
+`foreground_controlled_user_visible`; this means same-tab user-observed operation,
+not dedicated background proof.
 
 When there are several ChatGPT sessions open, do the full identity check before
 submitting:
@@ -751,19 +1051,74 @@ surf webgpt.no-activate-sanity --tab-id <TAB_ID>
 # or: surf webgpt.no-activate-sanity --url "https://chatgpt.com/c/<uuid>"
 ```
 
-**Required meta on success:** `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
+**Required meta on clean success:** `controlled_tab_id` == `requested_tab_id`,
+`raw_contains_sentinel: true`, `clean_contains_sentinel: false`, and
+`focus_changed: false`. A `recovered_focus_changed` result with the same tab and
+sentinel proof is usable degraded transport evidence, not clean background
+proof.
+
+For long WebGPT reviews, run a sentinel round-trip preflight before sending the
+large bundle:
+
+```bash
+surf webgpt.roundtrip-preflight \
+  --tab-id <TAB_ID> \
+  --expect-url "https://chatgpt.com/c/<uuid>" \
+  --no-activate \
+  --timeout 60 \
+  --json
+```
+
+This submits a tiny `pong <sentinel>` prompt through the same controlled tab and
+visibility mode. It writes a full debugging bundle: request, submitted prompt,
+clean/raw response, Surf meta, stderr, focus before/after, tab list with KDE
+metadata where available, and `roundtrip-preflight.json`. A failure with
+`hidden_tab_stall`, `document_hidden_at_completion`, `background_hidden_polls`,
+or `missing_sentinel` means the expensive review bundle should not be submitted
+in background mode yet. Activate/repair/rebind the reviewer tab or use a visible
+dedicated reviewer tab/window.
+
+When Surf/WebGPT reliability is in question, run the fail-closed E2E matrix
+before any project-agent review bundle:
+
+```bash
+surf webgpt.e2e-sanity --json
+surf webgpt.e2e-sanity \
+  --tab-id <TAB_ID> \
+  --expect-url "https://chatgpt.com/c/<uuid>" \
+  --no-activate \
+  --json
+```
+
+`webgpt.e2e-sanity` always checks extension/native freshness, `tab.list`,
+`focus.state`, and a fresh `--create-tab` sentinel round trip. When `--tab-id`
+or `--url` is supplied, it also tests that explicit target. It fails closed on
+stale native host, missing tab list, missing focus state, failed preflight,
+prompt delivery not proven, missing sentinel, missing controlled tab id,
+controlled-tab mismatch, focus drift in `--no-activate`, unproven project
+conversation URL, or missing reasoning-selection metadata. It writes
+`e2e-sanity-result.json` plus per-scenario artifacts under the output directory.
+
+Treat `warning_reasoning_selector_unavailable` as a visible degradation: Surf
+can still prove delivery and response, but ChatGPT did not expose the requested
+reasoning selector, so agents must not claim that `Pro` was actually selected.
 
 
 #### Background controlled-tab mode (`--no-activate`)
 
-`webgpt.submit --no-activate` keeps the controlled ChatGPT tab in the
-background so it does not foreground over whatever window the user has active.
+`webgpt.submit --no-activate` does not foreground the controlled ChatGPT tab.
+If the controlled tab is already active, Surf uses it in place and does not
+treat that as a failure. If the tab is inactive, this keeps it in the background
+so it does not foreground over whatever window the user has active.
 The proof contract is unchanged — controlled tab id required, sentinel in the
 final assistant DOM message, clean output strips only the terminal sentinel —
 plus the additional invariants:
 
-- The user's foreground tab and focused window are unchanged across the run
-  (`focus_changed: false` in meta).
+- The user's foreground tab and focused window are unchanged across the run for
+  clean background proof (`focus_changed: false` in meta). If focus changes but
+  the controlled tab still returns the current sentinel-bearing assistant
+  response, Surf may report `recovered_focus_changed`; callers must preserve
+  that degradation in their evidence.
 - The screenshot (when taken alongside) goes through CDP `Page.captureScreenshot`,
   never the `chrome.tabs.captureVisibleTab` fallback. The fallback is disabled
   in `--no-activate` mode because it would capture whichever tab is actually
