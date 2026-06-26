@@ -155,6 +155,7 @@ One-time setup (see "Extension Setup" below), then:
 ```bash
 surf tab.list                    # See all browser tabs
 surf tab.new "https://example.com"
+surf tab.close <id>              # Close tab by id (duplicates auto-closed by webgpt.submit)
 surf read                        # Page content with element refs (e1, e2...)
 surf click e5                    # Click element
 surf type "hello" --ref e2       # Type into element
@@ -223,6 +224,7 @@ the caller explicitly overrides the WebGPT reasoning label.
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
 | "is WebGPT transport safe to use", "run e2e WebGPT sanity", "debug brittle Surf" | `surf webgpt.e2e-sanity [--tab-id <id> --expect-url <url>] --json` |
+| "prove WebGPT monitoring works", "test assistant stream heartbeat" | `surf webgpt.monitoring-sanity [--tab-id <id> --expect-url <url>] --json` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
 | "prove tab id targeting while I work elsewhere", "Tab ID Viewer" | `surf webgpt.tab-id-background-sanity --tab-id <id>` |
 | "what tab/window am I focused on" | `surf focus.state --json` |
@@ -364,6 +366,17 @@ Behavior:
   ChatGPT, such as `Pro` or `Heavy Reasoning`.
 - `$surf` waits for the final assistant DOM message to contain the marker and
   then remain unchanged for `--stable-polls` polls.
+- During WebGPT waits, `$surf` writes `webgpt_heartbeat.json` and
+  `webgpt_heartbeat.events.jsonl` next to the response metadata. The heartbeat
+  includes advisory assistant-stream fields: current assistant message character
+  count, SHA-256 hash, tail excerpt, last change time, sentinel-seen state,
+  page-sentinel state, stable poll count, source, message id, turn index,
+  hidden/visibility state, and background hidden poll count.
+- Assistant-stream heartbeat fields are **monitoring only**. They can prove that
+  Surf is observing a growing or stalled assistant turn, but they are not
+  completion proof. Completion proof still requires the controlled tab's current
+  sentinel-bearing assistant DOM response and the normal raw/clean/meta
+  contract.
 - Whole-page text is diagnostic only. It must never satisfy the completion
   contract because the submitted prompt itself contains the sentinel.
 - Raw output keeps the marker. Clean output strips the marker. Metadata records
@@ -1103,6 +1116,20 @@ Treat `warning_reasoning_selector_unavailable` as a visible degradation: Surf
 can still prove delivery and response, but ChatGPT did not expose the requested
 reasoning selector, so agents must not claim that `Pro` was actually selected.
 
+To prove the assistant-stream monitoring layer itself, run the live monitoring
+sanity:
+
+```bash
+surf webgpt.monitoring-sanity --json
+surf webgpt.monitoring-sanity --tab-id <TAB_ID> --expect-url "https://chatgpt.com/c/<uuid>" --json
+```
+
+This is a non-mocked real ChatGPT/WebGPT round trip. It passes only if the
+normal sentinel response is proven and the monitoring artifacts contain
+assistant length/hash/tail, sentinel state, stable poll count, and JSONL
+assistant snapshot events. Its result JSON reports `mocked: false`,
+`live: true`, `claims.proves`, and `claims.does_not_prove`.
+
 
 #### Background controlled-tab mode (`--no-activate`)
 
@@ -1157,6 +1184,47 @@ Asserts the focus state did not change, the screenshot method is `cdp`
 authenticated session and will trip Cloudflare. `--no-activate` runs inside
 the user's authenticated Chrome via the extension; the only difference from
 the default WebGPT path is that the controlled tab is not foregrounded.
+
+#### WebGPT submit auto-recovery (built into `scripts/webgpt-submit.sh`)
+
+`webgpt.submit` now handles three common failure modes automatically:
+
+1. **Duplicate tab cleanup**: Before submitting, `webgpt.submit` checks for any
+   other open ChatGPT tabs sharing the same conversation URL. Duplicates are
+   closed with `tab.close <id>`, eliminating "unverified_tab_id_with_multiple_
+   chatgpt_tabs" identity preflight failures.
+
+2. **KDE desktop auto-switch**: If the target tab is on a different KDE desktop
+   than the current one, `webgpt.submit` switches to that desktop using
+   `wmctrl -s` before attaching the CDP debugger. Chrome freezes JS execution on
+   tabs that are not on the active desktop, causing `document_hidden=true` and
+   `hidden_tab_stall` failures. Switching desktops before attach prevents this.
+
+3. **CDP stale connection + composer recovery**: Chrome allows only one CDP
+   debugger connection per tab. If a previous `webgpt.submit` process was killed
+   before cleanup, the stale connection blocks all subsequent CDP access to that
+   tab (`"Failed to attach debugger: Another debugger is already attached"`).
+   `webgpt.submit` now:
+   - Activates the tab with `tab.activate` to force Chrome to release the stale
+     CDP connection
+   - Clears the ChatGPT composer text and its localStorage draft source
+     (ChatGPT restores drafts on page load, causing false-positive
+     "ChatGPT prompt composer is not empty" errors)
+   - Retries the clear if ChatGPT restores the draft between clear and submit
+
+If all three recovery steps fail, use `--create-tab` which opens a fresh
+ChatGPT tab with no stale CDP and no restored draft:
+
+```bash
+surf webgpt.submit --input REQ.md --output RESP.md --create-tab --timeout 900
+```
+
+**Tab close**: duplicate tabs with the same URL are closed automatically. To
+close a tab manually by id:
+
+```bash
+tab.close <id>
+```
 
 For ChatGPT/WebGPT handoffs, the generic CDP verification hook is not
 authoritative proof. It launches or controls a separate browser context and may

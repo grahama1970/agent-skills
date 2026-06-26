@@ -42,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     --output) output="${2:-}"; shift 2 ;;
     --output-dir) output_dir="${2:-}"; shift 2 ;;
     --downloads-dir) downloads_dir="${2:-}"; shift 2 ;;
+    --tab-id) tab_id="${2:-}"; shift 2 ;;
     --poll-interval) poll_interval="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
