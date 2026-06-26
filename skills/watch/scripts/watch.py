@@ -12,6 +12,7 @@ Output: frames + transcript + 3 QRA pairs + image descriptions + audio descripti
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import shutil
@@ -45,8 +46,7 @@ from storage import (
 )
 from transcribe import transcribe_video, parse_captions, filter_segments, align_segments_to_reference, extract_subtitles, has_text_subtitles
 from diff_intelligence import build_diff_intelligence
-
-MOVIE_LIBRARY = Path("/mnt/storage12tb/media/movies")
+from config import MOVIE_LIBRARY
 
 _CAST_CACHE: dict[str, dict[str, str]] = {}
 
@@ -191,6 +191,69 @@ def _resolve_movie_source(source: str) -> str | None:
     return None
 
 
+ROLLING_WINDOW_SECONDS = 300.0
+ROLLING_WINDOW_OVERLAP_SECONDS = 3.0
+ROLLING_MIN_DURATION_SECONDS = 600.0
+
+
+def _should_use_rolling_window(
+    effective_duration: float,
+    focused: bool,
+    fps: float | None,
+    scene_change: bool,
+) -> bool:
+    return (
+        effective_duration > ROLLING_MIN_DURATION_SECONDS
+        and not focused
+        and fps is None
+        and scene_change
+    )
+
+
+def _plan_rolling_windows(
+    effective_start: float,
+    effective_end: float,
+    window_seconds: float = ROLLING_WINDOW_SECONDS,
+    overlap_seconds: float = ROLLING_WINDOW_OVERLAP_SECONDS,
+) -> list[dict]:
+    windows: list[dict] = []
+    total_duration = max(0.0, effective_end - effective_start)
+    total_chunks = max(1, int(math.ceil(total_duration / window_seconds)))
+
+    for idx in range(total_chunks):
+        canonical_start = effective_start + idx * window_seconds
+        canonical_end = min(effective_end, canonical_start + window_seconds)
+        extract_start = max(effective_start, canonical_start - overlap_seconds)
+        extract_end = min(effective_end, canonical_end + overlap_seconds)
+        windows.append({
+            "chunk_index": idx,
+            "total_chunks": total_chunks,
+            "chunk_start_seconds": canonical_start,
+            "chunk_end_seconds": canonical_end,
+            "extract_start_seconds": extract_start,
+            "extract_end_seconds": extract_end,
+        })
+    return windows
+
+
+def _merge_rolling_frames(all_chunk_frames: list[list[dict]], tolerance_seconds: float = 0.5) -> list[dict]:
+    merged: list[dict] = []
+    seen: list[float] = []
+    for frame in sorted(
+        (f for chunk in all_chunk_frames for f in chunk),
+        key=lambda f: float(f["timestamp_seconds"]),
+    ):
+        ts = float(frame["timestamp_seconds"])
+        if any(abs(ts - existing) <= tolerance_seconds for existing in seen):
+            continue
+        row = dict(frame)
+        row["index"] = len(merged)
+        row["persist_name"] = f"frame_{len(merged) + 1:05d}.jpg"
+        merged.append(row)
+        seen.append(ts)
+    return merged
+
+
 def run_watch(
     source: str,
     scene_change: bool = True,
@@ -212,6 +275,8 @@ def run_watch(
     """Main watch pipeline: resolve source, extract frames, transcribe, generate QRA, store to memory."""
     max_frames_capped = min(max_frames, 500)
 
+    # Rolling window: if video exceeds frame budget, split into chunks
+    # This ensures long videos get full coverage without hitting the frame cap
     raw_source = source
     source_url = raw_source if is_url(raw_source) else None
     resolved_source = raw_source
@@ -260,15 +325,66 @@ def run_watch(
     scope_str = (f"{format_time(effective_start)}-{format_time(effective_end)} ({effective_duration:.1f}s)"
                  if focused else f"full {effective_duration:.1f}s")
 
-    try:
-        frames, sampling_mode = extract_frames(
-            video_path, work / "frames",
-            use_scene_change=use_scene, fps=use_fps, resolution=resolution,
-            max_frames=max_frames_capped, start_seconds=start_sec, end_seconds=end_sec,
-        )
-    except Exception as exc:
-        logger.error("frame extraction failed: {}", exc)
-        return 1
+    frames: list[dict] = []
+    sampling_mode = ""
+
+    if _should_use_rolling_window(effective_duration, focused, use_fps, scene_change):
+        windows = _plan_rolling_windows(effective_start, effective_end)
+        logger.info("rolling window: {} chunks of {:.0f}s for {:.0f}s video",
+                     len(windows), ROLLING_WINDOW_SECONDS, effective_duration)
+        all_chunk_frames: list[list[dict]] = []
+        for w in windows:
+            ci = w["chunk_index"]
+            try:
+                cf, cs = extract_frames(
+                    video_path, work / "frames" / f"chunk_{ci:04d}",
+                    use_scene_change=True, fps=None, resolution=resolution,
+                    max_frames=max_frames_capped,
+                    start_seconds=w["extract_start_seconds"],
+                    end_seconds=w["extract_end_seconds"],
+                )
+            except Exception as exc:
+                logger.error("chunk {} frame extraction failed: {}", ci, exc)
+                continue
+            # Keep only frames in canonical chunk range (no overlap)
+            owned = [
+                dict(f, chunk_index=ci, total_chunks=len(windows),
+                     chunk_start_seconds=w["chunk_start_seconds"],
+                     chunk_end_seconds=w["chunk_end_seconds"])
+                for f in cf
+                if w["chunk_start_seconds"] <= f["timestamp_seconds"] < w["chunk_end_seconds"]
+            ]
+            if owned:
+                all_chunk_frames.append(owned)
+            logger.info("  chunk {}/{}: {} frames ({:.0f}s-{:.0f}s)",
+                        ci + 1, len(windows), len(owned),
+                        w["chunk_start_seconds"], w["chunk_end_seconds"])
+
+        if all_chunk_frames:
+            frames = _merge_rolling_frames(all_chunk_frames)
+            sampling_mode = "rolling-window"
+        else:
+            logger.error("rolling window produced no frames — falling back to single-pass")
+            try:
+                frames, sampling_mode = extract_frames(
+                    video_path, work / "frames",
+                    use_scene_change=use_scene, fps=use_fps, resolution=resolution,
+                    max_frames=max_frames_capped, start_seconds=start_sec, end_seconds=end_sec,
+                )
+            except Exception as exc:
+                logger.error("frame extraction failed: {}", exc)
+                return 1
+    else:
+        try:
+            frames, sampling_mode = extract_frames(
+                video_path, work / "frames",
+                use_scene_change=use_scene, fps=use_fps, resolution=resolution,
+                max_frames=max_frames_capped, start_seconds=start_sec, end_seconds=end_sec,
+            )
+        except Exception as exc:
+            logger.error("frame extraction failed: {}", exc)
+            return 1
+
     logger.info("extracted {} frames ({})", len(frames), sampling_mode)
 
     transcript = None

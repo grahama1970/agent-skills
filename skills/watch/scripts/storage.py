@@ -17,7 +17,9 @@ from pathlib import Path
 import httpx
 from loguru import logger
 
-WATCH_FRAMES_DIR = Path("/mnt/storage12tb/media/watch-frames")
+from config import WATCH_MEDIA_ROOT, MEMORY_DAEMON_URL, WHISPER_API_KEY, WHISPER_API_URL
+
+WATCH_FRAMES_DIR = WATCH_MEDIA_ROOT
 
 
 def _slugify(title: str) -> str:
@@ -37,9 +39,12 @@ def persist_frames(frames: list[dict], slug: str) -> list[dict]:
         src = Path(f["path"])
         if not src.exists():
             continue
-        dst = dest / src.name
+        dst_name = f.get("persist_name") or src.name
+        dst = dest / dst_name
         shutil.copy2(str(src), str(dst))
-        persisted.append({"index": f["index"], "timestamp_seconds": f["timestamp_seconds"], "path": str(dst)})
+        row = dict(f)
+        row["path"] = str(dst)
+        persisted.append(row)
     return persisted
 
 
@@ -242,7 +247,7 @@ def upsert_qras(
         return 0
     try:
         resp = httpx.post(
-            "http://127.0.0.1:8601/upsert",
+            f"{MEMORY_DAEMON_URL}/upsert",
             json={"collection": "watch_content", "documents": docs},
             timeout=15.0,
         )
@@ -251,7 +256,7 @@ def upsert_qras(
             return len(docs)
         logger.error("memory upsert failed ({}): {}", resp.status_code, resp.text)
     except httpx.ConnectError:
-        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+        logger.error("memory daemon not reachable at {}", MEMORY_DAEMON_URL)
     except Exception as exc:
         logger.error("memory upsert error: {}", exc)
     return 0
@@ -280,9 +285,11 @@ def upsert_scene_elements(
             tags.append(f"persona:{persona}")
         if diff.get("category"):
             tags.append(f"divergence:{diff['category']}")
+        if row.get("total_chunks"):
+            tags.append(f"chunk:{int(row['chunk_index']) + 1}-of-{row['total_chunks']}")
         srt_text = (row.get("srt_text") or "").strip()
         whisper_text = (row.get("text") or "").strip()
-        docs.append({
+        doc = {
             "_key": doc_key,
             "question": f"What happens in {title} at {timecode}?",
             "answer": f"SRT: {srt_text[:300]}\nWhisper: {whisper_text[:300]}"[:500],
@@ -301,13 +308,17 @@ def upsert_scene_elements(
             "frame_dir": str(WATCH_FRAMES_DIR / slug),
             "scope": "watch_history",
             "tags": tags,
-        })
+        }
+        for chunk_field in ("chunk_index", "total_chunks", "chunk_start_seconds", "chunk_end_seconds"):
+            if chunk_field in row:
+                doc[chunk_field] = row[chunk_field]
+        docs.append(doc)
     if not docs:
         return 0
     keys = [d["_key"] for d in docs]
     try:
         resp = httpx.post(
-            "http://127.0.0.1:8601/upsert",
+            f"{MEMORY_DAEMON_URL}/upsert",
             json={"collection": "watch_content", "documents": docs},
             timeout=30.0,
         )
@@ -316,7 +327,7 @@ def upsert_scene_elements(
             return keys
         logger.error("scene memory upsert failed ({}): {}", resp.status_code, resp.text)
     except httpx.ConnectError:
-        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+        logger.error("memory daemon not reachable at {}", MEMORY_DAEMON_URL)
     except Exception as exc:
         logger.error("scene memory upsert error: {}", exc)
     return []
@@ -366,7 +377,7 @@ def upsert_persona_watch_record(
     }
     try:
         resp = httpx.post(
-            "http://127.0.0.1:8601/upsert",
+            f"{MEMORY_DAEMON_URL}/upsert",
             json={"collection": "persona_memory", "documents": [doc]},
             timeout=15.0,
         )
@@ -375,7 +386,7 @@ def upsert_persona_watch_record(
             return 1
         logger.error("persona memory upsert failed ({}): {}", resp.status_code, resp.text[:200])
     except httpx.ConnectError:
-        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+        logger.error("memory daemon not reachable at {}", MEMORY_DAEMON_URL)
     except Exception as exc:
         logger.error("persona memory upsert error: {}", exc)
     return 0
@@ -425,7 +436,7 @@ def upsert_visual_descriptions(
         return 0
     try:
         resp = httpx.post(
-            "http://127.0.0.1:8601/upsert",
+            f"{MEMORY_DAEMON_URL}/upsert",
             json={"collection": "watch_content", "documents": docs},
             timeout=15.0,
         )
@@ -434,7 +445,7 @@ def upsert_visual_descriptions(
             return len(docs)
         logger.error("visual memory upsert failed ({}): {}", resp.status_code, resp.text)
     except httpx.ConnectError:
-        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+        logger.error("memory daemon not reachable at {}", MEMORY_DAEMON_URL)
     except Exception as exc:
         logger.error("visual memory upsert error: {}", exc)
     return 0

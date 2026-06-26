@@ -280,7 +280,7 @@ def extract_frames(
         frames = extract_uniform(video_path, out_dir, fps, resolution, max_frames, start_seconds, end_seconds)
         return frames, "uniform"
 
-    if use_scene_change and start_seconds is None and end_seconds is None:
+    if use_scene_change:
         frames = extract_scene_change(
             video_path, out_dir, resolution=resolution, max_frames=max_frames,
             start_seconds=start_seconds, end_seconds=end_seconds,

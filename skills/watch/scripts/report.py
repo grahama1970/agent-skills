@@ -461,26 +461,29 @@ def build_scene_elements(
             image_cell = f"{image_path} — {visual_description}"
         else:
             image_cell = f"{image_path} — visual description not analyzed"
-        rows.append(
-            {
-                "index": int(frame.get("index", index)),
-                "timecode": _format_ts(start),
-                "text": text,
-                "srt_text": srt_text,
-                "scene_marker_image": image_cell,
-                "scene_marker_image_path": image_path,
-                "video_clip_path": str(frame.get("video_clip_path", "")),
-                "audio_clip_path": str(frame.get("audio_clip_path", "")),
-                "audio_wav_clip_path": str(frame.get("audio_wav_clip_path", "")),
-                "visual_description": visual_description or "not_analyzed",
-                "visual_description_source": visual.get("source", "none") if visual else "none",
-                "visual_description_status": visual_status,
-                "movie_segment": f"{_format_ts(start)}-{_format_ts(end)}",
-                "sound": _sound_for_segment(transcript, start, end, audio_path),
-                "audio_path": audio_path or "",
-                "sound_description_source": "transcript" if transcript and transcript.get("segments") else "none",
-            }
-        )
+        row = {
+            "index": int(frame.get("index", index)),
+            "timecode": _format_ts(start),
+            "text": text,
+            "srt_text": srt_text,
+            "scene_marker_image": image_cell,
+            "scene_marker_image_path": image_path,
+            "video_clip_path": str(frame.get("video_clip_path", "")),
+            "audio_clip_path": str(frame.get("audio_clip_path", "")),
+            "audio_wav_clip_path": str(frame.get("audio_wav_clip_path", "")),
+            "visual_description": visual_description or "not_analyzed",
+            "visual_description_source": visual.get("source", "none") if visual else "none",
+            "visual_description_status": visual_status,
+            "movie_segment": f"{_format_ts(start)}-{_format_ts(end)}",
+            "sound": _sound_for_segment(transcript, start, end, audio_path),
+            "audio_path": audio_path or "",
+            "sound_description_source": "transcript" if transcript and transcript.get("segments") else "none",
+        }
+        # Propagate rolling window chunk metadata from frame
+        for chunk_field in ("chunk_index", "total_chunks", "chunk_start_seconds", "chunk_end_seconds"):
+            if chunk_field in frame:
+                row[chunk_field] = frame[chunk_field]
+        rows.append(row)
     diff_info = get_row_diff  # ensure module is importable at runtime
     for row in rows:
         diff = get_row_diff(row)
