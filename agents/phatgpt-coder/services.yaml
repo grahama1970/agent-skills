@@ -1,0 +1,10 @@
+version: "1.0"
+project: phatgpt-lab
+workdir: /home/graham/workspace/experiments/chatgpt-lab
+
+scheduled:
+  phatgpt-coder-mvp:
+    description: "Every five minutes, process at most one implementation-ready PhatGPT PR task, push a scoped patch, mark it ready for review, and exit."
+    cron: "*/5 * * * *"
+    command: "python3 scripts/phatgpt_local_worker_cycle.py --role coder --max-targets 1"
+    enabled: false

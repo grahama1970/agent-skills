@@ -1,0 +1,10 @@
+version: "1.0"
+project: phatgpt-lab
+workdir: /home/graham/workspace/experiments/chatgpt-lab
+
+scheduled:
+  phatgpt-reviewer-mvp:
+    description: "Every five minutes, review at most one PhatGPT PR marked ready-for-review, label pass/needs-changes/blocked, and exit."
+    cron: "*/5 * * * *"
+    command: "python3 scripts/phatgpt_local_worker_cycle.py --role reviewer --max-targets 1"
+    enabled: false

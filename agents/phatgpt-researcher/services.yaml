@@ -1,0 +1,10 @@
+version: "1.0"
+project: phatgpt-lab
+workdir: /home/graham/workspace/experiments/chatgpt-lab
+
+scheduled:
+  phatgpt-researcher-mvp:
+    description: "On demand, prepare or refuse one implementation-ready PhatGPT task block for a PR/issue."
+    cron: null
+    command: "python3 scripts/phatgpt_local_worker_cycle.py --role researcher --max-targets 1"
+    enabled: false
