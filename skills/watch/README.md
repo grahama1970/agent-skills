@@ -20,6 +20,10 @@ shown, when scenes changed, and what the audio felt like. The run leaves behind
 local reports you can inspect, plus memory records that `/memory/recall` can use
 later.
 
+![Watch UI — Divergence Intelligence](docs/assets/watch-ui-screenshot.png)
+*Watch UI showing the Edge of Tomorrow divergence report with [!] SANITIZED,
+[+] HIDDEN, and [?] OCCLUDED chips, forensic summary sidebar, and scene browser.*
+
 Use it for work like:
 
 - "What is on the instructor's screen at 2:30?"
@@ -58,6 +62,73 @@ screen recordings and slide decks.
 
 After the run, open `report.md` in the printed work directory. That tells you what
 was actually processed before you ask recall questions about the video.
+
+## How to Use
+
+### 1. Watch a movie
+
+```bash
+cd skills/watch
+
+# Set the Whisper API key (from Docker container)
+export WHISPER_API_KEY="$(docker exec watch-whisper whisper_manage --showkey | grep -m1 -oP 'whisper-[a-f0-9]+')"
+
+# Watch a local movie with Whisper + divergence (auto-extracts SRT from MKV)
+./run.sh /path/to/movie.mkv --whisper --persona embry
+
+# Watch a YouTube video
+./run.sh "https://youtu.be/..." --persona embry
+
+# Watch a specific clip (faster)
+./run.sh movie.mkv --start 300 --end 600 --whisper --persona embry
+```
+
+### 2. Open the UI
+
+```bash
+# Start the Express API
+cd skills/watch/ui
+npx tsx server/index.ts &
+
+# Start the Vite dev server
+npx vite --port 3002
+```
+
+Then open `http://localhost:3002/#watch` in a browser to see the divergence
+report with color-coded chips, the forensic summary sidebar, and the scene
+element table.
+
+### 3. Query via memory
+
+```python
+import httpx
+
+# What did Embry watch?
+r = httpx.post("http://127.0.0.1:8601/recall", json={
+    "q": "Embry watch history",
+    "collections": ["persona_memory"],
+    "tags": ["persona:embry", "watch_history"],
+    "k": 5,
+})
+print(r.json()["items"])
+
+# Ask about a specific scene
+r = httpx.post("http://127.0.0.1:8601/recall", json={
+    "q": "What happens at 04:48 in Edge of Tomorrow?",
+    "collections": ["watch_content"],
+    "k": 5,
+})
+for item in r.json()["items"]:
+    print(item["answer"])  # Contains both SRT and Whisper text
+```
+
+### 4. Docker (production)
+
+```bash
+cd skills/watch/docker
+docker compose --profile all up -d
+# Whisper on :9000, Watch UI on :3002
+```
 
 ## What it does
 
