@@ -8,9 +8,10 @@ protocols:
   - skill_help_protocol@v1
 
 description: >
-  Cron-launched bounded implementation worker for PhatGPT-LAB. It consumes one
+  Event-launched bounded implementation worker for PhatGPT-LAB. It consumes one
   implementation-ready GitHub PR or issue, applies the requested code change,
-  runs declared checks, records receipts, pushes the branch, and exits.
+  runs declared checks, records receipts, pushes the branch, and exits. A local
+  cycle may run it as a fallback smoke harness.
 
 default_agent_profile: build
 model_policy: code_reasoning
@@ -22,6 +23,7 @@ primary_skills:
   - best-practices-python
   - best-practices-react
   - best-practices-subagent
+  - best-practices-github-ticket
   - scillm
 
 role: >
@@ -48,6 +50,8 @@ capabilities:
   - bounded_command_execution
   - branch_push
   - pr_status_comment
+  - ticket_lease
+  - proof_based_ticket_update
   - implementation_receipt
 
 dag_spec:
@@ -57,6 +61,7 @@ dag_spec:
   inputs_required:
     - github_pr_or_issue_number
     - phatgpt-task:v1 block
+    - best-practices-github-ticket ticket metadata
   nodes:
     - id: acquire_target
       kind: github_lookup
@@ -117,6 +122,7 @@ tool_policy:
     - github.pr_read
     - github.pr_comment
     - github.label_update
+    - github.ticket_lease
     - git.scoped_commit
     - git.scoped_push
   denied:
@@ -235,6 +241,8 @@ turn_contract:
     - edit_unrelated_files
     - conceal_failed_checks
     - claim_pass_without_reviewer_receipt
+    - close_ticket
+    - mutate_without_ticket_lease
 
 status_reporting:
   required: true
@@ -297,6 +305,7 @@ output_contract:
     - commands_run
     - artifacts
     - labels_added
+    - ticket_lease
     - reviewer_next_action
     - verified
   error_fields:
@@ -314,6 +323,7 @@ artifact_contract:
   required_per_turn:
     - request.json
     - target.json
+    - ticket-lease.json
     - local-subagent-receipt.json
   recommended_per_turn:
     - task-validation.json

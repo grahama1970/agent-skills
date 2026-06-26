@@ -8,10 +8,11 @@ protocols:
   - skill_help_protocol@v1
 
 description: >
-  Cron-launched read-only PR reviewer for PhatGPT-LAB. It evaluates one
+  Event-launched read-only PR reviewer for PhatGPT-LAB. It evaluates one
   ready-for-review PR against its structured task contract, receipts, checks,
   screenshots or deployment evidence when required, comments with findings,
-  labels the result, and exits.
+  labels the result, and exits. A local cycle may run it as a fallback smoke
+  harness.
 
 default_agent_profile: explore
 model_policy: cheap_review
@@ -21,6 +22,7 @@ primary_skills:
   - review-code
   - code-runner
   - best-practices-subagent
+  - best-practices-github-ticket
   - scillm
 
 role: >
@@ -45,6 +47,8 @@ capabilities:
   - ci_status_review
   - screenshot_evidence_check
   - read_only_validation_command_execution
+  - ticket_metadata_review
+  - proof_based_ticket_verdict
   - needs_changes_comment
   - review_receipt
 
@@ -56,6 +60,7 @@ dag_spec:
     - github_pr_number
     - phatgpt-task:v1 block
     - local-subagent-receipt.json
+    - best-practices-github-ticket ticket metadata
   nodes:
     - id: acquire_ready_pr
       kind: github_lookup
@@ -109,6 +114,7 @@ tool_policy:
     - github.pr_comment
     - github.label_update
     - github.checks_read
+    - github.ticket_comment
   denied:
     - memory.store
     - memory.upsert
@@ -213,6 +219,8 @@ turn_contract:
     - ignore_required_task_evidence
     - mark_pass_with_missing_ci_or_receipt
     - merge_pr
+    - close_ticket_without_deterministic_proof
+    - treat_webgpt_review_as_closure_proof
 
 status_reporting:
   required: true
@@ -271,6 +279,7 @@ output_contract:
     - commands_run
     - artifacts
     - labels_added
+    - ticket_disposition
     - next_owner
     - verified
   error_fields:
@@ -289,6 +298,7 @@ artifact_contract:
   required_per_turn:
     - request.json
     - target.json
+    - ticket-metadata.json
     - review-receipt.json
   recommended_per_turn:
     - review-findings.json
