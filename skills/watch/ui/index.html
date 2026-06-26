@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch — Embry OS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { height: 100%; width: 100%; }
+    body { background: #0b0d10; color: #e6edf3; font-family: system-ui, -apple-system, sans-serif; }
+    #crash-log { display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 12px; background: #1a0a0a; border-top: 2px solid #ff4444;
+      color: #ff6b6b; font-family: monospace; font-size: 12px; z-index: 9999;
+      white-space: pre-wrap; max-height: 200px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="crash-log"></div>
+  <script>
+    window.__crashes = [];
+    window.onerror = function(msg, src, line, col, err) {
+      var text = msg + ' @ ' + (src||'').split('/').pop() + ':' + line;
+      if (err && err.stack) text += '\n' + err.stack.split('\n').slice(0,3).join('\n');
+      window.__crashes.push(text);
+      var el = document.getElementById('crash-log');
+      el.style.display = 'block';
+      el.innerHTML = '<b>CRASH LOG</b><br>' + window.__crashes.join('<br><br>');
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      var text = 'Unhandled Promise: ' + (e.reason?.message || e.reason || 'unknown');
+      if (e.reason?.stack) text += '\n' + e.reason.stack.split('\n').slice(0,3).join('\n');
+      window.__crashes.push(text);
+      var el = document.getElementById('crash-log');
+      el.style.display = 'block';
+      el.innerHTML = '<b>CRASH LOG</b><br>' + window.__crashes.join('<br><br>');
+    });
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from loguru import logger
+
+logger.remove()
+logger.add(sys.stderr, format="{time:HH:mm:ss} | {level:<7} | {message}", level="INFO")
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -32,6 +36,7 @@ def watch(
     query: Optional[str] = typer.Option(None, "--query", help="Free-text search in SRT"),
     whisper: bool = typer.Option(True, "--whisper/--no-whisper", help="Enable Whisper fallback"),
     doc2qra: bool = typer.Option(False, "--doc2qra", help="Feed transcript to doc2qra for QRA extraction"),
+    persona: Optional[str] = typer.Option(None, "--persona", help="Persona name (e.g. embry) for persona_memory tagging"),
     out_dir: Optional[Path] = typer.Option(None, "--out-dir", help="Working directory"),
     json_output: bool = typer.Option(False, "--json", help="Output JSON instead of markdown"),
 ):
@@ -50,6 +55,7 @@ def watch(
         query=query,
         whisper=whisper,
         doc2qra=doc2qra,
+        persona=persona,
         out_dir=str(out_dir) if out_dir else None,
         json_output=json_output,
     )

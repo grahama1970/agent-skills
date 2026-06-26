@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -36,13 +37,54 @@ from storage import (
     extract_and_persist_audio,
     generate_playable_segments,
     upsert_qras,
+    upsert_scene_elements,
     upsert_visual_descriptions,
+    upsert_persona_watch_record,
     _slugify,
     WATCH_FRAMES_DIR,
 )
-from transcribe import transcribe_video, parse_captions, filter_segments, align_segments_to_reference
+from transcribe import transcribe_video, parse_captions, filter_segments, align_segments_to_reference, extract_subtitles, has_text_subtitles
+from diff_intelligence import build_diff_intelligence
 
 MOVIE_LIBRARY = Path("/mnt/storage12tb/media/movies")
+
+_CAST_CACHE: dict[str, dict[str, str]] = {}
+
+_COMMON_ALIASES = {
+    "grandma": "Granny",
+    "granny": "Granny",
+    "kid": "Thurman Merman",
+    "santa": "Willie T. Soke",
+}
+
+def _word_in(phrase: str, word: str) -> bool:
+    return word in phrase.split()
+
+def _fetch_cast_map(title: str) -> dict[str, str]:
+    """Query Wikipedia API for cast list and return {Character: Actor} map."""
+    import json
+    import urllib.request
+    cache_key = title.lower().strip()
+    if cache_key in _CAST_CACHE:
+        return _CAST_CACHE[cache_key]
+    movie_name = title.split("(")[0].strip().replace(" ", "_")
+    api_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.request.quote(movie_name)}&prop=text&section=2&format=json"
+    cast_map: dict[str, str] = {}
+    try:
+        req = urllib.request.Request(api_url, headers={"User-Agent": "WatchSkill/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read())
+        html = data.get("parse", {}).get("text", {}).get("*", "")
+        for actor, char in re.findall(r'<li><a[^>]*>([^<]+)</a>\s+as\s+([^<]+)</li>', html):
+            actor = actor.strip()
+            char = char.strip()
+            if char and actor and len(char) > 1 and len(actor) > 1:
+                cast_map[char] = actor
+        _CAST_CACHE[cache_key] = cast_map
+        return cast_map
+    except Exception as exc:
+        logger.debug("cast lookup failed for {}: {}", title, exc)
+        return {}
 
 
 def _env_without_venv() -> dict:
@@ -153,7 +195,7 @@ def run_watch(
     source: str,
     scene_change: bool = True,
     fps: float | None = None,
-    max_frames: int = 100,
+    max_frames: int = 150,
     resolution: int = 512,
     start: str | None = None,
     end: str | None = None,
@@ -163,11 +205,12 @@ def run_watch(
     query: str | None = None,
     whisper: bool = True,
     doc2qra: bool = False,
+    persona: str | None = None,
     out_dir: str | None = None,
     json_output: bool = False,
 ) -> int:
     """Main watch pipeline: resolve source, extract frames, transcribe, generate QRA, store to memory."""
-    max_frames_capped = min(max_frames, 100)
+    max_frames_capped = min(max_frames, 500)
 
     raw_source = source
     source_url = raw_source if is_url(raw_source) else None
@@ -235,6 +278,11 @@ def run_watch(
         lib_srt = _find_srt_in_dir(Path(resolved_source).parent)
         if lib_srt:
             sub_path = str(lib_srt)
+    if sub_path is None and video_path:
+        extracted = extract_subtitles(video_path)
+        if extracted:
+            sub_path = extracted
+            logger.info("auto-extracted subtitles from video: {}", sub_path)
 
     def _filter_transcript(t: dict | None, st: float | None, en: float | None) -> dict | None:
         if t is None:
@@ -267,8 +315,12 @@ def run_watch(
 
     if whisper and not source_url:
         try:
-            w_result = transcribe_video(video_path, work)
-            transcript = _filter_transcript(w_result, start_sec, end_sec)
+            w_result = transcribe_video(video_path, work, start_seconds=start_sec, end_seconds=end_sec)
+            transcript = _filter_transcript(w_result, None, None)
+            if transcript and start_sec is not None:
+                for seg in transcript.get("segments", []):
+                    seg["original_start"] = seg.get("start", 0.0)
+                    seg["start"] = round(seg["start"] + start_sec, 3)
         except RuntimeError as exc:
             logger.error("Whisper failed: {}", exc)
             gaps.append("transcription_failed")
@@ -345,6 +397,26 @@ def run_watch(
 
     now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
     scene_elements = build_scene_elements(playable_frames, full_duration, transcript, visual_descriptions, audio_path, captions)
+    diff_intel = build_diff_intelligence(scene_elements)
+    cast_map = _fetch_cast_map(title)
+    if cast_map and diff_intel.get("character_intel"):
+        name_lower = {k.lower(): (k, v) for k, v in cast_map.items()}
+        for ci in diff_intel["character_intel"]:
+            cn = ci["name"].lower()
+            actor = cast_map.get(ci["name"])
+            if not actor:
+                alias_target = _COMMON_ALIASES.get(cn)
+                if alias_target:
+                    actor = cast_map.get(alias_target)
+            if not actor:
+                for wiki_name, (orig_name, act) in name_lower.items():
+                    wl = wiki_name.lower()
+                    if cn == wl or (wl.startswith(cn) and len(cn) >= 4) or _word_in(wl, cn) or _word_in(cn, wl):
+                        actor = act
+                        break
+            if actor:
+                ci["actor"] = actor
+                ci["insight"] = f"{ci['name']} ({actor}) — {ci['insight'].split('—', 1)[-1].strip()}"
 
     report_path = work / "report.md"
     write_markdown_report(
@@ -357,6 +429,7 @@ def run_watch(
         html_report_path, source, title, full_duration, sampling_mode, playable_frames,
         transcript, scenes_analysis, emotion_analysis, captions=captions, focused_range=scope_str if focused else None,
         gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+        diff_intelligence=diff_intel,
     )
 
     json_report_path = work / "report.json"
@@ -365,6 +438,7 @@ def run_watch(
         transcript, scenes_analysis, emotion_analysis,
         metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
         gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
+        diff_intelligence=diff_intel,
     )
 
     qra_pairs = generate_qras(full_text, title, uploader) if full_text else None
@@ -384,16 +458,35 @@ def run_watch(
                 html_report_path, source, title, full_duration, sampling_mode, playable_frames,
                 transcript, scenes_analysis, emotion_analysis, captions=captions, focused_range=scope_str if focused else None,
                 gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path,
+                diff_intelligence=diff_intel,
             )
             write_report(
                 json_report_path, source, title, full_duration, sampling_mode, playable_frames,
                 transcript, scenes_analysis, emotion_analysis,
                 metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
                 gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
+                diff_intelligence=diff_intel,
             )
 
     if visual_descriptions:
         upsert_visual_descriptions(visual_descriptions, source, title, slug, now)
+
+    scene_keys: list[str] = []
+    if scene_elements:
+        scene_keys = upsert_scene_elements(scene_elements, source, title, slug, now, diff_intel, persona=persona)
+        logger.info("scene_keys count={}, persona={}", len(scene_keys), persona)
+        if scene_keys and persona:
+            logger.info("calling upsert_persona_watch_record for persona={}", persona)
+            upsert_persona_watch_record(
+                title, source, slug, now, full_duration,
+                scene_count=len(scene_elements),
+                frame_count=len(frames),
+                diff_percentage=diff_intel.get("overall_diff_percentage", 0) if diff_intel else 0,
+                persona=persona,
+                scene_keys=scene_keys,
+            )
+    else:
+        logger.warning("no scene elements to store in memory")
 
     if json_output:
         print(json_report_path.read_text())

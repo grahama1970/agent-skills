@@ -257,6 +257,130 @@ def upsert_qras(
     return 0
 
 
+def upsert_scene_elements(
+    scene_elements: list[dict],
+    source: str,
+    title: str,
+    slug: str,
+    now: str,
+    diff_intelligence: dict | None = None,
+    persona: str | None = None,
+) -> int:
+    """Upsert individual scene rows to watch_content for timecode-level recall."""
+    docs = []
+    for row in scene_elements:
+        timecode = row.get("timecode", "")
+        if not timecode:
+            continue
+        seed = f"{source}:{title}:{slug}:scene:{timecode}"
+        doc_key = f"watch-scene-{hashlib.sha256(seed.encode()).hexdigest()[:16]}"
+        diff = row.get("diff_info") or {}
+        tags = ["watch_history", "watch_scene", slug]
+        if persona:
+            tags.append(f"persona:{persona}")
+        if diff.get("category"):
+            tags.append(f"divergence:{diff['category']}")
+        srt_text = (row.get("srt_text") or "").strip()
+        whisper_text = (row.get("text") or "").strip()
+        docs.append({
+            "_key": doc_key,
+            "question": f"What happens in {title} at {timecode}?",
+            "answer": f"SRT: {srt_text[:300]}\nWhisper: {whisper_text[:300]}"[:500],
+            "title": title[:200],
+            "source": source,
+            "timecode": timecode,
+            "movie_segment": row.get("movie_segment", ""),
+            "srt_text": srt_text[:500],
+            "whisper_text": whisper_text[:500],
+            "visual_description": (row.get("visual_description") or "")[:500],
+            "scene_image_path": row.get("scene_marker_image_path", ""),
+            "diff_category": diff.get("category", ""),
+            "diff_confidence": diff.get("confidence", 0),
+            "diff_detail": (diff.get("detail") or "")[:200],
+            "watched_at": now,
+            "frame_dir": str(WATCH_FRAMES_DIR / slug),
+            "scope": "watch_history",
+            "tags": tags,
+        })
+    if not docs:
+        return 0
+    keys = [d["_key"] for d in docs]
+    try:
+        resp = httpx.post(
+            "http://127.0.0.1:8601/upsert",
+            json={"collection": "watch_content", "documents": docs},
+            timeout=30.0,
+        )
+        if resp.status_code == 200:
+            logger.info("upserted {} scene elements to watch_content: {}", len(docs), title)
+            return keys
+        logger.error("scene memory upsert failed ({}): {}", resp.status_code, resp.text)
+    except httpx.ConnectError:
+        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+    except Exception as exc:
+        logger.error("scene memory upsert error: {}", exc)
+    return []
+
+
+def upsert_persona_watch_record(
+    title: str,
+    source: str,
+    slug: str,
+    now: str,
+    duration_seconds: float,
+    scene_count: int,
+    frame_count: int,
+    diff_percentage: int = 0,
+    persona: str | None = None,
+    scene_keys: list[str] | None = None,
+) -> int:
+    """Record that a persona watched this film in persona_memory."""
+    persona_id = persona or "default"
+    seed = f"watch:{persona_id}:{slug}:{now[:10]}"
+    doc_key = f"watch-{persona_id}-{slug}-{now[:10]}"
+    tags = ["watch_history", f"persona:{persona_id}", "media:movie", slug]
+    answer_text = f"{persona_id.capitalize()} watched {title} ({duration_seconds:.0f}s, {scene_count} scenes)"
+    retrieval_text = (
+        f"{persona_id.capitalize()} watched {title} on {now[:10]}. "
+        f"It is {duration_seconds:.0f}s long with {scene_count} scenes and {frame_count} frames extracted."
+    )
+    doc = {
+        "_key": doc_key,
+        "persona_id": persona_id,
+        "retrieval_text": retrieval_text,
+        "question_text": f"What movies has {persona_id.capitalize()} watched?",
+        "answer_text": answer_text,
+        "title": title[:200],
+        "source": source,
+        "media_type": "movie",
+        "duration_seconds": duration_seconds,
+        "scene_count": scene_count,
+        "frame_count": frame_count,
+        "diff_percentage": diff_percentage,
+        "slug": slug,
+        "watch_report_path": slug,
+        "watched_at": now,
+        "watch_content_keys": json.dumps(scene_keys or []),
+        "scope": "persona_memory",
+        "tags": tags,
+    }
+    try:
+        resp = httpx.post(
+            "http://127.0.0.1:8601/upsert",
+            json={"collection": "persona_memory", "documents": [doc]},
+            timeout=15.0,
+        )
+        if resp.status_code == 200:
+            logger.info("stored persona watch record for {}: {}", persona_id, title)
+            return 1
+        logger.error("persona memory upsert failed ({}): {}", resp.status_code, resp.text[:200])
+    except httpx.ConnectError:
+        logger.error("memory daemon not reachable at 127.0.0.1:8601")
+    except Exception as exc:
+        logger.error("persona memory upsert error: {}", exc)
+    return 0
+
+
 def upsert_visual_descriptions(
     visual_descriptions: list[dict],
     source: str,

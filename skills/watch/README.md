@@ -40,16 +40,16 @@ Start with one video. You do not need to understand the whole pipeline first.
 cd skills/watch
 
 # Watch a YouTube video
-uv run python scripts/watch.py "https://youtu.be/iYG5tiFfK3E"
+./run.sh "https://youtu.be/iYG5tiFfK3E"
 
 # Watch a local file
-uv run python scripts/watch.py movie.mkv
+./run.sh movie.mkv
 
 # Focus on a section of a long video
-uv run python scripts/watch.py movie.mkv --start 180 --end 600
+./run.sh movie.mkv --start 180 --end 600
 
 # Static screen recording? Try uniform sampling instead of scene cuts
-uv run python scripts/watch.py recording.mp4 --no-scene-change
+./run.sh recording.mp4 --no-scene-change
 ```
 
 By default, `watch` tries scene-change frame extraction. Focused ranges and
@@ -70,6 +70,8 @@ From there, the useful pieces get stitched together. The transcript, frame list,
 scene notes, optional enrichment, and memory records all refer back to seconds
 from the start of the same source. That alignment is the reason a later query can
 recover the matching dialogue, frame, and audio context for the same moment.
+The generated report also includes a scene element table with timecode, text,
+scene marker image, movie segment, and sound notes for each sampled scene.
 
 A normal run does some or all of this:
 
@@ -97,28 +99,61 @@ For long videos, prefer a focused clip with `--start` and `--end`. The output is
 usually better when `watch` analyzes the section you actually care about instead
 of an entire long recording.
 
-## Installation
+## Self-Contained Setup (Docker)
 
-Install the Python dependencies used by `watch` and its nearby helper tooling:
+The watch skill includes a docker-compose.yml that launches all required services:
 
 ```bash
-uv pip install httpx rich loguru typer pillow faster-whisper
+cd skills/watch/docker
 
-# Optional: only needed for PDF embedding through skills/embedding
-uv pip install pypdfium2
+# Start everything (Whisper GPU + Watch UI)
+docker compose --profile all up -d
+
+# Or start individual services:
+docker compose --profile whisper up -d   # Whisper ASR only
+docker compose --profile ui up -d        # Watch UI only
+
+# Get the Whisper API key for the pipeline:
+docker exec watch-whisper whisper_manage --showkey
 ```
 
-`watch.py` itself uses the backward-compatible `argparse` entry point, while
-`scripts/cli.py` uses `typer`. Installing the full set on a fresh machine avoids
-confusing import errors when you switch between entry points or run helper scripts.
+Services:
 
-Make sure these system tools are available on `PATH`:
+| Service | Port | Purpose |
+|---------|------|---------|
+| `watch-whisper` | 9000 | GPU-accelerated speech-to-text (hwdsl2/whisper-server:cuda) |
+| `watch-ui` | 3002 | React UI + Express API for browsing watch reports |
 
-```text
-ffmpeg
-ffprobe
-yt-dlp
+### Manual Installation (No Docker)
+
+For the watch pipeline (CLI only, no UI):
+
+```bash
+cd skills/watch
+uv pip install httpx rich loguru typer pillow
 ```
+
+System requirements: `ffmpeg`, `ffprobe`, `yt-dlp`
+
+For the watch UI (development):
+
+```bash
+cd skills/watch/ui
+npm install
+npm run dev:all    # Vite on :3002, API on :3003
+```
+
+### Whisper Configuration
+
+The pipeline uses Docker Whisper by default. Set these environment variables:
+
+```bash
+export WHISPER_API_URL="http://127.0.0.1:9000/v1/audio/transcriptions"
+export WHISPER_API_KEY="$(docker exec watch-whisper whisper_manage --showkey | grep -m1 -oP 'whisper-[a-f0-9]+')"
+```
+
+Without Docker Whisper, the pipeline falls back to CPU-only faster-whisper
+(slower, lower quality).
 
 Useful checks:
 
@@ -139,7 +174,7 @@ failure.
 Basic form:
 
 ```bash
-uv run python scripts/watch.py SOURCE [options]
+./run.sh SOURCE [options]
 ```
 
 `SOURCE` can be a video URL, a local file path, or a movie title that resolves in
@@ -153,10 +188,11 @@ Common options:
 --scene-change              use scene-change extraction (default)
 --no-scene-change           use uniform sampling instead
 --fps FLOAT                 force a sampling rate
---max-frames INT            cap extracted frames, up to 100
---resolution INT            output frame width, default 512
---subtitle PATH             use a specific subtitle/SRT file
---no-whisper                skip local Whisper transcription
+--max-frames INT            cap extracted frames (default 150, max 500)
+--resolution INT            output frame width, default 256
+--subtitle PATH             use a specific subtitle/SRT file (auto-extracted from MKV if omitted)
+--whisper / --no-whisper    enable/disable GPU Whisper transcription (default: off)
+--persona TEXT              persona name (e.g. embry) for persona_memory tagging
 --out-dir PATH              keep the working artifacts in a known directory
 --json                      print the JSON report
 ```
@@ -165,19 +201,19 @@ Examples:
 
 ```bash
 # URL input
-uv run python scripts/watch.py "https://youtu.be/iYG5tiFfK3E"
+./run.sh "https://youtu.be/iYG5tiFfK3E"
 
 # Local file input
-uv run python scripts/watch.py /path/to/demo.mp4
+./run.sh /path/to/demo.mp4
 
 # Focused range, useful for long recordings
-uv run python scripts/watch.py /path/to/demo.mp4 --start 120 --end 420
+./run.sh /path/to/demo.mp4 --start 120 --end 420
 
 # Uniform sampling for a static screen recording
-uv run python scripts/watch.py /path/to/recording.mp4 --no-scene-change
+./run.sh /path/to/recording.mp4 --no-scene-change
 
 # Keep the work directory instead of using a temporary one
-uv run python scripts/watch.py /path/to/demo.mp4 --out-dir /tmp/watch-demo
+./run.sh /path/to/demo.mp4 --out-dir /tmp/watch-demo
 ```
 
 Use scene detection for videos with cuts, camera changes, slide transitions, or
@@ -234,6 +270,26 @@ media path.
 can find the video later. The exact memory schema is agent-facing contract
 material and lives in [`SKILL.md`](SKILL.md).
 
+## Divergence Intelligence
+
+When both SRT and Whisper are available, `watch` computes a semantic divergence
+between the official script (SRT) and the raw audio transcription (Whisper).
+Only three meaningful divergence types are reported:
+
+| Type | Meaning | Example |
+|------|---------|---------|
+| `[+] HIDDEN` | Whisper caught dialogue SRT omitted | SRT: `(PEOPLE CHATTERING)` → Whisper: "I've got my eyes on you" |
+| `[!] SANITIZED` | SRT cleaned profanity | SRT: `Oh, my.` → Whisper: `Oh my fucking god.` |
+| `[?] OCCLUDED` | SRT has audio cue, Whisper no speech | SRT: `(EXPLOSIONS)` → Whisper: silence |
+
+No generic similarity ratio is computed. SRT and Whisper describe different
+layers of the same scene (script vs audio), so minor wording differences are
+expected and not flagged.
+
+The divergence intelligence is displayed in the watch UI with color-coded chips
+and a forensic summary sidebar. Memory recall stores both SRT and Whisper text
+equally so agents can decide which to trust.
+
 ## Using the result
 
 Once the run finishes, the report tells you what was found. The real value comes
@@ -258,6 +314,13 @@ What is the mood of the soundtrack during the chase scene?
 If recall gives a weak answer, check `report.md` first. The moment may not have
 been sampled, the transcript may be missing, or the memory service may not have
 accepted the upsert.
+
+Agents should ask video-memory questions through `/memory recall` against the
+`watch_content` collection and read `items`, not `results`. For movie questions,
+Watch can answer like a human viewer when the watched-video evidence supports
+the answer. It may use Brave Search to corroborate public movie facts or expected
+answers, but not as a substitute for frames, transcript, scene metadata, or
+`watch_content` recall.
 
 ## Sanity check
 
@@ -339,12 +402,13 @@ the storage volume, or symlink `watch-frames` to a directory on local disk.
 
 | Area | Current behavior |
 | --- | --- |
-| Frames | Up to 100 frames per watch, capped at 2 fps. |
-| Transcription | Uses `faster-whisper` for local files when captions are not available; speed depends heavily on CPU/GPU. |
-| Image descriptions | Enrichment describes a small set of key frames rather than every frame. |
-| Soundtrack descriptions | Enrichment samples scene chunks rather than continuously analyzing the full audio track. |
+| Frames | Up to 500 frames per watch, capped at 2 fps. Two-pass scene detection (all scene changes detected, then evenly subsampled). |
+| Transcription | Docker Whisper GPU (`hwdsl2/whisper-server:cuda`) on port 9000. Falls back to CPU-only faster-whisper. |
+| Subtitles | Auto-extracted from MKV (subrip/ASS/SSA). PGS (BluRay image) subtitles are skipped — OCR is too slow. |
+| Divergence | Only 3 semantic types: hidden_dialogue, sanitized, acoustic_context. No similarity ratio noise. |
+| Memory | Two layers: `watch_content` (per-scene rows) + `persona_memory` (watch records tagged by persona). |
 | Persisted media root | Hardcoded to `/mnt/storage12tb/media/watch-frames`. |
-| Recall | Requires memory services to be running and reachable. |
+| Recall | Requires memory daemon at `localhost:8601`. |
 
 `watch` is not a video editor and it is not a perfect substitute for a human
 watching every second. It is an indexing tool: it gives agents enough aligned

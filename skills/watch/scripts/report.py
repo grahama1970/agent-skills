@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 
+from diff_intelligence import build_diff_intelligence, get_row_diff
+
 
 def write_report(
     out_path: Path,
@@ -22,6 +24,7 @@ def write_report(
     visual_descriptions: list[dict] | None = None,
     audio_path: str | None = None,
     captions: dict | None = None,
+    diff_intelligence: dict | None = None,
 ) -> Path:
     report = {
         "watch_report": {
@@ -43,6 +46,9 @@ def write_report(
 
     scene_elements = build_scene_elements(frames, duration_seconds, transcript, visual_descriptions, audio_path, captions)
     report["scene_elements"] = scene_elements
+
+    if diff_intelligence:
+        report["diff_intelligence"] = diff_intelligence
 
     report["frames"] = [
         {
@@ -211,6 +217,7 @@ def write_html_report(
     gaps: list[str] | None = None,
     visual_descriptions: list[dict] | None = None,
     audio_path: str | None = None,
+    diff_intelligence: dict | None = None,
 ) -> Path:
     """Write a self-contained inspection page for scene evidence."""
     rows = build_scene_elements(frames, duration_seconds, transcript, visual_descriptions, audio_path, captions)
@@ -257,6 +264,23 @@ audio{width:220px;max-width:22vw}
     lines.append("</div>")
     if gaps:
         lines.append(f"<div class=\"gaps\">Gaps: {escape(', '.join(gaps))}</div>")
+    if diff_intelligence and diff_intelligence.get("overall_diff_percentage", 0) > 0:
+        di = diff_intelligence
+        cc = di.get("category_counts", {})
+        lines.append("<div class=\"evidence\" style=\"border-left:3px solid #c2410c\">")
+        lines.append("<div style=\"font-weight:700;margin-bottom:6px\">Forensic Insights — SRT vs Whisper Divergence</div>")
+        lines.append(f"<div><strong>Overall diff:</strong> {di.get('overall_diff_percentage')}% of rows differ</div>")
+        if cc.get("sanitized"):
+            lines.append(f"<div>🔴 <strong>Sanitized:</strong> {cc['sanitized']} scene(s) — SRT may tone down raw language</div>")
+        if cc.get("hidden_dialogue"):
+            lines.append(f"<div>🟡 <strong>Hidden Dialogue:</strong> {cc['hidden_dialogue']} scene(s) — Whisper catches dialogue SRT omits</div>")
+        if cc.get("acoustic_context"):
+            lines.append(f"<div>🔵 <strong>Acoustic Context:</strong> {cc['acoustic_context']} scene(s) — SRT captures environmental cues Whisper missed</div>")
+        if cc.get("unknown_diff"):
+            lines.append(f"<div>⚪ <strong>Unclassified:</strong> {cc['unknown_diff']} scene(s) — may warrant manual review</div>")
+        for takeaway in di.get("takeaways", []):
+            lines.append(f"<div style=\"margin-top:4px;color:#4b5563;font-style:italic\">{escape(takeaway)}</div>")
+        lines.append("</div>")
     lines.extend([
         "<table>",
         "<thead><tr><th>Timecode</th><th>English SRT / Captions</th><th>Open-Whisper Transcript</th><th>Scene Marker</th><th>Visual Evidence</th><th>Movie Segment</th><th>Sound</th></tr></thead>",
@@ -457,6 +481,11 @@ def build_scene_elements(
                 "sound_description_source": "transcript" if transcript and transcript.get("segments") else "none",
             }
         )
+    diff_info = get_row_diff  # ensure module is importable at runtime
+    for row in rows:
+        diff = get_row_diff(row)
+        if diff:
+            row["diff_info"] = diff
     return rows
 
 

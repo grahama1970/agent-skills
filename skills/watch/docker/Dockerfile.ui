@@ -1,0 +1,19 @@
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY ui/package.json ui/tsconfig.json ui/vite.config.ts ./
+COPY ui/index.html ./
+COPY ui/src ./src
+COPY ui/components ./components
+COPY ui/server ./server
+RUN npm install && npx vite build
+
+FROM node:20-slim
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/package.json ./ 
+RUN npm install --omit=dev
+EXPOSE 3002
+ENV WATCH_API_PORT=3002
+ENV NODE_ENV=production
+CMD ["npx", "tsx", "server/index.ts"]

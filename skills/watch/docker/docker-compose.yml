@@ -1,0 +1,51 @@
+services:
+  whisper:
+    image: hwdsl2/whisper-server:cuda
+    container_name: watch-whisper
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - whisper-data:/var/lib/whisper
+    environment:
+      - WHISPER_MODEL=base
+      - WHISPER_DEVICE=cuda
+      - WHISPER_COMPUTE_TYPE=float16
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    profiles:
+      - whisper
+      - all
+
+  watch-ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+    container_name: watch-ui
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      - WATCH_API_PORT=3002
+      - WATCH_REPORT_PATH=/data/report.json
+      - WATCH_FRAMES_DIR=/data/frames
+      - MEMORY_DAEMON_URL=http://embry-memory:8601
+    volumes:
+      - watch-data:/data
+      - /mnt/storage12tb/media/watch-frames:/mnt/storage12tb/media/watch-frames:ro
+    profiles:
+      - ui
+      - all
+
+volumes:
+  whisper-data:
+  watch-data:
+
+networks:
+  default:
+    name: watch-net

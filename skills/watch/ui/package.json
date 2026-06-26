@@ -1,0 +1,31 @@
+{
+  "name": "watch-ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:all": "concurrently \"vite\" \"tsx watch server/index.ts\"",
+    "build": "vite build",
+    "start": "node server/prod.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.400.0",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4",
+    "@vitejs/plugin-react": "^4.3.1",
+    "tsx": "^4.16.2",
+    "concurrently": "^8.2.2"
+  }
+}

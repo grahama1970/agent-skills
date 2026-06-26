@@ -20,7 +20,9 @@ from frames import extract_frames, get_metadata, parse_time, format_time, extrac
 from download import download, is_url, is_youtube_url
 from transcribe import parse_captions, filter_segments, transcribe_video
 from scenes import parse_srt, find_scenes, analyze_emotions, VALID_TAGS, VALID_EMOTIONS
-from report import write_report, write_markdown_report, write_frames_manifest
+from report import write_report, write_markdown_report, write_html_report, write_frames_manifest, build_scene_elements
+from video_memory import recall_video_question, corroborate_movie_question, ask_movie_question
+import bad_santa_canary
 from watch import _env_without_venv, _find_movie_in_library, _find_video_in_dir, _find_srt_in_dir, _check_radarr_library, _resolve_movie_source, MOVIE_LIBRARY, SKILLS_DIR
 " 2>/dev/null && pass "all imports OK" || fail "imports failed"
 
@@ -28,7 +30,7 @@ from watch import _env_without_venv, _find_movie_in_library, _find_video_in_dir,
 # 2. CLI
 # ---------------------------------------------------------------------------
 echo "--- 2. CLI ---"
-uv run python scripts/watch.py --help > /dev/null 2>&1 && pass "CLI --help" || fail "CLI --help"
+uv run python scripts/cli.py --help > /dev/null 2>&1 && pass "Typer CLI --help" || fail "Typer CLI --help"
 
 # ---------------------------------------------------------------------------
 # 3. System dependencies
@@ -264,14 +266,63 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 11. Memory recall proof (3 QRA pairs, all queryable)
+# 11. Product failure-mode sanity checks
 # ---------------------------------------------------------------------------
-echo "--- 11. Memory recall proof (3 questions) ---"
+echo "--- 11. Product failure modes ---"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if uv run python "$SCRIPT_DIR/scripts/failure_modes_sanity.py"; then
+  pass "failure-mode monkeypatch checks OK"
+else
+  fail "failure-mode monkeypatch checks failed"
+fi
+
+# ---------------------------------------------------------------------------
+# 12. Bad Santa canary contract
+# ---------------------------------------------------------------------------
+echo "--- 12. Bad Santa canary contract ---"
+if uv run python "$SCRIPT_DIR/scripts/bad_santa_canary.py" --offline >/dev/null; then
+  pass "Bad Santa canary contract OK"
+else
+  fail "Bad Santa canary contract failed"
+fi
+
+# ---------------------------------------------------------------------------
+# 13. Memory recall proof (3 QRA pairs, all queryable)
+# ---------------------------------------------------------------------------
+echo "--- 13. Memory recall proof (3 questions) ---"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if uv run python "$SCRIPT_DIR/scripts/recall_proof.py" 2>/dev/null; then
   pass "3 QRA pairs stored + recallable"
 else
   echo "  SKIP: memory daemon or watch_content not available"
+fi
+
+# ---------------------------------------------------------------------------
+# 14. e2e memory: scene elements + persona watch record
+# ---------------------------------------------------------------------------
+echo "--- 14. e2e memory (scene elements + persona) ---"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if uv run python -c "
+import sys, httpx, json
+sys.path.insert(0, '$SCRIPT_DIR/scripts')
+# Check persona_memory for Embry watch records
+r = httpx.post('http://127.0.0.1:8601/recall', json={
+    'q': 'Embry watch history',
+    'collections': ['persona_memory'],
+    'tags': ['persona:embry', 'watch_history'],
+    'k': 3,
+}, timeout=10.0)
+data = r.json()
+found = data.get('found', False) and len(data.get('items', [])) > 0
+if found:
+    print(f'  {len(data[\"items\"])} persona watch records found')
+else:
+    print('  no persona watch records found')
+    sys.exit(1)
+" 2>/dev/null; then
+  pass "e2e persona watch record recallable"
+else
+  echo "  SKIP: e2e memory check (run --persona embry first)"
 fi
 
 # ---------------------------------------------------------------------------

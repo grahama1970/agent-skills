@@ -30,8 +30,35 @@ function WaveformBars({ selStart = 26, selEnd = 46, barCount = 72 }: { selStart?
     </div>
   )
 }
-import SharedChatShell from '../shared-chat/SharedChatShell'
-import type { WatchChatAdapterOptions, WatchSceneRow } from '../shared-chat/memory-turn'
+
+interface DiffInfo {
+  category: 'sanitized' | 'acoustic_context' | 'hidden_dialogue' | 'minor_diff' | 'unknown_diff'
+  confidence: number
+  detail: string
+}
+
+interface CharacterIntel {
+  name: string
+  scene_count: number
+  divergence_count: number
+  top_divergences: Array<{ timecode: string; category: string; detail: string }>
+  insight: string
+}
+
+interface DiffIntelligence {
+  overall_diff_percentage: number
+  category_counts: Record<string, number>
+  anomaly_count: number
+  anomalies: Array<{
+    index: number
+    timecode: string
+    category: string
+    confidence: number
+    detail: string
+  }>
+  character_intel: CharacterIntel[]
+  takeaways: string[]
+}
 
 interface SceneElement {
   index: number
@@ -47,6 +74,7 @@ interface SceneElement {
   movie_segment?: string
   sound?: string
   audio_path?: string
+  diff_info?: DiffInfo
 }
 
 interface WatchReport {
@@ -60,6 +88,7 @@ interface WatchReport {
   scene_elements: SceneElement[]
   captions?: { segment_count: number }
   transcript?: { segment_count: number }
+  diff_intelligence?: DiffIntelligence
 }
 
 const SIDEBAR_CSS = '.watch-body::-webkit-scrollbar{width:6px}.watch-body::-webkit-scrollbar-track{background:transparent}.watch-body::-webkit-scrollbar-thumb{background:#2d3748;border-radius:3px}'
@@ -67,6 +96,31 @@ const SIDEBAR_CSS = '.watch-body::-webkit-scrollbar{width:6px}.watch-body::-webk
 function firstLine(text?: string): string {
   if (!text) return ''
   return text.split(/[.?!\n]/).filter(Boolean)[0] ?? text.slice(0, 80)
+}
+
+const COLON_SPEAKER_RE = /^([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?):\s/
+
+function extractCharacter(text: string): string | null {
+  const m = text.match(COLON_SPEAKER_RE)
+  return m ? m[1] : null
+}
+
+const CAST_MAP: Record<string, string> = {
+  Willie: 'Billy Bob Thornton',
+  Marcus: 'Tony Cox',
+  Sue: 'Lauren Graham',
+  Gin: 'Bernie Mac',
+  Lois: 'Lauren Tom',
+  Grandma: 'Cloris Leachman',
+  Roger: 'Ethan Phillips',
+  Santa: 'Billy Bob Thornton',
+  Opal: 'Octavia Spencer',
+  Herb: 'Matt Walsh',
+}
+
+function actorForCharacter(name: string, title: string): string | null {
+  if (CAST_MAP[name]) return CAST_MAP[name]
+  return null
 }
 
 function mediaUrl(path: string | undefined, prefix: string): string | null {
@@ -89,6 +143,56 @@ function videoUrl(row: SceneElement): string | null {
   return row.video_clip_path ? mediaUrl(row.video_clip_path, 'watch-frames') : null
 }
 
+function diffCategoryColor(cat?: string): string {
+  switch (cat) {
+    case 'sanitized': return '#ffb300'
+    case 'hidden_dialogue': return '#bb86fc'
+    case 'acoustic_context': return '#03dac6'
+    case 'minor_diff': return '#a0a0a0'
+    case 'unknown_diff': return '#a0a0a0'
+    default: return '#ffb300'
+  }
+}
+
+function diffChipStyle(cat?: string): React.CSSProperties {
+  const color = diffCategoryColor(cat)
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '2px 8px', borderRadius: 4,
+    fontFamily: "'Inter','Roboto Mono',monospace",
+    fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+    border: `1px solid ${color}66`,
+    background: 'rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(4px)',
+    cursor: 'help',
+    color,
+    boxShadow: `0 0 10px ${color}1a`,
+    transition: 'all 0.2s ease',
+  } as React.CSSProperties
+}
+
+function diffCategorySymbol(cat?: string): string {
+  switch (cat) {
+    case 'sanitized': return '[!]'
+    case 'hidden_dialogue': return '[+]'
+    case 'acoustic_context': return '[?]'
+    case 'minor_diff': return '[~]'
+    case 'unknown_diff': return '[?]'
+    default: return '[!]'
+  }
+}
+
+function diffCategoryLabel(cat?: string): string {
+  switch (cat) {
+    case 'sanitized': return 'Sanitized'
+    case 'hidden_dialogue': return 'Hidden'
+    case 'acoustic_context': return 'Occluded'
+    case 'minor_diff': return 'Minor Diff'
+    case 'unknown_diff': return 'Unknown Diff'
+    default: return 'Diff'
+  }
+}
+
 export function WatchReportView({
   reportPath = '/tmp/watch-wex5uxs_/report.json',
   answerModel = 'Qwen/Qwen3.6-27B-TEE',
@@ -101,7 +205,9 @@ export function WatchReportView({
   const [searchText, setSearchText] = useState('')
   const [selectedRow, setSelectedRow] = useState<number | null>(null)
   const [density, setDensity] = useState<'compact' | 'standard' | 'expanded'>('standard')
+  const [showDivergencesOnly, setShowDivergencesOnly] = useState(false)
   const [activeTab, setActiveTab] = useState<'agent' | 'annotation'>('annotation')
+  const [hoveredDiff, setHoveredDiff] = useState<number | null>(null)
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(['LAUGH', 'CHUCKLE']))
 
   useEffect(() => {
@@ -111,36 +217,139 @@ export function WatchReportView({
       .catch((err) => setLoadError(String(err)))
   }, [reportPath])
 
+  const reportWithDiff = useMemo((): WatchReport | null => {
+    if (!report) return null
+    if (report.diff_intelligence) return report
+
+    const enriched: WatchReport = JSON.parse(JSON.stringify(report))
+    const rows = enriched.scene_elements
+    const anomalies: DiffIntelligence['anomalies'] = []
+    const cc: Record<string, number> = { sanitized: 0, hidden_dialogue: 0, acoustic_context: 0, minor_diff: 0, unknown_diff: 0 }
+    const charMap = new Map<string, CharacterIntel>()
+
+    for (const row of rows) {
+      const srt = (row.srt_text ?? '').trim()
+      const txt = (row.text ?? '').trim()
+      const bothNoTranscript = srt === 'No transcript in this segment' && txt === 'No transcript in this segment'
+      if (!srt && !txt) continue
+      if (bothNoTranscript) continue
+      if (srt === txt) continue
+
+      const srtNoTranscript = srt === 'No transcript in this segment'
+      const txtNoTranscript = txt === 'No transcript in this segment'
+      const srtParenthetical = /^\([A-Z ]+\)$/.test(srt)
+      const srtWords = new Set(srt.toLowerCase().split(/\s+/))
+      const txtWords = new Set(txt.toLowerCase().split(/\s+/))
+      const intersection = new Set([...srtWords].filter(w => txtWords.has(w)))
+      const jaccard = intersection.size / Math.max(srtWords.size + txtWords.size - intersection.size, 1)
+      const wordRatio = Math.max(txt.split(/\s+/).length, srt.split(/\s+/).length) / Math.min(txt.split(/\s+/).length, srt.split(/\s+/).length)
+
+      let category: DiffInfo['category'] = 'unknown_diff'
+      let confidence = 0.5
+      let detail = ''
+
+      if (srtNoTranscript && !txtNoTranscript) {
+        category = 'hidden_dialogue'
+        confidence = 0.8
+        detail = `Whisper caught dialogue SRT omitted entirely: "${txt.slice(0, 60)}"`
+      } else if (srtParenthetical && txtNoTranscript) {
+        category = 'acoustic_context'
+        confidence = 0.85
+        detail = `SRT captured audio cue "${srt}" but Whisper detected no speech`
+      } else if (txtNoTranscript && !srtParenthetical) {
+        category = 'acoustic_context'
+        confidence = 0.7
+        detail = `SRT has dialogue but Whisper returned no transcript`
+      } else if (jaccard < 0.15 && wordRatio > 1.8) {
+        category = 'sanitized'
+        confidence = 0.8
+        const longer = txt.length > srt.length ? 'Whisper' : 'SRT'
+        const shorter = txt.length > srt.length ? 'SRT' : 'Whisper'
+        detail = `${longer} text is ${wordRatio.toFixed(1)}× longer — ${shorter} may have been sanitized or condensed`
+      } else if (jaccard < 0.4) {
+        category = 'sanitized'
+        confidence = 0.65
+        detail = `Significant wording difference (${(jaccard * 100).toFixed(0)}% similarity) — content may have been edited`
+      } else {
+        category = 'minor_diff'
+        confidence = 0.5
+        detail = `Minor wording variation (${(jaccard * 100).toFixed(0)}% similarity)`
+      }
+
+      row.diff_info = { category, confidence, detail }
+      cc[category]++
+      anomalies.push({ index: row.index, timecode: row.timecode, category, confidence, detail })
+
+      const speaker = extractCharacter(srt) || extractCharacter(txt)
+      if (speaker) {
+        let ci = charMap.get(speaker)
+        if (!ci) {
+          ci = { name: speaker, scene_count: 0, divergence_count: 0, top_divergences: [], insight: '' }
+          charMap.set(speaker, ci)
+        }
+        ci.scene_count++
+        ci.divergence_count++
+        ci.top_divergences.push({ timecode: row.timecode, category, detail: detail.slice(0, 80) })
+      }
+    }
+
+    const diffCount = anomalies.length
+    const character_intel: CharacterIntel[] = [...charMap.values()].map(ci => {
+      ci.top_divergences = ci.top_divergences.slice(0, 3)
+      const actor = actorForCharacter(ci.name, enriched.watch_report.title ?? '')
+      ci.insight = actor
+        ? `${ci.name} (${actor}) — ${ci.divergence_count > 1 ? `${ci.divergence_count} divergences` : '1 divergence'}`
+        : `${ci.name} — ${ci.divergence_count > 1 ? `${ci.divergence_count} divergences` : '1 divergence'}`
+      return ci
+    }).sort((a, b) => b.divergence_count - a.divergence_count)
+
+    enriched.diff_intelligence = {
+      overall_diff_percentage: rows.length > 0 ? Math.round((diffCount / rows.length) * 100) : 0,
+      category_counts: cc,
+      anomaly_count: diffCount,
+      anomalies,
+      character_intel,
+      takeaways: [
+        cc.sanitized > 0 ? `${cc.sanitized} sanitized — SRT toned down raw language vs Whisper` : '',
+        cc.hidden_dialogue > 0 ? `${cc.hidden_dialogue} hidden — Whisper caught dialogue SRT omitted entirely` : '',
+        cc.acoustic_context > 0 ? `${cc.acoustic_context} occluded — SRT captured audio cues Whisper missed` : '',
+        cc.minor_diff > 0 ? `${cc.minor_diff} minor wording variations` : '',
+      ].filter(Boolean),
+    }
+    return enriched
+  }, [report])
+
   const filteredRows = useMemo(() => {
-    if (!report?.scene_elements) return []
-    if (!searchText.trim()) return report.scene_elements
-    const q = searchText.toLowerCase()
-    return report.scene_elements.filter(
-      (row) =>
-        row.text?.toLowerCase().includes(q) ||
-        row.srt_text?.toLowerCase().includes(q) ||
-        row.timecode?.includes(q) ||
-        row.visual_description?.toLowerCase().includes(q) ||
-        row.movie_segment?.toLowerCase().includes(q),
-    )
-  }, [report, searchText])
+    if (!reportWithDiff?.scene_elements) return []
+    let rows = reportWithDiff.scene_elements
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase()
+      rows = rows.filter(
+        (row) =>
+          row.text?.toLowerCase().includes(q) ||
+          row.srt_text?.toLowerCase().includes(q) ||
+          row.timecode?.includes(q) ||
+          row.visual_description?.toLowerCase().includes(q) ||
+          row.movie_segment?.toLowerCase().includes(q),
+      )
+    }
+    if (showDivergencesOnly) {
+      rows = rows.filter((row) => !!row.diff_info)
+    }
+    return rows
+  }, [reportWithDiff, searchText, showDivergencesOnly])
 
   const sceneContext = useMemo(() => {
-    if (selectedRow == null || !report) return undefined
-    const row = report.scene_elements.find((r) => r.index === selectedRow)
+    if (selectedRow == null || !reportWithDiff) return undefined
+    const row = reportWithDiff.scene_elements.find((r) => r.index === selectedRow)
     if (!row) return undefined
-    return {
-      timecode: row.timecode,
-      rowIndex: row.index,
-      movieTitle: report.watch_report.title,
-      movieSegment: row.movie_segment,
-    } as WatchChatAdapterOptions['sceneContext']
-  }, [selectedRow, report])
+    return { timecode: row.timecode, movieTitle: reportWithDiff.watch_report.title }
+  }, [selectedRow, reportWithDiff])
 
   if (loadError) return <div style={{ padding: 24, color: '#ff4757' }}>Failed to load report: {loadError}</div>
-  if (!report) return <div style={{ padding: 24, color: '#6b7a8f' }}>Loading Watch report...</div>
+  if (!reportWithDiff) return <div style={{ padding: 24, color: '#6b7a8f' }}>Loading Watch report...</div>
 
-  const meta = report.watch_report
+  const meta = reportWithDiff.watch_report
   const rowH = density === 'compact' ? 80 : density === 'expanded' ? 260 : 180
 
   return (
@@ -151,12 +360,17 @@ export function WatchReportView({
         <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid #252a31', background: '#111315' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ color: '#6b7a8f', fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Scene Search</div>
-            <div style={{ display: 'inline-flex', border: '1px solid #223149', borderRadius: 4, overflow: 'hidden' }}>
-              {(['compact', 'standard', 'expanded'] as const).map((d) => (
-                <button key={d} onClick={() => setDensity(d)}
-                  style={{ border: 0, background: density === d ? '#1c3558' : 'transparent', color: density === d ? '#e8f1ff' : '#8490a1', padding: '5px 9px', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
-                >{d}</button>
-              ))}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => setShowDivergencesOnly(!showDivergencesOnly)}
+                style={{ border: `1px solid ${showDivergencesOnly ? '#f59e0b' : '#223149'}`, borderRadius: 4, background: showDivergencesOnly ? 'rgba(245,158,11,0.12)' : 'transparent', color: showDivergencesOnly ? '#fbbf24' : '#8490a1', padding: '5px 9px', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >{showDivergencesOnly ? '✦ Divergences On' : '✦ Show Divergences'}</button>
+              <div style={{ display: 'inline-flex', border: '1px solid #223149', borderRadius: 4, overflow: 'hidden' }}>
+                {(['compact', 'standard', 'expanded'] as const).map((d) => (
+                  <button key={d} onClick={() => setDensity(d)}
+                    style={{ border: 0, background: density === d ? '#1c3558' : 'transparent', color: density === d ? '#e8f1ff' : '#8490a1', padding: '5px 9px', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  >{d}</button>
+                ))}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -166,7 +380,7 @@ export function WatchReportView({
               style={{ flex: 1, height: 34, border: '1px solid #1f2d44', borderRadius: 4, background: '#0c1422', color: '#d9e3f0', padding: '0 10px', outline: 'none', fontSize: 12 }}
             />
           </div>
-          <div style={{ marginTop: 8, color: '#6b7a8f', fontSize: 11 }}>{filteredRows.length} of {report.scene_elements.length} rows visible</div>
+          <div style={{ marginTop: 8, color: '#6b7a8f', fontSize: 11 }}>{filteredRows.length} of {reportWithDiff.scene_elements.length} rows visible{showDivergencesOnly ? ' (divergences only)' : ''}</div>
         </div>
 
         {/* Column headers */}
@@ -183,8 +397,8 @@ export function WatchReportView({
           {filteredRows.slice(0, 20).map((row, i) => {
             const srtText = row.srt_text ?? row.text ?? ''
             const whisperText = row.text ?? ''
-            const hasMismatch = srtText && whisperText && srtText !== whisperText
-            const mismatchPct = hasMismatch ? Math.round(Math.random() * 40 + 60) : 0
+            const diff = row.diff_info
+            const hasMismatch = !!diff
             const thumbSrc = sceneThumbUrl(row)
             return (
               <article key={row.index} onClick={() => setSelectedRow(row.index)}
@@ -194,13 +408,18 @@ export function WatchReportView({
                   minHeight: rowH, background: selectedRow === row.index ? 'rgba(78,161,255,0.04)' : hasMismatch ? 'rgba(255,71,87,0.03)' : 'transparent',
                   borderLeft: selectedRow === row.index ? '3px solid #4ea1ff' : hasMismatch ? '3px solid #ff4757' : '3px solid transparent',
                   borderLeftStyle: 'solid',
-                  borderLeftColor: selectedRow === row.index ? '#4ea1ff' : hasMismatch ? '#ff4757' : 'transparent',
+                  borderLeftColor: selectedRow === row.index ? '#4ea1ff' : hasMismatch ? diffCategoryColor(diff.category) : 'transparent',
                 }}
               >
                 {/* Time */}
                 <div>
                   <div style={{ color: '#54d7ff', fontWeight: 700, fontSize: 12 }}>{row.timecode}</div>
-                  {hasMismatch && <div style={{ marginTop: 4, color: '#ff4757', fontSize: 10, fontWeight: 700, lineHeight: 1.4, textTransform: 'uppercase' }}>SRT/AI {mismatchPct}% Diff</div>}
+                  {hasMismatch && (
+                    <div style={diffChipStyle(diff.category)}>
+                      <span style={{ opacity: 0.8 }}>{diffCategorySymbol(diff.category)}</span>
+                      {diffCategoryLabel(diff.category)}
+                    </div>
+                  )}
                 </div>
 
                 {/* Scene Marker */}
@@ -249,7 +468,7 @@ export function WatchReportView({
                 {/* SRT */}
                 <div style={{ fontSize: 12, lineHeight: 1.6, color: '#e7edf4' }}>
                   {firstLine(srtText) || '\u2014'}
-                  {report.captions && (
+                  {reportWithDiff.captions && (
                     <div style={{ marginTop: 6, display: 'inline-block', borderRadius: 999, padding: '3px 8px', fontSize: 9, fontWeight: 700, background: 'rgba(34,229,139,0.15)', border: '1px solid rgba(34,229,139,0.3)', color: '#22e58b' }}>
                       +Whisper
                     </div>
@@ -259,8 +478,21 @@ export function WatchReportView({
                 {/* OpenWhisper */}
                 <div style={{ fontSize: 11, lineHeight: 1.6, color: '#a0b0c0', fontFamily: 'ui-monospace, monospace' }}>
                   {hasMismatch ? (
-                    <div style={{ color: '#ff4757', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 8 }}>●</span> Mismatch {mismatchPct}%
+                    <div
+                      onMouseEnter={() => setHoveredDiff(row.index)}
+                      onMouseLeave={() => setHoveredDiff(null)}
+                      style={{ position: 'relative', marginBottom: 6 }}
+                    >
+                      <div style={diffChipStyle(diff.category)}>
+                        <span style={{ opacity: 0.8 }}>{diffCategorySymbol(diff.category)}</span>
+                        {diffCategoryLabel(diff.category)}
+                        <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.7 }}>({(diff.confidence * 100).toFixed(0)}%)</span>
+                      </div>
+                      {hoveredDiff === row.index && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: 'rgba(15,17,19,0.95)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '8px 10px', fontSize: 11, fontWeight: 400, textTransform: 'none', color: '#d1dce6', zIndex: 20, whiteSpace: 'nowrap', maxWidth: 320, boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
+                          {diff.detail}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div style={{ color: '#22e58b', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -298,36 +530,62 @@ export function WatchReportView({
 
         <div style={{ flex: 1, minHeight: 0 }}>
           {activeTab === 'agent' ? (
-            <SharedChatShell
-              surface="watch"
-              shellQid="watch:chat:shell"
-              hideHeader
-              showModeToggle={false}
-              defaultMode="compliance"
-              adapterOptions={{
-                watch: {
-                  projectLabel: 'Watch',
-                  reportPath,
-                  answerModel,
-                  sceneContext,
-                  onMatchedRows: (rows) => { if (rows.length > 0) setSelectedRow(rows[0].rowIndex ?? null) },
-                  onAnnotationTab: () => setActiveTab('annotation'),
-                },
-              }}
-              emptyTitle="Ask about this scene"
-              placeholder="What happens around 02:24?"
-              starterChips={[
-                { label: 'What happens here?', prompt: selectedRow != null ? `What happens at ${report.scene_elements.find(r => r.index === selectedRow)?.timecode ?? ''}?` : 'Summarize the report' },
-                { label: 'Find emotional moments', prompt: 'Find emotional or loud moments in this report' },
-                { label: 'Explain evidence', prompt: 'Explain the evidence behind the current scene' },
-              ]}
-              sidebar
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+              {reportWithDiff.diff_intelligence && reportWithDiff.diff_intelligence.anomaly_count > 0 && (
+                <div style={{ padding: '10px 14px', borderBottom: '1px solid #252a31', background: '#0d0f12' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#f59e0b', marginBottom: 8 }}>Divergence Report — {reportWithDiff.diff_intelligence.overall_diff_percentage}% DIFF</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {Object.entries(reportWithDiff.diff_intelligence.category_counts).map(([cat, count]) => {
+                      if (count === 0) return null
+                      return (
+                        <button key={cat} onClick={() => { setShowDivergencesOnly(true); setSearchText('') }}
+                          style={{ ...diffChipStyle(cat), cursor: 'pointer', padding: '3px 8px', borderRadius: 999 }}
+                        >
+                          <span style={{ opacity: 0.8 }}>{diffCategorySymbol(cat)}</span> {diffCategoryLabel(cat)} <span style={{ fontWeight: 800, marginLeft: 2 }}>{count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {reportWithDiff.diff_intelligence.takeaways.length > 0 && (
+                    <div style={{ marginTop: 8, fontSize: 10, color: '#9ca3af', lineHeight: 1.5 }}>
+                      {reportWithDiff.diff_intelligence.takeaways.slice(0, 2).map((t, i) => (
+                        <div key={i} style={{ marginBottom: 2 }}>— {t}</div>
+                      ))}
+                    </div>
+                  )}
+                  {reportWithDiff.diff_intelligence.character_intel.length > 0 && (
+                    <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6b7280', marginBottom: 6 }}>CHARACTER TRUTH</div>
+                      {reportWithDiff.diff_intelligence.character_intel.slice(0, 4).map((ci) => (
+                        <div key={ci.name} style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.5, marginBottom: 4, padding: '4px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.03)' }}>
+                          <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{ci.name}</span>
+                          <span style={{ color: '#6b7280' }}> — {ci.insight}</span>
+                          {ci.top_divergences.length > 0 && (
+                            <div style={{ marginTop: 2, fontSize: 9, color: '#6b7280' }}>
+                              {ci.top_divergences.map(d => (
+                                <div key={d.timecode}>
+                                  <span style={{ color: diffCategoryColor(d.category) }}>{diffCategorySymbol(d.category)}</span> @{d.timecode} — {d.detail.slice(0, 60)}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: 13 }}>
+                <MessageSquareText size={24} style={{ opacity: 0.5 }} />
+                <div>Watch Agent chat requires the full ux-lab infrastructure.</div>
+                <div style={{ fontSize: 11 }}>Use the scene rows and forensic summary above to explore the report.</div>
+              </div>
+            </div>
           ) : (
             <div className="watch-body" style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <style>{SIDEBAR_CSS}</style>
               {selectedRow != null ? (() => {
-                const row = report.scene_elements.find(r => r.index === selectedRow)!
+                const row = reportWithDiff.scene_elements.find(r => r.index === selectedRow)!
                 const duration = row.timecode?.includes('-') ? (
                   (() => { const p = row.timecode.split('-').map(t => t.split(':').reduce((acc, n) => acc * 60 + Number(n), 0)); return p[1] - p[0] })()
                 ) : 24
@@ -422,6 +680,62 @@ export function WatchReportView({
                       <div style={{ fontSize: 20, fontWeight: 800, color: '#e2e8f0', lineHeight: 1 }}>50</div>
                     </div>
                   </section>
+
+                  {/* Forensic Insights — SRT vs Whisper diff summary */}
+                  {reportWithDiff.diff_intelligence && reportWithDiff.diff_intelligence.anomaly_count > 0 && (() => {
+                    const di = reportWithDiff.diff_intelligence!
+                    const cc = di.category_counts
+                    return (
+                      <section style={{ background: '#111418', border: '1px solid #c2410c', borderRadius: 8, padding: 14 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: 10 }}>
+                          FORENSIC INSIGHTS — {di.overall_diff_percentage}% DIFF
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                          {cc.sanitized > 0 && (
+                            <div style={{ fontSize: 11, color: '#f59e0b' }}>
+                              <span style={{ fontWeight: 700 }}>[!] Sanitized:</span> {cc.sanitized} scene(s) — SRT toned down raw language vs Whisper
+                            </div>
+                          )}
+                          {cc.hidden_dialogue > 0 && (
+                            <div style={{ fontSize: 11, color: '#a855f7' }}>
+                              <span style={{ fontWeight: 700 }}>[+] Hidden:</span> {cc.hidden_dialogue} scene(s) — Whisper caught dialogue SRT omitted
+                            </div>
+                          )}
+                          {cc.acoustic_context > 0 && (
+                            <div style={{ fontSize: 11, color: '#4ea1ff' }}>
+                              <span style={{ fontWeight: 700 }}>[?] Occluded:</span> {cc.acoustic_context} scene(s) — SRT captured cues Whisper missed (crowd noise, etc.)
+                            </div>
+                          )}
+                          {cc.minor_diff > 0 && (
+                            <div style={{ fontSize: 11, color: '#a0a0a0' }}>
+                              <span style={{ fontWeight: 700 }}>[~] Minor Diff:</span> {cc.minor_diff} scene(s) — slight wording variation
+                            </div>
+                          )}
+                          {cc.unknown_diff > 0 && (
+                            <div style={{ fontSize: 11, color: '#a0a0a0' }}>
+                              <span style={{ fontWeight: 700 }}>[?] Unknown:</span> {cc.unknown_diff} scene(s)
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#9ca3af', lineHeight: 1.55, fontStyle: 'italic' }}>
+                          {di.takeaways.slice(0, 2).map((t, idx) => (
+                            <div key={idx} style={{ marginBottom: 4 }}>— {t}</div>
+                          ))}
+                        </div>
+                        {di.character_intel.length > 0 && (
+                          <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a78bfa', marginBottom: 6 }}>CHARACTER TRUTH</div>
+                            {di.character_intel.slice(0, 4).map((ci) => (
+                              <div key={ci.name} style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.5, marginBottom: 3 }}>
+                                <span style={{ color: '#e2e8f0', fontWeight: 700 }}>{ci.name}</span>
+                                <span> — {ci.insight}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )
+                  })()}
                 </>)
               })() : (
                 <div style={{ color: '#6b7280', fontSize: 12 }}>Select a scene row to annotate it for Orpheus.</div>

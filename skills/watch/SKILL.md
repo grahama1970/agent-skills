@@ -33,6 +33,8 @@ composes:
   - ingest-movie          # Acquisition + SRT scene analysis (owns search, Radarr, subtitle quality)
   - scillm
   - task-monitor
+  - voice-segment-selector # Orpheus candidate review/export and synthetic SFX gap-fill
+  - unsloth-studio       # downstream train/eval loop ownership
 complies:
   - best-practices-skills
   - best-practices-python
@@ -48,7 +50,9 @@ Watch any video (URL or local file) and get:
 1. **Scene-change frames** — one JPEG per detected shot via ffmpeg `select=gt(scene,…)`
 2. **Transcript** — native captions first, then Whisper via scillm
 3. **SRT emotion/scene analysis** — for local files with subtitles
-4. **Structured report** — frames manifest + transcript + pacing metrics
+4. **Scene element table** — timecode, transcript text, marker image, movie segment, and sound note per sampled scene
+5. **HTML inspection table** — thumbnails, visual description status, playable video/audio controls where local paths are available
+6. **Structured report** — frames manifest + transcript + pacing metrics
 
 ## Quick Start
 
@@ -56,19 +60,19 @@ Watch any video (URL or local file) and get:
 cd /home/graham/workspace/experiments/agent-skills/skills/watch
 
 # Watch a YouTube URL → auto-routes transcript to ingest-youtube (3-tier fallback)
-uv run python scripts/watch.py "https://youtube.com/watch?v=dQw4w9WgXcQ"
+./run.sh "https://youtube.com/watch?v=dQw4w9WgXcQ"
 
 # Watch a local movie with SRT → auto-routes emotion analysis to ingest-movie
-uv run python scripts/watch.py /path/to/video.mp4 --subtitle /path/to/subtitles.srt --emotion rage
+./run.sh /path/to/video.mp4 --subtitle /path/to/subtitles.srt --emotion rage
 
 # Watch a local file, scene-change frames only
-uv run python scripts/watch.py /path/to/video.mp4 --scene-change
+./run.sh /path/to/video.mp4 --scene-change
 
 # Focus on a specific section (denser frames, lower token cost)
-uv run python scripts/watch.py video.mp4 --start 2:15 --end 2:45
+./run.sh video.mp4 --start 2:15 --end 2:45
 
 # Uniform frame sampling (skip scene-change detection)
-uv run python scripts/watch.py video.mp4 --fps 0.5
+./run.sh video.mp4 --fps 0.5
 ```
 
 ## Source Resolution
@@ -87,13 +91,17 @@ watch "There Will Be Blood"              → Movie title: disk → ingest-movie 
 | 2 | **Is it on disk?** — check local library | watch built-in | Fuzzy match in `/mnt/storage12tb/media/movies/` |
 | 3 | **Find a release** — search Usenet with subtitle checks | `ingest-movie` search | `./run.sh search "Bad Santa 2003"` |
 | 4 | **Acquire** — download with quality enforcement | `ingest-movie` Radarr | `./run.sh acquire radarr --preset horus_standard --execute` |
-| 5 | **Failure** — can't find or acquire | agent reports to user | Exit code 1 + context |
+| 5 | **Subtitle recovery** — ensure English SRT exists beside media | Bazarr | `http://localhost:6767` connected to Radarr/Sonarr |
+| 6 | **Failure** — can't find, acquire, or obtain English SRT | agent reports to user | Exit code 1 + context |
 
 Rules:
 - **Topic discovery** → `brave-search` (find *what* to watch)
 - **Acquisition** → `ingest-movie` ONLY (find + download *a specific title*)
+- **Post-import subtitles** → Bazarr connected to Radarr/Sonarr; expected output is
+  an English `.srt` alongside the movie file
 - Do NOT call ops-nzbgeek, Radarr API, or brave-search for acquisition —
   `ingest-movie` owns all of that and enforces subtitle quality.
+- Do NOT treat Whisper as a replacement for the required English SRT column.
 
 ## Composition Routing
 
@@ -102,8 +110,8 @@ Rules:
 | Source type | Transcript | Scene/emotion analysis | Download/acquisition |
 |-------------|-----------|----------------------|---------------------|
 | **YouTube URL** | `ingest-youtube` (captions via `--no-whisper`, then scillm Whisper on video) | Not applicable | `yt-dlp` for frames |
-| **Local file with SRT** | Direct SRT parse or scillm Whisper | `ingest-movie` scenes analyze/find | N/A (local) |
-| **Movie title** (name not found in library) | Direct SRT parse or scillm Whisper | `ingest-movie` scenes analyze/find | `ingest-movie` Radarr (SDH subs + English audio + 1080p enforced) |
+| **Local file with SRT** | English SRT plus separate scillm Whisper | `ingest-movie` scenes analyze/find | N/A (local) |
+| **Movie title** (name not found in library) | English SRT plus separate scillm Whisper | `ingest-movie` scenes analyze/find | `ingest-movie` Radarr + Bazarr English SRT recovery |
 | **Other URL / no SRT** | scillm Whisper fallback | Built-in SRT parser (fallback) | `yt-dlp` download |
 
 ## Pipeline
@@ -117,8 +125,10 @@ Source (URL or local)
   │
   ├─ Transcript routing:
   │   ├─ YouTube URL ──→ compose with ingest-youtube (uv subprocess, stdout JSON)
-  │   ├─ Local SRT file ──→ parse directly (SSA/ASS/SRT)
+  │   ├─ Local English SRT file ──→ parse directly (SSA/ASS/SRT)
   │   └─ Fallback ──→ scillm Whisper (httpx to localhost:4001, not raw API key)
+  │      Note: Whisper is a separate transcript stream; it does not satisfy
+  │      the English SRT requirement for movie canary/product runs.
   │
   ├─ SRT scene analysis routing:
   │   ├─ Local movie with SRT ──→ compose with ingest-movie (uv subprocess, temp JSON)
@@ -127,12 +137,69 @@ Source (URL or local)
   └─ Structured report: frames_manifest.json + transcript.json + scenes.json + report.md
 ```
 
+## Asking Questions About Watched Videos
+
+Questions about previously watched videos must go through `$memory` recall, not
+direct ArangoDB or Qdrant queries. The Watch subagent may answer movie questions
+like a human viewer when the answer is supported by watched-video evidence
+(`watch_content`, frames, transcript, scene table, or scene metadata).
+
+```python
+import httpx
+
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=httpx.Timeout(10.0, connect=2.0))
+resp = client.post("/recall", json={
+    "q": "What was on screen when the narrator mentioned deployment?",
+    "collections": ["watch_content"],
+    "k": 5,
+})
+data = resp.json()
+items = data["items"]  # not "results"
+```
+
+Use natural-language questions, inspect `found`, `confidence`, `items`, and
+source fields, and ask a clarifying question when recall is weak or ambiguous.
+Do not answer video facts from memory when `watch_content` recall misses.
+When the question targets a specific video, pass a media title/key/slug and
+reject wrong-video hits even when `/recall` returns `found=true`.
+
+Appearance questions require frame-derived visual evidence records. Transcript
+QRA records are not sufficient to answer what a character, object, or scene
+looked like. If no frame/VLM description exists, answer `not present in
+extracted visual evidence` and regenerate visual descriptions instead of
+guessing.
+
+For public movie facts or expected-answer sanity checks, Watch may use
+`$brave-search` to corroborate the likely answer:
+
+```python
+from video_memory import ask_movie_question
+
+packet = ask_movie_question(
+    "why does the character leave the apartment?",
+    movie_title="Example Film",
+)
+```
+
+Treat Brave Search as corroboration only. It must not override the watched
+video evidence, and it must not be used as the only source for scene-specific
+claims about what appeared in the watched video.
+
+The answer contract is:
+
+```text
+extracted watch evidence first -> Brave corroboration second
+```
+
+If Brave finds a fact that extraction does not, that is a coverage gap, not an
+answer.
+
 ## Commands
 
-### `watch.py` — Main entry point
+### `run.sh` — Main Typer entry point
 
 ```bash
-uv run python scripts/watch.py <source> [options]
+./run.sh <source> [options]
 ```
 
 **Arguments:**
@@ -162,23 +229,23 @@ uv run python scripts/watch.py <source> [options]
 
 ```bash
 # Find scenes matching an emotion tag
-uv run python scripts/watch.py movie.mkv --subtitle movie.srt --emotion rage
+./run.sh movie.mkv --subtitle movie.srt --emotion rage
 
 # Find scenes matching a text query
-uv run python scripts/watch.py movie.mkv --subtitle movie.srt --query "explosion"
+./run.sh movie.mkv --subtitle movie.srt --query "explosion"
 
 # Find scenes matching a cue tag
-uv run python scripts/watch.py movie.mkv --subtitle movie.srt --tag shout
+./run.sh movie.mkv --subtitle movie.srt --tag shout
 ```
 
 ### Focused analysis (denser frames)
 
 ```bash
 # Dense frames over a 30-second window
-uv run python scripts/watch.py video.mp4 --start 1:30 --end 2:00
+./run.sh video.mp4 --start 1:30 --end 2:00
 
 # Last 10 seconds
-uv run python scripts/watch.py video.mp4 --start 50 --end 60
+./run.sh video.mp4 --start 50 --end 60
 ```
 
 ## Output
@@ -203,6 +270,32 @@ uv run python scripts/watch.py video.mp4 --start 50 --end 60
   ]
 }
 ```
+
+### Scene element table (`report.md` and `report.json`)
+
+Every report includes a scene-by-scene table with:
+
+| Field | Description |
+|-------|-------------|
+| `timecode` | Timestamp for the sampled scene marker |
+| `text` | Transcript text overlapping the scene segment, or an explicit missing-transcript note |
+| `scene_marker_image` | Extracted frame path for visual inspection |
+| `visual_description` | VLM-derived description or `not_analyzed` |
+| `visual_description_source` | Model/source receipt, or `none` |
+| `visual_description_status` | `described` or `not_analyzed` |
+| `movie_segment` | Start/end time range represented by the row |
+| `sound` | Speech/source note or explicit unavailable/not-analyzed note |
+
+### HTML report (`report.html`)
+
+Every run writes `report.html` beside `report.md` and `report.json`. It renders
+the same scene rows with:
+
+- image thumbnails from actual frame paths
+- visual description status and source
+- local video media fragments for scene playback when the source is a local file
+- audio controls when an extracted audio artifact exists
+- explicit gaps such as `image_descriptions_missing`
 
 ### Transcript (`transcript.json`)
 
@@ -262,6 +355,47 @@ Reuses the emotion cue system from `ingest-movie`:
 - **Emotions**: rage, anger, sorrow, regret, camaraderie
 - **Detection**: subtitle text parsing for [bracketed], (parenthesized), ALL-CAPS cues
 - **Quality validation**: entry count, emotion cue presence, timing consistency
+
+## Orpheus Emotion Dataset Boundary
+
+Watch helps find and curate movie-derived Orpheus evidence, but it does not own
+synthetic SFX generation, LoRA training, or training self-improvement loops.
+
+**Source-derived step model:**
+
+1. **Search watched/local movie evidence** — `watch` parses SRT/Whisper/scene
+   rows and finds candidate spans for Orpheus-native tags.
+   - Status: implemented/intended in Watch.
+2. **Create movie-curated candidates** — Watch report/UX selects exact audio
+   windows and writes provenance as `source_type=movie_curated`.
+   - Status: intended; movie clips are preferred for authenticity.
+3. **Report missing/sparse tags** — Watch identifies tags with insufficient
+   movie evidence.
+   - Status: intended; the report should name missing tags directly.
+4. **Generate synthetic gap-fill candidates** — delegate to
+   `voice-segment-selector generate-orpheus-sfx`, not Watch.
+   - Status: implemented in `voice-segment-selector`.
+5. **Prompt review loop** — generated ElevenLabs prompts must be sent through a
+   prompt-reviewer/skills-loop artifact before API generation.
+   - Status: implemented as a prompt-review bundle emitted by Unsloth Studio;
+     external reviewer/subagent consumes the bundle.
+6. **Train/evaluate/promote** — owned by `voice-segment-selector` and, where
+   Studio API training loops are used, `unsloth-studio`; not Watch.
+   - Status: outside Watch scope.
+
+Handoff command:
+
+```bash
+cd /home/graham/workspace/experiments/agent-skills
+skills/voice-segment-selector/run.sh generate-orpheus-sfx \
+  --speaker embry \
+  --samples-per-tag 40 \
+  --job-dir /mnt/storage12tb/skills/voice-segment-selector/jobs/embry-lawson-orpheus-elevenlabs-sfx
+```
+
+Use `--dry-run` first to create only the prompt-review bundle and planned
+manifest. Do not treat ElevenLabs samples as movie evidence; they are
+`source_type=elevenlabs_sfx` synthetic gap-fill candidates.
 
 ## Dependencies
 

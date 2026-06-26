@@ -173,6 +173,13 @@ def extract_scene_change(
     select_expr = f"eq(n\\,0)+gt(scene\\,{scene_threshold})"
     vf = f"select='{select_expr}',metadata=mode=print:file=-,scale={resolution}:-2"
     output_pattern = str(out_dir / "frame_%04d.jpg")
+    # Single-pass scene detection without frame limit, then subsample to max_frames
+    meta = get_metadata(video_path)
+    total_dur = meta["duration_seconds"]
+    eff_start = start_seconds or 0.0
+    eff_end = end_seconds or total_dur
+    eff_duration = max(0.1, eff_end - eff_start)
+
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y"]
     if start_seconds is not None:
         cmd += ["-ss", f"{start_seconds:.3f}"]
@@ -182,14 +189,10 @@ def extract_scene_change(
         "-i", str(Path(video_path).resolve()),
         "-vf", vf,
         "-vsync", "vfr",
-        "-frames:v", str(max_frames),
         "-q:v", "4",
         output_pattern,
     ]
-
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg scene-change extraction failed: {result.stderr.strip()}")
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
     pts_times: list[float] = []
     for stream in (result.stdout, result.stderr):
@@ -197,53 +200,70 @@ def extract_scene_change(
             line = line.strip()
             if "pts_time" in line:
                 for tok in line.split():
-                    if tok.startswith("pts_time:"):
+                    if tok.startswith("pts_time:") or tok.startswith("pts_time="):
                         try:
-                            pts_times.append(float(tok.split(":", 1)[1]))
-                        except ValueError:
-                            pass
-                    elif tok.startswith("pts_time="):
-                        try:
-                            pts_times.append(float(tok.split("=", 1)[1]))
+                            val = tok.split(":", 1)[1] if ":" in tok else tok.split("=", 1)[1]
+                            pts_times.append(float(val))
                         except ValueError:
                             pass
 
     sorted_frames = sorted(out_dir.glob("frame_*.jpg"))
 
-    if len(sorted_frames) < uniform_fallback_min:
-        for f in sorted_frames:
-            f.unlink()
-        meta = get_metadata(video_path)
-        full_duration = meta["duration_seconds"]
-        eff_start = start_seconds if start_seconds is not None else 0.0
-        eff_end = end_seconds if end_seconds is not None else full_duration
-        eff_duration = max(0.1, eff_end - eff_start)
-        fps, _ = auto_fps(eff_duration, max_frames=max_frames)
-        return extract_uniform(
-            video_path, out_dir, fps=fps, resolution=resolution,
-            max_frames=max_frames, start_seconds=start_seconds, end_seconds=end_seconds,
-        )
+    if len(sorted_frames) >= uniform_fallback_min:
+        offset = start_seconds or 0.0
+        if len(pts_times) < len(sorted_frames):
+            pts_times += [0.0] * (len(sorted_frames) - len(pts_times))
 
-    offset = start_seconds or 0.0
-    if len(pts_times) < len(sorted_frames):
-        pts_times += [0.0] * (len(sorted_frames) - len(pts_times))
+        # If we have more scene changes than max_frames, subsample evenly
+        if len(sorted_frames) > max_frames:
+            step = len(sorted_frames) / max_frames
+            indices = [int(i * step) for i in range(max_frames)]
+            indices = [min(i, len(sorted_frames) - 1) for i in indices]
+            return [
+                {"index": i, "timestamp_seconds": round(offset + pts_times[idx], 2),
+                 "path": str(sorted_frames[idx]), "source": "scene-change"}
+                for i, idx in enumerate(indices)
+            ]
 
-    # Check time coverage: if last scene frame is <10% into video duration, fall back to uniform
-    meta = get_metadata(video_path)
-    total_dur = meta["duration_seconds"]
-    if total_dur > 30 and pts_times and pts_times[-1] < total_dur * 0.1:
-        for f in sorted_frames:
-            f.unlink()
-        calc_fps, _ = auto_fps(total_dur, max_frames=max_frames)
-        return extract_uniform(
-            video_path, out_dir, fps=calc_fps, resolution=resolution,
-            max_frames=max_frames, start_seconds=start_seconds, end_seconds=end_seconds,
-        )
+        return [
+            {"index": i, "timestamp_seconds": round(offset + pts_times[i], 2), "path": str(p), "source": "scene-change"}
+            for i, p in enumerate(sorted_frames)
+        ]
 
-    return [
-        {"index": i, "timestamp_seconds": round(offset + pts_times[i], 2), "path": str(p), "source": "scene-change"}
-        for i, p in enumerate(sorted_frames)
-    ]
+    # Fallback: uniform sampling
+    for f in out_dir.glob("frame_*.jpg"):
+        f.unlink()
+    fps, _ = auto_fps(eff_duration, max_frames=max_frames)
+    return extract_uniform(
+        video_path, out_dir, fps=fps, resolution=resolution,
+        max_frames=max_frames, start_seconds=start_seconds, end_seconds=end_seconds,
+    )
+
+
+def _extract_at_pts(video_path: str, pts_list: list[float], out_dir: Path,
+                    resolution: int = 512, offset: float = 0.0) -> list[dict]:
+    """Extract one frame at each PTS timestamp using fast seeking."""
+    frames: list[dict] = []
+    for i, pts in enumerate(pts_list):
+        out_path = out_dir / f"frame_{i + 1:04d}.jpg"
+        cmd = [
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-ss", f"{pts:.3f}",
+            "-i", str(Path(video_path).resolve()),
+            "-vf", f"scale={resolution}:-2",
+            "-vframes", "1",
+            "-q:v", "4",
+            str(out_path),
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        if out_path.exists():
+            frames.append({
+                "index": i,
+                "timestamp_seconds": round(offset + pts, 2),
+                "path": str(out_path),
+                "source": "keyframe",
+            })
+    return frames
 
 
 def extract_frames(
