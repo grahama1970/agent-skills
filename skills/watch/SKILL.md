@@ -121,7 +121,14 @@ Source (URL or local)
   │
   ├─ yt-dlp download ──→ local video file (for frames)
   │
+  ├─ Rolling window planner (≥10min videos only)
+  │   ├─ Split into 5-min chunks with 3s boundary overlap
+  │   ├─ Extract frames per chunk via scene-change detection
+  │   ├─ Merge and deduplicate (0.5s tolerance)
+  │   └─ Global reindex → single flat frame list
+  │
   ├─ ffmpeg scene-change or uniform frame extraction ──→ JPEG frames
+  │   (single-pass for short/focused videos, chunked for long videos)
   │
   ├─ Transcript routing:
   │   ├─ YouTube URL ──→ compose with ingest-youtube (uv subprocess, stdout JSON)
@@ -397,13 +404,54 @@ Use `--dry-run` first to create only the prompt-review bundle and planned
 manifest. Do not treat ElevenLabs samples as movie evidence; they are
 `source_type=elevenlabs_sfx` synthetic gap-fill candidates.
 
+## Rolling Window Extraction
+
+Videos ≥10 minutes (full-video, scene-change mode only) are automatically split
+into 5-minute chunks with 3s boundary overlap. Each chunk is processed
+independently for frame extraction, then frames are merged and deduplicated
+into a single global timeline.
+
+- Triggered when: `effective_duration > 600s`, `not focused`, `fps is None`,
+  `scene_change is True`
+- Chunk size: 300s (configurable via `ROLLING_WINDOW_SECONDS`)
+- Overlap: 3s (configurable via `ROLLING_WINDOW_OVERLAP_SECONDS`)
+- Dedup tolerance: 0.5s
+- Scene rows include: `chunk_index`, `total_chunks`, `chunk_start_seconds`,
+  `chunk_end_seconds`
+
+## Configuration
+
+All environment variables are centralized in `scripts/config.py`:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `WHISPER_API_URL` | `http://127.0.0.1:9000/v1/audio/transcriptions` | Docker Whisper endpoint |
+| `WHISPER_API_KEY` | `""` | API key for Docker Whisper |
+| `MEMORY_DAEMON_URL` | `http://127.0.0.1:8601` | Memory service for upsert/recall |
+| `WATCH_MEDIA_ROOT` | `~/.local/share/agent-skills/watch-frames` | Persistent frame/audio storage |
+| `WATCH_REPORT_PATH` | `""` | Default report path for the UI |
+
+## PGS Subtitle OCR
+
+BluRay PGS (image-based) subtitles are OCR'd via a batch approach:
+1. `ffprobe` extracts subtitle event PTS values
+2. `ffmpeg` overlay renders each subtitle on a scaled video frame
+3. `tesseract` OCRs each frame (ThreadPoolExecutor with 4 workers)
+4. Produces an SRT file with timing from the PTS metadata
+
+Capped at 500 events (same as the single-pass frame budget). Falls back to
+Whisper-only if OCR fails.
+
 ## Dependencies
 
 ```bash
-uv pip install httpx rich
+uv pip install httpx rich loguru typer pillow
 ```
 
-System: `ffmpeg`, `yt-dlp` (both must be on PATH)
+System: `ffmpeg`, `ffprobe`, `yt-dlp`, `tesseract` (for PGS OCR)
+
+The CLI validates system deps at startup: missing `ffmpeg`, `ffprobe`, or
+`yt-dlp` produces a clear error before any pipeline work begins.
 
 ## Composing with Other Skills
 

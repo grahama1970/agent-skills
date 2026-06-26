@@ -4,7 +4,7 @@
   <img
     src="docs/assets/watch-banner.jpg"
     alt="excited vintage robot labeled WATCH sitting on a couch and watching television in a colorful retro living room"
-    width="100%"
+    width="100%" style="max-width:800px;height:auto"
   />
 </p>
 
@@ -341,6 +341,24 @@ media path.
 can find the video later. The exact memory schema is agent-facing contract
 material and lives in [`SKILL.md`](SKILL.md).
 
+## Rolling Window Extraction
+
+Long videos (≥10 min) are automatically split into 5-minute chunks with 3s
+boundary overlap. Each chunk is processed independently for frame extraction,
+then frames are merged, deduplicated, and globally reindexed into a single
+timeline. This ensures full temporal coverage regardless of the frame budget.
+
+| Video length | Without rolling | With rolling |
+|-------------|----------------|--------------|
+| 30 min | 500 frames (capped) | ~600-1200 frames |
+| 2 hours | 500 frames (capped) | ~800-2000 frames |
+
+Scene rows and memory records include `chunk_index`, `total_chunks`,
+`chunk_start_seconds`, and `chunk_end_seconds` for traceability.
+
+Rolling is automatic and only activates for full-video scene-change mode
+(not for `--start`/`--end` focused clips or `--fps` explicit sampling).
+
 ## Divergence Intelligence
 
 When both SRT and Whisper are available, `watch` computes a semantic divergence
@@ -473,13 +491,13 @@ the storage volume, or symlink `watch-frames` to a directory on local disk.
 
 | Area | Current behavior |
 | --- | --- |
-| Frames | Up to 500 frames per watch, capped at 2 fps. Two-pass scene detection (all scene changes detected, then evenly subsampled). |
+| Frames | Rolling window extraction for long videos (≥10 min). Auto-splits into 5-min chunks with 3s overlap, merges and deduplicates. Up to 500 frames per chunk, effectively unlimited across chunks. |
 | Transcription | Docker Whisper GPU (`hwdsl2/whisper-server:cuda`) on port 9000. Falls back to CPU-only faster-whisper. |
-| Subtitles | Auto-extracted from MKV (subrip/ASS/SSA). PGS (BluRay image) subtitles are skipped — OCR is too slow. |
+| Subtitles | Auto-extracted from MKV (subrip/ASS/SSA). PGS (BluRay image) subs OCR'd via batch ffmpeg + tesseract (ThreadPoolExecutor, max 500 events). |
 | Divergence | Only 3 semantic types: hidden_dialogue, sanitized, acoustic_context. No similarity ratio noise. |
-| Memory | Two layers: `watch_content` (per-scene rows) + `persona_memory` (watch records tagged by persona). |
-| Persisted media root | Hardcoded to `/mnt/storage12tb/media/watch-frames`. |
-| Recall | Requires memory daemon at `localhost:8601`. |
+| Memory | Two layers: `watch_content` (per-scene rows) + `persona_memory` (watch records tagged by persona). Chunk metadata in every row. |
+| Config | All paths/env vars in `scripts/config.py`: `WATCH_MEDIA_ROOT`, `MEMORY_DAEMON_URL`, `WHISPER_API_URL` + `WHISPER_API_KEY`. Media root defaults to `~/.local/share/agent-skills/watch-frames`. |
+| Recall | Requires memory daemon at `localhost:8601`. Configured via `MEMORY_DAEMON_URL`. |
 
 `watch` is not a video editor and it is not a perfect substitute for a human
 watching every second. It is an indexing tool: it gives agents enough aligned
