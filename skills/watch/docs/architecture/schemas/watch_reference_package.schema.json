@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_reference_package.schema.json",
+  "title": "Watch Reference Package",
+  "type": "object",
+  "required": [
+    "schema",
+    "reference_package_id",
+    "entity",
+    "approval_status",
+    "references"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.reference_package.v1"
+    },
+    "reference_package_id": {
+      "type": "string"
+    },
+    "entity": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "display_name",
+        "entity_kind"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "movie_character",
+            "actor",
+            "vehicle",
+            "object",
+            "person",
+            "unit",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "approval_status": {
+      "enum": [
+        "CANDIDATE",
+        "PENDING_APPROVAL",
+        "APPROVED",
+        "REJECTED"
+      ]
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "reference_item_id",
+          "approval_status",
+          "source"
+        ],
+        "properties": {
+          "reference_item_id": {
+            "type": "string"
+          },
+          "approval_status": {
+            "enum": [
+              "CANDIDATE",
+              "PENDING_APPROVAL",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "source": {
+            "type": "object"
+          },
+          "qdrant": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

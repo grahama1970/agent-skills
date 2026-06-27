@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_reference_hydration_plan.schema.json",
+  "title": "Watch Reference Hydration Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "asset",
+    "state",
+    "gates",
+    "reference_packages",
+    "fail_closed",
+    "proof_scope"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.reference_hydration_plan.v1"
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "asset_id",
+        "asset_kind"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string"
+        },
+        "asset_kind": {
+          "enum": [
+            "cinema_movie",
+            "drone",
+            "itar",
+            "rtsp",
+            "youtube"
+          ]
+        }
+      }
+    },
+    "state": {
+      "enum": [
+        "REFERENCE_PACKAGE_MISSING",
+        "REFERENCE_CANDIDATES_COLLECTED",
+        "REFERENCE_IMAGES_PENDING_APPROVAL",
+        "REFERENCE_EMBEDDINGS_READY"
+      ]
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "can_ingest",
+        "can_track",
+        "can_promote_identity",
+        "requires_human_approval"
+      ],
+      "properties": {
+        "can_ingest": {
+          "type": "boolean"
+        },
+        "can_track": {
+          "type": "boolean"
+        },
+        "can_promote_identity": {
+          "type": "boolean"
+        },
+        "requires_human_approval": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reference_packages": {
+      "type": "array"
+    },
+    "fail_closed": {
+      "type": "object",
+      "required": [
+        "active",
+        "reasons"
+      ],
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "proof_scope": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "reference_hydration_plan",
+          "dry_run_plumbing",
+          "planned_persistence_only"
+        ]
+      }
+    }
+  },
+  "additionalProperties": true
+}

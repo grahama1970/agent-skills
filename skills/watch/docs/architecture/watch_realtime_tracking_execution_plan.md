@@ -55,6 +55,39 @@ not scene truth.
 
 ## Execution Phases
 
+### Phase 0: Domain / Reference Hydration
+
+Goal: make identity references available before frame extraction or live
+tracking starts.
+
+Default by stream type:
+
+| Stream type | Reference source |
+| --- | --- |
+| Cinema/movie | Brave/movie-domain cast search plus local movie-domain memory |
+| YouTube/web | Channel/video metadata, provided annotations, then web search fallback |
+| Drone/ITAR/RTSP | Mission manifest, asset registry, telemetry manifest, operator annotations |
+
+For cinema ingest, this phase is mandatory by default. It should produce:
+
+- movie-domain entities such as actor/character pairs
+- reference-source candidates with URLs and provenance
+- approved reference image slots
+- Qdrant/Jina point plans for reference images and later track crops
+- failure codes when references are missing
+
+The phase must not prove scene presence. It only creates priors and reference
+inputs for later crop/reference comparison.
+
+Current Bad Santa canary:
+
+- Brave Search queries: `3`
+- Raw reference-source results: `15`
+- Marcus-linked reference query groups: `2`
+- Candidate URLs linked to Marcus review crops: `10`
+- Approved reference images: `0`
+- Qdrant writes: `PLANNED_NOT_WRITTEN`
+
 ### Phase 1: Domain Seed Package
 
 Goal: create movie-domain priors without making scene claims.

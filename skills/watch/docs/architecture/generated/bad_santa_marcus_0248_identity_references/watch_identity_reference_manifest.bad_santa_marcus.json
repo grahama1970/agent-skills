@@ -1,0 +1,322 @@
+{
+  "approved_reference_count": 0,
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "actor_name": "Tony Cox",
+      "approved_references": [],
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "kind": "CHARACTER",
+      "name": "Marcus",
+      "promotion_rule": "A track can become SUPPORTED only after approved reference images or embeddings compare the candidate to the specific track crop, or a human approves the overlay.",
+      "reference_source_candidates": [
+        {
+          "query": "Bad Santa cast Willie Marcus images",
+          "result_count": 5,
+          "status": "DOMAIN_REFERENCE_SOURCE_CANDIDATE",
+          "urls": [
+            "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+            "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+            "https://en.wikipedia.org/wiki/Bad_Santa",
+            "https://www.imdb.com/title/tt0307987/fullcredits/",
+            "https://www.themoviedb.org/movie/338964-bad-santa-2/cast"
+          ]
+        },
+        {
+          "query": "Bad Santa Marcus character Tony Cox images",
+          "result_count": 5,
+          "status": "DOMAIN_REFERENCE_SOURCE_CANDIDATE",
+          "urls": [
+            "https://en.wikipedia.org/wiki/Tony_Cox_(actor)",
+            "https://www.imdb.com/title/tt0307987/characters/nm0185272/",
+            "https://www.amazon.com/Thornton-Willie-Marcus-walking-street/dp/B01MTT06N5",
+            "https://www.imdb.com/name/nm0185272/",
+            "https://www.amazon.com/Santa-Thornton-Willie-Marcus-child/dp/B01MYS51B5"
+          ]
+        }
+      ],
+      "reference_status": "MISSING_APPROVED_REFERENCES",
+      "rejected_references": [],
+      "required_embedding_modalities": [
+        "frame_crop",
+        "reference_image"
+      ],
+      "required_negative_reference_count": 3,
+      "required_positive_reference_count": 3,
+      "review_crop_count": 10,
+      "review_crops": [
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+          "crop_size": {
+            "height": 255,
+            "width": 284
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_1_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.46,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_1"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+          "crop_size": {
+            "height": 184,
+            "width": 54
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_10_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.46,
+            "start_seconds": 168.63
+          },
+          "track_id": "track_10"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+          "crop_size": {
+            "height": 196,
+            "width": 79
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_15_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.04,
+            "start_seconds": 169.04
+          },
+          "track_id": "track_15"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+          "crop_size": {
+            "height": 275,
+            "width": 221
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_2_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 174.46,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_2"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+          "crop_size": {
+            "height": 88,
+            "width": 67
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_3_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.25,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_3"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+          "crop_size": {
+            "height": 209,
+            "width": 110
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_4_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.46,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_4"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+          "crop_size": {
+            "height": 123,
+            "width": 126
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_5_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 168.83,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_5"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+          "crop_size": {
+            "height": 251,
+            "width": 142
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_6_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 173.63,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_6"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+          "crop_size": {
+            "height": 50,
+            "width": 73
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_7_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 168.0,
+            "start_seconds": 168.0
+          },
+          "track_id": "track_7"
+        },
+        {
+          "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+          "crop_size": {
+            "height": 98,
+            "width": 43
+          },
+          "current_failure_codes": [
+            "DOMAIN_PRIOR_ONLY",
+            "NEEDS_HUMAN_REVIEW",
+            "TRACK_IDENTITY_UNCERTAIN"
+          ],
+          "current_verdict": "INCONCLUSIVE",
+          "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+          "qdrant_point_plan": {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_unrated_seg_0007_track_8_frame_crop",
+            "write_status": "PLANNED_NOT_WRITTEN"
+          },
+          "time_range": {
+            "end_seconds": 169.25,
+            "start_seconds": 168.42
+          },
+          "track_id": "track_8"
+        }
+      ],
+      "source_status": "PROVISIONAL"
+    }
+  ],
+  "claim_boundary": "This manifest records reference-image and embedding requirements. It does not prove identity and must not promote any track to SUPPORTED until the reference requirements are satisfied.",
+  "memory_write_status": "PLANNED_NOT_WRITTEN",
+  "posted": false,
+  "qdrant_write_status": "PLANNED_NOT_WRITTEN",
+  "review_crop_count": 10,
+  "schema_version": "watch.identity_reference_manifest.v1",
+  "source_crop_manifest": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/watch_tracking_crops.bad_santa_marcus.json",
+  "source_identity_report": "docs/architecture/generated/bad_santa_marcus_0248_identity_verification/watch_identity_verification.bad_santa_marcus.json",
+  "source_reference_sources": "docs/architecture/generated/bad_santa_character_reference_sources/summary.json",
+  "status": "DRY_RUN_ONLY"
+}

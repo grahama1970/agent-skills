@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Watch Reference Hydration P0</title>
+  <style>
+    body { margin: 0; background: #0b0f14; color: #d8e2ef; font: 14px/1.5 Inter, system-ui, sans-serif; }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px; }
+    h1, h2 { letter-spacing: .06em; text-transform: uppercase; }
+    h1 { color: #03dac6; font-size: 24px; }
+    h2 { color: #60a5fa; font-size: 16px; margin-top: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .card { border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 14px; background: rgba(255,255,255,.035); }
+    .missing { border-color: rgba(255,179,0,.45); }
+    .partial { border-color: rgba(96,165,250,.45); }
+    .fail { border-color: rgba(207,102,121,.45); }
+    code { color: #ffd166; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid rgba(255,255,255,.09); padding: 8px; text-align: left; vertical-align: top; }
+    th { color: #93c5fd; text-transform: uppercase; font-size: 11px; letter-spacing: .12em; }
+    .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .flow div { border: 1px solid rgba(3,218,198,.28); border-radius: 6px; padding: 10px; min-height: 80px; background: rgba(3,218,198,.04); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Watch Reference Hydration P0</h1>
+  <p>Target model for WebGPT creation: make character/object identity verification a fail-closed pipeline that joins movie-domain references, real-time ML tracks, multimodal embeddings, graph metadata, and `$memory recall`.</p>
+
+  <h2>Master Flow</h2>
+  <section class="flow">
+    <div><strong>1. Asset</strong><br>Cinema, drone, RTSP, YouTube.</div>
+    <div><strong>2. Reference</strong><br>Auto-hydrate movie cast refs or require source manifest.</div>
+    <div><strong>3. Track</strong><br>YOLO/ByteTrack stream observations and crops.</div>
+    <div><strong>4. Verify</strong><br>Compare crop, frame, text, transcript, reference package.</div>
+    <div><strong>5. Persist</strong><br>Memory records, Arango metadata, Qdrant pointers.</div>
+    <div><strong>6. Recall</strong><br>Find all segments with entity traces and case anchors.</div>
+  </section>
+
+  <h2>Current Evidence</h2>
+  <table>
+    <tr><th>Artifact</th><th>Current Count / State</th><th>Meaning</th></tr>
+    <tr><td>YOLO/ByteTrack events</td><td>80</td><td>Tracking exists for one canary, but identity is not proven.</td></tr>
+    <tr><td>Overlay records</td><td>10</td><td>Static UI annotation payload exists.</td></tr>
+    <tr><td>Track crops</td><td>10 PNG crops + contact sheet</td><td>Visual material exists for reference comparison.</td></tr>
+    <tr><td>Identity verification</td><td>0 supported / 10 inconclusive</td><td>Fail-closed behavior is working for the canary.</td></tr>
+    <tr><td>Brave source candidates</td><td>3 queries / 15 raw results</td><td>Domain candidates exist; no approved image refs yet.</td></tr>
+    <tr><td>Qdrant writes</td><td>0</td><td>Only planned pointer ids exist.</td></tr>
+  </table>
+
+  <h2>Capability Gaps</h2>
+  <section class="grid">
+    <div class="card missing"><strong>Movie reference hydration</strong><br>Missing default pre-ingest cast/character reference package generation.</div>
+    <div class="card missing"><strong>Reference image approval</strong><br>Missing automated/manual approval boundary and local cache contract.</div>
+    <div class="card missing"><strong>Qdrant/Jina embeddings</strong><br>Missing idempotent point creation and recall proof.</div>
+    <div class="card partial"><strong>Tracker crop extraction</strong><br>Partial; canary crops exist, but no streaming verification loop.</div>
+    <div class="card fail"><strong>Identity promotion</strong><br>Currently fails closed, as intended, because no reference proof exists.</div>
+    <div class="card missing"><strong>Memory recall</strong><br>Missing stored traces that answer entity/time queries.</div>
+  </section>
+
+  <h2>Required Fail-Closed Rule</h2>
+  <p>Detector labels, Brave snippets, and movie-domain priors are not enough to mark a row as <code>IDENTITY_SUPPORTED</code>. A supported identity needs a bounded observation, an approved reference package, a comparison score/evidence record, and persistence that can be recalled.</p>
+</main>
+</body>
+</html>

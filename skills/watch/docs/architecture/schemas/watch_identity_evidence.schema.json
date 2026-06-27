@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_identity_evidence.schema.json",
+  "title": "Watch Identity Evidence",
+  "type": "object",
+  "required": [
+    "schema",
+    "identity_evidence_id",
+    "track_observation_id",
+    "identity_status",
+    "evidence",
+    "promotion_blockers"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.identity_evidence.v1"
+    },
+    "identity_evidence_id": {
+      "type": "string"
+    },
+    "track_observation_id": {
+      "type": "string"
+    },
+    "candidate_entity_id": {
+      "type": "string"
+    },
+    "reference_package_id": {
+      "type": "string"
+    },
+    "approved_reference_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "identity_status": {
+      "enum": [
+        "IDENTITY_SUPPORTED",
+        "IDENTITY_INCONCLUSIVE",
+        "IDENTITY_REFUTED"
+      ]
+    },
+    "evidence": {
+      "type": "object"
+    },
+    "promotion_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "persistence": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

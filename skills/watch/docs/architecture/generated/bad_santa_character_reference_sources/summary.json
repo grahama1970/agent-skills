@@ -1,0 +1,68 @@
+{
+  "claim_boundary": "Brave Search results provide public character/actor reference-source candidates only. They do not prove any character appears in a Watch segment and do not approve identity labels without crop/reference comparison or human review.",
+  "posted": false,
+  "queries": [
+    {
+      "count": 5,
+      "file": "skills/watch/docs/architecture/generated/bad_santa_character_reference_sources/brave_bad_santa_cast_reference_sources.json",
+      "query": "Bad Santa cast Willie Marcus images",
+      "titles": [
+        "PHOTOS: The 'Bad Santa' Cast Then & Now",
+        "Bad Santa - Full Cast & Crew - TV Guide",
+        "Bad Santa - Wikipedia",
+        "Bad Santa (2003) - Full cast & crew - IMDb",
+        "Bad Santa 2 (2016) - Cast & Crew \u2014 The Movie Database (TMDB)"
+      ],
+      "urls": [
+        "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+        "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+        "https://en.wikipedia.org/wiki/Bad_Santa",
+        "https://www.imdb.com/title/tt0307987/fullcredits/",
+        "https://www.themoviedb.org/movie/338964-bad-santa-2/cast"
+      ]
+    },
+    {
+      "count": 5,
+      "file": "skills/watch/docs/architecture/generated/bad_santa_character_reference_sources/brave_bad_santa_marcus_reference_sources.json",
+      "query": "Bad Santa Marcus character Tony Cox images",
+      "titles": [
+        "Tony Cox (actor) - Wikipedia",
+        "Bad Santa (2003) - Tony Cox as Marcus - IMDb",
+        "Bad Santa Billy Bob Thornton as Willie and Tony Cox as Marcus walking down street 8 x 10 Inch Photo at Amazon's Entertainment Collectibles Store",
+        "Tony Cox | Actor, Stunts, Producer",
+        "Bad Santa Billy Bob Thornton as Willie and Tony Cox as Marcus with child 8 x 10 Inch Photo at Amazon's Entertainment Collectibles Store"
+      ],
+      "urls": [
+        "https://en.wikipedia.org/wiki/Tony_Cox_(actor)",
+        "https://www.imdb.com/title/tt0307987/characters/nm0185272/",
+        "https://www.amazon.com/Thornton-Willie-Marcus-walking-street/dp/B01MTT06N5",
+        "https://www.imdb.com/name/nm0185272/",
+        "https://www.amazon.com/Santa-Thornton-Willie-Marcus-child/dp/B01MYS51B5"
+      ]
+    },
+    {
+      "count": 5,
+      "file": "skills/watch/docs/architecture/generated/bad_santa_character_reference_sources/brave_bad_santa_willie_reference_sources.json",
+      "query": "Bad Santa Willie character Billy Bob Thornton images",
+      "titles": [
+        "Bad Santa - Wikipedia",
+        "Bad Santa (2003) - Billy Bob Thornton as Willie - IMDb",
+        "BILLY BOB THORNTON, BAD SANTA, 2003 Stock Photo - Alamy",
+        "Bad Santa - Full Cast & Crew - TV Guide",
+        "PHOTOS: The 'Bad Santa' Cast Then & Now"
+      ],
+      "urls": [
+        "https://en.wikipedia.org/wiki/Bad_Santa",
+        "https://www.imdb.com/title/tt0307987/characters/nm0000671/",
+        "https://www.alamy.com/billy-bob-thornton-bad-santa-2003-image485726535.html",
+        "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+        "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/"
+      ]
+    }
+  ],
+  "query_count": 3,
+  "result_count": 15,
+  "schema_version": "watch.character_reference_sources.v1",
+  "source": "brave-search",
+  "status": "DOMAIN_PRIOR_ONLY"
+}

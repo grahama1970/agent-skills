@@ -114,6 +114,16 @@ example, Brave can seed `Tony Cox -> Marcus` for *Bad Santa*, but the Watch row
 still needs frame, clip, transcript, or tracking evidence before answering that
 Marcus appears in a specific segment.
 
+For cinema assets, this domain hydration must run before the movie ingest/tracking
+pass by default. Watch should build a cast/reference-source pool from public
+movie data, then use those sources to prepare approved reference images and
+Qdrant/Jina embeddings. For drone, RTSP, YouTube, and ITAR/industrial streams,
+the equivalent entity/reference package may be provided by the mission manifest,
+asset registry, operator annotations, or channel metadata instead of web search.
+If no reference package exists, identity labels remain provisional and the
+memory pipeline must clarify or create an unresolved evidence case rather than
+guess.
+
 See:
 
 - [`docs/architecture/watch_realtime_character_tracking_contract.md`](docs/architecture/watch_realtime_character_tracking_contract.md)
@@ -139,6 +149,13 @@ See:
 - [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
 - [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
 - [`docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/inspection.md)
+- [`scripts/extract_tracking_crops.py`](scripts/extract_tracking_crops.py)
+- [`docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/inspection.md)
+- [`scripts/verify_tracking_identity.py`](scripts/verify_tracking_identity.py)
+- [`docs/architecture/generated/bad_santa_marcus_0248_identity_verification/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_identity_verification/inspection.md)
+- [`scripts/build_identity_reference_manifest.py`](scripts/build_identity_reference_manifest.py)
+- [`docs/architecture/generated/bad_santa_character_reference_sources/inspection.md`](docs/architecture/generated/bad_santa_character_reference_sources/inspection.md)
+- [`docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
 
 For live character/asset tracking, install the optional tracking dependencies:
@@ -154,6 +171,19 @@ event cadence via `--sample-fps 5`, using a source-frame stride before producing
 `watch.live_track_update.v1` JSONL. Identity verification and memory persistence
 remain separate Watch Agent steps, and memory stores bounded observations/cases
 rather than every sampled frame.
+
+The first live-YOLO identity gate is intentionally fail-closed. Crop extraction
+currently produces 10 representative track crops for the Bad Santa canary, but
+`verify_tracking_identity.py` reports 0 supported identities and 10 inconclusive
+tracks because the crops are only evidence inputs. A character label is not
+supported until per-track re-identification, crop embeddings, frame/transcript
+binding, or human overlay approval supports the domain candidate.
+
+The current Bad Santa reference-source canary has 3 Brave Search queries and 15
+raw results for cast/Willie/Marcus sources. The Marcus identity-reference
+manifest links 2 relevant query groups and 10 candidate URLs to the 10 review
+crops. This is still `DOMAIN_PRIOR_ONLY`: no reference images have been
+downloaded, approved, embedded, or recalled through Qdrant yet.
 
 ## How to Use
 

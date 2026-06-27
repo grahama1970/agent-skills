@@ -1,0 +1,157 @@
+{
+  "schema": "watch.reference_hydration_state_machine.v1",
+  "states": [
+    {
+      "name": "REFERENCE_PACKAGE_MISSING",
+      "terminal_for_ingest_when": [
+        "asset_kind in drone, itar, rtsp, youtube",
+        "source_manifest missing or invalid"
+      ],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "REFERENCE_CANDIDATES_COLLECTED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "REFERENCE_IMAGES_PENDING_APPROVAL",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "REFERENCE_EMBEDDINGS_READY",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": true
+    },
+    {
+      "name": "TRACK_OBSERVING",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "IDENTITY_CANDIDATE",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "IDENTITY_SUPPORTED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": true
+    },
+    {
+      "name": "IDENTITY_INCONCLUSIVE",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "IDENTITY_REFUTED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": false
+    },
+    {
+      "name": "CASE_ANCHOR_CREATED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": true
+    },
+    {
+      "name": "MEMORY_PERSISTED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": true
+    },
+    {
+      "name": "RECALL_VERIFIED",
+      "terminal_for_ingest_when": [],
+      "permits_identity_promotion": true
+    }
+  ],
+  "transitions": [
+    {
+      "from": "REFERENCE_PACKAGE_MISSING",
+      "to": "REFERENCE_CANDIDATES_COLLECTED",
+      "when": "cinema_movie candidate sources collected"
+    },
+    {
+      "from": "REFERENCE_PACKAGE_MISSING",
+      "to": "REFERENCE_EMBEDDINGS_READY",
+      "when": "non_movie source manifest includes approved references and embedding pointers"
+    },
+    {
+      "from": "REFERENCE_CANDIDATES_COLLECTED",
+      "to": "REFERENCE_IMAGES_PENDING_APPROVAL",
+      "when": "candidate reference images or source records need approval"
+    },
+    {
+      "from": "REFERENCE_IMAGES_PENDING_APPROVAL",
+      "to": "REFERENCE_EMBEDDINGS_READY",
+      "when": "approved references have deterministic Qdrant point ids"
+    },
+    {
+      "from": "REFERENCE_EMBEDDINGS_READY",
+      "to": "TRACK_OBSERVING",
+      "when": "tracker stream starts"
+    },
+    {
+      "from": "TRACK_OBSERVING",
+      "to": "IDENTITY_CANDIDATE",
+      "when": "observation crop/frame has candidate references to compare"
+    },
+    {
+      "from": "IDENTITY_CANDIDATE",
+      "to": "IDENTITY_SUPPORTED",
+      "when": "approved references plus evidence meet thresholds"
+    },
+    {
+      "from": "IDENTITY_CANDIDATE",
+      "to": "IDENTITY_INCONCLUSIVE",
+      "when": "evidence is missing or below threshold"
+    },
+    {
+      "from": "IDENTITY_CANDIDATE",
+      "to": "IDENTITY_REFUTED",
+      "when": "refuting evidence exceeds threshold"
+    },
+    {
+      "from": "IDENTITY_SUPPORTED",
+      "to": "CASE_ANCHOR_CREATED",
+      "when": "bounded entity/time evidence case is created"
+    },
+    {
+      "from": "CASE_ANCHOR_CREATED",
+      "to": "MEMORY_PERSISTED",
+      "when": "memory write receipts exist"
+    },
+    {
+      "from": "MEMORY_PERSISTED",
+      "to": "RECALL_VERIFIED",
+      "when": "$memory recall retrieves expected entity/time evidence"
+    }
+  ],
+  "fail_closed_rules": [
+    {
+      "rule_id": "no_public_search_for_restricted_streams",
+      "condition": "asset_kind != cinema_movie and source_manifest missing",
+      "state": "REFERENCE_PACKAGE_MISSING"
+    },
+    {
+      "rule_id": "detector_label_not_identity",
+      "condition": "only detector label exists",
+      "state": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "rule_id": "domain_prior_not_scene_truth",
+      "condition": "only public search/movie-domain prior exists",
+      "state": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "rule_id": "no_raw_vectors_in_arango",
+      "condition": "arango document contains vector array",
+      "state": "validation_error"
+    },
+    {
+      "rule_id": "recall_required_for_answer_claim",
+      "condition": "no $memory recall proof",
+      "state": "MEMORY_PERSISTED"
+    }
+  ]
+}

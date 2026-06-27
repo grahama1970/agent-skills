@@ -1,0 +1,23 @@
+{
+  "schema": "watch.track_observation_set.v1",
+  "observations": [
+    {
+      "schema": "watch.track_observation.v1",
+      "track_id": "bytetrack:bad_santa:track_0248_0007",
+      "media_time_ms": 168000,
+      "segment_start_ms": 168000,
+      "segment_end_ms": 170000,
+      "frame_index": 5040,
+      "bbox": {
+        "x": 426,
+        "y": 112,
+        "width": 88,
+        "height": 176,
+        "coordinate_space": "source_frame_pixels"
+      },
+      "crop_sha256": "fixture_bad_santa_0248_crop_sha256",
+      "source_event_id": "watch_event:bad_santa_0248_5040",
+      "identity_status": "UNVERIFIED"
+    }
+  ]
+}

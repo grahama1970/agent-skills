@@ -1,0 +1,30 @@
+{
+  "schema": "watch.identity_evidence_set.v1",
+  "identity_evidence": [
+    {
+      "schema": "watch.identity_evidence.v1",
+      "track_observation_id": "watch_obs:placeholder_recomputed_by_plan",
+      "candidate_entity_id": "watch_entity:marcus_bad_santa_2003",
+      "reference_package_id": "watch_refpkg:placeholder_candidate_only",
+      "approved_reference_ids": [],
+      "identity_status": "IDENTITY_INCONCLUSIVE",
+      "evidence": {
+        "detector_label": "person",
+        "domain_prior_status": "CANDIDATE_ONLY",
+        "visual_match_status": "NOT_RUN_NO_APPROVED_REFERENCES",
+        "transcript_context_status": "NOT_SUFFICIENT_FOR_IDENTITY"
+      },
+      "promotion_blockers": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "persistence": {
+        "arango_write_receipt": null,
+        "qdrant_write_receipt": null,
+        "memory_case_receipt": null,
+        "recall_proof_id": null
+      }
+    }
+  ]
+}

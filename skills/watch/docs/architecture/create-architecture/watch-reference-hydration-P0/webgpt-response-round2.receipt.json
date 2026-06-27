@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-submit-prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-submitted-round2.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-response-round2.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-response-round2.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-response-round2.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260627T225132Z:dff2d0db>>>",
+  "requested_tab_id": "837356822",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-06-27T22:51:58Z"
+}

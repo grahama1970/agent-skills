@@ -1,0 +1,42 @@
+{
+  "schema": "watch.source_reference_manifest.v1",
+  "manifest_id": "source_manifest:drone_alpha_fixture",
+  "asset_kind": "drone",
+  "provenance": {
+    "source_type": "operator_manifest",
+    "provided_by": "fixture_operator_registry",
+    "approval_status": "APPROVED"
+  },
+  "reference_packages": [
+    {
+      "schema": "watch.reference_package.v1",
+      "reference_package_id": "watch_refpkg:drone_alpha_vehicle_fixture",
+      "entity": {
+        "entity_id": "watch_entity:drone_alpha_vehicle_01",
+        "display_name": "Vehicle 01",
+        "entity_kind": "vehicle",
+        "aliases": [
+          "alpha vehicle"
+        ]
+      },
+      "approval_status": "APPROVED",
+      "references": [
+        {
+          "reference_item_id": "watch_ref:drone_alpha_vehicle_01_image_001",
+          "approval_status": "APPROVED",
+          "source": {
+            "source_type": "operator_manifest",
+            "local_uri": "source_manifest://vehicle_01/reference_001.jpg",
+            "image_sha256": "fixture_vehicle_reference_image_sha256"
+          },
+          "qdrant": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "27e6a4e4-a9c0-5c3e-9342-63a8c97e026f",
+            "write_status": "EXISTS",
+            "model": "jina-clip-v2"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "bundle_filename": "watch-reference-hydration-P0-solution.zip",
+  "created_at_utc": "2026-06-27T22:49:05Z",
+  "bundle_kind": "create-architecture-solution",
+  "project": "Watch",
+  "slice": "watch-reference-hydration-P0",
+  "scope_summary": "Reference-hydration architecture, schemas, fail-closed state machine, persistence contracts, stdlib helper CLIs, tests, fixtures, commands, rollback, and prompt improvements.",
+  "claims": {
+    "live_yolo_bytetrack": false,
+    "identity_supported": false,
+    "qdrant_written": false,
+    "arango_written": false,
+    "memory_persisted": false,
+    "memory_recall_proven": false,
+    "dry_run_contracts_only": true
+  },
+  "apply_instruction": "Copy repo/. into the agent-skills repository root, then run COMMANDS.md.",
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "b2acb3b8e92237a70df4964f1ffd646d86bb3b32bf1d6dedaacea308571ae534",
+      "bytes": 17228
+    },
+    {
+      "path": "COMMANDS.md",
+      "sha256": "dbab8efca1b7bb93b10c7695f8bdef7e3411e1033e3fb7d14a30c68408b3e60a",
+      "bytes": 2552
+    },
+    {
+      "path": "KNOWN_GAPS.md",
+      "sha256": "37efcddb4bc915fd24221bacfae051617ed6aea1d5536f213be1cc73ff062411",
+      "bytes": 472
+    },
+    {
+      "path": "README.md",
+      "sha256": "8ea3475fc5ff2464b0ae3317afae74b8d2593a118e3e6e124118784be1bb4dd9",
+      "bytes": 1061
+    },
+    {
+      "path": "ROLLBACK_REBUILD.md",
+      "sha256": "9547ea975952b2f580fad9c79d865ce98f249e7612aa9d77867954d1e5dbb39b",
+      "bytes": 1455
+    },
+    {
+      "path": "prompt_improvements.md",
+      "sha256": "16d4573a27a9774333b61cb0d2f4311a94bfb28655a679fda1c3c4892abc7ead",
+      "bytes": 1923
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/patches/watch_reference_hydration_P0_docs.patch",
+      "sha256": "eb5010b34396e4ea4034b37a226e7f9acaea1ec59d4010b09513985ce5a072ef",
+      "bytes": 2194
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_identity_evidence.schema.json",
+      "sha256": "fc94e3111114bd2a1231d3b79959ce3397b1fabf4f7e01ae79b590d74a6e9a8b",
+      "bytes": 1150
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_memory_trace_write.schema.json",
+      "sha256": "219e64d967a76bfea4e0535ffcde6b4fe6ff499d9734a099974f8c1e45d9b12d",
+      "bytes": 931
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_reference_hydration_plan.schema.json",
+      "sha256": "7ead399c7495d2d8223a9b19e84ac89f3f75437da94435c5257870382726cb81",
+      "bytes": 2118
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_reference_package.schema.json",
+      "sha256": "271cb51ec9a2769eaf4e56656926d3b4299abd81bfac22816fd9fd364ba69fae",
+      "bytes": 1779
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_source_reference_manifest.schema.json",
+      "sha256": "a964012123167d431f28dc87351c1ead3465a26597c631fbf9ce1c5558caf178",
+      "bytes": 1323
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/schemas/watch_track_observation.schema.json",
+      "sha256": "46480edfe661248d83329f15506fb018bb9126e28ee0e3825daee46128f5cc1d",
+      "bytes": 1691
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/state_machines/watch_reference_hydration_P0.state_machine.json",
+      "sha256": "22ff7df464ee6c9f9f1c5621f04ad71114782ca0f7678d37151cdfa178d1824e",
+      "bytes": 4460
+    },
+    {
+      "path": "repo/skills/watch/docs/architecture/watch_reference_hydration_P0.md",
+      "sha256": "b2acb3b8e92237a70df4964f1ffd646d86bb3b32bf1d6dedaacea308571ae534",
+      "bytes": 17228
+    },
+    {
+      "path": "repo/skills/watch/scripts/build_watch_memory_trace_plan.py",
+      "sha256": "39be2d5c763c637c129c909a5b8055b668b3edf3d24bad67b4cac4e6d08efd88",
+      "bytes": 1726
+    },
+    {
+      "path": "repo/skills/watch/scripts/build_watch_reference_hydration_plan.py",
+      "sha256": "c92d337939d33bcabab704f523c211c832e450436d7616c1f3726475ee3300af",
+      "bytes": 1459
+    },
+    {
+      "path": "repo/skills/watch/scripts/validate_watch_reference_hydration_contract.py",
+      "sha256": "4bb3ed18a2b409130d6775e84f98eb5aae3c6fad7b18539d2abe23b07c63079f",
+      "bytes": 1030
+    },
+    {
+      "path": "repo/skills/watch/scripts/watch_reference_hydration.py",
+      "sha256": "97a124bd177eb567881a92454be292f7c0af5cd8749876a2027c0fe98c84f4df",
+      "bytes": 18789
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/asset_drone_stream.json",
+      "sha256": "7db914cb0f1ca80a3ae739b40d149b0be13bdb1880691b3dd220677a53a65932",
+      "bytes": 243
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/asset_movie_bad_santa.json",
+      "sha256": "a9450f34428d14a2227d48030d3e7aafa7a8519d1980fa95a5cb2342c8975bdb",
+      "bytes": 303
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/identity_evidence_inconclusive_domain_only.json",
+      "sha256": "87aced88b65667df21a7acc7b57696b0c63f02da77fa6f4799e8db8b091b6106",
+      "bytes": 992
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/movie_reference_candidates_bad_santa.json",
+      "sha256": "3003a00b7d3ee2a14fbd41656712fa2c037b8281123f5bdf2ad0a5b2f1c6f97f",
+      "bytes": 956
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/source_reference_manifest_drone_valid.json",
+      "sha256": "2680787c9ecf820b6c5c39f3c0c75ca6b3393dd384a8916ba3fd079bb4ce07a3",
+      "bytes": 1324
+    },
+    {
+      "path": "repo/skills/watch/tests/fixtures/reference_hydration_P0/track_observations_bad_santa_0248.json",
+      "sha256": "749ccc88f15fbd9048e6e77002ede99344e2efbb0dba064d1f4877ef2fa1d04c",
+      "bytes": 625
+    },
+    {
+      "path": "repo/skills/watch/tests/test_watch_reference_hydration_P0.py",
+      "sha256": "eaec410a31b02d37aee35d74d46fafb86cb1b093746cf465217e8ca4bdc56f25",
+      "bytes": 3620
+    }
+  ]
+}

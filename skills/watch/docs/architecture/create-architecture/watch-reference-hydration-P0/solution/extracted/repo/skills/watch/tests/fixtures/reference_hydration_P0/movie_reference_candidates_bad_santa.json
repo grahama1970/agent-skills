@@ -1,0 +1,30 @@
+{
+  "schema": "watch.movie_reference_candidates.v1",
+  "candidate_source_policy": "movie_public_search_candidates_only_not_scene_truth",
+  "entities": [
+    {
+      "entity_key": "marcus_bad_santa_2003",
+      "display_name": "Marcus",
+      "entity_kind": "movie_character",
+      "aliases": [
+        "Marcus Skidmore",
+        "Tony Cox character"
+      ],
+      "approval_status": "CANDIDATE",
+      "candidate_sources": [
+        {
+          "source_type": "movie_public_search_candidate",
+          "url": "https://example.invalid/bad-santa-cast",
+          "title": "Bad Santa cast reference candidate",
+          "snippet": "Candidate source only; not scene truth."
+        },
+        {
+          "source_type": "movie_public_search_candidate",
+          "url": "https://example.invalid/tony-cox-marcus",
+          "title": "Tony Cox / Marcus candidate",
+          "snippet": "Candidate source only; not scene truth."
+        }
+      ]
+    }
+  ]
+}

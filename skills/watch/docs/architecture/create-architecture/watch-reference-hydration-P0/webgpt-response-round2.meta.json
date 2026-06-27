@@ -1,0 +1,102 @@
+{
+  "status": "recovered_focus_changed",
+  "failure": "focus_stolen_despite_no_activate",
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-submit-prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-submitted-round2.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-response-round2.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/webgpt-response-round2.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.Mmrmeb.log",
+  "sentinel": "<<<WEBGPT_DONE:20260627T225132Z:dff2d0db>>>",
+  "requested_tab_id": "837356822",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "observed_requested_reasoning": "Pro",
+  "selected_reasoning": null,
+  "reasoning_selection_status": "selector_unavailable",
+  "reasoning_selection_error": "Reasoning selector button not found for: Pro",
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837356822",
+    "tab": {
+      "id": "837356822",
+      "title": "ChatGPT - Watch",
+      "url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a402bf0-f99c-83ea-b8e3-5466fd27c664"
+    },
+    "chatgpt_tabs_count": 12,
+    "expected_url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a402bf0-f99c-83ea-b8e3-5466fd27c664",
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837356822"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "expected_url_matches_tab",
+        "ok": true,
+        "detail": "expected_url matched tab 837356822"
+      },
+      {
+        "name": "expected_url_unique",
+        "ok": true,
+        "detail": "unique"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "verified"
+      }
+    ]
+  },
+  "roundtrip_preflight_required": false,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight": null,
+  "stable_polls": 3,
+  "timeout_s": 900,
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": false,
+  "clean_contamination_markers": [],
+  "raw_chars": 289,
+  "clean_chars": 244,
+  "controlled_tab_id": "837356822",
+  "controlled_tab_id_mismatch": false,
+  "no_activate": true,
+  "tab_was_created": false,
+  "activated": false,
+  "focused_window_before": 837355493,
+  "focused_window_after": 837356825,
+  "active_tab_before": 837356846,
+  "active_tab_after": 837356822,
+  "focus_changed": true,
+  "focus_stolen_mid_submit": false,
+  "focus_invariant_ok": false,
+  "transport_degraded": true,
+  "recovered_output": true,
+  "focus_mid_log": "/tmp/surf-webgpt-focus-mid.hPUOoR.log",
+  "response_source": "assistant-dom",
+  "conversation_url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a402bf0-f99c-83ea-b8e3-5466fd27c664",
+  "page_text_contains_sentinel": true,
+  "document_hidden_at_completion": false,
+  "visibility_state_at_completion": "visible",
+  "background_hidden_polls": 0,
+  "hidden_recovery_used": false,
+  "background_poll_count": 46,
+  "notification_assisted_wait_requested": false,
+  "notification_assisted_wait_completion_proof": false,
+  "notification_assisted_wait_reason": "disabled",
+  "started_at": "2026-06-27T22:51:36Z",
+  "finished_at": "2026-06-27T22:52:17Z",
+  "proof_status": "degraded_focus",
+  "agent_diagnosis": "The controlled tab returned sentinel output, but browser focus changed during no-activate mode.",
+  "agent_action": "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof.",
+  "submitted_to_chatgpt": true
+}

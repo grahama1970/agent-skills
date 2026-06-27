@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_source_reference_manifest.schema.json",
+  "title": "Watch Source Reference Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "manifest_id",
+    "asset_kind",
+    "provenance",
+    "reference_packages"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.source_reference_manifest.v1"
+    },
+    "manifest_id": {
+      "type": "string"
+    },
+    "asset_kind": {
+      "enum": [
+        "drone",
+        "itar",
+        "rtsp",
+        "youtube"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "provided_by",
+        "approval_status"
+      ],
+      "properties": {
+        "source_type": {
+          "enum": [
+            "operator_manifest",
+            "asset_registry",
+            "channel_metadata",
+            "source_metadata_package"
+          ]
+        },
+        "provided_by": {
+          "type": "string"
+        },
+        "approval_status": {
+          "enum": [
+            "APPROVED",
+            "PENDING",
+            "REVOKED"
+          ]
+        }
+      }
+    },
+    "reference_packages": {
+      "type": "array",
+      "items": {
+        "$ref": "watch_reference_package.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

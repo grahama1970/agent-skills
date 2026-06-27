@@ -1,0 +1,32 @@
+Archive:  skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/solution/watch-reference-hydration-P0-solution.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+    17228  2026-06-27 22:49   ARCHITECTURE.md
+     2552  2026-06-27 22:49   COMMANDS.md
+      472  2026-06-27 22:49   KNOWN_GAPS.md
+     5980  2026-06-27 22:49   MANIFEST.json
+     1061  2026-06-27 22:49   README.md
+     1455  2026-06-27 22:49   ROLLBACK_REBUILD.md
+     1923  2026-06-27 22:49   prompt_improvements.md
+     2194  2026-06-27 22:49   repo/skills/watch/docs/architecture/patches/watch_reference_hydration_P0_docs.patch
+     1150  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_identity_evidence.schema.json
+      931  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_memory_trace_write.schema.json
+     2118  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_reference_hydration_plan.schema.json
+     1779  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_reference_package.schema.json
+     1323  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_source_reference_manifest.schema.json
+     1691  2026-06-27 22:49   repo/skills/watch/docs/architecture/schemas/watch_track_observation.schema.json
+     4460  2026-06-27 22:49   repo/skills/watch/docs/architecture/state_machines/watch_reference_hydration_P0.state_machine.json
+    17228  2026-06-27 22:49   repo/skills/watch/docs/architecture/watch_reference_hydration_P0.md
+     1726  2026-06-27 22:49   repo/skills/watch/scripts/build_watch_memory_trace_plan.py
+     1459  2026-06-27 22:49   repo/skills/watch/scripts/build_watch_reference_hydration_plan.py
+     1030  2026-06-27 22:49   repo/skills/watch/scripts/validate_watch_reference_hydration_contract.py
+    18789  2026-06-27 22:49   repo/skills/watch/scripts/watch_reference_hydration.py
+      243  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/asset_drone_stream.json
+      303  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/asset_movie_bad_santa.json
+      992  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/identity_evidence_inconclusive_domain_only.json
+      956  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/movie_reference_candidates_bad_santa.json
+     1324  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/source_reference_manifest_drone_valid.json
+      625  2026-06-27 22:49   repo/skills/watch/tests/fixtures/reference_hydration_P0/track_observations_bad_santa_0248.json
+     3620  2026-06-27 22:49   repo/skills/watch/tests/test_watch_reference_hydration_P0.py
+---------                     -------
+    94612                     27 files

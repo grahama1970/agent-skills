@@ -1,0 +1,572 @@
+{
+  "candidate_names": [
+    "Marcus"
+  ],
+  "claim_boundary": "This report verifies the fail-closed identity gate only. It proves the current overlay payload does not contain enough independent evidence to promote provisional domain candidates to supported character identities. It does not write memory, create Qdrant points, perform re-identification, or prove recall.",
+  "counts": {
+    "inconclusive": 10,
+    "refuted": 0,
+    "supported": 0,
+    "track_count": 10
+  },
+  "excluded_proofs": [
+    "person_reid",
+    "frame_crop_embedding",
+    "human_approval",
+    "memory_write",
+    "qdrant_write",
+    "recall"
+  ],
+  "failure_code_counts": {
+    "DOMAIN_PRIOR_ONLY": 10,
+    "NEEDS_HUMAN_REVIEW": 10,
+    "TRACK_IDENTITY_UNCERTAIN": 10
+  },
+  "next_required_evidence": [
+    "per_track_crop_embedding_or_reid_score",
+    "frame_or_clip_evidence_binding_candidate_to_track",
+    "transcript_or_scene_row_evidence_binding_candidate_to_track",
+    "human_overlay_approval_or_correction"
+  ],
+  "posted": false,
+  "proof_scope": [
+    "identity_gate"
+  ],
+  "results": [
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.82,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+        "crop_size": {
+          "height": 255,
+          "width": 284
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 8,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_1",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.3923329710960388,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+        "crop_size": {
+          "height": 184,
+          "width": 54
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 4,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.63
+      },
+      "track_id": "track_10",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.36308422684669495,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+        "crop_size": {
+          "height": 196,
+          "width": 79
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 1,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.04,
+        "start_seconds": 169.04
+      },
+      "track_id": "track_15",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.82,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+        "crop_size": {
+          "height": 275,
+          "width": 221
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 30,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 174.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_2",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5526084303855896,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+        "crop_size": {
+          "height": 88,
+          "width": 67
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 6,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.25,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_3",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.6979628801345825,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+        "crop_size": {
+          "height": 209,
+          "width": 110
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 8,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_4",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5103434920310974,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+        "crop_size": {
+          "height": 123,
+          "width": 126
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 5,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 168.83,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_5",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.677405059337616,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+        "crop_size": {
+          "height": 251,
+          "width": 142
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 12,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 173.63,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_6",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.2707499563694,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+        "crop_size": {
+          "height": 50,
+          "width": 73
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 1,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 168.0,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_7",
+      "verdict": "INCONCLUSIVE"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5662699341773987,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "crop_ref": {
+        "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+        "crop_size": {
+          "height": 98,
+          "width": 43
+        },
+        "identity_evidence_status": "CROP_ONLY_NOT_IDENTITY"
+      },
+      "evidence_flags": {
+        "has_domain_candidate": true,
+        "has_frame_clip_binding": false,
+        "has_human_approval": false,
+        "has_live_track_events": true,
+        "has_per_track_reid": false,
+        "has_track_crop_embedding": false,
+        "has_track_crop_image": true,
+        "has_transcript_track_binding": false
+      },
+      "failure_codes": [
+        "DOMAIN_PRIOR_ONLY",
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "reason": "YOLO/ByteTrack produced a person track and a domain candidate is available, but no per-track crop/re-ID, frame binding, transcript binding, or human approval evidence supports the character label.",
+      "route": "CLARIFY",
+      "segment_id": "seg_0007",
+      "source_event_count": 5,
+      "support_reasons": [
+        "live tracker events exist",
+        "domain candidate attached"
+      ],
+      "time_range": {
+        "end_seconds": 169.25,
+        "start_seconds": 168.42
+      },
+      "track_id": "track_8",
+      "verdict": "INCONCLUSIVE"
+    }
+  ],
+  "schema_version": "watch.identity_verification_report.v1",
+  "source_crop_manifest": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/watch_tracking_crops.bad_santa_marcus.json",
+  "source_overlay_payload": "docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json",
+  "source_overlay_status": "DRY_RUN_ONLY",
+  "status": "DRY_RUN_ONLY"
+}

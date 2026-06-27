@@ -1,0 +1,9 @@
+{
+  "schema": "watch.asset_metadata.v1",
+  "asset_kind": "cinema_movie",
+  "title": "Bad Santa",
+  "release_year": 2003,
+  "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+  "media_sha256": "fixture_bad_santa_media_sha256",
+  "notes": "P0 fixture only; does not prove identity."
+}

@@ -1,0 +1,7 @@
+{
+  "schema": "watch.asset_metadata.v1",
+  "asset_kind": "drone",
+  "canonical_uri": "rtsp://source.invalid/drone-feed-alpha",
+  "declared_source_id": "drone-feed-alpha-20260627",
+  "notes": "P0 fixture: requires source reference manifest."
+}

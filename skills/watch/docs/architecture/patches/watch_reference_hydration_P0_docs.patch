@@ -1,0 +1,40 @@
+diff --git a/skills/watch/README.md b/skills/watch/README.md
+--- a/skills/watch/README.md
++++ b/skills/watch/README.md
+@@
++## Reference Hydration P0
++
++Watch identity tracking is fail-closed. Movie/cinema assets must create a
++cast/character reference-candidate package before ingest/tracking. Drone,
++ITAR, RTSP, and YouTube streams must use source-provided reference manifests
++or fail closed. Detector labels and public movie-domain source candidates are
++observation/reference priors only; they do not prove scene visibility or named
++identity. Supported identity requires approved references, bounded track
++observations, comparison evidence, persistence receipts, and later `$memory
++recall` proof.
++
+diff --git a/skills/watch/docs/PROJECT_KNOWLEDGE.md b/skills/watch/docs/PROJECT_KNOWLEDGE.md
+--- a/skills/watch/docs/PROJECT_KNOWLEDGE.md
++++ b/skills/watch/docs/PROJECT_KNOWLEDGE.md
+@@
++### Watch Reference Hydration P0
++
++- Cinema/movie assets default to automatic reference-candidate hydration.
++- Drone/ITAR/RTSP/YouTube assets require source-provided manifests or fail closed.
++- Public search and detector labels cannot promote identity.
++- Arango stores structured metadata and Qdrant pointers, never raw vectors.
++- Memory recall is the official retrieval path; direct Qdrant/Arango answers are not valid Watch user answers.
++
+diff --git a/skills/watch/docs/architecture/watch_realtime_tracking_execution_plan.md b/skills/watch/docs/architecture/watch_realtime_tracking_execution_plan.md
+--- a/skills/watch/docs/architecture/watch_realtime_tracking_execution_plan.md
++++ b/skills/watch/docs/architecture/watch_realtime_tracking_execution_plan.md
+@@
++## P0 preflight: reference hydration
++
++Before real-time tracking starts, Watch must build a
++`watch.reference_hydration_plan.v1`. Movie assets may collect public movie-domain
++reference candidates, but those candidates only feed approval and embedding
++steps. Non-movie stream assets must provide source manifests and fail closed when
++they are absent. The tracker may stream low-rate observations while identity is
++pending, but `IDENTITY_SUPPORTED` requires approved references plus evidence and
++later `$memory recall` proof.

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_memory_trace_write.schema.json",
+  "title": "Watch Memory Trace Write Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "write_status",
+    "memory_pipeline",
+    "records",
+    "recall_proof_required"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.memory_trace_write_plan.v1"
+    },
+    "write_status": {
+      "enum": [
+        "PLANNED_NOT_WRITTEN",
+        "WRITTEN",
+        "ROLLED_BACK"
+      ]
+    },
+    "memory_pipeline": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "intent",
+          "extract_entities",
+          "recall",
+          "create_evidence_case",
+          "answer",
+          "clarify",
+          "deflect"
+        ]
+      }
+    },
+    "records": {
+      "type": "array"
+    },
+    "recall_proof_required": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}
