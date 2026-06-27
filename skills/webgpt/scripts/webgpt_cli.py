@@ -162,18 +162,12 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> None:
         except (json.JSONDecodeError, KeyError, TypeError, IndexError):
             pass
 
-    # Desktop mismatch
+    # Desktop mismatch — CDP works across desktops, so this is informational only.
     if target_desk and actual_desk is not None:
         human_actual = int(actual_desk) + 1
         if str(human_actual) != target_desk:
             msg = f"DESKTOP_MISMATCH: binding={target_desk} actual={human_actual}{tag}"
-            print(f"ERROR_{msg}", file=sys.stderr)
-            print(f"  fix: wmctrl -s {str(int(target_desk)-1)}  # switch desktop", file=sys.stderr)
-            print(f"  fix: config --kde-desktop {human_actual}  # update binding", file=sys.stderr)
-            findings.append(msg)
-            if not background:
-                subprocess.run(["wmctrl", "-s", str(int(target_desk)-1)], timeout=5)
-                time.sleep(1)
+            print(f"NOTE_{msg}", file=sys.stderr)
 
     # URL mismatch
     if conv_url and actual_url and conv_url.split("/")[-1] != actual_url.split("/")[-1]:
