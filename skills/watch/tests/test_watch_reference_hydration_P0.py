@@ -14,6 +14,7 @@ from watch_reference_hydration import (
     STATE_REFERENCE_EMBEDDINGS_READY,
     STATE_REFERENCE_IMAGES_PENDING_APPROVAL,
     STATE_REFERENCE_PACKAGE_MISSING,
+    build_graph_vector_persistence_plan,
     build_live_tracking_memory_window_plan,
     build_memory_trace_plan,
     build_reference_hydration_plan,
@@ -119,3 +120,53 @@ def test_live_tracking_events_collapse_to_recall_gated_memory_windows() -> None:
     assert identity_records
     assert all(record["identity_status"] == "IDENTITY_INCONCLUSIVE" for record in identity_records)
     assert all("MEMORY_RECALL_NOT_VERIFIED" in record["promotion_blockers"] for record in identity_records)
+
+
+def test_live_windows_shape_graph_and_vector_persistence_without_raw_vectors() -> None:
+    live_window_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_live_memory_window_plan"
+        / "watch_live_tracking_memory_window_plan.bad_santa_marcus.json"
+    )
+    plan = build_graph_vector_persistence_plan(live_window_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_graph_vector_persistence_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.graph_vector_persistence_plan.v1"
+    assert plan["write_status"] == "PLANNED_NOT_WRITTEN"
+    assert plan["memory_recall"]["required_before_answer_claim"] is True
+    assert plan["memory_recall"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_recall"]["direct_qdrant_or_arango_answer_allowed"] is False
+
+    counts = plan["counts"]
+    assert counts["track_observations"] == 10
+    assert counts["identity_evidence"] == 10
+    assert counts["evidence_cases"] == 10
+    assert counts["qdrant_point_plans"] == 20
+
+    arango_collections = plan["arango_plan"]["collections"]
+    assert arango_collections["watch_evidence_edges"]
+    assert all("qdrant_pointers" in doc for doc in arango_collections["watch_track_observations"])
+    assert all(
+        not any(key in doc for key in ("embedding", "embeddings", "vector", "vectors"))
+        for doc in arango_collections["watch_track_observations"]
+    )
+
+    qdrant_collections = plan["qdrant_plan"]["collections"]
+    point_plans = qdrant_collections["watch_track_crop_embeddings"] + qdrant_collections["watch_identity_evidence_embeddings"]
+    assert point_plans
+    assert all(point["embedding_status"] == "PLANNED_NOT_WRITTEN" for point in point_plans)
+    assert all("point_id" in point and "payload" in point for point in point_plans)
+    assert all(
+        not any(key in point for key in ("embedding", "embeddings", "vector", "vectors"))
+        for point in point_plans
+    )

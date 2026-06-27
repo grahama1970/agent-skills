@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_graph_vector_persistence_plan.schema.json",
+  "title": "Watch Graph Vector Persistence Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "write_status",
+    "asset",
+    "arango_plan",
+    "qdrant_plan",
+    "memory_recall",
+    "counts",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.graph_vector_persistence_plan.v1"
+    },
+    "write_status": {
+      "const": "PLANNED_NOT_WRITTEN"
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "arango_plan": {
+      "type": "object",
+      "required": ["write_status", "collections", "forbidden"],
+      "properties": {
+        "write_status": {
+          "const": "PLANNED_NOT_WRITTEN"
+        },
+        "collections": {
+          "type": "object",
+          "required": [
+            "watch_assets",
+            "watch_track_observations",
+            "watch_identity_evidence",
+            "watch_evidence_cases",
+            "watch_evidence_edges",
+            "watch_memory_receipts"
+          ]
+        },
+        "forbidden": {
+          "type": "object",
+          "properties": {
+            "raw_vectors_allowed": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "qdrant_plan": {
+      "type": "object",
+      "required": ["write_status", "collections", "forbidden"],
+      "properties": {
+        "write_status": {
+          "const": "PLANNED_NOT_WRITTEN"
+        },
+        "collections": {
+          "type": "object",
+          "required": [
+            "watch_track_crop_embeddings",
+            "watch_identity_evidence_embeddings",
+            "watch_segment_text_embeddings"
+          ]
+        },
+        "forbidden": {
+          "type": "object",
+          "properties": {
+            "direct_answer_path_allowed": {
+              "const": false
+            },
+            "raw_vector_values_in_plan": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "memory_recall": {
+      "type": "object",
+      "required": [
+        "required_before_answer_claim",
+        "allowed_answer_path",
+        "direct_qdrant_or_arango_answer_allowed"
+      ],
+      "properties": {
+        "required_before_answer_claim": {
+          "const": true
+        },
+        "allowed_answer_path": {
+          "const": "$memory recall"
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "track_observations",
+        "identity_evidence",
+        "evidence_cases",
+        "graph_edges",
+        "qdrant_point_plans"
+      ],
+      "properties": {
+        "track_observations": {"type": "integer", "minimum": 0},
+        "identity_evidence": {"type": "integer", "minimum": 0},
+        "evidence_cases": {"type": "integer", "minimum": 0},
+        "graph_edges": {"type": "integer", "minimum": 0},
+        "qdrant_point_plans": {"type": "integer", "minimum": 0}
+      }
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "planned_persistence_only"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}

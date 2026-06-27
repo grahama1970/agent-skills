@@ -35,6 +35,8 @@ not scene truth.
 | `generated/bad_santa_marcus_0248_yolo_overlay_payload/` | Live-derived overlay artifact exists | 10 schema-valid overlay records generated from live YOLO event geometry |
 | `watch_live_tracking_memory_window_plan.schema.json` | Contract added | Bounded 5fps event windows feeding planned memory writes |
 | `build_watch_live_tracking_memory_window_plan.py` | Harness added | Collapses live tracker JSONL into recall-gated memory trace plans |
+| `watch_graph_vector_persistence_plan.schema.json` | Contract added | Planned Arango graph metadata and Qdrant point plans without raw vectors |
+| `build_watch_graph_vector_persistence_plan.py` | Harness added | Converts bounded live windows into graph/vector persistence plans |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -189,6 +191,30 @@ Current canary proof:
 - Boundary: this proves event-windowing and planned memory-trace shaping only. It
   does not prove browser animation, supported identity, Qdrant writes, Arango
   writes, or `$memory recall`.
+
+### Phase 2.6: Planned Graph / Vector Persistence
+
+Goal: turn bounded live windows into explicit persistence plans for Arango graph
+metadata and Qdrant point plans without raw vectors or direct answer paths.
+
+Runtime path:
+
+```text
+watch.live_tracking_memory_window_plan.v1
+  -> Arango watch_assets / watch_track_observations / watch_identity_evidence
+  -> Arango watch_evidence_cases and watch_evidence_edges
+  -> Qdrant point plans for crop and identity-evidence embeddings
+  -> memory recall remains the only allowed answer path
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_graph_vector_persistence_plan.py --live-window-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_live_memory_window_plan/watch_live_tracking_memory_window_plan.bad_santa_marcus.json --out /tmp/watch-graph-vector-plan.json`
+- Expected output: `graph_vector_persistence_plan_ok 10 observations 10 cases 20 qdrant_point_plans`
+- Schema: `skills/watch/docs/architecture/schemas/watch_graph_vector_persistence_plan.schema.json`
+- Boundary: this proves persistence shape only. It does not prove Arango writes,
+  Qdrant writes, `$memory recall`, or supported identity. Arango documents store
+  Qdrant pointers only; raw vectors are forbidden.
 
 ### Phase 3: Verification and Bounded Observation
 

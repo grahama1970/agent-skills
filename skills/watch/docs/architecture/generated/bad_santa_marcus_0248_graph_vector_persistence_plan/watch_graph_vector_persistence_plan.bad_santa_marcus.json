@@ -1,0 +1,1466 @@
+{
+  "schema": "watch.graph_vector_persistence_plan.v1",
+  "write_status": "PLANNED_NOT_WRITTEN",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_live_window_plan_schema": "watch.live_tracking_memory_window_plan.v1",
+  "arango_plan": {
+    "write_status": "PLANNED_NOT_WRITTEN",
+    "collections": {
+      "watch_assets": [
+        {
+          "_key": "watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "schema": "watch.asset_metadata.v1",
+          "asset_kind": "cinema_movie",
+          "title": "Bad Santa",
+          "release_year": 2003,
+          "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+          "media_sha256": "fixture_bad_santa_media_sha256"
+        }
+      ],
+      "watch_track_observations": [
+        {
+          "_key": "watch_obs_4aad92267bbeae50141b4394f48538ef",
+          "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+          "track_id": "track_1",
+          "media_time_ms": 169460,
+          "bbox": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 276.0,
+            "height": 253.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:a40bd0bc820d008dc74ed3e9812c94c0",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "cd9eb2d6-5dec-5fe1-8a28-3be9feb642f4",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_898580e523815285e984fb56366cabc9",
+          "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:3210a08af289da3ed0333fccf66dc7f2",
+          "track_id": "track_10",
+          "media_time_ms": 168630,
+          "bbox": {
+            "x": 0.0,
+            "y": 24.0,
+            "width": 56.0,
+            "height": 184.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:fd50ae7fd574148abbaa2555a895b9b7",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "ae8a4c90-8fbc-5f84-913d-a423c2990826",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_11d974c31a80912fb960f49f77f982ea",
+          "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:75c93b93bd7f748d53c3777e53b4de6e",
+          "track_id": "track_15",
+          "media_time_ms": 169040,
+          "bbox": {
+            "x": 243.0,
+            "y": 73.0,
+            "width": 79.0,
+            "height": 196.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:4c685c2de17b6e04ab2e76280fcc05dd",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "04d9bfdf-2aa9-53e8-9d85-657ff10f2aac",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_61732fb0c8bf48c84d5cf91c46b06a42",
+          "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:1772344b4a4b7595aa87733640614b09",
+          "track_id": "track_2",
+          "media_time_ms": 170710,
+          "bbox": {
+            "x": 283.0,
+            "y": 0.0,
+            "width": 210.0,
+            "height": 278.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:6ab3da01b18174b0a133479ee307e89d",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "1f4b53e9-7b57-5a41-9756-6f7e56599593",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_3048f9c5f92a792ad8aaa51d37407f76",
+          "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:e80284c07b4598fc36147a58d38b9115",
+          "track_id": "track_3",
+          "media_time_ms": 168000,
+          "bbox": {
+            "x": 6.0,
+            "y": 28.0,
+            "width": 75.0,
+            "height": 82.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:656de2cf51fe92ff64f9df74f7e1684f",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "a8a256ab-82b7-5fe3-b572-c19c41f624c3",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_733edbdf9e7df50c65889fc32b18542d",
+          "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+          "track_id": "track_4",
+          "media_time_ms": 168630,
+          "bbox": {
+            "x": 402.0,
+            "y": 59.0,
+            "width": 110.0,
+            "height": 208.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:93f464c6fe1a439169ef682ece92ec15",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "89e4285d-e2da-5ab5-a85b-a7884ccd10bb",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:e25d1bea1386426a5e35523085e0e151",
+          "track_id": "track_5",
+          "media_time_ms": 168420,
+          "bbox": {
+            "x": 138.0,
+            "y": 23.0,
+            "width": 126.0,
+            "height": 122.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:511293c565a2dc2388bf883ab8eb3e6c",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "f7e117dd-82e3-59f0-9c7d-6d15bcea9db2",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_77ceaaa8381daf81a791c89026e3edb6",
+          "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:fdcce1e25a8cf81b9580b410a324bd26",
+          "track_id": "track_6",
+          "media_time_ms": 171550,
+          "bbox": {
+            "x": 227.0,
+            "y": 1.0,
+            "width": 193.0,
+            "height": 276.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:a7ceb0b3349a4fa29f462dc7d17ca678",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "f8a75a9e-b9b4-5d98-a149-74b997eb2a64",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_dfeac73dd474daf35bc960813d00cc26",
+          "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:f66ae87a3b5dddd162f795e1952616a2",
+          "track_id": "track_7",
+          "media_time_ms": 168000,
+          "bbox": {
+            "x": 240.0,
+            "y": 72.0,
+            "width": 73.0,
+            "height": 50.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:bcc83af433241bb9c8939e384fc2a6d6",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "15adc617-6893-5890-aeca-7cd055fb31d0",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_obs_6aa5c319df42441d4afd5733ae09ae53",
+          "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "segment_id": "watch_segment:4c5c19d6e33a18f3edfd0a51489951cc",
+          "track_id": "track_8",
+          "media_time_ms": 168420,
+          "bbox": {
+            "x": 395.0,
+            "y": 52.0,
+            "width": 50.0,
+            "height": 108.0,
+            "coordinate_space": "source_frame_pixels"
+          },
+          "identity_status": "IDENTITY_CANDIDATE",
+          "source_event_id": "watch_live_event_window:3302cd6c1ad3ec5f1bf07b0289e3f9ed",
+          "qdrant_pointers": [
+            {
+              "collection": "watch_track_crop_embeddings",
+              "point_id": "58dff4ad-0258-586d-9d07-16c7b059ccf3",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        }
+      ],
+      "watch_identity_evidence": [
+        {
+          "_key": "watch_identity_37ca28ae168f67e2427d4ded9ff64586",
+          "identity_evidence_id": "watch_identity:37ca28ae168f67e2427d4ded9ff64586",
+          "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "d646fdba-89a2-57b3-acdc-f6a6a7ba5b09",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_41b11ccb037e3cd7780a0c1f7dcf412b",
+          "identity_evidence_id": "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b",
+          "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "89479887-53e3-5ad4-87c6-6fb70e1262ad",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_16880a46153cbeb24e370c76d3bb0f7d",
+          "identity_evidence_id": "watch_identity:16880a46153cbeb24e370c76d3bb0f7d",
+          "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "81ea36aa-743b-55e4-a6a7-e71e9cbcd29a",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+          "identity_evidence_id": "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+          "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "134765f2-895c-5379-bd53-26a79eac7def",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_28395a8932256130509c01c18115324b",
+          "identity_evidence_id": "watch_identity:28395a8932256130509c01c18115324b",
+          "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "7ade3f5c-44b2-5ff3-afd8-a567e80395f1",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_94a6259a019734e815a9430f7f76e8e5",
+          "identity_evidence_id": "watch_identity:94a6259a019734e815a9430f7f76e8e5",
+          "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "32c1f394-7922-5e81-a06c-c2bc9ee6e868",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_27808e7135404d8f628dc8804b63c2f9",
+          "identity_evidence_id": "watch_identity:27808e7135404d8f628dc8804b63c2f9",
+          "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "da3a30c7-6f77-5415-b503-53129afe3a01",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_a1169e518f68f6c416b9b44949fa4fa6",
+          "identity_evidence_id": "watch_identity:a1169e518f68f6c416b9b44949fa4fa6",
+          "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "accd5d95-1417-5bf4-82c8-fddb5a1a417e",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_55c7873b79f310e919813efe525f866b",
+          "identity_evidence_id": "watch_identity:55c7873b79f310e919813efe525f866b",
+          "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "e87ce319-8e22-56f4-9ed5-228871ecbb5f",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        },
+        {
+          "_key": "watch_identity_006a165886f3b6b25b8ffef4a2f800d0",
+          "identity_evidence_id": "watch_identity:006a165886f3b6b25b8ffef4a2f800d0",
+          "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "identity_status": "IDENTITY_INCONCLUSIVE",
+          "promotion_blockers": [
+            "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+            "LIVE_TRACK_PROVISIONAL",
+            "MEMORY_RECALL_NOT_VERIFIED",
+            "REFERENCE_IMAGES_NOT_APPROVED"
+          ],
+          "qdrant_pointers": [
+            {
+              "collection": "watch_identity_evidence_embeddings",
+              "point_id": "3666d4c4-2a41-50ea-a254-83b10b8fac3c",
+              "model": "jina-clip-v2-planned",
+              "write_status": "PLANNED_NOT_WRITTEN"
+            }
+          ]
+        }
+      ],
+      "watch_evidence_cases": [
+        {
+          "_key": "watch_case_984ad1fbe4fccd063a02ef05642a5e0e",
+          "case_id": "watch_case:984ad1fbe4fccd063a02ef05642a5e0e",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "track_ids": [
+              "track_1"
+            ],
+            "evidence_ids": [
+              "watch_identity:37ca28ae168f67e2427d4ded9ff64586"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_95e998f71804e65a11e431edef339c88",
+          "case_id": "watch_case:95e998f71804e65a11e431edef339c88",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168630,
+              "end_ms": 169460
+            },
+            "track_ids": [
+              "track_10"
+            ],
+            "evidence_ids": [
+              "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_507e4ce25c454cf44538e549ebcc1135",
+          "case_id": "watch_case:507e4ce25c454cf44538e549ebcc1135",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 169040,
+              "end_ms": 169240
+            },
+            "track_ids": [
+              "track_15"
+            ],
+            "evidence_ids": [
+              "watch_identity:16880a46153cbeb24e370c76d3bb0f7d"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_f9f15b94301f9589a5b8d18af5c2043f",
+          "case_id": "watch_case:f9f15b94301f9589a5b8d18af5c2043f",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 174460
+            },
+            "track_ids": [
+              "track_2"
+            ],
+            "evidence_ids": [
+              "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_e4c0abd4fe985bf3f987b1fe384e5f60",
+          "case_id": "watch_case:e4c0abd4fe985bf3f987b1fe384e5f60",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169250
+            },
+            "track_ids": [
+              "track_3"
+            ],
+            "evidence_ids": [
+              "watch_identity:28395a8932256130509c01c18115324b"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_1de3a75088d9173da1c251662bb979ff",
+          "case_id": "watch_case:1de3a75088d9173da1c251662bb979ff",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "track_ids": [
+              "track_4"
+            ],
+            "evidence_ids": [
+              "watch_identity:94a6259a019734e815a9430f7f76e8e5"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_f346fc89d3230792b804c38ba55807f5",
+          "case_id": "watch_case:f346fc89d3230792b804c38ba55807f5",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168830
+            },
+            "track_ids": [
+              "track_5"
+            ],
+            "evidence_ids": [
+              "watch_identity:27808e7135404d8f628dc8804b63c2f9"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_aadacaffc586952fa236508eddaaab27",
+          "case_id": "watch_case:aadacaffc586952fa236508eddaaab27",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 173630
+            },
+            "track_ids": [
+              "track_6"
+            ],
+            "evidence_ids": [
+              "watch_identity:a1169e518f68f6c416b9b44949fa4fa6"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_09c9a3184e5c349c1801570c5d03f41e",
+          "case_id": "watch_case:09c9a3184e5c349c1801570c5d03f41e",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168200
+            },
+            "track_ids": [
+              "track_7"
+            ],
+            "evidence_ids": [
+              "watch_identity:55c7873b79f310e919813efe525f866b"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        },
+        {
+          "_key": "watch_case_ac53bbb787fb99f6d4ef8fa6c5c4e244",
+          "case_id": "watch_case:ac53bbb787fb99f6d4ef8fa6c5c4e244",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "case_anchor": {
+            "entity_ids": [
+              "movie_domain_entities/marcus_bad_santa_2003"
+            ],
+            "time_range": {
+              "start_ms": 168420,
+              "end_ms": 169250
+            },
+            "track_ids": [
+              "track_8"
+            ],
+            "evidence_ids": [
+              "watch_identity:006a165886f3b6b25b8ffef4a2f800d0"
+            ]
+          },
+          "verdict": {
+            "status": "INCONCLUSIVE",
+            "failure_code": "NEEDS_HUMAN_REVIEW",
+            "human_review_required": true
+          },
+          "write_status": "PLANNED_NOT_WRITTEN"
+        }
+      ],
+      "watch_evidence_edges": [
+        {
+          "_key": "watch_edge_b50f7d7caffe065190787e1cde24296c",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_4aad92267bbeae50141b4394f48538ef",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_88b4d8f0f005b4739d9764e5a3cbdd73",
+          "_from": "watch_track_observations/watch_obs_4aad92267bbeae50141b4394f48538ef",
+          "_to": "watch_identity_evidence/watch_identity_37ca28ae168f67e2427d4ded9ff64586",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_393964bfc9dab8ce8ba3f98a2e064be6",
+          "_from": "watch_identity_evidence/watch_identity_37ca28ae168f67e2427d4ded9ff64586",
+          "_to": "watch_evidence_cases/watch_case_984ad1fbe4fccd063a02ef05642a5e0e",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_cc210bdaa2b16bd43420cb8365dd20cf",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_898580e523815285e984fb56366cabc9",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_5091e4338c9f81eea0d920b9948a5dd4",
+          "_from": "watch_track_observations/watch_obs_898580e523815285e984fb56366cabc9",
+          "_to": "watch_identity_evidence/watch_identity_41b11ccb037e3cd7780a0c1f7dcf412b",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_5a55298171d951fad1d7b68a8dd9fcfb",
+          "_from": "watch_identity_evidence/watch_identity_41b11ccb037e3cd7780a0c1f7dcf412b",
+          "_to": "watch_evidence_cases/watch_case_95e998f71804e65a11e431edef339c88",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_ee3a6e6077428c116bd3b89c1511a7bc",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_11d974c31a80912fb960f49f77f982ea",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_ca2d0f238ba9aeb5b2f028e2e3772a38",
+          "_from": "watch_track_observations/watch_obs_11d974c31a80912fb960f49f77f982ea",
+          "_to": "watch_identity_evidence/watch_identity_16880a46153cbeb24e370c76d3bb0f7d",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_b4af1eefd869ed9efb299fdd7bd863ba",
+          "_from": "watch_identity_evidence/watch_identity_16880a46153cbeb24e370c76d3bb0f7d",
+          "_to": "watch_evidence_cases/watch_case_507e4ce25c454cf44538e549ebcc1135",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_e96eea688ef8d1857d14c0042c0e221e",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_61732fb0c8bf48c84d5cf91c46b06a42",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_26037a106813444c535b0e8056cd6f79",
+          "_from": "watch_track_observations/watch_obs_61732fb0c8bf48c84d5cf91c46b06a42",
+          "_to": "watch_identity_evidence/watch_identity_e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_7573878ab4cc457b7d09e8b6745f1d5f",
+          "_from": "watch_identity_evidence/watch_identity_e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+          "_to": "watch_evidence_cases/watch_case_f9f15b94301f9589a5b8d18af5c2043f",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_57c137931608f2fcd2660ad5a68e65ba",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_3048f9c5f92a792ad8aaa51d37407f76",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_451e8fa89a6e8c1742d4709e5f5e2fab",
+          "_from": "watch_track_observations/watch_obs_3048f9c5f92a792ad8aaa51d37407f76",
+          "_to": "watch_identity_evidence/watch_identity_28395a8932256130509c01c18115324b",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_9caf560b1b81a53282b3fd9e65110510",
+          "_from": "watch_identity_evidence/watch_identity_28395a8932256130509c01c18115324b",
+          "_to": "watch_evidence_cases/watch_case_e4c0abd4fe985bf3f987b1fe384e5f60",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_8187d856de7690bd49ef0e9dd03475f7",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_733edbdf9e7df50c65889fc32b18542d",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_b77d629b9afba692a1f3e2c8b3454e9e",
+          "_from": "watch_track_observations/watch_obs_733edbdf9e7df50c65889fc32b18542d",
+          "_to": "watch_identity_evidence/watch_identity_94a6259a019734e815a9430f7f76e8e5",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_91794dc83c3742849ebab4f1cb683073",
+          "_from": "watch_identity_evidence/watch_identity_94a6259a019734e815a9430f7f76e8e5",
+          "_to": "watch_evidence_cases/watch_case_1de3a75088d9173da1c251662bb979ff",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_249011e9c22ef6f917f99a90c1c1b6eb",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_a3ded50f464ee24b0b2cf4d4fee8d7af",
+          "_from": "watch_track_observations/watch_obs_61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "_to": "watch_identity_evidence/watch_identity_27808e7135404d8f628dc8804b63c2f9",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_51798225a68a1fd3e3c2b5721045134b",
+          "_from": "watch_identity_evidence/watch_identity_27808e7135404d8f628dc8804b63c2f9",
+          "_to": "watch_evidence_cases/watch_case_f346fc89d3230792b804c38ba55807f5",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_f26fabd0014f479dc3edbe369855c1da",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_77ceaaa8381daf81a791c89026e3edb6",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_0d3fdbf25bdcd726472832bd005ceb54",
+          "_from": "watch_track_observations/watch_obs_77ceaaa8381daf81a791c89026e3edb6",
+          "_to": "watch_identity_evidence/watch_identity_a1169e518f68f6c416b9b44949fa4fa6",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_6aec5ac4eacb0fd51cb456022a8c7fbe",
+          "_from": "watch_identity_evidence/watch_identity_a1169e518f68f6c416b9b44949fa4fa6",
+          "_to": "watch_evidence_cases/watch_case_aadacaffc586952fa236508eddaaab27",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_259229e727abe7bb3a74b6d0fac2885e",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_dfeac73dd474daf35bc960813d00cc26",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_5709c50ed4263134d14dfac1d87b017d",
+          "_from": "watch_track_observations/watch_obs_dfeac73dd474daf35bc960813d00cc26",
+          "_to": "watch_identity_evidence/watch_identity_55c7873b79f310e919813efe525f866b",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_51b3153327636df734f0364d9c33a36f",
+          "_from": "watch_identity_evidence/watch_identity_55c7873b79f310e919813efe525f866b",
+          "_to": "watch_evidence_cases/watch_case_09c9a3184e5c349c1801570c5d03f41e",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_06980f6a39aafb447ff5f8f16d034872",
+          "_from": "watch_assets/watch_asset_45db802844fc54e8dc0cf1189cefc68d",
+          "_to": "watch_track_observations/watch_obs_6aa5c319df42441d4afd5733ae09ae53",
+          "edge_type": "HAS_TRACK_OBSERVATION",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_37d0cda664658d800daf48870a37eae2",
+          "_from": "watch_track_observations/watch_obs_6aa5c319df42441d4afd5733ae09ae53",
+          "_to": "watch_identity_evidence/watch_identity_006a165886f3b6b25b8ffef4a2f800d0",
+          "edge_type": "HAS_IDENTITY_EVIDENCE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        },
+        {
+          "_key": "watch_edge_695a98c00757242dfae078abdf8be7df",
+          "_from": "watch_identity_evidence/watch_identity_006a165886f3b6b25b8ffef4a2f800d0",
+          "_to": "watch_evidence_cases/watch_case_ac53bbb787fb99f6d4ef8fa6c5c4e244",
+          "edge_type": "ANCHORS_CASE",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+        }
+      ],
+      "watch_memory_receipts": [
+        {
+          "_key": "watch_receipt_8da4ac204a8a6add6e6519acfd40c7b4",
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "recall_proof_required": true,
+          "source_plan_schema": "watch.live_tracking_memory_window_plan.v1"
+        }
+      ]
+    },
+    "forbidden": {
+      "raw_vectors_allowed": false
+    }
+  },
+  "qdrant_plan": {
+    "write_status": "PLANNED_NOT_WRITTEN",
+    "collections": {
+      "watch_track_crop_embeddings": [
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "cd9eb2d6-5dec-5fe1-8a28-3be9feb642f4",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+            "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "ae8a4c90-8fbc-5f84-913d-a423c2990826",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:898580e523815285e984fb56366cabc9",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:3210a08af289da3ed0333fccf66dc7f2",
+            "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+            "time_range": {
+              "start_ms": 168630,
+              "end_ms": 169460
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "04d9bfdf-2aa9-53e8-9d85-657ff10f2aac",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:75c93b93bd7f748d53c3777e53b4de6e",
+            "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+            "time_range": {
+              "start_ms": 169040,
+              "end_ms": 169240
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "1f4b53e9-7b57-5a41-9756-6f7e56599593",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:1772344b4a4b7595aa87733640614b09",
+            "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 174460
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "a8a256ab-82b7-5fe3-b572-c19c41f624c3",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:e80284c07b4598fc36147a58d38b9115",
+            "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169250
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "89e4285d-e2da-5ab5-a85b-a7884ccd10bb",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+            "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "f7e117dd-82e3-59f0-9c7d-6d15bcea9db2",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:e25d1bea1386426a5e35523085e0e151",
+            "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168830
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "f8a75a9e-b9b4-5d98-a149-74b997eb2a64",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:fdcce1e25a8cf81b9580b410a324bd26",
+            "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 173630
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "15adc617-6893-5890-aeca-7cd055fb31d0",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f66ae87a3b5dddd162f795e1952616a2",
+            "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168200
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        },
+        {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "58dff4ad-0258-586d-9d07-16c7b059ccf3",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+          "source_collection": "watch_track_observations",
+          "modality": "frame_crop",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:4c5c19d6e33a18f3edfd0a51489951cc",
+            "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+            "time_range": {
+              "start_ms": 168420,
+              "end_ms": 169250
+            },
+            "schema": "watch.track_observation.v1",
+            "model": "jina-clip-v2-planned",
+            "source_sha256": null
+          }
+        }
+      ],
+      "watch_identity_evidence_embeddings": [
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "d646fdba-89a2-57b3-acdc-f6a6a7ba5b09",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:37ca28ae168f67e2427d4ded9ff64586",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+            "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+            "identity_evidence_id": "watch_identity:37ca28ae168f67e2427d4ded9ff64586",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "89479887-53e3-5ad4-87c6-6fb70e1262ad",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:3210a08af289da3ed0333fccf66dc7f2",
+            "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+            "identity_evidence_id": "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168630,
+              "end_ms": 169460
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "81ea36aa-743b-55e4-a6a7-e71e9cbcd29a",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:16880a46153cbeb24e370c76d3bb0f7d",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:75c93b93bd7f748d53c3777e53b4de6e",
+            "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+            "identity_evidence_id": "watch_identity:16880a46153cbeb24e370c76d3bb0f7d",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 169040,
+              "end_ms": 169240
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "134765f2-895c-5379-bd53-26a79eac7def",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:1772344b4a4b7595aa87733640614b09",
+            "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+            "identity_evidence_id": "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 174460
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "7ade3f5c-44b2-5ff3-afd8-a567e80395f1",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:28395a8932256130509c01c18115324b",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:e80284c07b4598fc36147a58d38b9115",
+            "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+            "identity_evidence_id": "watch_identity:28395a8932256130509c01c18115324b",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169250
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "32c1f394-7922-5e81-a06c-c2bc9ee6e868",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:94a6259a019734e815a9430f7f76e8e5",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+            "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+            "identity_evidence_id": "watch_identity:94a6259a019734e815a9430f7f76e8e5",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 169460
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "da3a30c7-6f77-5415-b503-53129afe3a01",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:27808e7135404d8f628dc8804b63c2f9",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:e25d1bea1386426a5e35523085e0e151",
+            "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+            "identity_evidence_id": "watch_identity:27808e7135404d8f628dc8804b63c2f9",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168830
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "accd5d95-1417-5bf4-82c8-fddb5a1a417e",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:a1169e518f68f6c416b9b44949fa4fa6",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:fdcce1e25a8cf81b9580b410a324bd26",
+            "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+            "identity_evidence_id": "watch_identity:a1169e518f68f6c416b9b44949fa4fa6",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 173630
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "e87ce319-8e22-56f4-9ed5-228871ecbb5f",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:55c7873b79f310e919813efe525f866b",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:f66ae87a3b5dddd162f795e1952616a2",
+            "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+            "identity_evidence_id": "watch_identity:55c7873b79f310e919813efe525f866b",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168000,
+              "end_ms": 168200
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        },
+        {
+          "collection": "watch_identity_evidence_embeddings",
+          "point_id": "3666d4c4-2a41-50ea-a254-83b10b8fac3c",
+          "embedding_status": "PLANNED_NOT_WRITTEN",
+          "source_record_id": "watch_identity:006a165886f3b6b25b8ffef4a2f800d0",
+          "source_collection": "watch_identity_evidence",
+          "modality": "identity_evidence_summary",
+          "payload": {
+            "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+            "segment_id": "watch_segment:4c5c19d6e33a18f3edfd0a51489951cc",
+            "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+            "identity_evidence_id": "watch_identity:006a165886f3b6b25b8ffef4a2f800d0",
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "identity_status": "IDENTITY_INCONCLUSIVE",
+            "time_range": {
+              "start_ms": 168420,
+              "end_ms": 169250
+            },
+            "schema": "watch.identity_evidence.v1",
+            "model": "jina-clip-v2-planned"
+          }
+        }
+      ],
+      "watch_segment_text_embeddings": []
+    },
+    "forbidden": {
+      "direct_answer_path_allowed": false,
+      "raw_vector_values_in_plan": false
+    }
+  },
+  "memory_recall": {
+    "required_before_answer_claim": true,
+    "allowed_answer_path": "$memory recall",
+    "direct_qdrant_or_arango_answer_allowed": false
+  },
+  "counts": {
+    "track_observations": 10,
+    "identity_evidence": 10,
+    "evidence_cases": 10,
+    "graph_edges": 30,
+    "qdrant_point_plans": 20
+  },
+  "proof_scope": [
+    "arango_metadata_shape",
+    "qdrant_pointer_shape",
+    "planned_persistence_only"
+  ],
+  "claims": {
+    "proves": [
+      "bounded live windows can be shaped into Arango metadata and graph edge documents",
+      "Qdrant persistence is represented as point plans with deterministic ids and payload metadata",
+      "raw vectors are excluded from the graph persistence plan"
+    ],
+    "does_not_prove": [
+      "Arango write success",
+      "Qdrant write success",
+      "$memory recall success",
+      "supported character identity"
+    ]
+  }
+}

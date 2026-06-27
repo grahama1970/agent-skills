@@ -28,6 +28,7 @@ TRACK_OBSERVATION_SCHEMA = "watch.track_observation.v1"
 IDENTITY_EVIDENCE_SCHEMA = "watch.identity_evidence.v1"
 MEMORY_TRACE_SCHEMA = "watch.memory_trace_write_plan.v1"
 LIVE_TRACKING_MEMORY_WINDOW_SCHEMA = "watch.live_tracking_memory_window_plan.v1"
+GRAPH_VECTOR_PERSISTENCE_SCHEMA = "watch.graph_vector_persistence_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -134,6 +135,15 @@ def compute_identity_evidence_id(evidence: Mapping[str, Any]) -> str:
         "identity_status": evidence.get("identity_status"),
     }
     return stable_id("watch_identity", material)
+
+
+def compute_case_anchor_id(asset_id: str, entity_ids: Iterable[str], time_range: Mapping[str, Any], evidence_ids: Iterable[str]) -> str:
+    return stable_id("watch_case", {
+        "asset_id": asset_id,
+        "entity_ids": sorted(str(entity_id) for entity_id in entity_ids if entity_id),
+        "time_range": dict(time_range),
+        "evidence_ids": sorted(str(evidence_id) for evidence_id in evidence_ids if evidence_id),
+    })
 
 
 def approved_references(package: Mapping[str, Any]) -> List[Mapping[str, Any]]:
@@ -505,6 +515,255 @@ def build_live_tracking_memory_window_plan(
             ],
         },
     }
+
+
+def _assert_no_raw_vectors(value: Any, path: str = "$") -> None:
+    forbidden = {"embedding", "embeddings", "vector", "vectors", "dense_vector"}
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if str(key) in forbidden:
+                raise ValueError(f"raw vector-like field is forbidden at {child_path}")
+            _assert_no_raw_vectors(child, child_path)
+    elif isinstance(value, list):
+        if len(value) > 8 and all(isinstance(item, (int, float)) for item in value):
+            raise ValueError(f"raw numeric vector array is forbidden at {path}")
+        for index, child in enumerate(value):
+            _assert_no_raw_vectors(child, f"{path}[{index}]")
+
+
+def build_graph_vector_persistence_plan(live_window_plan: Mapping[str, Any]) -> Dict[str, Any]:
+    """Build planned Arango/Qdrant persistence records for a live window plan.
+
+    Arango records contain metadata, graph edges, and Qdrant pointers only.
+    Qdrant records are point plans without raw vectors; actual embedding is a
+    later runtime step owned by the memory/vector layer.
+    """
+
+    if live_window_plan.get("schema") != LIVE_TRACKING_MEMORY_WINDOW_SCHEMA:
+        raise ValueError(f"unsupported live window plan schema: {live_window_plan.get('schema')!r}")
+
+    asset = copy.deepcopy(dict(live_window_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    memory_trace = live_window_plan.get("memory_trace_plan") or {}
+    observations = memory_trace.get("track_observations") or []
+    identity_evidence = memory_trace.get("identity_evidence") or []
+
+    collections: Dict[str, List[Dict[str, Any]]] = {
+        "watch_assets": [],
+        "watch_track_observations": [],
+        "watch_identity_evidence": [],
+        "watch_evidence_cases": [],
+        "watch_evidence_edges": [],
+        "watch_memory_receipts": [],
+    }
+    qdrant_points: Dict[str, List[Dict[str, Any]]] = {
+        "watch_track_crop_embeddings": [],
+        "watch_identity_evidence_embeddings": [],
+        "watch_segment_text_embeddings": [],
+    }
+
+    collections["watch_assets"].append({
+        "_key": asset_id.replace(":", "_"),
+        "asset_id": asset_id,
+        "schema": asset.get("schema", "watch.asset_metadata.v1"),
+        "asset_kind": asset.get("asset_kind"),
+        "title": asset.get("title"),
+        "release_year": asset.get("release_year"),
+        "canonical_uri": asset.get("canonical_uri"),
+        "media_sha256": asset.get("media_sha256"),
+    })
+
+    identity_by_observation = {
+        evidence.get("track_observation_id"): evidence
+        for evidence in identity_evidence
+    }
+
+    for observation in observations:
+        obs_id = observation["track_observation_id"]
+        qdrant = observation.get("qdrant") or {}
+        qdrant_pointer = {
+            "collection": qdrant.get("collection", "watch_track_crop_embeddings"),
+            "point_id": qdrant.get("point_id", qdrant_point_id(obs_id)),
+            "model": qdrant.get("model", "jina-clip-v2-planned"),
+            "write_status": PLANNED_NOT_WRITTEN,
+        }
+        collections["watch_track_observations"].append({
+            "_key": obs_id.replace(":", "_"),
+            "track_observation_id": obs_id,
+            "asset_id": asset_id,
+            "segment_id": observation.get("segment_id"),
+            "track_id": observation.get("track_id"),
+            "media_time_ms": observation.get("media_time_ms"),
+            "bbox": observation.get("bbox"),
+            "identity_status": observation.get("identity_status"),
+            "source_event_id": observation.get("source_event_id"),
+            "qdrant_pointers": [qdrant_pointer],
+        })
+        qdrant_points["watch_track_crop_embeddings"].append({
+            "collection": qdrant_pointer["collection"],
+            "point_id": qdrant_pointer["point_id"],
+            "embedding_status": PLANNED_NOT_WRITTEN,
+            "source_record_id": obs_id,
+            "source_collection": "watch_track_observations",
+            "modality": "frame_crop",
+            "payload": {
+                "asset_id": asset_id,
+                "segment_id": observation.get("segment_id"),
+                "track_observation_id": obs_id,
+                "time_range": observation.get("live_time_range"),
+                "schema": observation.get("schema"),
+                "model": qdrant_pointer["model"],
+                "source_sha256": observation.get("crop_sha256"),
+            },
+        })
+        collections["watch_evidence_edges"].append({
+            "_key": stable_id("watch_edge", {"from": asset_id, "to": obs_id, "type": "HAS_TRACK_OBSERVATION"}).replace(":", "_"),
+            "_from": f"watch_assets/{asset_id.replace(':', '_')}",
+            "_to": f"watch_track_observations/{obs_id.replace(':', '_')}",
+            "edge_type": "HAS_TRACK_OBSERVATION",
+            "asset_id": asset_id,
+        })
+
+        evidence = identity_by_observation.get(obs_id)
+        if not evidence:
+            continue
+        evidence_id = evidence.get("identity_evidence_id") or compute_identity_evidence_id(evidence)
+        entity_id = evidence.get("entity_id")
+        qdrant_identity_pointer = {
+            "collection": "watch_identity_evidence_embeddings",
+            "point_id": qdrant_point_id(evidence_id),
+            "model": "jina-clip-v2-planned",
+            "write_status": PLANNED_NOT_WRITTEN,
+        }
+        collections["watch_identity_evidence"].append({
+            "_key": evidence_id.replace(":", "_"),
+            "identity_evidence_id": evidence_id,
+            "track_observation_id": obs_id,
+            "asset_id": asset_id,
+            "entity_id": entity_id,
+            "entity_name": evidence.get("entity_name"),
+            "identity_status": evidence.get("identity_status"),
+            "promotion_blockers": evidence.get("promotion_blockers", []),
+            "qdrant_pointers": [qdrant_identity_pointer],
+        })
+        qdrant_points["watch_identity_evidence_embeddings"].append({
+            "collection": qdrant_identity_pointer["collection"],
+            "point_id": qdrant_identity_pointer["point_id"],
+            "embedding_status": PLANNED_NOT_WRITTEN,
+            "source_record_id": evidence_id,
+            "source_collection": "watch_identity_evidence",
+            "modality": "identity_evidence_summary",
+            "payload": {
+                "asset_id": asset_id,
+                "segment_id": observation.get("segment_id"),
+                "track_observation_id": obs_id,
+                "identity_evidence_id": evidence_id,
+                "entity_id": entity_id,
+                "identity_status": evidence.get("identity_status"),
+                "time_range": observation.get("live_time_range"),
+                "schema": evidence.get("schema"),
+                "model": qdrant_identity_pointer["model"],
+            },
+        })
+        collections["watch_evidence_edges"].append({
+            "_key": stable_id("watch_edge", {"from": obs_id, "to": evidence_id, "type": "HAS_IDENTITY_EVIDENCE"}).replace(":", "_"),
+            "_from": f"watch_track_observations/{obs_id.replace(':', '_')}",
+            "_to": f"watch_identity_evidence/{evidence_id.replace(':', '_')}",
+            "edge_type": "HAS_IDENTITY_EVIDENCE",
+            "asset_id": asset_id,
+        })
+
+        time_range = observation.get("live_time_range") or {}
+        case_id = compute_case_anchor_id(asset_id, [entity_id] if entity_id else [], time_range, [evidence_id])
+        collections["watch_evidence_cases"].append({
+            "_key": case_id.replace(":", "_"),
+            "case_id": case_id,
+            "asset_id": asset_id,
+            "case_anchor": {
+                "entity_ids": [entity_id] if entity_id else [],
+                "time_range": time_range,
+                "track_ids": [observation.get("track_id")],
+                "evidence_ids": [evidence_id],
+            },
+            "verdict": {
+                "status": "INCONCLUSIVE",
+                "failure_code": "NEEDS_HUMAN_REVIEW",
+                "human_review_required": True,
+            },
+            "write_status": PLANNED_NOT_WRITTEN,
+        })
+        collections["watch_evidence_edges"].append({
+            "_key": stable_id("watch_edge", {"from": evidence_id, "to": case_id, "type": "ANCHORS_CASE"}).replace(":", "_"),
+            "_from": f"watch_identity_evidence/{evidence_id.replace(':', '_')}",
+            "_to": f"watch_evidence_cases/{case_id.replace(':', '_')}",
+            "edge_type": "ANCHORS_CASE",
+            "asset_id": asset_id,
+        })
+
+    collections["watch_memory_receipts"].append({
+        "_key": stable_id("watch_receipt", {"asset_id": asset_id, "plan_schema": GRAPH_VECTOR_PERSISTENCE_SCHEMA}).replace(":", "_"),
+        "asset_id": asset_id,
+        "write_status": PLANNED_NOT_WRITTEN,
+        "recall_proof_required": True,
+        "source_plan_schema": live_window_plan.get("schema"),
+    })
+
+    arango_plan = {
+        "write_status": PLANNED_NOT_WRITTEN,
+        "collections": collections,
+        "forbidden": {
+            "raw_vectors_allowed": False,
+        },
+    }
+    qdrant_plan = {
+        "write_status": PLANNED_NOT_WRITTEN,
+        "collections": qdrant_points,
+        "forbidden": {
+            "direct_answer_path_allowed": False,
+            "raw_vector_values_in_plan": False,
+        },
+    }
+    plan = {
+        "schema": GRAPH_VECTOR_PERSISTENCE_SCHEMA,
+        "write_status": PLANNED_NOT_WRITTEN,
+        "asset": asset,
+        "source_live_window_plan_schema": live_window_plan.get("schema"),
+        "arango_plan": arango_plan,
+        "qdrant_plan": qdrant_plan,
+        "memory_recall": {
+            "required_before_answer_claim": True,
+            "allowed_answer_path": "$memory recall",
+            "direct_qdrant_or_arango_answer_allowed": False,
+        },
+        "counts": {
+            "track_observations": len(collections["watch_track_observations"]),
+            "identity_evidence": len(collections["watch_identity_evidence"]),
+            "evidence_cases": len(collections["watch_evidence_cases"]),
+            "graph_edges": len(collections["watch_evidence_edges"]),
+            "qdrant_point_plans": sum(len(points) for points in qdrant_points.values()),
+        },
+        "proof_scope": [
+            "arango_metadata_shape",
+            "qdrant_pointer_shape",
+            "planned_persistence_only",
+        ],
+        "claims": {
+            "proves": [
+                "bounded live windows can be shaped into Arango metadata and graph edge documents",
+                "Qdrant persistence is represented as point plans with deterministic ids and payload metadata",
+                "raw vectors are excluded from the graph persistence plan",
+            ],
+            "does_not_prove": [
+                "Arango write success",
+                "Qdrant write success",
+                "$memory recall success",
+                "supported character identity",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
 
 
 def identity_promotion_errors(identity_evidence: Mapping[str, Any]) -> List[str]:
