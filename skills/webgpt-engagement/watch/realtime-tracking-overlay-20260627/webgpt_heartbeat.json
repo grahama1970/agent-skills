@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-06-27T20:06:14Z",
+  "submitted_at": "2026-06-27T20:04:26Z",
+  "last_browser_observation_at": "2026-06-27T20:06:14Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/response.raw.md",
+  "next_expected_artifact": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260627T200421Z:0e045280>>>",
+  "prepared_prompt_is_transport_proof": false
+}

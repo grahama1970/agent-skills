@@ -243,6 +243,15 @@ there, but only stream evidence can support what is visible at a specific time.
    `tracking` extra installed.
 2. Validate emitted JSONL against the live event schema.
 3. Replace the current modal placeholder bbox with event-derived bbox data.
+   - Dry-run adapter exists:
+     `scripts/build_tracking_overlay_payload.py`
+   - Payload schema and validator exist:
+     `docs/architecture/watch_ui_overlay_payload.schema.json` and
+     `scripts/validate_watch_overlay_payload.py`
+   - Current dry-run payload:
+     `docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json`
+   - This proves event-to-overlay geometry only; the production UI still needs
+     to consume this payload or live stream events instead of placeholders.
 4. With human approval, post the already generated `/upsert` payloads to memory.
 5. Run recall proof queries:
    - "find all movie segments with Marcus"
@@ -257,4 +266,5 @@ This plan does not claim the goal is complete. Missing proof remains:
 - live memory write receipt
 - live `/recall` proof for Watch observations/cases
 - Qdrant/Jina point write and dense recall proof
-- UI overlay from event-derived bbox rather than deterministic placeholder bbox
+- production UI consumption of event-derived bbox rather than deterministic
+  placeholder bbox

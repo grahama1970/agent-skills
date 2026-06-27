@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embry.local/schemas/watch_ui_overlay_payload.schema.json",
+  "title": "Watch UI Overlay Payload",
+  "description": "UI-facing overlay payload derived from Watch live-track events. This contract renders browser/table/modal annotation geometry and preserves proof boundaries.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "posted",
+    "proof_scope",
+    "excluded_proofs",
+    "coordinate_space",
+    "source_events",
+    "source_event_summary",
+    "frame_size",
+    "overlay_count",
+    "overlays",
+    "claim_boundary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "watch.ui_overlay_payload.v1"
+    },
+    "status": {
+      "enum": [
+        "DRY_RUN_ONLY",
+        "LIVE",
+        "REPLAY"
+      ]
+    },
+    "posted": {
+      "type": "boolean"
+    },
+    "proof_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "geometry_plumbing",
+          "ui_rendering",
+          "live_ml",
+          "identity",
+          "memory_write",
+          "qdrant_write",
+          "recall"
+        ]
+      }
+    },
+    "excluded_proofs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "live_ml",
+          "identity",
+          "memory_write",
+          "qdrant_write",
+          "recall"
+        ]
+      }
+    },
+    "coordinate_space": {
+      "type": "object",
+      "required": [
+        "source",
+        "frame_width",
+        "frame_height",
+        "normalized_basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "const": "video_frame_pixels"
+        },
+        "frame_width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frame_height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "normalized_basis": {
+          "const": "percent_of_source_frame"
+        }
+      }
+    },
+    "source_events": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_event_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "frame_size": {
+      "$ref": "#/$defs/frame_size"
+    },
+    "overlay_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "overlays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/overlay"
+      }
+    },
+    "claim_boundary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "frame_size": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "overlay": {
+      "type": "object",
+      "required": [
+        "overlay_id",
+        "stream_id",
+        "asset_uid",
+        "segment_id",
+        "track_id",
+        "time_range",
+        "anchor_media_time_seconds",
+        "valid_at_media_time_seconds",
+        "bbox_policy",
+        "representative_event",
+        "track_lifecycle_status",
+        "last_seen_media_time_seconds",
+        "stale_after_ms",
+        "detected_class",
+        "classification",
+        "bbox_xyxy",
+        "bbox_percent",
+        "identity_candidate",
+        "identity_status",
+        "visibility_proof",
+        "source_event_count",
+        "source_event_refs",
+        "render_policy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "overlay_id": {
+          "type": "string",
+          "pattern": "^watch_overlay_[a-zA-Z0-9._-]+$"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "time_range": {
+          "$ref": "#/$defs/time_range"
+        },
+        "anchor_media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "valid_at_media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bbox_policy": {
+          "enum": [
+            "median_source_events",
+            "latest_event",
+            "representative_event"
+          ]
+        },
+        "representative_event": {
+          "$ref": "#/$defs/representative_event"
+        },
+        "track_lifecycle_status": {
+          "enum": [
+            "active",
+            "boundary_candidate",
+            "stale",
+            "dropped",
+            "merged",
+            "split"
+          ]
+        },
+        "last_seen_media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stale_after_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "detected_class": {
+          "enum": [
+            "person",
+            "vehicle",
+            "drone",
+            "object",
+            "unknown"
+          ]
+        },
+        "classification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bbox_xyxy": {
+          "$ref": "#/$defs/bbox_xyxy"
+        },
+        "bbox_percent": {
+          "$ref": "#/$defs/bbox_percent"
+        },
+        "identity_candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/identity_candidate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "identity_status": {
+          "enum": [
+            "PROVISIONAL",
+            "UNRESOLVED",
+            "VERIFIED",
+            "REFUTED",
+            "HUMAN_OVERRIDE"
+          ]
+        },
+        "visibility_proof": {
+          "type": "boolean"
+        },
+        "source_event_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_event_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_event_ref"
+          }
+        },
+        "render_policy": {
+          "$ref": "#/$defs/render_policy"
+        }
+      }
+    },
+    "time_range": {
+      "type": "object",
+      "required": [
+        "start_seconds",
+        "end_seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "representative_event": {
+      "type": "object",
+      "required": [
+        "media_time_seconds",
+        "status",
+        "emitted_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "emitted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "bbox_xyxy": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "bbox_percent": {
+      "type": "object",
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "left": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "top": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "identity_candidate": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "name",
+        "kind",
+        "confidence",
+        "status",
+        "basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "source_event_ref": {
+      "type": "object",
+      "required": [
+        "media_time_seconds",
+        "status",
+        "bbox_xyxy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bbox_xyxy": {
+          "$ref": "#/$defs/bbox_xyxy"
+        }
+      }
+    },
+    "render_policy": {
+      "type": "object",
+      "required": [
+        "stroke",
+        "stroke_color",
+        "fill_opacity",
+        "pointer_events",
+        "label_position"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stroke": {
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ]
+        },
+        "stroke_color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "fill_opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pointer_events": {
+          "enum": [
+            "none",
+            "auto"
+          ]
+        },
+        "label_position": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right"
+          ]
+        }
+      }
+    }
+  }
+}

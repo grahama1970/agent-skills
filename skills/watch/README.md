@@ -14,24 +14,73 @@ Some videos are easy for a person and surprisingly hard for an agent. A transcri
 captures the words, but not the screen. A thumbnail shows one moment, but not the
 story. A generic summary loses the exact timestamp where something happened.
 
-`watch` fixes that gap. Give it a YouTube URL, a local video file, or a configured
-movie-library title, and it builds a searchable record of what was said, what was
-shown, when scenes changed, and what the audio felt like. The run leaves behind
-local reports you can inspect, plus memory records that `/memory/recall` can use
-later.
+`watch` fixes that gap. Hand it a YouTube URL, a local file, or a movie from your
+library. It builds a searchable record of what was said, what was shown, when
+scenes changed, and what the audio felt like. After the run you get local reports
+you can inspect, plus memory records that `/memory/recall` can use later.
 
 ![Watch UI — Divergence Intelligence](docs/assets/watch-ui-screenshot.png)
-*Watch UI showing the current forensic asset library, scene table, memory-pipeline
+*Watch UI showing the forensic asset library, scene table, memory-pipeline
 agent rail, inline movie segment playback, and domain-linked character markers.*
 
-Use it for work like:
+## What it does
 
-- "What is on the instructor's screen at 2:30?"
-- "Find the part of this lecture where they discuss gradient descent."
-- "Summarize this Zoom recording, including when the shared slides change."
-- "Extract key visual scenes from this movie clip."
-- "Index this screen recording so another agent can ask about it later."
-- "Track which movie character or field asset appears in each segment, while streaming provisional labels live and persisting bounded observations to memory."
+`watch` ingests a video source and produces a time-aligned bundle:
+
+1. **Acquire** — downloads or probes the source (YouTube via `yt-dlp`, local files, or library titles).
+2. **Sample** — extracts frames at scene changes or uniform intervals, whichever fits the material.
+3. **Transcribe** — pulls audio and runs speech-to-text (GPU Whisper when available, CPU fallback otherwise).
+4. **Enrich** — optional scene descriptions, soundtrack mood, and divergence checks between official subtitles and raw audio.
+5. **Persist** — writes a human-readable `report.md`, a structured `report.json`, and upserts searchable memory records.
+
+Everything is anchored to seconds-from-start. That alignment is the whole point:
+a later query can recover the dialogue, frame, and audio context for the same
+moment without reopening the video.
+
+## When to reach for it
+
+Use `watch` when the visual or audio context matters, not just the transcript.
+
+| Situation | Why `watch` helps |
+| --- | --- |
+| YouTube tutorials | Captures the instructor's screen, not only the narration. |
+| Screen recordings | Preserves UI state, menus, dialogs, cursor context, and timing. |
+| Lectures and talks | Connects spoken explanations to slide changes and timestamps. |
+| Meetings and Zoom calls | Combines transcript with shared-screen context. |
+| Film or video clips | Records scene boundaries, key frames, dialogue, and soundtrack mood. |
+| Multi-asset operational review | Indexes telemetry-synced footage so agents can query by timestamp, visual cue, or audio event later. |
+| Agent memory | Creates a durable video index that other agents can search and reason about. |
+
+For long recordings, prefer a focused clip with `--start` and `--end`. The output
+is usually better when `watch` analyzes the section you actually care about
+instead of an entire two-hour archive.
+
+## Quickstart
+
+You do not need to understand the whole pipeline first. Start with one video.
+
+```bash
+cd skills/watch
+
+# Watch a YouTube video
+./run.sh "https://youtu.be/iYG5tiFfK3E"
+
+# Watch a local file
+./run.sh movie.mkv
+
+# Focus on a section of a long video
+./run.sh movie.mkv --start 180 --end 600
+
+# Static screen recording? Try uniform sampling instead of scene cuts
+./run.sh recording.mp4 --no-scene-change
+```
+
+By default, `watch` tries scene-change frame extraction. Focused ranges and
+explicit `--fps` runs use uniform sampling, which is often better for static
+screen recordings and slide decks.
+
+After the run, open `report.md` in the printed work directory. That tells you
+what was actually processed before you ask recall questions about the video.
 
 Agents and project skills should read [`SKILL.md`](SKILL.md) for the invocation
 contract, output schemas, memory records, and error behavior. This README is for
@@ -82,6 +131,10 @@ See:
 - [`scripts/build_realtime_tracking_event_log.py`](scripts/build_realtime_tracking_event_log.py)
 - [`docs/architecture/watch_realtime_tracking_frame_harness.inspection.md`](docs/architecture/watch_realtime_tracking_frame_harness.inspection.md)
 - [`docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json`](docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json)
+- [`scripts/build_tracking_overlay_payload.py`](scripts/build_tracking_overlay_payload.py)
+- [`scripts/validate_watch_overlay_payload.py`](scripts/validate_watch_overlay_payload.py)
+- [`docs/architecture/watch_ui_overlay_payload.schema.json`](docs/architecture/watch_ui_overlay_payload.schema.json)
+- [`docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/inspection.md)
 - [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
 - [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
@@ -95,33 +148,6 @@ uv pip install -e '.[tracking]'
 This adds Ultralytics YOLO and OpenCV for the `track_yolo_bytetrack.py` adapter.
 The adapter emits provisional live-track events only; identity verification and
 memory persistence remain separate Watch Agent steps.
-
-## Quickstart
-
-Start with one video. You do not need to understand the whole pipeline first.
-
-```bash
-cd skills/watch
-
-# Watch a YouTube video
-./run.sh "https://youtu.be/iYG5tiFfK3E"
-
-# Watch a local file
-./run.sh movie.mkv
-
-# Focus on a section of a long video
-./run.sh movie.mkv --start 180 --end 600
-
-# Static screen recording? Try uniform sampling instead of scene cuts
-./run.sh recording.mp4 --no-scene-change
-```
-
-By default, `watch` tries scene-change frame extraction. Focused ranges and
-explicit `--fps` runs use uniform sampling, which is often better for static
-screen recordings and slide decks.
-
-After the run, open `report.md` in the printed work directory. That tells you what
-was actually processed before you ask recall questions about the video.
 
 ## How to Use
 
@@ -189,46 +215,6 @@ cd skills/watch/docker
 docker compose --profile all up -d
 # Whisper on :9000, Watch UI on :3002
 ```
-
-## What it does
-
-`watch` builds a time-aligned bundle from a video. First it gets a workable video
-file: URLs go through `yt-dlp`, while local paths are probed directly. Then it
-pulls the audio track for transcription and samples frames either at visual cuts
-or at regular intervals.
-
-From there, the useful pieces get stitched together. The transcript, frame list,
-scene notes, optional enrichment, and memory records all refer back to seconds
-from the start of the same source. That alignment is the reason a later query can
-recover the matching dialogue, frame, and audio context for the same moment.
-The generated report also includes a scene element table with timecode, text,
-scene marker image, movie segment, and sound notes for each sampled scene.
-
-A normal run does some or all of this:
-
-- downloads or probes the source video
-- extracts frames with `ffmpeg`
-- extracts audio and transcribes speech when captions are not available
-- writes a markdown report and structured JSON report
-- persists selected frames and audio for later recall
-- upserts searchable memory records when transcript/QRA generation succeeds
-
-## When to use it
-
-Use `watch` when the visual or audio context matters, not just the transcript.
-
-| Situation | Why `watch` helps |
-| --- | --- |
-| YouTube tutorials | Captures the instructor's screen, not only the narration. |
-| Screen recordings | Preserves UI state, menus, dialogs, cursor context, and timing. |
-| Lectures and talks | Connects spoken explanations to slide changes and timestamps. |
-| Meetings and Zoom calls | Combines transcript with shared-screen context. |
-| Film or video clips | Records scene boundaries, key frames, dialogue, and soundtrack mood. |
-| Agent memory | Creates a reusable video index that other agents can query later. |
-
-For long videos, prefer a focused clip with `--start` and `--end`. The output is
-usually better when `watch` analyzes the section you actually care about instead
-of an entire long recording.
 
 ## Self-Contained Setup (Docker)
 

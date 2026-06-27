@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/submit-prompt.md",
+  "submitted_output": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/submit-prompt.submitted.md",
+  "output": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/response.md",
+  "raw_output": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/response.raw.md",
+  "meta_output": "skills/webgpt-engagement/watch/realtime-tracking-overlay-20260627/response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260627T200421Z:0e045280>>>",
+  "requested_tab_id": "837356822",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-06-27T20:04:47Z"
+}

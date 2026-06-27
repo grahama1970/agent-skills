@@ -1,0 +1,97 @@
+{
+  "claim_boundary": "This payload proves only that validated Watch track events can drive browser overlay geometry without hard-coded boxes. It does not prove live YOLO/ByteTrack inference, person re-identification, character identity, memory writes, Qdrant writes, or recall.",
+  "frame_size": {
+    "height": 140,
+    "width": 256
+  },
+  "overlay_count": 1,
+  "overlays": [
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 76.429,
+        "left": 44.141,
+        "top": 8.571,
+        "width": 30.859
+      },
+      "bbox_xyxy": [
+        113,
+        12,
+        192,
+        119
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "vlm_scene_text"
+        ],
+        "confidence": 0.5,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_07",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T16:45:05.320000Z",
+        "media_time_seconds": 191.72,
+        "status": "BOUNDARY_CANDIDATE"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 3,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            110,
+            11,
+            189,
+            118
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            113,
+            12,
+            192,
+            119
+          ],
+          "media_time_seconds": 171.08,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            116,
+            13,
+            195,
+            120
+          ],
+          "media_time_seconds": 191.72,
+          "status": "BOUNDARY_CANDIDATE"
+        }
+      ],
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 191.72,
+        "start_seconds": 168.42
+      },
+      "track_id": "track_07"
+    }
+  ],
+  "posted": false,
+  "schema_version": "watch.ui_overlay_payload.v1",
+  "source_event_summary": "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json",
+  "source_events": "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracker_events/watch_tracker_event_log.bad_santa_marcus.frame_harness.jsonl",
+  "status": "DRY_RUN_ONLY"
+}
