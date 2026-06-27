@@ -1,0 +1,167 @@
+{
+  "schema": "watch.memory_recall_verification_plan.v1",
+  "verification_status": "PLANNED_NOT_QUERIED",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_graph_vector_plan_schema": "watch.graph_vector_persistence_plan.v1",
+  "memory_pipeline": [
+    "intent",
+    "extract_entities",
+    "recall",
+    "create_evidence_case",
+    "answer",
+    "clarify",
+    "deflect"
+  ],
+  "recall_requests": [
+    {
+      "request_id": "watch_recall_probe:e971d7f7566b46074db9c2403520210f",
+      "kind": "entity_segments",
+      "route": [
+        "intent",
+        "extract_entities",
+        "recall"
+      ],
+      "http": {
+        "method": "POST",
+        "path": "/recall",
+        "body": {
+          "q": "Which Watch evidence cases or movie segments contain Marcus in Bad Santa?",
+          "collections": [
+            "watch_evidence_cases",
+            "watch_identity_evidence",
+            "watch_track_observations"
+          ],
+          "k": 10
+        }
+      },
+      "expected_constraints": {
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "min_case_count": 10,
+        "expected_case_ids": [
+          "watch_case:984ad1fbe4fccd063a02ef05642a5e0e",
+          "watch_case:95e998f71804e65a11e431edef339c88",
+          "watch_case:507e4ce25c454cf44538e549ebcc1135",
+          "watch_case:f9f15b94301f9589a5b8d18af5c2043f",
+          "watch_case:e4c0abd4fe985bf3f987b1fe384e5f60",
+          "watch_case:1de3a75088d9173da1c251662bb979ff",
+          "watch_case:f346fc89d3230792b804c38ba55807f5",
+          "watch_case:aadacaffc586952fa236508eddaaab27",
+          "watch_case:09c9a3184e5c349c1801570c5d03f41e",
+          "watch_case:ac53bbb787fb99f6d4ef8fa6c5c4e244"
+        ],
+        "expected_segment_ids": [
+          "watch_segment:1772344b4a4b7595aa87733640614b09",
+          "watch_segment:3210a08af289da3ed0333fccf66dc7f2",
+          "watch_segment:4c5c19d6e33a18f3edfd0a51489951cc",
+          "watch_segment:75c93b93bd7f748d53c3777e53b4de6e",
+          "watch_segment:e25d1bea1386426a5e35523085e0e151",
+          "watch_segment:e80284c07b4598fc36147a58d38b9115",
+          "watch_segment:f66ae87a3b5dddd162f795e1952616a2",
+          "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+          "watch_segment:fdcce1e25a8cf81b9580b410a324bd26"
+        ],
+        "time_range_ms": {
+          "start_ms": 168000,
+          "end_ms": 174460
+        }
+      },
+      "acceptance": {
+        "requires_found": true,
+        "requires_items_key": true,
+        "requires_no_results_key_dependency": true,
+        "requires_expected_asset": true,
+        "requires_expected_entity": true,
+        "requires_scores": [
+          "bm25",
+          "dense"
+        ],
+        "dense_score_may_be_zero_until_qdrant_written": true
+      }
+    },
+    {
+      "request_id": "watch_recall_probe:a73d10af80b1ba693f4d47b05c8ff63d",
+      "kind": "negative_entity_control",
+      "route": [
+        "intent",
+        "extract_entities",
+        "recall"
+      ],
+      "http": {
+        "method": "POST",
+        "path": "/recall",
+        "body": {
+          "q": "Which Watch evidence cases contain Willie in Bad Santa for this planned Marcus canary window?",
+          "collections": [
+            "watch_evidence_cases",
+            "watch_identity_evidence",
+            "watch_track_observations"
+          ],
+          "k": 10
+        }
+      },
+      "expected_constraints": {
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "forbidden_entity_ids": [
+          "movie_domain_entities/willie_bad_santa_2003"
+        ],
+        "forbidden_case_ids": [
+          "watch_case:984ad1fbe4fccd063a02ef05642a5e0e",
+          "watch_case:95e998f71804e65a11e431edef339c88",
+          "watch_case:507e4ce25c454cf44538e549ebcc1135",
+          "watch_case:f9f15b94301f9589a5b8d18af5c2043f",
+          "watch_case:e4c0abd4fe985bf3f987b1fe384e5f60",
+          "watch_case:1de3a75088d9173da1c251662bb979ff",
+          "watch_case:f346fc89d3230792b804c38ba55807f5",
+          "watch_case:aadacaffc586952fa236508eddaaab27",
+          "watch_case:09c9a3184e5c349c1801570c5d03f41e",
+          "watch_case:ac53bbb787fb99f6d4ef8fa6c5c4e244"
+        ],
+        "reason": "This planned canary graph/vector artifact only contains provisional Marcus candidates."
+      },
+      "acceptance": {
+        "requires_no_forbidden_case_ids": true,
+        "requires_no_wrong_entity_promotion": true
+      }
+    }
+  ],
+  "proof_requirements": {
+    "live_http_required": true,
+    "memory_base_url": "http://127.0.0.1:8601",
+    "read_response_key": "items",
+    "forbidden_response_key_dependency": "results",
+    "direct_qdrant_or_arango_answer_allowed": false,
+    "answer_claim_requires_recall_artifact": true
+  },
+  "expected_written_state_before_running": {
+    "graph_vector_plan_write_status": "PLANNED_NOT_WRITTEN",
+    "requires_arango_write_receipts": true,
+    "requires_qdrant_write_receipts_for_dense_scores": true
+  },
+  "proof_scope": [
+    "recall_probe_contract",
+    "planned_not_queried"
+  ],
+  "claims": {
+    "proves": [
+      "Watch recall proof must be question-shaped and use /recall items",
+      "Expected asset/entity/time constraints are explicit before live recall",
+      "Direct Qdrant or Arango answer paths remain forbidden"
+    ],
+    "does_not_prove": [
+      "$memory recall success",
+      "Arango write success",
+      "Qdrant write success",
+      "supported character identity"
+    ]
+  }
+}

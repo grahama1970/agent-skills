@@ -29,6 +29,7 @@ IDENTITY_EVIDENCE_SCHEMA = "watch.identity_evidence.v1"
 MEMORY_TRACE_SCHEMA = "watch.memory_trace_write_plan.v1"
 LIVE_TRACKING_MEMORY_WINDOW_SCHEMA = "watch.live_tracking_memory_window_plan.v1"
 GRAPH_VECTOR_PERSISTENCE_SCHEMA = "watch.graph_vector_persistence_plan.v1"
+MEMORY_RECALL_VERIFICATION_SCHEMA = "watch.memory_recall_verification_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -764,6 +765,155 @@ def build_graph_vector_persistence_plan(live_window_plan: Mapping[str, Any]) -> 
     }
     _assert_no_raw_vectors(plan)
     return plan
+
+
+def build_memory_recall_verification_plan(graph_vector_plan: Mapping[str, Any]) -> Dict[str, Any]:
+    """Build planned $memory recall probes for Watch graph/vector persistence.
+
+    This is not a recall result. It is the deterministic proof contract that a
+    later live `/intent` + `/recall` run must satisfy before Watch can claim
+    that entity/time retrieval works.
+    """
+
+    if graph_vector_plan.get("schema") != GRAPH_VECTOR_PERSISTENCE_SCHEMA:
+        raise ValueError(f"unsupported graph/vector plan schema: {graph_vector_plan.get('schema')!r}")
+
+    asset = copy.deepcopy(dict(graph_vector_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    title = asset.get("title") or asset_id
+    arango_collections = ((graph_vector_plan.get("arango_plan") or {}).get("collections") or {})
+    cases = arango_collections.get("watch_evidence_cases") or []
+    identity_evidence = arango_collections.get("watch_identity_evidence") or []
+    observations = arango_collections.get("watch_track_observations") or []
+
+    entity_ids = sorted({
+        entity_id
+        for case in cases
+        for entity_id in ((case.get("case_anchor") or {}).get("entity_ids") or [])
+        if entity_id
+    })
+    primary_entity_id = entity_ids[0] if entity_ids else None
+    primary_entity_name = None
+    for evidence in identity_evidence:
+        if evidence.get("entity_id") == primary_entity_id:
+            primary_entity_name = evidence.get("entity_name")
+            break
+    primary_entity_name = primary_entity_name or primary_entity_id or "tracked entity"
+
+    all_case_ids = [case.get("case_id") for case in cases if case.get("case_id")]
+    all_segment_ids = sorted({obs.get("segment_id") for obs in observations if obs.get("segment_id")})
+    all_time_ranges = [
+        (case.get("case_anchor") or {}).get("time_range")
+        for case in cases
+        if (case.get("case_anchor") or {}).get("time_range")
+    ]
+    start_ms = min((int(r.get("start_ms", 0)) for r in all_time_ranges), default=0)
+    end_ms = max((int(r.get("end_ms", 0)) for r in all_time_ranges), default=start_ms)
+
+    recall_requests = []
+    if primary_entity_id:
+        recall_requests.append({
+            "request_id": stable_id("watch_recall_probe", {
+                "asset_id": asset_id,
+                "entity_id": primary_entity_id,
+                "kind": "entity_segments",
+            }),
+            "kind": "entity_segments",
+            "route": ["intent", "extract_entities", "recall"],
+            "http": {
+                "method": "POST",
+                "path": "/recall",
+                "body": {
+                    "q": f"Which Watch evidence cases or movie segments contain {primary_entity_name} in {title}?",
+                    "collections": ["watch_evidence_cases", "watch_identity_evidence", "watch_track_observations"],
+                    "k": 10,
+                },
+            },
+            "expected_constraints": {
+                "asset_id": asset_id,
+                "entity_id": primary_entity_id,
+                "min_case_count": len(all_case_ids),
+                "expected_case_ids": all_case_ids,
+                "expected_segment_ids": all_segment_ids,
+                "time_range_ms": {"start_ms": start_ms, "end_ms": end_ms},
+            },
+            "acceptance": {
+                "requires_found": True,
+                "requires_items_key": True,
+                "requires_no_results_key_dependency": True,
+                "requires_expected_asset": True,
+                "requires_expected_entity": True,
+                "requires_scores": ["bm25", "dense"],
+                "dense_score_may_be_zero_until_qdrant_written": True,
+            },
+        })
+
+    recall_requests.append({
+        "request_id": stable_id("watch_recall_probe", {
+            "asset_id": asset_id,
+            "kind": "negative_entity_control",
+        }),
+        "kind": "negative_entity_control",
+        "route": ["intent", "extract_entities", "recall"],
+        "http": {
+            "method": "POST",
+            "path": "/recall",
+            "body": {
+                "q": f"Which Watch evidence cases contain Willie in {title} for this planned Marcus canary window?",
+                "collections": ["watch_evidence_cases", "watch_identity_evidence", "watch_track_observations"],
+                "k": 10,
+            },
+        },
+        "expected_constraints": {
+            "asset_id": asset_id,
+            "forbidden_entity_ids": ["movie_domain_entities/willie_bad_santa_2003"],
+            "forbidden_case_ids": all_case_ids,
+            "reason": "This planned canary graph/vector artifact only contains provisional Marcus candidates.",
+        },
+        "acceptance": {
+            "requires_no_forbidden_case_ids": True,
+            "requires_no_wrong_entity_promotion": True,
+        },
+    })
+
+    return {
+        "schema": MEMORY_RECALL_VERIFICATION_SCHEMA,
+        "verification_status": "PLANNED_NOT_QUERIED",
+        "asset": asset,
+        "source_graph_vector_plan_schema": graph_vector_plan.get("schema"),
+        "memory_pipeline": ["intent", "extract_entities", "recall", "create_evidence_case", "answer", "clarify", "deflect"],
+        "recall_requests": recall_requests,
+        "proof_requirements": {
+            "live_http_required": True,
+            "memory_base_url": "http://127.0.0.1:8601",
+            "read_response_key": "items",
+            "forbidden_response_key_dependency": "results",
+            "direct_qdrant_or_arango_answer_allowed": False,
+            "answer_claim_requires_recall_artifact": True,
+        },
+        "expected_written_state_before_running": {
+            "graph_vector_plan_write_status": graph_vector_plan.get("write_status"),
+            "requires_arango_write_receipts": True,
+            "requires_qdrant_write_receipts_for_dense_scores": True,
+        },
+        "proof_scope": [
+            "recall_probe_contract",
+            "planned_not_queried",
+        ],
+        "claims": {
+            "proves": [
+                "Watch recall proof must be question-shaped and use /recall items",
+                "Expected asset/entity/time constraints are explicit before live recall",
+                "Direct Qdrant or Arango answer paths remain forbidden",
+            ],
+            "does_not_prove": [
+                "$memory recall success",
+                "Arango write success",
+                "Qdrant write success",
+                "supported character identity",
+            ],
+        },
+    }
 
 
 def identity_promotion_errors(identity_evidence: Mapping[str, Any]) -> List[str]:

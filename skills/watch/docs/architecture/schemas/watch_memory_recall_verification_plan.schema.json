@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_memory_recall_verification_plan.schema.json",
+  "title": "Watch Memory Recall Verification Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "verification_status",
+    "asset",
+    "memory_pipeline",
+    "recall_requests",
+    "proof_requirements",
+    "expected_written_state_before_running",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.memory_recall_verification_plan.v1"
+    },
+    "verification_status": {
+      "const": "PLANNED_NOT_QUERIED"
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "memory_pipeline": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "intent",
+          "extract_entities",
+          "recall",
+          "create_evidence_case",
+          "answer",
+          "clarify",
+          "deflect"
+        ]
+      },
+      "contains": {
+        "const": "recall"
+      }
+    },
+    "recall_requests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "kind",
+          "route",
+          "http",
+          "expected_constraints",
+          "acceptance"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^watch_recall_probe:"
+          },
+          "kind": {
+            "enum": [
+              "entity_segments",
+              "negative_entity_control"
+            ]
+          },
+          "route": {
+            "type": "array",
+            "contains": {
+              "const": "recall"
+            }
+          },
+          "http": {
+            "type": "object",
+            "required": ["method", "path", "body"],
+            "properties": {
+              "method": {
+                "const": "POST"
+              },
+              "path": {
+                "const": "/recall"
+              },
+              "body": {
+                "type": "object",
+                "required": ["q", "collections", "k"],
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "minLength": 20
+                  },
+                  "collections": {
+                    "type": "array",
+                    "contains": {
+                      "const": "watch_evidence_cases"
+                    }
+                  },
+                  "k": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "proof_requirements": {
+      "type": "object",
+      "required": [
+        "live_http_required",
+        "memory_base_url",
+        "read_response_key",
+        "forbidden_response_key_dependency",
+        "direct_qdrant_or_arango_answer_allowed",
+        "answer_claim_requires_recall_artifact"
+      ],
+      "properties": {
+        "live_http_required": {
+          "const": true
+        },
+        "memory_base_url": {
+          "const": "http://127.0.0.1:8601"
+        },
+        "read_response_key": {
+          "const": "items"
+        },
+        "forbidden_response_key_dependency": {
+          "const": "results"
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        },
+        "answer_claim_requires_recall_artifact": {
+          "const": true
+        }
+      }
+    },
+    "expected_written_state_before_running": {
+      "type": "object",
+      "required": [
+        "requires_arango_write_receipts",
+        "requires_qdrant_write_receipts_for_dense_scores"
+      ],
+      "properties": {
+        "requires_arango_write_receipts": {
+          "const": true
+        },
+        "requires_qdrant_write_receipts_for_dense_scores": {
+          "const": true
+        }
+      }
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "planned_not_queried"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}

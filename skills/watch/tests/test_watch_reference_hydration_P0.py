@@ -16,6 +16,7 @@ from watch_reference_hydration import (
     STATE_REFERENCE_PACKAGE_MISSING,
     build_graph_vector_persistence_plan,
     build_live_tracking_memory_window_plan,
+    build_memory_recall_verification_plan,
     build_memory_trace_plan,
     build_reference_hydration_plan,
     load_json,
@@ -170,3 +171,42 @@ def test_live_windows_shape_graph_and_vector_persistence_without_raw_vectors() -
         not any(key in point for key in ("embedding", "embeddings", "vector", "vectors"))
         for point in point_plans
     )
+
+
+def test_graph_vector_plan_builds_question_shaped_memory_recall_contract() -> None:
+    graph_vector_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_graph_vector_persistence_plan"
+        / "watch_graph_vector_persistence_plan.bad_santa_marcus.json"
+    )
+    plan = build_memory_recall_verification_plan(graph_vector_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_memory_recall_verification_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.memory_recall_verification_plan.v1"
+    assert plan["verification_status"] == "PLANNED_NOT_QUERIED"
+    assert plan["proof_requirements"]["read_response_key"] == "items"
+    assert plan["proof_requirements"]["forbidden_response_key_dependency"] == "results"
+    assert plan["proof_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+
+    requests = plan["recall_requests"]
+    assert {request["kind"] for request in requests} == {"entity_segments", "negative_entity_control"}
+    entity_request = next(request for request in requests if request["kind"] == "entity_segments")
+    assert entity_request["http"]["path"] == "/recall"
+    assert "Which Watch evidence cases or movie segments contain" in entity_request["http"]["body"]["q"]
+    assert "watch_evidence_cases" in entity_request["http"]["body"]["collections"]
+    assert entity_request["expected_constraints"]["min_case_count"] == 10
+    assert len(entity_request["expected_constraints"]["expected_case_ids"]) == 10
+
+    negative = next(request for request in requests if request["kind"] == "negative_entity_control")
+    assert "movie_domain_entities/willie_bad_santa_2003" in negative["expected_constraints"]["forbidden_entity_ids"]
+    assert negative["acceptance"]["requires_no_wrong_entity_promotion"] is True

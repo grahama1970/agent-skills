@@ -37,6 +37,8 @@ not scene truth.
 | `build_watch_live_tracking_memory_window_plan.py` | Harness added | Collapses live tracker JSONL into recall-gated memory trace plans |
 | `watch_graph_vector_persistence_plan.schema.json` | Contract added | Planned Arango graph metadata and Qdrant point plans without raw vectors |
 | `build_watch_graph_vector_persistence_plan.py` | Harness added | Converts bounded live windows into graph/vector persistence plans |
+| `watch_memory_recall_verification_plan.schema.json` | Contract added | Planned `$memory recall` proof requests and acceptance constraints |
+| `build_watch_memory_recall_verification_plan.py` | Harness added | Converts graph/vector plans into question-shaped recall probes |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -215,6 +217,29 @@ Current canary proof:
 - Boundary: this proves persistence shape only. It does not prove Arango writes,
   Qdrant writes, `$memory recall`, or supported identity. Arango documents store
   Qdrant pointers only; raw vectors are forbidden.
+
+### Phase 2.7: Planned Memory Recall Verification
+
+Goal: define the exact `$memory recall` proof that must pass before Watch can
+answer entity/time queries from the graph/vector records.
+
+Runtime path:
+
+```text
+watch.graph_vector_persistence_plan.v1
+  -> question-shaped /recall probes
+  -> expected asset/entity/time/case constraints
+  -> negative-control probe for wrong entity promotion
+  -> live response must use items, not results
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_memory_recall_verification_plan.py --graph-vector-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_graph_vector_persistence_plan/watch_graph_vector_persistence_plan.bad_santa_marcus.json --out /tmp/watch-memory-recall-verification-plan.json`
+- Expected output: `memory_recall_verification_plan_ok 2 requests status=PLANNED_NOT_QUERIED`
+- Schema: `skills/watch/docs/architecture/schemas/watch_memory_recall_verification_plan.schema.json`
+- Boundary: this proves the recall proof contract only. It does not prove live
+  memory recall, Arango writes, Qdrant writes, or supported identity.
 
 ### Phase 3: Verification and Bounded Observation
 
