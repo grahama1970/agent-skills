@@ -88,6 +88,7 @@ Runtime path:
 video/stream source
   -> Ultralytics YOLO person/object detection
   -> ByteTrack track IDs
+  -> 5fps Watch event sampling/throttle
   -> watch.live_track_update.v1 events
   -> browser/player overlay and active row sync
 ```
@@ -97,10 +98,14 @@ Output:
 - JSONL event stream with `stream_id`, `asset_uid`, `segment_id`,
   `media_time_seconds`, `track_id`, `bbox_xyxy`, `detected_class`,
   `candidate_entities`, and `status`.
+- The default live canary event cadence is 5fps (`--sample-fps 5`). The tracker
+  may process source video internally, but Watch emits and verifies track events
+  at this cadence before any bounded observation is persisted.
 
 Acceptance evidence:
 
-- `track_yolo_bytetrack.py` runs against a real clip or stream source.
+- `track_yolo_bytetrack.py --sample-fps 5` runs against a real clip or stream
+  source with the `tracking` extra installed.
 - Event JSONL validates against `watch_track_observations.schema.json`
   `live_track_update_event`.
 - UI modal/table overlay uses actual event bbox data, not a hard-coded region.
@@ -239,27 +244,27 @@ there, but only stream evidence can support what is visible at a specific time.
 
 ## Next Legal Implementation Move
 
-1. Run `track_yolo_bytetrack.py` against the Bad Santa 02:48-03:12 clip with the
-   `tracking` extra installed.
-2. Validate emitted JSONL against the live event schema.
-3. Replace the current modal placeholder bbox with event-derived bbox data.
+1. Install the `tracking` extra in a controlled runtime.
+2. Run `track_yolo_bytetrack.py --sample-fps 5` against the Bad Santa
+   02:48-03:12 clip or an equivalent local stream source.
+3. Validate emitted JSONL against the live event schema.
+4. Build a UI overlay payload from the live JSONL and repeat positive/negative
+   modal proofs against the loaded Watch API/static report artifact.
    - Dry-run adapter exists:
      `scripts/build_tracking_overlay_payload.py`
    - Payload schema and validator exist:
      `docs/architecture/watch_ui_overlay_payload.schema.json` and
      `scripts/validate_watch_overlay_payload.py`
-   - Current dry-run payload:
-     `docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json`
-   - Local UI consumption inspection:
+   - Loaded dry-run UI consumption inspection:
      `docs/architecture/watch_ui_overlay_payload_consumption.inspection.md`
-   - This proves event-to-overlay geometry only; the production UI still needs
-     to load this payload from a Watch API/static report artifact or consume
-     live stream events instead of carrying an inline fixture.
-4. With human approval, post the already generated `/upsert` payloads to memory.
-5. Run recall proof queries:
+   - This still proves event-to-overlay geometry only until the source JSONL is
+     produced by live YOLO/ByteTrack.
+5. With human approval, post the already generated `/upsert` payloads to memory
+   or regenerate them from the live event log.
+6. Run recall proof queries:
    - "find all movie segments with Marcus"
    - "find all movie segments with Willie"
-6. Record the proof artifacts and update the inspection status.
+7. Record the proof artifacts and update the inspection status.
 
 ## Explicit Non-Completion
 
