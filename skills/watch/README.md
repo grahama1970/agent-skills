@@ -4,7 +4,7 @@
   <img
     src="docs/assets/watch-banner.jpg"
     alt="excited vintage robot labeled WATCH sitting on a couch and watching television in a colorful retro living room"
-    width="100%" style="max-width:800px;height:auto"
+    style="max-width: 100%; height: auto; display: block;"
   />
 </p>
 
@@ -21,8 +21,8 @@ local reports you can inspect, plus memory records that `/memory/recall` can use
 later.
 
 ![Watch UI — Divergence Intelligence](docs/assets/watch-ui-screenshot.png)
-*Watch UI showing the Edge of Tomorrow divergence report with [!] SANITIZED,
-[+] HIDDEN, and [?] OCCLUDED chips, forensic summary sidebar, and scene browser.*
+*Watch UI showing the current forensic asset library, scene table, memory-pipeline
+agent rail, inline movie segment playback, and domain-linked character markers.*
 
 Use it for work like:
 
@@ -31,10 +31,68 @@ Use it for work like:
 - "Summarize this Zoom recording, including when the shared slides change."
 - "Extract key visual scenes from this movie clip."
 - "Index this screen recording so another agent can ask about it later."
+- "Track which movie character or field asset appears in each segment, while streaming provisional labels live and persisting bounded observations to memory."
 
 Agents and project skills should read [`SKILL.md`](SKILL.md) for the invocation
 contract, output schemas, memory records, and error behavior. This README is for
 humans installing, running, and debugging `watch`.
+
+## Real-Time Tracking Direction
+
+Watch is evolving from a single-video memory tool into a multi-asset evidence
+stream console. Movies are the controlled test case. The target architecture also
+supports streamed sources such as drone feeds, RTSP cameras, web videos, and
+telemetry-aligned operational footage.
+
+The tracking contract is:
+
+```text
+live tracking is streamed
+bounded observations and cases are stored to memory
+```
+
+The practical starting stack is:
+
+- Ultralytics YOLO for person/object detection
+- ByteTrack or DeepSORT for frame-to-frame track continuity
+- OpenCV for local media I/O, sampling, and overlay plumbing
+- optional face/person re-identification embeddings for character candidates
+- `$brave-search` for actor/character domain seeding
+- `$memory` plus Qdrant/Jina multimodal embeddings for durable recall
+
+Brave Search and movie-domain memory provide domain priors, not scene truth. For
+example, Brave can seed `Tony Cox -> Marcus` for *Bad Santa*, but the Watch row
+still needs frame, clip, transcript, or tracking evidence before answering that
+Marcus appears in a specific segment.
+
+See:
+
+- [`docs/architecture/watch_realtime_character_tracking_contract.md`](docs/architecture/watch_realtime_character_tracking_contract.md)
+- [`docs/architecture/watch_realtime_character_tracking_inspection.md`](docs/architecture/watch_realtime_character_tracking_inspection.md)
+- [`docs/architecture/watch_track_observations.schema.json`](docs/architecture/watch_track_observations.schema.json)
+- [`docs/architecture/watch_track_observation.bad_santa_marcus.sample.json`](docs/architecture/watch_track_observation.bad_santa_marcus.sample.json)
+- [`docs/architecture/watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json`](docs/architecture/watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json)
+- [`docs/architecture/watch_realtime_tracking_memory_upsert_manifest.inspection.md`](docs/architecture/watch_realtime_tracking_memory_upsert_manifest.inspection.md)
+- [`docs/architecture/watch_tracker_event_log.bad_santa_marcus.fixture.jsonl`](docs/architecture/watch_tracker_event_log.bad_santa_marcus.fixture.jsonl)
+- [`docs/architecture/watch_tracker_event_log.bad_santa_marcus.inspection.md`](docs/architecture/watch_tracker_event_log.bad_santa_marcus.inspection.md)
+- [`scripts/build_realtime_tracking_upsert_payloads.py`](scripts/build_realtime_tracking_upsert_payloads.py)
+- [`docs/architecture/watch_realtime_tracking_upsert_payloads.inspection.md`](docs/architecture/watch_realtime_tracking_upsert_payloads.inspection.md)
+- [`docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/summary.json`](docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/summary.json)
+- [`scripts/build_realtime_tracking_event_log.py`](scripts/build_realtime_tracking_event_log.py)
+- [`docs/architecture/watch_realtime_tracking_frame_harness.inspection.md`](docs/architecture/watch_realtime_tracking_frame_harness.inspection.md)
+- [`docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json`](docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json)
+- [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
+- [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
+
+For live character/asset tracking, install the optional tracking dependencies:
+
+```bash
+uv pip install -e '.[tracking]'
+```
+
+This adds Ultralytics YOLO and OpenCV for the `track_yolo_bytetrack.py` adapter.
+The adapter emits provisional live-track events only; identity verification and
+memory persistence remain separate Watch Agent steps.
 
 ## Quickstart
 

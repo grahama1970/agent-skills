@@ -10,4 +10,11 @@ dependencies = [
     "typer",
     "pillow",
     "faster-whisper",
+    "jsonschema",
+]
+
+[project.optional-dependencies]
+tracking = [
+    "ultralytics",
+    "opencv-python",
 ]

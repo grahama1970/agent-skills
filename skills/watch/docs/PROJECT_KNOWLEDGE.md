@@ -8,6 +8,22 @@
   - `persona_memory` — "Embry watched Movie Title" record with `persona_id`, `answer_text`, `retrieval_text`, `watch_history` tag
 - **Whisper:** Dedicated Docker container `hwdsl2/whisper-server:cuda` on port 9000 (GPU-accelerated). Falls back to local faster-whisper on CPU only when Docker is unreachable.
 
+## Real-Time Entity Tracking Direction
+
+- **Strategic purpose:** Watch is the test bed for managing many evidence streams in an area of operations. Movies are the controlled canary; the destination includes drone, telemetry, industrial, web, RTSP, and other streamed evidence sources.
+- **Core boundary:** live ML tracking is streamed to the player/table, while `$memory` stores bounded segment observations, domain entities, graph edges, Qdrant pointers, overlays, and evidence cases. Do not write every frame to memory.
+- **Initial ML stack:** use Ultralytics YOLO for person/object detection, ByteTrack or DeepSORT for stable track IDs, OpenCV for media I/O/sampling/overlay, and optional face/person re-identification embeddings for character candidates.
+- **Domain hydration:** use `$brave-search` to seed movie-domain actor/character priors such as `Tony Cox -> Marcus` and `Billy Bob Thornton -> Willie`. Brave/domain memory can corroborate public cast facts, but cannot override extracted frame/clip/transcript evidence.
+- **Persistence contract:** Qdrant/Jina multimodal embeddings store vectors for representative frames, crops, transcript chunks, and audio/text evidence. Arango/memory stores metadata, source pointers, graph edges, and case/overlay records.
+- **Case trigger:** create `watch_evidence_cases` only when a claim needs durable anchoring, such as visual-track/SRT/Whisper/domain conflicts, telemetry-vs-visual mismatches, operator isolate actions, or unresolved identity evidence.
+- **Chat UX:** the `$memory` pipeline belongs in Watch Agent dynamic thinking/status, not in the Library ingest panel. Expected stages are `/intent`, `extract entities`, `/recall`, `create evidence case` when needed, and `/answer | /clarify | /deflect`.
+- **Current contract artifacts:** `docs/architecture/watch_realtime_character_tracking_contract.md` records the candidate architecture; `docs/architecture/watch_track_observations.schema.json` and `docs/architecture/watch_track_observation.bad_santa_marcus.sample.json` define the first bounded track-observation canary. `docs/architecture/watch_realtime_character_tracking_inspection.md` remains `REVISE` until memory upsert/recall proof and a live playback tracker log exist.
+- **Dry-run memory plan:** `docs/architecture/watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json` is the first accepted dry-run manifest for the Bad Santa Marcus canary. It prepares one movie-domain entity, one bounded track observation, one evidence case, three graph edges, Qdrant pointer metadata, rollback keys, and recall-proof queries without executing memory or vector writes.
+- **Tracker event fixture:** `docs/architecture/watch_tracker_event_log.bad_santa_marcus.fixture.jsonl` is the first accepted deterministic live-event fixture. It contains three provisional `watch.live_track_update.v1` events for `track_07` over 02:48-03:12 and feeds the dry-run manifest without claiming live YOLO/ByteTrack runtime proof.
+- **Dry-run upsert payloads:** `scripts/build_realtime_tracking_upsert_payloads.py` reads the accepted manifest plus tracker JSONL fixture and emits concrete `/upsert` request bodies under `docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/` without posting. This proves payload shape only; live memory writes and recall remain gated.
+- **Frame-backed event harness:** `scripts/build_realtime_tracking_event_log.py` reads the accepted manifest frame and emits schema-valid `watch.live_track_update.v1` JSONL under `docs/architecture/generated/bad_santa_marcus_0248_tracker_events/`. It is deterministic harness output, not YOLO/ByteTrack or identity proof.
+- **YOLO/ByteTrack adapter:** `scripts/track_yolo_bytetrack.py` maps Ultralytics `model.track(..., tracker="bytetrack.yaml", stream=True)` output into the same `watch.live_track_update.v1` JSONL contract. `ultralytics` is provided through the `tracking` extra in `pyproject.toml`; local inspection currently proves mapper/schema wiring with fake results, not live inference.
+
 ## Subtitle Sourcing
 
 **Correctness hierarchy:**
