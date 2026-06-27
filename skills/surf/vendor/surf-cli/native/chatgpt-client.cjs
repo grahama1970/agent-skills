@@ -1,7 +1,11 @@
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
@@ -19,13 +23,41 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function wakeBackgroundTab(inputCdp, log) {
-  if (!inputCdp) return;
+const BACKGROUND_WAKE_EVERY_POLLS = 5;
+
+async function wakeBackgroundTab(inputCdp, log, reason = "poll") {
+  if (!inputCdp) return false;
   try {
     await inputCdp("Page.setWebLifecycleState", { state: "active" });
-    log?.("Background tab lifecycle set to active for DOM polling");
+    log?.(`Background tab lifecycle set to active (${reason})`);
+    return true;
   } catch (err) {
-    log?.(`Page.setWebLifecycleState skipped: ${err?.message || err}`);
+    log?.(`Page.setWebLifecycleState skipped (${reason}): ${err?.message || err}`);
+    return false;
+  }
+}
+
+async function nudgeBackgroundRendering(cdp, inputCdp, log, reason = "poll") {
+  await wakeBackgroundTab(inputCdp, log, reason);
+  try {
+    await evaluate(
+      cdp,
+      `(() => {
+        try {
+          document.dispatchEvent(new Event('visibilitychange'));
+          if (typeof document.onvisibilitychange === 'function') {
+            document.onvisibilitychange(new Event('visibilitychange'));
+          }
+        } catch (_) {}
+        return {
+          documentHidden: document.hidden === true,
+          visibilityState: document.visibilityState || null,
+          documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
+        };
+      })()`,
+    );
+  } catch (err) {
+    log?.(`Background render nudge skipped (${reason}): ${err?.message || err}`);
   }
 }
 
@@ -83,15 +115,121 @@ function withTimeout(promise, timeoutMs, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-const assistantSnapshotExpression = (sentinel) => {
+function isoNow() {
+  return new Date().toISOString();
+}
+
+function sha256Text(text) {
+  return crypto.createHash("sha256").update(text || "", "utf8").digest("hex");
+}
+
+function tailExcerpt(text, maxChars = 700) {
+  const value = String(text || "");
+  if (value.length <= maxChars) return value;
+  return value.slice(value.length - maxChars);
+}
+
+function heartbeatEventsPath(heartbeatFile) {
+  if (!heartbeatFile) return null;
+  const parsed = path.parse(String(heartbeatFile));
+  return path.join(parsed.dir, `${parsed.name}.events.jsonl`);
+}
+
+function writeAssistantHeartbeat(heartbeatFile, event) {
+  if (!heartbeatFile) return;
+  try {
+    const file = String(heartbeatFile);
+    const dir = path.dirname(file);
+    fs.mkdirSync(dir, { recursive: true });
+    const existing = fs.existsSync(file)
+      ? JSON.parse(fs.readFileSync(file, "utf8"))
+      : {};
+    const assistantText = String(event.assistantText || "");
+    const observedAt = isoNow();
+    const assistant = {
+      observed_at: observedAt,
+      changed_at: event.changedAtIso || null,
+      poll_count: event.pollCount,
+      message_chars: assistantText.length,
+      message_sha256: sha256Text(assistantText),
+      tail_excerpt: tailExcerpt(assistantText),
+      sentinel_seen: event.sentinelSeen === true,
+      page_sentinel_seen: event.pageSentinelSeen === true,
+      stable_poll_count: event.stableCycles,
+      required_stable_polls: event.requiredStableCycles,
+      stable_ms: event.stableMs,
+      message_id: event.messageId || null,
+      turn_index: Number.isFinite(event.turnIndex) ? event.turnIndex : null,
+      source: event.source || null,
+      stop_visible: event.stopVisible === true,
+      finished_actions_visible: event.finished === true,
+      document_hidden: event.documentHidden === true,
+      visibility_state: event.visibilityState || null,
+      background_hidden_polls: event.hiddenPolls || 0,
+      hidden_recovery_used: event.hiddenRecoveryUsed === true,
+    };
+    const payload = {
+      ...existing,
+      schema: existing.schema || "surf.webgpt_heartbeat.v1",
+      stream_schema: "surf.webgpt_assistant_stream.v1",
+      updated_at: observedAt,
+      last_browser_observation_at: observedAt,
+      phase: event.phase || existing.phase || "generating",
+      page_state: event.pageState || existing.page_state || "waiting_for_sentinel",
+      assistant_message_chars: assistant.message_chars,
+      assistant_message_sha256: assistant.message_sha256,
+      assistant_tail_excerpt: assistant.tail_excerpt,
+      assistant_last_changed_at: assistant.changed_at,
+      assistant_sentinel_seen: assistant.sentinel_seen,
+      assistant_page_sentinel_seen: assistant.page_sentinel_seen,
+      assistant_stable_poll_count: assistant.stable_poll_count,
+      assistant_required_stable_polls: assistant.required_stable_polls,
+      assistant_stable_ms: assistant.stable_ms,
+      assistant_message_id: assistant.message_id,
+      assistant_turn_index: assistant.turn_index,
+      assistant_source: assistant.source,
+      assistant_stop_visible: assistant.stop_visible,
+      assistant_finished_actions_visible: assistant.finished_actions_visible,
+      assistant_document_hidden: assistant.document_hidden,
+      assistant_visibility_state: assistant.visibility_state,
+      assistant_background_hidden_polls: assistant.background_hidden_polls,
+      assistant_hidden_recovery_used: assistant.hidden_recovery_used,
+      assistant_observation: assistant,
+      assistant_event_log: heartbeatEventsPath(file),
+      prepared_prompt_is_transport_proof: false,
+    };
+    const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+    fs.renameSync(tmp, file);
+    const eventPath = heartbeatEventsPath(file);
+    if (eventPath) {
+      const eventPayload = {
+        schema: "surf.webgpt_assistant_stream_event.v1",
+        event: "assistant_snapshot",
+        observed_at: observedAt,
+        phase: payload.phase,
+        page_state: payload.page_state,
+        assistant,
+      };
+      fs.appendFileSync(eventPath, `${JSON.stringify(eventPayload)}\n`, "utf8");
+    }
+  } catch (_) {
+    // Heartbeat must never change WebGPT transport behavior or proof semantics.
+  }
+}
+
+const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
+  const baseline = Number.isFinite(baselineAssistantCount) && baselineAssistantCount >= 0
+    ? Math.floor(baselineAssistantCount)
+    : 0;
   const sentinelLiteral = JSON.stringify(sentinel || null);
   return `(() => {
+    const BASELINE = ${baseline};
     const SENTINEL = ${sentinelLiteral};
     const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
     const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
     const STOP_SELECTOR = '${SELECTORS.stopButton}';
     const FINISHED_SELECTOR = '${SELECTORS.finishedActions}';
-    const pageText = (document.body?.innerText || document.body?.textContent || '').trim();
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
@@ -102,28 +240,48 @@ const assistantSnapshotExpression = (sentinel) => {
     };
     const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
       .filter((node) => node instanceof HTMLElement);
-    const turns = directAssistantTurns.length
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
       ? directAssistantTurns
-      : Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-    let lastAssistantTurn = null;
-    for (let i = turns.length - 1; i >= 0; i--) {
-      if (isAssistantTurn(turns[i])) {
-        lastAssistantTurn = turns[i];
-        break;
-      }
-    }
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const newAssistantTurns = assistantTurns.slice(BASELINE);
+    let baselineFallback = false;
+    let lastAssistantTurn = newAssistantTurns.length
+      ? newAssistantTurns[newAssistantTurns.length - 1]
+      : null;
     const sentinelVariants = SENTINEL
       ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
       : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
-    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(pageText));
+    if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
+      // ChatGPT can mutate an already-counted assistant container after we capture the
+      // baseline. The per-submit sentinel is unique, so only fall back when that exact
+      // marker is present in an existing assistant turn.
+      for (let idx = assistantTurns.length - 1; idx >= 0; idx--) {
+        const candidate = assistantTurns[idx];
+        const candidateText = (candidate?.innerText || candidate?.textContent || '').trim();
+        if (findSentinel(candidateText)) {
+          lastAssistantTurn = candidate;
+          baselineFallback = true;
+          break;
+        }
+      }
+    }
+    const documentHidden = document.hidden === true;
+    const visibilityState = document.visibilityState || null;
+    const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
     if (!lastAssistantTurn) {
       return {
         text: '',
         stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
         finished: false,
-        source: 'no-assistant-turn',
-        pageTextContainsSentinel,
+        source: 'awaiting-assistant-turn',
+        pageTextContainsSentinel: false,
+        documentHidden,
+        visibilityState,
+        documentHasFocus,
+        baselineAssistantCount: BASELINE,
+        newAssistantTurnCount: 0,
       };
     }
     const messageRoot = lastAssistantTurn.querySelector(ASSISTANT_SELECTOR) || lastAssistantTurn;
@@ -146,13 +304,38 @@ const assistantSnapshotExpression = (sentinel) => {
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
     const messageId = messageRoot.getAttribute('data-message-id') || null;
-    return { text, stopVisible, finished, messageId, turnIndex: turns.length - 1, source: 'assistant-dom', pageTextContainsSentinel, sentinelMatch };
+    const turnTextForSentinel = turnText || contentText || '';
+    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(turnTextForSentinel));
+    let source = baselineFallback ? 'assistant-dom-baseline-fallback' : 'assistant-dom';
+    if (SENTINEL && pageTextContainsSentinel && !findSentinel(text)) {
+      const marker = findSentinel(turnTextForSentinel);
+      const idx = marker ? turnTextForSentinel.lastIndexOf(marker) : -1;
+      if (idx >= 0) {
+        text = turnTextForSentinel.slice(Math.max(0, idx - 12000), idx + marker.length).trim();
+        source = 'page-text-fallback';
+      }
+    }
+    return {
+      text,
+      stopVisible,
+      finished,
+      messageId,
+      turnIndex: assistantTurns.length - 1,
+      source,
+      pageTextContainsSentinel,
+      sentinelMatch,
+      documentHidden,
+      visibilityState,
+      documentHasFocus,
+      baselineAssistantCount: BASELINE,
+      newAssistantTurnCount: newAssistantTurns.length,
+    };
   })()`;
 };
 
-async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000) {
+async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000, baselineAssistantCount = 0) {
   return withTimeout(
-    evaluate(cdp, assistantSnapshotExpression(sentinel)),
+    evaluate(cdp, assistantSnapshotExpression(sentinel, baselineAssistantCount)),
     timeoutMs,
     "ChatGPT assistant DOM snapshot",
   );
@@ -228,6 +411,87 @@ async function waitForPromptReady(cdp, timeoutMs = 30000) {
     await delay(200);
   }
   return false;
+}
+
+async function assertReadyForNewPrompt(cdp) {
+  const state = await evaluate(
+    cdp,
+    `(() => {
+      const STOP_SELECTOR = '${SELECTORS.stopButton}';
+      const SEND_SELECTOR = '${SELECTORS.sendButton}';
+      const PROMPT_SELECTOR = '${SELECTORS.promptTextarea}';
+      const stop = document.querySelector(STOP_SELECTOR);
+      const send = document.querySelector(SEND_SELECTOR);
+      const prompt = document.querySelector(PROMPT_SELECTOR);
+      const promptText = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '').trim() : '';
+      const visibleText = (document.body?.innerText || '').slice(-4000);
+      const buttons = Array.from(document.querySelectorAll('button'))
+        .map((button) => ({
+          text: (button.innerText || button.textContent || '').trim(),
+          aria: (button.getAttribute('aria-label') || '').trim(),
+          testid: (button.getAttribute('data-testid') || '').trim(),
+          disabled: button.disabled ||
+            button.hasAttribute('disabled') ||
+            button.getAttribute('aria-disabled') === 'true' ||
+            button.getAttribute('data-disabled') === 'true',
+        }));
+      const activeStopButton = buttons.find((button) => {
+        const label = (button.text + ' ' + button.aria + ' ' + button.testid).toLowerCase();
+        return !button.disabled && (
+          label.includes('stop answering') ||
+          label.includes('stop generating') ||
+          label.includes('stop response') ||
+          button.testid === 'stop-button'
+        );
+      }) || null;
+      const stoppedThinkingCount = buttons.filter((button) => {
+        const label = (button.text + ' ' + button.aria).toLowerCase();
+        return label.includes('stopped thinking');
+      }).length;
+      const disabled = send
+        ? (send.hasAttribute('disabled') ||
+           send.getAttribute('aria-disabled') === 'true' ||
+           send.getAttribute('data-disabled') === 'true')
+        : null;
+      return {
+        stopVisible: Boolean(stop) || Boolean(activeStopButton),
+        activeStopLabel: activeStopButton ? (activeStopButton.text || activeStopButton.aria || activeStopButton.testid || null) : null,
+        stoppedThinkingCount,
+        sendPresent: Boolean(send),
+        sendDisabled: disabled,
+        promptPresent: Boolean(prompt),
+        promptChars: promptText.length,
+        promptPreview: promptText.slice(0, 200),
+        documentHidden: document.hidden === true,
+        visibilityState: document.visibilityState || null,
+        documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
+        tailContainsStoppedThinking: visibleText.toLowerCase().includes('stopped thinking'),
+        title: document.title || '',
+        url: location.href || '',
+      };
+    })()`
+  );
+  if (state?.stopVisible) {
+    const err = new Error("ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab");
+    err.chatgptPageState = state;
+    throw err;
+  }
+  if (!state?.promptPresent) {
+    const err = new Error("ChatGPT prompt composer not present before submit");
+    err.chatgptPageState = state || null;
+    throw err;
+  }
+  if (state?.promptChars > 0) {
+    const err = new Error("ChatGPT prompt composer is not empty before submit; clear the draft or use a fresh reviewer tab");
+    err.chatgptPageState = state;
+    throw err;
+  }
+  if (state?.stoppedThinkingCount > 0 || state?.tailContainsStoppedThinking) {
+    const err = new Error("ChatGPT page is in a stopped-generation state before submit; retry in a clean conversation or use a fresh reviewer tab");
+    err.chatgptPageState = state;
+    throw err;
+  }
+  return state;
 }
 
 async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
@@ -489,6 +753,8 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
 async function typePrompt(cdp, inputCdp, prompt) {
   const selectors = JSON.stringify(SELECTORS.promptTextarea.split(", "));
   const encodedPrompt = JSON.stringify(prompt);
+  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
+  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
   const focused = await evaluate(
     cdp,
     `(() => {
@@ -516,18 +782,80 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (!focused) {
     throw new Error("Failed to focus prompt textarea");
   }
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Control",
+    code: "ControlLeft",
+    windowsVirtualKeyCode: 17,
+    nativeVirtualKeyCode: 17,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Control",
+    code: "ControlLeft",
+    windowsVirtualKeyCode: 17,
+    nativeVirtualKeyCode: 17,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+  await delay(100);
   await inputCdp("Input.insertText", { text: prompt });
   await delay(300);
-  const verified = await evaluate(
+  let verified = await evaluate(
     cdp,
     `(() => {
       const selectors = ${selectors};
+      const promptStart = ${promptStart};
+      const promptEnd = ${promptEnd};
+      const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
+      const normalizedStart = normalize(promptStart);
+      const normalizedEnd = normalize(promptEnd);
+      const hasPrompt = (text) => {
+        const normalized = normalize(text);
+        return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
+      };
       for (const selector of selectors) {
         const node = document.querySelector(selector);
         if (!node) continue;
         const text = node.innerText || node.value || node.textContent || '';
-        if (text.trim().length > 0) return true;
+        if (hasPrompt(text)) return true;
       }
+      const active = document.activeElement;
+      const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
+      if (hasPrompt(activeText)) return true;
+      const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
+      const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
+      if (hasPrompt(activeFormText)) return true;
+      if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
       return false;
     })()`
   );
@@ -535,19 +863,88 @@ async function typePrompt(cdp, inputCdp, prompt) {
     await evaluate(
       cdp,
       `(() => {
-        const editor = document.querySelector('#prompt-textarea');
-        const fallback = document.querySelector('textarea[name="prompt-textarea"]');
-        if (fallback) {
-          fallback.value = ${encodedPrompt};
-          fallback.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+        const selectors = ${selectors};
+        for (const selector of selectors) {
+          const node = document.querySelector(selector);
+          if (!node) continue;
+          if ('value' in node) {
+            node.value = ${encodedPrompt};
+          } else {
+            node.textContent = ${encodedPrompt};
+          }
+          node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          return true;
         }
-        if (editor) {
-          editor.textContent = ${encodedPrompt};
-          editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+        return false;
+      })()`
+    );
+    await delay(300);
+    verified = await evaluate(
+      cdp,
+      `(() => {
+        const selectors = ${selectors};
+        const promptStart = ${promptStart};
+        const promptEnd = ${promptEnd};
+        const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
+        const normalizedStart = normalize(promptStart);
+        const normalizedEnd = normalize(promptEnd);
+        const hasPrompt = (text) => {
+          const normalized = normalize(text);
+          return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
+        };
+        for (const selector of selectors) {
+          const node = document.querySelector(selector);
+          if (!node) continue;
+          const text = node.innerText || node.value || node.textContent || '';
+          if (hasPrompt(text)) return true;
         }
+        const active = document.activeElement;
+        const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
+        if (hasPrompt(activeText)) return true;
+        const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
+        const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
+        if (hasPrompt(activeFormText)) return true;
+        if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
+        return false;
       })()`
     );
   }
+  if (!verified) {
+    throw new Error("Failed to replace ChatGPT prompt composer with submitted WebGPT request");
+  }
+}
+
+
+async function captureAssistantBaseline(cdp) {
+  const expr = `(() => {
+    const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
+    const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
+    const isAssistantTurn = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
+      if (role === 'assistant') return true;
+      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
+      if (turn === 'assistant') return true;
+      return Boolean(node.querySelector(ASSISTANT_SELECTOR));
+    };
+    const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
+      .filter((node) => node instanceof HTMLElement);
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
+      ? directAssistantTurns
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
+    return {
+      assistantCount: assistantTurns.length,
+      lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
+    };
+  })()`;
+  const value = await evaluate(cdp, expr);
+  return {
+    assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
+    lastMessageId: value?.lastMessageId || null,
+  };
 }
 
 async function clickSend(cdp, inputCdp) {
@@ -596,14 +993,53 @@ async function clickSend(cdp, inputCdp) {
   return true;
 }
 
+async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
+  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
+  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
+  const deadline = Date.now() + timeoutMs;
+  let lastState = null;
+  while (Date.now() < deadline) {
+    lastState = await evaluate(
+      cdp,
+      `(() => {
+        const STOP_SELECTOR = '${SELECTORS.stopButton}';
+        const PROMPT_SELECTOR = '${SELECTORS.promptTextarea}';
+        const promptStart = ${promptStart};
+        const promptEnd = ${promptEnd};
+        const prompt = document.querySelector(PROMPT_SELECTOR);
+        const text = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '') : '';
+        return {
+          stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
+          promptPresent: Boolean(prompt),
+          composerStillContainsPrompt: Boolean(text && text.includes(promptStart) && text.includes(promptEnd)),
+          composerChars: text.length,
+        };
+      })()`
+    );
+    if (lastState?.stopVisible || lastState?.composerStillContainsPrompt === false) {
+      return { accepted: true, ...lastState };
+    }
+    await delay(200);
+  }
+  const err = new Error("ChatGPT did not accept submitted prompt: prompt remained in the composer after send");
+  err.chatgptSubmitState = lastState || null;
+  throw err;
+}
+
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const sentinel = options.sentinel || null;
+  const baselineAssistantCount = Number.isFinite(options.baselineAssistantCount)
+    ? options.baselineAssistantCount
+    : 0;
   const noActivate = options.noActivate === true;
   const inputCdp = options.inputCdp || null;
   const log = options.log || (() => {});
-  if (noActivate) {
-    await wakeBackgroundTab(inputCdp, log);
-  }
+  const activateTabForRecovery = typeof options.activateTabForRecovery === "function"
+    ? options.activateTabForRecovery
+    : null;
+  const heartbeatFile = options.heartbeatFile || null;
+  const hiddenRecoveryPolls = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_POLLS || "25", 10);
+  const hiddenRecoveryIdleMs = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_IDLE_MS || "30000", 10);
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -613,10 +1049,23 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const minStableMs = 1200;
   let lastChangeAt = Date.now();
   let lastSnapshotError = null;
+  let pollCount = 0;
+  let hiddenPolls = 0;
+  let hiddenRecoveryUsed = false;
+  let lastVisibilityState = null;
+  let lastDocumentHidden = null;
+  let lastNonEmptySnapshot = null;
+  if (noActivate) {
+    await nudgeBackgroundRendering(cdp, inputCdp, log, "start");
+  }
   while (Date.now() < deadline) {
+    pollCount++;
+    if (noActivate && (pollCount === 1 || pollCount % BACKGROUND_WAKE_EVERY_POLLS === 0)) {
+      await nudgeBackgroundRendering(cdp, inputCdp, log, `poll-${pollCount}`);
+    }
     let snapshot;
     try {
-      snapshot = await assistantSnapshot(cdp, sentinel);
+      snapshot = await assistantSnapshot(cdp, sentinel, 12000, baselineAssistantCount);
       lastSnapshotError = null;
     } catch (err) {
       lastSnapshotError = err;
@@ -627,8 +1076,43 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       await delay(400);
       continue;
     }
+    if (snapshot.documentHidden === true) {
+      hiddenPolls++;
+      if (noActivate) {
+        await nudgeBackgroundRendering(cdp, inputCdp, log, `hidden-poll-${pollCount}`);
+        const idleMs = Date.now() - lastChangeAt;
+        const pageHasSentinelNow = sentinel ? snapshot.pageTextContainsSentinel === true : false;
+        const assistantHasSentinelNow = sentinel
+          ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
+          : false;
+        if (
+          !hiddenRecoveryUsed
+          && activateTabForRecovery
+          && hiddenPolls >= hiddenRecoveryPolls
+          && idleMs >= hiddenRecoveryIdleMs
+          && !assistantHasSentinelNow
+          && !pageHasSentinelNow
+        ) {
+          hiddenRecoveryUsed = true;
+          log(`Hidden-tab stall recovery: activating controlled tab after hidden_polls=${hiddenPolls} idle_ms=${idleMs}`);
+          try {
+            await activateTabForRecovery();
+            await delay(1500);
+            await nudgeBackgroundRendering(cdp, inputCdp, log, "post-activate-recovery");
+            lastChangeAt = Date.now();
+          } catch (err) {
+            log(`Hidden-tab stall recovery failed: ${err?.message || err}`);
+          }
+        }
+      }
+    }
+    lastVisibilityState = snapshot.visibilityState || null;
+    lastDocumentHidden = snapshot.documentHidden === true;
     const currentText = snapshot.text || "";
     const currentLength = currentText.length;
+    if (currentLength > 0) {
+      lastNonEmptySnapshot = { ...snapshot };
+    }
     if (currentText !== previousText) {
       previousText = currentText;
       stableCycles = 0;
@@ -637,13 +1121,37 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       stableCycles++;
     }
     const stableMs = Date.now() - lastChangeAt;
-    const hasSentinel = sentinel ? ((snapshot.text || "").includes(sentinel) || Boolean(snapshot.sentinelMatch)) : true;
+    const hasAssistantSentinel = sentinel
+      ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
+      : true;
     const pageHasSentinel = sentinel ? snapshot.pageTextContainsSentinel === true : false;
+    const hasSentinel = sentinel ? hasAssistantSentinel : true;
+    writeAssistantHeartbeat(heartbeatFile, {
+      phase: hasSentinel ? "sentinel_seen" : "generating",
+      pageState: hasSentinel ? "stabilizing_response" : "waiting_for_sentinel",
+      assistantText: currentText,
+      sentinelSeen: hasAssistantSentinel,
+      pageSentinelSeen: pageHasSentinel,
+      stableCycles,
+      requiredStableCycles,
+      stableMs,
+      changedAtIso: new Date(lastChangeAt).toISOString(),
+      messageId: snapshot.messageId,
+      turnIndex: snapshot.turnIndex,
+      source: snapshot.source,
+      stopVisible: snapshot.stopVisible,
+      finished: snapshot.finished,
+      documentHidden: snapshot.documentHidden,
+      visibilityState: snapshot.visibilityState,
+      hiddenPolls,
+      hiddenRecoveryUsed,
+      pollCount,
+    });
     // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
     // is focused, even after the assistant message is complete. In --no-activate mode we
-    // trust a stable assistant sentinel (or page-level sentinel) instead of stop-button absence.
+    // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
     const stopGateOk = !snapshot.stopVisible
-      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel));
+      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel || snapshot.source === 'page-text-fallback'));
     if (stopGateOk && hasSentinel) {
       const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
       const finishedVisible = snapshot.finished;
@@ -657,13 +1165,40 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
           hasSentinel,
           source: snapshot.source,
           pageTextContainsSentinel: snapshot.pageTextContainsSentinel,
+          documentHiddenAtCompletion: snapshot.documentHidden === true,
+          visibilityStateAtCompletion: snapshot.visibilityState || null,
+          backgroundHiddenPolls: hiddenPolls,
+          backgroundPollCount: pollCount,
+          hiddenRecoveryUsed,
         };
       }
     }
     await delay(400);
   }
   const detail = lastSnapshotError ? `; last snapshot error: ${lastSnapshotError.message}` : "";
-  throw new Error(`Response timeout${detail}`);
+  const hiddenDetail = noActivate
+    ? `; hidden_polls=${hiddenPolls}; last_visibility=${lastVisibilityState || "unknown"}; document_hidden=${lastDocumentHidden}`
+    : "";
+  const err = new Error(`Response timeout${hiddenDetail}${detail}`);
+  if (lastNonEmptySnapshot?.text) {
+    err.partialResponse = {
+      text: lastNonEmptySnapshot.text,
+      messageId: lastNonEmptySnapshot.messageId || null,
+      turnIndex: lastNonEmptySnapshot.turnIndex,
+      sentinel,
+      hasSentinel: false,
+      source: lastNonEmptySnapshot.source || "assistant-dom",
+      pageTextContainsSentinel: lastNonEmptySnapshot.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: lastNonEmptySnapshot.documentHidden === true,
+      visibilityStateAtCompletion: lastNonEmptySnapshot.visibilityState || null,
+      backgroundHiddenPolls: hiddenPolls,
+      backgroundPollCount: pollCount,
+      hiddenRecoveryUsed,
+      timeout: true,
+      timeoutError: err.message,
+    };
+  }
+  throw err;
 }
 
 async function extractAssistantResponse(options) {
@@ -689,6 +1224,8 @@ async function extractAssistantResponse(options) {
     sentinel: sentinel || null,
     hasSentinel,
     pageTextContainsSentinel: snapshot?.pageTextContainsSentinel === true,
+    documentHiddenAtCompletion: snapshot?.documentHidden === true,
+    visibilityStateAtCompletion: snapshot?.visibilityState || null,
     stopVisible: snapshot?.stopVisible === true,
     finished: snapshot?.finished === true,
     turnIndex: snapshot?.turnIndex,
@@ -706,6 +1243,7 @@ async function query(options) {
     stablePolls,
     keepTab = false,
     noActivate = false,
+    heartbeatFile = null,
     getCookies,
     createTab,
     closeTab,
@@ -726,6 +1264,17 @@ async function query(options) {
     throw new Error("Failed to create ChatGPT tab");
   }
   log(`Created tab ${tabId}`);
+  if (typeof options.pinControlledTab === "function") {
+    try {
+      await options.pinControlledTab(tabId);
+      log(`Pinned controlled tab ${tabId} (autoDiscardable=false)`);
+    } catch (err) {
+      log(`Pin controlled tab skipped: ${err?.message || err}`);
+    }
+  }
+  const activateTabForRecovery = noActivate && typeof options.activateTab === "function"
+    ? () => options.activateTab(tabId)
+    : null;
   
   const cdp = (expr) => cdpEvaluate(tabId, expr);
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
@@ -745,15 +1294,29 @@ async function query(options) {
     if (!promptReady) {
       throw new Error("Prompt textarea not ready");
     }
+    await assertReadyForNewPrompt(cdp);
     log("Prompt ready");
     if (model) {
       const selectedLabel = await selectModel(cdp, model);
       log(`Selected model: ${selectedLabel}`);
     }
     let selectedReasoning = null;
+    let reasoningSelectionStatus = reasoning ? "not_requested" : null;
+    let reasoningSelectionError = null;
     if (reasoning) {
-      selectedReasoning = await selectReasoning(cdp, reasoning);
-      log(`Selected reasoning: ${selectedReasoning}`);
+      reasoningSelectionStatus = "requested";
+      try {
+        selectedReasoning = await selectReasoning(cdp, reasoning);
+        reasoningSelectionStatus = "selected";
+        log(`Selected reasoning: ${selectedReasoning}`);
+      } catch (err) {
+        reasoningSelectionError = err?.message || String(err);
+        if (!reasoningSelectionError.includes("Reasoning selector button not found")) {
+          throw err;
+        }
+        reasoningSelectionStatus = "selector_unavailable";
+        log(`Reasoning selector unavailable for ${reasoning}; continuing with current ChatGPT setting`);
+      }
     }
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
@@ -761,15 +1324,45 @@ async function query(options) {
     }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
+    const assistantBaseline = await captureAssistantBaseline(cdp);
+    log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
+    const submitState = await waitForSubmitAccepted(cdp, prompt);
+    log(`Prompt accepted: sentinel=${sentinel || ''} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
-    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls, noActivate, inputCdp, log });
+    let response;
+    let responseTimedOut = false;
+    let timeoutError = null;
+    try {
+      response = await waitForResponse(cdp, timeout, {
+        sentinel,
+        stablePolls,
+        noActivate,
+        inputCdp,
+        log,
+        baselineAssistantCount: assistantBaseline.assistantCount,
+        activateTabForRecovery,
+        heartbeatFile,
+      });
+    } catch (err) {
+      if (!err.partialResponse?.text) {
+        throw err;
+      }
+      response = err.partialResponse;
+      responseTimedOut = true;
+      timeoutError = err.message;
+      log(`Response timed out; preserving partial assistant text (${response.text.length} chars)`);
+    }
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
       model: model || "current",
       reasoning: selectedReasoning || reasoning || null,
+      requestedReasoning: reasoning || null,
+      selectedReasoning: selectedReasoning || null,
+      reasoningSelectionStatus,
+      reasoningSelectionError,
       tabId,
       controlledTabId: tabId,
       conversationUrl,
@@ -777,6 +1370,14 @@ async function query(options) {
       responseSource: response.source,
       sentinel,
       hasSentinel: response.hasSentinel,
+      pageTextContainsSentinel: response.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
+      backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
+      backgroundPollCount: response.backgroundPollCount || 0,
+      hiddenRecoveryUsed: response.hiddenRecoveryUsed === true,
+      responseTimedOut,
+      timeoutError,
       tookMs: Date.now() - startTime,
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,
@@ -789,4 +1390,13 @@ async function query(options) {
   }
 }
 
-module.exports = { query, extractAssistantResponse, hasRequiredCookies, CHATGPT_URL };
+module.exports = {
+  query,
+  extractAssistantResponse,
+  hasRequiredCookies,
+  CHATGPT_URL,
+  assistantSnapshotExpression,
+  assertReadyForNewPrompt,
+  waitForSubmitAccepted,
+  typePrompt,
+};
