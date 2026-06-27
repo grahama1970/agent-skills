@@ -1,0 +1,104 @@
+{
+  "collection": "watch_track_observations",
+  "documents": [
+    {
+      "_key": "watch_track_observation_bad_santa_marcus_0248_track_07",
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "candidate_entity": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "brave_domain_seed",
+          "movie_domain_memory",
+          "person_reid_embedding",
+          "vlm_scene_text"
+        ],
+        "confidence": 0.82,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "CANDIDATE"
+      },
+      "case_refs": [
+        "watch_evidence_cases/watch_case_bad_santa_marcus_0248_identity"
+      ],
+      "created_at": "2026-06-27T16:00:00Z",
+      "created_by": "watch-agent",
+      "decision": {
+        "failure_codes": [
+          "NEEDS_HUMAN_REVIEW",
+          "TRACK_IDENTITY_UNCERTAIN"
+        ],
+        "reason": "The live tracker and movie-domain prior agree on Marcus as a plausible candidate, but this remains bounded and inconclusive until frame evidence or human review supports the identity.",
+        "route": "CREATE_EVIDENCE_CASE",
+        "verdict": "INCONCLUSIVE"
+      },
+      "edge_refs": [
+        "watch_evidence_edges/watch_edge_case_marcus_obs_0248",
+        "watch_evidence_edges/watch_edge_obs_marcus_domain",
+        "watch_evidence_edges/watch_edge_obs_marcus_qdrant"
+      ],
+      "evidence_basis": {
+        "clip_refs": [
+          {
+            "path": "/tmp/watch-wex5uxs_/clips/segment_0007.mp4",
+            "ref": "watch_clip_bad_santa_0248_0312",
+            "source_type": "watch_clip"
+          }
+        ],
+        "domain_refs": [
+          {
+            "ref": "movie_domain_entities/marcus_bad_santa_2003",
+            "source_type": "movie_domain_entities"
+          },
+          {
+            "field": "Tony Cox credited as Marcus",
+            "ref": "https://www.imdb.com/title/tt0307987/fullcredits/",
+            "source_type": "brave_search"
+          }
+        ],
+        "frame_refs": [
+          {
+            "path": "/tmp/watch-wex5uxs_/frames/frame_0007.jpg",
+            "ref": "watch_frame_bad_santa_0007_168s",
+            "source_type": "watch_frame"
+          }
+        ],
+        "qdrant_refs": [
+          {
+            "collection": "watch_multimodal",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "modality": "frame_crop",
+            "point_id": "movie_bad_santa_2003_seg_0007_track_07_frame_crop",
+            "source_hash": "sha256:pending_fixture_hash"
+          }
+        ],
+        "transcript_refs": [
+          {
+            "field": "visual_description",
+            "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+            "source_type": "watch_content"
+          },
+          {
+            "field": "whisper_text",
+            "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+            "source_type": "watch_content"
+          }
+        ]
+      },
+      "observation_id": "WTO-BADSANTAMARCUS0248",
+      "observation_status": "INCONCLUSIVE",
+      "schema_version": "watch.track_observation.v1",
+      "segment_id": "seg_0007",
+      "stream_id": "watch_stream_bad_santa_2003",
+      "stream_type": "cinema_srt",
+      "time_range": {
+        "end": "03:12",
+        "end_seconds": 192,
+        "start": "02:48",
+        "start_seconds": 168
+      },
+      "track_id": "track_07",
+      "updated_at": "2026-06-27T16:45:00Z"
+    }
+  ]
+}

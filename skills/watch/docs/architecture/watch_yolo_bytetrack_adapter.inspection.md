@@ -41,11 +41,12 @@ uv pip install -e '.[tracking]'
 Run against the manifest clip:
 
 ```bash
-python3 scripts/track_yolo_bytetrack.py \
-  --model yolo26n.pt \
+uv run --extra tracking python scripts/track_yolo_bytetrack.py \
+  --model yolo11n.pt \
   --tracker bytetrack.yaml \
   --sample-fps 5 \
-  --attach-domain-candidate
+  --attach-domain-candidate \
+  --max-events 80
 ```
 
 `--attach-domain-candidate` only attaches provisional domain candidates to the
@@ -141,27 +142,75 @@ ultralytics_unavailable ModuleNotFoundError No module named 'ultralytics'
 cv2_available 4.13.0
 ```
 
+Live tracking-extra run:
+
+```bash
+cd skills/watch
+uv run --extra tracking python scripts/track_yolo_bytetrack.py \
+  --model yolo11n.pt \
+  --tracker bytetrack.yaml \
+  --sample-fps 5 \
+  --attach-domain-candidate \
+  --max-events 80
+```
+
+Result:
+
+```text
+yolo_bytetrack_events_ok 80
+track_ids ['track_1', 'track_10', 'track_15', 'track_2', 'track_3', 'track_4', 'track_5', 'track_6', 'track_7', 'track_8']
+source_fps 23.975985652770184
+event_log /home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl
+```
+
+The run emitted real Ultralytics/ByteTrack track events from the local clip. The
+runtime used CPU fallback because the installed NVIDIA driver was too old for
+the available PyTorch CUDA build.
+
+Event schema validation:
+
+```text
+event_schema_ok 80
+track_count 10
+time_bounds 168.0 174.46
+candidate_names ['Marcus']
+statuses ['PROVISIONAL']
+```
+
+Summary artifact:
+
+```text
+schema_version watch.yolo_bytetrack_event_log_summary.v1
+status DRY_RUN_ONLY
+posted false
+source /tmp/watch-wex5uxs_/clips/segment_0007.mp4
+model yolo11n.pt
+tracker bytetrack.yaml
+sample_fps 5.0
+frame_stride 5
+event_count 80
+domain_candidates_attached true
+```
+
 ## Acceptance Rationale
 
-The adapter is accepted as a contract adapter because its Ultralytics result
-mapping emits schema-valid Watch live-track events, preserves provisional
+The adapter is accepted as a live event-stream adapter because its Ultralytics
+tracking run emitted schema-valid Watch live-track events, preserves provisional
 candidate identity semantics, and leaves memory writes outside the runtime.
 
-This inspection used fake Ultralytics-style result objects because the local
-environment did not have `ultralytics` installed. That proves mapper/schema
-wiring only, not live inference.
+The fake Ultralytics-style result inspection still proves mapper/schema edge
+cases. The live run adds detector/tracker runtime evidence for one bounded clip.
 
 ## What This Does Not Prove
 
-- It does not prove `ultralytics` is installed in the runtime.
-- It does not prove YOLO inference.
-- It does not prove ByteTrack continuity.
+- It does not prove character identity.
 - It does not prove Marcus is present in the clip.
-- It does not prove Watch UI overlay rendering.
+- It does not prove Watch UI real-time overlay rendering from the live JSONL.
 - It does not prove memory/Qdrant writes or recall.
+- It does not prove a durable evidence case should be created.
 
 ## Next Legal Move
 
-Install the tracking extra in a controlled runtime, run the adapter against the
-manifest clip, and compare the live JSONL output against the deterministic frame
-harness before memory writes are approved.
+Build the browser overlay payload from this live JSONL, compare it against the
+deterministic frame harness, then request approval for bounded memory/Qdrant
+upserts and `/memory recall` proof.

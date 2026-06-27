@@ -1,0 +1,132 @@
+{
+  "schema_version": "watch.track_observation_contract.v1",
+  "live_event_fixture": {
+    "event_type": "track_update",
+    "schema_version": "watch.live_track_update.v1",
+    "stream_id": "watch_stream_bad_santa_2003",
+    "asset_uid": "movie_bad_santa_2003_unrated",
+    "segment_id": "seg_0007",
+    "media_time_seconds": 168.42,
+    "track_id": "track_07",
+    "bbox_xyxy": [
+      386,
+      74,
+      676,
+      424
+    ],
+    "detected_class": "person",
+    "candidate_entities": [
+      {
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "name": "Marcus",
+        "kind": "CHARACTER",
+        "actor_name": "Tony Cox",
+        "confidence": 0.82,
+        "status": "PROVISIONAL",
+        "basis": [
+          "brave_domain_seed",
+          "movie_domain_memory",
+          "person_reid_embedding",
+          "vlm_scene_text"
+        ]
+      }
+    ],
+    "status": "PROVISIONAL",
+    "emitted_at": "2026-06-27T16:00:00Z"
+  },
+  "collections": {
+    "watch_track_observations": {
+      "_key": "watch_track_observation_bad_santa_marcus_0248_track_07",
+      "schema_version": "watch.track_observation.v1",
+      "observation_id": "WTO-BADSANTAMARCUS0248",
+      "stream_id": "watch_stream_bad_santa_2003",
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "stream_type": "cinema_srt",
+      "segment_id": "seg_0007",
+      "track_id": "track_07",
+      "time_range": {
+        "start": "02:48",
+        "end": "03:12",
+        "start_seconds": 168,
+        "end_seconds": 192
+      },
+      "observation_status": "INCONCLUSIVE",
+      "candidate_entity": {
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "name": "Marcus",
+        "kind": "CHARACTER",
+        "actor_name": "Tony Cox",
+        "confidence": 0.82,
+        "status": "CANDIDATE",
+        "basis": [
+          "brave_domain_seed",
+          "movie_domain_memory",
+          "person_reid_embedding",
+          "vlm_scene_text"
+        ]
+      },
+      "evidence_basis": {
+        "frame_refs": [
+          {
+            "source_type": "watch_frame",
+            "ref": "watch_frame_bad_santa_0007_168s",
+            "path": "/tmp/watch-wex5uxs_/frames/frame_0007.jpg"
+          }
+        ],
+        "clip_refs": [
+          {
+            "source_type": "watch_clip",
+            "ref": "watch_clip_bad_santa_0248_0312",
+            "path": "/tmp/watch-wex5uxs_/clips/segment_0007.mp4"
+          }
+        ],
+        "transcript_refs": [
+          {
+            "source_type": "watch_content",
+            "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+            "field": "visual_description"
+          },
+          {
+            "source_type": "watch_content",
+            "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+            "field": "whisper_text"
+          }
+        ],
+        "domain_refs": [
+          {
+            "source_type": "movie_domain_entities",
+            "ref": "movie_domain_entities/marcus_bad_santa_2003"
+          },
+          {
+            "source_type": "brave_search",
+            "ref": "https://www.imdb.com/title/tt0307987/fullcredits/",
+            "field": "Tony Cox credited as Marcus"
+          }
+        ],
+        "qdrant_refs": [
+          {
+            "collection": "watch_multimodal",
+            "point_id": "movie_bad_santa_2003_seg_0007_track_07_frame_crop",
+            "modality": "frame_crop",
+            "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+            "source_hash": "sha256:pending_fixture_hash"
+          }
+        ]
+      },
+      "decision": {
+        "route": "CREATE_EVIDENCE_CASE",
+        "verdict": "INCONCLUSIVE",
+        "failure_codes": [
+          "NEEDS_HUMAN_REVIEW",
+          "TRACK_IDENTITY_UNCERTAIN"
+        ],
+        "reason": "The live tracker and movie-domain prior agree on Marcus as a plausible candidate, but the observation remains bounded and inconclusive until frame evidence or human review supports the identity."
+      },
+      "case_refs": [],
+      "edge_refs": [],
+      "created_by": "watch-agent",
+      "created_at": "2026-06-27T16:00:00Z",
+      "updated_at": "2026-06-27T16:00:00Z"
+    }
+  }
+}

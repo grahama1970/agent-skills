@@ -1,0 +1,22 @@
+{
+  "claim_boundary": "This harness proves only that frame-backed inputs can emit the live track JSONL contract. It does not prove person detection, ByteTrack continuity, character identity, memory writes, or recall.",
+  "event_count": 3,
+  "event_log": "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracker_events/watch_tracker_event_log.bad_santa_marcus.frame_harness.jsonl",
+  "frame_size": {
+    "height": 140,
+    "width": 256
+  },
+  "provenance": "deterministic_frame_harness_not_ml",
+  "schema_version": "watch.realtime_tracking_event_log_summary.v1",
+  "source_frame": "/tmp/watch-wex5uxs_/frames/frame_0007.jpg",
+  "source_frame_copy": "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracker_events/source_frame.jpg",
+  "source_manifest": "skills/watch/docs/architecture/watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json",
+  "status": "DRY_RUN_ONLY",
+  "time_bounds_seconds": {
+    "end": 191.72,
+    "start": 168.42
+  },
+  "track_ids": [
+    "track_07"
+  ]
+}

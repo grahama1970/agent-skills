@@ -1,0 +1,43 @@
+{
+  "collection": "watch_evidence_cases",
+  "documents": [
+    {
+      "_key": "watch_case_bad_santa_marcus_0248_identity",
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "case_anchor": {
+        "entity_ids": [
+          "movie_domain_entities/marcus_bad_santa_2003"
+        ],
+        "segment_ids": [
+          "seg_0007"
+        ],
+        "stream_id": "watch_stream_bad_santa_2003",
+        "time_range": {
+          "end": "03:12",
+          "end_seconds": 192,
+          "start": "02:48",
+          "start_seconds": 168
+        }
+      },
+      "case_id": "WEC-BADSANTAMARCUS0248",
+      "case_type": "REALTIME_ENTITY_TRACKING",
+      "claim": "The 02:48-03:12 segment contains Marcus, the mall-store elf character played by Tony Cox.",
+      "created_at": "2026-06-27T16:45:00Z",
+      "domain_refs": [
+        "movie_domain_entities/marcus_bad_santa_2003"
+      ],
+      "evidence_refs": [
+        "watch_track_observations/watch_track_observation_bad_santa_marcus_0248_track_07"
+      ],
+      "failure_codes": [
+        "NEEDS_HUMAN_REVIEW",
+        "TRACK_IDENTITY_UNCERTAIN"
+      ],
+      "question": "find all movie segments with Marcus",
+      "schema_version": "watch.evidence_case.v1",
+      "source_truth_policy": "domain refs corroborate entity identity only; Watch frame/clip/track evidence must support scene presence.",
+      "updated_at": "2026-06-27T16:45:00Z",
+      "verdict": "INCONCLUSIVE"
+    }
+  ]
+}

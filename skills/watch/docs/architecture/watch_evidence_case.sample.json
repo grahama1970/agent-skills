@@ -1,0 +1,149 @@
+{
+  "schema_version": "watch.evidence_case.v1",
+  "collections": {
+    "watch_evidence_cases": {
+      "_key": "watch_case_bad_santa_willie_0136",
+      "schema_version": "watch.evidence_case.v1",
+      "case_id": "WEC-BADSANTA0136",
+      "case_type": "MOVIE_DOMAIN_CORRECTION",
+      "movie": {
+        "title": "Bad Santa",
+        "movie_slug": "bad-santa-2003",
+        "release_year": 2003,
+        "report_path": "/tmp/watch-wex5uxs_/report.json"
+      },
+      "question": "Is the 01:36 dialogue and entity attribution grounded in extracted Watch evidence?",
+      "claim": "The 01:36 segment is a Willie-centered divergence case requiring overlay-based review, not mutation of the SRT or Whisper source.",
+      "verdict": "INCONCLUSIVE",
+      "failure_codes": [
+        "NEEDS_HUMAN_REVIEW"
+      ],
+      "case_anchor": {
+        "entity_ids": [
+          "movie_domain_entities/willie"
+        ],
+        "time_range": {
+          "start": "01:36",
+          "end": "02:00",
+          "start_seconds": 96,
+          "end_seconds": 120
+        },
+        "thread_label": "Willie 01:36 divergence",
+        "divergence_count": 1,
+        "anchor_reason": "Entity mention and SRT/Whisper mismatch occur in the same segment window."
+      },
+      "answerability": {
+        "can_answer": false,
+        "route": "CLARIFY",
+        "reason": "The case has extracted transcript evidence but still needs human approval before any correction overlay is accepted."
+      },
+      "entity_context": {
+        "entities": [
+          {
+            "entity_id": "movie_domain_entities/willie",
+            "name": "Willie",
+            "kind": "CHARACTER",
+            "actor_name": "Billy Bob Thornton",
+            "domain_collection": "movie_domain_entities"
+          }
+        ],
+        "spans": [
+          {
+            "text": "Willie",
+            "span": [
+              0,
+              6
+            ],
+            "entity_id": "movie_domain_entities/willie",
+            "status": "VERIFIED",
+            "source_field": "whisper_text"
+          }
+        ],
+        "grounding_ok": true
+      },
+      "domain_corroboration": [
+        {
+          "source": "memory",
+          "claim": "Willie is a Bad Santa character portrayed by Billy Bob Thornton.",
+          "status": "CORROBORATED",
+          "retrieved_at": "2026-06-27T14:35:00Z"
+        }
+      ],
+      "evidence_items": [
+        {
+          "evidence_id": "WE-BADSANTA0136",
+          "timecode": "01:36",
+          "movie_segment": "01:36-02:00",
+          "source_refs": [
+            {
+              "source_type": "watch_content",
+              "collection": "watch_content",
+              "key": "watch_segment_badsantaunrated2003brripxvidhd720p-npw_0005"
+            },
+            {
+              "source_type": "report_json",
+              "collection": "file",
+              "key": "report.json",
+              "path": "/tmp/watch-wex5uxs_/report.json"
+            }
+          ],
+          "srt_text": "Can I get another drink down here?",
+          "whisper_text": "Willie: I've been to prison once...",
+          "visual_description": "Frame-derived evidence is available for the segment, but the correction remains overlay-only until reviewed.",
+          "diff_category": "minor_diff",
+          "diff_confidence": 0.5,
+          "hashes": {
+            "report_row_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "overlay_refs": [
+        "watch_overlay_bad_santa_willie_0136_entity"
+      ],
+      "edge_refs": [
+        "watch_edge_case_has_evidence_bad_santa_0136"
+      ],
+      "audit_trail": [
+        {
+          "event_type": "CREATED",
+          "actor": "watch-agent",
+          "timestamp": "2026-06-27T14:35:00Z",
+          "detail": "Created sample case for schema validation."
+        }
+      ],
+      "created_by": "watch-agent",
+      "created_at": "2026-06-27T14:35:00Z",
+      "updated_at": "2026-06-27T14:35:00Z"
+    },
+    "watch_evidence_edges": {
+      "_key": "watch_edge_case_has_evidence_bad_santa_0136",
+      "_from": "watch_evidence_cases/watch_case_bad_santa_willie_0136",
+      "_to": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0005",
+      "schema_version": "watch.evidence_edge.v1",
+      "edge_type": "CASE_HAS_EVIDENCE",
+      "confidence": 0.75,
+      "basis": "Case anchor time range overlaps the Watch content row.",
+      "created_at": "2026-06-27T14:35:00Z"
+    },
+    "watch_overlay_records": {
+      "_key": "watch_overlay_bad_santa_willie_0136_entity",
+      "schema_version": "watch.overlay_record.v1",
+      "overlay_id": "WO-BADSANTA0136",
+      "case_id": "WEC-BADSANTA0136",
+      "source_ref": {
+        "source_type": "watch_content",
+        "collection": "watch_content",
+        "key": "watch_segment_badsantaunrated2003brripxvidhd720p-npw_0005",
+        "field": "entities"
+      },
+      "overlay_type": "ENTITY_CORRECTION",
+      "original_value": null,
+      "proposed_value": [
+        "movie_domain_entities/willie"
+      ],
+      "rationale": "Overlay proposes entity grounding without mutating the raw transcript or report row.",
+      "review_status": "PENDING",
+      "created_at": "2026-06-27T14:35:00Z"
+    }
+  }
+}

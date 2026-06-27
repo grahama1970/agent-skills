@@ -1,0 +1,722 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embry.local/schemas/watch_evidence_cases.schema.json",
+  "title": "Watch Evidence Case Persistence Contract",
+  "description": "Persistence schema for Watch forensic video evidence cases, edges, and reversible overlay records. Source evidence is immutable; corrections are stored as overlay records.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "collections"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "watch.evidence_case.v1"
+    },
+    "collections": {
+      "type": "object",
+      "required": [
+        "watch_evidence_cases",
+        "watch_evidence_edges",
+        "watch_overlay_records"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "watch_evidence_cases": {
+          "$ref": "#/$defs/watch_evidence_case"
+        },
+        "watch_evidence_edges": {
+          "$ref": "#/$defs/watch_evidence_edge"
+        },
+        "watch_overlay_records": {
+          "$ref": "#/$defs/watch_overlay_record"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "watch_evidence_case": {
+      "type": "object",
+      "required": [
+        "_key",
+        "schema_version",
+        "case_id",
+        "case_type",
+        "movie",
+        "question",
+        "claim",
+        "verdict",
+        "case_anchor",
+        "answerability",
+        "evidence_items",
+        "audit_trail",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_key": {
+          "type": "string",
+          "pattern": "^watch_case_[a-z0-9._-]+$"
+        },
+        "schema_version": {
+          "const": "watch.evidence_case.v1"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^WEC-[A-Z0-9]{8,}$"
+        },
+        "case_type": {
+          "type": "string",
+          "enum": [
+            "MOVIE_DOMAIN_CORRECTION",
+            "SRT_WHISPER_DIVERGENCE",
+            "VISUAL_ENTITY_GROUNDING",
+            "ORPHEUS_CANDIDATE_REVIEW",
+            "GENERAL_VIDEO_FORENSIC",
+            "REALTIME_ENTITY_TRACKING",
+            "STREAM_TELEMETRY_VISUAL_MISMATCH"
+          ]
+        },
+        "movie": {
+          "$ref": "#/$defs/movie_ref"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "SUPPORTED",
+            "REFUTED",
+            "INCONCLUSIVE"
+          ]
+        },
+        "failure_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "SYSTEM_MISMATCH",
+              "COVERAGE_GAP",
+              "NEEDS_HUMAN_REVIEW",
+              "MEMORY_RECALL_MISS",
+              "VISUAL_EVIDENCE_MISSING",
+              "DOMAIN_CORROBORATION_MISSING",
+              "SOURCE_HASH_MISSING",
+              "TRACK_IDENTITY_UNCERTAIN",
+              "TRACK_FRAGMENTED",
+              "STREAM_SEGMENT_EXPIRED",
+              "LIVE_OBSERVATION_UNGROUNDED"
+            ]
+          },
+          "default": []
+        },
+        "case_anchor": {
+          "$ref": "#/$defs/case_anchor"
+        },
+        "answerability": {
+          "$ref": "#/$defs/answerability"
+        },
+        "entity_context": {
+          "$ref": "#/$defs/entity_context"
+        },
+        "domain_corroboration": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/domain_corroboration"
+          },
+          "default": []
+        },
+        "evidence_items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence_item"
+          }
+        },
+        "overlay_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^watch_overlay_[a-z0-9._-]+$"
+          },
+          "default": []
+        },
+        "edge_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^watch_edge_[a-z0-9._-]+$"
+          },
+          "default": []
+        },
+        "audit_trail": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/audit_event"
+          }
+        },
+        "created_by": {
+          "type": "string",
+          "default": "watch-agent"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "watch_evidence_edge": {
+      "type": "object",
+      "required": [
+        "_key",
+        "_from",
+        "_to",
+        "schema_version",
+        "edge_type",
+        "confidence",
+        "created_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_key": {
+          "type": "string",
+          "pattern": "^watch_edge_[a-z0-9._-]+$"
+        },
+        "_from": {
+          "type": "string"
+        },
+        "_to": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "watch.evidence_edge.v1"
+        },
+        "edge_type": {
+          "type": "string",
+          "enum": [
+            "CASE_HAS_EVIDENCE",
+            "CASE_HAS_OVERLAY",
+            "CASE_GROUNDS_ENTITY",
+            "CASE_CORROBORATED_BY_DOMAIN",
+            "CASE_HAS_OBSERVATION",
+            "EVIDENCE_FROM_SEGMENT",
+            "EVIDENCE_FROM_FRAME",
+            "EVIDENCE_FROM_TRANSCRIPT",
+            "OVERLAY_SUPERSEDES_OVERLAY",
+            "TRACK_CANDIDATE_ENTITY",
+            "OBSERVATION_HAS_VECTOR"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "basis": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "watch_overlay_record": {
+      "type": "object",
+      "required": [
+        "_key",
+        "schema_version",
+        "overlay_id",
+        "case_id",
+        "source_ref",
+        "overlay_type",
+        "proposed_value",
+        "review_status",
+        "created_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_key": {
+          "type": "string",
+          "pattern": "^watch_overlay_[a-z0-9._-]+$"
+        },
+        "schema_version": {
+          "const": "watch.overlay_record.v1"
+        },
+        "overlay_id": {
+          "type": "string",
+          "pattern": "^WO-[A-Z0-9]{8,}$"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^WEC-[A-Z0-9]{8,}$"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "overlay_type": {
+          "type": "string",
+          "enum": [
+            "ENTITY_CORRECTION",
+            "TRANSCRIPT_CORRECTION",
+            "VERDICT_OVERRIDE",
+            "FAILURE_CODE_OVERRIDE",
+            "VISUAL_DESCRIPTION_CORRECTION"
+          ]
+        },
+        "original_value": {
+          "type": [
+            "string",
+            "object",
+            "array",
+            "null"
+          ]
+        },
+        "proposed_value": {
+          "type": [
+            "string",
+            "object",
+            "array"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "APPROVED",
+            "REJECTED",
+            "SUPERSEDED"
+          ]
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "movie_ref": {
+      "type": "object",
+      "required": [
+        "title",
+        "movie_slug"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "movie_slug": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release_year": {
+          "type": "integer"
+        },
+        "source_video_path": {
+          "type": "string"
+        },
+        "report_path": {
+          "type": "string"
+        }
+      }
+    },
+    "case_anchor": {
+      "type": "object",
+      "required": [
+        "entity_ids",
+        "time_range"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "time_range": {
+          "$ref": "#/$defs/time_range"
+        },
+        "thread_label": {
+          "type": "string"
+        },
+        "divergence_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "anchor_reason": {
+          "type": "string"
+        }
+      }
+    },
+    "time_range": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}(?::\\d{2})?$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}(?::\\d{2})?$"
+        },
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "answerability": {
+      "type": "object",
+      "required": [
+        "can_answer",
+        "route",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "can_answer": {
+          "type": "boolean"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "ANSWER",
+            "CLARIFY",
+            "DEFLECT"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "entity_context": {
+      "type": "object",
+      "required": [
+        "entities",
+        "spans"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity_ref"
+          }
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity_span"
+          }
+        },
+        "grounding_ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "entity_ref": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "CHARACTER",
+            "ACTOR",
+            "PLACE",
+            "OBJECT",
+            "WORK",
+            "DIALOGUE_REFERENCE"
+          ]
+        },
+        "actor_name": {
+          "type": "string"
+        },
+        "domain_collection": {
+          "type": "string",
+          "default": "movie_domain_entities"
+        }
+      }
+    },
+    "entity_span": {
+      "type": "object",
+      "required": [
+        "text",
+        "span",
+        "entity_id",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "span": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "VERIFIED",
+            "DIVERGENT",
+            "UNRESOLVED"
+          ]
+        },
+        "source_field": {
+          "type": "string",
+          "enum": [
+            "srt_text",
+            "whisper_text",
+            "visual_description",
+            "scene_marker",
+            "question"
+          ]
+        }
+      }
+    },
+    "domain_corroboration": {
+      "type": "object",
+      "required": [
+        "source",
+        "claim",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "memory",
+            "brave_search",
+            "manual"
+          ]
+        },
+        "claim": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "CORROBORATED",
+            "CONFLICTING",
+            "MISSING"
+          ]
+        },
+        "uri": {
+          "type": "string"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "evidence_item": {
+      "type": "object",
+      "required": [
+        "evidence_id",
+        "timecode",
+        "movie_segment",
+        "source_refs",
+        "hashes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^WE-[A-Z0-9]{8,}$"
+        },
+        "timecode": {
+          "type": "string"
+        },
+        "movie_segment": {
+          "type": "string"
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "srt_text": {
+          "type": "string"
+        },
+        "whisper_text": {
+          "type": "string"
+        },
+        "visual_description": {
+          "type": "string"
+        },
+        "diff_category": {
+          "type": "string"
+        },
+        "diff_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "hashes": {
+          "$ref": "#/$defs/hash_set"
+        }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "collection",
+        "key"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "watch_content",
+            "movie_domain_entity",
+            "frame_file",
+            "clip_file",
+            "report_json",
+            "overlay_record"
+          ]
+        },
+        "collection": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        }
+      }
+    },
+    "hash_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_video_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "clip_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "frame_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "report_row_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "case_json_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "audit_event": {
+      "type": "object",
+      "required": [
+        "event_type",
+        "actor",
+        "timestamp",
+        "detail"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "ENTITY_RESOLVED",
+            "OVERLAY_PROPOSED",
+            "OVERLAY_APPROVED",
+            "OVERLAY_REJECTED",
+            "VERDICT_CHANGED",
+            "HUMAN_REVIEW_REQUESTED"
+          ]
+        },
+        "actor": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

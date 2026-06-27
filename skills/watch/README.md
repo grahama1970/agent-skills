@@ -147,11 +147,12 @@ uv pip install -e '.[tracking]'
 ```
 
 This adds Ultralytics YOLO and OpenCV for the `track_yolo_bytetrack.py` adapter.
-The adapter emits provisional live-track events only. It defaults to a 5fps
-Watch event cadence via `--sample-fps 5`, using a source-frame stride before
-producing `watch.live_track_update.v1` JSONL. Identity verification and memory
-persistence remain separate Watch Agent steps, and memory stores bounded
-observations/cases rather than every sampled frame.
+The tracking extra also includes ByteTrack's `lap` association dependency. The
+adapter emits provisional live-track events only. It defaults to a 5fps Watch
+event cadence via `--sample-fps 5`, using a source-frame stride before producing
+`watch.live_track_update.v1` JSONL. Identity verification and memory persistence
+remain separate Watch Agent steps, and memory stores bounded observations/cases
+rather than every sampled frame.
 
 ## How to Use
 

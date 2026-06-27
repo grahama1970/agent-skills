@@ -1,0 +1,513 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embry.local/schemas/watch_track_observations.schema.json",
+  "title": "Watch Track Observation Persistence Contract",
+  "description": "Schema for real-time Watch tracking events and bounded memory observations. Live track updates are streamed; only bounded observations are persisted to memory.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "collections"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "watch.track_observation_contract.v1"
+    },
+    "live_event_fixture": {
+      "$ref": "#/$defs/live_track_update_event"
+    },
+    "collections": {
+      "type": "object",
+      "required": [
+        "watch_track_observations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "watch_track_observations": {
+          "$ref": "#/$defs/watch_track_observation"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "live_track_update_event": {
+      "type": "object",
+      "required": [
+        "event_type",
+        "schema_version",
+        "stream_id",
+        "asset_uid",
+        "segment_id",
+        "media_time_seconds",
+        "track_id",
+        "bbox_xyxy",
+        "detected_class",
+        "status",
+        "emitted_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "event_type": {
+          "const": "track_update"
+        },
+        "schema_version": {
+          "const": "watch.live_track_update.v1"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "media_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "bbox_xyxy": {
+          "$ref": "#/$defs/bbox_xyxy"
+        },
+        "detected_class": {
+          "type": "string",
+          "enum": [
+            "person",
+            "vehicle",
+            "drone",
+            "object",
+            "unknown"
+          ]
+        },
+        "candidate_entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/candidate_entity"
+          },
+          "default": []
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PROVISIONAL",
+            "DROPPED",
+            "BOUNDARY_CANDIDATE"
+          ]
+        },
+        "emitted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "watch_track_observation": {
+      "type": "object",
+      "required": [
+        "_key",
+        "schema_version",
+        "observation_id",
+        "stream_id",
+        "asset_uid",
+        "stream_type",
+        "segment_id",
+        "track_id",
+        "time_range",
+        "observation_status",
+        "candidate_entity",
+        "evidence_basis",
+        "decision",
+        "created_at",
+        "updated_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "_key": {
+          "type": "string",
+          "pattern": "^watch_track_observation_[a-z0-9._-]+$"
+        },
+        "schema_version": {
+          "const": "watch.track_observation.v1"
+        },
+        "observation_id": {
+          "type": "string",
+          "pattern": "^WTO-[A-Z0-9]{8,}$"
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stream_type": {
+          "type": "string",
+          "enum": [
+            "cinema_srt",
+            "youtube_web",
+            "rtsp_live",
+            "drone_telemetry",
+            "itar_sensor",
+            "screen_recording"
+          ]
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "time_range": {
+          "$ref": "#/$defs/time_range"
+        },
+        "observation_status": {
+          "type": "string",
+          "enum": [
+            "CANDIDATE",
+            "SUPPORTED",
+            "REFUTED",
+            "INCONCLUSIVE",
+            "SUPERSEDED"
+          ]
+        },
+        "candidate_entity": {
+          "$ref": "#/$defs/candidate_entity"
+        },
+        "evidence_basis": {
+          "$ref": "#/$defs/evidence_basis"
+        },
+        "decision": {
+          "$ref": "#/$defs/observation_decision"
+        },
+        "case_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^watch_evidence_cases/watch_case_[a-z0-9._-]+$"
+          },
+          "default": []
+        },
+        "edge_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^watch_evidence_edges/watch_edge_[a-z0-9._-]+$"
+          },
+          "default": []
+        },
+        "created_by": {
+          "type": "string",
+          "default": "watch-agent"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "bbox_xyxy": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "candidate_entity": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "name",
+        "kind",
+        "confidence",
+        "status",
+        "basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "CHARACTER",
+            "ACTOR",
+            "PERSON",
+            "DRONE",
+            "VEHICLE",
+            "OBJECT",
+            "UNKNOWN"
+          ]
+        },
+        "actor_name": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DOMAIN_PRIOR",
+            "PROVISIONAL",
+            "CANDIDATE",
+            "SUPPORTED",
+            "REFUTED",
+            "UNRESOLVED"
+          ]
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "brave_domain_seed",
+              "movie_domain_memory",
+              "face_embedding",
+              "person_reid_embedding",
+              "vlm_scene_text",
+              "srt_text",
+              "whisper_text",
+              "human_review",
+              "telemetry_registry"
+            ]
+          }
+        }
+      }
+    },
+    "time_range": {
+      "type": "object",
+      "required": [
+        "start",
+        "end",
+        "start_seconds",
+        "end_seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}(?::\\d{2})?$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}(?::\\d{2})?$"
+        },
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "evidence_basis": {
+      "type": "object",
+      "required": [
+        "frame_refs",
+        "clip_refs",
+        "transcript_refs",
+        "domain_refs",
+        "qdrant_refs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "frame_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "clip_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "transcript_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "domain_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          }
+        },
+        "qdrant_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qdrant_ref"
+          }
+        }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "watch_content",
+            "watch_frame",
+            "watch_clip",
+            "report_json",
+            "movie_domain_entities",
+            "brave_search",
+            "telemetry_log",
+            "mission_registry"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "qdrant_ref": {
+      "type": "object",
+      "required": [
+        "collection",
+        "point_id",
+        "modality",
+        "embedding_model"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "collection": {
+          "type": "string",
+          "minLength": 1
+        },
+        "point_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modality": {
+          "type": "string",
+          "enum": [
+            "frame",
+            "frame_crop",
+            "clip",
+            "transcript",
+            "audio",
+            "telemetry"
+          ]
+        },
+        "embedding_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "observation_decision": {
+      "type": "object",
+      "required": [
+        "route",
+        "verdict",
+        "failure_codes",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "route": {
+          "type": "string",
+          "enum": [
+            "ANSWER",
+            "CLARIFY",
+            "DEFLECT",
+            "CREATE_EVIDENCE_CASE"
+          ]
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "SUPPORTED",
+            "REFUTED",
+            "INCONCLUSIVE"
+          ]
+        },
+        "failure_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "SYSTEM_MISMATCH",
+              "COVERAGE_GAP",
+              "NEEDS_HUMAN_REVIEW",
+              "MEMORY_RECALL_MISS",
+              "VISUAL_EVIDENCE_MISSING",
+              "DOMAIN_CORROBORATION_MISSING",
+              "SOURCE_HASH_MISSING",
+              "TRACK_IDENTITY_UNCERTAIN",
+              "TRACK_FRAGMENTED",
+              "STREAM_SEGMENT_EXPIRED",
+              "LIVE_OBSERVATION_UNGROUNDED"
+            ]
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

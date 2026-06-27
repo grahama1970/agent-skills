@@ -1,0 +1,32 @@
+{
+  "claim_boundary": "Payloads are request-shape proof only. This does not prove live memory writes, Qdrant vector writes, live tracker inference, or recall.",
+  "event_count": 3,
+  "manifest_id": "watch_realtime_tracking_bad_santa_marcus_0248_dry_run",
+  "payload_counts": {
+    "movie_domain_entities": 1,
+    "watch_evidence_cases": 1,
+    "watch_evidence_edges": 3,
+    "watch_track_observations": 1
+  },
+  "payload_files": [
+    "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/upsert_movie_domain_entities.json",
+    "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/upsert_watch_track_observations.json",
+    "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/upsert_watch_evidence_cases.json",
+    "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/upsert_watch_evidence_edges.json"
+  ],
+  "posted": false,
+  "schema_version": "watch.realtime_tracking_upsert_payload_summary.v1",
+  "segment_ids": [
+    "seg_0007"
+  ],
+  "source_events": "skills/watch/docs/architecture/watch_tracker_event_log.bad_santa_marcus.fixture.jsonl",
+  "source_manifest": "skills/watch/docs/architecture/watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json",
+  "status": "DRY_RUN_ONLY",
+  "time_bounds_seconds": {
+    "end": 191.72,
+    "start": 168.42
+  },
+  "track_ids": [
+    "track_07"
+  ]
+}

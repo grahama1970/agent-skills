@@ -30,7 +30,8 @@ not scene truth.
 | `watch_evidence_cases.schema.json` | Draft schema exists | Durable case and overlay contract |
 | `watch_tracker_event_log.bad_santa_marcus.fixture.jsonl` | Deterministic fixture exists | Offline live-track event shape proof |
 | `build_realtime_tracking_event_log.py` | Deterministic harness exists | Emits schema-valid event JSONL from fixture frame |
-| `track_yolo_bytetrack.py` | Adapter exists | Maps Ultralytics YOLO + ByteTrack output into Watch events |
+| `track_yolo_bytetrack.py` | Live bounded run exists | Maps Ultralytics YOLO + ByteTrack output into Watch events |
+| `generated/bad_santa_marcus_0248_yolo_bytetrack/` | Live event artifact exists | 80 schema-valid provisional YOLO/ByteTrack events over 168.0-174.46s |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -110,6 +111,16 @@ Acceptance evidence:
   `live_track_update_event`.
 - UI modal/table overlay uses actual event bbox data, not a hard-coded region.
 - Event claims remain `PROVISIONAL`.
+
+Current canary proof:
+
+- Command: `uv run --extra tracking python scripts/track_yolo_bytetrack.py --model yolo11n.pt --tracker bytetrack.yaml --sample-fps 5 --attach-domain-candidate --max-events 80`
+- Output: `yolo_bytetrack_events_ok 80`
+- Event log: `generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl`
+- Schema validation: 80 events, 10 track IDs, time bounds 168.0-174.46s, candidate `Marcus`, status `PROVISIONAL`
+- Boundary: this proves live event emission and schema validity only. It does
+  not prove Marcus identity, UI real-time overlay updates, memory writes,
+  Qdrant writes, or recall.
 
 ### Phase 3: Verification and Bounded Observation
 

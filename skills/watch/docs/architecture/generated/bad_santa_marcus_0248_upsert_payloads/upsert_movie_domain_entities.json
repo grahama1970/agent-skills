@@ -1,0 +1,28 @@
+{
+  "collection": "movie_domain_entities",
+  "documents": [
+    {
+      "_key": "marcus_bad_santa_2003",
+      "actor_name": "Tony Cox",
+      "aliases": [
+        "Marcus",
+        "mall-store elf"
+      ],
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "kind": "CHARACTER",
+      "name": "Marcus",
+      "record_type": "movie_domain_entity",
+      "schema_version": "movie_domain.entity.v1",
+      "source_refs": [
+        {
+          "claim": "Tony Cox is credited as Marcus.",
+          "retrieved_at": "2026-06-27T15:44:00Z",
+          "source": "brave-search",
+          "url": "https://www.imdb.com/title/tt0307987/fullcredits/"
+        }
+      ],
+      "source_truth_policy": "domain_prior_not_scene_truth",
+      "status": "DOMAIN_PRIOR"
+    }
+  ]
+}
