@@ -33,6 +33,8 @@ not scene truth.
 | `track_yolo_bytetrack.py` | Live bounded run exists | Maps Ultralytics YOLO + ByteTrack output into Watch events |
 | `generated/bad_santa_marcus_0248_yolo_bytetrack/` | Live event artifact exists | 80 schema-valid provisional YOLO/ByteTrack events over 168.0-174.46s |
 | `generated/bad_santa_marcus_0248_yolo_overlay_payload/` | Live-derived overlay artifact exists | 10 schema-valid overlay records generated from live YOLO event geometry |
+| `watch_live_tracking_memory_window_plan.schema.json` | Contract added | Bounded 5fps event windows feeding planned memory writes |
+| `build_watch_live_tracking_memory_window_plan.py` | Harness added | Collapses live tracker JSONL into recall-gated memory trace plans |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -162,6 +164,31 @@ Current overlay proof:
 - Validation: `overlay_payload_schema_ok 10 geometry_plumbing`
 - Frame size: `512x278`, derived from the local clip via `ffprobe` because the live YOLO summary does not include `frame_size`
 - Boundary: this proves live event geometry can feed the browser overlay payload contract. It does not prove real-time UI animation, Marcus identity, memory writes, Qdrant writes, or recall. The generated payload currently labels all 10 tracks with the same provisional `Marcus` candidate, which is a known identity-verification gap and must stay visually provisional.
+
+### Phase 2.5: Live Event Windowing for Memory
+
+Goal: convert raw 5fps tracker updates into bounded, memory-ready windows without
+claiming identity support.
+
+Runtime path:
+
+```text
+watch.live_track_update.v1 JSONL
+  -> group by track_id
+  -> choose representative bbox/time per track window
+  -> emit watch.track_observation.v1 records
+  -> emit watch.identity_evidence.v1 records as IDENTITY_INCONCLUSIVE
+  -> emit watch.memory_trace_write_plan.v1 as PLANNED_NOT_WRITTEN
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_live_tracking_memory_window_plan.py --asset skills/watch/tests/fixtures/reference_hydration_P0/asset_movie_bad_santa.json --events skills/watch/docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl --out /tmp/watch-live-window-plan.json --sample-fps 5`
+- Expected output: `live_tracking_memory_window_plan_ok 10 windows 80 events`
+- Schema: `skills/watch/docs/architecture/schemas/watch_live_tracking_memory_window_plan.schema.json`
+- Boundary: this proves event-windowing and planned memory-trace shaping only. It
+  does not prove browser animation, supported identity, Qdrant writes, Arango
+  writes, or `$memory recall`.
 
 ### Phase 3: Verification and Bounded Observation
 

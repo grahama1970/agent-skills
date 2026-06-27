@@ -1,0 +1,1294 @@
+{
+  "schema": "watch.live_tracking_memory_window_plan.v1",
+  "write_status": "PLANNED_NOT_WRITTEN",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "sample_fps": 5.0,
+  "event_count": 80,
+  "track_window_count": 10,
+  "windows": [
+    {
+      "track_id": "track_1",
+      "event_count": 8,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 169460
+      },
+      "representative_media_time_ms": 169460,
+      "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.82,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_10",
+      "event_count": 4,
+      "time_range_ms": {
+        "start_ms": 168630,
+        "end_ms": 169460
+      },
+      "representative_media_time_ms": 168630,
+      "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.3923329710960388,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_15",
+      "event_count": 1,
+      "time_range_ms": {
+        "start_ms": 169040,
+        "end_ms": 169240
+      },
+      "representative_media_time_ms": 169040,
+      "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.36308422684669495,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_2",
+      "event_count": 30,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 174460
+      },
+      "representative_media_time_ms": 170710,
+      "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.82,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_3",
+      "event_count": 6,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 169250
+      },
+      "representative_media_time_ms": 168000,
+      "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.5526084303855896,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_4",
+      "event_count": 8,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 169460
+      },
+      "representative_media_time_ms": 168630,
+      "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.6979628801345825,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_5",
+      "event_count": 5,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 168830
+      },
+      "representative_media_time_ms": 168420,
+      "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.5103434920310974,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_6",
+      "event_count": 12,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 173630
+      },
+      "representative_media_time_ms": 171550,
+      "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.677405059337616,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_7",
+      "event_count": 1,
+      "time_range_ms": {
+        "start_ms": 168000,
+        "end_ms": 168200
+      },
+      "representative_media_time_ms": 168000,
+      "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.2707499563694,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    },
+    {
+      "track_id": "track_8",
+      "event_count": 5,
+      "time_range_ms": {
+        "start_ms": 168420,
+        "end_ms": 169250
+      },
+      "representative_media_time_ms": 168420,
+      "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+      "candidate_entities": [
+        {
+          "actor_name": "Tony Cox",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.5662699341773987,
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "kind": "CHARACTER",
+          "name": "Marcus",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "identity_status": "IDENTITY_INCONCLUSIVE"
+    }
+  ],
+  "memory_trace_plan": {
+    "schema": "watch.memory_trace_write_plan.v1",
+    "write_status": "PLANNED_NOT_WRITTEN",
+    "asset": {
+      "schema": "watch.asset_metadata.v1",
+      "asset_kind": "cinema_movie",
+      "title": "Bad Santa",
+      "release_year": 2003,
+      "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+      "media_sha256": "fixture_bad_santa_media_sha256",
+      "notes": "P0 fixture only; does not prove identity.",
+      "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+    },
+    "memory_pipeline": [
+      "intent",
+      "extract_entities",
+      "recall",
+      "create_evidence_case",
+      "answer",
+      "clarify",
+      "deflect"
+    ],
+    "records": [
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "cd9eb2d6-5dec-5fe1-8a28-3be9feb642f4",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:898580e523815285e984fb56366cabc9",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "ae8a4c90-8fbc-5f84-913d-a423c2990826",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "04d9bfdf-2aa9-53e8-9d85-657ff10f2aac",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "1f4b53e9-7b57-5a41-9756-6f7e56599593",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "a8a256ab-82b7-5fe3-b572-c19c41f624c3",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "89e4285d-e2da-5ab5-a85b-a7884ccd10bb",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "f7e117dd-82e3-59f0-9c7d-6d15bcea9db2",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "f8a75a9e-b9b4-5d98-a149-74b997eb2a64",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "15adc617-6893-5890-aeca-7cd055fb31d0",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "track_observation",
+        "id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+        "arango_collection": "watch_track_observations",
+        "qdrant_collection": "watch_track_crop_embeddings",
+        "qdrant_point_id": "58dff4ad-0258-586d-9d07-16c7b059ccf3",
+        "write_status": "PLANNED_NOT_WRITTEN"
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:37ca28ae168f67e2427d4ded9ff64586",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "d646fdba-89a2-57b3-acdc-f6a6a7ba5b09",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "89479887-53e3-5ad4-87c6-6fb70e1262ad",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:16880a46153cbeb24e370c76d3bb0f7d",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "81ea36aa-743b-55e4-a6a7-e71e9cbcd29a",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "134765f2-895c-5379-bd53-26a79eac7def",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:28395a8932256130509c01c18115324b",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "7ade3f5c-44b2-5ff3-afd8-a567e80395f1",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:94a6259a019734e815a9430f7f76e8e5",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "32c1f394-7922-5e81-a06c-c2bc9ee6e868",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:27808e7135404d8f628dc8804b63c2f9",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "da3a30c7-6f77-5415-b503-53129afe3a01",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:a1169e518f68f6c416b9b44949fa4fa6",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "accd5d95-1417-5bf4-82c8-fddb5a1a417e",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:55c7873b79f310e919813efe525f866b",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "e87ce319-8e22-56f4-9ed5-228871ecbb5f",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      },
+      {
+        "record_kind": "identity_evidence",
+        "id": "watch_identity:006a165886f3b6b25b8ffef4a2f800d0",
+        "arango_collection": "watch_identity_evidence",
+        "qdrant_collection": "watch_identity_evidence_embeddings",
+        "qdrant_point_id": "3666d4c4-2a41-50ea-a254-83b10b8fac3c",
+        "write_status": "PLANNED_NOT_WRITTEN",
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ]
+      }
+    ],
+    "track_observations": [
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_1",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 169460,
+        "media_time_ms": 169460,
+        "bbox": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 276.0,
+          "height": 253.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:a40bd0bc820d008dc74ed3e9812c94c0",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 8,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 169460
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.82,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+        "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "cd9eb2d6-5dec-5fe1-8a28-3be9feb642f4",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_10",
+        "segment_start_ms": 168630,
+        "segment_end_ms": 169460,
+        "media_time_ms": 168630,
+        "bbox": {
+          "x": 0.0,
+          "y": 24.0,
+          "width": 56.0,
+          "height": 184.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:fd50ae7fd574148abbaa2555a895b9b7",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 4,
+        "live_time_range": {
+          "start_ms": 168630,
+          "end_ms": 169460
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.3923329710960388,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:3210a08af289da3ed0333fccf66dc7f2",
+        "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "ae8a4c90-8fbc-5f84-913d-a423c2990826",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_15",
+        "segment_start_ms": 169040,
+        "segment_end_ms": 169240,
+        "media_time_ms": 169040,
+        "bbox": {
+          "x": 243.0,
+          "y": 73.0,
+          "width": 79.0,
+          "height": 196.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:4c685c2de17b6e04ab2e76280fcc05dd",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 1,
+        "live_time_range": {
+          "start_ms": 169040,
+          "end_ms": 169240
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.36308422684669495,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:75c93b93bd7f748d53c3777e53b4de6e",
+        "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "04d9bfdf-2aa9-53e8-9d85-657ff10f2aac",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_2",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 174460,
+        "media_time_ms": 170710,
+        "bbox": {
+          "x": 283.0,
+          "y": 0.0,
+          "width": 210.0,
+          "height": 278.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:6ab3da01b18174b0a133479ee307e89d",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 30,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 174460
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.82,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:1772344b4a4b7595aa87733640614b09",
+        "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "1f4b53e9-7b57-5a41-9756-6f7e56599593",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_3",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 169250,
+        "media_time_ms": 168000,
+        "bbox": {
+          "x": 6.0,
+          "y": 28.0,
+          "width": 75.0,
+          "height": 82.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:656de2cf51fe92ff64f9df74f7e1684f",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 6,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 169250
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.5526084303855896,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:e80284c07b4598fc36147a58d38b9115",
+        "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "a8a256ab-82b7-5fe3-b572-c19c41f624c3",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_4",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 169460,
+        "media_time_ms": 168630,
+        "bbox": {
+          "x": 402.0,
+          "y": 59.0,
+          "width": 110.0,
+          "height": 208.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:93f464c6fe1a439169ef682ece92ec15",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 8,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 169460
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.6979628801345825,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:f74a16a8e3fbe7d0208095b133c796b6",
+        "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "89e4285d-e2da-5ab5-a85b-a7884ccd10bb",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_5",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 168830,
+        "media_time_ms": 168420,
+        "bbox": {
+          "x": 138.0,
+          "y": 23.0,
+          "width": 126.0,
+          "height": 122.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:511293c565a2dc2388bf883ab8eb3e6c",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 5,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 168830
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.5103434920310974,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:e25d1bea1386426a5e35523085e0e151",
+        "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "f7e117dd-82e3-59f0-9c7d-6d15bcea9db2",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_6",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 173630,
+        "media_time_ms": 171550,
+        "bbox": {
+          "x": 227.0,
+          "y": 1.0,
+          "width": 193.0,
+          "height": 276.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:a7ceb0b3349a4fa29f462dc7d17ca678",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 12,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 173630
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.677405059337616,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:fdcce1e25a8cf81b9580b410a324bd26",
+        "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "f8a75a9e-b9b4-5d98-a149-74b997eb2a64",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_7",
+        "segment_start_ms": 168000,
+        "segment_end_ms": 168200,
+        "media_time_ms": 168000,
+        "bbox": {
+          "x": 240.0,
+          "y": 72.0,
+          "width": 73.0,
+          "height": 50.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:bcc83af433241bb9c8939e384fc2a6d6",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 1,
+        "live_time_range": {
+          "start_ms": 168000,
+          "end_ms": 168200
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.2707499563694,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:f66ae87a3b5dddd162f795e1952616a2",
+        "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "15adc617-6893-5890-aeca-7cd055fb31d0",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      },
+      {
+        "schema": "watch.track_observation.v1",
+        "track_id": "track_8",
+        "segment_start_ms": 168420,
+        "segment_end_ms": 169250,
+        "media_time_ms": 168420,
+        "bbox": {
+          "x": 395.0,
+          "y": 52.0,
+          "width": 50.0,
+          "height": 108.0,
+          "coordinate_space": "source_frame_pixels"
+        },
+        "source_event_id": "watch_live_event_window:3302cd6c1ad3ec5f1bf07b0289e3f9ed",
+        "identity_status": "IDENTITY_CANDIDATE",
+        "detected_class": "person",
+        "live_event_count": 5,
+        "live_time_range": {
+          "start_ms": 168420,
+          "end_ms": 169250
+        },
+        "candidate_entities": [
+          {
+            "actor_name": "Tony Cox",
+            "basis": [
+              "movie_domain_memory",
+              "person_reid_embedding"
+            ],
+            "confidence": 0.5662699341773987,
+            "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+            "kind": "CHARACTER",
+            "name": "Marcus",
+            "status": "PROVISIONAL"
+          }
+        ],
+        "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+        "segment_id": "watch_segment:4c5c19d6e33a18f3edfd0a51489951cc",
+        "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+        "qdrant": {
+          "collection": "watch_track_crop_embeddings",
+          "point_id": "58dff4ad-0258-586d-9d07-16c7b059ccf3",
+          "write_status": "PLANNED_NOT_WRITTEN",
+          "model": "jina-clip-v2-planned"
+        }
+      }
+    ],
+    "identity_evidence": [
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:4aad92267bbeae50141b4394f48538ef",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.82,
+          "event_count": 8,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:37ca28ae168f67e2427d4ded9ff64586"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:898580e523815285e984fb56366cabc9",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.3923329710960388,
+          "event_count": 4,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:41b11ccb037e3cd7780a0c1f7dcf412b"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:11d974c31a80912fb960f49f77f982ea",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.36308422684669495,
+          "event_count": 1,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:16880a46153cbeb24e370c76d3bb0f7d"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:61732fb0c8bf48c84d5cf91c46b06a42",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.82,
+          "event_count": 30,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:e5e1a4d333a64b5e6b5ddfacd12c3aaf"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:3048f9c5f92a792ad8aaa51d37407f76",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.5526084303855896,
+          "event_count": 6,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:28395a8932256130509c01c18115324b"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:733edbdf9e7df50c65889fc32b18542d",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.6979628801345825,
+          "event_count": 8,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:94a6259a019734e815a9430f7f76e8e5"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:61e8c9cd0ef78d8dbb7a55408c5f8f72",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.5103434920310974,
+          "event_count": 5,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:27808e7135404d8f628dc8804b63c2f9"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:77ceaaa8381daf81a791c89026e3edb6",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.677405059337616,
+          "event_count": 12,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:a1169e518f68f6c416b9b44949fa4fa6"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:dfeac73dd474daf35bc960813d00cc26",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.2707499563694,
+          "event_count": 1,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:55c7873b79f310e919813efe525f866b"
+      },
+      {
+        "schema": "watch.identity_evidence.v1",
+        "track_observation_id": "watch_obs:6aa5c319df42441d4afd5733ae09ae53",
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "entity_name": "Marcus",
+        "reference_package_id": null,
+        "approved_reference_ids": [],
+        "identity_status": "IDENTITY_INCONCLUSIVE",
+        "verifier_version": "watch_live_tracking_memory_window_P0",
+        "evidence": {
+          "visual_match_status": "PROVISIONAL",
+          "detector_status": "PROVISIONAL",
+          "candidate_basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "candidate_confidence": 0.5662699341773987,
+          "event_count": 5,
+          "sample_fps": 5.0
+        },
+        "persistence": {},
+        "promotion_blockers": [
+          "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+          "LIVE_TRACK_PROVISIONAL",
+          "MEMORY_RECALL_NOT_VERIFIED",
+          "REFERENCE_IMAGES_NOT_APPROVED"
+        ],
+        "identity_evidence_id": "watch_identity:006a165886f3b6b25b8ffef4a2f800d0"
+      }
+    ],
+    "recall_proof_required": true,
+    "direct_qdrant_or_arango_answer_allowed": false,
+    "notes": [
+      "This is a planned write payload only.",
+      "Arango stores metadata and Qdrant pointers, never raw vectors.",
+      "A later $memory recall proof is required before claiming retrieval works."
+    ]
+  },
+  "proof_scope": [
+    "live_event_windowing",
+    "bounded_memory_trace_plan",
+    "planned_persistence_only"
+  ],
+  "claims": {
+    "proves": [
+      "5fps live tracker events can be collapsed into bounded track observations",
+      "candidate identity remains inconclusive without approved references and recall proof",
+      "memory trace payloads are planned without direct Qdrant or Arango answers"
+    ],
+    "does_not_prove": [
+      "real-time browser overlay animation",
+      "supported character identity",
+      "Qdrant write success",
+      "Arango write success",
+      "$memory recall success"
+    ]
+  }
+}

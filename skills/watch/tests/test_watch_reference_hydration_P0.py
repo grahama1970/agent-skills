@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
+
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -12,13 +14,16 @@ from watch_reference_hydration import (
     STATE_REFERENCE_EMBEDDINGS_READY,
     STATE_REFERENCE_IMAGES_PENDING_APPROVAL,
     STATE_REFERENCE_PACKAGE_MISSING,
+    build_live_tracking_memory_window_plan,
     build_memory_trace_plan,
     build_reference_hydration_plan,
     load_json,
+    load_jsonl,
     validate_hydration_plan,
 )
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "reference_hydration_P0"
+WATCH_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_movie_candidates_do_not_promote_identity() -> None:
@@ -74,3 +79,43 @@ def test_memory_trace_plan_is_planned_not_written_and_recall_gated() -> None:
     assert identity_records
     assert identity_records[0]["identity_status"] == "IDENTITY_INCONCLUSIVE"
     assert "DOMAIN_PRIOR_ONLY" in identity_records[0]["promotion_blockers"]
+
+
+def test_live_tracking_events_collapse_to_recall_gated_memory_windows() -> None:
+    asset = load_json(FIXTURES / "asset_movie_bad_santa.json")
+    events = load_jsonl(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_yolo_bytetrack"
+        / "watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl"
+    )
+    plan = build_live_tracking_memory_window_plan(asset, events, sample_fps=5.0)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_live_tracking_memory_window_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.live_tracking_memory_window_plan.v1"
+    assert plan["write_status"] == "PLANNED_NOT_WRITTEN"
+    assert plan["event_count"] == 80
+    assert plan["track_window_count"] == 10
+    assert plan["memory_trace_plan"]["recall_proof_required"] is True
+    assert plan["memory_trace_plan"]["direct_qdrant_or_arango_answer_allowed"] is False
+
+    windows = plan["windows"]
+    assert {window["identity_status"] for window in windows} == {"IDENTITY_INCONCLUSIVE"}
+    assert all(window["event_count"] >= 1 for window in windows)
+
+    trace_records = plan["memory_trace_plan"]["records"]
+    assert trace_records
+    assert all(record["write_status"] == "PLANNED_NOT_WRITTEN" for record in trace_records)
+    identity_records = plan["memory_trace_plan"]["identity_evidence"]
+    assert identity_records
+    assert all(record["identity_status"] == "IDENTITY_INCONCLUSIVE" for record in identity_records)
+    assert all("MEMORY_RECALL_NOT_VERIFIED" in record["promotion_blockers"] for record in identity_records)

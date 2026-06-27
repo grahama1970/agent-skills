@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_live_tracking_memory_window_plan.schema.json",
+  "title": "Watch Live Tracking Memory Window Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "write_status",
+    "asset",
+    "sample_fps",
+    "event_count",
+    "track_window_count",
+    "windows",
+    "memory_trace_plan",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.live_tracking_memory_window_plan.v1"
+    },
+    "write_status": {
+      "const": "PLANNED_NOT_WRITTEN"
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "sample_fps": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "track_window_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "windows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "track_id",
+          "event_count",
+          "time_range_ms",
+          "representative_media_time_ms",
+          "track_observation_id",
+          "candidate_entities",
+          "identity_status"
+        ],
+        "properties": {
+          "track_id": {
+            "type": "string"
+          },
+          "event_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "time_range_ms": {
+            "type": "object",
+            "required": ["start_ms", "end_ms"],
+            "properties": {
+              "start_ms": {"type": "integer", "minimum": 0},
+              "end_ms": {"type": "integer", "minimum": 1}
+            }
+          },
+          "representative_media_time_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "track_observation_id": {
+            "type": "string",
+            "pattern": "^watch_obs:"
+          },
+          "candidate_entities": {
+            "type": "array"
+          },
+          "identity_status": {
+            "const": "IDENTITY_INCONCLUSIVE"
+          }
+        }
+      }
+    },
+    "memory_trace_plan": {
+      "type": "object",
+      "required": [
+        "schema",
+        "write_status",
+        "records",
+        "track_observations",
+        "identity_evidence",
+        "recall_proof_required",
+        "direct_qdrant_or_arango_answer_allowed"
+      ],
+      "properties": {
+        "schema": {
+          "const": "watch.memory_trace_write_plan.v1"
+        },
+        "write_status": {
+          "const": "PLANNED_NOT_WRITTEN"
+        },
+        "recall_proof_required": {
+          "const": true
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "planned_persistence_only"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}

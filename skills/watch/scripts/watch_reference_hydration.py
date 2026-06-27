@@ -27,6 +27,7 @@ REFERENCE_PACKAGE_SCHEMA = "watch.reference_package.v1"
 TRACK_OBSERVATION_SCHEMA = "watch.track_observation.v1"
 IDENTITY_EVIDENCE_SCHEMA = "watch.identity_evidence.v1"
 MEMORY_TRACE_SCHEMA = "watch.memory_trace_write_plan.v1"
+LIVE_TRACKING_MEMORY_WINDOW_SCHEMA = "watch.live_tracking_memory_window_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -35,6 +36,7 @@ STATE_REFERENCE_EMBEDDINGS_READY = "REFERENCE_EMBEDDINGS_READY"
 STATE_IDENTITY_SUPPORTED = "IDENTITY_SUPPORTED"
 STATE_IDENTITY_INCONCLUSIVE = "IDENTITY_INCONCLUSIVE"
 STATE_IDENTITY_REFUTED = "IDENTITY_REFUTED"
+STATE_IDENTITY_CANDIDATE = "IDENTITY_CANDIDATE"
 
 APPROVED = "APPROVED"
 PLANNED_NOT_WRITTEN = "PLANNED_NOT_WRITTEN"
@@ -60,6 +62,21 @@ def qdrant_point_id(canonical_id: str) -> str:
 
 def load_json(path: str | Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def load_jsonl(path: str | Path) -> List[Dict[str, Any]]:
+    records: List[Dict[str, Any]] = []
+    for line_no, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{path}:{line_no}: invalid JSONL record: {exc}") from exc
+        if not isinstance(value, dict):
+            raise ValueError(f"{path}:{line_no}: JSONL record must be an object")
+        records.append(value)
+    return records
 
 
 def write_json(path: str | Path, value: Any) -> None:
@@ -320,6 +337,174 @@ def normalize_track_observation(raw: Mapping[str, Any], asset: Mapping[str, Any]
         "model": "jina-clip-v2-planned",
     })
     return observation
+
+
+def _bbox_xyxy_to_bbox(bbox_xyxy: Iterable[Any]) -> Dict[str, Any]:
+    coords = [float(v) for v in bbox_xyxy]
+    if len(coords) != 4:
+        raise ValueError(f"bbox_xyxy must have four numbers, got {coords!r}")
+    x1, y1, x2, y2 = coords
+    return {
+        "x": x1,
+        "y": y1,
+        "width": max(0.0, x2 - x1),
+        "height": max(0.0, y2 - y1),
+        "coordinate_space": "source_frame_pixels",
+    }
+
+
+def _candidate_confidence(event: Mapping[str, Any]) -> float:
+    candidates = event.get("candidate_entities") or []
+    if not candidates:
+        return 0.0
+    return max(float(candidate.get("confidence") or 0.0) for candidate in candidates)
+
+
+def _representative_event(events: List[Mapping[str, Any]]) -> Mapping[str, Any]:
+    return max(
+        events,
+        key=lambda event: (
+            _candidate_confidence(event),
+            float(event.get("media_time_seconds") or 0.0),
+        ),
+    )
+
+
+def _window_time_range(events: List[Mapping[str, Any]]) -> Dict[str, int]:
+    times = [float(event.get("media_time_seconds") or 0.0) for event in events]
+    start_ms = int(min(times) * 1000)
+    end_ms = int(max(times) * 1000)
+    if end_ms <= start_ms:
+        end_ms = start_ms + 200
+    return {"start_ms": start_ms, "end_ms": end_ms}
+
+
+def build_live_tracking_memory_window_plan(
+    asset: Mapping[str, Any],
+    events: Iterable[Mapping[str, Any]],
+    sample_fps: float = 5.0,
+) -> Dict[str, Any]:
+    """Collapse live 5 FPS tracker events into bounded memory-write plans.
+
+    The result remains a planned artifact. It never writes Qdrant, Arango, or
+    memory, and it never promotes a candidate entity to supported identity.
+    """
+
+    normalized_asset = copy.deepcopy(dict(asset))
+    normalized_asset["asset_id"] = compute_asset_id(normalized_asset)
+    event_list = [copy.deepcopy(dict(event)) for event in events]
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for event in event_list:
+        if event.get("schema_version") != "watch.live_track_update.v1":
+            raise ValueError(f"unsupported live event schema: {event.get('schema_version')!r}")
+        if event.get("event_type") != "track_update":
+            continue
+        track_id = str(event.get("track_id") or "")
+        if not track_id:
+            raise ValueError("live track event missing track_id")
+        grouped.setdefault(track_id, []).append(event)
+
+    observations: List[Dict[str, Any]] = []
+    identity_evidence_records: List[Dict[str, Any]] = []
+    windows: List[Dict[str, Any]] = []
+
+    for track_id in sorted(grouped):
+        track_events = sorted(grouped[track_id], key=lambda event: float(event.get("media_time_seconds") or 0.0))
+        representative = _representative_event(track_events)
+        time_range = _window_time_range(track_events)
+        raw_observation = {
+            "schema": TRACK_OBSERVATION_SCHEMA,
+            "track_id": track_id,
+            "segment_start_ms": time_range["start_ms"],
+            "segment_end_ms": time_range["end_ms"],
+            "media_time_ms": int(float(representative.get("media_time_seconds") or 0.0) * 1000),
+            "bbox": _bbox_xyxy_to_bbox(representative.get("bbox_xyxy") or [0, 0, 0, 0]),
+            "source_event_id": stable_id("watch_live_event_window", {
+                "stream_id": representative.get("stream_id"),
+                "asset_uid": representative.get("asset_uid"),
+                "segment_id": representative.get("segment_id"),
+                "track_id": track_id,
+                "start_ms": time_range["start_ms"],
+                "end_ms": time_range["end_ms"],
+                "event_count": len(track_events),
+            }),
+            "identity_status": STATE_IDENTITY_CANDIDATE,
+            "detected_class": representative.get("detected_class"),
+            "live_event_count": len(track_events),
+            "live_time_range": time_range,
+            "candidate_entities": representative.get("candidate_entities") or [],
+        }
+        observation = normalize_track_observation(raw_observation, normalized_asset)
+        observations.append(observation)
+
+        candidates = representative.get("candidate_entities") or []
+        primary_candidate = candidates[0] if candidates else {}
+        identity_status = STATE_IDENTITY_INCONCLUSIVE
+        identity_evidence_records.append({
+            "schema": IDENTITY_EVIDENCE_SCHEMA,
+            "track_observation_id": observation["track_observation_id"],
+            "entity_id": primary_candidate.get("entity_id"),
+            "entity_name": primary_candidate.get("name"),
+            "reference_package_id": primary_candidate.get("reference_package_id"),
+            "approved_reference_ids": [],
+            "identity_status": identity_status,
+            "verifier_version": "watch_live_tracking_memory_window_P0",
+            "evidence": {
+                "visual_match_status": "PROVISIONAL",
+                "detector_status": representative.get("status", "PROVISIONAL"),
+                "candidate_basis": primary_candidate.get("basis", []),
+                "candidate_confidence": primary_candidate.get("confidence"),
+                "event_count": len(track_events),
+                "sample_fps": sample_fps,
+            },
+            "persistence": {},
+            "promotion_blockers": [
+                "LIVE_TRACK_PROVISIONAL",
+                "REFERENCE_IMAGES_NOT_APPROVED",
+                "APPROVED_REFERENCE_EMBEDDINGS_MISSING",
+                "MEMORY_RECALL_NOT_VERIFIED",
+            ],
+        })
+        windows.append({
+            "track_id": track_id,
+            "event_count": len(track_events),
+            "time_range_ms": time_range,
+            "representative_media_time_ms": observation["media_time_ms"],
+            "track_observation_id": observation["track_observation_id"],
+            "candidate_entities": representative.get("candidate_entities") or [],
+            "identity_status": identity_status,
+        })
+
+    memory_trace_plan = build_memory_trace_plan(normalized_asset, observations, identity_evidence_records)
+    return {
+        "schema": LIVE_TRACKING_MEMORY_WINDOW_SCHEMA,
+        "write_status": PLANNED_NOT_WRITTEN,
+        "asset": normalized_asset,
+        "sample_fps": sample_fps,
+        "event_count": len(event_list),
+        "track_window_count": len(windows),
+        "windows": windows,
+        "memory_trace_plan": memory_trace_plan,
+        "proof_scope": [
+            "live_event_windowing",
+            "bounded_memory_trace_plan",
+            "planned_persistence_only",
+        ],
+        "claims": {
+            "proves": [
+                "5fps live tracker events can be collapsed into bounded track observations",
+                "candidate identity remains inconclusive without approved references and recall proof",
+                "memory trace payloads are planned without direct Qdrant or Arango answers",
+            ],
+            "does_not_prove": [
+                "real-time browser overlay animation",
+                "supported character identity",
+                "Qdrant write success",
+                "Arango write success",
+                "$memory recall success",
+            ],
+        },
+    }
 
 
 def identity_promotion_errors(identity_evidence: Mapping[str, Any]) -> List[str]:
