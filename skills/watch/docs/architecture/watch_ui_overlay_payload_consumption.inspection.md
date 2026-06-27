@@ -183,11 +183,91 @@ blank screenshot. The rerun succeeded:
 - Screenshot:
   `/tmp/codex-ui-verification/agent-skills/watch-modal-event-overlay-payload-rerun/20260627T204747Z.png`
 
+## Loaded artifact/API proof
+
+The next proof rung replaced the inline modal fixture with a loaded Watch API
+payload:
+
+- API route:
+  `GET /api/projects/watch/overlay-payload`
+- Server file:
+  `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts`
+- UI file:
+  `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchReportView.tsx`
+
+Endpoint checks:
+
+```bash
+curl -sS http://127.0.0.1:3001/api/projects/watch/overlay-payload \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["schema_version"], d["status"], len(d["overlays"]), d["overlays"][0]["overlay_id"])'
+```
+
+Output:
+
+```text
+watch.ui_overlay_payload.v1 DRY_RUN_ONLY 1 watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_07
+```
+
+The same check through the Vite proxy also returned the loaded payload:
+
+```bash
+curl -sS http://127.0.0.1:3002/api/projects/watch/overlay-payload \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["schema_version"], d["status"], len(d["overlays"]), d["overlays"][0]["overlay_id"])'
+```
+
+Output:
+
+```text
+watch.ui_overlay_payload.v1 DRY_RUN_ONLY 1 watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_07
+```
+
+Browser probe against the loaded endpoint:
+
+```json
+{
+  "positive": {
+    "modal": true,
+    "overlayCount": 1,
+    "labels": ["MarcusTony CoxPROVISIONAL"],
+    "contract": "DRY_RUN_ONLY geometry_plumbing overlay",
+    "overlayData": [
+      {
+        "overlayId": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_07",
+        "trackId": "track_07",
+        "identityStatus": "PROVISIONAL",
+        "left": "44.141%",
+        "top": "8.571%",
+        "width": "30.859%",
+        "height": "76.429%"
+      }
+    ]
+  },
+  "negative": {
+    "overlayCount": 0,
+    "contract": "Tracking overlay unavailable: no event-backed bbox for this segment"
+  },
+  "screenshots": [
+    "/tmp/watch-loaded-overlay-0248.png",
+    "/tmp/watch-loaded-overlay-0136-negative.png"
+  ]
+}
+```
+
+Targeted lint after the API-backed UI patch:
+
+```bash
+npx eslint src/components/watch/WatchReportView.tsx
+```
+
+Result: exit code 0.
+
 ## What this proves
 
 - The modal can render an annotation box from event-derived overlay payload data.
 - The modal can show the payload proof scope (`DRY_RUN_ONLY geometry_plumbing`).
 - A clip without matching overlay payload does not render a fake annotation box.
+- The modal can consume the overlay payload through the Watch API route instead
+  of an inline React fixture.
 
 ## What this does not prove
 
@@ -201,7 +281,8 @@ blank screenshot. The rerun succeeded:
 
 ## Next proof rung
 
-Move the modal overlay payload from an inline/local fixture to a loaded Watch API
-or static report artifact, then repeat the positive and negative browser proofs
-against the loaded artifact. Only after that should the live YOLO/ByteTrack event
-stream replace the dry-run payload fixture.
+Replace the dry-run loaded payload with a live YOLO/ByteTrack event stream that
+updates the modal overlay at playback time, then persist resulting observations
+to `watch_track_observations` and verify recall through the movie-domain memory
+profile. The current payload remains `DRY_RUN_ONLY`; it is geometry plumbing,
+not live tracking or identity proof.
