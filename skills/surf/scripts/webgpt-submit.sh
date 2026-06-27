@@ -892,45 +892,16 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 # Stale CDP recovery + composer prep.
 # Chrome allows only one CDP debugger per tab. If a previous webgpt.submit
 # was killed before cleanup, the stale CDP connection blocks all subsequent
-# CDP access to that tab. Activating the tab forces Chrome to release the
-# stale connection and establish a fresh one. After activation, clear the
-# ChatGPT composer (ChatGPT may restore drafts on page navigation).
+# CDP access. Activating the tab forces Chrome to release the stale connection
+# and establish a fresh one. CDP works across KDE desktops — no desktop switch
+# needed. After activation, clear the ChatGPT composer (ChatGPT may restore
+# drafts from localStorage on page navigation).
 if [[ -n "${requested_tab_id:-}" ]]; then
-  # KDE desktop auto-switch
-  tab_list_json="$("$RUN_SH" tab.list --json --with-kde 2>/dev/null || true)"
-  if [[ -n "$tab_list_json" ]]; then
-    target_desktop="$(echo "$tab_list_json" | python3 -c "
-import json, sys
-tabs = json.load(sys.stdin)
-for t in tabs:
-    if str(t.get('id')) == '$requested_tab_id':
-        d = t.get('kde_desktop')
-        if d is not None:
-            print(d)
-        break
-" 2>/dev/null || true)"
-    current_desktop="$(python3 -c "
-import subprocess, sys
-try:
-    r = subprocess.run(['qdbus', 'org.kde.KWin', '/KWin', 'currentDesktop'], capture_output=True, text=True, timeout=5)
-    if r.returncode == 0 and r.stdout.strip():
-        print(r.stdout.strip())
-except: pass
-" 2>/dev/null || true)"
-    if [[ -n "$target_desktop" && -n "$current_desktop" && "$target_desktop" != "$current_desktop" ]]; then
-      echo "webgpt.submit: switching to KDE desktop $target_desktop" >&2
-      wmctrl -s "$target_desktop" 2>/dev/null || true
-      sleep 1
-    fi
-  fi
-
-  # Activate tab to release stale CDP debugger and ensure fresh connection
   echo "webgpt.submit: activating tab $requested_tab_id for CDP recovery" >&2
   "$RUN_SH" tab.activate "$requested_tab_id" >/dev/null 2>&1 || true
   sleep 3
 
-  # Clear ChatGPT composer AND its localStorage draft source.
-  # ChatGPT restores drafts from localStorage on page load, so clear both.
+  # Clear ChatGPT composer + localStorage drafts.
   "$RUN_SH" js "
     const keys = Object.keys(localStorage).filter(k => k.includes('draft') || k.includes('composer') || k.includes('input'));
     keys.forEach(k => localStorage.removeItem(k));
