@@ -1,0 +1,1431 @@
+{
+  "claim_boundary": "This payload proves only that validated Watch track events can drive browser overlay geometry without hard-coded boxes. It does not prove live YOLO/ByteTrack inference, person re-identification, character identity, memory writes, Qdrant writes, or recall.",
+  "coordinate_space": {
+    "frame_height": 278,
+    "frame_width": 512,
+    "normalized_basis": "percent_of_source_frame",
+    "source": "video_frame_pixels"
+  },
+  "excluded_proofs": [
+    "live_ml",
+    "identity",
+    "memory_write",
+    "qdrant_write",
+    "recall"
+  ],
+  "frame_size": {
+    "height": 278,
+    "width": 512
+  },
+  "overlay_count": 10,
+  "overlays": [
+    {
+      "anchor_media_time_seconds": 169.46,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 91.727,
+        "left": 3.516,
+        "top": 0.0,
+        "width": 55.469
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        18,
+        0,
+        302,
+        255
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.82,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.46,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.459794Z",
+        "media_time_seconds": 169.46,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 8,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            26,
+            0,
+            320,
+            261
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            20,
+            0,
+            314,
+            261
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            20,
+            0,
+            307,
+            255
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            17,
+            0,
+            304,
+            255
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            14,
+            0,
+            299,
+            253
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            18,
+            0,
+            299,
+            248
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            7,
+            0,
+            294,
+            256
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            0,
+            276,
+            253
+          ],
+          "media_time_seconds": 169.46,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_1",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.46,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 169.46,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 66.187,
+        "left": 0.0,
+        "top": 8.633,
+        "width": 10.547
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        0,
+        24,
+        54,
+        208
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.3923329710960388,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.46,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.459794Z",
+        "media_time_seconds": 169.46,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 4,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            0,
+            24,
+            56,
+            208
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            24,
+            54,
+            207
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            26,
+            53,
+            209
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            25,
+            51,
+            202
+          ],
+          "media_time_seconds": 169.46,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.63
+      },
+      "track_id": "track_10",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.46,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 169.04,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 70.504,
+        "left": 47.461,
+        "top": 26.259,
+        "width": 15.43
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        243,
+        73,
+        322,
+        269
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.36308422684669495,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.04,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.042710Z",
+        "media_time_seconds": 169.04,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 1,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            243,
+            73,
+            322,
+            269
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.04,
+        "start_seconds": 169.04
+      },
+      "track_id": "track_15",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.04,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 174.46,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 98.921,
+        "left": 54.297,
+        "top": 0.0,
+        "width": 43.164
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        278,
+        0,
+        499,
+        275
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.82,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 174.46,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:06.464802Z",
+        "media_time_seconds": 174.46,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 30,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            319,
+            72,
+            416,
+            205
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            317,
+            72,
+            415,
+            208
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            319,
+            72,
+            416,
+            206
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            322,
+            73,
+            418,
+            206
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            323,
+            73,
+            417,
+            204
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            300,
+            72,
+            424,
+            246
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            285,
+            73,
+            422,
+            267
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            291,
+            74,
+            430,
+            275
+          ],
+          "media_time_seconds": 169.46,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            287,
+            14,
+            476,
+            278
+          ],
+          "media_time_seconds": 170.09,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            286,
+            5,
+            485,
+            278
+          ],
+          "media_time_seconds": 170.29,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            284,
+            1,
+            490,
+            278
+          ],
+          "media_time_seconds": 170.5,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            283,
+            0,
+            493,
+            278
+          ],
+          "media_time_seconds": 170.71,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            281,
+            0,
+            495,
+            278
+          ],
+          "media_time_seconds": 170.92,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            280,
+            0,
+            497,
+            278
+          ],
+          "media_time_seconds": 171.13,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            279,
+            0,
+            498,
+            277
+          ],
+          "media_time_seconds": 171.34,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            277,
+            0,
+            500,
+            277
+          ],
+          "media_time_seconds": 171.55,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            277,
+            0,
+            500,
+            276
+          ],
+          "media_time_seconds": 171.75,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            276,
+            0,
+            501,
+            275
+          ],
+          "media_time_seconds": 171.96,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            276,
+            0,
+            503,
+            275
+          ],
+          "media_time_seconds": 172.17,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            275,
+            0,
+            504,
+            275
+          ],
+          "media_time_seconds": 172.38,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            275,
+            0,
+            505,
+            274
+          ],
+          "media_time_seconds": 172.59,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            275,
+            0,
+            506,
+            274
+          ],
+          "media_time_seconds": 172.8,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            273,
+            0,
+            505,
+            275
+          ],
+          "media_time_seconds": 173.01,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            272,
+            0,
+            506,
+            274
+          ],
+          "media_time_seconds": 173.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            271,
+            0,
+            506,
+            274
+          ],
+          "media_time_seconds": 173.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            272,
+            0,
+            507,
+            274
+          ],
+          "media_time_seconds": 173.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            270,
+            0,
+            507,
+            275
+          ],
+          "media_time_seconds": 173.84,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            268,
+            0,
+            507,
+            275
+          ],
+          "media_time_seconds": 174.05,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            268,
+            0,
+            506,
+            274
+          ],
+          "media_time_seconds": 174.26,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            265,
+            0,
+            505,
+            273
+          ],
+          "media_time_seconds": 174.46,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 174.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_2",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 174.46,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 169.25,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 31.655,
+        "left": 0.0,
+        "top": 8.633,
+        "width": 13.086
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        0,
+        24,
+        67,
+        112
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5526084303855896,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.25,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.251252Z",
+        "media_time_seconds": 169.25,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 6,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            6,
+            28,
+            81,
+            110
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            26,
+            83,
+            119
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            24,
+            69,
+            112
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            23,
+            65,
+            112
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            24,
+            63,
+            112
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            0,
+            24,
+            62,
+            111
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.25,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_3",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.25,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 169.46,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 75.18,
+        "left": 78.516,
+        "top": 21.223,
+        "width": 21.484
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        402,
+        59,
+        512,
+        268
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.6979628801345825,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.46,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.459794Z",
+        "media_time_seconds": 169.46,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 8,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            400,
+            55,
+            512,
+            267
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            400,
+            56,
+            512,
+            270
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            401,
+            57,
+            512,
+            272
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            402,
+            59,
+            512,
+            267
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            402,
+            60,
+            511,
+            266
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            402,
+            59,
+            511,
+            266
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            402,
+            60,
+            512,
+            271
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            402,
+            62,
+            512,
+            271
+          ],
+          "media_time_seconds": 169.46,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.46,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_4",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.46,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 168.83,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 44.245,
+        "left": 26.953,
+        "top": 7.914,
+        "width": 24.609
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        138,
+        22,
+        264,
+        145
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5103434920310974,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 168.83,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:00.834168Z",
+        "media_time_seconds": 168.83,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 5,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            142,
+            21,
+            265,
+            141
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            141,
+            22,
+            265,
+            143
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            138,
+            23,
+            264,
+            145
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            134,
+            22,
+            262,
+            146
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            130,
+            22,
+            261,
+            148
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 168.83,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_5",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 168.83,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 173.63,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 90.288,
+        "left": 27.344,
+        "top": 7.554,
+        "width": 27.734
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        140,
+        21,
+        282,
+        272
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.677405059337616,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 173.63,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:05.630634Z",
+        "media_time_seconds": 173.63,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 12,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            140,
+            22,
+            275,
+            258
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            138,
+            23,
+            273,
+            257
+          ],
+          "media_time_seconds": 168.21,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            130,
+            23,
+            271,
+            266
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            131,
+            22,
+            274,
+            270
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            139,
+            22,
+            283,
+            269
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            135,
+            21,
+            281,
+            270
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            132,
+            21,
+            282,
+            273
+          ],
+          "media_time_seconds": 169.46,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            227,
+            1,
+            420,
+            277
+          ],
+          "media_time_seconds": 171.55,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            227,
+            0,
+            446,
+            275
+          ],
+          "media_time_seconds": 172.8,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            218,
+            0,
+            458,
+            276
+          ],
+          "media_time_seconds": 173.01,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            203,
+            1,
+            461,
+            276
+          ],
+          "media_time_seconds": 173.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            183,
+            1,
+            459,
+            275
+          ],
+          "media_time_seconds": 173.63,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 173.63,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_6",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 173.63,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 168.0,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 17.986,
+        "left": 46.875,
+        "top": 25.899,
+        "width": 14.258
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        240,
+        72,
+        313,
+        122
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.2707499563694,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 168.0,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:00Z",
+        "media_time_seconds": 168.0,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 1,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            240,
+            72,
+            313,
+            122
+          ],
+          "media_time_seconds": 168.0,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 168.0,
+        "start_seconds": 168.0
+      },
+      "track_id": "track_7",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 168.0,
+      "visibility_proof": false
+    },
+    {
+      "anchor_media_time_seconds": 169.25,
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_percent": {
+        "height": 35.252,
+        "left": 76.758,
+        "top": 18.705,
+        "width": 8.398
+      },
+      "bbox_policy": "median_source_events",
+      "bbox_xyxy": [
+        393,
+        52,
+        436,
+        150
+      ],
+      "classification": "provisional_identity",
+      "detected_class": "person",
+      "identity_candidate": {
+        "actor_name": "Tony Cox",
+        "basis": [
+          "movie_domain_memory",
+          "person_reid_embedding"
+        ],
+        "confidence": 0.5662699341773987,
+        "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+        "kind": "CHARACTER",
+        "name": "Marcus",
+        "status": "PROVISIONAL"
+      },
+      "identity_status": "PROVISIONAL",
+      "last_seen_media_time_seconds": 169.25,
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "render_policy": {
+        "fill_opacity": 0.1,
+        "label_position": "top-left",
+        "pointer_events": "none",
+        "stroke": "solid",
+        "stroke_color": "#03dac6"
+      },
+      "representative_event": {
+        "emitted_at": "2026-06-27T21:40:01.251252Z",
+        "media_time_seconds": 169.25,
+        "status": "PROVISIONAL"
+      },
+      "segment_id": "seg_0007",
+      "source_event_count": 5,
+      "source_event_refs": [
+        {
+          "bbox_xyxy": [
+            395,
+            52,
+            445,
+            160
+          ],
+          "media_time_seconds": 168.42,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            393,
+            52,
+            441,
+            156
+          ],
+          "media_time_seconds": 168.63,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            393,
+            52,
+            436,
+            144
+          ],
+          "media_time_seconds": 168.83,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            391,
+            52,
+            434,
+            144
+          ],
+          "media_time_seconds": 169.04,
+          "status": "PROVISIONAL"
+        },
+        {
+          "bbox_xyxy": [
+            390,
+            53,
+            436,
+            150
+          ],
+          "media_time_seconds": 169.25,
+          "status": "PROVISIONAL"
+        }
+      ],
+      "stale_after_ms": 1000,
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end_seconds": 169.25,
+        "start_seconds": 168.42
+      },
+      "track_id": "track_8",
+      "track_lifecycle_status": "active",
+      "valid_at_media_time_seconds": 169.25,
+      "visibility_proof": false
+    }
+  ],
+  "posted": false,
+  "proof_scope": [
+    "geometry_plumbing"
+  ],
+  "schema_version": "watch.ui_overlay_payload.v1",
+  "source_event_summary": "docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/summary.json",
+  "source_events": "docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl",
+  "status": "DRY_RUN_ONLY"
+}

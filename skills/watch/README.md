@@ -138,6 +138,7 @@ See:
 - [`docs/architecture/watch_ui_overlay_payload_consumption.inspection.md`](docs/architecture/watch_ui_overlay_payload_consumption.inspection.md)
 - [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
 - [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
+- [`docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/inspection.md)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
 
 For live character/asset tracking, install the optional tracking dependencies:

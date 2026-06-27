@@ -192,6 +192,32 @@ event_count 80
 domain_candidates_attached true
 ```
 
+Live-derived overlay payload:
+
+```bash
+python3 scripts/build_tracking_overlay_payload.py \
+  --events docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl \
+  --event-summary docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/summary.json \
+  --out-dir docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload
+python3 scripts/validate_watch_overlay_payload.py \
+  --payload docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json
+```
+
+Result:
+
+```text
+overlay_payload_ok 10
+frame_size 512 278
+identity_candidates ['Marcus']
+overlay_payload_schema_ok 10 geometry_plumbing
+```
+
+This payload is deliberately `DRY_RUN_ONLY`. It proves the live tracker event
+geometry can feed the browser overlay contract without hard-coded boxes. It also
+shows the current identity gap: all 10 person tracks inherit the same
+provisional `Marcus` candidate from the domain seed, so the UI must not render
+those labels as verified character identity.
+
 ## Acceptance Rationale
 
 The adapter is accepted as a live event-stream adapter because its Ultralytics
@@ -208,9 +234,12 @@ cases. The live run adds detector/tracker runtime evidence for one bounded clip.
 - It does not prove Watch UI real-time overlay rendering from the live JSONL.
 - It does not prove memory/Qdrant writes or recall.
 - It does not prove a durable evidence case should be created.
+- It does not prove candidate labels are correctly assigned to individual
+  tracks.
 
 ## Next Legal Move
 
-Build the browser overlay payload from this live JSONL, compare it against the
-deterministic frame harness, then request approval for bounded memory/Qdrant
-upserts and `/memory recall` proof.
+Add an identity verification pass that compares track crops, frame evidence,
+transcript/SRT evidence, movie-domain candidates, and optional human overlay
+approval before any track is persisted as `SUPPORTED` or rendered as a verified
+character label.

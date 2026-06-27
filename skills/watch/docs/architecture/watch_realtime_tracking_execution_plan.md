@@ -32,6 +32,7 @@ not scene truth.
 | `build_realtime_tracking_event_log.py` | Deterministic harness exists | Emits schema-valid event JSONL from fixture frame |
 | `track_yolo_bytetrack.py` | Live bounded run exists | Maps Ultralytics YOLO + ByteTrack output into Watch events |
 | `generated/bad_santa_marcus_0248_yolo_bytetrack/` | Live event artifact exists | 80 schema-valid provisional YOLO/ByteTrack events over 168.0-174.46s |
+| `generated/bad_santa_marcus_0248_yolo_overlay_payload/` | Live-derived overlay artifact exists | 10 schema-valid overlay records generated from live YOLO event geometry |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -121,6 +122,13 @@ Current canary proof:
 - Boundary: this proves live event emission and schema validity only. It does
   not prove Marcus identity, UI real-time overlay updates, memory writes,
   Qdrant writes, or recall.
+
+Current overlay proof:
+
+- Command: `python3 scripts/build_tracking_overlay_payload.py --events docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl --event-summary docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/summary.json --out-dir docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload`
+- Validation: `overlay_payload_schema_ok 10 geometry_plumbing`
+- Frame size: `512x278`, derived from the local clip via `ffprobe` because the live YOLO summary does not include `frame_size`
+- Boundary: this proves live event geometry can feed the browser overlay payload contract. It does not prove real-time UI animation, Marcus identity, memory writes, Qdrant writes, or recall. The generated payload currently labels all 10 tracks with the same provisional `Marcus` candidate, which is a known identity-verification gap and must stay visually provisional.
 
 ### Phase 3: Verification and Bounded Observation
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from statistics import median
@@ -130,9 +131,42 @@ def _frame_size(summary_path: Path) -> tuple[int, int]:
     frame_size = summary.get("frame_size", {})
     width = int(frame_size.get("width", 0))
     height = int(frame_size.get("height", 0))
+    if (width <= 0 or height <= 0) and summary.get("source"):
+        width, height = _probe_video_size(str(summary["source"]))
     if width <= 0 or height <= 0:
         raise ValueError(f"missing frame_size width/height in {summary_path}")
     return width, height
+
+
+def _probe_video_size(source: str) -> tuple[int, int]:
+    if source.startswith(("rtsp://", "http://", "https://")):
+        raise ValueError("live or remote stream summaries must include frame_size")
+    path = Path(source)
+    if not path.exists():
+        raise FileNotFoundError(f"cannot derive frame_size; source missing: {source}")
+    completed = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "json",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    data = json.loads(completed.stdout)
+    streams = data.get("streams") or []
+    if not streams:
+        raise ValueError(f"ffprobe found no video stream: {source}")
+    stream = streams[0]
+    return int(stream.get("width", 0)), int(stream.get("height", 0))
 
 
 def _build_overlays(
@@ -299,6 +333,12 @@ annotation boxes from the browser layer.
 ## Claim Boundary
 
 {payload['claim_boundary']}
+
+When the source event log is produced by a live tracker, live detector/tracker
+proof remains owned by that source event artifact. This overlay payload only
+proves that validated events can be transformed into browser geometry. Identity
+labels remain provisional until a separate verification pass supports or
+rejects them.
 """
 
 
