@@ -135,6 +135,7 @@ See:
 - [`scripts/validate_watch_overlay_payload.py`](scripts/validate_watch_overlay_payload.py)
 - [`docs/architecture/watch_ui_overlay_payload.schema.json`](docs/architecture/watch_ui_overlay_payload.schema.json)
 - [`docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/inspection.md)
+- [`docs/architecture/watch_ui_overlay_payload_consumption.inspection.md`](docs/architecture/watch_ui_overlay_payload_consumption.inspection.md)
 - [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
 - [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)

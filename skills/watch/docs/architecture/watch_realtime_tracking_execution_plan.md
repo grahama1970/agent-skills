@@ -250,8 +250,11 @@ there, but only stream evidence can support what is visible at a specific time.
      `scripts/validate_watch_overlay_payload.py`
    - Current dry-run payload:
      `docs/architecture/generated/bad_santa_marcus_0248_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json`
+   - Local UI consumption inspection:
+     `docs/architecture/watch_ui_overlay_payload_consumption.inspection.md`
    - This proves event-to-overlay geometry only; the production UI still needs
-     to consume this payload or live stream events instead of placeholders.
+     to load this payload from a Watch API/static report artifact or consume
+     live stream events instead of carrying an inline fixture.
 4. With human approval, post the already generated `/upsert` payloads to memory.
 5. Run recall proof queries:
    - "find all movie segments with Marcus"
@@ -266,5 +269,5 @@ This plan does not claim the goal is complete. Missing proof remains:
 - live memory write receipt
 - live `/recall` proof for Watch observations/cases
 - Qdrant/Jina point write and dense recall proof
-- production UI consumption of event-derived bbox rather than deterministic
-  placeholder bbox
+- committed production UI consumption of loaded event-derived overlay payload,
+  followed by live stream event consumption
