@@ -1,0 +1,260 @@
+# Watch Real-Time Tracking Execution Plan
+
+Status: active implementation plan
+Created: 2026-06-27
+Scope: movie-character tracking canary for multi-drone AO stream management
+
+## Objective
+
+Make Watch prove the same loop on movie characters that it will later use for
+many drone or sensor streams in an area of operations:
+
+```text
+stream provisional ML tracks live
+hydrate domain entities separately
+verify against extracted Watch evidence
+persist only bounded observations, cases, graph edges, and vector pointers
+answer through the memory pipeline
+```
+
+Movies remain the controlled canary. They are easier to inspect than AO feeds,
+but they must use the same evidence boundaries: domain knowledge is a prior,
+not scene truth.
+
+## Current Inputs
+
+| Artifact | Current status | Role |
+| --- | --- | --- |
+| `watch_realtime_character_tracking_contract.md` | Candidate contract | Architecture boundary and evidence rules |
+| `watch_track_observations.schema.json` | Draft schema exists | Bounded observation persistence contract |
+| `watch_evidence_cases.schema.json` | Draft schema exists | Durable case and overlay contract |
+| `watch_tracker_event_log.bad_santa_marcus.fixture.jsonl` | Deterministic fixture exists | Offline live-track event shape proof |
+| `build_realtime_tracking_event_log.py` | Deterministic harness exists | Emits schema-valid event JSONL from fixture frame |
+| `track_yolo_bytetrack.py` | Adapter exists | Maps Ultralytics YOLO + ByteTrack output into Watch events |
+| `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
+| `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
+
+## Non-Negotiable Invariants
+
+1. Brave Search and movie databases seed domain candidates only.
+2. A character can be marked present in a segment only from Watch evidence:
+   frame, clip, transcript, VLM row text, live track event, human overlay, or
+   accepted bounded observation.
+3. Memory receives bounded summaries, not every frame.
+4. Arango-bound documents store metadata, source refs, graph edges, and Qdrant
+   point pointers. They must not store raw vector arrays.
+5. Qdrant/Jina multimodal points represent frame crops, scene markers,
+   transcript snippets, and optional clip-level features.
+6. UI overlays may be provisional. Persistence must name whether identity is
+   `CANDIDATE`, `SUPPORTED`, `REFUTED`, or `INCONCLUSIVE`.
+7. AO/drone streams use the same model, replacing movie cast/domain priors with
+   asset registry, mission logs, telemetry, geofence, sensor state, or operator
+   overlays.
+
+## Execution Phases
+
+### Phase 1: Domain Seed Package
+
+Goal: create movie-domain priors without making scene claims.
+
+Inputs:
+
+- Raw Brave Search results:
+  `generated/bad_santa_domain_seed/brave_bad_santa_cast_search.json`
+- Manual extraction target:
+  `movie_domain_entities`
+
+Output records:
+
+- `movie_domain_assets/movie_bad_santa_2003_unrated`
+- `movie_domain_entities/willie_bad_santa_2003`
+- `movie_domain_entities/marcus_bad_santa_2003`
+- `movie_domain_entities/the_kid_bad_santa_2003`
+
+Acceptance evidence:
+
+- Raw Brave Search artifact exists.
+- Extracted domain entities cite source URLs.
+- Domain records are marked `DOMAIN_PRIOR`.
+- No Watch segment claims are emitted from this phase.
+
+### Phase 2: Live Track Event Stream
+
+Goal: produce provisional track events during playback or recorded replay.
+
+Runtime path:
+
+```text
+video/stream source
+  -> Ultralytics YOLO person/object detection
+  -> ByteTrack track IDs
+  -> watch.live_track_update.v1 events
+  -> browser/player overlay and active row sync
+```
+
+Output:
+
+- JSONL event stream with `stream_id`, `asset_uid`, `segment_id`,
+  `media_time_seconds`, `track_id`, `bbox_xyxy`, `detected_class`,
+  `candidate_entities`, and `status`.
+
+Acceptance evidence:
+
+- `track_yolo_bytetrack.py` runs against a real clip or stream source.
+- Event JSONL validates against `watch_track_observations.schema.json`
+  `live_track_update_event`.
+- UI modal/table overlay uses actual event bbox data, not a hard-coded region.
+- Event claims remain `PROVISIONAL`.
+
+### Phase 3: Verification and Bounded Observation
+
+Goal: convert live events into memory-ready segment observations.
+
+Verification compares:
+
+- tracker events
+- movie-domain entity priors
+- Watch frame/clip/VLM row text
+- SRT/Whisper transcript
+- human overlay approvals or corrections
+
+Output:
+
+- `watch_track_observations` documents, one per bounded track/segment claim.
+
+Verdict rule:
+
+| Evidence state | Observation status |
+| --- | --- |
+| Tracker + row evidence agree and identity is supported | `SUPPORTED` |
+| Tracker/domain candidate conflicts with row evidence | `REFUTED` or `INCONCLUSIVE` |
+| Tracker exists but identity evidence is weak | `INCONCLUSIVE` + `TRACK_IDENTITY_UNCERTAIN` |
+| Domain source exists but no Watch evidence supports scene presence | `INCONCLUSIVE` + `COVERAGE_GAP` |
+
+Acceptance evidence:
+
+- Dry-run payload validates.
+- Live `/upsert` receipt exists when approved.
+- Recall can retrieve the observation by entity and time range.
+
+### Phase 4: Evidence Case Creation
+
+Goal: create durable cases only when there is a real investigative need.
+
+Case triggers:
+
+- operator clicks isolate/create case
+- tracker identity conflicts with SRT/Whisper/domain evidence
+- AO telemetry conflicts with visual evidence
+- answer pipeline needs durable anchoring
+- repeated divergence suggests batch resolution or human review
+
+Output:
+
+- `watch_evidence_cases`
+- `watch_evidence_edges`
+- optional `watch_overlay_records`
+
+Acceptance evidence:
+
+- Case has `entity_ids` and `time_range`.
+- Case references source evidence and any track observation.
+- Case verdict uses `SUPPORTED`, `REFUTED`, or `INCONCLUSIVE`.
+- Technical ingest states use `failure_codes`, not verdict vocabulary.
+
+### Phase 5: Qdrant/Jina Multimodal Index
+
+Goal: support recall such as "find all segments with Willie" across assets.
+
+Point types:
+
+- representative frame crop
+- scene marker frame
+- transcript/SRT/Whisper chunk
+- VLM description chunk
+- optional short clip embedding
+
+Arango record fields:
+
+```json
+{
+  "qdrant_collection": "watch_multimodal",
+  "qdrant_point_id": "movie_bad_santa_2003_seg_0007_track_07_frame_crop",
+  "embedding_model": "jina-clip-or-current-watch-multimodal-model",
+  "embedding_version": "pending",
+  "modality": "frame_crop",
+  "source_hash": "sha256:..."
+}
+```
+
+Acceptance evidence:
+
+- Qdrant point exists for at least one crop/text pair.
+- Arango document stores pointer metadata only.
+- `/recall` result includes `scores.dense > 0.0` for at least one Watch item
+  when Qdrant is healthy.
+
+### Phase 6: Chat Memory Pipeline
+
+Goal: answer through the same memory front door that other domains use.
+
+Pipeline:
+
+```text
+/intent
+extract entities
+/recall
+create evidence case, if needed
+/answer | /clarify | /deflect
+```
+
+UI requirement:
+
+- This pipeline belongs in the Watch Agent chat thinking/status line.
+- It does not belong in the Library ingest pipeline panel.
+- Thinking text must advance with the active memory stage.
+
+Acceptance evidence:
+
+- Asking "find all movie segments with Willie" routes to
+  `watch_evidence_recall`.
+- Recall inspects Watch collections and returns source refs.
+- If evidence is weak, the answer is `CLARIFY` or `INCONCLUSIVE`, not guessed.
+
+## AO / Drone Mapping
+
+| Movie canary concept | AO/drone equivalent |
+| --- | --- |
+| Movie asset | Mission stream or sensor asset |
+| Character domain entity | Asset, vehicle, operator, target, facility, object class |
+| SRT stream | Mission plan, telemetry log, operator transcript, ROE event log |
+| Whisper stream | Live audio/comms transcript |
+| Scene marker frame | Sensor frame or keyframe |
+| Track observation | Object/asset track observation |
+| Movie-domain cast prior | Asset registry, mission manifest, geofence, order of battle |
+| Case | Audit incident, compliance discrepancy, spoof/tamper investigation |
+
+The same fail-closed rule applies: telemetry/domain data can say what should be
+there, but only stream evidence can support what is visible at a specific time.
+
+## Next Legal Implementation Move
+
+1. Run `track_yolo_bytetrack.py` against the Bad Santa 02:48-03:12 clip with the
+   `tracking` extra installed.
+2. Validate emitted JSONL against the live event schema.
+3. Replace the current modal placeholder bbox with event-derived bbox data.
+4. With human approval, post the already generated `/upsert` payloads to memory.
+5. Run recall proof queries:
+   - "find all movie segments with Marcus"
+   - "find all movie segments with Willie"
+6. Record the proof artifacts and update the inspection status.
+
+## Explicit Non-Completion
+
+This plan does not claim the goal is complete. Missing proof remains:
+
+- live YOLO/ByteTrack run
+- live memory write receipt
+- live `/recall` proof for Watch observations/cases
+- Qdrant/Jina point write and dense recall proof
+- UI overlay from event-derived bbox rather than deterministic placeholder bbox

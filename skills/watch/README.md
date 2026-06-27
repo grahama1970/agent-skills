@@ -68,6 +68,7 @@ Marcus appears in a specific segment.
 See:
 
 - [`docs/architecture/watch_realtime_character_tracking_contract.md`](docs/architecture/watch_realtime_character_tracking_contract.md)
+- [`docs/architecture/watch_realtime_tracking_execution_plan.md`](docs/architecture/watch_realtime_tracking_execution_plan.md)
 - [`docs/architecture/watch_realtime_character_tracking_inspection.md`](docs/architecture/watch_realtime_character_tracking_inspection.md)
 - [`docs/architecture/watch_track_observations.schema.json`](docs/architecture/watch_track_observations.schema.json)
 - [`docs/architecture/watch_track_observation.bad_santa_marcus.sample.json`](docs/architecture/watch_track_observation.bad_santa_marcus.sample.json)
@@ -83,6 +84,7 @@ See:
 - [`docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json`](docs/architecture/generated/bad_santa_marcus_0248_tracker_events/summary.json)
 - [`scripts/track_yolo_bytetrack.py`](scripts/track_yolo_bytetrack.py)
 - [`docs/architecture/watch_yolo_bytetrack_adapter.inspection.md`](docs/architecture/watch_yolo_bytetrack_adapter.inspection.md)
+- [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
 
 For live character/asset tracking, install the optional tracking dependencies:
 
