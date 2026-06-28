@@ -1,0 +1,220 @@
+{
+  "schema": "watch.reference_download_review_approval_receipt.v1",
+  "status": "RECEIPTS_WRITTEN",
+  "asset_id": "movie_bad_santa_2003_unrated",
+  "source_reference_manifest_schema": "watch.approved_reference_manifest.v1",
+  "source_reference_manifest_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_approved_reference_canary/watch_approved_reference_manifest.bad_santa_marcus.canary.json",
+  "reference_receipts": [
+    {
+      "reference_id": "watch_ref_canary:d39ecd9109d414fe7e9d36b14c1c5336",
+      "asset_id": "movie_bad_santa_2003_unrated",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "provider": null,
+      "source_url": null,
+      "image_url": null,
+      "thumbnail_url": null,
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "download_receipt": {
+        "receipt_id": "watch_ref_download_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "required": true,
+        "artifact": {
+          "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+          "byte_size": 125269,
+          "sha256": "b6dbd7a0f3158aa3f5b3ffafb57f80527a3b3b679e483da2353ddecb882d7750",
+          "media_type": "image/png",
+          "dimensions": {
+            "width": 284,
+            "height": 255
+          }
+        }
+      },
+      "source_review_receipt": {
+        "receipt_id": "watch_ref_source_review_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+        "status": "SOURCE_REVIEWED_CANARY",
+        "required": true,
+        "review_basis": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "review_scope_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "receipt_id": "watch_ref_approval_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+        "status": "APPROVED_CANARY_PIPELINE_ONLY",
+        "required": true,
+        "approved_by": null,
+        "approval_time": null,
+        "approval_source": "watch_canary_existing_track_crop_reference",
+        "approval_scope": "CANARY_PIPELINE_ONLY"
+      },
+      "approved_reference_status": "APPROVED_FOR_PIPELINE_CANARY_ONLY",
+      "scene_truth_claimed": false,
+      "identity_promotion_allowed": false,
+      "promotion_blockers": [
+        "CROP_REFERENCE_SIMILARITY_NOT_PROVEN",
+        "MEMORY_RECALL_PROOF_REQUIRED",
+        "CANARY_REFERENCES_ARE_NOT_INDEPENDENT_PRODUCTION_REFERENCES"
+      ]
+    },
+    {
+      "reference_id": "watch_ref_canary:6fdb786a4b931c48198fd31529bf4ea6",
+      "asset_id": "movie_bad_santa_2003_unrated",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "provider": null,
+      "source_url": null,
+      "image_url": null,
+      "thumbnail_url": null,
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "download_receipt": {
+        "receipt_id": "watch_ref_download_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "required": true,
+        "artifact": {
+          "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+          "byte_size": 17784,
+          "sha256": "57e3b5a4ea9eb9bd9aca5cd280c10b374efa138afd8c38784ab3a74cdc42dda3",
+          "media_type": "image/png",
+          "dimensions": {
+            "width": 54,
+            "height": 184
+          }
+        }
+      },
+      "source_review_receipt": {
+        "receipt_id": "watch_ref_source_review_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+        "status": "SOURCE_REVIEWED_CANARY",
+        "required": true,
+        "review_basis": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "review_scope_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+        "status": "APPROVED_CANARY_PIPELINE_ONLY",
+        "required": true,
+        "approved_by": null,
+        "approval_time": null,
+        "approval_source": "watch_canary_existing_track_crop_reference",
+        "approval_scope": "CANARY_PIPELINE_ONLY"
+      },
+      "approved_reference_status": "APPROVED_FOR_PIPELINE_CANARY_ONLY",
+      "scene_truth_claimed": false,
+      "identity_promotion_allowed": false,
+      "promotion_blockers": [
+        "CROP_REFERENCE_SIMILARITY_NOT_PROVEN",
+        "MEMORY_RECALL_PROOF_REQUIRED",
+        "CANARY_REFERENCES_ARE_NOT_INDEPENDENT_PRODUCTION_REFERENCES"
+      ]
+    },
+    {
+      "reference_id": "watch_ref_canary:76e9bc60a162798f360cad3b60d32847",
+      "asset_id": "movie_bad_santa_2003_unrated",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "provider": null,
+      "source_url": null,
+      "image_url": null,
+      "thumbnail_url": null,
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "download_receipt": {
+        "receipt_id": "watch_ref_download_receipt:603ba0f7a329b183eacf63c0a8b2533b",
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "required": true,
+        "artifact": {
+          "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+          "byte_size": 26559,
+          "sha256": "d22871b9e67b79985c4959428608a86ff91982daddf1a42a7cab380d4321642b",
+          "media_type": "image/png",
+          "dimensions": {
+            "width": 79,
+            "height": 196
+          }
+        }
+      },
+      "source_review_receipt": {
+        "receipt_id": "watch_ref_source_review_receipt:603ba0f7a329b183eacf63c0a8b2533b",
+        "status": "SOURCE_REVIEWED_CANARY",
+        "required": true,
+        "review_basis": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "review_scope_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "receipt_id": "watch_ref_approval_receipt:603ba0f7a329b183eacf63c0a8b2533b",
+        "status": "APPROVED_CANARY_PIPELINE_ONLY",
+        "required": true,
+        "approved_by": null,
+        "approval_time": null,
+        "approval_source": "watch_canary_existing_track_crop_reference",
+        "approval_scope": "CANARY_PIPELINE_ONLY"
+      },
+      "approved_reference_status": "APPROVED_FOR_PIPELINE_CANARY_ONLY",
+      "scene_truth_claimed": false,
+      "identity_promotion_allowed": false,
+      "promotion_blockers": [
+        "CROP_REFERENCE_SIMILARITY_NOT_PROVEN",
+        "MEMORY_RECALL_PROOF_REQUIRED",
+        "CANARY_REFERENCES_ARE_NOT_INDEPENDENT_PRODUCTION_REFERENCES"
+      ]
+    }
+  ],
+  "receipt_requirements": {
+    "download_receipts_required": true,
+    "source_review_receipts_required": true,
+    "approval_receipts_required": true,
+    "approved_before_embedding": true,
+    "independent_reference_package_required_for_identity_promotion": true
+  },
+  "promotion_policy": {
+    "candidate_url_can_promote_identity": false,
+    "download_without_approval_can_promote_identity": false,
+    "approval_without_crop_similarity_can_promote_identity": false,
+    "canary_reference_can_promote_identity": false,
+    "scene_truth_claim_allowed": false
+  },
+  "counts": {
+    "reference_count": 3,
+    "local_artifact_count": 3,
+    "downloaded_reference_count": 3,
+    "approved_reference_count": 3,
+    "canary_approved_reference_count": 3,
+    "blocked_reference_count": 0
+  },
+  "proof_scope": [
+    "reference_download_review_approval_receipts",
+    "local_artifact_hashes",
+    "canary_fail_closed_identity_gate"
+  ],
+  "claims": {
+    "proves": [
+      "local reference artifacts have deterministic download, source-review, and approval receipts",
+      "local reference artifacts were hashed and counted before embedding or similarity comparison",
+      "canary references remain blocked from identity promotion without crop/reference similarity and memory recall proof"
+    ],
+    "does_not_prove": [
+      "public web image download success",
+      "license suitability for external images",
+      "production human approval",
+      "Jina embedding success",
+      "Qdrant write success",
+      "crop/reference similarity",
+      "supported character identity"
+    ]
+  }
+}
