@@ -49,7 +49,7 @@ It is designed to improve extractor and `learn-datalake` quality by:
 ## Commands
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-training-datalake
+cd /path/to/agent-skills/skills/ingest-training-datalake
 
 # 1) Assess current training corpus coverage
 ./run.sh assess /mnt/storage12tb/extractor_corpus --target-pdf-per-sector 500
