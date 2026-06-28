@@ -130,13 +130,13 @@ Pre-configured jobs for memory automation:
 ./run.sh register --name "memory-edge-verify" \
   --cron "0 2 * * *" \
   --command ".pi/skills/edge-verifier/run.sh --batch" \
-  --workdir "/home/graham/workspace/experiments/memory"
+  --workdir "$MEMORY_PROJECT_DIR"
 
 # Treesitter ingestion (hourly)
 ./run.sh register --name "memory-treesitter-ingest" \
   --cron "0 * * * *" \
   --command ".pi/skills/treesitter/run.sh scan src/ --json" \
-  --workdir "/home/graham/workspace/experiments/memory"
+  --workdir "$MEMORY_PROJECT_DIR"
 ```
 
 ## Daemon Management
