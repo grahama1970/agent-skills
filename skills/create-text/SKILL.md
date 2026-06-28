@@ -14,6 +14,13 @@ metadata:
   short-description: "Deterministic corpus text chunker"
 provides:
   - create-text
+composes:
+  - ingest-doc
+  - extract-pdf
+  - best-practices-python
+complies:
+  - best-practices-skills
+  - best-practices-python
 ---
 
 # /create-text
