@@ -8,6 +8,15 @@ description: >
   x-special/gnome-copied-files clipboard targets matter.
 metadata:
   short-description: Copy files as desktop clipboard paste items
+provides:
+  - file-clipboard-copy
+  - desktop-file-list-mime
+  - clipboard-target-verification
+composes:
+  - best-practices-kde
+complies:
+  - best-practices-skills
+  - best-practices-kde
 ---
 
 # Clipboard File
