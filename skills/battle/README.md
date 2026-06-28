@@ -264,7 +264,7 @@ The Battle monitor is artifact-backed. It must load generated JSON from:
 To inspect the generated run in the monitor:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/battle
+cd /path/to/agent-skills/skills/battle
 rm -rf monitor/battle/public/artifacts/battle-001
 mkdir -p monitor/battle/public/artifacts/battle-001
 cp -R /tmp/battle-001/* monitor/battle/public/artifacts/battle-001/
