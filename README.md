@@ -66,6 +66,53 @@ Deploy to configured agent homes:
 ./deploy.sh --check
 ```
 
+## What I'm Working On
+
+I maintain projects and skills continuously. Here's my current focus:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/tau">
+        <img src="https://raw.githubusercontent.com/grahama1970/tau/main/docs/assets/tau-header.webp" width="100%" alt="T'au" />
+      </a>
+      <br/><strong>T'au</strong> — Goal-locked agent harness
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
+        <img src="skills/battle/docs/assets/battle-header.png" width="100%" alt="Battle" />
+      </a>
+      <br/><strong>Battle</strong> — Red vs Blue security competitions
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
+        <img src="skills/watch/docs/assets/watch-banner.jpg" width="100%" alt="Watch" />
+      </a>
+      <br/><strong>Watch</strong> — Video evidence extraction
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
+        <img src="skills/surf/docs/assets/surf-banner.png" width="100%" alt="Surf" />
+      </a>
+      <br/><strong>Surf</strong> — Browser automation &amp; WebGPT transport
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/hum">
+        <img src="skills/hum/assets/hum-header.webp" width="100%" alt="Hum" />
+      </a>
+      <br/><strong>Hum</strong> — Persona humming diagnostics
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
+        <img src="skills/debugger/docs/assets/debugger-banner.png" width="100%" alt="Debugger" />
+      </a>
+      <br/><strong>Debugger</strong> — Runtime state inspection
+    </td>
+  </tr>
+</table>
+
 ## What Lives Where
 
 | I am looking for... | Go to | What is inside |
