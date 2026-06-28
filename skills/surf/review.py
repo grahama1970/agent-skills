@@ -1,7 +1,7 @@
 import os
 import base64
 import json
-import requests
+import httpx
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -75,5 +75,5 @@ payload = {
     "temperature": 0.0
 }
 
-response = requests.post("http://localhost:4001/v1/chat/completions", headers=headers, json=payload)
+response = httpx.post("http://localhost:4001/v1/chat/completions", headers=headers, json=payload)
 print(json.dumps(response.json(), indent=2))
