@@ -299,6 +299,59 @@ def arena_docker_smoke(
         raise typer.Exit(1)
 
 
+@app.command("battle-v1-operational")
+def battle_v1_operational(
+    fixture: str = typer.Argument("battle-003", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+    red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
+    blue_persona: str = typer.Option("coder", help="Blue team persona id"),
+    red_workers: int = typer.Option(2, min=1, max=8, help="Bounded Red worker pool size"),
+    blue_workers: int = typer.Option(2, min=1, max=8, help="Bounded Blue worker pool size"),
+    max_attempts: int = typer.Option(4, min=1, max=16, help="Maximum warm-pond combinations to replay"),
+    memory_required: bool = typer.Option(
+        True,
+        "--require-memory/--memory-optional",
+        help="Require $memory recall and mutation promotion for PASS.",
+    ),
+    memory_base_url: Optional[str] = typer.Option(
+        None,
+        help="$memory HTTP base URL; defaults to BATTLE_MEMORY_BASE_URL / BATTLE_MEMORY default.",
+    ),
+):
+    """Run the Battle v1 four-party Docker-only operational proof.
+
+    This command advances beyond battle-003 by producing first-class Arena,
+    Red Team, Blue Team, Scorekeeper, memory-promotion, scoreboard, monitor,
+    and run receipts. Red and Blue run bounded worker pools asynchronously;
+    Scorekeeper derives outcome from Docker replay, not Blue self-certification.
+    """
+    from .arena_docker_smoke import MEMORY_BASE_URL
+    from .battle_v1_operational import run_battle_v1_operational
+    from .config import ARTIFACTS_DIR, SKILL_DIR
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (ARTIFACTS_DIR / fixture / "battle-v1-operational")
+    result = run_battle_v1_operational(
+        fixture_dir=fixture_dir,
+        out_dir=out_dir,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        red_workers=red_workers,
+        blue_workers=blue_workers,
+        max_attempts=max_attempts,
+        memory_required=memory_required,
+        memory_base_url=memory_base_url or MEMORY_BASE_URL,
+    )
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command()
 def status():
     """Check status of running or recent battles."""

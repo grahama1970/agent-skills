@@ -1,7 +1,7 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-28 17:17 EDT by agent
-**Status:** Active development, pending review/commit
+**Last updated:** 2026-06-28 15:45 EDT by agent
+**Status:** Active development, Battle v1 operational proof locally exercised
 
 ## Current Understanding
 
@@ -211,6 +211,30 @@
   context node. The graph inspector and hidden accessibility table are backed
   by loaded artifacts, not static fixture arrays. This is still not the final
   Canvas/WebGL live swarm monitor for hundreds or thousands of attempts.
+- Battle now has a four-party operational proof entry point:
+  `./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory`.
+  It runs Arena Team, Red Team, Blue Team, and Scorekeeper roles, dispatches
+  bounded asynchronous Red/Blue worker pools, records memory recall and
+  promotion receipts, replays every selected warm-pond attempt in Docker, writes
+  a SQLite event ledger, and emits `graph/battle-v1-force-graph.json`.
+- Current Battle v1 operational local evidence:
+  `/tmp/battle-v1-operational-a/run-receipt.json` and
+  `/tmp/battle-v1-operational-b/run-receipt.json` both have `status=PASS` and
+  `verdict=BLUE_SUCCESS`; both generated artifact sets passed
+  `sanity/battle_v1_operational_acceptance.py`; the second run passed
+  `--require-recall-found`.
+- `$memory` accepted `battle_mutation_memory` documents through `/upsert`, but
+  `/recall` with `collections=["battle_mutation_memory"]` returned no items in
+  this daemon. Battle records an explicit fallback in
+  `context/memory-recall-receipt.json` and uses `/list` to prove promoted
+  records exist until the memory custom-collection recall behavior is fixed.
+- Battle Monitor now also renders the `battle-v1-operational` generated
+  artifacts. Local UI proof: `npm run build` passed, `npm run test:e2e` reported
+  `4 passed`, and the inspected screenshot is
+  `skills/battle/monitor/battle/test-results/battle-monitor-v1-operational.png`.
+  The generic CDP hook captured a stale non-Battle surface, so
+  `.codex/ui-verification/latest.json` records Playwright as the usable visual
+  proof and notes the CDP mismatch.
 
 ## Recent Decisions
 
@@ -256,6 +280,8 @@
 | 2026-06-28 | Add artifact-backed React+D3 graph proof to Battle Monitor. | This verifies the monitor can render generated `battle-003` Arena/Tau/context artifacts as a force-directed evidence graph before building the full live swarm interface. |
 | 2026-06-28 | Require the context proof to record memory recall, Docker scan, Brave research, warm-pond candidates, and memory upsert before the race. | Battle strategy must start from prior memory and fresh reconnaissance; scan/research evidence should weight exploit and defense combinations rather than appearing after the score. |
 | 2026-06-28 | Add bounded warm-pond execution before the main race. | Candidate generation alone is not enough; selected exploit/defense combinations now execute in isolated Docker workspaces with per-attempt receipts and revert-by-discarding semantics. |
+| 2026-06-28 | Add `battle-v1-operational` as the four-party Docker proof rung. | This moves beyond context smoke by proving Arena/Red/Blue/Scorekeeper roles, async worker overlap, Docker-only replay evidence, memory promotion, generated force graph artifacts, and monitor rendering for one bounded fixture. |
+| 2026-06-28 | Record `$memory` custom-collection recall fallback explicitly. | `/upsert` and `/list` prove `battle_mutation_memory` records exist, while `/recall` currently returns no items for that custom collection; Battle must preserve that limitation in receipts rather than hiding it. |
 
 ## Open Questions
 

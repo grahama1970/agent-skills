@@ -55,6 +55,33 @@ test("renders generated Battle v1 context graph artifacts", async ({ page }) => 
   });
 });
 
+test("renders Battle v1 operational force graph artifacts", async ({ page }) => {
+  await page.goto("/?artifactBase=/artifacts/battle-v1-operational");
+
+  await expect(page.getByText("Battle Monitor")).toBeVisible();
+  await expect(page.getByText("Battle-003 Arena hidden vulnerability race")).toBeVisible();
+  await expect(page.getByText("arena-hidden-sqli-xss-race-001")).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Arena Team" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "brandon-bailey" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "coder" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Scorekeeper" })).toBeVisible();
+  await expect(page.locator(".summaryGrid").getByRole("heading", { name: "BLUE_SUCCESS" })).toBeVisible();
+  await expect(page.locator(".artifactList").getByText("context/memory-promotion-receipt.json")).toBeVisible();
+  await expect(page.locator(".artifactList").getByText("graph/battle-v1-force-graph.json")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:svg"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:memory"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:warm-pond-execution"]')).toBeVisible();
+
+  await page.locator('[data-qid="battle:graph:node:signal:warm-pond-execution"]').click();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("executed attempts")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("4 passed / 4 selected / 0 failed")).toBeVisible();
+
+  await page.screenshot({
+    path: "test-results/battle-monitor-v1-operational.png",
+    fullPage: true
+  });
+});
+
 test("fails closed when artifacts are missing", async ({ page }) => {
   await page.goto("/?artifactBase=/artifacts/does-not-exist");
 

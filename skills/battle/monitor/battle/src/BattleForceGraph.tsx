@@ -182,7 +182,8 @@ function buildGraph(data: LoadedBattleArtifacts): { nodes: GraphNode[]; links: G
     links.push({ source: "signal:warm-pond-execution", target: "scorekeeper", label: "evidence" });
   }
 
-  return { nodes: [...nodes.values()], links };
+  const filteredLinks = links.filter((link) => nodes.has(link.source) && nodes.has(link.target));
+  return { nodes: [...nodes.values()], links: filteredLinks };
 }
 
 function positionGraph(nodes: GraphNode[], links: GraphLink[]): PositionedNode[] {

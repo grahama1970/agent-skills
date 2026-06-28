@@ -206,6 +206,12 @@ independent Judge receipts.
    scan, live Brave batch search, research seed, warm-pond candidate generation,
    bounded warm-pond execution in isolated Docker workspaces, Tau/Scillm action
    selection, Docker race, scorekeeper replay, and `$memory` upsert.
+5. **Battle v1 operational** for the current four-party Docker proof rung over
+   `battle-003`. It runs Arena, Red, Blue, and Scorekeeper roles, bounded
+   asynchronous Red/Blue worker pools, Docker-only probe/patch/replay commands,
+   memory recall/promotion receipts, a SQLite event ledger, a generated force
+   graph, and an artifact-backed monitor proof. It is still bounded and
+   deterministic; it does not prove an unbounded swarm or Tau loop repair.
 
 Battle v0 is the safer first rung to run when checking the artifact contract. It
 does not exercise live Red or Blue agents.
@@ -287,6 +293,17 @@ Run it with memory/code/research context receipts as well:
   --red-persona brandon-bailey \
   --blue-persona coder \
   --scillm-model opencode/kimi-k2.6
+```
+
+Run the current four-party Battle v1 operational proof:
+
+```bash
+./run.sh battle-v1-operational battle-003 \
+  --out /tmp/battle-v1-operational-a \
+  --red-workers 2 \
+  --blue-workers 2 \
+  --max-attempts 4 \
+  --require-memory
 ```
 
 Inspect recent battles:
@@ -485,6 +502,64 @@ unbounded warm-pond swarm, memory graph promotion or cross-round reuse,
 Dogpile/GitHub-search candidate enrichment, Tree-sitter success when its
 diagnostic is blocked, or the React+D3 live monitor.
 
+## Battle v1 Operational Proof
+
+`battle-v1-operational` is the current four-party Docker proof rung. It uses the
+same `battle-003` hidden SQLi/XSS target, but the proof contract now includes:
+
+```text
+Arena Team writes target and hidden ground truth
+Red workers run bounded exploit probes asynchronously
+Blue workers run bounded patch/regression workers asynchronously
+Scorekeeper replays exploit-before-patch, patch, exploit-after-patch, and regression in Docker
+Successful warm-pond combinations are promoted to $memory
+Monitor renders generated receipts and force graph artifacts
+```
+
+Validation commands:
+
+```bash
+cd skills/battle
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a \
+  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+python3 sanity/battle_v1_operational_acceptance.py \
+  /tmp/battle-v1-operational-a \
+  --allow-first-recall-empty
+
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-b \
+  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+python3 sanity/battle_v1_operational_acceptance.py \
+  /tmp/battle-v1-operational-b \
+  --require-recall-found
+```
+
+Current local evidence from this rung:
+
+```text
+/tmp/battle-v1-operational-a/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-operational-a acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-operational-b/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-operational-b/context/memory-recall-receipt.json found=true
+/tmp/battle-v1-operational-b acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+```
+
+Memory note: `$memory` `/upsert` stores `battle_mutation_memory` documents and
+`/list` proves those records exist. In the current memory daemon, `/recall` with
+`collections=["battle_mutation_memory"]` can return zero items for that custom
+collection even after semantic sync. Battle records this as an explicit
+`fallback` in `context/memory-recall-receipt.json` rather than hiding it.
+
+Non-claims:
+
+```text
+does_not_execute_unbounded_warm_pond_swarm
+does_not_prove_tau_loop_repair_cycle
+does_not_prove_scillm_delegate_batch_or_tool_execution
+does_not_integrate_qemu_or_afl_campaigns
+does_not_wire_chat_sidebar_to_orchestrator_actions
+does_not_stream_attempts_live_over_websocket
+```
+
 ## Battle Monitor
 
 The Battle monitor is artifact-backed. It must load generated JSON from:
@@ -563,10 +638,10 @@ Current UI evidence:
 
 ```text
 npm run build -> PASS
-npm run test:e2e -> 3 passed
+npm run test:e2e -> 4 passed
 skills/battle/monitor/battle/test-results/battle-monitor-v1-context-graph.png
-.codex/ui-verification/latest.json -> battle-monitor-v1-context-graph
-/tmp/codex-ui-verification/agent-skills/battle-monitor-v1-context-graph/20260628T150035Z.png
+skills/battle/monitor/battle/test-results/battle-monitor-v1-operational.png
+.codex/ui-verification/latest.json -> battle-v1-operational-monitor
 ```
 
 The monitor also needs a right-sidebar chat/interjection surface, following the
@@ -611,12 +686,14 @@ Battle v0 modules:
 ```text
 src/battle_skill/battle_fixture.py deterministic fixture runner
 src/battle_skill/arena_docker_smoke.py Arena hidden-vulnerability Docker race runner
+src/battle_skill/battle_v1_operational.py four-party Docker operational proof
 src/battle_skill/judge.py deterministic scorekeeper-style verifier
 src/battle_skill/receipts.py receipt dataclasses and JSON writer
 fixtures/battle-001/    seeded path traversal target and patch
 fixtures/battle-003/    hidden SQL injection/XSS Docker race fixture
 monitor/battle/         React artifact monitor and Playwright checks
 docs/BATTLE_V0.md      detailed Battle v0 validation contract
+docs/BATTLE_V1_OPERATIONAL.md detailed Battle v1 operational validation contract
 ```
 
 ## Scoring Terms

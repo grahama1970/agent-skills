@@ -261,6 +261,9 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run Arena Docker race with Scillm, Tau, and memory/code/research context receipts
 ./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena-context --agentic --scillm-plan --context-receipts --red-persona brandon-bailey --blue-persona coder --scillm-model opencode/kimi-k2.6
+
+# Run the four-party Docker operational proof
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
 ```
 
 ## Battle v0 Fixture Proof
@@ -387,6 +390,37 @@ This proof does not exercise Scillm delegate, batch, or tool execution inside
 Battle, an unbounded warm-pond swarm, Dogpile/GitHub-search candidate
 enrichment, memory graph promotion or cross-round reuse, Tau loop repair
 cycles, Tree-sitter success, or the React+D3 live monitor.
+
+The current `battle-v1-operational` command is the next bounded proof rung. It
+runs Arena, Red, Blue, and Scorekeeper roles against `battle-003`, dispatches
+bounded asynchronous Red/Blue worker pools, records memory recall and
+warm-pond promotion receipts, replays every selected attempt inside Docker, and
+writes a generated force graph for the monitor:
+
+```text
+mocked: no
+live: docker_four_party_operational
+agentic: true
+docker_only: true
+red_blue_async: true
+models_used: ["tau-local-deterministic-provider"]
+```
+
+Validation:
+
+```bash
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-a --allow-first-recall-empty
+
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-b --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-b --require-recall-found
+```
+
+This proof still does not execute an unbounded swarm, Tau loop repair cycles,
+Scillm delegate/batch/tool execution, QEMU/AFL campaigns, orchestrator-mutating
+chat, or live websocket streaming. Its `$memory` proof records an explicit
+fallback when `/recall` returns no custom-collection items but `/list` proves
+the promoted `battle_mutation_memory` records exist.
 
 The current monitor proof now renders a narrow React+D3 artifact graph over the
 generated `battle-003` context artifacts. `BattleForceGraph.tsx` uses D3 force
@@ -553,6 +587,7 @@ battle/
     orchestrator.py          # Game loop orchestrator
     battle_fixture.py        # Deterministic fixture proof runner
     arena_docker_smoke.py    # Arena hidden-vulnerability Docker race proof
+    battle_v1_operational.py # Four-party Docker operational proof
     judge.py                 # Deterministic scorekeeper verifier
     receipts.py              # Receipt dataclasses and JSON writer
     report.py                # Report generation
