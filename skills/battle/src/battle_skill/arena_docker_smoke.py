@@ -246,6 +246,65 @@ def run_arena_docker_smoke(
             extra={"command": planted_cmd},
         )
 
+    warm_pond_execution_receipt = (
+        run_warm_pond_execution_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario=scenario,
+            image=image,
+            target=target,
+            patches=patches,
+            out_dir=out_dir,
+            ledger_path=ledger_path,
+            red_persona=red_persona,
+            blue_persona=blue_persona,
+        )
+        if context_receipts
+        else skipped_warm_pond_execution_receipt(battle_id=battle_id, run_id=run_id)
+    )
+    if context_receipts:
+        warm_pond_execution_path = out_dir / "context" / "warm-pond-execution-receipt.json"
+        record_event(
+            ledger_path,
+            run_id=run_id,
+            battle_id=battle_id,
+            team="orchestrator",
+            persona="battle-orchestrator",
+            event_type="warm_pond_execution",
+            status=str(warm_pond_execution_receipt["status"]),
+            artifact_path=warm_pond_execution_path,
+            details=to_jsonable(warm_pond_execution_receipt),
+        )
+        context_receipt["warm_pond_execution"] = "context/warm-pond-execution-receipt.json"
+        context_receipt["warm_pond_execution_summary"] = {
+            "status": warm_pond_execution_receipt["status"],
+            "selected_attempt_count": warm_pond_execution_receipt.get("selected_attempt_count", 0),
+            "passed_attempt_count": warm_pond_execution_receipt.get("passed_attempt_count", 0),
+            "failed_attempt_count": warm_pond_execution_receipt.get("failed_attempt_count", 0),
+        }
+        context_receipt["artifacts"].append("context/warm-pond-execution-receipt.json")
+        context_receipt["non_claims"] = [
+            claim
+            for claim in context_receipt.get("non_claims", [])
+            if claim != "does_not_execute_warm_pond_candidates_yet"
+        ] + [
+            "does_not_execute_unbounded_warm_pond_swarm",
+            "does_not_promote_warm_pond_winners_across_rounds_yet",
+        ]
+        write_json(out_dir / "context" / "context-receipt.json", context_receipt)
+    if context_receipts and warm_pond_execution_receipt["status"] != "PASS":
+        return write_blocked(
+            out_dir=out_dir,
+            battle_id=battle_id,
+            run_id=run_id,
+            reason="warm_pond_execution_failed",
+            execution_scope=execution_scope,
+            extra={
+                "warm_pond_execution": warm_pond_execution_receipt,
+                "warm_pond_execution_receipt": "context/warm-pond-execution-receipt.json",
+            },
+        )
+
     started = time.monotonic()
     red_delay = float(race.get("red_delay_seconds", 1.0))
     blue_delay = float(race.get("blue_delay_seconds", 0.0))
@@ -380,6 +439,13 @@ def run_arena_docker_smoke(
             "receipt": "context/context-receipt.json"
             if context_receipts
             else None,
+            "warm_pond_execution_status": warm_pond_execution_receipt["status"],
+            "warm_pond_executed_attempts": warm_pond_execution_receipt.get(
+                "selected_attempt_count", 0
+            ),
+            "warm_pond_passed_attempts": warm_pond_execution_receipt.get(
+                "passed_attempt_count", 0
+            ),
         },
         "red_score": 1.5 if red_exploited else 0.0,
         "blue_score": 3.6 if winner == "blue" else 0.0,
@@ -1331,6 +1397,229 @@ def build_warm_pond_receipt(
         "selection_rule": "promote candidates only after Docker scorekeeper evidence; retain failures as negative evidence",
         "execution": "not_executed_in_this_receipt_candidates_only",
     }
+
+
+def skipped_warm_pond_execution_receipt(*, battle_id: str, run_id: str) -> dict[str, Any]:
+    return {
+        "schema": "battle.warm_pond_execution_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "status": "SKIPPED",
+        "reason": "context_receipts_disabled",
+        "selected_attempt_count": 0,
+        "passed_attempt_count": 0,
+        "failed_attempt_count": 0,
+        "attempts": [],
+    }
+
+
+def run_warm_pond_execution_receipt(
+    *,
+    battle_id: str,
+    run_id: str,
+    scenario: dict[str, Any],
+    image: str,
+    target: Path,
+    patches: Path,
+    out_dir: Path,
+    ledger_path: Path,
+    red_persona: str,
+    blue_persona: str,
+) -> dict[str, Any]:
+    """Execute a bounded warm-pond candidate matrix in isolated Docker workspaces."""
+
+    context_dir = out_dir / "context"
+    warm_pond_path = context_dir / "warm-pond-receipt.json"
+    execution_dir = context_dir / "warm-pond-execution"
+    execution_dir.mkdir(parents=True, exist_ok=True)
+
+    warm_pond = json.loads(warm_pond_path.read_text(encoding="utf-8"))
+    exploit_by_id = {
+        item["id"]: item
+        for item in warm_pond.get("exploit_candidates", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    defense_by_id = {
+        item["id"]: item
+        for item in warm_pond.get("defense_candidates", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    combinations = [
+        item
+        for item in warm_pond.get("combinations", [])
+        if isinstance(item, dict)
+        and item.get("exploit") in exploit_by_id
+        and item.get("defense") in defense_by_id
+    ]
+    max_attempts = int(scenario.get("warm_pond", {}).get("max_execution_attempts", 4))
+    selected = sorted(
+        combinations,
+        key=lambda item: (-float(item.get("affinity", 0.0)), str(item.get("id", ""))),
+    )[:max_attempts]
+
+    attempts: list[dict[str, Any]] = []
+    if selected:
+        with ThreadPoolExecutor(max_workers=min(4, len(selected))) as executor:
+            futures = [
+                executor.submit(
+                    execute_warm_pond_attempt,
+                    battle_id=battle_id,
+                    run_id=run_id,
+                    image=image,
+                    target=target,
+                    patches=patches,
+                    execution_dir=execution_dir,
+                    combination=combination,
+                    exploit=exploit_by_id[str(combination["exploit"])],
+                    defense=defense_by_id[str(combination["defense"])],
+                    regression_command=scenario["commands"]["regression"],
+                )
+                for combination in selected
+            ]
+            for future in futures:
+                attempt = future.result(timeout=90)
+                attempts.append(attempt)
+                record_event(
+                    ledger_path,
+                    run_id=run_id,
+                    battle_id=battle_id,
+                    team="red_blue",
+                    persona=f"{red_persona}+{blue_persona}",
+                    event_type="warm_pond_attempt",
+                    status=str(attempt["status"]),
+                    artifact_path=Path(attempt["receipt_path"]),
+                    details=to_jsonable(attempt),
+                )
+
+    passed = [attempt for attempt in attempts if attempt["status"] == "PASS"]
+    failed = [attempt for attempt in attempts if attempt["status"] != "PASS"]
+    receipt = {
+        "schema": "battle.warm_pond_execution_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "status": "PASS" if selected and not failed else "BLOCKED",
+        "mocked": False,
+        "live": "docker_no_network_bounded_candidate_execution",
+        "source_candidates": "context/warm-pond-receipt.json",
+        "selection_rule": "highest_affinity_then_id",
+        "max_execution_attempts": max_attempts,
+        "selected_attempt_count": len(selected),
+        "passed_attempt_count": len(passed),
+        "failed_attempt_count": len(failed),
+        "attempts": attempts,
+        "non_claims": [
+            "does_not_execute_unbounded_warm_pond_swarm",
+            "does_not_promote_warm_pond_winners_across_rounds_yet",
+            "does_not_run_dogpile_or_github_search_candidates",
+        ],
+    }
+    if not selected:
+        receipt["reason"] = "no_warm_pond_combinations_selected"
+    write_json(context_dir / "warm-pond-execution-receipt.json", receipt)
+    return receipt
+
+
+def execute_warm_pond_attempt(
+    *,
+    battle_id: str,
+    run_id: str,
+    image: str,
+    target: Path,
+    patches: Path,
+    execution_dir: Path,
+    combination: dict[str, Any],
+    exploit: dict[str, Any],
+    defense: dict[str, Any],
+    regression_command: list[str],
+) -> dict[str, Any]:
+    attempt_id = safe_key(str(combination["id"]))
+    attempt_dir = execution_dir / "attempts" / attempt_id
+    workspace = attempt_dir / "workspace"
+    if workspace.exists():
+        shutil.rmtree(workspace)
+    shutil.copytree(target, workspace)
+
+    before_ok, before_cmd = run_docker_command(
+        image=image,
+        target=workspace,
+        command=exploit_probe_command(exploit=exploit, expect_success=True),
+        artifact_dir=attempt_dir,
+        name="exploit-before-patch",
+    )
+    patch_ok, patch_cmd = run_docker_command(
+        image=image,
+        target=workspace,
+        command=[
+            "python",
+            "-c",
+            "import shutil; shutil.copyfile('/patches/app.py', '/workspace/app.py')",
+        ],
+        artifact_dir=attempt_dir,
+        name="apply-defense",
+        extra_mounts=[(patches, Path("/patches"), "ro")],
+    )
+    after_ok, after_cmd = run_docker_command(
+        image=image,
+        target=workspace,
+        command=exploit_probe_command(exploit=exploit, expect_success=False),
+        artifact_dir=attempt_dir,
+        name="exploit-after-patch",
+    )
+    regression_ok, regression_cmd = run_docker_command(
+        image=image,
+        target=workspace,
+        command=regression_command,
+        artifact_dir=attempt_dir,
+        name="regression-after-patch",
+    )
+
+    status = "PASS" if before_ok and patch_ok and after_ok and regression_ok else "FAIL"
+    receipt = {
+        "schema": "battle.warm_pond_attempt_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "attempt_id": attempt_id,
+        "status": status,
+        "combination_id": combination["id"],
+        "families": combination.get("families", []),
+        "affinity": combination.get("affinity"),
+        "exploit": exploit,
+        "defense": defense,
+        "workspace": str(workspace),
+        "isolation": "copied_workspace_reverted_by_discarding_attempt_directory",
+        "results": {
+            "exploit_succeeded_before_patch": before_ok,
+            "defense_applied": patch_ok,
+            "exploit_blocked_after_patch": after_ok,
+            "regression_passed": regression_ok,
+        },
+        "commands_run": [before_cmd, patch_cmd, after_cmd, regression_cmd],
+        "created_at": utc_now(),
+    }
+    receipt_path = attempt_dir / "attempt-receipt.json"
+    write_json(receipt_path, receipt)
+    receipt["receipt_path"] = str(receipt_path)
+    write_json(receipt_path, receipt)
+    return receipt
+
+
+def exploit_probe_command(*, exploit: dict[str, Any], expect_success: bool) -> list[str]:
+    family = str(exploit.get("family", ""))
+    payload = str(exploit.get("payload", ""))
+    if family == "sql_injection":
+        predicate = "'<li>admin</li>' in html"
+    elif family == "reflected_xss":
+        predicate = "payload in html"
+    else:
+        predicate = "False"
+    script = f"""
+from app import render_search
+payload = {payload!r}
+html = render_search(payload)
+success = bool({predicate})
+raise SystemExit(0 if success is {expect_success!r} else 1)
+"""
+    return ["python", "-c", script]
 
 
 def store_battle_memory_outcome(

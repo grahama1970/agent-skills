@@ -1,6 +1,6 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-28 15:28 EDT by agent
+**Last updated:** 2026-06-28 17:17 EDT by agent
 **Status:** Active development, pending review/commit
 
 ## Current Understanding
@@ -193,10 +193,11 @@
   This mode calls `$memory` over HTTP for `/recall`, runs a Docker-contained
   fast scan, calls live Brave batch search from scan/persona context, extracts
   Python AST code context for the target, writes a deterministic research seed
-  receipt, generates warm-pond exploit/defense candidates, stores one outcome
-  document through `$memory` `/upsert` into `battle_round_memory`, records those
-  artifacts in the scoreboard/run receipts, and appends memory/scan/research/
-  warm-pond/store events to the SQLite subagent ledger.
+  receipt, generates warm-pond exploit/defense candidates, executes a bounded
+  set of selected warm-pond combinations in isolated Docker workspaces, stores
+  one outcome document through `$memory` `/upsert` into `battle_round_memory`,
+  records those artifacts in the scoreboard/run receipts, and appends memory/
+  scan/research/warm-pond/execution/store events to the SQLite subagent ledger.
 - The current context proof records Tree-sitter as a blocked optional
   diagnostic, not a Battle failure. `skills/treesitter/run.sh symbols ...`
   currently fails because the treesitter-tools environment imports `typer`,
@@ -206,10 +207,10 @@
   `battle-003` context artifacts. `BattleForceGraph.tsx` uses D3 force layout
   math with React-owned SVG DOM to show Arena/Red/Blue/Judge players, receipts,
   scorekeeper verdict, race signals, Docker fast scan, Brave research,
-  warm-pond candidates, and the memory-upsert context node. The graph inspector
-  and hidden accessibility table are backed by loaded artifacts, not static
-  fixture arrays. This is still not the final Canvas/WebGL live swarm monitor
-  for hundreds or thousands of attempts.
+  warm-pond candidates, bounded warm-pond execution, and the memory-upsert
+  context node. The graph inspector and hidden accessibility table are backed
+  by loaded artifacts, not static fixture arrays. This is still not the final
+  Canvas/WebGL live swarm monitor for hundreds or thousands of attempts.
 
 ## Recent Decisions
 
@@ -254,6 +255,7 @@
 | 2026-06-28 | Add `--context-receipts` to `arena-docker-smoke`. | This proves memory-first recall, AST code-context extraction, deterministic research seed receipts, and one `$memory` `/upsert` outcome write without claiming graph promotion or cross-round reuse. |
 | 2026-06-28 | Add artifact-backed React+D3 graph proof to Battle Monitor. | This verifies the monitor can render generated `battle-003` Arena/Tau/context artifacts as a force-directed evidence graph before building the full live swarm interface. |
 | 2026-06-28 | Require the context proof to record memory recall, Docker scan, Brave research, warm-pond candidates, and memory upsert before the race. | Battle strategy must start from prior memory and fresh reconnaissance; scan/research evidence should weight exploit and defense combinations rather than appearing after the score. |
+| 2026-06-28 | Add bounded warm-pond execution before the main race. | Candidate generation alone is not enough; selected exploit/defense combinations now execute in isolated Docker workspaces with per-attempt receipts and revert-by-discarding semantics. |
 
 ## Open Questions
 
@@ -357,15 +359,17 @@ BATTLE_ARENA_DOCKER_SCILLM_ASSERT_PASS
 ./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena-context --agentic --scillm-plan --context-receipts --red-persona brandon-bailey --blue-persona coder --scillm-model opencode/kimi-k2.6 -> status=PASS, verdict=BLUE_SUCCESS
 BATTLE_ARENA_DOCKER_CONTEXT_ASSERT_PASS
 BATTLE_SCAN_BRAVE_WARM_POND_ASSERT_PASS
+BATTLE_WARM_POND_EXECUTION_ASSERT_PASS
 /tmp/battle-003-arena-context/run-receipt.json -> execution.live=docker_hidden_vulnerability_race, agentic=True, scillm_plan=True, context_receipts=True, models_used includes opencode/kimi-k2.6
 /tmp/battle-003-arena-context/context/context-receipt.json -> status=PASS, memory.recall_status=PASS, memory.store_status=PASS
 /tmp/battle-003-arena-context/context/fast-scan-receipt.json -> status=PASS, finding_count=2, families=["reflected_xss","sql_injection"]
 /tmp/battle-003-arena-context/context/brave-search-receipt.json -> status=PASS, query_count=4, result_count=8
 /tmp/battle-003-arena-context/context/warm-pond-receipt.json -> status=PASS, exploit_candidate_count=4, defense_candidate_count=4, combination_count=16
+/tmp/battle-003-arena-context/context/warm-pond-execution-receipt.json -> status=PASS, selected_attempt_count=4, passed_attempt_count=4, failed_attempt_count=0
 /tmp/battle-003-arena-context/context/memory-store-receipt.json -> status=PASS, collection=battle_round_memory, response.inserted=1, response.errors=[]
 /tmp/battle-003-arena-context/context/code-context-receipt.json -> status=PASS, symbol_count=7, treesitter.status=BLOCKED, treesitter.reason=treesitter_command_failed
 /tmp/battle-003-arena-context/context/treesitter.stderr.txt -> ModuleNotFoundError: No module named 'click'
-/tmp/battle-003-arena-context/subagent-ledger.sqlite -> 17 events, including memory_recall=PASS, fast_scan=PASS, brave_search=PASS, code_context=PASS, research_seed=PASS, warm_pond_candidates=PASS, memory_store=PASS, red/blue scillm_action_selection=PASS
+/tmp/battle-003-arena-context/subagent-ledger.sqlite -> 22 events, including memory_recall=PASS, fast_scan=PASS, brave_search=PASS, code_context=PASS, research_seed=PASS, warm_pond_candidates=PASS, warm_pond_execution=PASS, warm_pond_attempt=PASS x4, memory_store=PASS, red/blue scillm_action_selection=PASS
 npm run build in skills/battle/monitor/battle -> PASS
 npm run test:e2e in skills/battle/monitor/battle -> 3 passed
 skills/battle/monitor/battle/test-results/battle-monitor-v1-context-graph.png -> 514623 bytes

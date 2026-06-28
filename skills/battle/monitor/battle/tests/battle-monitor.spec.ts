@@ -42,11 +42,12 @@ test("renders generated Battle v1 context graph artifacts", async ({ page }) => 
   await expect(page.locator('[data-qid="battle:graph:node:signal:scan"]')).toBeVisible();
   await expect(page.locator('[data-qid="battle:graph:node:signal:brave"]')).toBeVisible();
   await expect(page.locator('[data-qid="battle:graph:node:signal:warm-pond"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:warm-pond-execution"]')).toBeVisible();
 
-  await page.locator('[data-qid="battle:graph:node:signal:warm-pond"]').click();
-  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("warm pond")).toBeVisible();
-  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("PASS")).toBeVisible();
-  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("16 combinations")).toBeVisible();
+  await page.locator('[data-qid="battle:graph:node:signal:warm-pond-execution"]').click();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("executed attempts")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:inspector"] strong').getByText("PASS", { exact: true })).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("4 passed / 4 selected / 0 failed")).toBeVisible();
 
   await page.screenshot({
     path: "test-results/battle-monitor-v1-context-graph.png",

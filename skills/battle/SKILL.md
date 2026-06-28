@@ -368,30 +368,34 @@ With `--context-receipts`, the same command additionally calls `$memory` over
 HTTP for `/recall`, runs a Docker-contained fast scan, calls live Brave batch
 search from scan/persona context, extracts Python AST code context, writes a
 deterministic research seed receipt, generates warm-pond exploit/defense
-candidates, and stores one outcome document through `$memory` `/upsert` into
-`battle_round_memory`. The current local context proof produced
+candidates, executes a bounded set of selected warm-pond combinations in
+isolated Docker workspaces, and stores one outcome document through `$memory`
+`/upsert` into `battle_round_memory`. The current local context proof produced
 `BATTLE_ARENA_DOCKER_CONTEXT_ASSERT_PASS` and
-`BATTLE_SCAN_BRAVE_WARM_POND_ASSERT_PASS`, with
+`BATTLE_SCAN_BRAVE_WARM_POND_ASSERT_PASS` and
+`BATTLE_WARM_POND_EXECUTION_ASSERT_PASS`, with
 `run.execution.context_receipts=True`, `context.memory.recall_status=PASS`,
 `context.memory.store_status=PASS`, `memory.upsert.inserted=1`,
 `fast_scan.finding_count=2`, `brave_search.result_count=8`,
-`warm_pond.combination_count=16`, `code_context.symbol_count=7`, and 17 SQLite
-event rows under `/tmp/battle-003-arena-context`. Its Tree-sitter diagnostic is
-currently `BLOCKED` because the treesitter-tools environment is missing
-`click`; the Battle proof uses Python AST fallback for this rung.
+`warm_pond.combination_count=16`, `warm_pond_execution.selected_attempt_count=4`,
+`warm_pond_execution.passed_attempt_count=4`, `code_context.symbol_count=7`,
+and 22 SQLite event rows under `/tmp/battle-003-arena-context`. Its Tree-sitter
+diagnostic is currently `BLOCKED` because the treesitter-tools environment is
+missing `click`; the Battle proof uses Python AST fallback for this rung.
 
 This proof does not exercise Scillm delegate, batch, or tool execution inside
-Battle, execution of the full warm-pond candidate matrix, multi-mutation
-swarms, memory graph promotion or cross-round reuse, Tau loop repair cycles,
-Tree-sitter success, or the React+D3 live monitor.
+Battle, an unbounded warm-pond swarm, Dogpile/GitHub-search candidate
+enrichment, memory graph promotion or cross-round reuse, Tau loop repair
+cycles, Tree-sitter success, or the React+D3 live monitor.
 
 The current monitor proof now renders a narrow React+D3 artifact graph over the
 generated `battle-003` context artifacts. `BattleForceGraph.tsx` uses D3 force
 layout math and React-owned SVG DOM to connect Arena/Red/Blue/Judge players,
 scorekeeper receipts, race signals, Docker fast scan, Brave research,
-warm-pond candidates, and the memory-upsert context node. It is artifact-backed
-and fail-closed through `loadBattleArtifacts`; it is not yet the final
-high-throughput Canvas/WebGL live attempt graph. Current proof artifacts:
+warm-pond candidates, bounded warm-pond execution, and the memory-upsert context
+node. It is artifact-backed and fail-closed through `loadBattleArtifacts`; it is
+not yet the final high-throughput Canvas/WebGL live attempt graph. Current proof
+artifacts:
 
 ```text
 skills/battle/monitor/battle/test-results/battle-monitor-v1-context-graph.png

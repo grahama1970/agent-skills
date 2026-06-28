@@ -204,8 +204,8 @@ independent Judge receipts.
    patched before Red exploited. With `--context-receipts`, this rung now also
    records the intended first-step strategy chain: `$memory` recall, Docker fast
    scan, live Brave batch search, research seed, warm-pond candidate generation,
-   Tau/Scillm action selection, Docker race, scorekeeper replay, and `$memory`
-   upsert.
+   bounded warm-pond execution in isolated Docker workspaces, Tau/Scillm action
+   selection, Docker race, scorekeeper replay, and `$memory` upsert.
 
 Battle v0 is the safer first rung to run when checking the artifact contract. It
 does not exercise live Red or Blue agents.
@@ -446,7 +446,8 @@ scillm.model=opencode/kimi-k2.6
 subagent-ledger.sqlite events=10
 BATTLE_ARENA_DOCKER_CONTEXT_ASSERT_PASS
 BATTLE_SCAN_BRAVE_WARM_POND_ASSERT_PASS
-context run artifacts=58
+BATTLE_WARM_POND_EXECUTION_ASSERT_PASS
+context run artifacts=115
 context.memory.recall_status=PASS
 context.memory.store_status=PASS
 memory.upsert.collection=battle_round_memory
@@ -458,10 +459,13 @@ brave_search.result_count=8
 warm_pond.exploit_candidate_count=4
 warm_pond.defense_candidate_count=4
 warm_pond.combination_count=16
+warm_pond_execution.selected_attempt_count=4
+warm_pond_execution.passed_attempt_count=4
+warm_pond_execution.failed_attempt_count=0
 code_context.symbol_count=7
 treesitter.status=BLOCKED
 treesitter.reason=treesitter_command_failed
-context subagent-ledger.sqlite events=17
+context subagent-ledger.sqlite events=22
 ```
 
 This proves the narrow Arena hidden-ground-truth and Docker command boundary
@@ -474,11 +478,12 @@ batch, or tool execution inside Battle.
 With `--context-receipts`, it additionally proves a memory-first `/recall`
 attempt, Docker-contained fast scan, live Brave batch research seeded by scan
 and persona context, Python AST code-context extraction, deterministic research
-seed receipt, warm-pond exploit/defense candidate generation, and one `$memory`
-HTTP `/upsert` write to `battle_round_memory`. It does not prove execution of
-the warm-pond candidate matrix, multi-mutation swarms, memory graph promotion or
-cross-round reuse, Tree-sitter success when its diagnostic is blocked, or the
-React+D3 live monitor.
+seed receipt, warm-pond exploit/defense candidate generation, bounded execution
+of four selected warm-pond combinations in isolated Docker workspaces, and one
+`$memory` HTTP `/upsert` write to `battle_round_memory`. It does not prove an
+unbounded warm-pond swarm, memory graph promotion or cross-round reuse,
+Dogpile/GitHub-search candidate enrichment, Tree-sitter success when its
+diagnostic is blocked, or the React+D3 live monitor.
 
 ## Battle Monitor
 
@@ -549,9 +554,10 @@ React+D3 SVG force graph for the generated `battle-003` context run through
 `src/BattleForceGraph.tsx`. It loads `/artifacts/battle-003-arena-context`,
 derives nodes from Arena/Red/Blue/Judge players, scorekeeper receipts, race
 signals, Docker fast scan, Brave research, warm-pond candidates, and the
-memory-upsert context receipt, and exposes a graph inspector plus hidden
-accessible table. This is a small proof graph over generated artifacts, not the
-final high-throughput Canvas/WebGL live swarm view.
+bounded warm-pond execution summary, and the memory-upsert context receipt, and
+exposes a graph inspector plus hidden accessible table. This is a small proof
+graph over generated artifacts, not the final high-throughput Canvas/WebGL live
+swarm view.
 
 Current UI evidence:
 

@@ -169,6 +169,19 @@ function buildGraph(data: LoadedBattleArtifacts): { nodes: GraphNode[]; links: G
     links.push({ source: "signal:warm-pond", target: "scorekeeper", label: "candidates" });
   }
 
+  const warmPondExecution = objectField(contextReceipt, "warm_pond_execution_summary");
+  if (warmPondExecution) {
+    nodes.set("signal:warm-pond-execution", {
+      id: "signal:warm-pond-execution",
+      label: "executed attempts",
+      kind: "signal",
+      status: stringField(warmPondExecution, "status"),
+      detail: `${numberField(warmPondExecution, "passed_attempt_count")} passed / ${numberField(warmPondExecution, "selected_attempt_count")} selected / ${numberField(warmPondExecution, "failed_attempt_count")} failed`
+    });
+    links.push({ source: "signal:warm-pond", target: "signal:warm-pond-execution", label: "executed" });
+    links.push({ source: "signal:warm-pond-execution", target: "scorekeeper", label: "evidence" });
+  }
+
   return { nodes: [...nodes.values()], links };
 }
 
