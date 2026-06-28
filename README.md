@@ -68,7 +68,7 @@ Deploy to configured agent homes:
 
 ## What I'm Working On
 
-I maintain projects and skills continuously. Here's my current focus:
+I break stuff all the time. Here are the projects and skills I'm currently having fun with:
 
 <table>
   <tr>
