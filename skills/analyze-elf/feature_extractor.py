@@ -319,11 +319,49 @@ def extract_imports_exports(analysis) -> tuple[list[dict], list[dict]]:
     # Map imports to shared libs if available
     libs = getattr(analysis, "shared_libs", [])
     for imp in imports:
-        imp["library"] = ""  # TODO: match via symbol versioning when available
+        imp["library"] = infer_import_library(imp["name"], libs)
     if libs:
         logger.info("Shared libs: {} | Imports: {} | Exports: {}", len(libs), len(imports), len(exports))
 
     return imports[:500], exports[:500]
+
+
+def infer_import_library(symbol_name: str, shared_libs: list[str]) -> str:
+    """Infer the likely shared library for a common imported ELF symbol."""
+    symbol_prefixes = {
+        "curl_": "libcurl",
+        "dl": "libdl",
+        "EVP_": "libcrypto",
+        "gl": "libGL",
+        "gnutls_": "libgnutls",
+        "gtk_": "libgtk",
+        "json_": "libjson",
+        "lua_": "liblua",
+        "mysql_": "libmysqlclient",
+        "napi_": "libnode",
+        "node_api_": "libnode",
+        "pa_": "libpulse",
+        "PQ": "libpq",
+        "pthread_": "libpthread",
+        "Py": "libpython",
+        "readline": "libreadline",
+        "sqlite3_": "libsqlite3",
+        "SSL_": "libssl",
+        "uv_": "libuv",
+        "xml": "libxml2",
+        "zlib": "libz",
+    }
+
+    for prefix, library_stem in symbol_prefixes.items():
+        if symbol_name.startswith(prefix):
+            match = next((lib for lib in shared_libs if lib.startswith(library_stem)), "")
+            return match or library_stem
+
+    if symbol_name in {"malloc", "free", "printf", "fprintf", "fopen", "fclose", "memcpy", "strlen"}:
+        match = next((lib for lib in shared_libs if lib.startswith("libc.")), "")
+        return match or "libc"
+
+    return ""
 
 
 def extract_api_routes(raw_strings: list[str]) -> list[str]:
