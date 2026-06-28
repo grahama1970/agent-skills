@@ -1,0 +1,107 @@
+{
+  "schema": "watch.reference_download_review_approval_receipt.v1",
+  "status": "RECEIPTS_WRITTEN",
+  "asset_id": "bad_santa_2003_canary",
+  "source_reference_manifest_schema": "watch.reference_manifest.v1",
+  "source_reference_manifest_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_download_review_approval_independent_20260628T1518Z/watch_reference_manifest.independent_file_reference.json",
+  "reference_receipts": [
+    {
+      "reference_id": "watch_ref_candidate:willie_independent_command_001",
+      "asset_id": "bad_santa_2003_canary",
+      "entity_id": "character:bad_santa:willie",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "provider": "brave_image_search_api",
+      "source_url": "https://example.test/bad-santa-willie",
+      "image_url": "file:///home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_download_review_approval_independent_20260628T1518Z/source_fixture/willie_reference.png",
+      "thumbnail_url": null,
+      "source_overlay_id": null,
+      "download_receipt": {
+        "receipt_id": "watch_ref_download_receipt:94bf4529752a2bfdeffc5325b2f81f53",
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "required": true,
+        "artifact": {
+          "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_download_review_approval_independent_20260628T1518Z/reference_artifacts/watch_ref_candidate_willie_independent_command_001.png",
+          "byte_size": 69,
+          "sha256": "f2720b23a802416b6d3f5fdf11055b57861e4438cd9d1b34de9655cb6098bb27",
+          "media_type": "image/png",
+          "dimensions": {
+            "width": 1,
+            "height": 1
+          }
+        }
+      },
+      "source_review_receipt": {
+        "receipt_id": "watch_ref_source_review_receipt:94bf4529752a2bfdeffc5325b2f81f53",
+        "status": "SOURCE_REVIEWED",
+        "required": true,
+        "review_basis": "Independent reviewed reference candidate; not scene truth.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "review_scope_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "receipt_id": "watch_ref_approval_receipt:94bf4529752a2bfdeffc5325b2f81f53",
+        "status": "APPROVED",
+        "required": true,
+        "approved_by": "command-fixture-reviewer",
+        "approval_time": null,
+        "approval_source": "brave_image_search_reviewed",
+        "approval_scope": "IDENTITY_PROMOTION"
+      },
+      "approved_reference_status": "APPROVED",
+      "scene_truth_claimed": false,
+      "identity_promotion_allowed": true,
+      "promotion_blockers": [
+        "CROP_REFERENCE_SIMILARITY_NOT_PROVEN",
+        "MEMORY_RECALL_PROOF_REQUIRED"
+      ]
+    }
+  ],
+  "receipt_requirements": {
+    "download_receipts_required": true,
+    "source_review_receipts_required": true,
+    "approval_receipts_required": true,
+    "approved_before_embedding": true,
+    "independent_reference_package_required_for_identity_promotion": true
+  },
+  "promotion_policy": {
+    "candidate_url_can_promote_identity": false,
+    "download_without_approval_can_promote_identity": false,
+    "approval_without_crop_similarity_can_promote_identity": false,
+    "canary_reference_can_promote_identity": false,
+    "scene_truth_claim_allowed": false
+  },
+  "counts": {
+    "reference_count": 1,
+    "local_artifact_count": 1,
+    "downloaded_reference_count": 1,
+    "approved_reference_count": 1,
+    "canary_approved_reference_count": 0,
+    "blocked_reference_count": 0
+  },
+  "proof_scope": [
+    "reference_download_review_approval_receipts",
+    "local_artifact_hashes",
+    "canary_fail_closed_identity_gate"
+  ],
+  "claims": {
+    "proves": [
+      "local reference artifacts have deterministic download, source-review, and approval receipts",
+      "local reference artifacts were hashed and counted before embedding or similarity comparison",
+      "canary references remain blocked from identity promotion without crop/reference similarity and memory recall proof"
+    ],
+    "does_not_prove": [
+      "public web image download success",
+      "license suitability for external images",
+      "production human approval",
+      "Jina embedding success",
+      "Qdrant write success",
+      "crop/reference similarity",
+      "supported character identity"
+    ]
+  }
+}

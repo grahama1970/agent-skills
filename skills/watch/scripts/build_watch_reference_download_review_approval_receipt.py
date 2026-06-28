@@ -13,9 +13,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 import struct
+from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import Any
+
+import httpx
 
 
 RECEIPT_SCHEMA = "watch.reference_download_review_approval_receipt.v1"
@@ -100,6 +105,80 @@ def artifact_metadata(path: Path) -> dict[str, Any]:
     }
 
 
+def safe_suffix(url_or_path: str) -> str:
+    parsed = urlparse(url_or_path)
+    name = Path(parsed.path or url_or_path).name
+    suffix = Path(name).suffix.lower()
+    if suffix in {".jpg", ".jpeg", ".png", ".webp"}:
+        return suffix
+    return ".img"
+
+
+def download_or_copy_reference_artifact(
+    ref: dict[str, Any],
+    *,
+    download_dir: Path,
+    timeout_seconds: float = 30.0,
+) -> dict[str, Any]:
+    """Return a reference copy with a local artifact when a source is available.
+
+    This is a materialization step only. It records local bytes for later review,
+    embedding, Qdrant writes, and negative controls. It does not approve a
+    reference and it does not make a scene-truth or identity claim.
+    """
+
+    if ref.get("local_path") or ref.get("downloaded_artifact_ref") or ref.get("crop_path"):
+        return dict(ref)
+
+    source = ref.get("image_url") or ref.get("thumbnail_url")
+    if not source:
+        return {**ref, "download_error": "NO_IMAGE_URL"}
+
+    reference_id = str(ref.get("reference_id") or stable_id("watch_ref", ref))
+    out_path = download_dir / f"{reference_id.replace(':', '_')}{safe_suffix(str(source))}"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    parsed = urlparse(str(source))
+
+    try:
+        if parsed.scheme == "file":
+            src = Path(parsed.path)
+            shutil.copyfile(src, out_path)
+        elif parsed.scheme in {"http", "https"}:
+            with httpx.Client(timeout=httpx.Timeout(timeout_seconds, connect=5.0), follow_redirects=True) as client:
+                response = client.get(str(source), headers={"User-Agent": "watch-reference-hydration/1.0"})
+                response.raise_for_status()
+                out_path.write_bytes(response.content)
+        else:
+            src = Path(str(source))
+            if not src.exists():
+                return {**ref, "download_error": f"UNSUPPORTED_OR_MISSING_SOURCE:{source}"}
+            shutil.copyfile(src, out_path)
+    except Exception as exc:
+        return {**ref, "download_error": f"{type(exc).__name__}:{exc}"}
+
+    return {
+        **ref,
+        "downloaded_artifact_ref": str(out_path),
+        "downloaded_at": utc_now(),
+    }
+
+
+def materialize_reference_manifest(
+    manifest: dict[str, Any],
+    *,
+    download_dir: Path,
+    limit: int = 0,
+) -> dict[str, Any]:
+    refs = manifest_references(manifest)
+    materialized: list[dict[str, Any]] = []
+    for idx, ref in enumerate(refs):
+        if limit and idx >= limit:
+            materialized.append(dict(ref))
+            continue
+        materialized.append(download_or_copy_reference_artifact(ref, download_dir=download_dir))
+    return {**manifest, "references": materialized}
+
+
 def manifest_references(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     refs = manifest.get("references")
     if isinstance(refs, list):
@@ -120,6 +199,10 @@ def is_canary_reference(ref: dict[str, Any], manifest: dict[str, Any]) -> bool:
         if value
     ).lower()
     return "canary" in material or "existing_track_crop" in material
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def build_reference_receipt_item(
@@ -149,6 +232,10 @@ def build_reference_receipt_item(
         source_review_status = "SOURCE_REVIEWED"
         receipt_approval_status = "APPROVED"
         approved_reference_status = "APPROVED"
+    elif approval_status in {"APPROVED_IDENTITY_PROMOTION", "APPROVED_FOR_IDENTITY_PROMOTION"} and artifact:
+        source_review_status = "SOURCE_REVIEWED"
+        receipt_approval_status = "APPROVED_IDENTITY_PROMOTION"
+        approved_reference_status = "APPROVED_FOR_IDENTITY_PROMOTION"
     elif artifact:
         source_review_status = "BLOCKED_PENDING_HUMAN_REVIEW"
         receipt_approval_status = "BLOCKED_PENDING_SOURCE_REVIEW"
@@ -158,7 +245,11 @@ def build_reference_receipt_item(
         receipt_approval_status = "BLOCKED_PENDING_DOWNLOAD"
         approved_reference_status = "NOT_APPROVED"
 
-    identity_promotion_allowed = False
+    identity_promotion_allowed = bool(
+        artifact
+        and not canary
+        and receipt_approval_status in {"APPROVED", "APPROVED_IDENTITY_PROMOTION"}
+    )
     return {
         "reference_id": reference_id,
         "asset_id": ref.get("asset_id") or manifest.get("asset_id"),
@@ -195,7 +286,7 @@ def build_reference_receipt_item(
             "approved_by": ref.get("approved_by"),
             "approval_time": ref.get("approval_time"),
             "approval_source": ref.get("approval_source") or manifest.get("reference_source"),
-            "approval_scope": "CANARY_PIPELINE_ONLY" if canary else "REFERENCE_REVIEW",
+            "approval_scope": "CANARY_PIPELINE_ONLY" if canary else "IDENTITY_PROMOTION",
         },
         "approved_reference_status": approved_reference_status,
         "scene_truth_claimed": False,
@@ -206,6 +297,13 @@ def build_reference_receipt_item(
             *(
                 ["CANARY_REFERENCES_ARE_NOT_INDEPENDENT_PRODUCTION_REFERENCES"]
                 if canary
+                else []
+            ),
+            *(
+                []
+                if identity_promotion_allowed
+                else ["INDEPENDENT_REFERENCE_APPROVAL_REQUIRED"]
+                if not canary
                 else []
             ),
         ],
@@ -321,9 +419,19 @@ def main() -> None:
     parser.add_argument("--reference-manifest", required=True, type=Path)
     parser.add_argument("--out-dir", required=True, type=Path)
     parser.add_argument("--name", default=None)
+    parser.add_argument("--download-missing", action="store_true", help="Download/copy image_url artifacts before building receipts")
+    parser.add_argument("--download-dir", type=Path, help="Directory for downloaded reference artifacts")
+    parser.add_argument("--download-limit", type=int, default=0, help="Optional maximum number of references to materialize")
     args = parser.parse_args()
 
     manifest = load_json(args.reference_manifest)
+    if args.download_missing:
+        download_dir = args.download_dir or args.out_dir / "reference_artifacts"
+        manifest = materialize_reference_manifest(
+            manifest,
+            download_dir=download_dir,
+            limit=args.download_limit,
+        )
     receipt = build_receipt(manifest, manifest_path=args.reference_manifest.resolve())
     name = args.name or args.reference_manifest.stem
     args.out_dir.mkdir(parents=True, exist_ok=True)

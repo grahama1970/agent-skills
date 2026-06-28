@@ -1,0 +1,24 @@
+{
+  "schema": "watch.negative_control_receipt.v1",
+  "status": "FAILED_NEGATIVE_CONTROL",
+  "created_at": "2026-06-28T15:25:45Z",
+  "source_realtime_identity_receipt": "skills/watch/docs/architecture/generated/watch_realtime_identity_memory_loop_independent_reference_20260628T1522Z/watch_realtime_identity_memory_loop_live_receipt.json",
+  "threshold": 0.72,
+  "input_similarity_status": "SCORED_REQUIRES_NEGATIVE_CONTROLS",
+  "claim_boundary": {
+    "proves": [
+      "crop/reference similarity was checked for canary-only high-similarity leakage",
+      "identity promotion remains blocked when references are not independent production references"
+    ],
+    "does_not_prove": [
+      "true negative-control coverage for production identity verification when status is failed",
+      "human-approved character identity"
+    ]
+  },
+  "failures": [],
+  "counts": {
+    "comparison_count": 2,
+    "candidate_crop_count": 2,
+    "failure_count": 0
+  }
+}

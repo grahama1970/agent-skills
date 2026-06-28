@@ -260,8 +260,10 @@ def attach_reference_approval(
             "approval_scope": None,
         }
     receipt = approval.get("approval_receipt") or {}
+    artifact = (approval.get("download_receipt") or {}).get("artifact") or {}
     return {
         **ref,
+        "downloaded_artifact_ref": ref.get("downloaded_artifact_ref") or artifact.get("local_path"),
         "approval_gate_status": "APPROVAL_RECEIPT_LINKED",
         "approval_receipt_id": receipt.get("receipt_id"),
         "approval_receipt_status": receipt.get("status"),
@@ -274,7 +276,7 @@ def approval_receipt_allows_embedding(ref: dict[str, Any]) -> bool:
     status = str(ref.get("approval_receipt_status") or "").upper()
     if not status:
         return True
-    return status in {"APPROVED", "APPROVED_CANARY_PIPELINE_ONLY"}
+    return status in {"APPROVED", "APPROVED_IDENTITY_PROMOTION", "APPROVED_CANARY_PIPELINE_ONLY"}
 
 
 def embed_and_write_references(
@@ -297,7 +299,11 @@ def embed_and_write_references(
         attach_reference_approval(ref, approval_by_id)
         for ref in approved_reference_records(manifest)
     ]
-    references = [ref for ref in references if approval_receipt_allows_embedding(ref)]
+    references = [
+        ref
+        for ref in references
+        if approval_receipt_allows_embedding(ref) and reference_local_path(ref)
+    ]
     image_inputs = [data_uri(resolve_repo_path(reference_local_path(ref))) for ref in references]
     with httpx.Client(timeout=httpx.Timeout(300.0, connect=5.0)) as client:
         response = client.post(
@@ -693,13 +699,11 @@ def retrieval_text(crop: dict[str, Any]) -> str:
 def approved_reference_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for ref in manifest.get("references") or []:
-        if str(ref.get("approval_status", "")).upper() == "APPROVED" and reference_local_path(ref):
+        if str(ref.get("approval_status", "")).upper() in {"APPROVED", "APPROVED_IDENTITY_PROMOTION"}:
             records.append(ref)
     for candidate in manifest.get("candidates") or []:
         for ref in candidate.get("approved_references") or []:
-            if str(ref.get("approval_status", "APPROVED")).upper() != "APPROVED":
-                continue
-            if not reference_local_path(ref):
+            if str(ref.get("approval_status", "APPROVED")).upper() not in {"APPROVED", "APPROVED_IDENTITY_PROMOTION"}:
                 continue
             merged = {
                 "entity_id": candidate.get("entity_id"),

@@ -13,6 +13,13 @@ from build_watch_reference_download_review_approval_receipt import (
     assert_no_raw_vectors,
     build_receipt,
     load_json,
+    materialize_reference_manifest,
+)
+from run_realtime_identity_memory_loop import (
+    approval_receipt_allows_embedding,
+    attach_reference_approval,
+    approved_reference_records,
+    reference_approval_by_id,
 )
 
 
@@ -55,3 +62,66 @@ def test_canary_manifest_writes_local_artifact_approval_receipts() -> None:
         assert artifact["dimensions"]["height"] > 0
 
     assert_no_raw_vectors(receipt)
+
+
+def test_independent_downloaded_reference_can_be_promotion_eligible_after_later_gates(tmp_path: Path) -> None:
+    source_png = tmp_path / "willie_reference.png"
+    source_png.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        b"\x00\x00\x00\rIHDR"
+        b"\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00"
+        b"\x90wS\xde"
+        b"\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfeA\xe2!\xbc"
+        b"\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    manifest = {
+        "schema": "watch.reference_manifest.v1",
+        "asset_id": "bad_santa_2003_canary",
+        "reference_source": "brave_image_search_reviewed",
+        "references": [
+            {
+                "reference_id": "watch_ref_candidate:willie_independent_001",
+                "asset_id": "bad_santa_2003_canary",
+                "entity_id": "character:bad_santa:willie",
+                "character_name": "Willie",
+                "actor_name": "Billy Bob Thornton",
+                "provider": "brave_image_search_api",
+                "source_url": "https://example.test/bad-santa-willie",
+                "image_url": source_png.as_uri(),
+                "approval_status": "APPROVED",
+                "approved_by": "test-human-reviewer",
+                "approval_note": "Independent reviewed solo reference candidate; not scene truth.",
+            }
+        ],
+    }
+
+    materialized = materialize_reference_manifest(manifest, download_dir=tmp_path / "downloads")
+    receipt = build_receipt(materialized)
+    item = receipt["reference_receipts"][0]
+
+    assert receipt["schema"] == RECEIPT_SCHEMA
+    assert receipt["counts"]["reference_count"] == 1
+    assert receipt["counts"]["local_artifact_count"] == 1
+    assert receipt["counts"]["approved_reference_count"] == 1
+    assert receipt["counts"]["canary_approved_reference_count"] == 0
+    assert item["download_receipt"]["status"] == "DOWNLOADED_LOCAL_ARTIFACT"
+    assert item["source_review_receipt"]["status"] == "SOURCE_REVIEWED"
+    assert item["approval_receipt"]["status"] == "APPROVED"
+    assert item["approval_receipt"]["approval_scope"] == "IDENTITY_PROMOTION"
+    assert item["approved_reference_status"] == "APPROVED"
+    assert item["identity_promotion_allowed"] is True
+    assert item["scene_truth_claimed"] is False
+    assert "CANARY_REFERENCES_ARE_NOT_INDEPENDENT_PRODUCTION_REFERENCES" not in item["promotion_blockers"]
+    assert "CROP_REFERENCE_SIMILARITY_NOT_PROVEN" in item["promotion_blockers"]
+    assert "MEMORY_RECALL_PROOF_REQUIRED" in item["promotion_blockers"]
+    assert_no_raw_vectors(receipt)
+
+    approval_by_id = reference_approval_by_id(receipt)
+    assert len(approved_reference_records(manifest)) == 1
+    linked = attach_reference_approval(manifest["references"][0], approval_by_id)
+    assert linked["approval_gate_status"] == "APPROVAL_RECEIPT_LINKED"
+    assert linked["approval_receipt_status"] == "APPROVED"
+    assert linked["approval_scope"] == "IDENTITY_PROMOTION"
+    assert linked["approval_promotion_allowed"] is True
+    assert linked["downloaded_artifact_ref"] == item["download_receipt"]["artifact"]["local_path"]
+    assert approval_receipt_allows_embedding(linked) is True
