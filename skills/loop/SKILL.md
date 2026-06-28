@@ -3,6 +3,18 @@ name: loop
 description: Run one bounded executable harness for a scoped artifact: explorer -> coder -> checks -> code-reviewer -> repair until PASS, BLOCKED, or max attempts.
 metadata:
   short-description: Executable one-artifact loop harness
+provides:
+  - bounded-artifact-loop
+  - executable-repair-harness
+  - loop-receipts
+composes:
+  - code-review-runner
+  - review-code
+  - task-monitor
+  - best-practices-python
+complies:
+  - best-practices-skills
+  - best-practices-python
 ---
 
 # Loop Skill
