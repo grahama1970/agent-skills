@@ -64,6 +64,11 @@
   React/SVG for labels, axes, selection chrome, accessible summaries, and the
   right-sidebar drill-down. Candidate directions include react-force-graph style
   Canvas/WebGL rendering and PixiJS+D3 hybrid rendering.
+- Battle Monitor v1 now includes a Watch-style right sidebar chat surface. It
+  renders starter chips, messages, a composer, stable `data-qid` selectors,
+  `data-qs-action` hooks, and local `battle.human_interjection.v1` preview
+  receipts. It is not connected to Tau, cron, persona mutation, Docker execution,
+  or scorekeeper state yet.
 - Battle v0 is the current deterministic proof rung. It runs one local fixture:
   Red proves a seeded path traversal exploit, Blue applies a deterministic
   patched `app.py`, Judge verifies the synced arena, and the scoreboard derives
@@ -96,6 +101,7 @@
 | 2026-06-27 | Treat Battle as warm-pond evolutionary exploit/defense search. | Many high/low-level ideas and combinations should be tried quickly; successful mutations are promoted and failures become negative evidence. |
 | 2026-06-27 | Make Battle an orchestrator of Tau subagents, not the LLM runtime. | Keeps Battle focused on teams, personas, Docker isolation, scoring, artifacts, and memory promotion while Tau/loop/scillm handle agent execution. |
 | 2026-06-27 | Add memory-backed graph/BM25 visualization to the production monitor target. | Related exploit/defense mutations should be inspectable as a live graph while the battle runs. |
+| 2026-06-27 | Implement the first Battle Monitor right-sidebar chat UX as local preview. | Reuses the Watch shared-chat interaction pattern while blocking orchestration mutation until schema-valid backend handling exists. |
 
 ## Open Questions
 
@@ -112,6 +118,8 @@
   deterministic fixture: Python-only, polyglot auto-detect, or target-declared?
 - [ ] Should the production Battle monitor be implemented as a new Tailwind /
   shadcn / D3 surface or by replacing the current Vite proof monitor in place?
+- [ ] What backend endpoint should consume `battle.human_interjection.v1`:
+  Battle directly, Tau route parser, or a shared human-interjection service?
 
 ## Key Files
 

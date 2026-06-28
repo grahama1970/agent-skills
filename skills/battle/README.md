@@ -322,6 +322,13 @@ they affect the orchestrator. Interactive controls must have stable
 `data-qid`, `data-qs-action`, and `title` attributes, and UI acceptance requires
 a fresh live CDP screenshot plus the Playwright checks.
 
+Battle Monitor v1 includes the first local version of this sidebar. It uses the
+same shared-chat interaction pattern as Watch: starter chips, message bubbles,
+composer, stable `data-qid` selectors, and `data-qs-action` command hooks. In
+v1, submitted messages create local `battle.human_interjection.v1` preview
+receipts only. They do not yet mutate Tau, cron, Docker execution, persona
+selection, or scorekeeper state.
+
 ## Architecture
 
 Core modules:

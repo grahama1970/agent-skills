@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { loadCalthArtifacts, type LoadedCalthArtifacts } from "./artifacts";
+import { BattleChatSidebar } from "./BattleChatSidebar";
 import type { CalthPlayer, CalthTimelineStage } from "./types";
 
 type LoadState =
@@ -183,67 +184,70 @@ function LoadedView({ data }: { data: LoadedCalthArtifacts }) {
   const { monitorIndex } = data;
 
   return (
-    <main className="appShell">
-      <header className="hero">
-        <div>
-          <div className="eyebrow">Battle Monitor</div>
-          <h1>{monitorIndex.title}</h1>
-          <p>
-            One-round Red to Blue to Judge battle. The scoreboard is derived from
-            Judge receipts, not Blue self-certification.
-          </p>
-        </div>
-
-        <div className="heroStatus">
-          <Crosshair size={22} />
-          <span className="eyebrow">Battle</span>
-          <strong className="mono">{monitorIndex.battle_id}</strong>
-          <strong className={statusClass(monitorIndex.status)}>{monitorIndex.status}</strong>
-        </div>
-      </header>
-
-      <section className="summaryGrid">
-        <article className="card">
-          <div className="eyebrow">Campaign</div>
-          <h2>{monitorIndex.campaign}</h2>
-          <p className="muted">Scenario: {monitorIndex.scenario}</p>
-        </article>
-
-        <article className="card">
-          <div className="eyebrow">Final verdict</div>
-          <h2 className={statusClass(monitorIndex.verdict)}>{monitorIndex.verdict}</h2>
-          <p className="muted">Exploit confirmed, patch applied, Judge verified.</p>
-        </article>
-      </section>
-
-      <section className="playersGrid">
-        {monitorIndex.players.map((player) => (
-          <PlayerCard key={`${player.team}-${player.persona}`} player={player} />
-        ))}
-      </section>
-
-      <section className="card timelineCard">
-        <div className="cardHeader">
-          <div className="iconBadge">
-            <Activity size={18} />
-          </div>
+    <main className="monitorShell">
+      <div className="appShell">
+        <header className="hero">
           <div>
-            <div className="eyebrow">Round timeline</div>
-            <h2>Prepare to Red to Blue to Judge to Score</h2>
+            <div className="eyebrow">Battle Monitor</div>
+            <h1>{monitorIndex.title}</h1>
+            <p>
+              One-round Red to Blue to scorekeeper battle. The scoreboard is derived from
+              scorekeeper receipts, not Blue self-certification.
+            </p>
           </div>
-        </div>
 
-        <div className="timeline">
-          {monitorIndex.timeline.map((item) => (
-            <TimelineNode key={item.stage} item={item} />
+          <div className="heroStatus">
+            <Crosshair size={22} />
+            <span className="eyebrow">Battle</span>
+            <strong className="mono">{monitorIndex.battle_id}</strong>
+            <strong className={statusClass(monitorIndex.status)}>{monitorIndex.status}</strong>
+          </div>
+        </header>
+
+        <section className="summaryGrid">
+          <article className="card">
+            <div className="eyebrow">Campaign</div>
+            <h2>{monitorIndex.campaign}</h2>
+            <p className="muted">Scenario: {monitorIndex.scenario}</p>
+          </article>
+
+          <article className="card">
+            <div className="eyebrow">Final verdict</div>
+            <h2 className={statusClass(monitorIndex.verdict)}>{monitorIndex.verdict}</h2>
+            <p className="muted">Exploit confirmed, patch applied, scorekeeper verified.</p>
+          </article>
+        </section>
+
+        <section className="playersGrid">
+          {monitorIndex.players.map((player) => (
+            <PlayerCard key={`${player.team}-${player.persona}`} player={player} />
           ))}
-        </div>
-      </section>
+        </section>
 
-      <section className="lowerGrid">
-        <ScoreCard data={data} />
-        <EvidencePanel data={data} />
-      </section>
+        <section className="card timelineCard">
+          <div className="cardHeader">
+            <div className="iconBadge">
+              <Activity size={18} />
+            </div>
+            <div>
+              <div className="eyebrow">Round timeline</div>
+              <h2>Prepare to Red to Blue to Scorekeeper to Score</h2>
+            </div>
+          </div>
+
+          <div className="timeline">
+            {monitorIndex.timeline.map((item) => (
+              <TimelineNode key={item.stage} item={item} />
+            ))}
+          </div>
+        </section>
+
+        <section className="lowerGrid">
+          <ScoreCard data={data} />
+          <EvidencePanel data={data} />
+        </section>
+      </div>
+      <BattleChatSidebar data={data} />
     </main>
   );
 }
