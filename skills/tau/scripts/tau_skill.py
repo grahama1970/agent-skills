@@ -206,6 +206,7 @@ def goal_objective_manifests(paths: list[Path]) -> list[dict[str, Any]]:
         "tau-same-run-compliance-20260628T222531Z": "same_run_chat_to_command_loop",
         "project-watchdog-same-run-compliance-apply-20260628T224349Z": "watchdog_apply_transport",
         "fresh-current-multistep-command-loop-20260628T225412Z": "current_multistep_command_loop",
+        "fresh-current-multistep-github-apply-20260628T225904Z": "current_multistep_github_apply",
     }
     rows: list[dict[str, Any]] = []
     for path in paths:
