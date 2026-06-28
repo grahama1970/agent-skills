@@ -2,6 +2,19 @@
 name: best-practices-chat
 description: Keep Sparta Chat usable as a modern chat interface while preserving evidence-gated compliance semantics. Use when designing, reviewing, or implementing ChatWell, InlineEvidenceCase, EvidenceWorkspace, ArtifactPanel, distance modes, voice/qid interactions, evidence receipts, artifact previews, or assistant answer ordering.
 version: 0.1.0
+provides:
+  - chat-ux-guidance
+  - evidence-backed-chat-patterns
+  - sparta-chat-contracts
+composes:
+  - best-practices-design
+  - best-practices-sparta
+  - review-design
+complies:
+  - best-practices-skills
+  - best-practices-security
+  - best-practices-sparta
+  - best-practices-chat
 ---
 
 # Best Practices Chat Skill — Sparta Chat
