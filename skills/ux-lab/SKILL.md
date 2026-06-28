@@ -1,3 +1,31 @@
+---
+name: ux-lab
+description: >
+  Shared chat UX package for agent-facing surfaces. Use when mounting,
+  migrating, auditing, or preserving the unified chat shell, memory-turn
+  adapters, evidence disclosure, and production chat renderer used by SPARTA,
+  Watch, final-site, and PersonaPlex.
+metadata:
+  short-description: Shared agent chat UX package and migration contract
+provides:
+  - shared-chat-ui
+  - chat-surface-contracts
+  - memory-turn-adapters
+composes:
+  - best-practices-react
+  - review-design
+  - watch
+  - personaplex
+complies:
+  - best-practices-skills
+  - best-practices-react
+  - best-practices-design
+taxonomy:
+  - frontend
+  - chat-ux
+  - migration
+---
+
 # ux-lab Skill
 
 ## Purpose
