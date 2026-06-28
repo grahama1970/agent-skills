@@ -10,6 +10,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 
 import typer
@@ -24,6 +25,7 @@ RECEIPT_ROOT = STATE_ROOT / "receipts"
 LOCK_DIR = STATE_ROOT / "lock"
 CRON_MARKER = "# project-watchdog global issue cron"
 TAU_REPAIR_MARKER = "project-watchdog-action:add-tau-coder-command-spec"
+TAU_HANDOFF_DISPATCH_MARKER = "project-watchdog-action:tau-handoff-dispatch"
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
 TAU_CODER_SPEC = (
     TAU_ROOT
@@ -109,9 +111,12 @@ def run_cmd(
     timeout_s: int = 120,
 ) -> dict[str, Any]:
     started = datetime.now(UTC)
+    env = os.environ.copy()
+    env["PATH"] = f"{UV_BIN.parent}:{env.get('PATH', '')}"
     result = subprocess.run(
         command,
         cwd=str(cwd) if cwd else None,
+        env=env,
         input=input_text,
         text=True,
         capture_output=True,
@@ -192,7 +197,10 @@ def tick_locked(
     handled = 0
     for issue in issues[:max_tickets]:
         handled += 1
-        result = handle_tau_coder_spec_issue(run_id, receipt_dir, issue, apply=apply)
+        if issue.get("watchdog_action") == "tau_handoff_dispatch":
+            result = handle_tau_handoff_dispatch_issue(run_id, receipt_dir, issue, apply=apply)
+        else:
+            result = handle_tau_coder_spec_issue(run_id, receipt_dir, issue, apply=apply)
         receipt.setdefault("handled_issues", []).append(result)
     receipt["handled_count"] = handled
     receipt["ok"] = all(item.get("ok") for item in receipt.get("handled_issues", []))
@@ -285,14 +293,200 @@ def list_routable_tau_issues(run_id: str, project: dict[str, Any]) -> list[dict[
     routable: list[dict[str, Any]] = []
     for issue in issues:
         labels = {label.get("name") for label in issue.get("labels", [])}
+        if "agent-active" in labels or "agent-blocked" in labels:
+            continue
         body = issue.get("body") or ""
         if (
             "next:coder" in labels
             and "executor:local" in labels
             and TAU_REPAIR_MARKER in body
         ):
+            issue["watchdog_action"] = "add_tau_coder_command_spec"
+            routable.append(issue)
+        elif (
+            "executor:local" in labels
+            and TAU_HANDOFF_DISPATCH_MARKER in body
+        ):
+            issue["watchdog_action"] = "tau_handoff_dispatch"
             routable.append(issue)
     return routable
+
+
+def parse_issue_fields(body: str) -> dict[str, str]:
+    """Extract shell-style key=value fields from a GitHub issue body."""
+    fields: dict[str, str] = {}
+    for token in shlex.split(body.replace("\r", " ")):
+        key, sep, value = token.partition("=")
+        if sep:
+            fields[key.strip()] = value.strip()
+    return fields
+
+
+def repo_relative_existing_path(value: str) -> Path:
+    """Return a safe repo-relative Tau path or raise ValueError."""
+    posix_path = PurePosixPath(value)
+    if posix_path.is_absolute() or ".." in posix_path.parts:
+        raise ValueError(f"start path must be repo-relative without '..': {value}")
+    path = TAU_ROOT / Path(value)
+    if not path.is_file():
+        raise ValueError(f"start handoff path does not exist: {value}")
+    return path
+
+
+def parse_positive_int(value: str, *, field: str) -> int:
+    if not value.isdecimal() or int(value) < 1:
+        raise ValueError(f"{field} must be a positive integer: {value}")
+    return int(value)
+
+
+def parse_bool(value: str, *, field: str) -> bool:
+    normalized = value.lower()
+    if normalized not in {"true", "false"}:
+        raise ValueError(f"{field} must be true or false: {value}")
+    return normalized == "true"
+
+
+def handle_tau_handoff_dispatch_issue(
+    run_id: str,
+    receipt_dir: Path,
+    issue: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any]:
+    issue_number = int(issue["number"])
+    issue_url = str(issue["url"])
+    log_event(run_id, "handle_handoff_dispatch_start", issue=issue_number, url=issue_url)
+    result: dict[str, Any] = {
+        "project_id": "tau",
+        "issue_number": issue_number,
+        "issue_url": issue_url,
+        "selected_agent": None,
+        "action": "tau_handoff_dispatch",
+        "ok": False,
+        "commands": [],
+        "artifacts": [],
+    }
+    body = issue.get("body") or ""
+    try:
+        fields = parse_issue_fields(body)
+        start_path = repo_relative_existing_path(fields["start"])
+        max_steps = parse_positive_int(fields.get("max_steps", "1"), field="max_steps")
+        active_goal_hash = fields.get("active_goal_hash", TAU_ACTIVE_GOAL_HASH)
+        if not active_goal_hash.startswith("sha256:"):
+            raise ValueError(f"active_goal_hash must start with sha256:: {active_goal_hash}")
+        apply_transport = parse_bool(fields.get("apply_transport", "false"), field="apply_transport")
+    except KeyError:
+        result.update({"ok": False, "status": "BLOCKED", "summary": "missing required start field"})
+        return result
+    except ValueError as exc:
+        result.update({"ok": False, "status": "BLOCKED", "summary": str(exc)})
+        return result
+
+    resolved = {
+        "schema": "agent_skills.project_watchdog.tau_handoff_dispatch_inputs.v1",
+        "issue": f"issue#{issue_number}",
+        "issue_url": issue_url,
+        "start": str(start_path.relative_to(TAU_ROOT)),
+        "max_steps": max_steps,
+        "active_goal_hash": active_goal_hash,
+        "apply_transport": apply_transport,
+    }
+    resolved_path = receipt_dir / "tau-handoff-dispatch-inputs.json"
+    write_json(resolved_path, resolved)
+    result["artifacts"].append(str(resolved_path))
+
+    if not apply:
+        result.update({"ok": True, "status": "DRY_RUN", "summary": "would run Tau handoff dispatch"})
+        return result
+
+    lease_body = watchdog_comment(
+        "Lease acquired",
+        {
+            "schema": "agent_skills.project_watchdog.lease.v1",
+            "run_id": run_id,
+            "issue": f"issue#{issue_number}",
+            "selected_agent": "tau-handoff-dispatch",
+            "action": "tau_handoff_dispatch",
+            "inputs": resolved,
+        },
+    )
+    result["commands"].append(gh_issue_comment(issue_number, lease_body))
+    result["commands"].append(gh_issue_edit(issue_number, add=["agent-active"], remove=[]))
+
+    loop_dir = receipt_dir / "tau-command-loop"
+    loop_command = [
+        str(UV_BIN),
+        "run",
+        "tau",
+        "handoff-command-loop",
+        "--start",
+        str(start_path),
+        "--receipt-dir",
+        str(loop_dir),
+        "--agents-root",
+        str(AGENTS_ROOT),
+        "--command-spec-root",
+        str(TAU_ROOT / "experiments/goal-locked-subagents/agent-command-specs"),
+        "--active-goal-hash",
+        active_goal_hash,
+        "--max-steps",
+        str(max_steps),
+    ]
+    loop_result = run_cmd(loop_command, cwd=TAU_ROOT, timeout_s=120)
+    result["commands"].append(loop_result)
+    loop_receipt = loop_dir / "command-loop-receipt.json"
+    result["artifacts"].append(str(loop_receipt))
+
+    transport_path = receipt_dir / "tau-github-transport.json"
+    transport_command = [
+        str(UV_BIN),
+        "run",
+        "tau",
+        "handoff-command-loop-github-transport",
+        str(loop_receipt),
+        "--receipt",
+        str(transport_path),
+    ]
+    if apply_transport:
+        transport_command.append("--apply")
+    transport_result = run_cmd(transport_command, cwd=TAU_ROOT, timeout_s=120)
+    result["commands"].append(transport_result)
+    result["artifacts"].append(str(transport_path))
+
+    if loop_result["exit_code"] != 0 or transport_result["exit_code"] != 0:
+        result.update({"ok": False, "status": "NEEDS_ATTENTION", "summary": "Tau handoff dispatch failed"})
+        result["commands"].append(gh_issue_edit(issue_number, add=["agent-blocked"], remove=["agent-active"]))
+        return result
+
+    evidence_body = watchdog_comment(
+        "Tau handoff dispatch evidence",
+        {
+            "schema": "agent_skills.project_watchdog.tau_handoff_dispatch_receipt.v1",
+            "run_id": run_id,
+            "issue": f"issue#{issue_number}",
+            "inputs": resolved,
+            "loop_exit_code": loop_result["exit_code"],
+            "transport_exit_code": transport_result["exit_code"],
+            "command_loop_receipt": str(loop_receipt),
+            "github_transport_receipt": str(transport_path),
+            "mocked": False,
+            "live": True,
+            "scope": "Runs one bounded Tau handoff command-loop tick from a GitHub issue and renders or applies terminal GitHub transport.",
+        },
+    )
+    result["commands"].append(gh_issue_comment(issue_number, evidence_body))
+    result["commands"].append(
+        gh_issue_edit(
+            issue_number,
+            add=["agent-done"],
+            remove=["agent-active", "next:coder", "next:reviewer", "executor:local"],
+        )
+    )
+    close = run_cmd(["gh", "issue", "close", str(issue_number), "--repo", "grahama1970/tau", "--reason", "completed"])
+    result["commands"].append(close)
+    result.update({"ok": close["exit_code"] == 0, "status": "COMPLETED", "summary": "Tau handoff dispatch executed"})
+    log_event(run_id, "handle_handoff_dispatch_finish", issue=issue_number, ok=result["ok"])
+    return result
 
 
 def handle_tau_coder_spec_issue(

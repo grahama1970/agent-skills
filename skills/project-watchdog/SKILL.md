@@ -106,3 +106,27 @@ Actions by invoking `workflow_dispatch` or `repository_dispatch` only when the
 project config declares the workflow as allowed.
 
 No dispatcher should mutate an issue unless it holds the current lease.
+
+## Tau Generic Handoff Issue Marker
+
+Tau issues can be routed through the global watchdog by adding `agent-work`,
+`executor:local`, and a body marker:
+
+```text
+project-watchdog-action:tau-handoff-dispatch \
+  start=experiments/goal-locked-subagents/proofs/.../start-handoff.json \
+  max_steps=1 \
+  active_goal_hash=sha256:... \
+  apply_transport=false
+```
+
+The watchdog treats `start` as a Tau repo-relative path, rejects absolute paths
+or `..`, runs one bounded `tau handoff-command-loop` tick, writes receipts under
+`~/.local/state/project-watchdog/receipts/<run_id>/`, and comments the evidence
+back to the issue. `apply_transport=true` is allowed only when the issue should
+apply the terminal Tau GitHub transport; otherwise the transport receipt is
+rendered dry-run.
+
+Issues with `agent-active` or `agent-blocked` are skipped until a human/operator
+clears the state label. This prevents cron from retrying a failed ticket every
+minute without an explicit retry decision.

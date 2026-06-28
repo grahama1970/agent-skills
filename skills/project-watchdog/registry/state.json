@@ -46,7 +46,7 @@
     },
     "tau": {
       "last_operator": "human-approved-development-session",
-      "reason": "Tau has a proven one-tick handoff path and recent live GitHub mutation proof, but full issue intake remains pending.",
+      "reason": "Tau has a proven one-tick handoff path, recent live GitHub mutation proof, and a generic issue-to-handoff watchdog proof for project-watchdog-action:tau-handoff-dispatch.",
       "resume_requires": [
         "valid-goal-file",
         "valid-github-auth"

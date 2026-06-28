@@ -67,7 +67,7 @@
         "one-tick-cron"
       ],
       "notes": [
-        "Tau has a local one-tick cron/handoff path. Full GitHub issue intake is still a pending watchdog feature."
+        "Tau has a local one-tick cron/handoff path plus a live generic issue-to-handoff watchdog proof for project-watchdog-action:tau-handoff-dispatch."
       ]
     },
     {
