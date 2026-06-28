@@ -271,7 +271,7 @@ export function WatchReportView({
       segment_id: `seg_${String(modalRowForStream.index + 1).padStart(4, '0')}`,
       asset_uid: (report?.watch_report.title || 'watch_asset').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
       stream_id: 'watch_stream_modal_live',
-      max_events: '120',
+      max_events: '900',
     })
     if (candidate) {
       streamParams.set('candidate_name', candidate.name)
@@ -447,10 +447,10 @@ export function WatchReportView({
     const absoluteTime = secondsFromTimecode(modalRow.movie_segment || modalRow.timecode) + modalPlaybackSeconds
     const nearestByTrack = new Map<string, { event: TrackerEvent; delta: number }>()
     for (const event of trackerEvents) {
-      const delta = Math.abs(event.media_time_seconds - absoluteTime)
-      if (delta > 0.22) continue
+      const delta = absoluteTime - event.media_time_seconds
+      if (delta < -0.12 || delta > 0.85) continue
       const current = nearestByTrack.get(event.track_id)
-      if (!current || delta < current.delta) {
+      if (!current || Math.abs(delta) < Math.abs(current.delta)) {
         nearestByTrack.set(event.track_id, { event, delta })
       }
     }

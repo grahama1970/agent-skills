@@ -1,0 +1,198 @@
+{
+  "asset_uid": "movie_bad_santa_2003_unrated",
+  "candidate_actor_name": "Billy Bob Thornton",
+  "candidate_name": "Willie",
+  "claim_boundary": "Live SSE proves YOLO/ByteTrack person tracking events reach the Watch modal stream endpoint. Candidate identity is provisional and not a promoted Willie identity proof.",
+  "counts": {
+    "bbox_count": 80,
+    "sse_event_count": 84,
+    "track_update_count": 80,
+    "unique_track_count": 12
+  },
+  "done": {
+    "exit_code": 0,
+    "status": "LIVE_STREAM_COMPLETE",
+    "stderr_tail": "/home/graham/workspace/experiments/agent-skills/.tmp_venv/lib/python3.14/site-packages/torch/cuda/__init__.py:187: UserWarning: CUDA initialization: The NVIDIA driver on your system is too old (found version 12080). Please update your GPU driver by downloading and installing a new version from the URL: http://www.nvidia.com/Download/index.aspx Alternatively, go to: https://pytorch.org to install a PyTorch version that has been compiled with your version of the CUDA driver. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)\n  return torch._C._cuda_getDeviceCount() > 0\n",
+    "total_events": 80
+  },
+  "meta": {
+    "asset_uid": "movie_bad_santa_2003_unrated",
+    "model": "/home/graham/workspace/experiments/agent-skills/skills/watch/yolo11n.pt",
+    "sample_fps": 5,
+    "schema": "watch.tracker_event_stream.v1",
+    "segment_id": "seg_0005",
+    "source": "/mnt/storage12tb/media/watch-frames/badsantaunrated2003brripxvidhd720p-npw/clips/segment_0005.mp4",
+    "status": "STARTING_LIVE_TRACKER"
+  },
+  "movie_segment": "01:36-02:00",
+  "sample_track_updates": [
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_xyxy": [
+        0,
+        541,
+        71,
+        689
+      ],
+      "candidate_entities": [
+        {
+          "actor_name": "Billy Bob Thornton",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.5856293439865112,
+          "entity_id": "movie_domain_entities/willie_provisional",
+          "kind": "CHARACTER",
+          "name": "Willie",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "detected_class": "person",
+      "emitted_at": "2026-06-28T13:44:23Z",
+      "event_type": "track_update",
+      "media_time_seconds": 96,
+      "schema_version": "watch.live_track_update.v1",
+      "segment_id": "seg_0005",
+      "status": "PROVISIONAL",
+      "stream_id": "watch_stream_modal_live",
+      "track_id": "track_1"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_xyxy": [
+        362,
+        7,
+        1271,
+        681
+      ],
+      "candidate_entities": [
+        {
+          "actor_name": "Billy Bob Thornton",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.5426926612854004,
+          "entity_id": "movie_domain_entities/willie_provisional",
+          "kind": "CHARACTER",
+          "name": "Willie",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "detected_class": "person",
+      "emitted_at": "2026-06-28T13:44:23Z",
+      "event_type": "track_update",
+      "media_time_seconds": 96,
+      "schema_version": "watch.live_track_update.v1",
+      "segment_id": "seg_0005",
+      "status": "PROVISIONAL",
+      "stream_id": "watch_stream_modal_live",
+      "track_id": "track_2"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_xyxy": [
+        421,
+        139,
+        647,
+        482
+      ],
+      "candidate_entities": [
+        {
+          "actor_name": "Billy Bob Thornton",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.45428466796875,
+          "entity_id": "movie_domain_entities/willie_provisional",
+          "kind": "CHARACTER",
+          "name": "Willie",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "detected_class": "person",
+      "emitted_at": "2026-06-28T13:44:23Z",
+      "event_type": "track_update",
+      "media_time_seconds": 96,
+      "schema_version": "watch.live_track_update.v1",
+      "segment_id": "seg_0005",
+      "status": "PROVISIONAL",
+      "stream_id": "watch_stream_modal_live",
+      "track_id": "track_3"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_xyxy": [
+        306,
+        141,
+        660,
+        684
+      ],
+      "candidate_entities": [
+        {
+          "actor_name": "Billy Bob Thornton",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.3271923065185547,
+          "entity_id": "movie_domain_entities/willie_provisional",
+          "kind": "CHARACTER",
+          "name": "Willie",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "detected_class": "person",
+      "emitted_at": "2026-06-28T13:44:23Z",
+      "event_type": "track_update",
+      "media_time_seconds": 96,
+      "schema_version": "watch.live_track_update.v1",
+      "segment_id": "seg_0005",
+      "status": "PROVISIONAL",
+      "stream_id": "watch_stream_modal_live",
+      "track_id": "track_4"
+    },
+    {
+      "asset_uid": "movie_bad_santa_2003_unrated",
+      "bbox_xyxy": [
+        841,
+        4,
+        1263,
+        577
+      ],
+      "candidate_entities": [
+        {
+          "actor_name": "Billy Bob Thornton",
+          "basis": [
+            "movie_domain_memory",
+            "person_reid_embedding"
+          ],
+          "confidence": 0.3129575848579407,
+          "entity_id": "movie_domain_entities/willie_provisional",
+          "kind": "CHARACTER",
+          "name": "Willie",
+          "status": "PROVISIONAL"
+        }
+      ],
+      "detected_class": "person",
+      "emitted_at": "2026-06-28T13:44:23Z",
+      "event_type": "track_update",
+      "media_time_seconds": 96,
+      "schema_version": "watch.live_track_update.v1",
+      "segment_id": "seg_0005",
+      "status": "PROVISIONAL",
+      "stream_id": "watch_stream_modal_live",
+      "track_id": "track_5"
+    }
+  ],
+  "schema": "watch.live_modal_tracker_stream_receipt.v1",
+  "segment_id": "seg_0005",
+  "source": "/api/projects/watch/tracker-events/stream?mode=live",
+  "status": "TRACK_UPDATES_STREAMED",
+  "time_bounds_seconds": {
+    "end": 100.17,
+    "start": 96
+  }
+}
