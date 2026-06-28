@@ -1,0 +1,25 @@
+{
+  "schema": "watch.trace_observation.v1",
+  "trace_observation_id": "watch_trace_bad_santa_0248_track_person_0007",
+  "asset_id": "bad_santa_2003_canary",
+  "stream_id": "movie_main_video",
+  "track_id": "track_person_0248_0007",
+  "time_range": {
+    "start_media_time_s": 168.0,
+    "end_media_time_s": 170.0
+  },
+  "frame_refs": [
+    "frame://bad_santa_2003_canary/000840",
+    "frame://bad_santa_2003_canary/000842"
+  ],
+  "crop_refs": [
+    "crop://bad_santa_2003_canary/track_person_0248_0007/168.4.png"
+  ],
+  "row_text_receipt_ref": "receipt://watch_row_text_materialization/bad_santa_0248/BLOCKED_PENDING_SOURCE_REFS",
+  "identity_status": "IDENTITY_INCONCLUSIVE",
+  "memory_write_status": "PLANNED",
+  "qdrant_point_ids": [
+    "planned:qdrant:watch_track_crop_embeddings:sha256:bad_santa_0248_track_person_0007_crop_168_4",
+    "planned:qdrant:watch_row_text_embeddings:sha256:bad_santa_0248_row_text"
+  ]
+}

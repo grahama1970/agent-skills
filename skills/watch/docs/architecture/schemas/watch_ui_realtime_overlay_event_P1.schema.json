@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.ui_realtime_overlay_event.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.ui_realtime_overlay_event.v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "stream_id": {
+      "type": "string"
+    },
+    "event_index": {
+      "type": "integer"
+    },
+    "track_id": {
+      "type": "string"
+    },
+    "media_time_s": {
+      "type": "number"
+    },
+    "frame_ref": {
+      "type": "string"
+    },
+    "bbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "normalized": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "normalized"
+      ]
+    },
+    "coordinate_space": {
+      "type": "object"
+    },
+    "identity_status": {
+      "enum": [
+        "OBSERVATION_ONLY",
+        "IDENTITY_CANDIDATE",
+        "IDENTITY_SUPPORTED",
+        "IDENTITY_INCONCLUSIVE",
+        "IDENTITY_REFUTED",
+        "NEEDS_HUMAN_REVIEW"
+      ]
+    },
+    "display_label": {
+      "type": "string"
+    },
+    "source_event_ref": {
+      "type": "string"
+    },
+    "stale_after_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "proof_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "asset_id",
+    "stream_id",
+    "event_index",
+    "track_id",
+    "media_time_s",
+    "frame_ref",
+    "bbox",
+    "coordinate_space",
+    "identity_status",
+    "display_label",
+    "source_event_ref",
+    "stale_after_ms",
+    "proof_scope"
+  ]
+}

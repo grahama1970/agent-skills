@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.reference_manifest.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.reference_manifest.v1"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "source_type": {
+      "enum": [
+        "movie_domain_search",
+        "source_provided_manifest",
+        "asset_registry",
+        "operator_upload"
+      ]
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "approved_reference_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "embedded_reference_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scene_truth_claimed": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema",
+    "asset_id",
+    "source_type",
+    "references",
+    "approved_reference_count",
+    "embedded_reference_count",
+    "scene_truth_claimed"
+  ]
+}

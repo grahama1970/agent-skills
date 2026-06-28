@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.evidence_case.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.evidence_case.v1"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "entity_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "time_range": {
+      "type": "object"
+    },
+    "trace_observation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verdict": {
+      "enum": [
+        "SUPPORTED",
+        "INCONCLUSIVE",
+        "REFUTED"
+      ]
+    },
+    "failure_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "asset_id",
+    "entity_ids",
+    "time_range",
+    "trace_observation_ids",
+    "source_refs",
+    "verdict",
+    "failure_codes"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "watch.evidence_case.v1",
+  "case_id": "watch_case_bad_santa_willie_001",
+  "asset_id": "bad_santa_2003_canary",
+  "entity_ids": [
+    "character:bad_santa:willie"
+  ],
+  "time_range": {
+    "start_media_time_s": 130.0,
+    "end_media_time_s": 140.0
+  },
+  "trace_observation_ids": [
+    "watch_trace_bad_santa_willie_example_001"
+  ],
+  "source_refs": [
+    "segment://bad_santa_2003_canary/00:02:10-00:02:20",
+    "srt://bad_santa_2003_canary/line/42"
+  ],
+  "verdict": "SUPPORTED",
+  "failure_codes": []
+}

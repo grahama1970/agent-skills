@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.memory_write_receipt.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.memory_write_receipt.v1"
+    },
+    "receipt_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PLANNED_ONLY",
+        "MOCKED_PERSISTED",
+        "PERSISTED",
+        "FAILED_CLOSED"
+      ]
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "trace_observation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "qdrant_writes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "arango_writes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "raw_vectors_in_arango": {
+      "const": false
+    },
+    "rollback_manifest_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "receipt_id",
+    "status",
+    "asset_id",
+    "trace_observation_ids",
+    "qdrant_writes",
+    "arango_writes",
+    "raw_vectors_in_arango"
+  ]
+}

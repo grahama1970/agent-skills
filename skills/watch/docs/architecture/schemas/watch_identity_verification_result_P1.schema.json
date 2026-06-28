@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.identity_verification_result.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.identity_verification_result.v1"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "track_id": {
+      "type": "string"
+    },
+    "candidate_entity_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "identity_status": {
+      "enum": [
+        "IDENTITY_CANDIDATE",
+        "IDENTITY_SUPPORTED",
+        "IDENTITY_INCONCLUSIVE",
+        "IDENTITY_REFUTED",
+        "NEEDS_HUMAN_REVIEW"
+      ]
+    },
+    "approved_reference_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failure_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "promotion_allowed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema",
+    "asset_id",
+    "track_id",
+    "identity_status",
+    "approved_reference_count",
+    "evidence_refs",
+    "failure_codes",
+    "promotion_allowed"
+  ]
+}

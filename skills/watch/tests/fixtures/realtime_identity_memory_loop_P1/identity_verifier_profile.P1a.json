@@ -1,0 +1,60 @@
+{
+  "schema": "watch.identity_verifier_profile.v1a",
+  "profile_id": "watch_identity_verifier_default_P1a",
+  "detector": {
+    "name": "ultralytics_yolo",
+    "role": "person_object_observation"
+  },
+  "tracker": {
+    "name": "bytetrack",
+    "role": "temporal_track_continuity"
+  },
+  "verification_cadence_fps": 5,
+  "reference_gate": {
+    "min_approved_images_per_entity": 3,
+    "target_approved_images_per_entity": 6,
+    "promotion_allowed_without_approved_refs": false
+  },
+  "verifier_stack": [
+    {
+      "lane": "face",
+      "default_model": "insightface_arcface_compatible",
+      "required_when": "usable_face_crop_exists"
+    },
+    {
+      "lane": "body_costume_reid",
+      "default_model": "osnet_or_fastreid_compatible",
+      "required_when": "face_crop_missing_or_weak"
+    },
+    {
+      "lane": "multimodal_context",
+      "default_model": "jina_clip_or_siglip_compatible",
+      "required_when": "compare_crop_reference_and_row_text_context"
+    }
+  ],
+  "thresholds": {
+    "face_cosine_min": 0.42,
+    "body_costume_cosine_min": 0.35,
+    "multimodal_cosine_min": 0.3,
+    "min_repeated_crop_agreement": 2
+  },
+  "promotion_policy": {
+    "default_identity_status": "IDENTITY_INCONCLUSIVE",
+    "identity_supported_requires": [
+      "stable_track_id",
+      "approved_reference_package",
+      "visual_verifier_lane_above_threshold",
+      "no_refuting_verifier_lane",
+      "segment_frame_crop_refs",
+      "row_text_refs_when_used"
+    ]
+  },
+  "fail_closed_boundaries": [
+    "detector_labels_are_observations_only",
+    "bytetrack_ids_are_temporal_continuity_only",
+    "brave_search_is_candidate_reference_only",
+    "less_than_three_approved_references_disables_identity_promotion",
+    "no_raw_vectors_in_arango",
+    "memory_recall_required_for_user_facing_retrieval"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "watch.ui_realtime_overlay_event.v1",
+  "run_id": "bad_santa_yolo_bytetrack_P1_fixture",
+  "asset_id": "bad_santa_2003_canary",
+  "stream_id": "movie_main_video",
+  "event_index": 2,
+  "track_id": "track_person_0248_0007",
+  "media_time_s": 168.4,
+  "frame_ref": "frame://bad_santa_2003_canary/000842",
+  "bbox": {
+    "x": 0.42,
+    "y": 0.18,
+    "width": 0.16,
+    "height": 0.48,
+    "normalized": true
+  },
+  "coordinate_space": {
+    "basis": "normalized_source_frame",
+    "frame_width": 1920,
+    "frame_height": 1080
+  },
+  "identity_status": "IDENTITY_INCONCLUSIVE",
+  "display_label": "candidate: Marcus?",
+  "source_event_ref": "jsonl://bad_santa_yolo_bytetrack_P1_fixture#event_index=2",
+  "stale_after_ms": 1000,
+  "proof_scope": [
+    "dry_run_overlay_contract",
+    "not_live_identity_proof"
+  ]
+}

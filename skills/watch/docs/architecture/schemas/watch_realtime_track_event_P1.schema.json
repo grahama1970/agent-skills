@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.realtime_track_event.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.realtime_track_event.v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "stream_id": {
+      "type": "string"
+    },
+    "event_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "track_id": {
+      "type": "string"
+    },
+    "media_time_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "frame_ref": {
+      "type": "string"
+    },
+    "bbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "normalized": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "normalized"
+      ]
+    },
+    "detector": {
+      "type": "object"
+    },
+    "tracker": {
+      "type": "object"
+    },
+    "identity_status": {
+      "const": "OBSERVATION_ONLY"
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "asset_id",
+    "stream_id",
+    "event_index",
+    "track_id",
+    "media_time_s",
+    "frame_ref",
+    "bbox",
+    "detector",
+    "tracker",
+    "identity_status"
+  ]
+}

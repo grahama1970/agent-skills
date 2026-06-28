@@ -1,0 +1,22 @@
+{
+  "schema": "watch.recall_receipt.v1",
+  "query": "find all movie segments with Willie",
+  "intent": "watch_memory_recall",
+  "extracted_entities": [
+    {
+      "entity_text": "Willie",
+      "entity_type": "movie_character",
+      "entity_id": "character:bad_santa:willie"
+    }
+  ],
+  "memory_recall_used": true,
+  "trace_observation_ids": [
+    "watch_trace_bad_santa_willie_example_001"
+  ],
+  "source_refs": [
+    "segment://bad_santa_2003_canary/00:02:10-00:02:20",
+    "srt://bad_santa_2003_canary/line/42"
+  ],
+  "answer_mode": "answer",
+  "evidence_case_created": false
+}

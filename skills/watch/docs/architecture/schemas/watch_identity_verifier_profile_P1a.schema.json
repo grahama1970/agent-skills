@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch.identity_verifier_profile.P1a.schema.json",
+  "title": "Watch Identity Verifier Profile P1a",
+  "type": "object",
+  "required": [
+    "schema",
+    "profile_id",
+    "detector",
+    "tracker",
+    "verification_cadence_fps",
+    "reference_gate",
+    "verifier_stack",
+    "promotion_policy",
+    "fail_closed_boundaries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.identity_verifier_profile.v1a"
+    },
+    "profile_id": {
+      "type": "string"
+    },
+    "detector": {
+      "type": "object",
+      "required": ["name", "role"],
+      "properties": {
+        "name": {"const": "ultralytics_yolo"},
+        "role": {"const": "person_object_observation"}
+      }
+    },
+    "tracker": {
+      "type": "object",
+      "required": ["name", "role"],
+      "properties": {
+        "name": {"const": "bytetrack"},
+        "role": {"const": "temporal_track_continuity"}
+      }
+    },
+    "verification_cadence_fps": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 5
+    },
+    "reference_gate": {
+      "type": "object",
+      "required": ["min_approved_images_per_entity", "target_approved_images_per_entity", "promotion_allowed_without_approved_refs"],
+      "properties": {
+        "min_approved_images_per_entity": {"type": "integer", "minimum": 3},
+        "target_approved_images_per_entity": {"type": "integer", "minimum": 6},
+        "promotion_allowed_without_approved_refs": {"const": false}
+      }
+    },
+    "verifier_stack": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["lane", "default_model", "required_when"],
+        "properties": {
+          "lane": {
+            "enum": ["face", "body_costume_reid", "multimodal_context"]
+          },
+          "default_model": {"type": "string"},
+          "required_when": {"type": "string"}
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": ["identity_supported_requires", "default_identity_status"],
+      "properties": {
+        "identity_supported_requires": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"type": "string"}
+        },
+        "default_identity_status": {"const": "IDENTITY_INCONCLUSIVE"}
+      }
+    },
+    "fail_closed_boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true
+}

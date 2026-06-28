@@ -1,0 +1,25 @@
+{
+  "schema": "watch.memory_write_receipt.v1",
+  "receipt_id": "watch_memory_write_bad_santa_0248_planned",
+  "status": "PLANNED_ONLY",
+  "asset_id": "bad_santa_2003_canary",
+  "trace_observation_ids": [
+    "watch_trace_bad_santa_0248_track_person_0007"
+  ],
+  "qdrant_writes": [
+    {
+      "collection": "watch_track_crop_embeddings",
+      "point_id": "planned:qdrant:watch_track_crop_embeddings:sha256:bad_santa_0248_track_person_0007_crop_168_4",
+      "status": "planned"
+    }
+  ],
+  "arango_writes": [
+    {
+      "collection": "watch_trace_observations",
+      "key": "watch_trace_bad_santa_0248_track_person_0007",
+      "status": "planned"
+    }
+  ],
+  "raw_vectors_in_arango": false,
+  "rollback_manifest_ref": null
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "watch.identity_verification_result.v1",
+  "asset_id": "bad_santa_2003_canary",
+  "track_id": "track_person_0248_0007",
+  "candidate_entity_id": "character:bad_santa:marcus_candidate",
+  "identity_status": "IDENTITY_INCONCLUSIVE",
+  "approved_reference_count": 0,
+  "evidence_refs": [
+    "crop://bad_santa_2003_canary/track_person_0248_0007/168.4.png",
+    "brave_search:bad_santa_cast_marcus_candidate_sources"
+  ],
+  "failure_codes": [
+    "DOMAIN_PRIOR_ONLY",
+    "NEEDS_HUMAN_REVIEW",
+    "TRACK_IDENTITY_UNCERTAIN"
+  ],
+  "promotion_allowed": false
+}

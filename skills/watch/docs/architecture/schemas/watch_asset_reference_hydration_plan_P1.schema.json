@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.asset_reference_hydration_plan.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.asset_reference_hydration_plan.v1"
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_type": {
+      "type": "string"
+    },
+    "reference_source_policy": {
+      "enum": [
+        "MOVIE_DOMAIN_AUTO_DISCOVERY",
+        "SOURCE_MANIFEST_REQUIRED",
+        "PUBLIC_SEARCH_DISABLED",
+        "UNKNOWN_FAIL_CLOSED"
+      ]
+    },
+    "public_search_allowed": {
+      "type": "boolean"
+    },
+    "candidate_discovery_api": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "documentation_url": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "result_count_target": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "result_count_max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "required_result_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "candidate_only": {
+          "type": "boolean"
+        },
+        "approval_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "REFERENCE_DISCOVERY_PLANNED",
+        "SOURCE_REFERENCE_MANIFEST_REQUIRED",
+        "REFERENCE_CANDIDATES_COLLECTED",
+        "REFERENCE_IMAGES_PENDING_APPROVAL",
+        "REFERENCE_EMBEDDINGS_READY",
+        "INGEST_READY",
+        "FAIL_CLOSED"
+      ]
+    },
+    "identity_promotion_allowed": {
+      "type": "boolean"
+    },
+    "candidate_source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "candidate_reference_queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "target_entity_id": {
+            "type": "string"
+          },
+          "target_actor_name": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "candidate_only": {
+            "type": "boolean"
+          },
+          "approval_required": {
+            "type": "boolean"
+          },
+          "identity_promotion_allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "approved_reference_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failure_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "asset_id",
+    "asset_type",
+    "reference_source_policy",
+    "public_search_allowed",
+    "status",
+    "identity_promotion_allowed",
+    "approved_reference_count"
+  ]
+}

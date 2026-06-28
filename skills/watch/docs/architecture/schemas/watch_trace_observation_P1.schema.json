@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.trace_observation.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "watch.trace_observation.v1"
+    },
+    "trace_observation_id": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "stream_id": {
+      "type": "string"
+    },
+    "track_id": {
+      "type": "string"
+    },
+    "time_range": {
+      "type": "object"
+    },
+    "frame_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "crop_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "row_text_receipt_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "identity_status": {
+      "type": "string"
+    },
+    "memory_write_status": {
+      "enum": [
+        "NOT_PLANNED",
+        "PLANNED",
+        "PERSISTED"
+      ]
+    },
+    "qdrant_point_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "trace_observation_id",
+    "asset_id",
+    "stream_id",
+    "track_id",
+    "time_range",
+    "frame_refs",
+    "crop_refs",
+    "identity_status",
+    "memory_write_status",
+    "qdrant_point_ids"
+  ]
+}

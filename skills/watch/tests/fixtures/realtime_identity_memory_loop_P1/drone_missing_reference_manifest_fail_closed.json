@@ -1,0 +1,12 @@
+{
+  "schema": "watch.asset_reference_hydration_plan.v1",
+  "asset_id": "ao_drone_stream_001",
+  "asset_type": "drone",
+  "reference_source_policy": "SOURCE_MANIFEST_REQUIRED",
+  "public_search_allowed": false,
+  "status": "SOURCE_REFERENCE_MANIFEST_REQUIRED",
+  "identity_promotion_allowed": false,
+  "candidate_source_refs": [],
+  "approved_reference_count": 0,
+  "failure_code": "SOURCE_REFERENCE_MANIFEST_REQUIRED"
+}

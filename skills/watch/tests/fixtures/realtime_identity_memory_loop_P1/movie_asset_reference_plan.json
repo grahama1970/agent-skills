@@ -1,0 +1,98 @@
+{
+  "schema": "watch.asset_reference_hydration_plan.v1",
+  "asset_id": "bad_santa_2003_canary",
+  "asset_type": "movie",
+  "title": "Bad Santa",
+  "reference_source_policy": "MOVIE_DOMAIN_AUTO_DISCOVERY",
+  "public_search_allowed": true,
+  "candidate_discovery_api": {
+    "provider": "brave_image_search_api",
+    "documentation_url": "https://api-dashboard.search.brave.com/documentation/services/image-search",
+    "endpoint": "https://api.search.brave.com/res/v1/images/search",
+    "result_count_target": 50,
+    "result_count_max": 200,
+    "required_result_fields": [
+      "image_url",
+      "thumbnail_url",
+      "source_page_url",
+      "image_dimensions",
+      "title",
+      "description",
+      "publisher"
+    ],
+    "candidate_only": true,
+    "approval_required": true
+  },
+  "status": "REFERENCE_DISCOVERY_PLANNED",
+  "identity_promotion_allowed": false,
+  "candidate_source_refs": [
+    "brave_images:bad_santa_willie_billy_bob_thornton_reference_candidates",
+    "brave_images:bad_santa_willie_only_scene_reference_candidates",
+    "brave_search:bad_santa_cast_marcus_candidate_sources",
+    "domain_source_candidate:imdb_or_official_cast_page_placeholder"
+  ],
+  "candidate_reference_queries": [
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "can you give me 3 images of actor Billy bob thorton and 3 images of the actor in Bad Santa 2003",
+      "url": "https://search.brave.com/images?q=can+you+give+me+3+images+of+actor+Billy+bob+thorton+and+3+images+of+the+actor+in+Bad+Santa+2003&source=web",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    },
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "can you give me 3 images of actor Billy bob thorton as Willie in Bad Santa where he is the only human in the scene",
+      "url": "https://search.brave.com/images?q=can+you+give+me+3+images+of+actor+Billy+bob+thorton+as+Willie+in+Bad+Santa+where+he+is+the+only+human+in+the+scene&source=images",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    },
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "\"Billy Bob Thornton\" \"Bad Santa\" 2003 promo portrait solo -Lauren -Tony -Bernie -Brett -group -cast -poster",
+      "search_syntax": "quoted_phrases_with_negative_terms",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    },
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "\"Billy Bob Thornton\" \"Bad Santa\" 2003 publicity still -Lauren Graham -Tony Cox -Bernie Mac -Brett Kelly -group -cast -poster",
+      "search_syntax": "quoted_phrases_with_negative_terms",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    },
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "\"Billy Bob Thornton\" \"Bad Santa\" 2003 promo portrait site:gettyimages.com -Lauren -Tony -Bernie -Brett -group -cast -poster",
+      "search_syntax": "site_operator_with_negative_terms",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    },
+    {
+      "provider": "brave_images",
+      "target_entity_id": "character:bad_santa:willie",
+      "target_actor_name": "Billy Bob Thornton",
+      "query": "\"Billy Bob Thornton\" \"Bad Santa\" 2003 site:shutterstock.com publicity -ensemble -poster -group -cast",
+      "search_syntax": "site_operator_with_negative_terms",
+      "candidate_only": true,
+      "approval_required": true,
+      "identity_promotion_allowed": false
+    }
+  ],
+  "approved_reference_count": 0,
+  "failure_code": "APPROVED_REFERENCES_REQUIRED_FOR_IDENTITY_SUPPORT"
+}

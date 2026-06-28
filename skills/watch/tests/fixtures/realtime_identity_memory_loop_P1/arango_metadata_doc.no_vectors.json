@@ -1,0 +1,15 @@
+{
+  "_key": "watch_trace_bad_santa_0248_track_person_0007",
+  "schema": "watch.trace_observation.arango_doc.v1",
+  "asset_id": "bad_santa_2003_canary",
+  "track_id": "track_person_0248_0007",
+  "identity_status": "IDENTITY_INCONCLUSIVE",
+  "qdrant_point_ids": [
+    "planned:qdrant:watch_track_crop_embeddings:sha256:bad_santa_0248_track_person_0007_crop_168_4"
+  ],
+  "source_refs": [
+    "frame://bad_santa_2003_canary/000842",
+    "receipt://watch_row_text_materialization/bad_santa_0248/BLOCKED_PENDING_SOURCE_REFS"
+  ],
+  "vector_storage_policy": "NO_RAW_VECTORS_IN_ARANGO"
+}
