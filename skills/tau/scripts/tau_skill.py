@@ -163,34 +163,58 @@ def latest_watchdog_receipts(*, limit: int) -> list[dict[str, Any]]:
 
 def latest_proofs_payload() -> dict[str, Any]:
     manifests: list[dict[str, Any]] = []
+    all_paths: list[Path] = []
     if PROOFS_ROOT.exists():
-        paths = sorted(PROOFS_ROOT.glob("*/manifest.json"), key=lambda p: p.stat().st_mtime)
-        for path in paths[-12:]:
-            try:
-                payload = json.loads(path.read_text(encoding="utf-8"))
-            except OSError as exc:
-                manifests.append({"path": str(path), "error": str(exc)})
-                continue
-            except json.JSONDecodeError as exc:
-                manifests.append({"path": str(path), "error": str(exc)})
-                continue
-            manifests.append(
-                {
-                    "path": str(path),
-                    "schema": payload.get("schema"),
-                    "mocked": payload.get("mocked"),
-                    "live": payload.get("live"),
-                    "ok": payload.get("ok", payload.get("status")),
-                }
-            )
+        all_paths = sorted(PROOFS_ROOT.glob("*/manifest.json"), key=lambda p: p.stat().st_mtime)
+        manifests = [manifest_summary(path) for path in all_paths[-12:]]
     return {
         "schema": "agent_skills.tau.latest_proofs.v1",
         "proofs_root": str(PROOFS_ROOT),
         "manifest_count": len(manifests),
+        "total_manifest_count": len(all_paths),
         "manifests": manifests,
+        "goal_objective_manifests": goal_objective_manifests(all_paths),
         "chat_contract_exists": CHAT_CONTRACT.exists(),
         "chat_contract": str(CHAT_CONTRACT),
     }
+
+
+def manifest_summary(path: Path) -> dict[str, Any]:
+    """Return a compact manifest row, preserving parse errors."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return {"path": str(path), "error": str(exc)}
+    except json.JSONDecodeError as exc:
+        return {"path": str(path), "error": str(exc)}
+    return {
+        "path": str(path),
+        "schema": payload.get("schema"),
+        "mocked": payload.get("mocked"),
+        "live": payload.get("live"),
+        "ok": payload.get("ok", payload.get("status")),
+    }
+
+
+def goal_objective_manifests(paths: list[Path]) -> list[dict[str, Any]]:
+    """Surface older manifests that directly prove the active Tau hardening goal."""
+    required_names = {
+        "live-memory-route-failclosed-20260628T140048Z": "route_specific_memory_failclosed",
+        "fresh-answer-browser-route-20260628T152045Z": "answer_browser_route",
+        "fresh-research-brave-command-loop-20260628T152651Z": "research_brave_command_loop",
+        "fresh-compliance-memory-browser-clean-20260628T212908Z": "compliance_memory_browser",
+        "tau-same-run-compliance-20260628T222531Z": "same_run_chat_to_command_loop",
+        "project-watchdog-same-run-compliance-apply-20260628T224349Z": "watchdog_apply_transport",
+    }
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        key = required_names.get(path.parent.name)
+        if key is None:
+            continue
+        row = manifest_summary(path)
+        row["goal_evidence_key"] = key
+        rows.append(row)
+    return rows
 
 
 def sanity_payload() -> dict[str, Any]:
