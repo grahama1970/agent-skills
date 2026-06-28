@@ -82,6 +82,8 @@ interface TrackerEntityCandidate {
   actor_name?: string
   confidence?: number
   status?: string
+  identity_status?: string
+  ui_label_policy?: string
 }
 
 interface TrackerEvent {
@@ -95,6 +97,8 @@ interface TrackerEvent {
   detected_class: string
   candidate_entities?: TrackerEntityCandidate[]
   status?: string
+  identity_status?: string
+  ui_label_policy?: string
 }
 
 interface WatchReport {
@@ -149,6 +153,26 @@ function candidateCharacterForRow(row: SceneElement, title = ''): { name: string
   const name = speaker || Object.keys(CAST_MAP).find((candidate) => new RegExp(`\\b${candidate}\\b`, 'i').test(text))
   if (!name) return null
   return { name, actor: actorForCharacter(name, title) }
+}
+
+function supportedIdentityForEvent(event: TrackerEvent): TrackerEntityCandidate | null {
+  const entity = event.candidate_entities?.[0]
+  const eventStatus = String(event.identity_status || event.status || '').toUpperCase()
+  const entityStatus = String(entity?.identity_status || entity?.status || '').toUpperCase()
+  const labelPolicy = String(event.ui_label_policy || entity?.ui_label_policy || '').toUpperCase()
+  if (
+    entity &&
+    (eventStatus === 'IDENTITY_SUPPORTED' || entityStatus === 'IDENTITY_SUPPORTED' || labelPolicy === 'ALLOW_NAMED_LABEL')
+  ) {
+    return entity
+  }
+  return null
+}
+
+function withheldIdentityHint(event: TrackerEvent): TrackerEntityCandidate | null {
+  const entity = event.candidate_entities?.[0]
+  if (!entity) return null
+  return supportedIdentityForEvent(event) ? null : entity
 }
 
 function mediaUrl(path: string | undefined, prefix: string): string | null {
@@ -991,22 +1015,32 @@ function TrackingModal({
               </div>
             )}
             {trackerEvents.map((event) => {
-              const entity = event.candidate_entities?.[0]
+              const supportedEntity = supportedIdentityForEvent(event)
+              const withheldEntity = withheldIdentityHint(event)
               const [x1, y1, x2, y2] = event.bbox_xyxy
               const left = (x1 / frameWidth) * 100
               const top = (y1 / frameHeight) * 100
               const width = ((x2 - x1) / frameWidth) * 100
               const height = ((y2 - y1) / frameHeight) * 100
-              const identityPrefix = entity?.status === 'PROVISIONAL' || event.status === 'PROVISIONAL' ? 'PROVISIONAL ' : ''
-              const label = entity?.actor_name
-                ? `${identityPrefix}${entity.name} · ${entity.actor_name}`
-                : `${identityPrefix}${entity?.name || event.detected_class}`
-              const stroke = event.status === 'BOUNDARY_CANDIDATE' ? '#ffb300' : '#03dac6'
+              const label = supportedEntity?.actor_name
+                ? `${supportedEntity.name} · ${supportedEntity.actor_name}`
+                : supportedEntity?.name
+                  ? supportedEntity.name
+                  : `PERSON TRACK ${event.track_id.replace(/^track_/, '')}`
+              const withheldLabel = withheldEntity
+                ? `candidate withheld: ${withheldEntity.name}${withheldEntity.actor_name ? ` · ${withheldEntity.actor_name}` : ''}`
+                : 'identity not promoted'
+              const stroke = supportedEntity
+                ? '#03dac6'
+                : event.status === 'BOUNDARY_CANDIDATE'
+                  ? '#ffb300'
+                  : '#7c8aa0'
               return (
                 <div
                   data-watch-tracking-box="true"
                   data-track-id={event.track_id}
                   data-track-time={event.media_time_seconds}
+                  data-identity-status={supportedEntity ? 'IDENTITY_SUPPORTED' : 'IDENTITY_WITHHELD'}
                   key={`${event.track_id}-${event.media_time_seconds}`}
                   style={{
                     position: 'absolute',
@@ -1014,8 +1048,8 @@ function TrackingModal({
                     top: `${top}%`,
                     width: `${width}%`,
                     height: `${height}%`,
-                    border: `2px solid ${stroke}`,
-                    background: `${stroke}1a`,
+                    border: `2px ${supportedEntity ? 'solid' : 'dashed'} ${stroke}`,
+                    background: supportedEntity ? `${stroke}1a` : 'rgba(15,23,42,0.08)',
                     boxShadow: `0 0 18px ${stroke}33`,
                   }}
                 >
@@ -1032,9 +1066,29 @@ function TrackingModal({
                     textTransform: 'uppercase',
                     whiteSpace: 'nowrap',
                     letterSpacing: '0.06em',
-                  }}>
-                    {label} {entity?.confidence ? `${Math.round(entity.confidence * 100)}%` : ''}
+                    }}>
+                    {label} {supportedEntity?.confidence ? `${Math.round(supportedEntity.confidence * 100)}%` : ''}
                   </div>
+                  {!supportedEntity && (
+                    <div style={{
+                      position: 'absolute',
+                      left: -2,
+                      top: 0,
+                      transform: 'translateY(4px)',
+                      background: 'rgba(8,10,13,0.76)',
+                      border: '1px solid rgba(124,138,160,0.4)',
+                      color: '#c7d2e2',
+                      padding: '3px 6px',
+                      fontFamily: 'ui-monospace, monospace',
+                      fontSize: 9,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                      letterSpacing: '0.04em',
+                    }}>
+                      {withheldLabel}
+                    </div>
+                  )}
                 </div>
               )
             })}

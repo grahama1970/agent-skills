@@ -1,0 +1,89 @@
+{
+  "claim_boundary": "Browser proof shows the Watch modal rendered tracking boxes from the live tracker event stream. Candidate entity labels are still provisional and do not prove promoted character identity.",
+  "clicked": {
+    "article_text": "01:36\n[~]\nMinor Diff\nMIMO-V2-OMNI\nThis frame shows a dimly lit bar interior with warm, subdued ambient lighting, festive Christmas trees in the background, dark wood bar counters, and red decorative wall accents, where a man in a red Santa ",
+    "button_count": 20,
+    "clicked": true,
+    "row_time": "01:36"
+  },
+  "proof": {
+    "box_count": 6,
+    "boxes": [
+      {
+        "rect": {
+          "height": 162,
+          "width": 78,
+          "x": 101,
+          "y": 738
+        },
+        "text": "PERSON TRACK 1\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_1",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 736,
+          "width": 993,
+          "x": 496,
+          "y": 155
+        },
+        "text": "PERSON TRACK 2\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_2",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 375,
+          "width": 247,
+          "x": 561,
+          "y": 299
+        },
+        "text": "PERSON TRACK 3\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_3",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 593,
+          "width": 387,
+          "x": 435,
+          "y": 301
+        },
+        "text": "PERSON TRACK 4\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_4",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 626,
+          "width": 461,
+          "x": 1020,
+          "y": 151
+        },
+        "text": "PERSON TRACK 5\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_5",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 414,
+          "width": 462,
+          "x": 1016,
+          "y": 149
+        },
+        "text": "PERSON TRACK 6\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON",
+        "track_id": "track_6",
+        "track_time": "96"
+      }
+    ],
+    "empty_visible": false,
+    "modal": true,
+    "modal_text": "01:36-02:00\nSTARTING_LIVE_TRACKER \u00b7 357 STREAMED EVENTS\nPERSON TRACK 1\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON\nPERSON TRACK 2\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON\nPERSON TRACK 3\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON\nPERSON TRACK 4\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON\nPERSON TRACK 5\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON\nPERSON TRACK 6\nCANDIDATE WITHHELD: WILLIE \u00b7 BILLY BOB THORNTON"
+  },
+  "row_time": "01:36",
+  "schema": "watch.modal_tracking_overlay_browser_proof.v1",
+  "screenshot": "skills/watch/docs/architecture/generated/watch_identity_gated_modal_overlay_browser_proof_20260628T1420Z/20260628T141916Z.png",
+  "status": "MODAL_BOXES_RENDERED",
+  "url": "http://127.0.0.1:3014/#watch",
+  "verified_at": "2026-06-28T14:19:16.841259+00:00"
+}

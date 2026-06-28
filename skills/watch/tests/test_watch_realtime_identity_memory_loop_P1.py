@@ -17,6 +17,7 @@ from skills.watch.scripts.run_realtime_identity_memory_loop import (
     approved_reference_records,
     reference_approval_by_id,
 )
+from skills.watch.scripts.build_watch_identity_gate_receipt import build_identity_gate_receipt
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "realtime_identity_memory_loop_P1"
@@ -39,6 +40,16 @@ CANARY_APPROVAL_RECEIPT = (
     / "generated"
     / "bad_santa_marcus_0248_reference_download_review_approval_receipt"
     / "watch_reference_download_review_approval_receipt.bad_santa_marcus_canary.json"
+)
+LIVE_APPROVAL_LINKED_RECEIPT = (
+    ROOT
+    / "skills"
+    / "watch"
+    / "docs"
+    / "architecture"
+    / "generated"
+    / "watch_realtime_identity_memory_loop_live_approval_linked_20260628T1315Z"
+    / "watch_realtime_identity_memory_loop_live_receipt.json"
 )
 
 
@@ -240,3 +251,21 @@ def test_overlay_event_can_render_without_claiming_supported_identity():
     assert overlay["identity_status"] == "IDENTITY_INCONCLUSIVE"
     assert overlay["identity_status"] != "IDENTITY_SUPPORTED"
     assert "not_live_identity_proof" in overlay["proof_scope"]
+
+
+def test_identity_gate_withholds_canary_only_references_even_with_similarity_scores():
+    source = json.loads(LIVE_APPROVAL_LINKED_RECEIPT.read_text(encoding="utf-8"))
+    gate = build_identity_gate_receipt(source, source_path=LIVE_APPROVAL_LINKED_RECEIPT, threshold=0.72)
+
+    assert gate["schema"] == "watch.identity_gate_receipt.v1"
+    assert gate["status"] == "IDENTITY_LABELS_WITHHELD"
+    assert gate["counts"]["comparison_count"] == 30
+    assert gate["counts"]["candidate_count"] == 10
+    assert gate["counts"]["promoted_count"] == 0
+    assert gate["counts"]["withheld_count"] == 10
+    assert gate["counts"]["memory_recall_item_count"] == 10
+    assert all(item["ui_label_policy"] == "RENDER_PERSON_OBSERVATION_ONLY" for item in gate["candidates"])
+    assert all(item["identity_status"] == "IDENTITY_WITHHELD" for item in gate["candidates"])
+    assert any((item["best_similarity"] or 0) >= 0.72 for item in gate["candidates"])
+    assert all("REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION" in item["blockers"] for item in gate["candidates"])
+    assert all("NEGATIVE_CONTROL_RECEIPT_MISSING" in item["blockers"] for item in gate["candidates"])
