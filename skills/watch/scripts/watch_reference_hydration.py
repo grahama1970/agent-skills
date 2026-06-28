@@ -30,6 +30,7 @@ MEMORY_TRACE_SCHEMA = "watch.memory_trace_write_plan.v1"
 LIVE_TRACKING_MEMORY_WINDOW_SCHEMA = "watch.live_tracking_memory_window_plan.v1"
 GRAPH_VECTOR_PERSISTENCE_SCHEMA = "watch.graph_vector_persistence_plan.v1"
 MEMORY_RECALL_VERIFICATION_SCHEMA = "watch.memory_recall_verification_plan.v1"
+IDENTITY_REINFORCEMENT_PLAN_SCHEMA = "watch.identity_reinforcement_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -914,6 +915,186 @@ def build_memory_recall_verification_plan(graph_vector_plan: Mapping[str, Any]) 
             ],
         },
     }
+
+
+def build_identity_reinforcement_plan(
+    reference_manifest: Mapping[str, Any],
+    graph_vector_plan: Mapping[str, Any],
+    recall_verification_plan: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Build the planned Watch identity reinforcement loop.
+
+    The plan joins public/movie-domain reference candidates, live crop point
+    plans, text/scene corroboration requirements, and `$memory recall` proof
+    requirements. It does not run image search, embeddings, person re-ID,
+    Arango/Qdrant writes, or recall.
+    """
+
+    if reference_manifest.get("schema_version") != "watch.identity_reference_manifest.v1":
+        raise ValueError(f"unsupported reference manifest schema: {reference_manifest.get('schema_version')!r}")
+    if graph_vector_plan.get("schema") != GRAPH_VECTOR_PERSISTENCE_SCHEMA:
+        raise ValueError(f"unsupported graph/vector plan schema: {graph_vector_plan.get('schema')!r}")
+    if recall_verification_plan.get("schema") != MEMORY_RECALL_VERIFICATION_SCHEMA:
+        raise ValueError(f"unsupported recall plan schema: {recall_verification_plan.get('schema')!r}")
+
+    asset = copy.deepcopy(dict(graph_vector_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    qdrant_collections = ((graph_vector_plan.get("qdrant_plan") or {}).get("collections") or {})
+    crop_point_plans = qdrant_collections.get("watch_track_crop_embeddings") or []
+    identity_point_plans = qdrant_collections.get("watch_identity_evidence_embeddings") or []
+    recall_requests = recall_verification_plan.get("recall_requests") or []
+
+    entity_plans = []
+    for candidate in reference_manifest.get("candidates") or []:
+        entity_id = candidate.get("entity_id")
+        review_crops = candidate.get("review_crops") or []
+        approved_references = candidate.get("approved_references") or []
+        reference_sources = candidate.get("reference_source_candidates") or []
+        expected_pair_count = len(review_crops) * max(1, candidate.get("required_positive_reference_count", 3))
+        blocked = not approved_references
+        entity_plans.append({
+            "entity_id": entity_id,
+            "entity_name": candidate.get("name"),
+            "actor_name": candidate.get("actor_name"),
+            "status": "BLOCKED_PENDING_APPROVED_REFERENCES" if blocked else "READY_FOR_EMBEDDING_COMPARISON",
+            "domain_reference_source_count": sum(int(source.get("result_count") or 0) for source in reference_sources),
+            "approved_reference_count": len(approved_references),
+            "review_crop_count": len(review_crops),
+            "expected_crop_reference_pair_count": expected_pair_count,
+            "required_positive_reference_count": candidate.get("required_positive_reference_count", 3),
+            "required_negative_reference_count": candidate.get("required_negative_reference_count", 3),
+            "reference_source_statuses": sorted({source.get("status") for source in reference_sources if source.get("status")}),
+            "promotion_blockers": (
+                [
+                    "APPROVED_REFERENCE_IMAGES_MISSING",
+                    "REFERENCE_IMAGE_EMBEDDINGS_NOT_WRITTEN",
+                    "CROP_REFERENCE_COMPARISON_NOT_RUN",
+                    "TEXT_SCENE_CORROBORATION_NOT_RUN",
+                    "MEMORY_RECALL_NOT_VERIFIED",
+                ]
+                if blocked
+                else [
+                    "REFERENCE_IMAGE_EMBEDDINGS_NOT_WRITTEN",
+                    "CROP_REFERENCE_COMPARISON_NOT_RUN",
+                    "TEXT_SCENE_CORROBORATION_NOT_RUN",
+                    "MEMORY_RECALL_NOT_VERIFIED",
+                ]
+            ),
+            "recall_probe_ids": [
+                request.get("request_id")
+                for request in recall_requests
+                if request.get("kind") == "entity_segments"
+            ],
+        })
+
+    plan = {
+        "schema": IDENTITY_REINFORCEMENT_PLAN_SCHEMA,
+        "status": "PLANNED_NOT_RUN",
+        "asset": asset,
+        "source_reference_manifest_schema": reference_manifest.get("schema_version"),
+        "source_graph_vector_plan_schema": graph_vector_plan.get("schema"),
+        "source_recall_verification_plan_schema": recall_verification_plan.get("schema"),
+        "reinforcement_loop": [
+            {
+                "stage": "domain_reference_seed",
+                "source": "brave-search/movie-domain-memory",
+                "output": "movie-domain actor/character candidates and reference-source URLs",
+                "scene_truth_allowed": False,
+            },
+            {
+                "stage": "live_crop_stream",
+                "source": "Ultralytics YOLO + ByteTrack sampled at 5fps",
+                "output": "bounded track crops and Qdrant crop point plans",
+                "scene_truth_allowed": True,
+            },
+            {
+                "stage": "multimodal_embedding_compare",
+                "source": "Jina/Qdrant multimodal reference-image and crop points",
+                "output": "crop/reference similarity receipts with positive and negative controls",
+                "scene_truth_allowed": False,
+            },
+            {
+                "stage": "text_scene_corroboration",
+                "source": "SRT, Whisper, scene marker, VLM description, and row metadata",
+                "output": "evidence that the candidate belongs to the row/time range",
+                "scene_truth_allowed": True,
+            },
+            {
+                "stage": "memory_recall_answer_gate",
+                "source": "$memory /intent then /recall",
+                "output": "question-shaped recall items with expected asset/entity/time constraints",
+                "scene_truth_allowed": True,
+            },
+        ],
+        "entity_reinforcement_plans": entity_plans,
+        "qdrant_requirements": {
+            "crop_point_plan_count": len(crop_point_plans),
+            "identity_evidence_point_plan_count": len(identity_point_plans),
+            "reference_image_collection": "watch_reference_image_embeddings",
+            "track_crop_collection": "watch_track_crop_embeddings",
+            "raw_vectors_in_arango_allowed": False,
+        },
+        "memory_requirements": {
+            "allowed_answer_path": "$memory recall",
+            "requires_intent_before_recall": True,
+            "requires_items_key": True,
+            "forbidden_results_key_dependency": True,
+            "direct_qdrant_or_arango_answer_allowed": False,
+            "recall_request_count": len(recall_requests),
+        },
+        "promotion_policy": {
+            "supported_identity_requires": [
+                "approved_reference_images",
+                "reference_image_embedding_receipts",
+                "track_crop_embedding_receipts",
+                "crop_reference_similarity_receipt_with_negative_controls",
+                "text_or_scene_row_corroboration",
+                "memory_recall_items_matching_asset_entity_time",
+            ],
+            "domain_reference_seed_can_promote_identity": False,
+            "detector_label_can_promote_identity": False,
+            "human_override_allowed_with_receipt": True,
+        },
+        "negative_controls": [
+            {
+                "control_id": stable_id("watch_identity_negative_control", {"asset_id": asset_id, "control": "wrong_entity_promotion"}),
+                "description": "A Marcus canary query must not promote Willie cases from this planned artifact.",
+                "forbidden_entity_ids": ["movie_domain_entities/willie_bad_santa_2003"],
+            }
+        ],
+        "counts": {
+            "entity_plan_count": len(entity_plans),
+            "domain_reference_source_count": sum(plan["domain_reference_source_count"] for plan in entity_plans),
+            "approved_reference_count": sum(plan["approved_reference_count"] for plan in entity_plans),
+            "review_crop_count": sum(plan["review_crop_count"] for plan in entity_plans),
+            "planned_crop_reference_pair_count": sum(plan["expected_crop_reference_pair_count"] for plan in entity_plans),
+            "qdrant_point_plan_count": len(crop_point_plans) + len(identity_point_plans),
+            "recall_request_count": len(recall_requests),
+        },
+        "proof_scope": [
+            "identity_reinforcement_contract",
+            "planned_not_run",
+        ],
+        "claims": {
+            "proves": [
+                "Brave/movie-domain references are treated as priors, not scene truth",
+                "Live crop, text/scene corroboration, Qdrant receipts, and memory recall are all required before identity support",
+                "Negative controls are explicit before any recall or identity promotion claim",
+            ],
+            "does_not_prove": [
+                "Brave image download success",
+                "reference image approval",
+                "Jina embedding success",
+                "Qdrant write success",
+                "Arango write success",
+                "$memory recall success",
+                "supported character identity",
+                "real-time annotation tracking",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
 
 
 def identity_promotion_errors(identity_evidence: Mapping[str, Any]) -> List[str]:

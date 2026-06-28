@@ -1,0 +1,143 @@
+{
+  "schema": "watch.identity_reinforcement_plan.v1",
+  "status": "PLANNED_NOT_RUN",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_reference_manifest_schema": "watch.identity_reference_manifest.v1",
+  "source_graph_vector_plan_schema": "watch.graph_vector_persistence_plan.v1",
+  "source_recall_verification_plan_schema": "watch.memory_recall_verification_plan.v1",
+  "reinforcement_loop": [
+    {
+      "stage": "domain_reference_seed",
+      "source": "brave-search/movie-domain-memory",
+      "output": "movie-domain actor/character candidates and reference-source URLs",
+      "scene_truth_allowed": false
+    },
+    {
+      "stage": "live_crop_stream",
+      "source": "Ultralytics YOLO + ByteTrack sampled at 5fps",
+      "output": "bounded track crops and Qdrant crop point plans",
+      "scene_truth_allowed": true
+    },
+    {
+      "stage": "multimodal_embedding_compare",
+      "source": "Jina/Qdrant multimodal reference-image and crop points",
+      "output": "crop/reference similarity receipts with positive and negative controls",
+      "scene_truth_allowed": false
+    },
+    {
+      "stage": "text_scene_corroboration",
+      "source": "SRT, Whisper, scene marker, VLM description, and row metadata",
+      "output": "evidence that the candidate belongs to the row/time range",
+      "scene_truth_allowed": true
+    },
+    {
+      "stage": "memory_recall_answer_gate",
+      "source": "$memory /intent then /recall",
+      "output": "question-shaped recall items with expected asset/entity/time constraints",
+      "scene_truth_allowed": true
+    }
+  ],
+  "entity_reinforcement_plans": [
+    {
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "status": "BLOCKED_PENDING_APPROVED_REFERENCES",
+      "domain_reference_source_count": 10,
+      "approved_reference_count": 0,
+      "review_crop_count": 10,
+      "expected_crop_reference_pair_count": 30,
+      "required_positive_reference_count": 3,
+      "required_negative_reference_count": 3,
+      "reference_source_statuses": [
+        "DOMAIN_REFERENCE_SOURCE_CANDIDATE"
+      ],
+      "promotion_blockers": [
+        "APPROVED_REFERENCE_IMAGES_MISSING",
+        "REFERENCE_IMAGE_EMBEDDINGS_NOT_WRITTEN",
+        "CROP_REFERENCE_COMPARISON_NOT_RUN",
+        "TEXT_SCENE_CORROBORATION_NOT_RUN",
+        "MEMORY_RECALL_NOT_VERIFIED"
+      ],
+      "recall_probe_ids": [
+        "watch_recall_probe:e971d7f7566b46074db9c2403520210f"
+      ]
+    }
+  ],
+  "qdrant_requirements": {
+    "crop_point_plan_count": 10,
+    "identity_evidence_point_plan_count": 10,
+    "reference_image_collection": "watch_reference_image_embeddings",
+    "track_crop_collection": "watch_track_crop_embeddings",
+    "raw_vectors_in_arango_allowed": false
+  },
+  "memory_requirements": {
+    "allowed_answer_path": "$memory recall",
+    "requires_intent_before_recall": true,
+    "requires_items_key": true,
+    "forbidden_results_key_dependency": true,
+    "direct_qdrant_or_arango_answer_allowed": false,
+    "recall_request_count": 2
+  },
+  "promotion_policy": {
+    "supported_identity_requires": [
+      "approved_reference_images",
+      "reference_image_embedding_receipts",
+      "track_crop_embedding_receipts",
+      "crop_reference_similarity_receipt_with_negative_controls",
+      "text_or_scene_row_corroboration",
+      "memory_recall_items_matching_asset_entity_time"
+    ],
+    "domain_reference_seed_can_promote_identity": false,
+    "detector_label_can_promote_identity": false,
+    "human_override_allowed_with_receipt": true
+  },
+  "negative_controls": [
+    {
+      "control_id": "watch_identity_negative_control:45130f68a4ba07b3c232012f4d614789",
+      "description": "A Marcus canary query must not promote Willie cases from this planned artifact.",
+      "forbidden_entity_ids": [
+        "movie_domain_entities/willie_bad_santa_2003"
+      ]
+    }
+  ],
+  "counts": {
+    "entity_plan_count": 1,
+    "domain_reference_source_count": 10,
+    "approved_reference_count": 0,
+    "review_crop_count": 10,
+    "planned_crop_reference_pair_count": 30,
+    "qdrant_point_plan_count": 20,
+    "recall_request_count": 2
+  },
+  "proof_scope": [
+    "identity_reinforcement_contract",
+    "planned_not_run"
+  ],
+  "claims": {
+    "proves": [
+      "Brave/movie-domain references are treated as priors, not scene truth",
+      "Live crop, text/scene corroboration, Qdrant receipts, and memory recall are all required before identity support",
+      "Negative controls are explicit before any recall or identity promotion claim"
+    ],
+    "does_not_prove": [
+      "Brave image download success",
+      "reference image approval",
+      "Jina embedding success",
+      "Qdrant write success",
+      "Arango write success",
+      "$memory recall success",
+      "supported character identity",
+      "real-time annotation tracking"
+    ]
+  }
+}

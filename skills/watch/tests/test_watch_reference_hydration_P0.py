@@ -15,6 +15,7 @@ from watch_reference_hydration import (
     STATE_REFERENCE_IMAGES_PENDING_APPROVAL,
     STATE_REFERENCE_PACKAGE_MISSING,
     build_graph_vector_persistence_plan,
+    build_identity_reinforcement_plan,
     build_live_tracking_memory_window_plan,
     build_memory_recall_verification_plan,
     build_memory_trace_plan,
@@ -210,3 +211,64 @@ def test_graph_vector_plan_builds_question_shaped_memory_recall_contract() -> No
     negative = next(request for request in requests if request["kind"] == "negative_entity_control")
     assert "movie_domain_entities/willie_bad_santa_2003" in negative["expected_constraints"]["forbidden_entity_ids"]
     assert negative["acceptance"]["requires_no_wrong_entity_promotion"] is True
+
+
+def test_identity_reinforcement_plan_keeps_brave_references_as_priors() -> None:
+    reference_manifest = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_identity_references"
+        / "watch_identity_reference_manifest.bad_santa_marcus.json"
+    )
+    graph_vector_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_graph_vector_persistence_plan"
+        / "watch_graph_vector_persistence_plan.bad_santa_marcus.json"
+    )
+    recall_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_memory_recall_verification_plan"
+        / "watch_memory_recall_verification_plan.bad_santa_marcus.json"
+    )
+    plan = build_identity_reinforcement_plan(reference_manifest, graph_vector_plan, recall_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_identity_reinforcement_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.identity_reinforcement_plan.v1"
+    assert plan["status"] == "PLANNED_NOT_RUN"
+    assert plan["promotion_policy"]["domain_reference_seed_can_promote_identity"] is False
+    assert plan["promotion_policy"]["detector_label_can_promote_identity"] is False
+    assert plan["memory_requirements"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_requirements"]["requires_items_key"] is True
+    assert plan["memory_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+
+    counts = plan["counts"]
+    assert counts["entity_plan_count"] == 1
+    assert counts["approved_reference_count"] == 0
+    assert counts["review_crop_count"] == 10
+    assert counts["recall_request_count"] == 2
+    assert counts["qdrant_point_plan_count"] == 20
+
+    entity_plan = plan["entity_reinforcement_plans"][0]
+    assert entity_plan["entity_name"] == "Marcus"
+    assert entity_plan["status"] == "BLOCKED_PENDING_APPROVED_REFERENCES"
+    assert "APPROVED_REFERENCE_IMAGES_MISSING" in entity_plan["promotion_blockers"]
+    assert "MEMORY_RECALL_NOT_VERIFIED" in entity_plan["promotion_blockers"]
+
+    domain_stage = next(stage for stage in plan["reinforcement_loop"] if stage["stage"] == "domain_reference_seed")
+    assert domain_stage["scene_truth_allowed"] is False
+    assert "movie_domain_entities/willie_bad_santa_2003" in plan["negative_controls"][0]["forbidden_entity_ids"]

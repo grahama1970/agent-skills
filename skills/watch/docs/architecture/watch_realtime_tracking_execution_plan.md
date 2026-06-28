@@ -39,6 +39,8 @@ not scene truth.
 | `build_watch_graph_vector_persistence_plan.py` | Harness added | Converts bounded live windows into graph/vector persistence plans |
 | `watch_memory_recall_verification_plan.schema.json` | Contract added | Planned `$memory recall` proof requests and acceptance constraints |
 | `build_watch_memory_recall_verification_plan.py` | Harness added | Converts graph/vector plans into question-shaped recall probes |
+| `watch_identity_reinforcement_plan.schema.json` | Contract added | Planned loop connecting domain references, crop embeddings, text evidence, and recall gates |
+| `build_watch_identity_reinforcement_plan.py` | Harness added | Converts reference, graph/vector, and recall plans into fail-closed identity-reinforcement requirements |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -240,6 +242,35 @@ Current canary proof:
 - Schema: `skills/watch/docs/architecture/schemas/watch_memory_recall_verification_plan.schema.json`
 - Boundary: this proves the recall proof contract only. It does not prove live
   memory recall, Arango writes, Qdrant writes, or supported identity.
+
+### Phase 2.8: Planned Identity Reinforcement Loop
+
+Goal: define how movie-domain reference images, live track crops, row text, and
+`$memory recall` reinforce one another before any character label can become
+supported.
+
+Runtime path:
+
+```text
+Brave/movie-domain reference candidates
+  -> approved reference image slots
+  -> Jina/Qdrant reference-image point receipts
+  -> 5fps live crop point receipts
+  -> crop/reference similarity with negative controls
+  -> SRT/Whisper/scene-marker corroboration
+  -> $memory /intent then /recall proof
+  -> supported identity or bounded evidence case
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_identity_reinforcement_plan.py --reference-manifest skills/watch/docs/architecture/generated/bad_santa_marcus_0248_identity_references/watch_identity_reference_manifest.bad_santa_marcus.json --graph-vector-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_graph_vector_persistence_plan/watch_graph_vector_persistence_plan.bad_santa_marcus.json --recall-verification-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_memory_recall_verification_plan/watch_memory_recall_verification_plan.bad_santa_marcus.json --out /tmp/watch-identity-reinforcement-plan.json`
+- Expected output: `identity_reinforcement_plan_ok 1 entities 10 crops status=PLANNED_NOT_RUN`
+- Schema: `skills/watch/docs/architecture/schemas/watch_identity_reinforcement_plan.schema.json`
+- Boundary: this proves the reinforcement contract only. It does not prove Brave
+  image download success, reference approval, Jina embedding, Qdrant writes,
+  Arango writes, live memory recall, real-time annotation tracking, or supported
+  identity.
 
 ### Phase 3: Verification and Bounded Observation
 

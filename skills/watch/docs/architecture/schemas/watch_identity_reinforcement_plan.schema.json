@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_identity_reinforcement_plan.schema.json",
+  "title": "Watch Identity Reinforcement Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "asset",
+    "reinforcement_loop",
+    "entity_reinforcement_plans",
+    "qdrant_requirements",
+    "memory_requirements",
+    "promotion_policy",
+    "negative_controls",
+    "counts",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.identity_reinforcement_plan.v1"
+    },
+    "status": {
+      "const": "PLANNED_NOT_RUN"
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "reinforcement_loop": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["stage", "source", "output", "scene_truth_allowed"],
+        "properties": {
+          "stage": {
+            "enum": [
+              "domain_reference_seed",
+              "live_crop_stream",
+              "multimodal_embedding_compare",
+              "text_scene_corroboration",
+              "memory_recall_answer_gate"
+            ]
+          },
+          "scene_truth_allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "entity_reinforcement_plans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "entity_id",
+          "entity_name",
+          "status",
+          "approved_reference_count",
+          "review_crop_count",
+          "expected_crop_reference_pair_count",
+          "promotion_blockers"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "BLOCKED_PENDING_APPROVED_REFERENCES",
+              "READY_FOR_EMBEDDING_COMPARISON"
+            ]
+          },
+          "promotion_blockers": {
+            "type": "array",
+            "contains": {
+              "enum": [
+                "APPROVED_REFERENCE_IMAGES_MISSING",
+                "MEMORY_RECALL_NOT_VERIFIED",
+                "CROP_REFERENCE_COMPARISON_NOT_RUN"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "qdrant_requirements": {
+      "type": "object",
+      "required": [
+        "crop_point_plan_count",
+        "identity_evidence_point_plan_count",
+        "reference_image_collection",
+        "track_crop_collection",
+        "raw_vectors_in_arango_allowed"
+      ],
+      "properties": {
+        "raw_vectors_in_arango_allowed": {
+          "const": false
+        }
+      }
+    },
+    "memory_requirements": {
+      "type": "object",
+      "required": [
+        "allowed_answer_path",
+        "requires_intent_before_recall",
+        "requires_items_key",
+        "forbidden_results_key_dependency",
+        "direct_qdrant_or_arango_answer_allowed",
+        "recall_request_count"
+      ],
+      "properties": {
+        "allowed_answer_path": {
+          "const": "$memory recall"
+        },
+        "requires_items_key": {
+          "const": true
+        },
+        "forbidden_results_key_dependency": {
+          "const": true
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": [
+        "supported_identity_requires",
+        "domain_reference_seed_can_promote_identity",
+        "detector_label_can_promote_identity"
+      ],
+      "properties": {
+        "domain_reference_seed_can_promote_identity": {
+          "const": false
+        },
+        "detector_label_can_promote_identity": {
+          "const": false
+        },
+        "supported_identity_requires": {
+          "type": "array",
+          "contains": {
+            "const": "memory_recall_items_matching_asset_entity_time"
+          }
+        }
+      }
+    },
+    "negative_controls": {
+      "type": "array",
+      "minItems": 1
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "entity_plan_count",
+        "approved_reference_count",
+        "review_crop_count",
+        "planned_crop_reference_pair_count",
+        "qdrant_point_plan_count",
+        "recall_request_count"
+      ]
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "planned_not_run"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}
