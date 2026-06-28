@@ -1,0 +1,56 @@
+{
+  "schema": "watch.approved_reference_manifest.v1",
+  "asset_id": "movie_bad_santa_2003_unrated",
+  "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+  "character_name": "Marcus",
+  "actor_name": "Tony Cox",
+  "reference_source": "watch_tracking_crop_canary",
+  "approval_boundary": "Approved here means approved for local pipeline canary receipts only. This manifest does not by itself prove supported identity.",
+  "references": [
+    {
+      "reference_id": "watch_ref_canary:d39ecd9109d414fe7e9d36b14c1c5336",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_source": "watch_canary_existing_track_crop_reference",
+      "approval_note": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+      "local_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "source_track_id": "track_1",
+      "source_media_time_seconds": 169.46,
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_canary:6fdb786a4b931c48198fd31529bf4ea6",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_source": "watch_canary_existing_track_crop_reference",
+      "approval_note": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+      "local_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "source_track_id": "track_10",
+      "source_media_time_seconds": 169.46,
+      "rank": 2
+    },
+    {
+      "reference_id": "watch_ref_canary:76e9bc60a162798f360cad3b60d32847",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_source": "watch_canary_existing_track_crop_reference",
+      "approval_note": "Canary reference generated from an existing Watch tracking crop. Use for pipeline proof only; production approval should come from human annotation or reviewed external reference images.",
+      "local_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "source_overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "source_track_id": "track_15",
+      "source_media_time_seconds": 169.04,
+      "rank": 3
+    }
+  ],
+  "counts": {
+    "approved_reference_count": 3
+  }
+}
