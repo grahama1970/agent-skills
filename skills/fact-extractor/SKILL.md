@@ -12,6 +12,15 @@ tags:
   - chutes
   - scillm
 entrypoint: ./run.sh
+provides:
+  - quote-grounded-fact-extraction
+  - qra-candidate-extraction
+  - extraction-artifact-validation
+composes:
+  - clean-text
+  - scillm
+  - create-qras
+  - best-practices-python
 complies:
   - best-practices-skills
   - best-practices-python
