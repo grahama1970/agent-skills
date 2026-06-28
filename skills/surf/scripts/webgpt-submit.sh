@@ -889,38 +889,53 @@ fi
 # Pre-run focus snapshot (also used for --no-activate foreground guard).
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
-# Stale CDP recovery + composer prep.
-# Chrome allows only one CDP debugger per tab. If a previous webgpt.submit
-# was killed before cleanup, the stale CDP connection blocks all subsequent
-# CDP access. Activating the tab forces Chrome to release the stale connection
-# and establish a fresh one. CDP works across KDE desktops — no desktop switch
-# needed. After activation, clear the ChatGPT composer (ChatGPT may restore
-# drafts from localStorage on page navigation).
+# CDP stale connection recovery.
+# Chrome allows one CDP debugger per tab. Killed processes leave a stale
+# connection that blocks subsequent CDP access. When --no-activate is set,
+# we cannot tab.activate (that would foreground). Instead, detect stale CDP
+# and fall back to --create-tab --url <url> which opens a fresh background
+# tab with a clean CDP connection — no foregrounding needed.
 if [[ -n "${requested_tab_id:-}" ]]; then
-  echo "webgpt.submit: activating tab $requested_tab_id for CDP recovery" >&2
-  "$RUN_SH" tab.activate "$requested_tab_id" >/dev/null 2>&1 || true
-  sleep 3
+  if [[ "$no_activate" -eq 1 ]]; then
+    # --no-activate mode: don't tab.activate. Test CDP first, fall back to fresh tab if stale.
+    cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>/dev/null || true)"
+    if [[ "$cdp_ok" != "cdp-ok" ]]; then
+      echo "webgpt.submit: stale CDP on tab $requested_tab_id; --create-tab fallback" >&2
+      create_tab=1
+      requested_tab_id=""
+    fi
+  else
+    # Foreground mode: activate tab to release stale CDP, then clear drafts
+    echo "webgpt.submit: activating tab $requested_tab_id for CDP recovery" >&2
+    "$RUN_SH" tab.activate "$requested_tab_id" >/dev/null 2>&1 || true
+    sleep 3
+  fi
 
-  # Clear ChatGPT composer + localStorage drafts.
-  "$RUN_SH" js "
-    const keys = Object.keys(localStorage).filter(k => k.includes('draft') || k.includes('composer') || k.includes('input'));
-    keys.forEach(k => localStorage.removeItem(k));
-    const ta = document.querySelector('#prompt-textarea') || document.querySelector('[contenteditable]');
-    if (ta) {
-      if (ta.tagName === 'TEXTAREA' || ta.tagName === 'INPUT') ta.value = '';
-      else { ta.innerHTML = '<p></p>'; ta.textContent = ''; }
-      ta.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
-    }
-    return 'cleared-' + keys.length;
-  " --tab-id "$requested_tab_id" >/dev/null 2>&1 || true
+  # Clear ChatGPT composer + localStorage drafts (only when CDP works)
+  if [[ -n "${requested_tab_id:-}" ]]; then
+    "$RUN_SH" js "
+      const keys = Object.keys(localStorage).filter(k => k.includes('draft') || k.includes('composer') || k.includes('input'));
+      keys.forEach(k => localStorage.removeItem(k));
+      const ta = document.querySelector('#prompt-textarea') || document.querySelector('[contenteditable]');
+      if (ta) {
+        if (ta.tagName === 'TEXTAREA' || ta.tagName === 'INPUT') ta.value = '';
+        else { ta.innerHTML = '<p></p>'; ta.textContent = ''; }
+        ta.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+      }
+      return 'cleared-' + keys.length;
+    " --no-activate --tab-id "$requested_tab_id" >/dev/null 2>&1 || true
+  fi
 fi
 
 if [[ "$no_activate" -eq 1 ]]; then
-  if [[ -z "${requested_tab_id:-}" ]]; then
-    echo "--no-activate requires --tab-id, --url, or --create-tab so we never foreground a tab to discover one." >&2
-    exit 2
+  if [[ -z "${requested_tab_id:-}" && "$create_tab" -eq 0 ]]; then
+    # No tab-id and no create-tab flag — auto-enable --create-tab for background mode
+    create_tab=1
+    echo "webgpt.submit: enabling --create-tab for background mode (no valid tab-id)" >&2
   fi
-  args+=(--no-activate)
+  if [[ -n "${requested_tab_id:-}" ]]; then
+    args+=(--no-activate)
+  fi
 fi
 
 if [[ -n "$attach_file_abs" ]]; then
