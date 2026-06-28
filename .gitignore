@@ -27,10 +27,27 @@ Thumbs.db
 .coverage
 htmlcov/
 
+# Agent artifacts (created by skills/webgpt, skills/ask, etc.)
+.artifacts/
+.ask/
+.ask_artifacts/
+.webgpt/
+.goal_artifacts/
+.plan-iterate/
+.opencode/
+.local/
+scratch/
+artifacts/
+reviews/
+create-architecture/
+*.task_state.json
+.batch_state.json
+
 # Temp
 *.tmp
 *.log
 .env
+.env_temp
 skills/assistant/checkpoints/
 skills/dogpile/run/fetch_cache/
 skills/ask/.ask_artifacts/
@@ -46,8 +63,20 @@ state/
 fetch_cache/
 checkpoints/
 worktrees/
+.loop2/
 skills/battle/battles/
 skills/battle/patch-runs/
 skills/battle/reports/battle_*.md
 skills/battle/reports/battle_*_viz/
 skills/battle/uv.lock
+
+# Persona-dream research bakeoff outputs
+runs/
+skills/persona-dream/research/bakeoff/runs/
+skills/persona-dream/research/bakeoff/_sample_outputs/
+skills/persona-dream/research/bakeoff/_agent_sample_outputs/
+**/media/
+**/*.mp4
+**/*.wav
+**/*.mp3
+**/contact_sheet_renders/
