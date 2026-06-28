@@ -1,2 +1,0 @@
-2026-04-19 07:58:53.251 | ERROR    | __main__:run:586 - DoD command has SYNTAX ERROR — the command itself is broken:
-2026-04-19 07:58:53.251 | ERROR    | __main__:run:587 -   SyntaxError: invalid decimal literal

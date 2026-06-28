@@ -1,8 +1,0 @@
-Using CPython 3.12.10
-Creating virtual environment at: /home/graham/workspace/experiments/agent-skills/skills/code-runner/.venv
-Downloading pydantic-core (2.0MiB)
- Downloaded pydantic-core
-Installed 22 packages in 14ms
-2026-04-17 13:25:36.576 | ERROR    | __main__:run:526 - === PRE-FLIGHT FAILED for 2 (1 issues) ===
-2026-04-17 13:25:36.576 | ERROR    | __main__:run:528 -   [backend] Value error, Unknown backend 'gpt-5.3-codex'. Valid: claude, codex, deepseek, gemini, test, text
-2026-04-17 13:25:36.576 | ERROR    | __main__:run:529 -     FIX: Use one of: codex, claude, text, gemini, deepseek.

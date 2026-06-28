@@ -1,3 +1,0 @@
-{"run_id":"1","event":"run_queued","ts":1776599933.129207,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{"spec_file":"/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776599932/1.code-runner-spec.json"}}
-{"run_id":"1","event":"preflight_started","ts":1776599933.1295028,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{}}
-{"run_id":"1","event":"preflight_failed","ts":1776599933.252137,"round":null,"state_before":"queued","state_after":"preflight_failed","reason_code":"bad_dod","payload":{"error":"DoD command has Python SyntaxError"}}

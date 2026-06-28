@@ -1,9 +1,0 @@
-{
-  "run_id": "1",
-  "state": "preflight_failed",
-  "reason_code": "bad_spec",
-  "current_round": 0,
-  "best_score": 0.0,
-  "started_at": 1776599885.409803,
-  "updated_at": 1776599885.4110975
-}

@@ -1,6 +1,0 @@
-2026-04-17 19:42:49.138 | INFO     | __main__:run:654 - === CODE-RUNNER v2: Add fluid typography with clamp() ===
-2026-04-17 19:42:49.138 | INFO     | __main__:run:655 -   Backend: claude
-2026-04-17 19:42:49.138 | INFO     | __main__:run:656 -   DoD: grep -q 'FLUID' packages/ux-lab/src/components/sparta/common/EmbryStyle.ts
-2026-04-17 19:42:49.138 | INFO     | __main__:run:657 -   Max rounds: 5
-2026-04-17 19:42:49.141 | ERROR    | __main__:run:676 - Another code-runner is already running in /home/graham/workspace/experiments/pi-mono. Aborting.
-2026-04-17 19:42:49.141 | WARNING  | event_emitter:emit:72 - Invalid state transition: queued -> blocked (valid: ['running', 'preflight_failed']). Event: run_blocked

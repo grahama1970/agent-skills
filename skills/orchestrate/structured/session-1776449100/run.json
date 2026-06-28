@@ -1,9 +1,0 @@
-{
-  "run_id": "2",
-  "state": "failed",
-  "reason_code": "max_rounds_exhausted",
-  "current_round": 3,
-  "best_score": 0.49,
-  "started_at": 1776449166.5687003,
-  "updated_at": 1776449307.6146696
-}
