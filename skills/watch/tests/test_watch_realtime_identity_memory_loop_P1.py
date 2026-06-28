@@ -18,6 +18,7 @@ from skills.watch.scripts.run_realtime_identity_memory_loop import (
     reference_approval_by_id,
 )
 from skills.watch.scripts.build_watch_identity_gate_receipt import build_identity_gate_receipt
+from skills.watch.scripts.build_watch_negative_control_receipt import build_negative_control_receipt
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "realtime_identity_memory_loop_P1"
@@ -269,3 +270,36 @@ def test_identity_gate_withholds_canary_only_references_even_with_similarity_sco
     assert any((item["best_similarity"] or 0) >= 0.72 for item in gate["candidates"])
     assert all("REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION" in item["blockers"] for item in gate["candidates"])
     assert all("NEGATIVE_CONTROL_RECEIPT_MISSING" in item["blockers"] for item in gate["candidates"])
+
+
+def test_negative_control_receipt_flags_canary_high_similarity_leakage():
+    source = json.loads(LIVE_APPROVAL_LINKED_RECEIPT.read_text(encoding="utf-8"))
+    receipt = build_negative_control_receipt(source, source_path=LIVE_APPROVAL_LINKED_RECEIPT, threshold=0.72)
+
+    assert receipt["schema"] == "watch.negative_control_receipt.v1"
+    assert receipt["status"] == "FAILED_CANARY_REFERENCES_NOT_INDEPENDENT"
+    assert receipt["counts"]["comparison_count"] == 30
+    assert receipt["counts"]["candidate_crop_count"] == 10
+    assert receipt["counts"]["failure_count"] > 0
+    assert all(
+        item["failure_code"] == "CANARY_REFERENCE_HIGH_SIMILARITY_NOT_INDEPENDENT"
+        for item in receipt["failures"]
+    )
+    assert all(item["reference_approval_scope"] == "CANARY_PIPELINE_ONLY" for item in receipt["failures"])
+    assert any(float(item["cosine_similarity"]) >= 0.72 for item in receipt["failures"])
+
+
+def test_identity_gate_consumes_failed_negative_control_receipt():
+    source = json.loads(LIVE_APPROVAL_LINKED_RECEIPT.read_text(encoding="utf-8"))
+    negative = build_negative_control_receipt(source, source_path=LIVE_APPROVAL_LINKED_RECEIPT, threshold=0.72)
+    gate = build_identity_gate_receipt(
+        source,
+        source_path=LIVE_APPROVAL_LINKED_RECEIPT,
+        threshold=0.72,
+        negative_control_receipt=negative,
+    )
+
+    assert gate["status"] == "IDENTITY_LABELS_WITHHELD"
+    assert gate["input_receipt_statuses"]["negative_control"] == "FAILED_CANARY_REFERENCES_NOT_INDEPENDENT"
+    assert all("NEGATIVE_CONTROL_FAILED" in item["blockers"] for item in gate["candidates"])
+    assert all("NEGATIVE_CONTROL_RECEIPT_MISSING" not in item["blockers"] for item in gate["candidates"])

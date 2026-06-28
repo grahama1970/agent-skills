@@ -39,12 +39,20 @@ DEFAULT_OUT_DIR = (
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-receipt", type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument("--negative-control-receipt", type=Path)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--threshold", type=float, default=0.72)
     args = parser.parse_args()
 
     source = read_json(args.source_receipt)
-    receipt = build_identity_gate_receipt(source, source_path=args.source_receipt, threshold=args.threshold)
+    negative_control = read_json(args.negative_control_receipt) if args.negative_control_receipt else None
+    receipt = build_identity_gate_receipt(
+        source,
+        source_path=args.source_receipt,
+        threshold=args.threshold,
+        negative_control_receipt=negative_control,
+        negative_control_path=args.negative_control_receipt,
+    )
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out = args.out_dir / "watch_identity_gate_receipt.json"
     out.write_text(json.dumps(receipt, indent=2, sort_keys=False) + "\n", encoding="utf-8")
@@ -57,7 +65,14 @@ def main() -> int:
     return 0 if receipt["status"] in {"IDENTITY_LABELS_WITHHELD", "IDENTITY_LABELS_PROMOTED"} else 2
 
 
-def build_identity_gate_receipt(source: dict[str, Any], *, source_path: Path, threshold: float) -> dict[str, Any]:
+def build_identity_gate_receipt(
+    source: dict[str, Any],
+    *,
+    source_path: Path,
+    threshold: float,
+    negative_control_receipt: dict[str, Any] | None = None,
+    negative_control_path: Path | None = None,
+) -> dict[str, Any]:
     receipts = source.get("receipts") or {}
     similarity = receipts.get("crop_reference_similarity") or {}
     recall = receipts.get("memory_recall") or {}
@@ -79,6 +94,7 @@ def build_identity_gate_receipt(source: dict[str, Any], *, source_path: Path, th
             similarity_receipt=similarity,
             memory_receipt=memory,
             recall_receipt=recall,
+            negative_control_receipt=negative_control_receipt,
             threshold=threshold,
         )
         promoted = not blockers
@@ -115,7 +131,9 @@ def build_identity_gate_receipt(source: dict[str, Any], *, source_path: Path, th
             "crop_reference_similarity": similarity.get("status"),
             "memory_upsert": memory.get("status"),
             "memory_recall": recall.get("status"),
+            "negative_control": negative_control_receipt.get("status") if negative_control_receipt else None,
         },
+        "source_negative_control_receipt": display_path(negative_control_path) if negative_control_path else None,
         "claim_boundary": {
             "proves": [
                 "crop/reference similarity comparisons were evaluated against identity-promotion gates",
@@ -148,6 +166,7 @@ def gate_blockers(
     similarity_receipt: dict[str, Any],
     memory_receipt: dict[str, Any],
     recall_receipt: dict[str, Any],
+    negative_control_receipt: dict[str, Any] | None,
     threshold: float,
 ) -> list[str]:
     blockers: list[str] = []
@@ -164,7 +183,11 @@ def gate_blockers(
     if approval_scope and approval_scope != "IDENTITY_PROMOTION":
         blockers.append("REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION")
 
-    if similarity_receipt.get("status") != "SCORED_WITH_NEGATIVE_CONTROLS":
+    if negative_control_receipt is None:
+        blockers.append("NEGATIVE_CONTROL_RECEIPT_MISSING")
+    elif negative_control_receipt.get("status") != "PASSED":
+        blockers.append("NEGATIVE_CONTROL_FAILED")
+    elif similarity_receipt.get("status") != "SCORED_WITH_NEGATIVE_CONTROLS":
         blockers.append("NEGATIVE_CONTROL_RECEIPT_MISSING")
     if memory_receipt.get("status") != "WRITTEN":
         blockers.append("MEMORY_UPSERT_RECEIPT_MISSING")
