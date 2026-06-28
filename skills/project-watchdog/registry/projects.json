@@ -1,0 +1,251 @@
+{
+  "schema": "agent_skills.project_watchdog.registry.v1",
+  "updated_at": "2026-06-28",
+  "defaults": {
+    "agents_root": "/home/graham/workspace/experiments/agent-skills/agents",
+    "state": "active",
+    "resume_requires": [
+      "trusted-human",
+      "valid-project-config",
+      "valid-github-auth"
+    ],
+    "labels": {
+      "ready": "agent-work",
+      "active": "agent-active",
+      "done": "agent-done",
+      "blocked": "agent-blocked",
+      "human": "next:human"
+    },
+    "max_tickets_per_tick": 1,
+    "lease_minutes": 15
+  },
+  "projects": [
+    {
+      "project_id": "tau",
+      "display_name": "T'au",
+      "repo": "grahama1970/tau",
+      "worktree": "/home/graham/workspace/experiments/tau",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "active",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "valid-goal-file",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "tau-command-loop",
+      "runner": {
+        "command": "uv run tau handoff-command-loop",
+        "cwd": "/home/graham/workspace/experiments/tau",
+        "requires_start_handoff": true,
+        "receipt_dir_env": "TAU_RECEIPT_DIR"
+      },
+      "command_spec_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs",
+      "goal_file": "/home/graham/workspace/experiments/tau/goals/current.json",
+      "allowed_agents": [
+        "goal-guardian",
+        "project-or-harness-verifier",
+        "coder",
+        "code-reviewer",
+        "human"
+      ],
+      "capabilities": [
+        "tau.agent_handoff.v1",
+        "tau.subagent_receipt.v1",
+        "github-comment-projection",
+        "github-label-projection",
+        "one-tick-cron"
+      ],
+      "notes": [
+        "Tau has a local one-tick cron/handoff path. Full GitHub issue intake is still a pending watchdog feature."
+      ]
+    },
+    {
+      "project_id": "scillm",
+      "display_name": "SciLLM",
+      "repo": "grahama1970/scillm",
+      "worktree": "/home/graham/workspace/experiments/scillm",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "paused",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "project-command-contract",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "PYTHONPATH=/home/graham/workspace/experiments/scillm/src uv run python -m scillm.cli",
+        "cwd": "/home/graham/workspace/experiments/scillm",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "scillm-agent",
+        "project-or-harness-verifier",
+        "code-reviewer",
+        "human"
+      ],
+      "capabilities": [
+        "project-agent-sanity-receipts",
+        "provider-health-checks",
+        "chutes-batch",
+        "gpt55-oauth"
+      ],
+      "notes": [
+        "SciLLM has live doctor receipts; a bounded issue runner still needs a project command contract before mutation."
+      ]
+    },
+    {
+      "project_id": "chatgpt-lab",
+      "display_name": "ChatGPT Lab",
+      "repo": "grahama1970/chatgpt-lab",
+      "worktree": "/home/graham/workspace/experiments/chatgpt-lab",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "paused",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "shared-lease-adapter",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local-watchdog",
+      "runner": {
+        "command": "./scripts/run_phatgpt_watchdog.sh",
+        "cwd": "/home/graham/workspace/experiments/chatgpt-lab",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "phatgpt-researcher",
+        "coder",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "phatgpt-watchdog",
+        "github-issue-routing",
+        "github-pr-routing"
+      ],
+      "notes": [
+        "Existing PhatGPT watchdog scripts should be adapted behind the shared project-watchdog lease and receipt protocol."
+      ]
+    },
+    {
+      "project_id": "agent-skills",
+      "display_name": "Agent Skills",
+      "repo": "grahama1970/agent-skills",
+      "worktree": "/home/graham/workspace/experiments/agent-skills",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "paused",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "clean-worktree-policy",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "python3 scripts/validate_skills.py",
+        "cwd": "/home/graham/workspace/experiments/agent-skills",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "skill-maintainer",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "skills-ci",
+        "subagent-registry",
+        "shared-skill-runtime"
+      ],
+      "notes": [
+        "The repository is currently very dirty; watchdog mutation should require a clean-worktree policy or explicit dirty-worktree handling."
+      ]
+    },
+    {
+      "project_id": "pi-mono",
+      "display_name": "Pi Mono",
+      "repo": "grahama1970/pi-mono",
+      "worktree": "/home/graham/workspace/experiments/pi-mono",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "paused",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "safe-bounded-runner",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "npm test",
+        "cwd": "/home/graham/workspace/experiments/pi-mono",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "coder",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "pi-reference-architecture",
+        "inter-tui-communication-reference"
+      ],
+      "notes": [
+        "Registered as a frequently referenced project. Its safe bounded issue runner needs confirmation before live mutation."
+      ]
+    }
+  ]
+}

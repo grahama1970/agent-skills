@@ -1,0 +1,40 @@
+# T'au Project Knowledge
+
+This skill is a light wrapper around `/home/graham/workspace/experiments/tau`.
+It does not implement Tau behavior itself.
+
+## Current Evidence Boundaries
+
+- Full Tau pytest was observed with `804 passed in 60.36s`.
+- Live project-watchdog issue repair was observed on `grahama1970/tau#3`.
+- Tau commit pushed for that repair: `19cd3697d9d834fa049948a7a4fdfcab1076f0ec`.
+- Watchdog receipt for the live issue lane:
+  `/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260628T120401Z/receipt.json`.
+- Project-watchdog cron is installed and writes receipts under:
+  `/home/graham/.local/state/project-watchdog/receipts/`.
+
+## Pending Proof Boundaries
+
+- The skill alone does not prove fresh browser chat rendering.
+- Chat UI claims need `test-interactions` manifests and browser/CDP screenshot
+  inspection against the host route.
+- The skill alone does not prove production Sparta Chat readiness.
+- Unit tests prove code paths only; live GitHub mutation and browser proof need
+  separate receipts.
+
+## Operating Model
+
+Tau has four major surfaces:
+
+1. Loop: command-loop and provider execution, including Chutes and fake-provider
+   lanes.
+2. Harness: goal-locked handoff contracts, subagent routing, immutable human
+   goal handling, and GitHub ticket orchestration.
+3. TUI: terminal-facing state and proof inspection.
+4. Chat: Memory-first React chat renderer intended to converge with Watch and
+   Sparta Chat UX patterns.
+
+The special long-running mode is not a forever-running subagent. Cron or GitHub
+Actions may run repeatedly as infrastructure, but each subagent invocation must
+be bounded and must emit a receipt with goal, context, result, rationale, next
+agent, required evidence, and stop condition.

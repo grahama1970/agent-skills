@@ -1,0 +1,59 @@
+{
+  "global": {
+    "reason": "human requested live cron issue-fix proof for Tau",
+    "resume_allowed_by": [
+      "human"
+    ],
+    "resume_requires": [
+      "dispatcher-implementation",
+      "dry-run-scan-receipt",
+      "no-live-mutation-without-apply"
+    ],
+    "state": "active"
+  },
+  "projects": {
+    "agent-skills": {
+      "reason": "Repository has extensive unrelated dirty worktree state; mutation requires explicit dirty-worktree policy.",
+      "resume_requires": [
+        "clean-worktree-policy",
+        "valid-github-auth"
+      ],
+      "state": "paused"
+    },
+    "chatgpt-lab": {
+      "reason": "Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.",
+      "resume_requires": [
+        "shared-lease-adapter",
+        "valid-github-auth"
+      ],
+      "state": "paused"
+    },
+    "pi-mono": {
+      "reason": "Registered as a reference project; safe bounded issue runner is not confirmed.",
+      "resume_requires": [
+        "safe-bounded-runner",
+        "valid-github-auth"
+      ],
+      "state": "paused"
+    },
+    "scillm": {
+      "reason": "Registered for future issue routing; bounded watchdog command contract is not proven yet.",
+      "resume_requires": [
+        "project-command-contract",
+        "valid-github-auth"
+      ],
+      "state": "paused"
+    },
+    "tau": {
+      "last_operator": "human-approved-development-session",
+      "reason": "Tau has a proven one-tick handoff path and recent live GitHub mutation proof, but full issue intake remains pending.",
+      "resume_requires": [
+        "valid-goal-file",
+        "valid-github-auth"
+      ],
+      "state": "active"
+    }
+  },
+  "schema": "agent_skills.project_watchdog.state.v1",
+  "updated_at": "2026-06-28"
+}
