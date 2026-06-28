@@ -14,6 +14,7 @@ from watch_reference_hydration import (
     STATE_REFERENCE_EMBEDDINGS_READY,
     STATE_REFERENCE_IMAGES_PENDING_APPROVAL,
     STATE_REFERENCE_PACKAGE_MISSING,
+    build_crop_reference_similarity_receipt_plan,
     build_graph_vector_persistence_plan,
     build_identity_reinforcement_plan,
     build_live_tracking_memory_window_plan,
@@ -341,4 +342,68 @@ def test_reference_embedding_receipt_plan_blocks_identity_until_receipts_exist()
     assert not any(
         any(key in point for key in ("embedding", "embeddings", "vector", "vectors"))
         for point in point_plan["points"]
+    )
+
+
+def test_crop_reference_similarity_receipt_plan_requires_negative_controls_and_recall() -> None:
+    crop_manifest = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_tracking_crops"
+        / "watch_tracking_crops.bad_santa_marcus.json"
+    )
+    reference_embedding_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_reference_embedding_receipt_plan"
+        / "watch_reference_embedding_receipt_plan.bad_santa_marcus.json"
+    )
+    plan = build_crop_reference_similarity_receipt_plan(crop_manifest, reference_embedding_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_crop_reference_similarity_receipt_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.crop_reference_similarity_receipt_plan.v1"
+    assert plan["status"] == "PLANNED_NOT_RUN"
+    assert plan["memory_requirements"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_requirements"]["requires_items_key"] is True
+    assert plan["memory_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+    assert plan["promotion_policy"]["similarity_without_text_scene_corroboration_can_promote_identity"] is False
+    assert plan["promotion_policy"]["similarity_without_memory_recall_can_promote_identity"] is False
+    assert plan["promotion_policy"]["domain_reference_seed_can_promote_identity"] is False
+
+    counts = plan["counts"]
+    assert counts["entity_plan_count"] == 1
+    assert counts["candidate_crop_count"] == 10
+    assert counts["planned_similarity_comparison_count"] == 60
+    assert counts["positive_control_comparison_count"] == 30
+    assert counts["negative_control_comparison_count"] == 30
+
+    entity_plan = plan["entity_similarity_plans"][0]
+    assert entity_plan["entity_name"] == "Marcus"
+    assert entity_plan["status"] == "BLOCKED_PENDING_EMBEDDINGS"
+    assert entity_plan["positive_reference_slot_count"] == 3
+    assert entity_plan["negative_reference_slot_count"] == 3
+    assert "CROP_EMBEDDING_RECEIPTS_MISSING" in entity_plan["promotion_blockers"]
+    assert "NEGATIVE_CONTROL_RECEIPTS_MISSING" in entity_plan["promotion_blockers"]
+    assert "MEMORY_RECALL_NOT_VERIFIED" in entity_plan["promotion_blockers"]
+
+    comparisons = plan["planned_similarity_comparisons"]
+    assert {comparison["reference_slot_kind"] for comparison in comparisons} == {"positive", "negative"}
+    assert all(comparison["similarity_receipt_status"] == "BLOCKED_PENDING_EMBEDDINGS" for comparison in comparisons)
+    assert all(comparison["scene_truth_allowed"] is False for comparison in comparisons)
+    assert all(comparison["promotion_allowed"] is False for comparison in comparisons)
+    assert all(comparison["required_before_identity_support"] is True for comparison in comparisons)
+    assert not any(
+        any(key in comparison for key in ("embedding", "embeddings", "vector", "vectors"))
+        for comparison in comparisons
     )

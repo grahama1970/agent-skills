@@ -1,0 +1,1652 @@
+{
+  "schema": "watch.crop_reference_similarity_receipt_plan.v1",
+  "status": "PLANNED_NOT_RUN",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_crop_manifest_schema": "watch.tracking_crop_manifest.v1",
+  "source_reference_embedding_receipt_schema": "watch.reference_embedding_receipt_plan.v1",
+  "entity_similarity_plans": [
+    {
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "status": "BLOCKED_PENDING_EMBEDDINGS",
+      "candidate_crop_count": 10,
+      "positive_reference_slot_count": 3,
+      "negative_reference_slot_count": 3,
+      "planned_comparison_count": 60,
+      "positive_control_comparison_count": 30,
+      "negative_control_comparison_count": 30,
+      "promotion_blockers": [
+        "CROP_EMBEDDING_RECEIPTS_MISSING",
+        "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+        "SIMILARITY_RECEIPTS_MISSING",
+        "NEGATIVE_CONTROL_RECEIPTS_MISSING",
+        "TEXT_SCENE_CORROBORATION_NOT_RUN",
+        "MEMORY_RECALL_NOT_VERIFIED"
+      ]
+    }
+  ],
+  "planned_similarity_comparisons": [
+    {
+      "comparison_id": "watch_similarity_receipt:238d344370a129073131b409be016494",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:bbb9db164e4692f6b4338e90969a6365",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:11a6f774006017576f83ef6321ed73a0",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:9dc5b3f6af8cbd6acf9e3b5f3d47a055",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:a00c1ec761e8e2c3ede610feef568dec",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:450d8ba77a683b8e5d51572fdfdabb8b",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1",
+      "track_id": "track_1",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_1.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "d377ad28-3948-5ea8-b828-d4ad2262c737",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:07e4d8e6250f88e22c7d3d017bdf4964",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:3f6e2f87a0eb701d9c8dfc1dc067776f",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:eea9a9dc1611d470e9942601e6935d89",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:47490cce6e23582a2d21dd81e8da1861",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:73936c12c2836e37ab0339c5eb8bb955",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:91d4b20320d59b4d59fc3fbe7abc9f98",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10",
+      "track_id": "track_10",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_10.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "e6b09950-3bcf-5c4d-b7fc-12764626c343",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:71533a94c4caea73574982ace225da24",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:6018e490f35b440bddd66ed45a8584c6",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:7327cfbecf9352fb34783e22220d1c2f",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:5b103cfc31b1ff4f2cec746cff41a618",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:56f19f182870da8836abb685f9a887e8",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:7d67c71f6eb92a4ddcd2fdf8346c2027",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15",
+      "track_id": "track_15",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.04,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_15.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "acc100db-7095-5223-a55b-1122f9756a07",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:3ff462f44b1634827510ca86bad37a39",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:d4dedc0408ceb2f211206a63ca4399bb",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:0d357e2af786fb8312a4de39f21383b5",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:1fd1c15808c4d8e63c5ec8666c881ab6",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:374578021ea87942eeb6815727b07f77",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:b2a196175fd6f41cb1b7bb9900e9ed15",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2",
+      "track_id": "track_2",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 174.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_2.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "c7fcdafa-8679-5325-94d3-046000a187a5",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:e0d23923d3573adff06e886dab2790b1",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:059757c8158ebc23448b7349cfda66f2",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:f8d8dcd6d3d078502b868a92001084d6",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:afbaa5246f7562c2336fcdcacd83aaa5",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:8bb1bd73925b487225eab01f274ebe8f",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:66401e5dc59fdfdf2104b5648d2a930d",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3",
+      "track_id": "track_3",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_3.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "abf0536f-17f6-58c1-8ce5-7d28da2057a2",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:197ac61919ae8c692f6c8da8faa11a68",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:cb5132210b42138ef89fa1bd44e0ef7d",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:bb58e0602a6bc20b8d9e05925fc0cc47",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:f94e412799786fa8704ba74f253eb92e",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:dc8305e7baf6478ef04975f523d6e508",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:ae718cde465a49e6a9edcf077c6fa69a",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4",
+      "track_id": "track_4",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.46,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_4.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "119561d3-73bb-5dc1-a907-ee56e698fb52",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:d4a52e05c87f9cefc0e723d005cbde6c",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:8cc6d1032cc543ca4243ba83913a77c7",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:a6d5bd2a4c1eb7c974fe99a226be498a",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:1f28cccc0034240f2b172ae4eb391ea9",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:7cc76986e61239f5a2b477eda991d814",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:c266d51d3808a4a95d22e6ebf6e8c606",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5",
+      "track_id": "track_5",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.83,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_5.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "5069acc9-5cbf-5a69-8ac7-cd0a3b8cdec6",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:98e1ff8dd00c716cd9d6f646c7ef68f7",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:622e50fe249140c2dbd0e2fc1edcb49e",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:621c605fa4dd27e7325d6ec37c1b8e2a",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:3feada15c5b6f546160da6818331dd35",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:cbf9de3d6934420a940deb686eb21f90",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:1f2c7388bb6702a01be17e74beb493b7",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6",
+      "track_id": "track_6",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 173.63,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_6.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "03096184-7a7f-528f-8550-a2864fb5da81",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:cc7e58d1be687834dbede93ab36548d0",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:994e3c2a034949259396899985819e18",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:33ae3bd9195eaa26e50ff1507935b4e7",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:446e146e8b9098f9e24e9db6e8b34449",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:bc36bba28d44747c4b984f24445957ae",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:82e50cfc7f2e31edd2225e9e9c82733c",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7",
+      "track_id": "track_7",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 168.0,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_7.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "a148e861-c25b-56f7-8818-6f0b5a83f858",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:9141ba923dc77852559101c66e9231d3",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:a40a72c143e00ad2a0ab41c80c645c2c",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:76af8d2aeeb0a03f2ca2c0ad4b110a54",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+      "reference_slot_kind": "positive",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:1fb13b9b03bfea4a42bac81f2506f78f",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:0882e84c36af46630e2bfc7e9641aa3c",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    },
+    {
+      "comparison_id": "watch_similarity_receipt:0a335c1c82990ead748d103c2d8460ad",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "overlay_id": "watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8",
+      "track_id": "track_8",
+      "segment_id": "seg_0007",
+      "media_time_seconds": 169.25,
+      "crop_path": "docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/crops/watch_overlay_movie_bad_santa_2003_unrated_seg_0007_track_8.png",
+      "crop_embedding_point": {
+        "collection": "watch_track_crop_embeddings",
+        "point_id": "47a59768-8355-5eb5-a151-9415df7f9744",
+        "embedding_status": "PLANNED_NOT_WRITTEN"
+      },
+      "reference_slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+      "reference_slot_kind": "negative",
+      "reference_embedding_point": {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+      },
+      "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+      "scene_truth_allowed": false,
+      "promotion_allowed": false,
+      "required_before_identity_support": true
+    }
+  ],
+  "receipt_requirements": {
+    "crop_embedding_receipts_required": true,
+    "reference_embedding_receipts_required": true,
+    "positive_control_similarity_receipts_required": true,
+    "negative_control_similarity_receipts_required": true,
+    "memory_recall_receipt_required": true
+  },
+  "promotion_policy": {
+    "similarity_without_text_scene_corroboration_can_promote_identity": false,
+    "similarity_without_memory_recall_can_promote_identity": false,
+    "domain_reference_seed_can_promote_identity": false,
+    "supported_identity_requires": [
+      "positive_similarity_above_threshold",
+      "negative_similarity_below_threshold",
+      "text_or_scene_row_corroboration",
+      "memory_recall_items_matching_asset_entity_time"
+    ]
+  },
+  "memory_requirements": {
+    "allowed_answer_path": "$memory recall",
+    "requires_intent_before_recall": true,
+    "requires_items_key": true,
+    "forbidden_results_key_dependency": true,
+    "direct_qdrant_or_arango_answer_allowed": false
+  },
+  "counts": {
+    "entity_plan_count": 1,
+    "candidate_crop_count": 10,
+    "planned_similarity_comparison_count": 60,
+    "positive_control_comparison_count": 30,
+    "negative_control_comparison_count": 30
+  },
+  "proof_scope": [
+    "crop_reference_similarity_receipt_contract",
+    "planned_not_run"
+  ],
+  "claims": {
+    "proves": [
+      "Live tracker crops are paired with reference-image slots through deterministic receipt ids",
+      "Positive and negative controls are required before any identity support",
+      "Similarity receipts remain planned and cannot promote identity without text/scene corroboration and memory recall"
+    ],
+    "does_not_prove": [
+      "crop embedding success",
+      "reference image embedding success",
+      "Qdrant write success",
+      "similarity score correctness",
+      "text or scene corroboration",
+      "$memory recall success",
+      "supported character identity",
+      "real-time annotation tracking"
+    ]
+  }
+}

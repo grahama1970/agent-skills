@@ -158,6 +158,8 @@ See:
 - [`docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md)
 - [`scripts/build_watch_reference_embedding_receipt_plan.py`](scripts/build_watch_reference_embedding_receipt_plan.py)
 - [`docs/architecture/generated/bad_santa_marcus_0248_reference_embedding_receipt_plan/watch_reference_embedding_receipt_plan.bad_santa_marcus.json`](docs/architecture/generated/bad_santa_marcus_0248_reference_embedding_receipt_plan/watch_reference_embedding_receipt_plan.bad_santa_marcus.json)
+- [`scripts/build_watch_crop_reference_similarity_receipt_plan.py`](scripts/build_watch_crop_reference_similarity_receipt_plan.py)
+- [`docs/architecture/generated/bad_santa_marcus_0248_crop_reference_similarity_receipt_plan/watch_crop_reference_similarity_receipt_plan.bad_santa_marcus.json`](docs/architecture/generated/bad_santa_marcus_0248_crop_reference_similarity_receipt_plan/watch_crop_reference_similarity_receipt_plan.bad_santa_marcus.json)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
 
 For live character/asset tracking, install the optional tracking dependencies:
@@ -192,6 +194,12 @@ creates planned positive and negative reference-image slots and Qdrant
 `watch_reference_image_embeddings` point plans, but keeps every slot blocked
 until download receipts, approval receipts, embedding receipts, crop/reference
 similarity receipts, and `$memory /recall` proof exist.
+
+The crop/reference similarity receipt plan then pairs the 10 extracted tracker
+crops with 3 positive and 3 negative reference slots, producing 60 planned
+comparison receipts. These are still `PLANNED_NOT_RUN`; they enforce that
+negative controls, text/scene corroboration, and `$memory /recall` must pass
+before a character label can be supported.
 
 ## How to Use
 

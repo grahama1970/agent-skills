@@ -43,6 +43,8 @@ not scene truth.
 | `build_watch_identity_reinforcement_plan.py` | Harness added | Converts reference, graph/vector, and recall plans into fail-closed identity-reinforcement requirements |
 | `watch_reference_embedding_receipt_plan.schema.json` | Contract added | Planned reference-image download, approval, and embedding receipt gate |
 | `build_watch_reference_embedding_receipt_plan.py` | Harness added | Converts reference-source candidates into fail-closed Qdrant reference-image point plans |
+| `watch_crop_reference_similarity_receipt_plan.schema.json` | Contract added | Planned crop/reference similarity receipt gate with positive and negative controls |
+| `build_watch_crop_reference_similarity_receipt_plan.py` | Harness added | Pairs live track crops with reference slots without promoting identity |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -299,6 +301,33 @@ Current canary proof:
   prove Brave image download success, approved reference images, Jina embedding,
   Qdrant writes, crop/reference similarity, `$memory recall`, real-time
   annotation tracking, or supported character identity.
+
+### Phase 2.10: Planned Crop / Reference Similarity Receipts
+
+Goal: pair live YOLO/ByteTrack-derived crops with planned positive and negative
+reference-image slots before identity support is allowed.
+
+Runtime path:
+
+```text
+tracking crop manifest
+  + reference embedding receipt plan
+  -> planned crop/reference comparison receipts
+  -> positive controls and negative controls
+  -> similarity thresholds
+  -> text/scene corroboration
+  -> $memory /intent then /recall proof
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_crop_reference_similarity_receipt_plan.py --crop-manifest skills/watch/docs/architecture/generated/bad_santa_marcus_0248_tracking_crops/watch_tracking_crops.bad_santa_marcus.json --reference-embedding-receipt-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_reference_embedding_receipt_plan/watch_reference_embedding_receipt_plan.bad_santa_marcus.json --out /tmp/watch-crop-reference-similarity-receipt-plan.json`
+- Expected output: `crop_reference_similarity_receipt_plan_ok 1 entities 10 crops 60 comparisons status=PLANNED_NOT_RUN`
+- Schema: `skills/watch/docs/architecture/schemas/watch_crop_reference_similarity_receipt_plan.schema.json`
+- Boundary: this proves the comparison receipt contract only. It does not prove
+  crop embedding success, reference embedding success, Qdrant writes,
+  similarity-score correctness, text/scene corroboration, `$memory recall`,
+  real-time annotation tracking, or supported character identity.
 
 ### Phase 3: Verification and Bounded Observation
 

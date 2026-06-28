@@ -32,6 +32,7 @@ GRAPH_VECTOR_PERSISTENCE_SCHEMA = "watch.graph_vector_persistence_plan.v1"
 MEMORY_RECALL_VERIFICATION_SCHEMA = "watch.memory_recall_verification_plan.v1"
 IDENTITY_REINFORCEMENT_PLAN_SCHEMA = "watch.identity_reinforcement_plan.v1"
 REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA = "watch.reference_embedding_receipt_plan.v1"
+CROP_REFERENCE_SIMILARITY_RECEIPT_PLAN_SCHEMA = "watch.crop_reference_similarity_receipt_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -1270,6 +1271,171 @@ def build_reference_embedding_receipt_plan(
                 "Qdrant write success",
                 "Arango write success",
                 "track crop/reference similarity",
+                "$memory recall success",
+                "supported character identity",
+                "real-time annotation tracking",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
+
+
+def build_crop_reference_similarity_receipt_plan(
+    crop_manifest: Mapping[str, Any],
+    reference_embedding_receipt_plan: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Build the planned crop/reference similarity receipt gate.
+
+    This is the first contract that explicitly joins live YOLO/ByteTrack crop
+    evidence to approved reference-image slots. It creates planned comparison
+    records only; it does not compute embeddings, similarity scores, Qdrant
+    writes, memory writes, or supported identity.
+    """
+
+    if crop_manifest.get("schema_version") != "watch.tracking_crop_manifest.v1":
+        raise ValueError(f"unsupported crop manifest schema: {crop_manifest.get('schema_version')!r}")
+    if reference_embedding_receipt_plan.get("schema") != REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA:
+        raise ValueError(
+            "unsupported reference embedding receipt schema: "
+            f"{reference_embedding_receipt_plan.get('schema')!r}"
+        )
+
+    asset = copy.deepcopy(dict(reference_embedding_receipt_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    crops = [copy.deepcopy(dict(crop)) for crop in crop_manifest.get("crops") or []]
+    requirements = reference_embedding_receipt_plan.get("entity_reference_requirements") or []
+
+    comparisons: List[Dict[str, Any]] = []
+    entity_plans: List[Dict[str, Any]] = []
+    for requirement in requirements:
+        entity_id = requirement.get("entity_id")
+        entity_name = requirement.get("entity_name")
+        slots = requirement.get("planned_reference_image_slots") or []
+        positive_slots = [slot for slot in slots if slot.get("slot_kind") == "positive"]
+        negative_slots = [slot for slot in slots if slot.get("slot_kind") == "negative"]
+        candidate_crops = [
+            crop
+            for crop in crops
+            if ((crop.get("candidate_entity") or {}).get("entity_id") == entity_id)
+        ]
+
+        for crop in candidate_crops:
+            crop_point = qdrant_point_id(stable_id("watch_crop_embedding", {
+                "asset_id": asset_id,
+                "overlay_id": crop.get("overlay_id"),
+                "crop_path": crop.get("crop_path"),
+            }))
+            for slot in slots:
+                slot_point_plan = slot.get("qdrant_point_plan") or {}
+                comparison_id = stable_id("watch_similarity_receipt", {
+                    "asset_id": asset_id,
+                    "overlay_id": crop.get("overlay_id"),
+                    "reference_slot_id": slot.get("slot_id"),
+                })
+                comparisons.append({
+                    "comparison_id": comparison_id,
+                    "entity_id": entity_id,
+                    "entity_name": entity_name,
+                    "overlay_id": crop.get("overlay_id"),
+                    "track_id": crop.get("track_id"),
+                    "segment_id": crop.get("segment_id"),
+                    "media_time_seconds": crop.get("media_time_seconds"),
+                    "crop_path": crop.get("crop_path"),
+                    "crop_embedding_point": {
+                        "collection": "watch_track_crop_embeddings",
+                        "point_id": crop_point,
+                        "embedding_status": "PLANNED_NOT_WRITTEN",
+                    },
+                    "reference_slot_id": slot.get("slot_id"),
+                    "reference_slot_kind": slot.get("slot_kind"),
+                    "reference_embedding_point": {
+                        "collection": slot_point_plan.get("collection", "watch_reference_image_embeddings"),
+                        "point_id": slot_point_plan.get("point_id"),
+                        "embedding_status": slot_point_plan.get("embedding_status", "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"),
+                    },
+                    "similarity_receipt_status": "BLOCKED_PENDING_EMBEDDINGS",
+                    "scene_truth_allowed": False,
+                    "promotion_allowed": False,
+                    "required_before_identity_support": True,
+                })
+
+        entity_plans.append({
+            "entity_id": entity_id,
+            "entity_name": entity_name,
+            "status": "BLOCKED_PENDING_EMBEDDINGS",
+            "candidate_crop_count": len(candidate_crops),
+            "positive_reference_slot_count": len(positive_slots),
+            "negative_reference_slot_count": len(negative_slots),
+            "planned_comparison_count": len(candidate_crops) * len(slots),
+            "positive_control_comparison_count": len(candidate_crops) * len(positive_slots),
+            "negative_control_comparison_count": len(candidate_crops) * len(negative_slots),
+            "promotion_blockers": [
+                "CROP_EMBEDDING_RECEIPTS_MISSING",
+                "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+                "SIMILARITY_RECEIPTS_MISSING",
+                "NEGATIVE_CONTROL_RECEIPTS_MISSING",
+                "TEXT_SCENE_CORROBORATION_NOT_RUN",
+                "MEMORY_RECALL_NOT_VERIFIED",
+            ],
+        })
+
+    plan = {
+        "schema": CROP_REFERENCE_SIMILARITY_RECEIPT_PLAN_SCHEMA,
+        "status": "PLANNED_NOT_RUN",
+        "asset": asset,
+        "source_crop_manifest_schema": crop_manifest.get("schema_version"),
+        "source_reference_embedding_receipt_schema": reference_embedding_receipt_plan.get("schema"),
+        "entity_similarity_plans": entity_plans,
+        "planned_similarity_comparisons": comparisons,
+        "receipt_requirements": {
+            "crop_embedding_receipts_required": True,
+            "reference_embedding_receipts_required": True,
+            "positive_control_similarity_receipts_required": True,
+            "negative_control_similarity_receipts_required": True,
+            "memory_recall_receipt_required": True,
+        },
+        "promotion_policy": {
+            "similarity_without_text_scene_corroboration_can_promote_identity": False,
+            "similarity_without_memory_recall_can_promote_identity": False,
+            "domain_reference_seed_can_promote_identity": False,
+            "supported_identity_requires": [
+                "positive_similarity_above_threshold",
+                "negative_similarity_below_threshold",
+                "text_or_scene_row_corroboration",
+                "memory_recall_items_matching_asset_entity_time",
+            ],
+        },
+        "memory_requirements": {
+            "allowed_answer_path": "$memory recall",
+            "requires_intent_before_recall": True,
+            "requires_items_key": True,
+            "forbidden_results_key_dependency": True,
+            "direct_qdrant_or_arango_answer_allowed": False,
+        },
+        "counts": {
+            "entity_plan_count": len(entity_plans),
+            "candidate_crop_count": sum(plan["candidate_crop_count"] for plan in entity_plans),
+            "planned_similarity_comparison_count": len(comparisons),
+            "positive_control_comparison_count": sum(plan["positive_control_comparison_count"] for plan in entity_plans),
+            "negative_control_comparison_count": sum(plan["negative_control_comparison_count"] for plan in entity_plans),
+        },
+        "proof_scope": [
+            "crop_reference_similarity_receipt_contract",
+            "planned_not_run",
+        ],
+        "claims": {
+            "proves": [
+                "Live tracker crops are paired with reference-image slots through deterministic receipt ids",
+                "Positive and negative controls are required before any identity support",
+                "Similarity receipts remain planned and cannot promote identity without text/scene corroboration and memory recall",
+            ],
+            "does_not_prove": [
+                "crop embedding success",
+                "reference image embedding success",
+                "Qdrant write success",
+                "similarity score correctness",
+                "text or scene corroboration",
                 "$memory recall success",
                 "supported character identity",
                 "real-time annotation tracking",
