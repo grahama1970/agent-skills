@@ -33,7 +33,7 @@ MIME target.
 2. Run the bundled script:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/clipboard-file/scripts/copy-file-to-clipboard.sh /absolute/path/to/file.zip
+./scripts/copy-file-to-clipboard.sh /absolute/path/to/file.zip
 ```
 
 3. Report the verified target and file URI from the script output.
