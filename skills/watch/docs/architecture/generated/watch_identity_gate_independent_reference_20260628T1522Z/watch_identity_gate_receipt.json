@@ -1,0 +1,74 @@
+{
+  "schema": "watch.identity_gate_receipt.v1",
+  "status": "IDENTITY_LABELS_WITHHELD",
+  "created_at": "2026-06-28T15:25:45Z",
+  "source_realtime_identity_receipt": "skills/watch/docs/architecture/generated/watch_realtime_identity_memory_loop_independent_reference_20260628T1522Z/watch_realtime_identity_memory_loop_live_receipt.json",
+  "threshold": 0.72,
+  "input_receipt_statuses": {
+    "realtime_identity_loop": "LIVE_RECEIPTS_WRITTEN",
+    "reference_embeddings": "WRITTEN",
+    "crop_reference_similarity": "SCORED_REQUIRES_NEGATIVE_CONTROLS",
+    "memory_upsert": "WRITTEN",
+    "memory_recall": "QUERIED",
+    "negative_control": "FAILED_NEGATIVE_CONTROL"
+  },
+  "source_negative_control_receipt": "skills/watch/docs/architecture/generated/watch_negative_control_independent_reference_20260628T1522Z/watch_negative_control_receipt.json",
+  "claim_boundary": {
+    "proves": [
+      "crop/reference similarity comparisons were evaluated against identity-promotion gates",
+      "UI label policy is explicit for each candidate crop"
+    ],
+    "does_not_prove": [
+      "final human-approved character identity when promotion is withheld",
+      "scene truth from Brave or public image search alone"
+    ]
+  },
+  "candidates": [
+    {
+      "crop_qdrant_point_id": "8a25051a-fd17-5cea-855a-ee576f478719",
+      "entity_id": "character:bad_santa:willie",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "best_similarity": 0.609769,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "680b7e45-7a96-5307-b423-a98606de218f",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:94bf4529752a2bfdeffc5325b2f81f53",
+      "reference_approval_receipt_status": "APPROVED",
+      "reference_approval_scope": "IDENTITY_PROMOTION",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "SIMILARITY_BELOW_THRESHOLD",
+        "NEGATIVE_CONTROL_FAILED"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "9f6f0863-59c1-59d0-a10f-551425ecbd4d",
+      "entity_id": "character:bad_santa:willie",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "best_similarity": 0.526925,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "680b7e45-7a96-5307-b423-a98606de218f",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:94bf4529752a2bfdeffc5325b2f81f53",
+      "reference_approval_receipt_status": "APPROVED",
+      "reference_approval_scope": "IDENTITY_PROMOTION",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "SIMILARITY_BELOW_THRESHOLD",
+        "NEGATIVE_CONTROL_FAILED"
+      ]
+    }
+  ],
+  "counts": {
+    "comparison_count": 2,
+    "candidate_count": 2,
+    "promoted_count": 0,
+    "withheld_count": 2,
+    "memory_recall_item_count": 10,
+    "reference_embedding_count": 1
+  }
+}

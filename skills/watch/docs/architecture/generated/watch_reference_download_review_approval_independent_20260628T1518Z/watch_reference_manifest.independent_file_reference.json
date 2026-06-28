@@ -1,0 +1,20 @@
+{
+  "schema": "watch.reference_manifest.v1",
+  "asset_id": "bad_santa_2003_canary",
+  "reference_source": "brave_image_search_reviewed",
+  "references": [
+    {
+      "reference_id": "watch_ref_candidate:willie_independent_command_001",
+      "asset_id": "bad_santa_2003_canary",
+      "entity_id": "character:bad_santa:willie",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "provider": "brave_image_search_api",
+      "source_url": "https://example.test/bad-santa-willie",
+      "image_url": "file:///home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_download_review_approval_independent_20260628T1518Z/source_fixture/willie_reference.png",
+      "approval_status": "APPROVED",
+      "approved_by": "command-fixture-reviewer",
+      "approval_note": "Independent reviewed reference candidate; not scene truth."
+    }
+  ]
+}
