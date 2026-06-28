@@ -80,7 +80,7 @@ Comprehensive SPARTA dataset assessment driven by the **Brandon Bailey persona**
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/review-sparta
+cd /path/to/agent-skills/skills/review-sparta
 
 # Full Brandon Bailey assessment (all dimensions)
 ./run.sh review --run-id run-recovery-verify --full
