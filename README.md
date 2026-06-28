@@ -1,145 +1,241 @@
-# Agent Skills & Hooks
+# Agent Skills
 
-Shared skills and hooks for AI agents (Claude Code, Codex, Pi Agent, etc.).
+![agent-skills header](docs/assets/agent-skills-header.webp)
 
-## Repository Structure
+Reusable skills, bounded agents, persona contracts, scheduler jobs, and lifecycle
+hooks for agent work. This repository is the source of truth; deployed copies
+and project-local links are consumers.
 
-```
-agent-skills/
-├── skills/           # Reusable agent skills
-│   ├── perplexity/
-│   ├── distill/
-│   ├── memory/
-│   └── ...
-├── hooks/            # Agent lifecycle hooks
-│   ├── quality-gate.sh
-│   ├── memory-first.sh
-│   ├── memory-prompt.sh
-│   └── prompts/
-│       └── quality-gate.md
-├── deploy.sh         # Deploy to all agents
-└── README.md
-```
+The important distinction:
 
-## Quick Start
+| Path | What it is | Use it when |
+|---|---|---|
+| `skills/` | Reusable capabilities with `SKILL.md` contracts and usually `run.sh` entrypoints | You need a capability such as browser automation, memory recall, video analysis, review, planning, or model calls |
+| `agents/` | Bounded project-agent/OpenCode workers with `AGENTS.md`, `persona.yaml`, and optional `services.yaml` | You need a role-bounded worker, reviewer, monitor, or scheduled maintainer |
+| `personas/` | Persona registry and contract layer for identities, memory probes, and voice readiness | You need to know which personas exist, where their source lives, and what evidence supports memory or voice lanes |
+| `hooks/` | Lifecycle gates and prompt hooks | You need memory-first behavior, quality gates, or completion discipline around agent sessions |
+| `reports/agent-maintainer/` | Latest report-only sweep over skills and agents | You need a triage surface before maintenance decisions |
+
+## Start Here
 
 ```bash
-# Deploy skills + hooks globally (one-time)
+# Deploy skills and hooks to local agent homes
 ./deploy.sh
 
-# Check what would be deployed
+# Check what deployment would change
 ./deploy.sh --check
 
-# Deploy only skills or hooks
-./deploy.sh --skills
-./deploy.sh --hooks
+# Find skill contracts
+find skills -maxdepth 2 -name SKILL.md | sort
+
+# Find agent contracts
+find agents -maxdepth 2 \( -name AGENTS.md -o -name persona.yaml \) | sort
+
+# Read the persona registry guide
+sed -n '1,160p' personas/README.md
 ```
 
-After deployment:
-- **Skills** available at `~/.claude/skills/`, `~/.codex/skills/`, `~/.pi/agent/skills/`
-- **Hooks** available at `~/.claude/hooks/`
+If a user names a skill, read that skill's `SKILL.md` before acting. The
+`README.md` files are human guides; `SKILL.md` files are operational contracts.
+
+## Current Inventory
+
+Latest local sweep used for this README: `msh-20260628-084135`.
+
+| Inventory | Count |
+|---|---:|
+| Skills scanned | 330 |
+| Skills with `run.sh` | 285 |
+| Skills with `sanity.sh` | 278 |
+| Agent directories inventoried | 72 |
+| Agents with `AGENTS.md` | 69 |
+| Agents with `persona.yaml` | 47 |
+| Agents with `services.yaml` | 6 |
+
+The sweep reported 171 healthy skills, 158 warning skills, 1 critical skill
+finding, and 28 shallow agent contract findings. Those numbers prove inventory
+and triage only; they do not prove semantic correctness or live behavior.
+
+Reports:
+
+```text
+reports/agent-maintainer/latest.md
+reports/agent-maintainer/latest.json
+reports/agent-maintainer/latest.html
+reports/agent-maintainer/runs/<run_id>/
+```
+
+## Repository Map
+
+```text
+agent-skills/
+  skills/                  reusable capabilities with SKILL.md contracts
+  agents/                  bounded workers, reviewers, monitors, maintainers
+  personas/                persona registry, schemas, and guide
+  hooks/                   lifecycle gates and prompt hooks
+  scripts/                 repo maintenance, checks, and queue runners
+  reports/agent-maintainer latest repo sweep for human decisions
+  deploy.sh                broadcast skills and hooks to local agent homes
+  workers-registry.json    generated worker registry
+```
+
+## Choosing The Right Surface
+
+| Work | Go to | Why |
+|---|---|---|
+| Invoke an existing capability | `skills/<name>/run.sh` and `skills/<name>/SKILL.md` | Skills own executable behavior, routing rules, artifacts, and proof language |
+| Learn how a capability is used | `skills/<name>/README.md` | Skill READMEs are operator-facing guides |
+| Repair or extend a capability | `skills/<name>/SKILL.md`, scripts, tests, `sanity.sh` | Contract changes need a focused implementation and proof |
+| Delegate bounded work | `agents/<name>/AGENTS.md` plus `persona.yaml` | Agents define ownership, denied scope, allowed skills, receipts, and stop conditions |
+| Inspect persona availability | `personas/registry.yaml` and `personas/README.md` | Personas are registry records, not generated corpora |
+| Enforce session behavior | `hooks/` | Hooks inject memory, block unsafe exits, and enforce evidence discipline |
+| Make maintenance decisions | `reports/agent-maintainer/latest.md` | Reports are decision surfaces, not dashboards |
 
 ## Skills
 
-### Self-Contained Skills
+Each skill is a directory under `skills/`. A production skill usually has:
 
-| Skill | CLI | Purpose |
-|-------|-----|---------|
-| `scillm` | `batch.py`, `prove.py` | LLM completions + Lean4 proofs |
-| `arxiv` | `arxiv_cli.py` | arXiv paper search |
-| `youtube-transcripts` | `youtube_transcript.py` | YouTube transcript extraction |
-| `perplexity` | `perplexity.py` | Paid web search with citations |
-| `brave-search` | `brave_search.py` | Free web + local search |
-| `context7` | `context7.py` | Library documentation lookup |
-| `memory` | `run.sh` | Knowledge graph recall |
-| `distill` | `run.sh`, `distill.py` | PDF/URL to Q&A pairs |
-| `qra` | `run.sh`, `qra.py` | Text to Q&A pairs |
-| `doc-to-qra` | `run.sh` | Happy path: document → Q&A |
-| `inbox` | `/inbox` ↔ `emit_message` wrapper | Switchboard messaging + acknowledgements |
-| `assess` | - | Project health assessment |
-| `clarify` | `runner.py` | Interactive form gathering |
+```text
+skills/<name>/
+  SKILL.md            required contract for agents
+  README.md           human/operator guide when useful
+  run.sh              stable entrypoint
+  sanity.sh           cheap local proof
+  scripts/            implementation details
+  references/         schemas, examples, templates
+```
 
-### Pointer Skills (Reference External Projects)
+Use a skill when it already owns the job. Do not write a parallel utility for
+browser automation, LLM calls, memory recall, report writing, GitHub tickets,
+code review, video analysis, or scheduled monitoring until you have checked the
+skill list and maintainer report.
 
-| Skill | External Project | Purpose |
-|-------|------------------|---------|
-| `fetcher` | fetcher project | Web crawling, PDF extraction |
-| `runpod-ops` | runpod_ops project | GPU instance management |
-| `surf` | surf-cli (npm) | Browser automation |
-| `pdf-fixture` | extractor project | Test PDF generation |
+Typical invocation:
+
+```bash
+cd skills/surf
+./run.sh tab.list --json
+```
+
+## Agents
+
+Agents live under `agents/`. They are not broadcast like skills; they are
+referenced by project-agent/OpenCode configuration and maintainer routing.
+
+A good agent has a narrow owner boundary:
+
+- what it owns
+- what it does not own
+- which skills it may call
+- what artifacts prove a turn
+- when it must stop or ask for help
+
+Normal shape:
+
+```text
+agents/<name>/
+  AGENTS.md
+  persona.yaml
+  services.yaml       only for scheduled jobs
+```
+
+Missing `persona.yaml` findings are contract-normalization candidates, not proof
+that the worker is broken.
+
+## Personas
+
+`personas/` is not where generated character assets live. It is the roster and
+contract layer for persona work:
+
+```text
+personas/
+  README.md
+  registry.yaml
+  schemas/persona-registry.schema.json
+```
+
+The registry points to source directories, memory probes, and voice-readiness
+receipts. Runtime persona memory lives in `$memory`; generated media and voice
+artifacts live under their own storage or skill job paths.
+
+## Maintainer Loop
+
+There are two maintainer roles:
+
+| Role | Owns | Does not own |
+|---|---|---|
+| `agent-maintainer` | Scheduled report-only sweeps over `skills/` and `agents/`; latest reports; candidate next actions | Automatic deprecation, deletion, repair, or issue closure |
+| `skill-maintainer` | One GitHub issue lease at a time; repair routing; verifier/review/WebGPT evidence bundle; proof-based issue disposition | Broad untracked cleanup, multi-issue repair, closure from WebGPT alone |
+
+Run the report-only sweep:
+
+```bash
+mkdir -p reports/agent-maintainer
+skills/monitor-skill-health/run.sh audit \
+  --no-memory \
+  --no-deep-review \
+  --repo-report \
+  --json > reports/agent-maintainer/last_run.json
+```
+
+The scheduled job is registered in `agents/agent-maintainer/services.yaml` and
+disabled by default. Enable it only when the scheduler environment is ready and
+the human wants the cron active.
 
 ## Hooks
 
-Hooks run at agent lifecycle events to enforce quality and inject context.
+Hooks run around agent lifecycle events. They keep behavior honest: memory
+first, no destructive shell shortcuts, no fake green exits, and no vague
+completion claims without evidence.
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `quality-gate.sh` | Stop (before exit) | Prevents exit with failing tests |
-| `memory-first.sh` | PreToolUse (Grep/Task) | Check memory before codebase scan |
-| `memory-prompt.sh` | UserPromptSubmit | Inject memory context |
+Important paths:
 
-### Hook Prompts
-
-Hook prompts are **editable markdown files** in `hooks/prompts/`:
-
-```
+```text
+hooks/memory-first.sh
+hooks/quality-gate.sh
+hooks/task-complete-gate.sh
 hooks/prompts/
-└── quality-gate.md    # Template shown when tests fail
 ```
 
-Template variables:
-- `{{OUTPUT}}` - Test output / error message
-- `{{ATTEMPT}}` - Current retry number
-- `{{MAX_ATTEMPTS}}` - Max retries
-
-## Usage Examples
+Deploy hooks with:
 
 ```bash
-# Skills (after deploy)
-python ~/.claude/skills/perplexity/perplexity.py ask "What's new in Python 3.12?"
-python ~/.claude/skills/context7/context7.py search arangodb "bm25"
-~/.claude/skills/doc-to-qra/run.sh paper.pdf research
-
-# Per-project (alternative to global)
-ln -s /path/to/agent-skills/skills .agents/skills
-ln -s ../.agents/skills .claude/skills
+./deploy.sh --hooks
 ```
 
-## Adding New Skills
+## Adding Things
 
-**Small utility (API wrapper, ~100-300 lines)?**
-→ Add to `skills/` with Python CLI
+Add a skill when the capability is reusable and needs a contract, entrypoint,
+and proof. Add an agent when a bounded role, receipts, and stop conditions matter.
+Keep one-off scripts, product features, broad cleanup, and standalone prompts out
+of this repo unless they belong to an existing skill or agent contract.
 
-**Complex project (multiple classes, own venv, tests)?**
-→ Keep as separate repo, add pointer skill in `skills/`
+For new skills:
 
-## Adding New Hooks
+- put the operating contract in `SKILL.md`
+- use `run.sh` as the stable entrypoint
+- add `sanity.sh` for cheap local proof
+- reuse existing skills before adding infrastructure
+- keep generated outputs and heavy artifacts out of the skill directory unless
+  the skill contract explicitly says otherwise
 
-1. Create `hooks/your-hook.sh`
-2. Optionally create `hooks/prompts/your-hook.md` for editable prompt
-3. Configure in project's `.claude/settings.json`:
+For new agents:
 
-```json
-{
-  "hooks": {
-    "Stop": [{
-      "matcher": "",
-      "hooks": [{"type": "command", "command": "~/.claude/hooks/your-hook.sh"}]
-    }]
-  }
-}
+- define the owner boundary in `AGENTS.md`
+- encode the role in `persona.yaml`
+- add `services.yaml` only for scheduled jobs
+- avoid agents that own detection, mutation, queueing, and closure all at once
+
+## Proof And Non-Claims
+
+The maintainer sweep used for this README was local and deterministic:
+
+```text
+mocked: no
+live: no
+exercised: monitor-skill-health audit over 330 skills plus shallow agents/ metadata inventory
+unverified: semantic correctness of each skill, runtime behavior of each agent, live scheduler daemon registration, live GitHub issue mutation
 ```
 
-## Agent Compatibility
-
-| Agent | Skills | Hooks |
-|-------|--------|-------|
-| Claude Code | ✅ `~/.claude/skills/` | ✅ `~/.claude/hooks/` |
-| Codex | ✅ `~/.codex/skills/` | ❓ Unknown |
-| Pi Agent | ✅ `~/.pi/agent/skills/` | ❓ Unknown |
-| Gemini | Via project docs | ❓ Unknown |
-
-## See Also
-
-- `skills/TRIGGERS.md` - All skill trigger phrases
-- `skills/run-all-sanity.sh` - Run all skill sanity tests
+Use `reports/agent-maintainer/latest.md` before final maintenance decisions, and
+rerun the sweep after substantial changes.

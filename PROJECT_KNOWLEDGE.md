@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-06-21 13:29 by agent
+**Last updated:** 2026-06-28 10:01 by agent
 
 ## watch subagent
 
@@ -76,6 +76,7 @@
 - 2026-06-21 ElevenLabs yawn prompt learning: the provider prompt "I'm so tired... [yawn!!!!!!]" works for both Horus voice_id jtE6dbPUTt2kchN89Uej and Embry voice_id xYa75LlayhWHCRl1yJSH. In voice-tts-context generation, use this as the first <yawn> attempt and set training tts_text to "I'm so tired... <yawn>" so spoken context and Orpheus tag stay aligned. Dry-run proof: /mnt/storage12tb/skills/voice-segment-selector/jobs/yawn-learned-trigger-dryrun-20260621-horus/elevenlabs_orpheus_sfx_manifest.json and /mnt/storage12tb/skills/voice-segment-selector/jobs/yawn-learned-trigger-dryrun-20260621-embry/elevenlabs_orpheus_sfx_manifest.json.
 - 2026-06-21 ElevenLabs sniffle prompt learning: the provider prompt "I've got a bad cold.. [sniffle!!!!!!]" works for both Horus voice_id jtE6dbPUTt2kchN89Uej and Embry voice_id xYa75LlayhWHCRl1yJSH. In voice-tts-context generation, use this as the first <sniffle> attempt and set training tts_text to "I've got a bad cold.. <sniffle>" so spoken context and Orpheus tag stay aligned. Dry-run proof: /mnt/storage12tb/skills/voice-segment-selector/jobs/sniffle-learned-trigger-dryrun-20260621-horus/elevenlabs_orpheus_sfx_manifest.json and /mnt/storage12tb/skills/voice-segment-selector/jobs/sniffle-learned-trigger-dryrun-20260621-embry/elevenlabs_orpheus_sfx_manifest.json.
 - 2026-06-21 ElevenLabs sniffle prompt learning update: three provider prompts worked across Horus and Embry voice IDs and should be first variants for <sniffle>: "I've got a bad cold.. [sniffle!!!!!!]" -> "I've got a bad cold.. <sniffle>"; "I've got a bad cold.. [sniffle sniffle sniffle!!!!!!]" -> "I've got a bad cold.. <sniffle> <sniffle> <sniffle>"; "I've got a bad cold.. [sniffle!!!!! sniffle! sniffle]" -> "I've got a bad cold.. <sniffle> <sniffle> <sniffle>". Dry-run proof: /mnt/storage12tb/skills/voice-segment-selector/jobs/sniffle-learned-triggers-dryrun-20260621-horus/elevenlabs_orpheus_sfx_manifest.json and /mnt/storage12tb/skills/voice-segment-selector/jobs/sniffle-learned-triggers-dryrun-20260621-embry/elevenlabs_orpheus_sfx_manifest.json.
+- 2026-06-28 README/navigation and header refresh: root README now uses docs/assets/agent-skills-header.webp and clarifies skills/ versus agents/ versus personas/ versus hooks/reports. Final header source was /tmp/codex-clipboard-A5ekqU.png. Pillow converted it to WebP quality=92/method=6, preserving 1672x941 dimensions and reducing size from 2,801,337 bytes to 307,986 bytes (89.0% reduction). Visual inspection confirmed the photorealistic header and small UI text remained intact. skills/watch/README.md and skills/surf/README.md were rewritten as operator guides while leaving SKILL.md as the authoritative runtime contract.
 
 ## Recent Decisions
 
