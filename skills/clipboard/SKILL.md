@@ -7,8 +7,15 @@ description: >
   asks to copy a file/artifact/zip/image/bundle.
 metadata:
   short-description: Verified desktop clipboard copy for files and text
+provides:
+  - clipboard-copy
+  - file-clipboard-mime
+  - clipboard-verification
 composes:
   - clipboard-file
+complies:
+  - best-practices-skills
+  - best-practices-kde
 ---
 
 # Clipboard
@@ -85,4 +92,3 @@ For file copies, the operation is not complete unless the command verifies:
 
 If verification fails, report the fallback path and do not claim clipboard
 success.
-
