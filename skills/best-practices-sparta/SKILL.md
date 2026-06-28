@@ -186,7 +186,7 @@ Stage 08: Build relationships → sparta_relationships
 
 ## References
 
-- [worksheets.yaml](/home/graham/workspace/experiments/sparta/config/worksheets.yaml) - Column mappings and relationship definitions
-- [08_relationships.py](/home/graham/workspace/experiments/sparta/src/sparta/pipeline/steps/08_relationships.py) - Edge building logic
-- [generate_cwe_qras.py](/home/graham/workspace/experiments/sparta/scripts/generate_cwe_qras.py) - CWE QRA batch generation
-- [/create-evidence-case SKILL.md](/home/graham/.claude/skills/create-evidence-case/SKILL.md) - Evidence case daemon
+- `sparta/config/worksheets.yaml` - Column mappings and relationship definitions
+- `sparta/src/sparta/pipeline/steps/08_relationships.py` - Edge building logic
+- `sparta/scripts/generate_cwe_qras.py` - CWE QRA batch generation
+- `/create-evidence-case` skill contract - Evidence case daemon
