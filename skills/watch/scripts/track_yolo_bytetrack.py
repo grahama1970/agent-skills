@@ -22,6 +22,7 @@ DEFAULT_ARCH_DIR = Path(__file__).resolve().parents[1] / "docs" / "architecture"
 DEFAULT_MANIFEST = DEFAULT_ARCH_DIR / "watch_realtime_tracking_memory_upsert_manifest.bad_santa_marcus.json"
 DEFAULT_SCHEMA = DEFAULT_ARCH_DIR / "watch_track_observations.schema.json"
 DEFAULT_OUT_DIR = DEFAULT_ARCH_DIR / "generated" / "bad_santa_marcus_0248_yolo_bytetrack"
+DEFAULT_MODEL = Path(__file__).resolve().parents[1] / "yolo11n.pt"
 
 PERSON_CLASS_ID = 0
 
@@ -32,7 +33,7 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--schema", type=Path, default=DEFAULT_SCHEMA)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--model", default="yolo26n.pt")
+    parser.add_argument("--model", default=str(DEFAULT_MODEL))
     parser.add_argument("--tracker", default="bytetrack.yaml")
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--imgsz", type=int, default=640)
@@ -48,10 +49,27 @@ def main() -> int:
     )
     parser.add_argument("--max-events", type=int, default=200)
     parser.add_argument("--attach-domain-candidate", action="store_true")
+    parser.add_argument("--stdout-jsonl", action="store_true", help="Emit each Watch track event as JSONL on stdout for SSE bridge use.")
+    parser.add_argument("--stream-id", help="Override manifest stream_id for live per-clip tracking.")
+    parser.add_argument("--asset-uid", help="Override manifest asset_uid for live per-clip tracking.")
+    parser.add_argument("--segment-id", help="Override manifest segment_id for live per-clip tracking.")
+    parser.add_argument("--start-seconds", type=float, help="Override manifest time_range.start_seconds for live per-clip tracking.")
+    parser.add_argument("--candidate-name", help="Optional provisional character/entity name to attach to emitted events.")
+    parser.add_argument("--candidate-actor-name", help="Optional actor name for the provisional candidate.")
+    parser.add_argument("--candidate-entity-id", help="Optional entity id for the provisional candidate.")
     args = parser.parse_args()
 
     manifest = _read_json(args.manifest)
-    observation = manifest["collections"]["watch_track_observations"][0]
+    observation = _observation_with_overrides(
+        manifest["collections"]["watch_track_observations"][0],
+        stream_id=args.stream_id,
+        asset_uid=args.asset_uid,
+        segment_id=args.segment_id,
+        start_seconds=args.start_seconds,
+        candidate_name=args.candidate_name,
+        candidate_actor_name=args.candidate_actor_name,
+        candidate_entity_id=args.candidate_entity_id,
+    )
     source = args.source or observation["evidence_basis"]["clip_refs"][0]["path"]
     if not _source_exists(source) and not _looks_like_stream(source):
         raise FileNotFoundError(f"source does not exist: {source}")
@@ -73,6 +91,11 @@ def main() -> int:
     if not events:
         raise RuntimeError("YOLO/ByteTrack produced no track events")
     _validate_events(events, args.schema)
+
+    if args.stdout_jsonl:
+        for event in events:
+            print(json.dumps(event, sort_keys=True), flush=True)
+        return 0
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     events_path = args.out_dir / "watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl"
@@ -113,6 +136,46 @@ def main() -> int:
     print("source_fps", fps)
     print("event_log", events_path)
     return 0
+
+
+def _observation_with_overrides(
+    observation: dict[str, Any],
+    *,
+    stream_id: str | None,
+    asset_uid: str | None,
+    segment_id: str | None,
+    start_seconds: float | None,
+    candidate_name: str | None,
+    candidate_actor_name: str | None,
+    candidate_entity_id: str | None,
+) -> dict[str, Any]:
+    updated = json.loads(json.dumps(observation))
+    if stream_id:
+        updated["stream_id"] = stream_id
+    if asset_uid:
+        updated["asset_uid"] = asset_uid
+    if segment_id:
+        updated["segment_id"] = segment_id
+    if start_seconds is not None:
+        duration = float(updated["time_range"].get("end_seconds", 0)) - float(updated["time_range"].get("start_seconds", 0))
+        updated["time_range"]["start_seconds"] = start_seconds
+        updated["time_range"]["end_seconds"] = start_seconds + max(duration, 0)
+    if candidate_name:
+        candidate = dict(updated.get("candidate_entity") or {})
+        safe_name = candidate_name.lower().replace(" ", "_")
+        candidate.update({
+            "entity_id": candidate_entity_id or f"movie_domain_entities/{safe_name}_provisional",
+            "name": candidate_name,
+            "kind": candidate.get("kind") or "CHARACTER",
+            "actor_name": candidate_actor_name,
+            "confidence": float(candidate.get("confidence", 0.5)),
+            "status": "CANDIDATE",
+            "basis": candidate.get("basis") or ["watch_modal_query_context"],
+        })
+        if not candidate_actor_name:
+            candidate.pop("actor_name", None)
+        updated["candidate_entity"] = candidate
+    return updated
 
 
 def _track_source(

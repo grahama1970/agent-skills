@@ -143,6 +143,14 @@ function actorForCharacter(name: string, title: string): string | null {
   return null
 }
 
+function candidateCharacterForRow(row: SceneElement, title = ''): { name: string; actor: string | null } | null {
+  const text = `${row.srt_text || ''}\n${row.text || ''}\n${row.visual_description || ''}`
+  const speaker = extractCharacter(row.srt_text || '') || extractCharacter(row.text || '')
+  const name = speaker || Object.keys(CAST_MAP).find((candidate) => new RegExp(`\\b${candidate}\\b`, 'i').test(text))
+  if (!name) return null
+  return { name, actor: actorForCharacter(name, title) }
+}
+
 function mediaUrl(path: string | undefined, prefix: string): string | null {
   if (!path) return null
   const idx = path.indexOf(prefix)
@@ -251,9 +259,25 @@ export function WatchReportView({
 
   useEffect(() => {
     if (modalRowIndex == null) return
+    const modalRowForStream = report?.scene_elements.find((row) => row.index === modalRowIndex)
+    if (!modalRowForStream?.video_clip_path) return
     setTrackerEvents([])
     setTrackerStreamStatus('connecting')
-    const source = new EventSource('/api/projects/watch/tracker-events/stream')
+    const candidate = candidateCharacterForRow(modalRowForStream, report?.watch_report.title || '')
+    const streamParams = new URLSearchParams({
+      mode: 'live',
+      video_path: modalRowForStream.video_clip_path,
+      start_seconds: String(secondsFromTimecode(modalRowForStream.movie_segment || modalRowForStream.timecode)),
+      segment_id: `seg_${String(modalRowForStream.index + 1).padStart(4, '0')}`,
+      asset_uid: (report?.watch_report.title || 'watch_asset').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
+      stream_id: 'watch_stream_modal_live',
+      max_events: '120',
+    })
+    if (candidate) {
+      streamParams.set('candidate_name', candidate.name)
+      if (candidate.actor) streamParams.set('candidate_actor_name', candidate.actor)
+    }
+    const source = new EventSource(`/api/projects/watch/tracker-events/stream?${streamParams.toString()}`)
     source.addEventListener('meta', (event) => {
       try {
         const data = JSON.parse((event as MessageEvent).data)
@@ -282,7 +306,7 @@ export function WatchReportView({
       source.close()
     }
     return () => source.close()
-  }, [modalRowIndex])
+  }, [modalRowIndex, report])
 
   const reportWithDiff = useMemo((): WatchReport | null => {
     if (!report) return null
@@ -896,8 +920,9 @@ function TrackingModal({
   onTimeUpdate: (seconds: number) => void
   onClose: () => void
 }) {
-  const frameWidth = 512
-  const frameHeight = 278
+  const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 })
+  const frameWidth = videoDimensions.width || 1280
+  const frameHeight = videoDimensions.height || 720
   const hasActiveBoxes = trackerEvents.length > 0
 
   return (
@@ -933,6 +958,12 @@ function TrackingModal({
               src={videoSrc}
               controls
               autoPlay
+              onLoadedMetadata={(event) => {
+                setVideoDimensions({
+                  width: event.currentTarget.videoWidth || 1280,
+                  height: event.currentTarget.videoHeight || 720,
+                })
+              }}
               onTimeUpdate={(event) => onTimeUpdate(event.currentTarget.currentTime)}
               style={{ width: '100%', maxHeight: 'calc(90vh - 54px)', display: 'block', objectFit: 'contain' }}
             />

@@ -1,6 +1,7 @@
 import express from 'express'
-import { readFileSync, existsSync, statSync } from 'fs'
+import { readFileSync, existsSync, statSync, realpathSync } from 'fs'
 import { createReadStream } from 'fs'
+import { spawn } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -18,6 +19,8 @@ const WATCH_TRACKER_EVENTS_PATH = process.env.WATCH_TRACKER_EVENTS_PATH || path.
   WATCH_SKILL_DIR,
   'docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl',
 )
+const WATCH_TRACKER_SCRIPT = process.env.WATCH_TRACKER_SCRIPT || path.join(WATCH_SKILL_DIR, 'scripts/track_yolo_bytetrack.py')
+const WATCH_TRACKER_MODEL = process.env.WATCH_TRACKER_MODEL || path.join(WATCH_SKILL_DIR, 'yolo11n.pt')
 
 // Serve report JSON
 app.get('/api/projects/watch/report', async (_req, res) => {
@@ -70,8 +73,32 @@ app.get('/api/projects/watch/media', async (req, res) => {
 // Event-backed tracker stream. This replays live YOLO/ByteTrack event artifacts
 // through the same SSE shape the modal will use for an active tracker process.
 app.get('/api/projects/watch/tracker-events/stream', async (req, res) => {
+  const mode = typeof req.query.mode === 'string' ? req.query.mode : 'replay'
   const segmentId = typeof req.query.segment_id === 'string' ? req.query.segment_id : ''
   const assetUid = typeof req.query.asset_uid === 'string' ? req.query.asset_uid : ''
+  const streamId = typeof req.query.stream_id === 'string' ? req.query.stream_id : ''
+  const sourcePath = typeof req.query.video_path === 'string' ? req.query.video_path : ''
+  const startSeconds = typeof req.query.start_seconds === 'string' ? req.query.start_seconds : ''
+  const maxEvents = typeof req.query.max_events === 'string' ? req.query.max_events : '200'
+  const candidateName = typeof req.query.candidate_name === 'string' ? req.query.candidate_name : ''
+  const candidateActorName = typeof req.query.candidate_actor_name === 'string' ? req.query.candidate_actor_name : ''
+
+  if (mode === 'live') {
+    streamLiveTrackerEvents({
+      req,
+      res,
+      sourcePath,
+      segmentId,
+      assetUid,
+      streamId,
+      startSeconds,
+      maxEvents,
+      candidateName,
+      candidateActorName,
+    })
+    return
+  }
+
   const eventsPath = typeof req.query.path === 'string' ? req.query.path : WATCH_TRACKER_EVENTS_PATH
 
   if (!eventsPath.startsWith(WATCH_SKILL_DIR) && !eventsPath.startsWith('/tmp')) {
@@ -124,6 +151,134 @@ app.get('/api/projects/watch/tracker-events/stream', async (req, res) => {
   req.on('close', () => clearInterval(interval))
 })
 
+function streamLiveTrackerEvents({
+  req,
+  res,
+  sourcePath,
+  segmentId,
+  assetUid,
+  streamId,
+  startSeconds,
+  maxEvents,
+  candidateName,
+  candidateActorName,
+}: {
+  req: express.Request
+  res: express.Response
+  sourcePath: string
+  segmentId: string
+  assetUid: string
+  streamId: string
+  startSeconds: string
+  maxEvents: string
+  candidateName: string
+  candidateActorName: string
+}) {
+  if (!sourcePath || !sourcePath.startsWith('/')) {
+    res.status(400).json({ error: 'absolute video_path required for live tracker stream' })
+    return
+  }
+
+  let realSource: string
+  try {
+    realSource = realpathSync(sourcePath)
+  } catch {
+    res.status(404).json({ error: 'tracker source not found', video_path: sourcePath })
+    return
+  }
+
+  if (!MEDIA_ROOTS.some(root => realSource.startsWith(root))) {
+    res.status(403).json({ error: 'tracker source outside allowed roots' })
+    return
+  }
+
+  const args = [
+    WATCH_TRACKER_SCRIPT,
+    '--source', realSource,
+    '--model', WATCH_TRACKER_MODEL,
+    '--tracker', process.env.WATCH_TRACKER_CONFIG || 'bytetrack.yaml',
+    '--sample-fps', process.env.WATCH_TRACKER_SAMPLE_FPS || '5',
+    '--max-events', /^\d+$/.test(maxEvents) ? maxEvents : '200',
+    '--stdout-jsonl',
+  ]
+  if (startSeconds && /^(\d+|\d+\.\d+)$/.test(startSeconds)) args.push('--start-seconds', startSeconds)
+  if (segmentId) args.push('--segment-id', segmentId)
+  if (assetUid) args.push('--asset-uid', assetUid)
+  if (streamId) args.push('--stream-id', streamId)
+  if (candidateName) {
+    args.push('--candidate-name', candidateName, '--attach-domain-candidate')
+    if (candidateActorName) args.push('--candidate-actor-name', candidateActorName)
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders?.()
+
+  res.write(`event: meta\ndata: ${JSON.stringify({
+    schema: 'watch.tracker_event_stream.v1',
+    status: 'STARTING_LIVE_TRACKER',
+    source: realSource,
+    segment_id: segmentId || null,
+    asset_uid: assetUid || null,
+    model: WATCH_TRACKER_MODEL,
+    sample_fps: Number(process.env.WATCH_TRACKER_SAMPLE_FPS || 5),
+  })}\n\n`)
+
+  const child = spawn(process.env.PYTHON || 'python3', args, {
+    cwd: WATCH_SKILL_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  let eventCount = 0
+  let stdoutBuffer = ''
+  let stderrBuffer = ''
+
+  child.stdout.setEncoding('utf-8')
+  child.stdout.on('data', (chunk: string) => {
+    stdoutBuffer += chunk
+    const lines = stdoutBuffer.split(/\r?\n/)
+    stdoutBuffer = lines.pop() || ''
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      try {
+        const event = JSON.parse(trimmed)
+        eventCount += 1
+        res.write(`event: track_update\ndata: ${JSON.stringify(event)}\n\n`)
+      } catch {
+        res.write(`event: diagnostic\ndata: ${JSON.stringify({ level: 'warn', message: trimmed.slice(0, 500) })}\n\n`)
+      }
+    }
+  })
+
+  child.stderr.setEncoding('utf-8')
+  child.stderr.on('data', (chunk: string) => {
+    stderrBuffer = `${stderrBuffer}${chunk}`.slice(-4000)
+    for (const line of chunk.split(/\r?\n/).map(item => item.trim()).filter(Boolean).slice(-5)) {
+      res.write(`event: diagnostic\ndata: ${JSON.stringify({ level: 'stderr', message: line.slice(0, 500) })}\n\n`)
+    }
+  })
+
+  child.on('error', (err) => {
+    res.write(`event: done\ndata: ${JSON.stringify({ status: 'TRACKER_SPAWN_ERROR', error: String(err), total_events: eventCount })}\n\n`)
+    res.end()
+  })
+
+  child.on('close', (code) => {
+    res.write(`event: done\ndata: ${JSON.stringify({
+      status: code === 0 && eventCount > 0 ? 'LIVE_STREAM_COMPLETE' : 'LIVE_STREAM_FAILED',
+      exit_code: code,
+      total_events: eventCount,
+      stderr_tail: stderrBuffer || null,
+    })}\n\n`)
+    res.end()
+  })
+
+  req.on('close', () => {
+    if (!child.killed) child.kill('SIGTERM')
+  })
+}
+
 function readTrackerEvents(eventsPath: string): any[] {
   return readFileSync(eventsPath, 'utf-8')
     .split(/\r?\n/)
@@ -134,7 +289,7 @@ function readTrackerEvents(eventsPath: string): any[] {
 
 function serveMediaFile(rawPath: string, req: express.Request, res: express.Response) {
   try {
-    const realPath = require('fs').realpathSync(rawPath)
+    const realPath = realpathSync(rawPath)
     const allowed = MEDIA_ROOTS.some(root => realPath.startsWith(root))
     if (!allowed) {
       res.status(403).json({ error: 'path outside allowed roots' })
