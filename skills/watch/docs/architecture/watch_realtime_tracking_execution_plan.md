@@ -45,6 +45,8 @@ not scene truth.
 | `build_watch_reference_embedding_receipt_plan.py` | Harness added | Converts reference-source candidates into fail-closed Qdrant reference-image point plans |
 | `watch_crop_reference_similarity_receipt_plan.schema.json` | Contract added | Planned crop/reference similarity receipt gate with positive and negative controls |
 | `build_watch_crop_reference_similarity_receipt_plan.py` | Harness added | Pairs live track crops with reference slots without promoting identity |
+| `watch_text_scene_corroboration_receipt_plan.schema.json` | Contract added | Planned row text/materialized scene corroboration gate |
+| `build_watch_text_scene_corroboration_receipt_plan.py` | Harness added | Blocks identity promotion when only case claims/refs exist and row text is not materialized |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -328,6 +330,33 @@ Current canary proof:
   crop embedding success, reference embedding success, Qdrant writes,
   similarity-score correctness, text/scene corroboration, `$memory recall`,
   real-time annotation tracking, or supported character identity.
+
+### Phase 2.11: Planned Text / Scene Corroboration Receipts
+
+Goal: prevent a dry-run case claim from being treated as scene truth. Watch must
+materialize the active row's scene marker, SRT text, Whisper text, and/or VLM
+description before text can corroborate a character identity.
+
+Runtime path:
+
+```text
+crop/reference similarity receipt plan
+  + watch_evidence_cases payload
+  -> text/scene corroboration receipt plan
+  -> row text materialization receipts
+  -> entity-span extraction receipts
+  -> $memory /intent then /recall proof
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_text_scene_corroboration_receipt_plan.py --crop-reference-similarity-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_crop_reference_similarity_receipt_plan/watch_crop_reference_similarity_receipt_plan.bad_santa_marcus.json --evidence-case-payload skills/watch/docs/architecture/generated/bad_santa_marcus_0248_upsert_payloads/upsert_watch_evidence_cases.json --out /tmp/watch-text-scene-corroboration-receipt-plan.json`
+- Expected output: `text_scene_corroboration_receipt_plan_ok 1 entities 0/4 text channels status=BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION`
+- Schema: `skills/watch/docs/architecture/schemas/watch_text_scene_corroboration_receipt_plan.schema.json`
+- Boundary: this proves the row-text corroboration contract only. It does not
+  prove row text materialization, entity-span extraction, scene-marker
+  correctness, SRT/Whisper correctness, `$memory recall`, real-time annotation
+  tracking, or supported character identity.
 
 ### Phase 3: Verification and Bounded Observation
 

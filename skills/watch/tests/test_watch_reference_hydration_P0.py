@@ -22,6 +22,7 @@ from watch_reference_hydration import (
     build_memory_trace_plan,
     build_reference_embedding_receipt_plan,
     build_reference_hydration_plan,
+    build_text_scene_corroboration_receipt_plan,
     load_json,
     load_jsonl,
     validate_hydration_plan,
@@ -406,4 +407,67 @@ def test_crop_reference_similarity_receipt_plan_requires_negative_controls_and_r
     assert not any(
         any(key in comparison for key in ("embedding", "embeddings", "vector", "vectors"))
         for comparison in comparisons
+    )
+
+
+def test_text_scene_corroboration_receipt_plan_blocks_claim_only_identity() -> None:
+    crop_reference_similarity_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_crop_reference_similarity_receipt_plan"
+        / "watch_crop_reference_similarity_receipt_plan.bad_santa_marcus.json"
+    )
+    evidence_case_payload = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_upsert_payloads"
+        / "upsert_watch_evidence_cases.json"
+    )
+    plan = build_text_scene_corroboration_receipt_plan(crop_reference_similarity_plan, evidence_case_payload)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_text_scene_corroboration_receipt_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.text_scene_corroboration_receipt_plan.v1"
+    assert plan["status"] == "BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION"
+    assert plan["case_context"]["claim_is_scene_truth"] is False
+    assert plan["memory_requirements"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_requirements"]["requires_items_key"] is True
+    assert plan["memory_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+    assert plan["promotion_policy"]["case_claim_without_materialized_text_can_promote_identity"] is False
+    assert plan["promotion_policy"]["text_without_crop_reference_similarity_can_promote_identity"] is False
+    assert plan["promotion_policy"]["text_without_memory_recall_can_promote_identity"] is False
+
+    counts = plan["counts"]
+    assert counts["entity_plan_count"] == 1
+    assert counts["required_text_channel_count"] == 4
+    assert counts["materialized_text_channel_count"] == 0
+    assert counts["source_similarity_comparison_count"] == 60
+
+    entity_plan = plan["entity_corroboration_plans"][0]
+    assert entity_plan["entity_name"] == "Marcus"
+    assert entity_plan["status"] == "BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION"
+    assert "ROW_TEXT_MATERIALIZATION_MISSING" in entity_plan["promotion_blockers"]
+    assert "MEMORY_RECALL_NOT_VERIFIED" in entity_plan["promotion_blockers"]
+    assert {channel["channel"] for channel in entity_plan["text_channels"]} == {
+        "scene_marker_text",
+        "srt_text",
+        "whisper_text",
+        "vlm_description",
+    }
+    assert all(channel["status"] == "BLOCKED_PENDING_ROW_TEXT" for channel in entity_plan["text_channels"])
+    assert all(channel["scene_truth_allowed"] is True for channel in entity_plan["text_channels"])
+    assert all(channel["promotion_allowed"] is False for channel in entity_plan["text_channels"])
+    assert not any(
+        any(key in channel for key in ("embedding", "embeddings", "vector", "vectors"))
+        for channel in entity_plan["text_channels"]
     )

@@ -601,6 +601,34 @@ the storage volume, or symlink `watch-frames` to a directory on local disk.
 watching every second. It is an indexing tool: it gives agents enough aligned
 visual, audio, and text evidence to search and reason about a video later.
 
+## Real-Time Character Tracking Memory Gate
+
+The movie-character tracker is the canary for the later multi-drone AO workflow.
+Its identity path is intentionally fail-closed:
+
+```text
+Ultralytics YOLO + ByteTrack live tracks
+  -> bounded crop windows
+  -> Brave/movie-domain actor-character priors
+  -> approved reference-image embedding receipts
+  -> crop/reference similarity receipts with negative controls
+  -> row text/scene corroboration receipts
+  -> $memory /intent then /recall items
+  -> watch_evidence_cases and graph/vector persistence
+```
+
+Brave Search, IMDb, Wikipedia, or other movie-domain sources seed actor and
+character candidates only. They do not prove that a character appears in a
+specific movie segment. Segment presence requires Watch evidence: frame/clip
+crops, scene-marker text, SRT/Whisper text, VLM row descriptions, human overlay
+approval, and a later `$memory recall` proof that reads the `items` response key.
+
+The current Bad Santa Marcus canary includes a text/scene corroboration receipt
+plan at
+`docs/architecture/generated/bad_santa_marcus_0248_text_scene_corroboration_receipt_plan/watch_text_scene_corroboration_receipt_plan.bad_santa_marcus.json`.
+It is deliberately blocked with `0/4` materialized row text channels. That means
+the dry-run evidence case is a useful anchor, not supported character identity.
+
 ## Tips and gotchas
 
 - Keep the first run small. A focused five-minute segment is easier to verify than

@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_text_scene_corroboration_receipt_plan.schema.json",
+  "title": "Watch Text Scene Corroboration Receipt Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "asset",
+    "entity_corroboration_plans",
+    "case_context",
+    "required_row_text_channels",
+    "materialized_text_channels",
+    "receipt_requirements",
+    "promotion_policy",
+    "memory_requirements",
+    "counts",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.text_scene_corroboration_receipt_plan.v1"
+    },
+    "status": {
+      "enum": ["BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION", "PLANNED_NOT_RUN"]
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "entity_corroboration_plans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "entity_id",
+          "entity_name",
+          "status",
+          "case_anchor",
+          "text_channels",
+          "promotion_blockers"
+        ],
+        "properties": {
+          "status": {
+            "enum": ["BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION", "PLANNED_NOT_RUN"]
+          },
+          "text_channels": {
+            "type": "array",
+            "minItems": 4,
+            "items": {
+              "type": "object",
+              "required": [
+                "channel",
+                "status",
+                "contains_entity_token",
+                "text_hash",
+                "scene_truth_allowed",
+                "promotion_allowed"
+              ],
+              "properties": {
+                "channel": {
+                  "enum": ["scene_marker_text", "srt_text", "whisper_text", "vlm_description"]
+                },
+                "status": {
+                  "enum": ["MATERIALIZED", "BLOCKED_PENDING_ROW_TEXT"]
+                },
+                "scene_truth_allowed": {
+                  "const": true
+                },
+                "promotion_allowed": {
+                  "const": false
+                }
+              }
+            }
+          },
+          "promotion_blockers": {
+            "type": "array",
+            "contains": {
+              "enum": [
+                "ROW_TEXT_MATERIALIZATION_MISSING",
+                "ENTITY_TOKEN_CORROBORATION_NOT_RUN",
+                "CROP_REFERENCE_SIMILARITY_RECEIPTS_MISSING",
+                "MEMORY_RECALL_NOT_VERIFIED"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "case_context": {
+      "type": "object",
+      "required": ["asset_id", "case_anchor", "claim_is_scene_truth"],
+      "properties": {
+        "claim_is_scene_truth": {
+          "const": false
+        }
+      }
+    },
+    "required_row_text_channels": {
+      "type": "array",
+      "minItems": 4,
+      "contains": {
+        "const": "scene_marker_text"
+      }
+    },
+    "receipt_requirements": {
+      "type": "object",
+      "required": [
+        "row_text_materialization_receipt_required",
+        "entity_span_extraction_receipt_required",
+        "scene_marker_or_vlm_receipt_required",
+        "srt_or_whisper_receipt_required",
+        "memory_recall_receipt_required"
+      ],
+      "properties": {
+        "row_text_materialization_receipt_required": {
+          "const": true
+        },
+        "entity_span_extraction_receipt_required": {
+          "const": true
+        },
+        "scene_marker_or_vlm_receipt_required": {
+          "const": true
+        },
+        "srt_or_whisper_receipt_required": {
+          "const": true
+        },
+        "memory_recall_receipt_required": {
+          "const": true
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": [
+        "case_claim_without_materialized_text_can_promote_identity",
+        "text_without_crop_reference_similarity_can_promote_identity",
+        "text_without_memory_recall_can_promote_identity",
+        "domain_reference_seed_can_promote_identity",
+        "supported_identity_requires"
+      ],
+      "properties": {
+        "case_claim_without_materialized_text_can_promote_identity": {
+          "const": false
+        },
+        "text_without_crop_reference_similarity_can_promote_identity": {
+          "const": false
+        },
+        "text_without_memory_recall_can_promote_identity": {
+          "const": false
+        },
+        "domain_reference_seed_can_promote_identity": {
+          "const": false
+        },
+        "supported_identity_requires": {
+          "type": "array",
+          "contains": {
+            "const": "row_text_materialized"
+          }
+        }
+      }
+    },
+    "memory_requirements": {
+      "type": "object",
+      "required": [
+        "allowed_answer_path",
+        "requires_intent_before_recall",
+        "requires_items_key",
+        "forbidden_results_key_dependency",
+        "direct_qdrant_or_arango_answer_allowed"
+      ],
+      "properties": {
+        "allowed_answer_path": {
+          "const": "$memory recall"
+        },
+        "requires_items_key": {
+          "const": true
+        },
+        "forbidden_results_key_dependency": {
+          "const": true
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "entity_plan_count",
+        "required_text_channel_count",
+        "materialized_text_channel_count",
+        "source_similarity_comparison_count"
+      ]
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "text_scene_corroboration_receipt_contract"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}

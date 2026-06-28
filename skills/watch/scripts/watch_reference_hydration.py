@@ -33,6 +33,7 @@ MEMORY_RECALL_VERIFICATION_SCHEMA = "watch.memory_recall_verification_plan.v1"
 IDENTITY_REINFORCEMENT_PLAN_SCHEMA = "watch.identity_reinforcement_plan.v1"
 REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA = "watch.reference_embedding_receipt_plan.v1"
 CROP_REFERENCE_SIMILARITY_RECEIPT_PLAN_SCHEMA = "watch.crop_reference_similarity_receipt_plan.v1"
+TEXT_SCENE_CORROBORATION_RECEIPT_PLAN_SCHEMA = "watch.text_scene_corroboration_receipt_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -1436,6 +1437,176 @@ def build_crop_reference_similarity_receipt_plan(
                 "Qdrant write success",
                 "similarity score correctness",
                 "text or scene corroboration",
+                "$memory recall success",
+                "supported character identity",
+                "real-time annotation tracking",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
+
+
+def _first_document(payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    docs = payload.get("documents") or []
+    if docs:
+        return docs[0]
+    return payload
+
+
+def _materialized_text_channels(case_document: Mapping[str, Any]) -> Dict[str, Optional[str]]:
+    fields = {
+        "scene_marker_text": case_document.get("scene_marker_text") or case_document.get("visual_description"),
+        "srt_text": case_document.get("srt_text") or case_document.get("official_srt_text"),
+        "whisper_text": case_document.get("whisper_text") or case_document.get("audio_audit_text"),
+        "vlm_description": case_document.get("vlm_description") or case_document.get("frame_description"),
+    }
+    return {key: value for key, value in fields.items() if isinstance(value, str) and value.strip()}
+
+
+def build_text_scene_corroboration_receipt_plan(
+    crop_reference_similarity_receipt_plan: Mapping[str, Any],
+    evidence_case_payload: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Build the planned text/scene corroboration gate for Watch identity.
+
+    This gate is deliberately stricter than the current dry-run case payloads:
+    a case claim and transcript refs are not enough. Watch must materialize the
+    row's scene-marker text, SRT text, Whisper text, and/or VLM description
+    before text can corroborate a live track identity.
+    """
+
+    if crop_reference_similarity_receipt_plan.get("schema") != CROP_REFERENCE_SIMILARITY_RECEIPT_PLAN_SCHEMA:
+        raise ValueError(
+            "unsupported crop/reference similarity schema: "
+            f"{crop_reference_similarity_receipt_plan.get('schema')!r}"
+        )
+
+    asset = copy.deepcopy(dict(crop_reference_similarity_receipt_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    case_document = copy.deepcopy(dict(_first_document(evidence_case_payload)))
+    case_anchor = case_document.get("case_anchor") or {}
+    claim = case_document.get("claim")
+    entity_ids = case_anchor.get("entity_ids") or []
+    materialized_text = _materialized_text_channels(case_document)
+
+    entity_plans = []
+    for entity_plan in crop_reference_similarity_receipt_plan.get("entity_similarity_plans") or []:
+        entity_id = entity_plan.get("entity_id")
+        entity_name = entity_plan.get("entity_name")
+        channels = []
+        for channel_name in ("scene_marker_text", "srt_text", "whisper_text", "vlm_description"):
+            text_value = materialized_text.get(channel_name)
+            channels.append({
+                "channel": channel_name,
+                "status": "MATERIALIZED" if text_value else "BLOCKED_PENDING_ROW_TEXT",
+                "contains_entity_token": bool(
+                    text_value
+                    and entity_name
+                    and str(entity_name).casefold() in text_value.casefold()
+                ),
+                "contains_actor_token": False,
+                "text_hash": sha256_text(text_value) if text_value else None,
+                "scene_truth_allowed": True,
+                "promotion_allowed": False,
+            })
+        blockers = [
+            "ROW_TEXT_MATERIALIZATION_MISSING",
+            "ENTITY_TOKEN_CORROBORATION_NOT_RUN",
+            "CROP_REFERENCE_SIMILARITY_RECEIPTS_MISSING",
+            "MEMORY_RECALL_NOT_VERIFIED",
+        ]
+        if materialized_text:
+            blockers.remove("ROW_TEXT_MATERIALIZATION_MISSING")
+        entity_plans.append({
+            "entity_id": entity_id,
+            "entity_name": entity_name,
+            "case_entity_ids": entity_ids,
+            "status": "BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION" if not materialized_text else "PLANNED_NOT_RUN",
+            "case_id": case_document.get("case_id"),
+            "case_key": case_document.get("_key"),
+            "case_claim": claim,
+            "case_anchor": case_anchor,
+            "text_channels": channels,
+            "promotion_blockers": blockers,
+        })
+
+    plan = {
+        "schema": TEXT_SCENE_CORROBORATION_RECEIPT_PLAN_SCHEMA,
+        "status": "BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION" if not materialized_text else "PLANNED_NOT_RUN",
+        "asset": asset,
+        "source_crop_reference_similarity_schema": crop_reference_similarity_receipt_plan.get("schema"),
+        "source_evidence_case_schema": case_document.get("schema_version") or evidence_case_payload.get("schema"),
+        "entity_corroboration_plans": entity_plans,
+        "case_context": {
+            "asset_id": asset_id,
+            "case_id": case_document.get("case_id"),
+            "case_key": case_document.get("_key"),
+            "case_anchor": case_anchor,
+            "claim": claim,
+            "claim_is_scene_truth": False,
+            "source_truth_policy": case_document.get("source_truth_policy"),
+        },
+        "required_row_text_channels": [
+            "scene_marker_text",
+            "srt_text",
+            "whisper_text",
+            "vlm_description",
+        ],
+        "materialized_text_channels": sorted(materialized_text),
+        "receipt_requirements": {
+            "row_text_materialization_receipt_required": True,
+            "entity_span_extraction_receipt_required": True,
+            "scene_marker_or_vlm_receipt_required": True,
+            "srt_or_whisper_receipt_required": True,
+            "memory_recall_receipt_required": True,
+        },
+        "memory_requirements": {
+            "allowed_answer_path": "$memory recall",
+            "requires_intent_before_recall": True,
+            "requires_items_key": True,
+            "forbidden_results_key_dependency": True,
+            "direct_qdrant_or_arango_answer_allowed": False,
+        },
+        "promotion_policy": {
+            "case_claim_without_materialized_text_can_promote_identity": False,
+            "text_without_crop_reference_similarity_can_promote_identity": False,
+            "text_without_memory_recall_can_promote_identity": False,
+            "domain_reference_seed_can_promote_identity": False,
+            "supported_identity_requires": [
+                "row_text_materialized",
+                "entity_span_extraction_receipt",
+                "scene_marker_or_vlm_corroboration",
+                "srt_or_whisper_corroboration_when_available",
+                "crop_reference_similarity_receipt_with_negative_controls",
+                "memory_recall_items_matching_asset_entity_time",
+            ],
+        },
+        "counts": {
+            "entity_plan_count": len(entity_plans),
+            "required_text_channel_count": 4,
+            "materialized_text_channel_count": len(materialized_text),
+            "case_entity_id_count": len(entity_ids),
+            "source_similarity_comparison_count": crop_reference_similarity_receipt_plan.get("counts", {}).get("planned_similarity_comparison_count", 0),
+        },
+        "proof_scope": [
+            "text_scene_corroboration_receipt_contract",
+            "planned_not_run",
+        ],
+        "claims": {
+            "proves": [
+                "Watch identity support requires materialized row text, not only a case claim or refs",
+                "Text/scene corroboration is a separate gate after crop/reference similarity and before memory answer claims",
+                "Direct Qdrant or Arango answer paths remain forbidden",
+            ],
+            "does_not_prove": [
+                "row text materialization success",
+                "entity span extraction success",
+                "scene marker correctness",
+                "SRT or Whisper correctness",
+                "crop embedding success",
+                "reference image embedding success",
+                "crop/reference similarity score correctness",
                 "$memory recall success",
                 "supported character identity",
                 "real-time annotation tracking",
