@@ -74,26 +74,41 @@ if [[ -z "$buttons_json" || "$buttons_json" == "[]" || "$buttons_json" == "[]\n"
   exit 3
 fi
 
-# 2. Pick the first match and click it
-button_text="$(echo "$buttons_json" | python3 -c "import json,sys; data=json.load(sys.stdin); print(data[0].get('text') or data[0].get('aria') or '')" 2>/dev/null || true)"
+# 2. Pick the first match and click by aria-label CSS selector.
+# ChatGPT download buttons have empty textContent — only aria-label has the
+# filename. surf click with a string does text matching, so use the CSS
+# attribute selector instead.
+button_aria="$(echo "$buttons_json" | python3 -c "import json,sys; data=json.load(sys.stdin); print(data[0].get('aria') or data[0].get('text') or '')" 2>/dev/null || true)"
 
-if [[ -z "$button_text" ]]; then
-  echo "Error: Could not parse button text from match" >&2
+if [[ -z "$button_aria" ]]; then
+  echo "Error: Could not parse button aria-label from match" >&2
   echo "$buttons_json" >&2
   exit 3
 fi
 
-echo "Clicking: $button_text" >&2
+echo "Clicking: $button_aria" >&2
 
 # Snapshot downloads dir before click
 before_files=$(ls -1 "$downloads_dir" 2>/dev/null || true)
 
-click_out=$("$RUN_SH" click "$button_text" "${tab_args[@]}" 2>&1) || {
-  echo "Error: Failed to click download button: $click_out" >&2
-  # Try clicking the raw element if text click fails
-  echo "  The button may need a different click method (use 'surf click eN' with the element ref)" >&2
+# Click via JS: find the first button whose aria-label or text matches the
+# pattern, then click it programmatically. This works regardless of whether
+# textContent is empty (ChatGPT download buttons use aria-label only).
+click_js="
+const match = '${match,,}';
+const btn = Array.from(document.querySelectorAll('button')).find(e => {
+  const label = (e.getAttribute('aria-label') || e.textContent || '').toLowerCase();
+  return label.includes(match);
+});
+if (btn) { btn.click(); 'clicked'; } else { 'no-match'; }
+"
+click_out=$("$RUN_SH" js "$click_js" "${tab_args[@]}" 2>/dev/null || true)
+
+if [[ "$click_out" != "clicked" ]]; then
+  echo "Error: Could not find or click download button" >&2
+  echo "  Try: surf click 'button' (find ref via surf read --tab-id \$TAB)" >&2
   exit 4
-}
+fi
 
 echo "Waiting for download to appear in: $downloads_dir" >&2
 
