@@ -53,6 +53,8 @@ locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 skills/tau/run.sh status
 skills/tau/run.sh sanity
 skills/tau/run.sh e2e
+skills/tau/run.sh e2e --include-chat-ui --chat-ui-timeout-s 90
+skills/tau/run.sh chat-ui-proof
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
 ```
@@ -60,7 +62,9 @@ skills/tau/run.sh latest-proofs
 `status` reports current repo, GitHub issue, watchdog cron, and latest receipt
 state. `sanity` runs bounded checks that do not mutate GitHub. `e2e` runs the
 same checks plus recent live-proof inspection; it does not create or close new
-GitHub issues.
+GitHub issues. Use `e2e --include-chat-ui` when a fresh live browser proof is
+required for chat UI claims. `chat-ui-proof` runs only the repeatable UX Lab
+same-message chat/TUI mirror proof.
 
 ## Proof Rules
 
