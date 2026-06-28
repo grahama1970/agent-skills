@@ -2,13 +2,17 @@
 
 ![agent-skills header](docs/assets/agent-skills-header.webp)
 
+> **Quick Links:** [Browse Skills](skills/) | [View Agents](agents/) |
+> [Explore Personas](personas/) |
+> [Check Maintenance Leads](reports/agent-maintainer/latest.md)
+
 **Agent Skills** is a toolbox and playground for agent work: reusable
 capabilities, bounded workers, persona contracts, scheduler jobs, and lifecycle
 hooks. If you have ever written a browser automation script, then written
 another one three months later because you could not find the first, this repo
-is for you. We keep the reusable pieces contract-first: every durable skill has
-a `SKILL.md`, a stable entrypoint, and a proof surface. Browse freely, borrow
-patterns, and reuse what already exists before making a new utility.
+is for you. We keep the reusable pieces **contract-first**: every durable skill
+has a `SKILL.md`, a stable entrypoint, and a proof surface. Browse freely,
+borrow patterns, and reuse what already exists before making a new utility.
 
 > **Public repo, private runtime.** The code, prompts, contracts, and docs are
 > public, but some paths expect private infrastructure: memory services, browser
