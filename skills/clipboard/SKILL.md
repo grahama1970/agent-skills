@@ -42,7 +42,7 @@ Examples of file-like artifacts:
 KDE Plasma expects `text/uri-list` for file paste/upload workflows:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/clipboard/run.sh file /absolute/path/to/file.zip
+./run.sh file /absolute/path/to/file.zip
 ```
 
 The expected verified payload is:
@@ -56,7 +56,7 @@ file:///absolute/path/to/file.zip
 GNOME file-manager copy can use `x-special/gnome-copied-files`:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/clipboard/run.sh file --target gnome /absolute/path/to/file.zip
+./run.sh file --target gnome /absolute/path/to/file.zip
 ```
 
 The expected verified payload is:
