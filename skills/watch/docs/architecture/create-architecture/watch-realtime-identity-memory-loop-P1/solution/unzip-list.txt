@@ -1,0 +1,41 @@
+Archive:  watch-realtime-identity-memory-loop-P1-solution.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     7910  2026-06-28 01:46   ARCHITECTURE.md
+     4231  2026-06-28 01:46   COMMANDS.md
+     1414  2026-06-28 01:46   KNOWN_GAPS.md
+     8056  2026-06-28 01:46   MANIFEST.json
+     4833  2026-06-28 01:46   PATCH_PLAN.md
+     2722  2026-06-28 01:46   README.md
+     2111  2026-06-28 01:46   ROLLBACK_REBUILD.md
+      381  2026-06-28 01:46   SOURCE_BUNDLE_SUMMARY.json
+     1376  2026-06-28 01:46   prompt_improvements.md
+     1517  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_asset_reference_hydration_plan_P1.schema.json
+     1115  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_evidence_case_P1.schema.json
+     1200  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_identity_verification_result_P1.schema.json
+     1147  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_memory_write_receipt_P1.schema.json
+     1588  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_realtime_track_event_P1.schema.json
+     1084  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_recall_receipt_P1.schema.json
+      972  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_reference_manifest_P1.schema.json
+     1315  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_trace_observation_P1.schema.json
+     2051  2026-06-28 01:46   repo/skills/watch/docs/architecture/schemas/watch_ui_realtime_overlay_event_P1.schema.json
+     2102  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_memory_persistence_contract_P1.md
+     1424  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_ml_tracking_runtime_P1.md
+     3240  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_realtime_identity_memory_loop_P1.md
+     2939  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_realtime_identity_state_machine_P1.md
+     1200  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_realtime_overlay_event_contract_P1.md
+     1458  2026-06-28 01:46   repo/skills/watch/docs/architecture/watch_reference_hydration_lifecycle_P1.md
+     5670  2026-06-28 01:46   repo/skills/watch/scripts/validate_watch_realtime_identity_memory_loop_P1.py
+      581  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/arango_metadata_doc.no_vectors.json
+      420  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/drone_missing_reference_manifest_fail_closed.json
+      523  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/evidence_case.anchored.example.json
+      571  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/identity_verification.inconclusive.json
+      731  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/memory_write_receipt.planned.json
+      588  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/movie_asset_reference_plan.json
+     1815  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/realtime_track_events.jsonl
+      584  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/recall_receipt.verified.example.json
+      922  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/trace_observation.memory_planned.json
+      828  2026-06-28 01:46   repo/skills/watch/tests/fixtures/realtime_identity_memory_loop_P1/ui_realtime_overlay_event.inconclusive.json
+     3000  2026-06-28 01:46   repo/skills/watch/tests/test_watch_realtime_identity_memory_loop_P1.py
+---------                     -------
+    73619                     36 files

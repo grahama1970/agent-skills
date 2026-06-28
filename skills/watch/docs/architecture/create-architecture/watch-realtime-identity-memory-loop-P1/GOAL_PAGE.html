@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watch Realtime Identity Memory Loop P1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b0f;
+      --panel: #10161d;
+      --line: rgba(255,255,255,.12);
+      --text: #dce7f3;
+      --muted: #8ea0b3;
+      --cyan: #03dac6;
+      --amber: #ffb300;
+      --red: #cf6679;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.45 Inter, system-ui, sans-serif;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+    h1, h2 {
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 20px;
+      color: var(--cyan);
+    }
+    h2 {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 24px 0;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 140px;
+    }
+    .card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .step {
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cyan);
+      border-radius: 6px;
+      padding: 10px;
+      background: rgba(255,255,255,.03);
+      min-height: 82px;
+    }
+    .step b {
+      display: block;
+      color: #fff;
+      font-size: 12px;
+    }
+    .step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .warn { border-left-color: var(--amber); }
+    .fail { border-left-color: var(--red); }
+    ul {
+      padding-left: 18px;
+      color: var(--muted);
+    }
+    code {
+      color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Watch Realtime Identity Memory Loop P1</h1>
+    <p>Movies are the test case for AO video memory: realtime tracking proposes observations, domain references verify identity, and bounded traces persist through memory for later recall.</p>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Primary Object</h2>
+        <strong>Tracked Evidence Trace</strong>
+        <p>A time-bounded track observation with frame, crop, transcript, source refs, identity status, and memory persistence pointers.</p>
+      </article>
+      <article class="card">
+        <h2>ML Runtime</h2>
+        <strong>YOLO + ByteTrack</strong>
+        <p>Realtime track ids stream live; identity verification samples at a bounded cadence such as 5 FPS.</p>
+      </article>
+      <article class="card">
+        <h2>Domain Memory</h2>
+        <strong>References Before Ingest</strong>
+        <p>Movies hydrate cast/character references; drones and restricted streams require source manifests.</p>
+      </article>
+      <article class="card">
+        <h2>Fail Closed</h2>
+        <strong>No Unsupported Identity</strong>
+        <p>Search results and detector labels are candidates only. Ambiguous identity stays inconclusive or needs human review.</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Pipeline Contract</h2>
+      <div class="flow">
+        <div class="step"><b>/intent</b><span>Classify query vs command before retrieval.</span></div>
+        <div class="step"><b>extract-entities</b><span>Find characters, assets, spans, and time ranges.</span></div>
+        <div class="step"><b>/recall</b><span>Query Watch memory via ArangoSearch and Qdrant pointers.</span></div>
+        <div class="step warn"><b>track verify</b><span>Compare track crops, references, and row text.</span></div>
+        <div class="step"><b>case anchor</b><span>Create evidence case only when bounded evidence requires it.</span></div>
+        <div class="step"><b>answer</b><span>Answer, clarify, or deflect from grounded evidence.</span></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Storage</h2>
+        <strong>Qdrant + Jina</strong>
+        <p>Multimodal/text embeddings for reference images, crops, segments, and row text.</p>
+      </article>
+      <article class="card">
+        <h2>Graph</h2>
+        <strong>Arango Metadata</strong>
+        <p>Entities, assets, track observations, cases, and Qdrant point ids. No raw vectors.</p>
+      </article>
+      <article class="card">
+        <h2>Case</h2>
+        <strong>watch_evidence_cases</strong>
+        <p>Anchored by <code>entity_ids</code> plus <code>time_range</code>, with verdict and failure code separation.</p>
+      </article>
+      <article class="card">
+        <h2>UI Contract</h2>
+        <strong>Realtime Overlay Events</strong>
+        <p>The modal consumes live track events; UI polish is downstream, not the architecture task.</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Acceptance Bar</h2>
+      <ul>
+        <li>Approved reference fixtures and deterministic embedding ids exist before identity support.</li>
+        <li>Track observations link to segment, frame, crop, transcript, and source refs.</li>
+        <li>Memory write and recall proof exists before user-facing recall claims.</li>
+        <li>Static overlay screenshots are not accepted as realtime tracking proof.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

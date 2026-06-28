@@ -1,0 +1,10 @@
+Archive:  watch-realtime-identity-memory-loop-P1-creation-bundle.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     5294  2026-06-27 21:37   GOAL.md
+     5312  2026-06-27 21:37   HANDOFF.md
+     5593  2026-06-27 21:37   GOAL_PAGE.html
+     7700  2026-06-27 21:37   creation-bundle.md
+     3794  2026-06-27 21:39   webgpt-submit-prompt.md
+---------                     -------
+    27693                     5 files
