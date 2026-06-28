@@ -1,0 +1,32 @@
+{
+  "schema_version": "watch.tracking_crop_manifest.v1",
+  "asset_id": "bad_santa_2003_canary",
+  "claim_boundary": "fixture_only_not_live_tracking",
+  "crop_count": 2,
+  "crops": [
+    {
+      "overlay_id": "watch_overlay_bad_santa_willie_0136_track_1",
+      "track_id": "track_willie_1",
+      "segment_id": "seg_0004",
+      "crop_path": "docs/architecture/generated/bad_santa_willie/crops/willie_0136_track_1.png",
+      "media_time_seconds": 96.2,
+      "candidate_entity": {
+        "entity_id": "character:bad_santa:willie",
+        "name": "Willie",
+        "status": "PROVISIONAL"
+      }
+    },
+    {
+      "overlay_id": "watch_overlay_bad_santa_willie_0136_track_2",
+      "track_id": "track_willie_1",
+      "segment_id": "seg_0004",
+      "crop_path": "docs/architecture/generated/bad_santa_willie/crops/willie_0136_track_2.png",
+      "media_time_seconds": 97.0,
+      "candidate_entity": {
+        "entity_id": "character:bad_santa:willie",
+        "name": "Willie",
+        "status": "PROVISIONAL"
+      }
+    }
+  ]
+}

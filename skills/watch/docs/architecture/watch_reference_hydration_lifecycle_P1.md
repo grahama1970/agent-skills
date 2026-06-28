@@ -14,13 +14,42 @@ ASSET_REGISTERED
 
 Movie-domain public search is allowed only for candidate discovery. It should produce candidate source refs such as official cast pages, stills, trailers, or other public pages. These are not scene evidence.
 
-For movie assets, the default public discovery source is Brave Image Search API
-(`https://api.search.brave.com/res/v1/images/search`). Watch should issue narrow
-actor-plus-film queries with negative terms for co-stars, group shots, posters,
-collages, memes, and thumbnails. API results are candidate records only: store
-the result URL, thumbnail URL, source page URL, title/description, publisher, and
-image dimensions, then require download, license/source review, human or
-operator approval, embedding, and recall proof before identity promotion.
+For movie assets, default public discovery can use:
+
+- Brave Image Search API (`https://api.search.brave.com/res/v1/images/search`)
+  for image/source candidates.
+- Brave LLM Context (`https://api.search.brave.com/res/v1/llm/context`) for
+  compact source grounding and page snippets.
+- Perplexity-style image leads when it finds better solo/character references.
+
+Watch should issue narrow actor-plus-film queries with negative terms for
+co-stars, group shots, posters, collages, memes, and thumbnails. Provider
+results are candidate records only: store the result URL, thumbnail URL, source
+page URL, title/description/snippets, publisher, and image dimensions when
+available, then require download, license/source review, human or operator
+approval, embedding, and recall proof before identity promotion.
+
+The candidate-to-memory path is receipt-gated:
+
+```text
+REFERENCE_CANDIDATES_COLLECTED
+  -> DOWNLOAD_RECEIPT_PLANNED
+  -> SOURCE_REVIEW_RECEIPT_REQUIRED
+  -> APPROVAL_RECEIPT_REQUIRED
+  -> JINA_REFERENCE_EMBEDDING_RECEIPT_REQUIRED
+  -> QDRANT_REFERENCE_POINT_RECEIPT_REQUIRED
+  -> CROP_REFERENCE_SIMILARITY_RECEIPT_REQUIRED
+  -> NEGATIVE_CONTROL_RECEIPT_REQUIRED
+  -> TEXT_SCENE_CORROBORATION_RECEIPT_REQUIRED
+  -> MEMORY_RECALL_RECEIPT_REQUIRED
+  -> IDENTITY_SUPPORT_ALLOWED
+```
+
+Every edge before `IDENTITY_SUPPORT_ALLOWED` must fail closed. A downloaded
+reference without source review and approval remains a candidate. A Qdrant point
+without an embedding receipt is not evidence. A crop/reference similarity score
+without negative controls, text/scene corroboration, and memory recall is not a
+supported identity.
 
 Example canary query templates for Willie / Billy Bob Thornton:
 

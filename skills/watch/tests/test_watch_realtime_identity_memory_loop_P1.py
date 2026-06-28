@@ -3,8 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from skills.watch.scripts.validate_watch_realtime_identity_memory_loop_P1 import assert_no_raw_vectors, validate
 from skills.watch.scripts.build_watch_candidate_reference_manifest import build_manifest
+from skills.watch.scripts.build_watch_reference_receipt_chain import (
+    build_crop_reference_similarity_plan,
+    build_download_review_approval_plan,
+    build_reference_embedding_receipt_plan,
+    assert_no_raw_vectors as assert_no_receipt_vectors,
+)
+from skills.watch.scripts.validate_watch_realtime_identity_memory_loop_P1 import assert_no_raw_vectors, validate
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "realtime_identity_memory_loop_P1"
@@ -57,6 +63,80 @@ def test_search_oracle_outputs_become_candidate_references_only():
     assert all(ref["approval_status"] == "CANDIDATE" for ref in manifest["references"])
     assert all(ref["download_status"] == "NOT_DOWNLOADED" for ref in manifest["references"])
     assert all(ref["embedding_status"] == "NOT_EMBEDDED" for ref in manifest["references"])
+
+
+def test_candidate_references_require_download_review_approval_receipts_before_embedding():
+    plan = load_json("movie_asset_reference_plan.json")
+    manifest = build_manifest(
+        plan,
+        brave_llm_context=load_json("brave_llm_context_bad_santa_willie.sample.json"),
+        perplexity_leads=load_json("perplexity_image_leads_bad_santa_willie.sample.json"),
+    )
+    approval_plan = build_download_review_approval_plan(manifest)
+
+    assert approval_plan["schema"] == "watch.reference_download_review_approval_receipt_plan.v1"
+    assert approval_plan["status"] == "PLANNED_NOT_RUN"
+    assert approval_plan["counts"]["candidate_reference_count"] == 5
+    assert approval_plan["counts"]["downloaded_reference_count"] == 0
+    assert approval_plan["counts"]["approved_reference_count"] == 0
+    assert approval_plan["receipt_requirements"]["download_receipts_required"] is True
+    assert approval_plan["receipt_requirements"]["source_review_receipts_required"] is True
+    assert approval_plan["receipt_requirements"]["approval_receipts_required"] is True
+    assert approval_plan["promotion_policy"]["candidate_url_can_promote_identity"] is False
+    assert approval_plan["promotion_policy"]["download_without_approval_can_promote_identity"] is False
+    assert approval_plan["promotion_policy"]["scene_truth_claim_allowed"] is False
+    assert all(item["download_receipt"]["status"] == "PLANNED_NOT_RUN" for item in approval_plan["reference_receipts"])
+    assert all(
+        item["source_review_receipt"]["status"] == "BLOCKED_PENDING_DOWNLOAD"
+        for item in approval_plan["reference_receipts"]
+    )
+    assert all(
+        item["approval_receipt"]["status"] == "BLOCKED_PENDING_SOURCE_REVIEW"
+        for item in approval_plan["reference_receipts"]
+    )
+    assert all(item["scene_truth_claimed"] is False for item in approval_plan["reference_receipts"])
+    assert all(item["identity_promotion_allowed"] is False for item in approval_plan["reference_receipts"])
+    assert_no_receipt_vectors(approval_plan)
+
+
+def test_reference_embedding_and_crop_similarity_receipts_are_blocked_until_real_receipts_exist():
+    plan = load_json("movie_asset_reference_plan.json")
+    manifest = build_manifest(
+        plan,
+        brave_llm_context=load_json("brave_llm_context_bad_santa_willie.sample.json"),
+        perplexity_leads=load_json("perplexity_image_leads_bad_santa_willie.sample.json"),
+    )
+    approval_plan = build_download_review_approval_plan(manifest)
+    embedding_plan = build_reference_embedding_receipt_plan(approval_plan)
+    similarity_plan = build_crop_reference_similarity_plan(load_json("willie_tracking_crops.sample.json"), embedding_plan)
+
+    assert embedding_plan["schema"] == "watch.reference_candidate_embedding_receipt_plan.v1"
+    assert embedding_plan["status"] == "BLOCKED_PENDING_APPROVAL_RECEIPTS"
+    assert embedding_plan["counts"]["reference_embedding_receipt_count"] == 5
+    assert embedding_plan["counts"]["ready_reference_embedding_count"] == 0
+    assert embedding_plan["qdrant_reference_point_plan"]["raw_vectors_in_plan"] is False
+    assert all(
+        point["qdrant_point_plan"]["write_status"] == "BLOCKED_PENDING_APPROVAL_RECEIPT"
+        for point in embedding_plan["reference_embedding_receipts"]
+    )
+    assert all(point["identity_promotion_allowed"] is False for point in embedding_plan["reference_embedding_receipts"])
+    assert_no_receipt_vectors(embedding_plan)
+
+    assert similarity_plan["schema"] == "watch.crop_reference_candidate_similarity_receipt_plan.v1"
+    assert similarity_plan["status"] == "BLOCKED_PENDING_EMBEDDINGS"
+    assert similarity_plan["counts"]["candidate_crop_count"] == 2
+    assert similarity_plan["counts"]["reference_embedding_receipt_count"] == 5
+    assert similarity_plan["counts"]["planned_similarity_receipt_count"] == 10
+    assert similarity_plan["counts"]["ready_similarity_receipt_count"] == 0
+    assert all(
+        item["similarity_receipt_status"] == "BLOCKED_PENDING_EMBEDDINGS"
+        for item in similarity_plan["similarity_receipts"]
+    )
+    assert all(item["negative_control_required"] is True for item in similarity_plan["similarity_receipts"])
+    assert all(item["text_scene_corroboration_required"] is True for item in similarity_plan["similarity_receipts"])
+    assert all(item["memory_recall_required"] is True for item in similarity_plan["similarity_receipts"])
+    assert all(item["identity_promotion_allowed"] is False for item in similarity_plan["similarity_receipts"])
+    assert_no_receipt_vectors(similarity_plan)
 
 
 def test_drone_without_source_manifest_fails_closed_and_disables_public_search():
