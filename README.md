@@ -21,6 +21,10 @@ borrow patterns, and reuse what already exists before making a new utility.
 > SDK. Many patterns copy cleanly; some commands need environment setup before
 > they run in a fresh clone.
 
+This repo is safe to show because it focuses on patterns: contracts, lifecycle
+hooks, maintainer reports, and reusable skill boundaries. Private runtime data,
+credentials, and regulated operational context stay outside the repo by design.
+
 ## Start Here
 
 Pick the path that matches what you want to explore:
