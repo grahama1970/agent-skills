@@ -82,7 +82,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
-      <br/><strong>Surf</strong><br/><em>Agentic browser control</em>
+      <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
