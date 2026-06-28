@@ -180,15 +180,22 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
         needs_recreate = True
 
     if needs_recreate and conv_url:
-        # Switch to Desktop 2, create tab there, switch back
+        # Create dedicated browser window on Desktop 2 with a single tab.
+        # window.new --unfocused creates the window without stealing focus.
+        cur_desk = subprocess.run(["qdbus", "org.kde.KWin", "/KWin", "currentDesktop"], capture_output=True, text=True, timeout=5).stdout.strip()
         subprocess.run(["wmctrl", "-s", "1"], capture_output=True, timeout=5)
         time.sleep(0.5)
-        result = _surf("tab.new", conv_url)
-        subprocess.run(["wmctrl", "-s", "0"], capture_output=True, timeout=5)
+        result = _surf("window.new", "--unfocused", conv_url)
+        if cur_desk and cur_desk != "1":
+            subprocess.run(["wmctrl", "-s", cur_desk], capture_output=True, timeout=5)
         if result.returncode == 0 and result.stdout.strip():
             parts = result.stdout.strip().split()
-            if len(parts) >= 3 and parts[0] == "Created":
-                new_id = parts[2].rstrip(":")
+            new_id = ""
+            for i, p in enumerate(parts):
+                if p == "(tab" and i + 1 < len(parts):
+                    new_id = parts[i + 1].rstrip(")")
+                    break
+            if new_id:
                 binding["tab_id"] = new_id
                 binding["kde_desktop_index"] = "2"
                 path = BINDING_DIR / f"{binding.get('name', 'sparta')}.json"
@@ -196,7 +203,7 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
                     stored = json.loads(path.read_text())
                     stored.update(binding)
                     path.write_text(json.dumps(stored, indent=2) + "\n")
-                print(f"TAB_REPLACED: {tab_id} -> {new_id} on Desktop 2{tag}", file=sys.stderr)
+                print(f"TAB_REPLACED: {tab_id} -> {new_id} (new window on Desktop 2){tag}", file=sys.stderr)
                 changed = True
 
     return binding
