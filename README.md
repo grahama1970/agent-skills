@@ -2,22 +2,32 @@
 
 ![agent-skills header](docs/assets/agent-skills-header.webp)
 
-**Agent Skills** is the toolbox and playground for agent work: reusable
+**Agent Skills** is a toolbox and playground for agent work: reusable
 capabilities, bounded workers, persona contracts, scheduler jobs, and lifecycle
 hooks. If you have ever written a browser automation script, then written
 another one three months later because you could not find the first, this repo
-is for you. Everything here is contract-first: a `SKILL.md`, a stable
-entrypoint, and a proof surface. Reuse first; reinvent only when the contract is
-missing.
+is for you. We keep the reusable pieces contract-first: every durable skill has
+a `SKILL.md`, a stable entrypoint, and a proof surface. Browse freely, borrow
+patterns, and reuse what already exists before making a new utility.
 
 > **Public repo, private runtime.** The code, prompts, contracts, and docs are
 > public, but some paths expect private infrastructure: memory services, browser
 > bindings, model gateways, media storage, credentials, or agent homes. Treat
 > this as a working blueprint and research playground, not a finished turnkey
-> SDK. Many patterns copy cleanly; not every command runs in a fresh clone
-> without environment setup.
+> SDK. Many patterns copy cleanly; some commands need environment setup before
+> they run in a fresh clone.
 
 ## Start Here
+
+Pick the path that matches what you want to explore:
+
+| If you want to... | Start here |
+|---|---|
+| Solve a task | [`skills/`](skills/) for browser, memory, analysis, model, review, and media capabilities |
+| Study agent behavior | [`agents/`](agents/) for worker roles, boundaries, receipts, and stop conditions |
+| Explore identities | [`personas/`](personas/) for registry records, memory probes, and voice-readiness evidence |
+| Borrow safety rails | [`hooks/`](hooks/) for quality gates, memory-first rules, and completion discipline |
+| Find maintenance leads | [`reports/agent-maintainer/latest.md`](reports/agent-maintainer/latest.md) for triage notes and possible follow-up work |
 
 ```bash
 # Find skill contracts
@@ -33,9 +43,14 @@ sed -n '1,160p' personas/README.md
 sed -n '1,180p' reports/agent-maintainer/latest.md
 ```
 
-**Pro tip:** `README.md` files are human guides; `SKILL.md` files are operational
-contracts. If someone names a skill, read its `SKILL.md` first. That file is the
-source of truth for how the capability behaves.
+**A few helpful habits:**
+
+- Use `README.md` files as friendly guides; use `SKILL.md` files as operational
+  contracts.
+- When a skill looks relevant, start with its `SKILL.md`. That file explains
+  what the capability promises and how it should be used.
+- Before writing a new utility, take a quick look through the skill list. There
+  may already be a close starting point.
 
 Deploy to configured agent homes:
 
@@ -51,11 +66,11 @@ Deploy to configured agent homes:
 
 | I am looking for... | Go to | What is inside |
 |---|---|---|
-| A capability to solve a task | `skills/` | Browser automation, memory recall, video analysis, code review, model calls, and other modular capabilities |
-| A bounded worker or reviewer | `agents/` | Worker contracts, reviewer roles, stop conditions, receipts, and scheduler definitions |
-| Persona patterns and registry | `personas/` | Registry records, memory probes, and voice-readiness evidence |
-| Guardrails and session discipline | `hooks/` | Memory-first behavior, quality gates, and completion discipline |
-| Maintenance triage leads | `reports/agent-maintainer/` | Report-only surfaces; warnings are leads, not proof of broken behavior |
+| A capability to solve a task | [`skills/`](skills/) | Browser automation, memory recall, video analysis, code review, model calls, and other modular capabilities |
+| A bounded worker or reviewer | [`agents/`](agents/) | Worker contracts, reviewer roles, stop conditions, receipts, and scheduler definitions |
+| Persona patterns and registry | [`personas/`](personas/) | Registry records, memory probes, and voice-readiness evidence |
+| Guardrails and session discipline | [`hooks/`](hooks/) | Memory-first behavior, quality gates, and completion discipline |
+| Maintenance triage leads | [`reports/agent-maintainer/`](reports/agent-maintainer/) | Report-only surfaces; warnings are leads for human review |
 
 ## Choosing The Right File
 
@@ -84,7 +99,8 @@ Latest sweep: `msh-20260628-084135`
 | With `services.yaml` | 6 |
 
 Health check: 171 healthy, 158 warnings, 1 critical. These are triage numbers,
-not quality scores. See the report before making maintenance decisions.
+not quality scores. If you are looking for a way to learn the repo, the latest
+report is a useful place to browse possible follow-up work.
 
 Reports live at:
 
@@ -124,10 +140,10 @@ skills/<name>/
   references/         schemas, examples, templates
 ```
 
-**Check the skill list before you write a parallel utility.** Browser
+**Start with the skill list before writing a parallel utility.** Browser
 automation, LLM calls, memory recall, report writing, GitHub tickets, code
-review, video analysis, and scheduled monitoring already live here. Reuse
-first.
+review, video analysis, and scheduled monitoring already live here, and many
+skills are easy to adapt.
 
 Typical invocation:
 
@@ -179,12 +195,12 @@ live under their own storage or skill job paths.
 
 ## Hooks
 
-Hooks run around agent lifecycle events. They keep behavior honest:
+Hooks run around agent lifecycle events. They keep sessions grounded:
 
-- **memory first**: no shortcuts that skip context
-- **no destructive shell**: safety rails on commands
-- **no fake green exits**: if it failed, say so
-- **evidence required**: vague completion claims without proof are blocked
+- **memory first**: start with context
+- **command safety**: keep guardrails around risky shell actions
+- **honest exits**: if something failed, say so
+- **evidence required**: completion claims need proof
 
 Deploy:
 
@@ -224,6 +240,17 @@ skills/monitor-skill-health/run.sh audit \
 The scheduled job is registered in `agents/agent-maintainer/services.yaml` but
 **disabled by default**. Enable it only when the scheduler environment is ready
 and you want the cron active.
+
+## Contributing
+
+You do not need the full private runtime to make the repo better. Useful
+contributions include clearer docs, tighter contracts, better examples, safer
+scripts, and source-level logic fixes.
+
+When private infrastructure blocks local execution, say that in the PR or issue
+and include the checks you could run. For behavior changes, update the relevant
+`SKILL.md` or `AGENTS.md` in the same change set so the guide and implementation
+stay together.
 
 ## Adding Things
 
