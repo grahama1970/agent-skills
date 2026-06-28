@@ -19,7 +19,7 @@ triggers:
   - homoglyph detection
 metadata:
   short-description: Clean PDF/Unicode text to ASCII + security sanitization
-  project-path: /home/graham/workspace/experiments/pi-mono
+  project: pi-mono
 provides:
   - clean-text
   - sanitize-for-validation
