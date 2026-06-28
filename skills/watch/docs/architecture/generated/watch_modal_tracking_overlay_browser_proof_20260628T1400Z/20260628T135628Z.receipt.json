@@ -1,0 +1,89 @@
+{
+  "claim_boundary": "Browser proof shows the Watch modal rendered tracking boxes from the live tracker event stream. Candidate entity labels are still provisional and do not prove promoted character identity.",
+  "clicked": {
+    "article_text": "01:36\n[~]\nMinor Diff\nMIMO-V2-OMNI\nThis frame shows a dimly lit bar interior with warm, subdued ambient lighting, festive Christmas trees in the background, dark wood bar counters, and red decorative wall accents, where a man in a red Santa ",
+    "button_count": 20,
+    "clicked": true,
+    "row_time": "01:36"
+  },
+  "proof": {
+    "box_count": 6,
+    "boxes": [
+      {
+        "rect": {
+          "height": 162,
+          "width": 78,
+          "x": 101,
+          "y": 738
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 59%",
+        "track_id": "track_1",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 736,
+          "width": 993,
+          "x": 496,
+          "y": 155
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 54%",
+        "track_id": "track_2",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 375,
+          "width": 247,
+          "x": 561,
+          "y": 299
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 45%",
+        "track_id": "track_3",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 593,
+          "width": 387,
+          "x": 435,
+          "y": 301
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 33%",
+        "track_id": "track_4",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 626,
+          "width": 461,
+          "x": 1020,
+          "y": 151
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 31%",
+        "track_id": "track_5",
+        "track_time": "96"
+      },
+      {
+        "rect": {
+          "height": 414,
+          "width": 462,
+          "x": 1016,
+          "y": 149
+        },
+        "text": "PROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 28%",
+        "track_id": "track_6",
+        "track_time": "96"
+      }
+    ],
+    "empty_visible": false,
+    "modal": true,
+    "modal_text": "01:36-02:00\nSTARTING_LIVE_TRACKER \u00b7 357 STREAMED EVENTS\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 59%\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 54%\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 45%\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 33%\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 31%\nPROVISIONAL WILLIE \u00b7 BILLY BOB THORNTON 28%"
+  },
+  "row_time": "01:36",
+  "schema": "watch.modal_tracking_overlay_browser_proof.v1",
+  "screenshot": "skills/watch/docs/architecture/generated/watch_modal_tracking_overlay_browser_proof_20260628T1400Z/20260628T135628Z.png",
+  "status": "MODAL_BOXES_RENDERED",
+  "url": "http://127.0.0.1:3014/#watch",
+  "verified_at": "2026-06-28T13:56:28.767386+00:00"
+}
