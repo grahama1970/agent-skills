@@ -478,10 +478,21 @@ export function WatchReportView({
         nearestByTrack.set(event.track_id, { event, delta })
       }
     }
+    if (nearestByTrack.size === 0 && trackerEvents.length > 0 && trackerStreamStatus !== 'stream_complete') {
+      const latestByTrack = new Map<string, TrackerEvent>()
+      for (const event of trackerEvents) {
+        const current = latestByTrack.get(event.track_id)
+        if (!current || event.media_time_seconds >= current.media_time_seconds) {
+          latestByTrack.set(event.track_id, event)
+        }
+      }
+      return [...latestByTrack.values()]
+        .sort((a, b) => a.track_id.localeCompare(b.track_id))
+    }
     return [...nearestByTrack.values()]
       .sort((a, b) => a.event.track_id.localeCompare(b.event.track_id))
       .map((item) => item.event)
-  }, [modalPlaybackSeconds, modalRow, trackerEvents])
+  }, [modalPlaybackSeconds, modalRow, trackerEvents, trackerStreamStatus])
 
   if (loadError) return <div style={{ padding: 24, color: '#ff4757' }}>Failed to load report: {loadError}</div>
   if (!reportWithDiff) return <div style={{ padding: 24, color: '#6b7a8f' }}>Loading Watch report...</div>
