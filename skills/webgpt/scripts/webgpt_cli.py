@@ -381,6 +381,20 @@ def navigate(
 
 
 @app.command()
+def refresh(
+    project: str = typer.Option("sparta", "-p"),
+    background: bool = typer.Option(True, "--background"),
+):
+    """Refresh the project's WebGPT tab."""
+    b = _binding(project)
+    _verify_desktop(b, background, "refresh")
+    tab_id = b.get("tab_id", "")
+    if tab_id:
+        _surf("tab.reload", *(["--no-activate"] if background else []), "--tab-id", tab_id)
+        typer.echo(f"Tab {tab_id} refreshed")
+
+
+@app.command()
 def close(tab_id: str = typer.Argument(..., help="Tab id to close")):
     """Close a browser tab."""
     _surf("tab.close", tab_id, capture=False)
