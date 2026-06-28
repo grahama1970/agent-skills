@@ -23,7 +23,8 @@ borrow patterns, and reuse what already exists before making a new utility.
 
 This repo is safe to show because it focuses on patterns: contracts, lifecycle
 hooks, maintainer reports, and reusable skill boundaries. Private runtime data,
-credentials, and regulated operational context stay outside the repo by design.
+credentials, regulated context, and operational details stay outside the repo by
+design.
 
 ## Start Here
 
