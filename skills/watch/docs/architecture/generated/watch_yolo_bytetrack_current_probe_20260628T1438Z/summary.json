@@ -1,0 +1,30 @@
+{
+  "claim_boundary": "YOLO/ByteTrack events prove detector/tracker output only. Character identity remains provisional until Watch evidence, re-identification, or human review supports it. This command does not write memory.",
+  "conf": 0.25,
+  "domain_candidates_attached": true,
+  "event_count": 12,
+  "event_log": "docs/architecture/generated/watch_yolo_bytetrack_current_probe_20260628T1438Z/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl",
+  "frame_stride": 5,
+  "imgsz": 640,
+  "model": "yolo11n.pt",
+  "posted": false,
+  "sample_fps": 5.0,
+  "schema_version": "watch.yolo_bytetrack_event_log_summary.v1",
+  "source": "/tmp/watch-wex5uxs_/clips/segment_0007.mp4",
+  "source_fps": 23.975985652770184,
+  "status": "DRY_RUN_ONLY",
+  "time_bounds_seconds": {
+    "end": 168.21,
+    "start": 168.0
+  },
+  "track_ids": [
+    "track_1",
+    "track_2",
+    "track_3",
+    "track_4",
+    "track_5",
+    "track_6",
+    "track_7"
+  ],
+  "tracker": "bytetrack.yaml"
+}
