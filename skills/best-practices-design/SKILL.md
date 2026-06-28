@@ -10,6 +10,18 @@ description: >
   surfaces, visual explanations, dashboards, or research-backed design changes.
 metadata:
   short-description: Product UX and design-routing guardrails
+provides:
+  - design-routing-guidance
+  - ux-guardrails
+  - mockup-first-acceptance
+composes:
+  - best-practices-react
+  - review-design
+  - ask
+  - memory
+complies:
+  - best-practices-skills
+  - best-practices-design
 ---
 
 # Best Practices Design
