@@ -76,7 +76,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/tau">
         <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
       </a>
-      <br/><strong>T'au</strong><br/><em>Agent orchestration harness</em>
+      <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
