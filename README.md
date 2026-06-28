@@ -2,25 +2,20 @@
 
 ![agent-skills header](docs/assets/agent-skills-header.webp)
 
-**Agent Skills** is a playground and toolbox for agent work: reusable
+**Agent Skills** is the toolbox and playground for agent work: reusable
 capabilities, bounded workers, persona contracts, scheduler jobs, and lifecycle
-hooks. It is where patterns are tried, hardened, reused, and sometimes retired.
-If you are building with agents, start here. If you are deploying inside this
-ecosystem, this repo is the source of truth; project-local copies are consumers.
+hooks. If you have ever written a browser automation script, then written
+another one three months later because you could not find the first, this repo
+is for you. Everything here is contract-first: a `SKILL.md`, a stable
+entrypoint, and a proof surface. Reuse first; reinvent only when the contract is
+missing.
 
-If you have ever written a browser automation script, then written another one
-three months later because you could not find the first, this repo is for you.
-Agent Skills is contract-first: every durable capability has a `SKILL.md`
-contract, a stable entrypoint, and a proof surface. The goal is reusable,
-bounded, documented agent work instead of orphaned scripts.
-
-> **Public repo, private runtime note:** the code, prompts, contracts, and
-> documentation are public, but some operational paths expect private/local
-> infrastructure: memory services, browser bindings, model gateways, media
-> storage, credentials, or project-specific agent homes. Treat this repo as a
-> working blueprint and research playground, not a finished turnkey SDK. Many
-> patterns are reusable as-is, but not every command is expected to run in a
-> fresh external clone without adapting the environment.
+> **Public repo, private runtime.** The code, prompts, contracts, and docs are
+> public, but some paths expect private infrastructure: memory services, browser
+> bindings, model gateways, media storage, credentials, or agent homes. Treat
+> this as a working blueprint and research playground, not a finished turnkey
+> SDK. Many patterns copy cleanly; not every command runs in a fresh clone
+> without environment setup.
 
 ## Start Here
 
@@ -42,7 +37,7 @@ sed -n '1,180p' reports/agent-maintainer/latest.md
 contracts. If someone names a skill, read its `SKILL.md` first. That file is the
 source of truth for how the capability behaves.
 
-Local deployment is for configured agent environments:
+Deploy to configured agent homes:
 
 ```bash
 # Deploy skills and hooks to local agent homes
@@ -52,29 +47,29 @@ Local deployment is for configured agent environments:
 ./deploy.sh --check
 ```
 
-## Developer Compass
+## What Lives Where
 
-| If you want to... | Start here | What to expect |
+| I am looking for... | Go to | What is inside |
 |---|---|---|
-| Solve a specific task | `skills/` | Browser automation, memory recall, video analysis, code review, model calls, and other modular capabilities |
-| Understand agent behavior | `agents/` | Bounded worker contracts, reviewer roles, stop conditions, receipts, and scheduler definitions |
-| Study persona and memory patterns | `personas/` | Persona registry records, memory probes, and voice-readiness evidence |
-| Borrow guardrails | `hooks/` | Memory-first behavior, quality gates, and completion discipline |
-| Find maintenance work | `reports/agent-maintainer/` | Report-only triage surfaces; warnings are leads, not proof of broken behavior |
+| A capability to solve a task | `skills/` | Browser automation, memory recall, video analysis, code review, model calls, and other modular capabilities |
+| A bounded worker or reviewer | `agents/` | Worker contracts, reviewer roles, stop conditions, receipts, and scheduler definitions |
+| Persona patterns and registry | `personas/` | Registry records, memory probes, and voice-readiness evidence |
+| Guardrails and session discipline | `hooks/` | Memory-first behavior, quality gates, and completion discipline |
+| Maintenance triage leads | `reports/agent-maintainer/` | Report-only surfaces; warnings are leads, not proof of broken behavior |
 
-## Choosing The Right Surface
+## Choosing The Right File
 
-| I want to... | Go to | Because |
+| I want to... | Touch this | Because |
 |---|---|---|
-| Invoke an existing capability | `skills/<name>/run.sh` and `skills/<name>/SKILL.md` | Skills own executable behavior, routing rules, artifacts, and proof language |
+| Invoke a capability | `skills/<name>/run.sh` + `skills/<name>/SKILL.md` | Skills own executable behavior, routing rules, artifacts, and proof language |
 | Learn how a capability works | `skills/<name>/README.md` | Skill READMEs are operator-facing guides |
 | Repair or extend a capability | `skills/<name>/SKILL.md`, scripts, tests, `sanity.sh` | Contract changes need focused implementation and proof |
-| Delegate bounded work | `agents/<name>/AGENTS.md` plus `persona.yaml` | Agents define ownership, denied scope, allowed skills, receipts, and stop conditions |
-| Inspect persona availability | `personas/registry.yaml` and `personas/README.md` | Personas are registry records, not generated corpora |
+| Delegate bounded work | `agents/<name>/AGENTS.md` + `persona.yaml` | Agents define ownership, denied scope, allowed skills, receipts, and stop conditions |
+| Inspect persona availability | `personas/registry.yaml` + `personas/README.md` | Personas are registry records, not generated corpora |
 | Enforce session behavior | `hooks/` | Hooks inject memory, block unsafe exits, and enforce evidence discipline |
 | Make maintenance decisions | `reports/agent-maintainer/latest.md` | Reports are decision surfaces, not dashboards |
 
-## Current Inventory
+## At a Glance
 
 Latest sweep: `msh-20260628-084135`
 
@@ -129,10 +124,10 @@ skills/<name>/
   references/         schemas, examples, templates
 ```
 
-**Do not write a parallel utility** for browser automation, LLM calls, memory
-recall, report writing, GitHub tickets, code review, video analysis, or
-scheduled monitoring until you have checked the skill list and maintainer
-report. Reuse first.
+**Check the skill list before you write a parallel utility.** Browser
+automation, LLM calls, memory recall, report writing, GitHub tickets, code
+review, video analysis, and scheduled monitoring already live here. Reuse
+first.
 
 Typical invocation:
 
@@ -144,7 +139,7 @@ cd skills/surf
 ## Agents
 
 `agents/` holds 72 bounded workers. Unlike skills, agents are not broadcast; they
-are referenced by project-agent/OpenCode configuration and maintainer routing.
+are referenced by project-agent configuration and maintainer routing.
 
 A good agent has a narrow boundary:
 
