@@ -544,10 +544,12 @@ Current local evidence from this rung:
 ```
 
 Memory note: `$memory` `/upsert` stores `battle_mutation_memory` documents and
-`/list` proves those records exist. In the current memory daemon, `/recall` with
-`collections=["battle_mutation_memory"]` can return zero items for that custom
-collection even after semantic sync. Battle records this as an explicit
-`fallback` in `context/memory-recall-receipt.json` rather than hiding it.
+Battle recalls them through `/recall` with
+`collections=["battle_mutation_memory"]` and
+`recall_profile="procedural_memory"`. Plain `/recall` without a profile can
+miss this custom collection even when `/list` proves records exist, so any
+`/list` fallback in `context/memory-recall-receipt.json` is diagnostic only and
+does not satisfy `--require-recall-found`.
 
 Non-claims:
 

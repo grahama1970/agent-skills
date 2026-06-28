@@ -1076,6 +1076,9 @@ def recall_promoted_mutations(
         "k": 8,
         "collections": ["battle_mutation_memory"],
         "tags": ["battle", "warm_pond", "mutation"],
+        "recall_profile": "procedural_memory",
+        "recall_profile_source": "battle_v1_operational",
+        "threshold": 0.0,
     }
     receipt: dict[str, Any] = {
         "schema": "battle.memory_recall_receipt.v1",
@@ -1100,6 +1103,7 @@ def recall_promoted_mutations(
             response.raise_for_status()
             data = response.json()
             items = data.get("items", []) or []
+            receipt["recall_found"] = bool(data.get("found"))
             if not items:
                 list_response = client.post(
                     "/list",
@@ -1110,13 +1114,13 @@ def recall_promoted_mutations(
                 list_data = list_response.json()
                 items = list_data.get("documents", []) or []
                 receipt["fallback"] = {
-                    "reason": "recall_returned_no_items_for_custom_collection",
+                    "reason": "diagnostic_only_recall_returned_no_items_for_custom_collection",
                     "endpoint": "/list",
                     "total": list_data.get("total", 0),
                 }
         receipt.update(
             {
-                "found": bool(data.get("found")) or bool(items),
+                "found": bool(data.get("found")),
                 "item_count": len(items),
                 "top_keys": [item.get("_key") for item in items[:5] if isinstance(item, dict)],
                 "meta": data.get("meta", {}),

@@ -418,9 +418,10 @@ python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-b 
 
 This proof still does not execute an unbounded swarm, Tau loop repair cycles,
 Scillm delegate/batch/tool execution, QEMU/AFL campaigns, orchestrator-mutating
-chat, or live websocket streaming. Its `$memory` proof records an explicit
-fallback when `/recall` returns no custom-collection items but `/list` proves
-the promoted `battle_mutation_memory` records exist.
+chat, or live websocket streaming. Its `$memory` proof uses `/recall` with the
+`procedural_memory` recall profile for promoted `battle_mutation_memory`
+records. If a `/list` fallback appears in the receipt, treat it as diagnostic
+persistence evidence only, not semantic recall proof.
 
 The current monitor proof now renders a narrow React+D3 artifact graph over the
 generated `battle-003` context artifacts. `BattleForceGraph.tsx` uses D3 force

@@ -223,11 +223,12 @@
   `verdict=BLUE_SUCCESS`; both generated artifact sets passed
   `sanity/battle_v1_operational_acceptance.py`; the second run passed
   `--require-recall-found`.
-- `$memory` accepted `battle_mutation_memory` documents through `/upsert`, but
-  `/recall` with `collections=["battle_mutation_memory"]` returned no items in
-  this daemon. Battle records an explicit fallback in
-  `context/memory-recall-receipt.json` and uses `/list` to prove promoted
-  records exist until the memory custom-collection recall behavior is fixed.
+- `$memory` accepted `battle_mutation_memory` documents through `/upsert`.
+  Plain `/recall` with `collections=["battle_mutation_memory"]` can return no
+  items for that custom collection, but `/recall` with
+  `recall_profile="procedural_memory"` returns the promoted mutation records.
+  Battle uses that profile-backed recall path; `/list` fallback evidence is
+  diagnostic persistence proof only.
 - Battle Monitor now also renders the `battle-v1-operational` generated
   artifacts. Local UI proof: `npm run build` passed, `npm run test:e2e` reported
   `4 passed`, and the inspected screenshot is
@@ -281,7 +282,7 @@
 | 2026-06-28 | Require the context proof to record memory recall, Docker scan, Brave research, warm-pond candidates, and memory upsert before the race. | Battle strategy must start from prior memory and fresh reconnaissance; scan/research evidence should weight exploit and defense combinations rather than appearing after the score. |
 | 2026-06-28 | Add bounded warm-pond execution before the main race. | Candidate generation alone is not enough; selected exploit/defense combinations now execute in isolated Docker workspaces with per-attempt receipts and revert-by-discarding semantics. |
 | 2026-06-28 | Add `battle-v1-operational` as the four-party Docker proof rung. | This moves beyond context smoke by proving Arena/Red/Blue/Scorekeeper roles, async worker overlap, Docker-only replay evidence, memory promotion, generated force graph artifacts, and monitor rendering for one bounded fixture. |
-| 2026-06-28 | Record `$memory` custom-collection recall fallback explicitly. | `/upsert` and `/list` prove `battle_mutation_memory` records exist, while `/recall` currently returns no items for that custom collection; Battle must preserve that limitation in receipts rather than hiding it. |
+| 2026-06-28 | Use `$memory` `procedural_memory` recall profile for Battle mutation memory. | `/upsert` and `/list` prove `battle_mutation_memory` persistence, but profile-backed `/recall` is the semantic recall proof path for custom procedural mutation records. |
 
 ## Open Questions
 
