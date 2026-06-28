@@ -36,7 +36,7 @@ Use this skill instead of free-form `$ask webgpt ...` for project-agent WebGPT
 reviews. The supported path is the dedicated wrapper:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/webgpt-review/scripts/run-webgpt-review.sh \
+./scripts/run-webgpt-review.sh \
   --bundle /absolute/path/to/review-bundle.md \
   --review-type code \
   --project <project-name> \
@@ -49,7 +49,7 @@ only when preflight cannot reach Surf/focus state, and then calls the ask-owned
 executable command:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh webgpt-review \
+../ask/run.sh webgpt-review \
   --bundle /absolute/path/to/review-bundle.md \
   --review-type code \
   --project <project-name> \
