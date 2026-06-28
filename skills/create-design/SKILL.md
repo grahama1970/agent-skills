@@ -10,6 +10,19 @@ description: >
   workflow, or ux-lab handoff.
 metadata:
   short-description: Research-backed UX collaboration loop
+provides:
+  - design-collaboration-loop
+  - ux-brief-generation
+  - mockup-review-workflow
+composes:
+  - best-practices-design
+  - memory
+  - dogpile
+  - ask
+  - ux-lab
+complies:
+  - best-practices-skills
+  - best-practices-design
 ---
 
 # Create Design
