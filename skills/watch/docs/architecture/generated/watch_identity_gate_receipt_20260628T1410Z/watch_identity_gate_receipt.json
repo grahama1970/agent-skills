@@ -1,0 +1,236 @@
+{
+  "schema": "watch.identity_gate_receipt.v1",
+  "status": "IDENTITY_LABELS_WITHHELD",
+  "created_at": "2026-06-28T14:15:41Z",
+  "source_realtime_identity_receipt": "skills/watch/docs/architecture/generated/watch_realtime_identity_memory_loop_live_approval_linked_20260628T1315Z/watch_realtime_identity_memory_loop_live_receipt.json",
+  "threshold": 0.72,
+  "input_receipt_statuses": {
+    "realtime_identity_loop": "LIVE_RECEIPTS_WRITTEN",
+    "reference_embeddings": "WRITTEN",
+    "crop_reference_similarity": "SCORED_REQUIRES_NEGATIVE_CONTROLS",
+    "memory_upsert": "WRITTEN",
+    "memory_recall": "QUERIED"
+  },
+  "claim_boundary": {
+    "proves": [
+      "crop/reference similarity comparisons were evaluated against identity-promotion gates",
+      "UI label policy is explicit for each candidate crop"
+    ],
+    "does_not_prove": [
+      "final human-approved character identity when promotion is withheld",
+      "scene truth from Brave or public image search alone"
+    ]
+  },
+  "candidates": [
+    {
+      "crop_qdrant_point_id": "162f973c-b8ee-5f4f-8cbb-75bbdc9066e6",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.705673,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b838548f-be1c-5df5-8f5b-8b06b85551ce",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "SIMILARITY_BELOW_THRESHOLD",
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "169f3a86-8d7d-59f0-b855-cdff95faf943",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.723379,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b25b81f3-203e-52c6-9d8d-214e9412a346",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "529c9a22-a480-5b5b-9959-71ce0e039601",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.819222,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b838548f-be1c-5df5-8f5b-8b06b85551ce",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "64a298ad-7eaa-562a-9bd9-1ae931ecee0d",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.657025,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b25b81f3-203e-52c6-9d8d-214e9412a346",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "SIMILARITY_BELOW_THRESHOLD",
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "7e1aa0c8-a5db-581a-8b4a-1a0288421fe8",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.836295,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b25b81f3-203e-52c6-9d8d-214e9412a346",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "8a25051a-fd17-5cea-855a-ee576f478719",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 1.0,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b838548f-be1c-5df5-8f5b-8b06b85551ce",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "8ec99331-fd3b-5eb6-8255-abe6c5387835",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.926936,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b838548f-be1c-5df5-8f5b-8b06b85551ce",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "9f6f0863-59c1-59d0-a10f-551425ecbd4d",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 1.0,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b25b81f3-203e-52c6-9d8d-214e9412a346",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:1f28abcf1af0f14ee92621f3b53d3b42",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "b21e2a36-4faf-5f58-98a2-1f70e899fe2b",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 0.814519,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "b838548f-be1c-5df5-8f5b-8b06b85551ce",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:c176670a9a2d328cc9647c819bc3fbf5",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    },
+    {
+      "crop_qdrant_point_id": "e4fd94fa-1068-578f-a044-4dbcff2fa31e",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "best_similarity": 1.0,
+      "threshold": 0.72,
+      "reference_qdrant_point_id": "d7528aa2-17bb-5455-8197-df4d3fc1564c",
+      "reference_approval_receipt_id": "watch_ref_approval_receipt:603ba0f7a329b183eacf63c0a8b2533b",
+      "reference_approval_receipt_status": "APPROVED_CANARY_PIPELINE_ONLY",
+      "reference_approval_scope": "CANARY_PIPELINE_ONLY",
+      "identity_status": "IDENTITY_WITHHELD",
+      "ui_label_policy": "RENDER_PERSON_OBSERVATION_ONLY",
+      "promotion_allowed": false,
+      "blockers": [
+        "REFERENCE_NOT_APPROVED_FOR_IDENTITY_PROMOTION",
+        "REFERENCE_SCOPE_NOT_IDENTITY_PROMOTION",
+        "NEGATIVE_CONTROL_RECEIPT_MISSING"
+      ]
+    }
+  ],
+  "counts": {
+    "comparison_count": 30,
+    "candidate_count": 10,
+    "promoted_count": 0,
+    "withheld_count": 10,
+    "memory_recall_item_count": 10,
+    "reference_embedding_count": 3
+  }
+}
