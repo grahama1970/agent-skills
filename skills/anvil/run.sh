@@ -11,7 +11,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     source "$PROJECT_ROOT/.env"
     set +a
 fi
-LOCAL_DEV="/home/graham/workspace/experiments/anvil"
+LOCAL_DEV="${ANVIL_DEV_DIR:-}"
 if [ -d "$LOCAL_DEV" ]; then
     cd "$LOCAL_DEV" || exit
     exec uv run anvil "$@"
