@@ -68,45 +68,65 @@ Deploy to configured agent homes:
 
 ## What I'm Working On
 
-I break stuff all the time. Here are the projects and skills I'm currently having fun with:
+I maintain projects and skills continuously. Here's my current focus:
 
 <table>
   <tr>
     <td align="center">
       <a href="https://github.com/grahama1970/tau">
-        <img src="https://raw.githubusercontent.com/grahama1970/tau/main/docs/assets/tau-header.webp" width="100%" alt="T'au" />
+        <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
       </a>
       <br/><strong>T'au</strong> — Goal-locked agent harness
     </td>
     <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
+        <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
+      </a>
+      <br/><strong>Surf</strong> — Browser automation &amp; WebGPT transport
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
+        <img src="docs/assets/project-cards/dogpile.webp" width="100%" alt="Dogpile" />
+      </a>
+      <br/><strong>Dogpile</strong> — Multi-source research evidence
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
+        <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
+      </a>
+      <br/><strong>Persona Dream</strong> — Memory-to-storyboard packets
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
+        <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
+      </a>
+      <br/><strong>Extractor</strong> — Preset-first document ingestion
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab">
+        <img src="docs/assets/project-cards/pdf-lab.webp" width="100%" alt="PDF Lab" />
+      </a>
+      <br/><strong>PDF Lab</strong> — Extraction convergence loop
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
-        <img src="skills/battle/docs/assets/battle-header.png" width="100%" alt="Battle" />
+        <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
       </a>
       <br/><strong>Battle</strong> — Red vs Blue security competitions
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
-        <img src="skills/watch/docs/assets/watch-banner.jpg" width="100%" alt="Watch" />
+        <img src="docs/assets/project-cards/watch.webp" width="100%" alt="Watch" />
       </a>
       <br/><strong>Watch</strong> — Video evidence extraction
     </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
-        <img src="skills/surf/docs/assets/surf-banner.png" width="100%" alt="Surf" />
-      </a>
-      <br/><strong>Surf</strong> — Browser automation &amp; WebGPT transport
-    </td>
-    <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/hum">
-        <img src="skills/hum/assets/hum-header.webp" width="100%" alt="Hum" />
-      </a>
-      <br/><strong>Hum</strong> — Persona humming diagnostics
-    </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
-        <img src="skills/debugger/docs/assets/debugger-banner.png" width="100%" alt="Debugger" />
+        <img src="docs/assets/project-cards/debugger.webp" width="100%" alt="Debugger" />
       </a>
       <br/><strong>Debugger</strong> — Runtime state inspection
     </td>
