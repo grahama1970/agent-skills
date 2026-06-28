@@ -1,3 +1,11 @@
+"""Typed metric models for pdf-lab integrity and readiness reports.
+
+Inputs: integrity counters, issue records, and report metadata.
+Outputs: dataclass instances convertible to JSON dictionaries.
+Failure modes: enum/dataclass construction raises normal Python validation
+errors when required fields are absent.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field

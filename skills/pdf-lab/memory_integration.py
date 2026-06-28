@@ -7,12 +7,13 @@ strategy selection and avoid repeating failed approaches.
 Post-hook: Learns convergence outcomes (strategy, iterations, final score,
 improvements) so future runs can skip to the winning strategy immediately.
 
-Pattern: Follows create-context/memory_integration.py with graceful degradation.
+Pattern: Calls /memory through memory/run.sh so pdf-lab never imports ArangoDB or
+memory internals directly.
 """
 
 import importlib.util
 import json
-import sys
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -22,17 +23,8 @@ from loguru import logger
 # ---------------------------------------------------------------------------
 # Lazy imports with graceful degradation
 # ---------------------------------------------------------------------------
-_SKILLS_DIR = Path(__file__).parent.parent
-if str(_SKILLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_SKILLS_DIR))
-
-# Memory client
-_HAS_MEMORY = False
-try:
-    from common.memory_client import MemoryClient, MemoryScope, RecallResult
-    _HAS_MEMORY = True
-except ImportError:
-    logger.debug("common.memory_client not available — memory integration disabled")
+_SKILLS_DIR = Path(__file__).resolve().parent.parent
+_MEMORY_RUN = _SKILLS_DIR / "memory" / "run.sh"
 
 # Taxonomy (loaded dynamically to avoid name conflicts)
 _taxonomy_extract = None
@@ -44,7 +36,21 @@ if _TAXONOMY_PATH.exists():
         _spec.loader.exec_module(_mod)
         _taxonomy_extract = getattr(_mod, "extract_taxonomy", None)
     except Exception as e:
-        logger.debug(f"Taxonomy module load failed: {e}")
+        logger.warning(f"Taxonomy module load failed: {e}")
+
+
+def _memory_available() -> bool:
+    return _MEMORY_RUN.exists() and _MEMORY_RUN.is_file()
+
+
+def _run_memory(args: List[str], timeout_s: float = 30.0) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [str(_MEMORY_RUN), *args],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=timeout_s,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -70,7 +76,7 @@ def extract_bridges(text: str) -> List[str]:
             if bridges:
                 return bridges
         except Exception as e:
-            logger.debug(f"Taxonomy extraction failed, using keyword fallback: {e}")
+            logger.warning(f"Taxonomy extraction failed, using keyword fallback: {e}")
 
     text_lower = text.lower()
     found = []
@@ -95,18 +101,24 @@ def recall_prior_convergence(
     enabling the tuner to skip failed approaches and start from the
     winning strategy. Returns empty string if memory unavailable.
     """
-    if not _HAS_MEMORY:
+    if not _memory_available():
         return ""
 
     try:
-        client = MemoryClient(scope=MemoryScope.OPERATIONAL)
-        result = client.recall(
-            f"pdf_lab convergence strategy {pdf_type_or_url} iterations score",
-            k=k,
+        result = _run_memory(
+            [
+                "recall",
+                "--q",
+                f"pdf_lab convergence strategy {pdf_type_or_url} iterations score",
+                "--k",
+                str(k),
+                "--brief",
+            ]
         )
-        if result.found:
-            return result.to_context(max_items=k)
-        return ""
+        if result.returncode != 0:
+            logger.warning("Prior convergence recall failed: {}", result.stderr.strip())
+            return ""
+        return result.stdout.strip()
     except Exception as e:
         logger.warning(f"Prior convergence recall failed: {e}")
         return ""
@@ -135,11 +147,10 @@ def learn_convergence(
 
     Returns list of learned lesson IDs (empty if memory unavailable).
     """
-    if not _HAS_MEMORY:
+    if not _memory_available():
         logger.info("Memory not available — skipping convergence learn")
         return []
 
-    client = MemoryClient(scope=MemoryScope.OPERATIONAL)
     now = datetime.now().isoformat()
     learned_ids = []
 
@@ -167,41 +178,65 @@ def learn_convergence(
     })
 
     try:
-        result = client.learn(
-            problem=f"PDF convergence: {pdf_url[:80]} — strategy={strategy} score={final_score:.2f}",
-            solution=summary,
-            tags=base_tags + ["snapshot"],
+        result = _run_memory(
+            [
+                "learn",
+                "--problem",
+                f"PDF convergence: {pdf_url[:80]} — strategy={strategy} score={final_score:.2f}",
+                "--solution",
+                summary,
+                "--tag",
+                ",".join(base_tags + ["snapshot"]),
+            ]
         )
-        if result.success:
-            learned_ids.append(result.lesson_id)
-            logger.info(f"Learned convergence snapshot: {result.lesson_id}")
+        if result.returncode == 0:
+            learned_ids.append(result.stdout.strip().splitlines()[-1] if result.stdout.strip() else "memory-learn")
+            logger.info("Learned convergence snapshot")
+        else:
+            logger.warning("Failed to learn convergence snapshot: {}", result.stderr.strip())
     except Exception as e:
         logger.warning(f"Failed to learn convergence snapshot: {e}")
 
     # 2. Individual improvements (cross-PDF value)
     for improvement in (improvements or []):
         try:
-            result = client.learn(
-                problem=f"PDF extraction improvement: {improvement[:100]}",
-                solution=improvement,
-                tags=base_tags + ["improvement"],
+            result = _run_memory(
+                [
+                    "learn",
+                    "--problem",
+                    f"PDF extraction improvement: {improvement[:100]}",
+                    "--solution",
+                    improvement,
+                    "--tag",
+                    ",".join(base_tags + ["improvement"]),
+                ]
             )
-            if result.success:
-                learned_ids.append(result.lesson_id)
+            if result.returncode == 0:
+                learned_ids.append(result.stdout.strip().splitlines()[-1] if result.stdout.strip() else "memory-learn")
+            else:
+                logger.warning("Failed to learn improvement: {}", result.stderr.strip())
         except Exception as e:
             logger.warning(f"Failed to learn improvement: {e}")
 
     # 3. Write-back result (if code was modified)
     if write_back_result:
         try:
-            result = client.learn(
-                problem=f"Pipeline code change: {pdf_url[:60]} — {strategy}",
-                solution=json.dumps(write_back_result),
-                tags=base_tags + ["write_back", "drift_tracking"],
+            result = _run_memory(
+                [
+                    "learn",
+                    "--problem",
+                    f"Pipeline code change: {pdf_url[:60]} — {strategy}",
+                    "--solution",
+                    json.dumps(write_back_result),
+                    "--tag",
+                    ",".join(base_tags + ["write_back", "drift_tracking"]),
+                ]
             )
-            if result.success:
-                learned_ids.append(result.lesson_id)
-                logger.info(f"Learned write-back result: {result.lesson_id}")
+            if result.returncode == 0:
+                learned_ids.append(result.stdout.strip().splitlines()[-1] if result.stdout.strip() else "memory-learn")
+                logger.info("Learned write-back result")
+            else:
+                logger.warning("Failed to learn write-back result: {}", result.stderr.strip())
         except Exception as e:
             logger.warning(f"Failed to learn write-back result: {e}")
 

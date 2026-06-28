@@ -17,10 +17,22 @@ triggers:
 metadata:
   short-description: Self-improving PDF extraction with convergence + write-back
   version: "1.0.0"
+runtime_self_improvement: substantial
 
 provides:
-  - pdf-lab
-composes: [task-monitor]
+  - pdf-extraction
+composes:
+  - memory
+  - scillm
+  - task-monitor
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-arangodb
+taxonomy:
+  - precision
+  - validation
+  - resilience
 ---
 
 # pdf-lab
@@ -70,6 +82,12 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab
 
 # Rollback a specific fix
 ./run.sh rollback --sha abc123
+
+# Deterministic post-run verification for substantial-skill jobs
+./run.sh verify --job-dir /tmp/pdf-lab-job
+
+# Build a maintainer escalation packet when verify fails
+./run.sh file-maintainer-ticket --job-dir /tmp/pdf-lab-job
 ```
 
 ## How Fixes Get Written Back
@@ -98,8 +116,9 @@ threshold. Falls back to heuristic adaptive params if convergence fails.
 
 ## Memory + Taxonomy Integration
 
-The skill integrates with the shared memory and taxonomy systems via
-`memory_integration.py` for cross-session learning:
+The skill integrates with `/memory` through `memory/run.sh` subcommands in
+`memory_integration.py`; it does not import ArangoDB clients or the memory
+Python package directly.
 
 - **Pre-hook (`recall_prior_convergence`)**: Before tuning, recalls prior convergence
   results for the same PDF type or URL. Enables the tuner to skip failed strategies
@@ -111,7 +130,30 @@ The skill integrates with the shared memory and taxonomy systems via
   (tuned to PDF extraction domain).
 - **Tags**: `["pdf_lab", "convergence"] + bridges`
 
-Gracefully degrades if `common.memory_client` or `taxonomy/taxonomy.py` are unavailable.
+Gracefully degrades if `/memory` is unavailable.
+
+## Runtime Verification
+
+Post-run verification is mandatory for non-trivial pdf-lab jobs.
+
+`pdf-lab` is a substantial runtime self-improvement skill. After any job that
+creates extraction, convergence, or write-back artifacts, run:
+
+```bash
+./run.sh verify --job-dir <job-dir>
+```
+
+The verifier writes `<job-dir>/verify-receipt.json` and exits non-zero on
+missing or inconsistent artifacts. When verification fails, create a maintainer
+packet with:
+
+```bash
+./run.sh file-maintainer-ticket --job-dir <job-dir>
+```
+
+Runtime workers must not patch or commit `agent-skills` from inside a failed
+pdf-lab job; maintainer escalation is documented in
+`references/maintainer-escalation.md`.
 
 ## File Structure
 
@@ -122,8 +164,11 @@ pdf-lab/
   pdf_lab.py                 # Typer CLI entry point
   memory_integration.py      # Memory + Taxonomy hooks
   pyproject.toml             # Dependencies
+  sanity.sh                  # Local behavioral sanity gate
+  scripts/                   # Runtime verification and compliance helpers
+  references/                # Maintainer escalation and long-form contracts
+  agents/pdf-lab/AGENTS.md   # Worker post-run rules
   lib/                       # Core libraries (delta, tuner, writer, etc.)
-  data/                      # Local state and convergence events
   docs/                      # Additional documentation
 ```
 
@@ -133,3 +178,5 @@ pdf-lab/
 - `/memory` entries for future recall (synthetic creation, convergence, reverts)
 - Git commits with persona attribution trailers
 - JSON report of convergence results
+- `verify-receipt.json` for deterministic runtime verification
+- `maintainer-ticket.json` when a failed job needs skill-maintainer repair

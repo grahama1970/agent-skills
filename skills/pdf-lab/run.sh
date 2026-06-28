@@ -22,6 +22,8 @@ unset VIRTUAL_ENV
 #   ./run.sh synthetic [options]             Generate synthetic reproduction PDF
 #   ./run.sh status                          Show recent tuning results
 #   ./run.sh status-report [options]         Create artifact-derived DoD/blocker report
+#   ./run.sh verify --job-dir DIR            Verify runtime artifacts and write receipt
+#   ./run.sh file-maintainer-ticket --job-dir DIR [--create]
 #   ./run.sh coverage-loop [options]         Create Coverage anti-hallucination plan-loop artifact
 #   ./run.sh memory-qa [options]             Create Memory/Qdrant final QA report
 #   ./run.sh history                         List all pdf-lab code changes
@@ -34,6 +36,7 @@ set -e
 INVOCATION_DIR="$PWD"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+export UV_PROJECT_ENVIRONMENT="${PDF_LAB_UV_ENV:-/mnt/storage12tb/skills/pdf-lab/.venv}"
 
 PDF_OXIDE_ROOT="${PDF_OXIDE_ROOT:-$INVOCATION_DIR}"
 export PDF_OXIDE_ROOT
@@ -75,6 +78,8 @@ Usage:
   pdf-lab synthetic [options]             Generate synthetic reproduction PDF
   pdf-lab status                          Show recent tuning results
   pdf-lab status-report [options]         Create artifact-derived DoD/blocker report
+  pdf-lab verify --job-dir DIR            Verify runtime artifacts and write receipt
+  pdf-lab file-maintainer-ticket --job-dir DIR [--create]
   pdf-lab coverage-loop [options]         Create Coverage anti-hallucination plan-loop artifact
   pdf-lab memory-qa [options]             Create Memory/Qdrant final QA report
   pdf-lab history                         List all pdf-lab code changes
@@ -300,6 +305,14 @@ cmd_memory_qa() {
     uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/pdf_lab.py" memory-qa "$@"
 }
 
+cmd_verify() {
+    uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/runtime_verify.py" "$@"
+}
+
+cmd_file_maintainer_ticket() {
+    uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/file_maintainer_ticket.py" "$@"
+}
+
 cmd_history() {
     echo "=== pdf-lab Code Change History ==="
     echo ""
@@ -398,6 +411,14 @@ case "${1:-}" in
     memory-qa)
         shift
         cmd_memory_qa "$@"
+        ;;
+    verify)
+        shift
+        cmd_verify "$@"
+        ;;
+    file-maintainer-ticket)
+        shift
+        cmd_file_maintainer_ticket "$@"
         ;;
     history)
         cmd_history

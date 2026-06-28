@@ -22,7 +22,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from loguru import logger
+
+load_dotenv()
 
 from .delta import ExtractionDelta, ReviewContext, Diagnosis, diagnose_delta
 from .human import (

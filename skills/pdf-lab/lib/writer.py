@@ -25,7 +25,10 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from loguru import logger
+
+load_dotenv()
 
 from .delta import ExtractionDelta, ReviewContext, Diagnosis
 from .params import TrialParams
