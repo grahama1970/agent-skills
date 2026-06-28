@@ -76,19 +76,19 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/tau">
         <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
       </a>
-      <br/><strong>T'au</strong><br/>Agent orchestration harness
+      <br/><strong>T'au</strong><br/><em>Agent orchestration harness</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
-      <br/><strong>Surf</strong><br/>Agent + ChatGPT browser control
+      <br/><strong>Surf</strong><br/><em>Agent + ChatGPT browser control</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
         <img src="docs/assets/project-cards/dogpile.webp" width="100%" alt="Dogpile" />
       </a>
-      <br/><strong>Dogpile</strong><br/>Search everything, cite it
+      <br/><strong>Dogpile</strong><br/><em>Search everything, cite it</em>
     </td>
   </tr>
   <tr>
@@ -96,19 +96,19 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
         <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
       </a>
-      <br/><strong>Persona Dream</strong><br/>Memory into storyboards
+      <br/><strong>Persona Dream</strong><br/><em>Memory into storyboards</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
         <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
       </a>
-      <br/><strong>Extractor</strong><br/>Docs into evidence trees
+      <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab">
         <img src="docs/assets/project-cards/pdf-lab.webp" width="100%" alt="PDF Lab" />
       </a>
-      <br/><strong>PDF Lab</strong><br/>Self-healing PDF extraction
+      <br/><strong>PDF Lab</strong><br/><em>Self-healing PDF extraction</em>
     </td>
   </tr>
   <tr>
@@ -116,19 +116,19 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
         <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
       </a>
-      <br/><strong>Battle</strong><br/>Genetic fuzzing arena
+      <br/><strong>Battle</strong><br/><em>Genetic fuzzing arena</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
         <img src="docs/assets/project-cards/watch.webp" width="100%" alt="Watch" />
       </a>
-      <br/><strong>Watch</strong><br/>Video that agents understand
+      <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
         <img src="docs/assets/project-cards/debugger.webp" width="100%" alt="Debugger" />
       </a>
-      <br/><strong>Debugger</strong><br/>Live variables, less guessing
+      <br/><strong>Debugger</strong><br/><em>Live variables, less guessing</em>
     </td>
   </tr>
 </table>
