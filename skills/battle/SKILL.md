@@ -29,6 +29,10 @@ composes:
   - ops-docker
   - code-runner
 
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-security
 taxonomy:
   - competition
   - selection
@@ -44,6 +48,59 @@ taxonomy:
 Pits a Red Team (attack) against a Blue Team (defense) in a long-running competitive loop. Each team leverages all `.pi/skills` to attack or defend a target codebase.
 
 ## Architecture
+
+Production Battle is an orchestration skill, not a large bespoke security
+engine. The host-side process should schedule rounds, choose personas, dispatch
+subagents, provision Docker runtimes, collect receipts, score hard runtime
+signals, write reports, and persist learning. Target code and team-generated
+code must execute only inside Docker.
+
+Required production invariants:
+
+- Red and Blue are subagent teams. Each dispatched subagent must include an
+  explicit persona selected by the orchestrator for that turn. Multiple personas
+  per team may run concurrently when the turn benefits from breadth.
+- Subagent handoffs and receipts should follow the compact Tau-style JSON
+  contract shape used by `tau.agent_handoff.v1` and `tau.subagent_receipt.v1`,
+  with Battle-specific fields layered on top rather than a separate ad hoc
+  protocol.
+- Battle calls modular Tau subagent contracts. Tau and the loop/agentic harness
+  own subagent execution and use `scillm` as the LLM/model caller. Battle owns
+  team selection, persona assignment, Docker runtimes, scorekeeping, artifacts,
+  and memory promotion.
+- Model choice is strategic but routed through Tau/loop: SOTA models for
+  planning, small fast models for high-throughput mutation generation and
+  triage, specialist models for language/security niches, and batch calls for
+  broad candidate generation.
+- Red and Blue have free research access through approved agent-side research
+  skills, including `dogpile`, `brave-search`, `memory`, GitHub/code search,
+  docs, papers, CVEs, and public writeups.
+- All target apps, exploit probes, fuzzers, payloads, repro scripts, patch
+  builds, tests, migrations, dependency installs, and replay checks run in
+  Docker. The host is control plane only.
+- Docker target runtimes may be rebuilt and relaunched between rounds. Persist
+  only controlled volumes and artifacts that must survive a rebuild; store
+  durable strategic context and learnings in `$memory`.
+- Docker runtimes must support dynamic language/toolchain selection. Any code
+  language required by the target may be added to the runtime image or selected
+  adapter; Battle should not hard-code one language.
+- Battle should be high-throughput when the target runtime is warm: thousands of
+  exploit/defense mutations may be attempted with tight 10-15 second Docker
+  execution windows on capable workstation hardware.
+- Battle should use combinatorial mutation. Red tries every plausible exploit
+  family and combination within safety/time budgets; Blue tries every plausible
+  patch, hardening, configuration, test, detection, and mitigation combination.
+  Successful combinations receive stronger promotion than isolated tactics.
+- Research may burst concurrently from the agent side. Red and Blue may fan out
+  multiple `brave-search` and `dogpile` calls, including 10x concurrent Brave
+  search batches when needed, then store useful results and negative evidence in
+  `$memory`.
+- Target containers default to no network. External research happens from the
+  agent side through controlled skills unless a scenario explicitly grants
+  target-container network access.
+- The scorekeeper records objective outcomes: system down, system still up after
+  the allotted time, exploit success, crash artifacts, patch timing, regression
+  behavior, resource limits, and replay results. It is not an LLM judge.
 
 Based on research into RvB framework, DARPA AIxCC, and Microsoft PyRIT:
 
@@ -154,7 +211,42 @@ For non-git directories. Creates simple file copies for each team.
 
 # Generate report from completed battle
 ./run.sh report <battle-id>
+
+# Run the deterministic Battle v0 fixture proof
+./run.sh battle-fixture battle-001 --out /tmp/battle-001
 ```
+
+## Battle v0 Fixture Proof
+
+Battle v0 is a narrow, deterministic proof rung for the Battle artifact contract.
+It runs one local Red -> Blue -> Judge fixture and emits replayable receipts:
+
+- `red-receipt.json`
+- `blue-receipt.json`
+- `judge/judge-receipt.json`
+- `scoreboard.json`
+- `monitor-index.json`
+- `run-receipt.json`
+
+The Battle v0 scoreboard is derived from the independent Judge receipt, not from
+Blue-side self-certification fields. This addresses the current battle loop gap
+where a Blue patch can carry `verified` and `functionality_preserved` claims
+without a separate Judge phase.
+
+The fixture proof is intentionally limited:
+
+```text
+mocked: no
+live: local_deterministic_fixture
+agentic: false
+models_used: []
+```
+
+It proves the receipt boundary and monitor artifact rendering for the local
+fixture only. It does not prove real Red or Blue agent behavior, scillm,
+OpenCode, anvil, code-runner, memory learning, Docker, QEMU, or multi-round
+campaign readiness. See `docs/BATTLE_V0.md` for the validation commands and
+artifact-backed monitor proof path.
 
 ## Scoring System (AIxCC-style)
 

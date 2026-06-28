@@ -1,0 +1,363 @@
+:root {
+  --bg: #111316;
+  --panel: #171b20;
+  --panelDeep: #0c1014;
+  --border: rgba(255, 255, 255, 0.12);
+  --text: #e4e9ef;
+  --muted: #8591a3;
+  --green: #19d27f;
+  --red: #ff5a54;
+  --amber: #f2ae36;
+  --blue: #5aa7ff;
+  --shadow: rgba(0, 0, 0, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.appShell {
+  min-height: 100vh;
+  padding: 32px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  margin: 8px 0 10px;
+  font-size: 38px;
+  line-height: 1.06;
+  letter-spacing: 0;
+}
+
+.hero p {
+  max-width: 760px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.heroStatus,
+.card,
+.statePanel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 18px 60px var(--shadow);
+}
+
+.heroStatus {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.card {
+  padding: 20px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cardHeader h2,
+.cardHeader h3,
+.card h2,
+.card h3 {
+  margin: 2px 0 0;
+}
+
+.iconBadge {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  color: var(--blue);
+  flex: 0 0 auto;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.summaryGrid,
+.lowerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.playersGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.playerCard.red {
+  border-color: rgba(255, 90, 84, 0.32);
+}
+
+.playerCard.blue {
+  border-color: rgba(90, 167, 255, 0.34);
+}
+
+.playerCard.judge {
+  border-color: rgba(25, 210, 127, 0.32);
+}
+
+.kv {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.kv div {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.kv dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.timelineCard {
+  margin-bottom: 18px;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.timelineNode {
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 96px;
+}
+
+.timelineDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  margin-bottom: 18px;
+}
+
+.timelineText {
+  display: grid;
+  gap: 6px;
+}
+
+.statusPass {
+  color: var(--green);
+}
+
+.statusFail {
+  color: var(--red);
+}
+
+.statusWarn {
+  color: var(--amber);
+}
+
+.statusNeutral {
+  color: var(--muted);
+}
+
+.timelineDot.statusPass {
+  background: var(--green);
+  box-shadow: 0 0 18px rgba(25, 210, 127, 0.34);
+}
+
+.timelineDot.statusFail {
+  background: var(--red);
+  box-shadow: 0 0 18px rgba(255, 90, 84, 0.34);
+}
+
+.timelineDot.statusWarn {
+  background: var(--amber);
+  box-shadow: 0 0 18px rgba(242, 174, 54, 0.34);
+}
+
+.scoreGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scoreGrid div {
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.scoreGrid strong {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 22px;
+}
+
+.redText {
+  color: var(--red);
+}
+
+.blueText {
+  color: var(--blue);
+}
+
+.verdictRow,
+.sourceLine {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.sourceLine {
+  margin: 0 0 16px;
+  border-top: 0;
+  padding-top: 0;
+  color: var(--muted);
+}
+
+.sourceLine strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.artifactList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.artifactList li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--text);
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+
+.centerShell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.statePanel {
+  width: min(720px, 100%);
+  padding: 26px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.statePanel h1 {
+  margin: 4px 0 8px;
+  letter-spacing: 0;
+}
+
+.statePanel p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.statePanel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0 0;
+}
+
+.blockedPanel svg {
+  color: var(--amber);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 920px) {
+  .hero,
+  .summaryGrid,
+  .lowerGrid,
+  .playersGrid,
+  .timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .appShell {
+    padding: 20px;
+  }
+
+  .scoreGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

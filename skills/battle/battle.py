@@ -21,6 +21,7 @@ Based on research into:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -145,6 +146,42 @@ def battle(
     report_path = REPORTS_DIR / f"{state.battle_id}.md"
     report_path.write_text(report)
     console.print(f"\n[green]Report saved: {report_path}[/green]")
+
+
+def run_battle_fixture_command(fixture: str, out: Optional[Path]) -> None:
+    """Run one deterministic Battle fixture with Red/Blue/Judge receipts."""
+    from calth import run_calth_001
+    from config import SKILL_DIR
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (SKILL_DIR / "artifacts" / "battle" / fixture)
+    result = run_calth_001(fixture_dir=fixture_dir, out_dir=out_dir)
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
+@app.command("battle-fixture")
+def battle_fixture(
+    fixture: str = typer.Argument("battle-001", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+):
+    """Run one deterministic Battle fixture with Red/Blue/Judge receipts."""
+    run_battle_fixture_command(fixture, out)
+
+
+@app.command()
+def calth(
+    fixture: str = typer.Argument("battle-001", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+):
+    """Compatibility alias for battle-fixture."""
+    run_battle_fixture_command(fixture, out)
 
 
 @app.command()

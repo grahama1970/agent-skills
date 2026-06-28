@@ -1,0 +1,32 @@
+{
+  "schema": "battle.scenario.v1",
+  "battle_id": "battle-001",
+  "scenario_id": "seeded-path-traversal-001",
+  "title": "Battle-001 seeded path traversal battle",
+  "mode": "copy",
+  "expected_changed_files": [
+    "app.py"
+  ],
+  "commands": {
+    "expect_vulnerable": [
+      "python3",
+      "exploit_check.py",
+      "--expect-vulnerable"
+    ],
+    "expect_safe": [
+      "python3",
+      "exploit_check.py",
+      "--expect-safe"
+    ],
+    "regression": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ]
+  },
+  "stop_condition": "Red confirms exploit, Blue applies patch, Judge verifies exploit blocked and tests pass."
+}

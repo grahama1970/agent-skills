@@ -1,0 +1,1 @@
+docs/PROJECT_KNOWLEDGE.md
