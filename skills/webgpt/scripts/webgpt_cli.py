@@ -180,7 +180,11 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
         needs_recreate = True
 
     if needs_recreate and conv_url:
+        # Switch to Desktop 2, create tab there, switch back
+        subprocess.run(["wmctrl", "-s", "1"], capture_output=True, timeout=5)
+        time.sleep(0.5)
         result = _surf("tab.new", conv_url)
+        subprocess.run(["wmctrl", "-s", "0"], capture_output=True, timeout=5)
         if result.returncode == 0 and result.stdout.strip():
             parts = result.stdout.strip().split()
             if len(parts) >= 3 and parts[0] == "Created":
@@ -192,7 +196,7 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
                     stored = json.loads(path.read_text())
                     stored.update(binding)
                     path.write_text(json.dumps(stored, indent=2) + "\n")
-                print(f"TAB_REPLACED: {tab_id} -> {new_id}{tag}", file=sys.stderr)
+                print(f"TAB_REPLACED: {tab_id} -> {new_id} on Desktop 2{tag}", file=sys.stderr)
                 changed = True
 
     return binding
