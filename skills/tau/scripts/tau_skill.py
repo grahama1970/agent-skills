@@ -209,6 +209,9 @@ def goal_objective_manifests(paths: list[Path]) -> list[dict[str, Any]]:
         "project-watchdog-same-run-compliance-apply-20260628T224349Z": "watchdog_apply_transport",
         "fresh-current-multistep-command-loop-20260628T225412Z": "current_multistep_command_loop",
         "fresh-current-multistep-github-apply-20260628T225904Z": "current_multistep_github_apply",
+        "ux-lab-repeatable-same-message-tui-mirror-20260628T232614Z": "repeatable_chat_tui_mirror",
+        "skill-chat-ui-proof-command-20260628T233232Z": "skill_chat_ui_proof_command",
+        "skill-e2e-include-chat-ui-20260628T233739Z": "e2e_include_chat_ui",
     }
     rows: list[dict[str, Any]] = []
     for path in paths:
@@ -373,10 +376,22 @@ def chat_ui_proof_payload(
     }
 
 
-def e2e_payload() -> dict[str, Any]:
+def e2e_payload(*, include_chat_ui: bool, chat_ui_timeout_s: int) -> dict[str, Any]:
     sanity_result = sanity_payload()
     status_result = status_payload()
-    ok = sanity_result["ok"] and status_result["ok"]
+    chat_ui_result = (
+        chat_ui_proof_payload(
+            url="http://127.0.0.1:3002/#tau",
+            prompt="How does Tau handle a CWE-287 SPARTA evidence case?",
+            out_dir=None,
+            timeout_s=chat_ui_timeout_s,
+        )
+        if include_chat_ui
+        else None
+    )
+    ok = sanity_result["ok"] and status_result["ok"] and (
+        chat_ui_result is None or chat_ui_result["ok"]
+    )
     return {
         "schema": "agent_skills.tau.e2e_receipt.v1",
         "checked_at": now(),
@@ -385,7 +400,10 @@ def e2e_payload() -> dict[str, Any]:
         "live": "mixed",
         "sanity": sanity_result,
         "status": status_result,
-        "required_next_for_ui_claims": [
+        "chat_ui": chat_ui_result,
+        "required_next_for_ui_claims": []
+        if include_chat_ui
+        else [
             "Run browser/CDP screenshot verification against the host chat route.",
             "Inspect screenshot for visible Memory stage trace and content rendering.",
         ],
@@ -448,9 +466,20 @@ def e2e_command(
             help="No-op flag documenting that this is not browser UI production proof.",
         ),
     ] = False,
+    include_chat_ui: Annotated[
+        bool,
+        typer.Option(
+            "--include-chat-ui",
+            help="Also run the live UX Lab Tau chat/TUI mirror browser proof.",
+        ),
+    ] = False,
+    chat_ui_timeout_s: Annotated[
+        int,
+        typer.Option("--chat-ui-timeout-s", help="Maximum seconds for the optional chat UI proof."),
+    ] = 90,
 ) -> None:
     """Run bounded Tau checks plus live status/proof inspection."""
-    emit(e2e_payload())
+    emit(e2e_payload(include_chat_ui=include_chat_ui, chat_ui_timeout_s=chat_ui_timeout_s))
 
 
 if __name__ == "__main__":
