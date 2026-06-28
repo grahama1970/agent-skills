@@ -40,7 +40,7 @@ Train RVC (Retrieval-based Voice Conversion) models from artist names. Creates a
 The simplest way for an agent to learn a voice:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-voice
+cd /path/to/agent-skills/skills/learn-voice
 
 # Just say who you want to learn
 ./run.sh learn "Sierra Ferrell"
