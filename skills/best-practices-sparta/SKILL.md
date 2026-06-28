@@ -9,6 +9,21 @@ triggers:
   - sparta data model
   - cwe sparta edges
   - qra generation
+metadata:
+  short-description: SPARTA pipeline data model and QRA guardrails
+provides:
+  - sparta-pipeline-guidance
+  - sparta-data-model-rules
+  - qra-generation-guardrails
+composes:
+  - create-qras
+  - create-evidence-case
+  - ops-arango
+  - best-practices-security
+complies:
+  - best-practices-skills
+  - best-practices-sparta
+  - best-practices-security
 ---
 
 # SPARTA Pipeline Best Practices
