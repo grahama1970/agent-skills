@@ -52,7 +52,7 @@ The skill monitors the following locations:
 
 - **Corpus**: `/mnt/storage12tb/extractor_corpus/`
 - **Results**: `/mnt/storage12tb/extractor_corpus/results/s00_batch_full/`
-- **Training Data**: `/home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/data/`
+- **Training Data**: `$PI_HOME/skills/create-classifier/data/`
 - **Logs**: Current working directory of the extractor project.
 
 ## Commands
