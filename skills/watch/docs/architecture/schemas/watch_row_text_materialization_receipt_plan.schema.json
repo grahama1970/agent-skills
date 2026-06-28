@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_row_text_materialization_receipt_plan.schema.json",
+  "title": "Watch Row Text Materialization Receipt Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "asset",
+    "observation_context",
+    "case_context",
+    "required_channel_plans",
+    "materialization_requirements",
+    "memory_requirements",
+    "promotion_policy",
+    "counts",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.row_text_materialization_receipt_plan.v1"
+    },
+    "status": {
+      "enum": ["BLOCKED_PENDING_SOURCE_REFS", "PLANNED_NOT_READ"]
+    },
+    "asset": {
+      "type": "object"
+    },
+    "observation_context": {
+      "type": "object",
+      "required": ["segment_id", "track_id", "candidate_entity"]
+    },
+    "case_context": {
+      "type": "object"
+    },
+    "required_channel_plans": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "channel",
+          "status",
+          "candidate_source_fields",
+          "source_refs",
+          "materialized_text_hash",
+          "materialized_text_present",
+          "read_receipt_required",
+          "scene_truth_allowed_after_read",
+          "promotion_allowed"
+        ],
+        "properties": {
+          "channel": {
+            "enum": ["scene_marker_text", "srt_text", "whisper_text", "vlm_description"]
+          },
+          "status": {
+            "enum": ["BLOCKED_PENDING_SOURCE_REF", "PLANNED_NOT_READ"]
+          },
+          "source_refs": {
+            "type": "array"
+          },
+          "materialized_text_hash": {
+            "type": ["string", "null"]
+          },
+          "materialized_text_present": {
+            "const": false
+          },
+          "read_receipt_required": {
+            "const": true
+          },
+          "scene_truth_allowed_after_read": {
+            "const": true
+          },
+          "promotion_allowed": {
+            "const": false
+          }
+        }
+      }
+    },
+    "materialization_requirements": {
+      "type": "object",
+      "required": [
+        "source_reads_required",
+        "text_hashes_required",
+        "empty_text_must_be_explicit",
+        "entity_span_receipt_after_materialization_required"
+      ],
+      "properties": {
+        "source_reads_required": {
+          "const": true
+        },
+        "text_hashes_required": {
+          "const": true
+        },
+        "empty_text_must_be_explicit": {
+          "const": true
+        },
+        "entity_span_receipt_after_materialization_required": {
+          "const": true
+        }
+      }
+    },
+    "memory_requirements": {
+      "type": "object",
+      "required": [
+        "allowed_answer_path",
+        "requires_intent_before_recall",
+        "requires_items_key",
+        "forbidden_results_key_dependency",
+        "direct_qdrant_or_arango_answer_allowed"
+      ],
+      "properties": {
+        "allowed_answer_path": {
+          "const": "$memory recall"
+        },
+        "requires_intent_before_recall": {
+          "const": true
+        },
+        "requires_items_key": {
+          "const": true
+        },
+        "forbidden_results_key_dependency": {
+          "const": true
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": [
+        "source_ref_without_read_receipt_can_promote_identity",
+        "row_text_without_hash_can_promote_identity",
+        "row_text_without_entity_span_receipt_can_promote_identity",
+        "domain_reference_seed_can_promote_identity"
+      ],
+      "properties": {
+        "source_ref_without_read_receipt_can_promote_identity": {
+          "const": false
+        },
+        "row_text_without_hash_can_promote_identity": {
+          "const": false
+        },
+        "row_text_without_entity_span_receipt_can_promote_identity": {
+          "const": false
+        },
+        "domain_reference_seed_can_promote_identity": {
+          "const": false
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "required_channel_count",
+        "planned_source_read_count",
+        "blocked_source_ref_count",
+        "source_ref_count",
+        "materialized_text_channel_count"
+      ],
+      "properties": {
+        "required_channel_count": {
+          "const": 4
+        },
+        "materialized_text_channel_count": {
+          "const": 0
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

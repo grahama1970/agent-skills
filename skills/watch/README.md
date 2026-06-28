@@ -629,6 +629,14 @@ plan at
 It is deliberately blocked with `0/4` materialized row text channels. That means
 the dry-run evidence case is a useful anchor, not supported character identity.
 
+The follow-on row-text materialization plan at
+`docs/architecture/generated/bad_santa_marcus_0248_row_text_materialization_receipt_plan/watch_row_text_materialization_receipt_plan.bad_santa_marcus.json`
+names the current source-read state: `visual_description` and `whisper_text`
+have `watch_content` refs, while `srt_text` is still missing a source ref. It
+does not read those fields yet. It only prevents Watch from treating UI-visible
+text, case claims, or Brave/movie-domain priors as supported identity without
+source reads, text hashes, entity spans, and `$memory recall`.
+
 ## Tips and gotchas
 
 - Keep the first run small. A focused five-minute segment is easier to verify than

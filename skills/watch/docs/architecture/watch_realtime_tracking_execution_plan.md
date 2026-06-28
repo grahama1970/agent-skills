@@ -47,6 +47,8 @@ not scene truth.
 | `build_watch_crop_reference_similarity_receipt_plan.py` | Harness added | Pairs live track crops with reference slots without promoting identity |
 | `watch_text_scene_corroboration_receipt_plan.schema.json` | Contract added | Planned row text/materialized scene corroboration gate |
 | `build_watch_text_scene_corroboration_receipt_plan.py` | Harness added | Blocks identity promotion when only case claims/refs exist and row text is not materialized |
+| `watch_row_text_materialization_receipt_plan.schema.json` | Contract added | Planned row-text source-read and hash receipt gate |
+| `build_watch_row_text_materialization_receipt_plan.py` | Harness added | Names the `watch_content` fields that must be read before scene/SRT/Whisper/VLM text can corroborate identity |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -357,6 +359,33 @@ Current canary proof:
   prove row text materialization, entity-span extraction, scene-marker
   correctness, SRT/Whisper correctness, `$memory recall`, real-time annotation
   tracking, or supported character identity.
+
+### Phase 2.12: Planned Row Text Materialization Receipts
+
+Goal: turn source refs such as `watch_content/... field visual_description`
+into an explicit source-read contract. The UI can display scene/SRT/Whisper
+text, but the memory identity gate requires materialized text values, hashes,
+and later entity-span receipts.
+
+Runtime path:
+
+```text
+track observation source refs
+  + text/scene corroboration receipt plan
+  -> row text materialization receipt plan
+  -> source reads from watch_content
+  -> text hashes and explicit empty-channel receipts
+  -> entity-span extraction receipts
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_row_text_materialization_receipt_plan.py --track-observation skills/watch/docs/architecture/watch_track_observation.bad_santa_marcus.sample.json --text-scene-corroboration-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_text_scene_corroboration_receipt_plan/watch_text_scene_corroboration_receipt_plan.bad_santa_marcus.json --out /tmp/watch-row-text-materialization-receipt-plan.json`
+- Expected output: `row_text_materialization_receipt_plan_ok 3 planned reads 1 blocked refs status=BLOCKED_PENDING_SOURCE_REFS`
+- Schema: `skills/watch/docs/architecture/schemas/watch_row_text_materialization_receipt_plan.schema.json`
+- Boundary: this proves the read-contract shape only. It does not prove source
+  reads, row text correctness, entity spans, `$memory recall`, real-time
+  annotation tracking, or supported character identity.
 
 ### Phase 3: Verification and Bounded Observation
 

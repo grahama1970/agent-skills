@@ -34,6 +34,7 @@ IDENTITY_REINFORCEMENT_PLAN_SCHEMA = "watch.identity_reinforcement_plan.v1"
 REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA = "watch.reference_embedding_receipt_plan.v1"
 CROP_REFERENCE_SIMILARITY_RECEIPT_PLAN_SCHEMA = "watch.crop_reference_similarity_receipt_plan.v1"
 TEXT_SCENE_CORROBORATION_RECEIPT_PLAN_SCHEMA = "watch.text_scene_corroboration_receipt_plan.v1"
+ROW_TEXT_MATERIALIZATION_RECEIPT_PLAN_SCHEMA = "watch.row_text_materialization_receipt_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -1462,6 +1463,153 @@ def _materialized_text_channels(case_document: Mapping[str, Any]) -> Dict[str, O
         "vlm_description": case_document.get("vlm_description") or case_document.get("frame_description"),
     }
     return {key: value for key, value in fields.items() if isinstance(value, str) and value.strip()}
+
+
+def _watch_track_observation_document(payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    collections = payload.get("collections") or {}
+    if isinstance(collections, Mapping):
+        observation = collections.get("watch_track_observations")
+        if isinstance(observation, Mapping):
+            return observation
+    return _first_document(payload)
+
+
+def _transcript_refs_by_field(observation: Mapping[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    evidence_basis = observation.get("evidence_basis") or {}
+    refs_by_field: Dict[str, List[Dict[str, Any]]] = {}
+    for ref in evidence_basis.get("transcript_refs") or []:
+        if not isinstance(ref, Mapping):
+            continue
+        field = ref.get("field")
+        if not field:
+            continue
+        refs_by_field.setdefault(str(field), []).append(copy.deepcopy(dict(ref)))
+    return refs_by_field
+
+
+def build_row_text_materialization_receipt_plan(
+    track_observation_payload: Mapping[str, Any],
+    text_scene_corroboration_receipt_plan: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Build the fail-closed row-text materialization read contract.
+
+    The text/scene corroboration gate needs actual row text values and hashes.
+    Existing Watch artifacts may only contain source refs such as
+    `watch_content/... field visual_description`. This plan records exactly
+    which source fields must be read before text can support identity.
+    """
+
+    if text_scene_corroboration_receipt_plan.get("schema") != TEXT_SCENE_CORROBORATION_RECEIPT_PLAN_SCHEMA:
+        raise ValueError(
+            "unsupported text/scene corroboration schema: "
+            f"{text_scene_corroboration_receipt_plan.get('schema')!r}"
+        )
+
+    observation = copy.deepcopy(dict(_watch_track_observation_document(track_observation_payload)))
+    asset = copy.deepcopy(dict(text_scene_corroboration_receipt_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or observation.get("asset_uid") or observation.get("asset_id")
+    case_context = copy.deepcopy(dict(text_scene_corroboration_receipt_plan.get("case_context") or {}))
+    refs_by_field = _transcript_refs_by_field(observation)
+    channel_sources = {
+        "scene_marker_text": ["scene_marker_text", "visual_description"],
+        "srt_text": ["srt_text", "official_srt_text"],
+        "whisper_text": ["whisper_text", "audio_audit_text"],
+        "vlm_description": ["vlm_description", "visual_description"],
+    }
+
+    channel_plans: List[Dict[str, Any]] = []
+    for channel, candidate_fields in channel_sources.items():
+        source_refs: List[Dict[str, Any]] = []
+        for field in candidate_fields:
+            source_refs.extend(refs_by_field.get(field, []))
+        status = "PLANNED_NOT_READ" if source_refs else "BLOCKED_PENDING_SOURCE_REF"
+        channel_plans.append({
+            "channel": channel,
+            "status": status,
+            "candidate_source_fields": candidate_fields,
+            "source_refs": source_refs,
+            "materialized_text_hash": None,
+            "materialized_text_present": False,
+            "read_receipt_required": True,
+            "scene_truth_allowed_after_read": True,
+            "promotion_allowed": False,
+        })
+
+    blocked = [plan for plan in channel_plans if plan["status"] == "BLOCKED_PENDING_SOURCE_REF"]
+    planned = [plan for plan in channel_plans if plan["status"] == "PLANNED_NOT_READ"]
+    plan_status = "BLOCKED_PENDING_SOURCE_REFS" if blocked else "PLANNED_NOT_READ"
+
+    plan = {
+        "schema": ROW_TEXT_MATERIALIZATION_RECEIPT_PLAN_SCHEMA,
+        "status": plan_status,
+        "asset": asset,
+        "source_track_observation_schema": (
+            track_observation_payload.get("schema_version")
+            or track_observation_payload.get("schema")
+            or observation.get("schema_version")
+            or observation.get("schema")
+        ),
+        "source_text_scene_corroboration_schema": text_scene_corroboration_receipt_plan.get("schema"),
+        "observation_context": {
+            "asset_id": asset_id,
+            "asset_uid": observation.get("asset_uid"),
+            "stream_id": observation.get("stream_id"),
+            "segment_id": observation.get("segment_id"),
+            "track_id": observation.get("track_id"),
+            "time_range": observation.get("time_range"),
+            "candidate_entity": observation.get("candidate_entity"),
+        },
+        "case_context": case_context,
+        "required_channel_plans": channel_plans,
+        "materialization_requirements": {
+            "source_reads_required": True,
+            "text_hashes_required": True,
+            "empty_text_must_be_explicit": True,
+            "entity_span_receipt_after_materialization_required": True,
+        },
+        "memory_requirements": {
+            "allowed_answer_path": "$memory recall",
+            "requires_intent_before_recall": True,
+            "requires_items_key": True,
+            "forbidden_results_key_dependency": True,
+            "direct_qdrant_or_arango_answer_allowed": False,
+        },
+        "promotion_policy": {
+            "source_ref_without_read_receipt_can_promote_identity": False,
+            "row_text_without_hash_can_promote_identity": False,
+            "row_text_without_entity_span_receipt_can_promote_identity": False,
+            "domain_reference_seed_can_promote_identity": False,
+        },
+        "counts": {
+            "required_channel_count": len(channel_plans),
+            "planned_source_read_count": len(planned),
+            "blocked_source_ref_count": len(blocked),
+            "source_ref_count": sum(len(plan["source_refs"]) for plan in channel_plans),
+            "materialized_text_channel_count": 0,
+        },
+        "proof_scope": [
+            "row_text_materialization_read_contract",
+            "planned_not_read",
+        ],
+        "claims": {
+            "proves": [
+                "Watch has an explicit read plan for row text needed by text/scene corroboration",
+                "Source refs alone cannot promote character identity",
+                "Row text must be hashed and followed by entity span extraction before identity support",
+            ],
+            "does_not_prove": [
+                "row text read success",
+                "row text correctness",
+                "entity span extraction success",
+                "crop/reference similarity score correctness",
+                "$memory recall success",
+                "supported character identity",
+                "real-time annotation tracking",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
 
 
 def build_text_scene_corroboration_receipt_plan(

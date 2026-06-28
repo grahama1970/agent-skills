@@ -22,6 +22,7 @@ from watch_reference_hydration import (
     build_memory_trace_plan,
     build_reference_embedding_receipt_plan,
     build_reference_hydration_plan,
+    build_row_text_materialization_receipt_plan,
     build_text_scene_corroboration_receipt_plan,
     load_json,
     load_jsonl,
@@ -470,4 +471,58 @@ def test_text_scene_corroboration_receipt_plan_blocks_claim_only_identity() -> N
     assert not any(
         any(key in channel for key in ("embedding", "embeddings", "vector", "vectors"))
         for channel in entity_plan["text_channels"]
+    )
+
+
+def test_row_text_materialization_receipt_plan_names_source_reads_before_corroboration() -> None:
+    track_observation = load_json(WATCH_ROOT / "docs" / "architecture" / "watch_track_observation.bad_santa_marcus.sample.json")
+    text_scene_corroboration_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_text_scene_corroboration_receipt_plan"
+        / "watch_text_scene_corroboration_receipt_plan.bad_santa_marcus.json"
+    )
+    plan = build_row_text_materialization_receipt_plan(track_observation, text_scene_corroboration_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_row_text_materialization_receipt_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.row_text_materialization_receipt_plan.v1"
+    assert plan["status"] == "BLOCKED_PENDING_SOURCE_REFS"
+    assert plan["observation_context"]["segment_id"] == "seg_0007"
+    assert plan["observation_context"]["candidate_entity"]["name"] == "Marcus"
+    assert plan["memory_requirements"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_requirements"]["requires_items_key"] is True
+    assert plan["memory_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+    assert plan["promotion_policy"]["source_ref_without_read_receipt_can_promote_identity"] is False
+    assert plan["promotion_policy"]["row_text_without_hash_can_promote_identity"] is False
+    assert plan["promotion_policy"]["row_text_without_entity_span_receipt_can_promote_identity"] is False
+
+    counts = plan["counts"]
+    assert counts["required_channel_count"] == 4
+    assert counts["planned_source_read_count"] == 3
+    assert counts["blocked_source_ref_count"] == 1
+    assert counts["source_ref_count"] == 3
+    assert counts["materialized_text_channel_count"] == 0
+
+    channels = {channel["channel"]: channel for channel in plan["required_channel_plans"]}
+    assert channels["scene_marker_text"]["status"] == "PLANNED_NOT_READ"
+    assert channels["scene_marker_text"]["source_refs"][0]["field"] == "visual_description"
+    assert channels["whisper_text"]["status"] == "PLANNED_NOT_READ"
+    assert channels["whisper_text"]["source_refs"][0]["field"] == "whisper_text"
+    assert channels["vlm_description"]["status"] == "PLANNED_NOT_READ"
+    assert channels["vlm_description"]["source_refs"][0]["field"] == "visual_description"
+    assert channels["srt_text"]["status"] == "BLOCKED_PENDING_SOURCE_REF"
+    assert channels["srt_text"]["source_refs"] == []
+    assert all(channel["promotion_allowed"] is False for channel in channels.values())
+    assert not any(
+        any(key in channel for key in ("embedding", "embeddings", "vector", "vectors"))
+        for channel in channels.values()
     )

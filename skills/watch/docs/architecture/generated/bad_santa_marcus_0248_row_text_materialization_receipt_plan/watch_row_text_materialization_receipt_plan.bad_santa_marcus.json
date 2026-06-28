@@ -1,0 +1,188 @@
+{
+  "schema": "watch.row_text_materialization_receipt_plan.v1",
+  "status": "BLOCKED_PENDING_SOURCE_REFS",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_track_observation_schema": "watch.track_observation_contract.v1",
+  "source_text_scene_corroboration_schema": "watch.text_scene_corroboration_receipt_plan.v1",
+  "observation_context": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "asset_uid": "movie_bad_santa_2003_unrated",
+    "stream_id": "watch_stream_bad_santa_2003",
+    "segment_id": "seg_0007",
+    "track_id": "track_07",
+    "time_range": {
+      "start": "02:48",
+      "end": "03:12",
+      "start_seconds": 168,
+      "end_seconds": 192
+    },
+    "candidate_entity": {
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "name": "Marcus",
+      "kind": "CHARACTER",
+      "actor_name": "Tony Cox",
+      "confidence": 0.82,
+      "status": "CANDIDATE",
+      "basis": [
+        "brave_domain_seed",
+        "movie_domain_memory",
+        "person_reid_embedding",
+        "vlm_scene_text"
+      ]
+    }
+  },
+  "case_context": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "case_id": "WEC-BADSANTAMARCUS0248",
+    "case_key": "watch_case_bad_santa_marcus_0248_identity",
+    "case_anchor": {
+      "entity_ids": [
+        "movie_domain_entities/marcus_bad_santa_2003"
+      ],
+      "segment_ids": [
+        "seg_0007"
+      ],
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end": "03:12",
+        "end_seconds": 192,
+        "start": "02:48",
+        "start_seconds": 168
+      }
+    },
+    "claim": "The 02:48-03:12 segment contains Marcus, the mall-store elf character played by Tony Cox.",
+    "claim_is_scene_truth": false,
+    "source_truth_policy": "domain refs corroborate entity identity only; Watch frame/clip/track evidence must support scene presence."
+  },
+  "required_channel_plans": [
+    {
+      "channel": "scene_marker_text",
+      "status": "PLANNED_NOT_READ",
+      "candidate_source_fields": [
+        "scene_marker_text",
+        "visual_description"
+      ],
+      "source_refs": [
+        {
+          "source_type": "watch_content",
+          "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+          "field": "visual_description"
+        }
+      ],
+      "materialized_text_hash": null,
+      "materialized_text_present": false,
+      "read_receipt_required": true,
+      "scene_truth_allowed_after_read": true,
+      "promotion_allowed": false
+    },
+    {
+      "channel": "srt_text",
+      "status": "BLOCKED_PENDING_SOURCE_REF",
+      "candidate_source_fields": [
+        "srt_text",
+        "official_srt_text"
+      ],
+      "source_refs": [],
+      "materialized_text_hash": null,
+      "materialized_text_present": false,
+      "read_receipt_required": true,
+      "scene_truth_allowed_after_read": true,
+      "promotion_allowed": false
+    },
+    {
+      "channel": "whisper_text",
+      "status": "PLANNED_NOT_READ",
+      "candidate_source_fields": [
+        "whisper_text",
+        "audio_audit_text"
+      ],
+      "source_refs": [
+        {
+          "source_type": "watch_content",
+          "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+          "field": "whisper_text"
+        }
+      ],
+      "materialized_text_hash": null,
+      "materialized_text_present": false,
+      "read_receipt_required": true,
+      "scene_truth_allowed_after_read": true,
+      "promotion_allowed": false
+    },
+    {
+      "channel": "vlm_description",
+      "status": "PLANNED_NOT_READ",
+      "candidate_source_fields": [
+        "vlm_description",
+        "visual_description"
+      ],
+      "source_refs": [
+        {
+          "source_type": "watch_content",
+          "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+          "field": "visual_description"
+        }
+      ],
+      "materialized_text_hash": null,
+      "materialized_text_present": false,
+      "read_receipt_required": true,
+      "scene_truth_allowed_after_read": true,
+      "promotion_allowed": false
+    }
+  ],
+  "materialization_requirements": {
+    "source_reads_required": true,
+    "text_hashes_required": true,
+    "empty_text_must_be_explicit": true,
+    "entity_span_receipt_after_materialization_required": true
+  },
+  "memory_requirements": {
+    "allowed_answer_path": "$memory recall",
+    "requires_intent_before_recall": true,
+    "requires_items_key": true,
+    "forbidden_results_key_dependency": true,
+    "direct_qdrant_or_arango_answer_allowed": false
+  },
+  "promotion_policy": {
+    "source_ref_without_read_receipt_can_promote_identity": false,
+    "row_text_without_hash_can_promote_identity": false,
+    "row_text_without_entity_span_receipt_can_promote_identity": false,
+    "domain_reference_seed_can_promote_identity": false
+  },
+  "counts": {
+    "required_channel_count": 4,
+    "planned_source_read_count": 3,
+    "blocked_source_ref_count": 1,
+    "source_ref_count": 3,
+    "materialized_text_channel_count": 0
+  },
+  "proof_scope": [
+    "row_text_materialization_read_contract",
+    "planned_not_read"
+  ],
+  "claims": {
+    "proves": [
+      "Watch has an explicit read plan for row text needed by text/scene corroboration",
+      "Source refs alone cannot promote character identity",
+      "Row text must be hashed and followed by entity span extraction before identity support"
+    ],
+    "does_not_prove": [
+      "row text read success",
+      "row text correctness",
+      "entity span extraction success",
+      "crop/reference similarity score correctness",
+      "$memory recall success",
+      "supported character identity",
+      "real-time annotation tracking"
+    ]
+  }
+}
