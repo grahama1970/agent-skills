@@ -17,6 +17,16 @@ metadata:
 provides:
   - qra-candidate-review
   - human-assessment-tui
+composes:
+  - memory
+  - scillm
+  - taxonomy
+  - dogpile
+  - create-figure
+  - create-qras
+complies:
+  - best-practices-skills
+  - best-practices-sparta
 requires:
   - memory
   - scillm
