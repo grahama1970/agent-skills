@@ -23,6 +23,12 @@ composes:
   - monitor-misuse
   - memory
 
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-scillm
+  - best-practices-arangodb
+  - best-practices-security
 taxonomy:
   - validation
   - compliance
@@ -33,6 +39,30 @@ taxonomy:
 # Skills Best Practices
 
 Use this skill when creating or reviewing skills under `.pi/skills/`.
+
+
+## Runtime self-improvement tier
+
+Declare in frontmatter when a skill is more than a simple one-shot CLI:
+
+```yaml
+runtime_self_improvement: none | basic | substantial
+```
+
+| Tier | Verify command | Maintainer ticket | Agent post-run section |
+|------|----------------|-------------------|------------------------|
+| `none` | No | No | No |
+| `basic` | `sanity.sh` only | No | Optional |
+| `substantial` | `./run.sh verify` + receipt | `file-maintainer-ticket` | Required in `agents/<skill>/AGENTS.md` |
+
+Full contract: `references/runtime-self-improvement.md`
+
+Template files: `references/templates/runtime-self-improvement/`
+
+Validator enforces `substantial` via rules `RSI001`–`RSI004` in `scripts/validate_skill.py`.
+
+Rollout: wire substantial skills incrementally; `voice-segment-selector` is the reference implementation.
+
 
 ## ArangoDB Access Policy (NON-NEGOTIABLE)
 
@@ -130,6 +160,9 @@ composes:
   - memory             # Skills this delegates to (by name)
   - scillm
   - extractor
+complies:
+  - best-practices-skills
+  - best-practices-python
 ---
 ```
 
@@ -140,6 +173,7 @@ composes:
 | `triggers` | list[str] | **Yes** | Natural-language phrases users will say. Parsed at runtime by `skill-selector` extension for BM25-style matching. Skills without triggers are invisible to implicit routing. |
 | `provides` | list[str] | Yes | Capabilities this skill makes available. Used by `/skill-lab` gap detector. |
 | `composes` | list[str] | Yes | Skills this skill delegates to via subprocess/import. Empty list `[]` if self-contained. Parsed at runtime by `skill-selector` extension for dependency expansion — when a skill is selected, its `composes` deps are automatically included in context. |
+| `complies` | list[str] | Yes | Best-practices or standards this skill must satisfy. This is audit metadata for `/skills-ci` and skill maintainers, not runtime delegation. Every skill must include `best-practices-skills`; add domain packs such as `best-practices-python`, `best-practices-scillm`, or `best-practices-react` when applicable. |
 | `taxonomy` | list[str] | Recommended | Federated taxonomy bridge tags for multi-hop discovery via `/memory`. Uses standard vocabulary: `precision`, `resilience`, `fragility`, `corruption`, `loyalty`, `stealth`, plus domain tags. |
 
 ### Runtime consumption (skill-selector extension)
@@ -154,15 +188,19 @@ The `.pi/extensions/skill-selector.ts` extension reads frontmatter at session st
   This replaced a hardcoded static map (Feb 2026) — the extension now reads live frontmatter.
 - **`provides`** → Used by `/skill-lab` for gap detection and capability graph traversal.
   Not yet consumed by skill-selector (future: reverse-index for "I need X capability" queries).
+- **`complies`** → Used by `/skills-ci`, `/skill-maintainer`, and review workflows
+  to select applicable best-practices checks for this skill. It does not pull
+  skills into context and must not be used as a substitute for `composes`.
 
 ### Binding affinity rules
 
 1. **Skills MUST declare all skills they delegate to** in `composes:`.
 2. **Skills MUST declare what they output** in `provides:`.
-3. **Self-contained skills** (no external dependencies) use `composes: []`.
-4. **Lab skills** (prompt-lab, gpt-lab, classifier-lab) are **catalysts** — they
+3. **Skills MUST declare applicable audit standards** in `complies:`.
+4. **Self-contained skills** (no external dependencies) use `composes: []`.
+5. **Lab skills** (prompt-lab, gpt-lab, classifier-lab) are **catalysts** — they
    create new skills without being consumed. They `provide: [skill-creation]`.
-5. **Composite skills** are molecules — stable combinations of existing skills
+6. **Composite skills** are molecules — stable combinations of existing skills
    wired together by a thin orchestrator.
 
 ### Capability vocabulary (standardized provides values)
@@ -231,6 +269,9 @@ that `/skills-ci` and `/skill-lab` validate against.
 See `references/composition_manifest.yml` for the schema `/skill-lab` uses
 when planning new composite skills.
 Run `./sanity.sh` in this skill to enforce the strict frontmatter gate across all skills.
+Run `scripts/sync_skill_compliance.py --skills-root skills --check` from the
+repository root to verify that every skill declares deterministic `complies:`
+metadata for skill-maintainer and `/skills-ci`.
 
 ## Design patterns
 
@@ -261,6 +302,41 @@ Skills that orchestrate other skills, external services, Docker stacks, or long-
 agent workflows SHOULD provide a machine-readable project state report and a human HTML
 view. The goal is to make current project state inspectable at a glance and prevent
 agents from hallucinating readiness that was not proven.
+
+### Browser-oracle registry for reviewable skills
+
+Complex, high-risk, UI-facing, security, compliance, orchestration, or subagent
+skills SHOULD include a committed browser-oracle registry:
+
+```text
+<skill>/.ask/browser-oracles.yaml
+```
+
+The registry maps the skill directory to a WebGPT project so `$webgpt-review`,
+`$ask webgpt`, and `$surf webgpt.submit` can resolve the correct browser
+reviewer through `$browser-oracle` walk-up. The tab id and conversation URL
+belong in the browser-oracle binding store, not in prompts or README prose:
+
+```bash
+skills/browser-oracle/run.sh bind <skill-project-name> \
+  --backend webgpt \
+  --tab-id <tab-id> \
+  --url '<chatgpt-project-conversation-url>' \
+  --manual \
+  --json
+```
+
+Minimum committed registry shape:
+
+```yaml
+version: 1
+webgpt:
+  default: <skill-project-name>
+```
+
+This file is committed configuration, not proof of a successful review.
+Readiness still requires actual `$webgpt-review` artifacts and local
+deterministic evidence.
 
 ### Required report concepts
 
@@ -416,6 +492,7 @@ include Docker deployment:
 - **`triggers`** list contains natural-language phrases users will say. **Required** — skills without triggers are invisible to implicit routing via skill-selector.
 - **`provides`** list declares capabilities this skill outputs. **Required.**
 - **`composes`** list declares all skills this delegates to. **Required** (use `[]` if self-contained). Parsed at runtime for automatic dependency inclusion.
+- **`complies`** list declares applicable best-practices standards. **Required.** Every skill includes `best-practices-skills`; add domain-specific standards only when they apply. This field is audit metadata, not runtime delegation.
 - `run.sh` exists only if the skill needs execution.
 - `sanity.sh` exists if the skill runs non-trivial scripts.
 - `sanity.sh` for non-trivial skills MUST include behavioral acceptance gates,
@@ -430,6 +507,9 @@ include Docker deployment:
   entrypoints, persist machine-readable proof artifacts, and fail closed when a
   required downstream receipt is missing. A generated request file is not a live
   proof.
+- Complex, high-risk, UI-facing, security, compliance, orchestration, or
+  subagent skills include `.ask/browser-oracles.yaml` so `$browser-oracle`
+  can resolve the correct WebGPT review project by directory walk-up.
 - **CLI: Typer only** — all Python CLIs use `typer`. NEVER `argparse` or `click`.
 - **No bespoke reimplementations** — if a helper skill exists, the new skill delegates to it.
 - **PyYAML dependency** — any script that parses SKILL.md frontmatter MUST depend on
@@ -448,6 +528,7 @@ name: my-skill
 description: Does something useful
 provides: [my-capability]
 composes: [memory]
+complies: [best-practices-skills]
 ---
 ```
 
@@ -461,6 +542,7 @@ triggers:
   - run my-skill
 provides: [my-capability]
 composes: [memory]
+complies: [best-practices-skills]
 ---
 ```
 

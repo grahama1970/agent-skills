@@ -32,7 +32,7 @@ This proves only:
 - Scoreboard status and verdict derived from the Judge receipt.
 - Monitor index generation for generated artifacts.
 - Artifact-backed monitor rendering when those artifacts are copied into
-  `monitor/calth/public/artifacts/battle-001`.
+  `monitor/battle/public/artifacts/battle-001`.
 
 ## Artifact Contract
 
@@ -92,12 +92,12 @@ python3 -m json.tool /tmp/battle-001/run-receipt.json
 Then copy generated artifacts into the monitor public directory:
 
 ```bash
-rm -rf monitor/calth/public/artifacts/battle-001
-mkdir -p monitor/calth/public/artifacts/battle-001
-cp -R /tmp/battle-001/* monitor/calth/public/artifacts/battle-001/
+rm -rf monitor/battle/public/artifacts/battle-001
+mkdir -p monitor/battle/public/artifacts/battle-001
+cp -R /tmp/battle-001/* monitor/battle/public/artifacts/battle-001/
 ```
 
-Run from `skills/battle/monitor/calth`:
+Run from `skills/battle/monitor/battle`:
 
 ```bash
 npm install

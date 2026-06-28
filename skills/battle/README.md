@@ -265,11 +265,11 @@ To inspect the generated run in the monitor:
 
 ```bash
 cd /home/graham/workspace/experiments/agent-skills/skills/battle
-rm -rf monitor/calth/public/artifacts/battle-001
-mkdir -p monitor/calth/public/artifacts/battle-001
-cp -R /tmp/battle-001/* monitor/calth/public/artifacts/battle-001/
+rm -rf monitor/battle/public/artifacts/battle-001
+mkdir -p monitor/battle/public/artifacts/battle-001
+cp -R /tmp/battle-001/* monitor/battle/public/artifacts/battle-001/
 
-cd monitor/calth
+cd monitor/battle
 npm install
 npm run build
 npm run test:e2e
@@ -331,29 +331,33 @@ selection, or scorekeeper state.
 
 ## Architecture
 
+The skill root is an entrypoint and documentation surface. Python
+implementation lives under `src/battle_skill/`; normal users and agents should
+invoke `./run.sh` rather than importing root-level files.
+
 Core modules:
 
 ```text
-battle.py              Typer CLI entry point
-orchestrator.py        multi-round game loop
-digital_twin.py        git worktree, copy, Docker, and QEMU isolation
-red_team.py            Red Team attack agent
-blue_team.py           Blue Team defense agent
-scoring.py             AIxCC-style scoring
-state.py               BattleState and round data classes
-memory.py              team-isolated memory
-memory_integration.py  shared memory and taxonomy hooks
-report.py              Markdown report generation
+src/battle_skill/cli.py Typer CLI entry point
+src/battle_skill/orchestrator.py multi-round game loop
+src/battle_skill/digital_twin.py git worktree, copy, Docker, and QEMU isolation
+src/battle_skill/red_team.py Red Team attack agent
+src/battle_skill/blue_team.py Blue Team defense agent
+src/battle_skill/scoring.py AIxCC-style scoring
+src/battle_skill/state.py BattleState and round data classes
+src/battle_skill/memory.py team-isolated memory
+src/battle_skill/memory_integration.py shared memory and taxonomy hooks
+src/battle_skill/report.py Markdown report generation
 ```
 
 Battle v0 modules:
 
 ```text
-calth.py               deterministic fixture runner
-judge.py               deterministic scorekeeper-style verifier
-receipts.py            receipt dataclasses and JSON writer
+src/battle_skill/battle_fixture.py deterministic fixture runner
+src/battle_skill/judge.py deterministic scorekeeper-style verifier
+src/battle_skill/receipts.py receipt dataclasses and JSON writer
 fixtures/battle-001/    seeded path traversal target and patch
-monitor/calth/         React artifact monitor and Playwright checks
+monitor/battle/         React artifact monitor and Playwright checks
 docs/BATTLE_V0.md      detailed Battle v0 validation contract
 ```
 
@@ -384,17 +388,39 @@ Receipts are evidence carriers, not the work itself. A Blue patch claim is not
 accepted as a successful defense until an independent Judge or equivalent
 deterministic gate verifies exploit blocking and regression behavior.
 
+## Skill Integration Notes
+
+- `$hack` is a sibling skill. Battle must delegate to it through skill/Tau
+  contracts, not `import hack`.
+- Red-team `$hack` usage belongs behind an `agent-skills/agents` subagent
+  dispatch. Battle chooses the persona, passes the target/scenario and candidate
+  exploit list after scan/research/memory recall, and then collects the
+  subagent receipt.
+- `$memory` is accessed through its HTTP API (`POST /recall`, `POST /store`) via
+  `httpx`, not raw ArangoDB imports or deprecated CLI learn calls.
+- `$webgpt-review` resolves the dedicated Battle reviewer tab through
+  `.ask/browser-oracles.yaml` and `$browser-oracle`.
+
 ## Storage Notes
 
 Generated monitor dependencies should not live as a real `node_modules`
 directory inside the skill folder. Use the workspace storage policy: keep heavy
 dependency directories on `/mnt/storage12tb` and symlink them back when needed.
 
+Battle runtime state defaults to:
+
+```text
+/mnt/storage12tb/skills/battle/
+```
+
+The skill root should not contain real `artifacts/`, `battles/`, `reports/`,
+`worktrees/`, `.venv/`, or `node_modules/` directories.
+
 Current Battle monitor convention:
 
 ```text
-skills/battle/monitor/calth/node_modules ->
-/mnt/storage12tb/skills/battle/monitor-calth/node_modules
+skills/battle/monitor/battle/node_modules ->
+/mnt/storage12tb/skills/battle/monitor-battle/node_modules
 ```
 
 ## Current Limits

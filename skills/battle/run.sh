@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
-# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
-unset VIRTUAL_ENV
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Enforce skill-local uv environment for python invocations.
-shopt -s expand_aliases
-alias python='uv run --project "$SCRIPT_DIR" python'
-alias python3='uv run --project "$SCRIPT_DIR" python'
-
-
 PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+
+unset VIRTUAL_ENV
+export BATTLE_STORAGE_ROOT="${BATTLE_STORAGE_ROOT:-/mnt/storage12tb/skills/battle}"
+mkdir -p "$BATTLE_STORAGE_ROOT"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$BATTLE_STORAGE_ROOT/.venv}"
 
 # Load .env if present
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -20,5 +17,5 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 cd "$SCRIPT_DIR"
 
-# Run with uv
-exec uv run python battle.py "$@"
+export PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

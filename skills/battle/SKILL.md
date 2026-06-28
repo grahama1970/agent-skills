@@ -60,6 +60,11 @@ Required production invariants:
 - Red and Blue are subagent teams. Each dispatched subagent must include an
   explicit persona selected by the orchestrator for that turn. Multiple personas
   per team may run concurrently when the turn benefits from breadth.
+- Red-team `$hack` execution is a subagent responsibility, not a Battle Python
+  import. Battle performs or schedules scan/research/memory recall, builds the
+  candidate exploit list, chooses the Red persona, dispatches an
+  `agent-skills/agents`/Tau subagent with that contract, and records the
+  returned exploit receipt.
 - Subagent handoffs and receipts should follow the compact Tau-style JSON
   contract shape used by `tau.agent_handoff.v1` and `tau.subagent_receipt.v1`,
   with Battle-specific fields layered on top rather than a separate ad hoc
@@ -382,21 +387,28 @@ Gracefully degrades if `common.memory_client` or `taxonomy/taxonomy.py` are unav
 ```
 battle/
   SKILL.md                   # This file
-  run.sh                     # Shell entry point
-  battle.py                  # Typer CLI entry point
-  memory_integration.py      # Memory + Taxonomy hooks
-  orchestrator.py            # Game loop orchestrator
-  config.py                  # Constants and paths
-  state.py                   # Data classes and BattleState
-  memory.py                  # Team-isolated memory system
-  scoring.py                 # AIxCC-style scoring
-  digital_twin.py            # Git worktree, Docker, QEMU isolation
-  red_team.py                # Red Team attack agent
-  blue_team.py               # Blue Team defense agent
-  report.py                  # Report generation
-  qemu_support.py            # QEMU emulator support
-  qemu_peripherals.py        # QEMU peripheral emulation
+  run.sh                     # Shell entry point; launches package through uv
+  sanity.sh                  # Deterministic fixture and structure sanity gate
   pyproject.toml             # Dependencies
+  .ask/browser-oracles.yaml  # WebGPT project mapping for browser-oracle walk-up
+  src/battle_skill/
+    cli.py                   # Typer CLI entry point
+    config.py                # Constants and paths
+    state.py                 # Data classes and BattleState
+    memory.py                # Team-isolated memory system
+    scoring.py               # AIxCC-style scoring
+    digital_twin.py          # Git worktree, Docker, QEMU isolation
+    red_team.py              # Red Team attack agent
+    blue_team.py             # Blue Team defense agent
+    orchestrator.py          # Game loop orchestrator
+    battle_fixture.py        # Deterministic fixture proof runner
+    judge.py                 # Deterministic scorekeeper verifier
+    receipts.py              # Receipt dataclasses and JSON writer
+    report.py                # Report generation
+    qemu_support.py          # QEMU emulator support
+    qemu_peripherals.py      # QEMU peripheral emulation
+  fixtures/battle-001/       # Deterministic local fixture
+  monitor/battle/            # Artifact-backed React monitor
 ```
 
 ## Leveraged Skills

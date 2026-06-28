@@ -131,64 +131,71 @@ def _desktop_state() -> str:
     return r.stdout.strip() if r.returncode == 0 else "wmctrl unavailable"
 
 
-def _verify_desktop(binding: dict, background: bool, label: str = "") -> None:
+def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
     """Verify tab identity and KDE desktop. Always called on every command.
     
-    Files a GitHub issue for any unexpected result: desktop mismatch, URL
-    mismatch, tab not found, etc. Forces the agent to acknowledge problems.
+    Auto-heals stale tabs: if the binding's tab is closed or points to the wrong
+    URL, creates a new tab with the conversation URL and updates the binding.
+    Returns the (possibly updated) binding.
     """
     tab_id = binding.get("tab_id", "")
-    target_desk = binding.get("kde_desktop_index", "")
     conv_url = binding.get("conversation_url", "")
-    if not tab_id and not target_desk:
-        return
+    if not tab_id and not conv_url:
+        return binding
 
     tag = f" [{label}]" if label else ""
-    findings: list[str] = []
-
+    changed = False
     actual_desk = None
     actual_url = None
-    tab_info = _surf("tab.list", "--json", "--with-kde")
-    if tab_info.returncode == 0 and tab_info.stdout.strip():
-        try:
-            data = json.loads(tab_info.stdout)
-            tabs = data.get("tabs", []) if isinstance(data, dict) else data
-            for t in tabs if isinstance(tabs, list) else []:
-                if str(t.get("id", "")) == tab_id:
-                    kde = t.get("kde", {}) or {}
-                    actual_desk = kde.get("desktop_index")
-                    actual_url = t.get("url", "")
-                    break
-        except (json.JSONDecodeError, KeyError, TypeError, IndexError):
-            pass
 
-    # Desktop mismatch — CDP works across desktops, so this is informational only.
+    if tab_id:
+        tab_info = _surf("tab.list", "--json", "--with-kde")
+        if tab_info.returncode == 0 and tab_info.stdout.strip():
+            try:
+                data = json.loads(tab_info.stdout)
+                tabs = data.get("tabs", []) if isinstance(data, dict) else data
+                for t in tabs if isinstance(tabs, list) else []:
+                    if str(t.get("id", "")) == tab_id:
+                        kde = t.get("kde", {}) or {}
+                        actual_desk = kde.get("desktop_index")
+                        actual_url = t.get("url", "")
+                        break
+            except (json.JSONDecodeError, KeyError, TypeError, IndexError):
+                pass
+
+    # Desktop mismatch — informational only, CDP works across desktops
+    target_desk = binding.get("kde_desktop_index", "")
     if target_desk and actual_desk is not None:
         human_actual = int(actual_desk) + 1
         if str(human_actual) != target_desk:
-            msg = f"DESKTOP_MISMATCH: binding={target_desk} actual={human_actual}{tag}"
-            print(f"NOTE_{msg}", file=sys.stderr)
+            print(f"NOTE_DESKTOP_MISMATCH: binding={target_desk} actual={human_actual}{tag}", file=sys.stderr)
 
-    # URL mismatch
-    if conv_url and actual_url and conv_url.split("/")[-1] != actual_url.split("/")[-1]:
-        msg = f"URL_MISMATCH: binding={conv_url[-60:]} actual={actual_url[-60:]}{tag}"
-        print(f"ERROR_{msg}", file=sys.stderr)
-        print(f"  fix: config --url {actual_url}", file=sys.stderr)
-        findings.append(msg)
-
-    # Tab not found
+    # Tab is stale (closed or wrong URL) — auto-heal by creating a new one
+    needs_recreate = False
     if tab_id and actual_desk is None:
-        msg = f"TAB_NOT_FOUND: tab_id={tab_id}{tag}"
-        print(f"ERROR_{msg}", file=sys.stderr)
-        findings.append(msg)
+        print(f"TAB_REPLACE: {tab_id} not found{tag}", file=sys.stderr)
+        needs_recreate = True
+    elif conv_url and actual_url and conv_url.split("/")[-1] != actual_url.split("/")[-1]:
+        print(f"TAB_REPLACE: {tab_id} has wrong conversation{tag}", file=sys.stderr)
+        needs_recreate = True
 
-    # File issue for every finding
-    for f in findings:
-        result = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="",
-            stderr=f"webgpt verification: {f}",
-        )
-        _report_failure(f"verify", result, binding=binding)
+    if needs_recreate and conv_url:
+        result = _surf("tab.new", conv_url)
+        if result.returncode == 0 and result.stdout.strip():
+            parts = result.stdout.strip().split()
+            if len(parts) >= 3 and parts[0] == "Created":
+                new_id = parts[2].rstrip(":")
+                binding["tab_id"] = new_id
+                binding["kde_desktop_index"] = "2"
+                path = BINDING_DIR / f"{binding.get('name', 'sparta')}.json"
+                if path.exists():
+                    stored = json.loads(path.read_text())
+                    stored.update(binding)
+                    path.write_text(json.dumps(stored, indent=2) + "\n")
+                print(f"TAB_REPLACED: {tab_id} -> {new_id}{tag}", file=sys.stderr)
+                changed = True
+
+    return binding
 
 
 def _surf(*args: str | int, capture: bool = True, timeout: int | None = None) -> subprocess.CompletedProcess:

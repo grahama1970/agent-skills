@@ -102,6 +102,10 @@
 | 2026-06-27 | Make Battle an orchestrator of Tau subagents, not the LLM runtime. | Keeps Battle focused on teams, personas, Docker isolation, scoring, artifacts, and memory promotion while Tau/loop/scillm handle agent execution. |
 | 2026-06-27 | Add memory-backed graph/BM25 visualization to the production monitor target. | Related exploit/defense mutations should be inspectable as a live graph while the battle runs. |
 | 2026-06-27 | Implement the first Battle Monitor right-sidebar chat UX as local preview. | Reuses the Watch shared-chat interaction pattern while blocking orchestration mutation until schema-valid backend handling exists. |
+| 2026-06-27 | Move Red `$hack` usage behind persona-attached subagents. | Battle should pass a scan/research/memory-derived exploit candidate list to an `agent-skills/agents`/Tau subagent, not import `$hack` modules directly. |
+| 2026-06-27 | Move Python implementation under `src/battle_skill/`. | Skill root should expose `SKILL.md`, `run.sh`, `sanity.sh`, docs, config, fixtures, and monitor assets; implementation modules belong in a package. |
+| 2026-06-27 | Register Battle with `$browser-oracle`. | `skills/battle/.ask/browser-oracles.yaml` maps to WebGPT project `battle`; the live binding points at tab `837356871`. |
+| 2026-06-27 | Use `$memory` HTTP endpoints for programmatic Battle memory integration. | `memory_integration.py` uses `httpx` with `/recall` and `/store`; deprecated CLI learn and direct Arango/common memory imports are not used. |
 
 ## Open Questions
 
@@ -125,12 +129,13 @@
 
 | File | Purpose |
 |------|---------|
-| `battle.py` | Typer CLI; includes `battle-fixture` and `calth` compatibility commands for deterministic fixture runs. |
-| `calth.py` | Deterministic Battle v0 Red -> Blue -> Judge runner and artifact writer. |
-| `judge.py` | Independent deterministic Judge for exploit-safe and regression commands. |
-| `receipts.py` | Red, Blue, Judge, and command receipt dataclasses plus JSON writer. |
+| `src/battle_skill/cli.py` | Typer CLI; includes `battle-fixture` for deterministic fixture runs. |
+| `src/battle_skill/battle_fixture.py` | Deterministic Battle v0 Red -> Blue -> Judge runner and artifact writer. |
+| `src/battle_skill/judge.py` | Independent deterministic Judge for exploit-safe and regression commands. |
+| `src/battle_skill/receipts.py` | Red, Blue, Judge, and command receipt dataclasses plus JSON writer. |
 | `fixtures/battle-001/` | Seeded path traversal target, exploit check, tests, and deterministic patch. |
-| `monitor/calth/` | React artifact monitor plus Playwright checks. |
+| `monitor/battle/` | React artifact monitor plus Playwright checks. |
+| `.ask/browser-oracles.yaml` | Directory-local WebGPT project mapping for `$browser-oracle` and `$webgpt-review`. |
 | `docs/BATTLE_V0.md` | Detailed Battle v0 claim scope, artifact contract, validation commands, and non-claims. |
 | `README.md` | Human-facing Battle overview with Battle v0 and evidence discipline. |
 | `SKILL.md` | Agent-facing Battle skill contract, now including Battle v0 fixture proof notes. |
@@ -143,7 +148,7 @@ Last inspected local artifacts from the Battle v0 run:
 /tmp/battle-001/run-receipt.json
 /tmp/battle-001/scoreboard.json
 /tmp/battle-001/judge/judge-receipt.json
-skills/battle/monitor/calth/test-results/battle-monitor.png
+skills/battle/monitor/battle/test-results/battle-monitor.png
 /tmp/codex-ui-verification/agent-skills/battle-monitor/latest.json
 ```
 
@@ -185,8 +190,11 @@ Battle v0 does not prove:
 
 ## Infrastructure State
 
-- `skills/battle/monitor/calth/node_modules` is expected to be a symlink to
-  `/mnt/storage12tb/skills/battle/monitor-calth/node_modules`.
+- Battle runtime state defaults to `/mnt/storage12tb/skills/battle/`.
+- The skill root should not contain real `.venv`, `artifacts`, `battles`,
+  `reports`, `worktrees`, `node_modules`, or `__pycache__` directories.
+- Generated monitor artifacts under `monitor/battle/public/artifacts/` are proof
+  copies for UI validation and should not be treated as source.
 - Current Battle worktree state is uncommitted and pending review.
 - Full clean validation should be rerun before any closure, commit, or readiness
   claim.

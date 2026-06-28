@@ -21,6 +21,9 @@ provides:
   - browser-oracle-registry
 composes:
   - surf
+complies:
+  - best-practices-skills
+  - best-practices-python
 taxonomy:
   - orchestration
   - validation
@@ -52,8 +55,8 @@ cd skills/browser-oracle
 ./run.sh bind oc-subagent-personas --tab-id <ID> --url <URL> --manual
 
 # 3. Register directory mapping (committed yaml)
-./run.sh register --at skills/oc-subagent --default oc-subagent-personas
-./run.sh register --at skills/oc-subagent --relative-path personas/mathematics oc-subagent-personas
+./run.sh register --at agents --default oc-subagent-personas
+./run.sh register --at agents --relative-path mathematics oc-subagent-personas
 
 # 4. Preflight
 ./run.sh doctor --from /path/to/work --json
@@ -65,13 +68,51 @@ cd ../ask
 
 **Do not** pass `--webgpt-tab-id` on every round when a project binding exists.
 
+## Skill integration contract
+
+Every reviewable skill should connect to WebGPT through this two-part binding:
+
+1. Commit a directory registry inside the skill:
+
+   ```text
+   <skill>/.ask/browser-oracles.yaml
+   ```
+
+   ```yaml
+   version: 1
+   webgpt:
+     default: <skill-project-name>
+   ```
+
+2. Bind the project name once to the live WebGPT tab and URL:
+
+   ```bash
+   skills/browser-oracle/run.sh bind <skill-project-name> \
+     --backend webgpt \
+     --tab-id <tab-id> \
+     --url '<chatgpt-project-conversation-url>' \
+     --manual \
+     --json
+   ```
+
+Then preflight from the skill directory:
+
+```bash
+skills/browser-oracle/run.sh resolve --from skills/<skill-name> --backend webgpt --json
+skills/browser-oracle/run.sh doctor --from skills/<skill-name> --backend webgpt --json
+```
+
+This is what lets `$webgpt-review`, `$ask webgpt`, and `$surf webgpt.submit`
+connect a skill to its browser reviewer without hardcoded tab ids in prompts,
+README files, or project-agent memory.
+
 ## Walk-up rule
 
 From `--from` (default `.`), walk **child → parent** for `.ask/browser-oracles.yaml`.
 **Nearest file wins.** See `references/browser-oracles.schema.yml`.
 
 Within a registry root, `by_relative_path` keys are relative to that root
-(e.g. `personas/mathematics` under `skills/oc-subagent/`).
+(e.g. `mathematics` under `agents/`).
 
 ## Full CLI reference
 
@@ -98,6 +139,42 @@ Check binding file exists and tab is still open (Chrome backends via `surf tab.l
 ```bash
 ./run.sh list [--backend webgpt] [--verify] [--json]
 ```
+
+### `reconcile`
+```bash
+./run.sh reconcile [--backend webgpt] [--project NAME] [--prune-missing] [--json]
+```
+Scan stored bindings against live `surf tab.list --json --with-kde` inventory.
+Reports `ready`, `missing_live_tab`, `url_mismatch`, `live_scan_incomplete`, or
+`scan_failed` per binding. `--prune-missing` deletes only binding files whose
+stored Chrome tab id no longer exists after a complete live scan; it does not
+close browser tabs. On KDE Plasma, missing OS/window workspace metadata is a
+transport ambiguity, so stale bindings are preserved fail-closed. Successful
+verification refreshes stored Chrome window/KDE observation fields so callers
+can remember `chrome_window_id`, `kde_desktop_index`, `kde_x11_window_id`, and
+the observation source/confidence.
+
+### `open-bind`
+```bash
+./run.sh open-bind NAME [--backend webgpt] --url URL [--window] [--manual|--auto] [--json]
+```
+Open a fresh reviewer surface and persist the new tab id as the project binding.
+
+For **webgpt**, the default is an isolated Chrome **window** on KDE Desktop 2
+(`--window`, overridable with `BROWSER_ORACLE_OPEN_BIND_WINDOW=0`). That keeps
+one project = one single-tab reviewer window instead of polluting the main
+Chrome window on Desktop 1. The window opens unfocused by default
+(`BROWSER_ORACLE_OPEN_BIND_UNFOCUSED=1`) and the tab title is labeled
+`<project> · WebGPT reviewer` for humans.
+
+`open-bind` must leave the bound tab on the requested reviewer URL, not on a
+Surf placeholder page. If `window.new` returns an "Agent Window" placeholder,
+browser-oracle owns the immediate `surf go <url> --tab-id <id>` recovery before
+saving the binding. Project agents should not hand-navigate reviewer windows
+after `open-bind`.
+
+Use plain `tab.new` only when you explicitly pass `--no-window` semantics via
+`BROWSER_ORACLE_OPEN_BIND_WINDOW=0` for webgpt, or for non-webgpt backends.
 
 ### `register`
 ```bash
@@ -130,7 +207,9 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 | Explicit project | `--project NAME` (resolve only) | `--webgpt-project NAME` | `--project NAME` |
 | Tab id | via `bind` → binding file | `--webgpt-tab-id ID` | `--tab-id ID` |
 | Conversation URL | `--url` on `bind`; resolve returns it | `--webgpt-url URL` | `--url URL` (+ `--expect-url`) |
-| Fresh tab | — | `--webgpt-create-tab` | `--create-tab` |
+| Fresh reviewer window/tab | `open-bind NAME --url URL` (webgpt defaults to `--window`) | `--webgpt-create-tab` / auto-provision on first `--webgpt-project` | `--create-tab` (project-aware: open-bind `--window`) |
+| Stored tab scan | `reconcile --project NAME` | compose before review | automatic before walked-up submit |
+| Delete stale id | `reconcile --prune-missing` | compose before review | `SURF_BROWSER_ORACLE_PRUNE_MISSING=1` |
 | Single round | — | `--once` | — |
 
 ## Commands (quick)
@@ -140,6 +219,8 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 ./run.sh bind NAME [--backend webgpt] --tab-id ID [--url URL] [--view-id ID] [--manual]
 ./run.sh verify NAME [--backend webgpt] [--json]
 ./run.sh list [--backend webgpt] [--verify] [--json]
+./run.sh reconcile [--backend webgpt] [--project NAME] [--prune-missing] [--json]
+./run.sh open-bind NAME [--backend webgpt] --url URL [--manual] [--json]
 ./run.sh register [--at DIR] [--backend webgpt] [--default] [--relative-path SUB] PROJECT
 ./run.sh show-registry [--from PATH] [--json]
 ./run.sh walk-up [--from PATH] [--json]
@@ -152,8 +233,8 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 | Intent | Say |
 |--------|-----|
 | Bind tab once | `$browser-oracle bind <project> tab <id> url <url> manual` |
-| Map a directory | `$browser-oracle register skills/oc-subagent default <project>` |
-| Map subpath | `$browser-oracle register … relative-path personas/mathematics <project>` |
+| Map a directory | `$browser-oracle register agents default <project>` |
+| Map subpath | `$browser-oracle register … relative-path mathematics <project>` |
 | Use from here | `$ask webgpt …` or `$surf webgpt.submit …` from that directory — walk-up fills project/tab/url automatically |
 | Override project | `$ask webgpt … --webgpt-project <name>` or `--browser-oracle-from <dir>` |
 | Inspect binding | `$browser-oracle doctor --from <dir>` or `resolve --json` |
@@ -178,6 +259,9 @@ Legacy `./run.sh webgpt-project …` in `/ask` remains; prefer **`browser-oracle
 ## Proof
 
 - Resolve/doctor JSON with `project`, `registry_path`, `tab_id`, `readiness`.
+- Reconcile JSON includes KDE workspace metadata when available:
+  `live_window_id`, `live_kde_desktop_index`, and `live_scan_context`.
+- Binding JSON persists last observed desktop/window metadata after verify.
 - Ask artifacts for actual WebGPT rounds (not chat paraphrase).
 
 Details: `README.md`, `docs/PROJECT_KNOWLEDGE.md`, `references/browser-oracles.schema.yml`.
@@ -195,7 +279,7 @@ Details: `README.md`, `docs/PROJECT_KNOWLEDGE.md`, `references/browser-oracles.s
 **Zero-flag workflow** (from a registered directory):
 
 ```bash
-cd skills/oc-subagent/personas/mathematics
+cd agents/mathematics
 $ask webgpt "review this bundle" --once          # walk-up → oc-subagent-personas + tab 837352004
 $surf webgpt.submit --input REQ.md --output RESP.md --no-activate  # same walk-up from cwd
 ```
