@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Search, Star, MoreHorizontal, MessageSquareText, NotebookPen } from 'lucide-react'
+import { Maximize2, Search, Star, MoreHorizontal, MessageSquareText, NotebookPen, X } from 'lucide-react'
 
 const EMOTION_TAGS = ['LAUGH', 'CHUCKLE', 'SIGH', 'COUGH', 'SNIFFLE', 'GROAN', 'YAWN', 'GASP'] as const
 
@@ -77,6 +77,26 @@ interface SceneElement {
   diff_info?: DiffInfo
 }
 
+interface TrackerEntityCandidate {
+  name: string
+  actor_name?: string
+  confidence?: number
+  status?: string
+}
+
+interface TrackerEvent {
+  event_type: 'track_update'
+  schema_version: 'watch.live_track_update.v1'
+  asset_uid: string
+  segment_id: string
+  media_time_seconds: number
+  track_id: string
+  bbox_xyxy: [number, number, number, number]
+  detected_class: string
+  candidate_entities?: TrackerEntityCandidate[]
+  status?: string
+}
+
 interface WatchReport {
   watch_report: {
     title: string
@@ -141,6 +161,14 @@ function sceneThumbUrl(row: SceneElement): string | null {
 
 function videoUrl(row: SceneElement): string | null {
   return row.video_clip_path ? mediaUrl(row.video_clip_path, 'watch-frames') : null
+}
+
+function secondsFromTimecode(value?: string): number {
+  if (!value) return 0
+  const start = value.split('-')[0]?.trim() ?? value
+  const parts = start.split(':').map((part) => Number(part))
+  if (parts.some((part) => Number.isNaN(part))) return 0
+  return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
 function diffCategoryColor(cat?: string): string {
@@ -209,6 +237,10 @@ export function WatchReportView({
   const [activeTab, setActiveTab] = useState<'agent' | 'annotation'>('annotation')
   const [hoveredDiff, setHoveredDiff] = useState<number | null>(null)
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(['LAUGH', 'CHUCKLE']))
+  const [modalRowIndex, setModalRowIndex] = useState<number | null>(null)
+  const [modalPlaybackSeconds, setModalPlaybackSeconds] = useState(0)
+  const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([])
+  const [trackerStreamStatus, setTrackerStreamStatus] = useState('idle')
 
   useEffect(() => {
     fetch(`/api/projects/watch/report?path=${encodeURIComponent(reportPath)}`)
@@ -216,6 +248,41 @@ export function WatchReportView({
       .then((data) => setReport(data))
       .catch((err) => setLoadError(String(err)))
   }, [reportPath])
+
+  useEffect(() => {
+    if (modalRowIndex == null) return
+    setTrackerEvents([])
+    setTrackerStreamStatus('connecting')
+    const source = new EventSource('/api/projects/watch/tracker-events/stream')
+    source.addEventListener('meta', (event) => {
+      try {
+        const data = JSON.parse((event as MessageEvent).data)
+        setTrackerStreamStatus(data.status || 'streaming')
+      } catch {
+        setTrackerStreamStatus('streaming')
+      }
+    })
+    source.addEventListener('track_update', (event) => {
+      try {
+        const data = JSON.parse((event as MessageEvent).data) as TrackerEvent
+        setTrackerEvents((current) => {
+          const next = [...current, data]
+          return next.length > 500 ? next.slice(next.length - 500) : next
+        })
+      } catch {
+        setTrackerStreamStatus('bad_event')
+      }
+    })
+    source.addEventListener('done', () => {
+      setTrackerStreamStatus((current) => current === 'connecting' ? 'stream_complete' : current)
+      source.close()
+    })
+    source.onerror = () => {
+      setTrackerStreamStatus('stream_error')
+      source.close()
+    }
+    return () => source.close()
+  }, [modalRowIndex])
 
   const reportWithDiff = useMemo((): WatchReport | null => {
     if (!report) return null
@@ -346,6 +413,28 @@ export function WatchReportView({
     return { timecode: row.timecode, movieTitle: reportWithDiff.watch_report.title }
   }, [selectedRow, reportWithDiff])
 
+  const modalRow = useMemo(() => {
+    if (modalRowIndex == null || !reportWithDiff) return null
+    return reportWithDiff.scene_elements.find((row) => row.index === modalRowIndex) ?? null
+  }, [modalRowIndex, reportWithDiff])
+
+  const activeTrackerEvents = useMemo(() => {
+    if (!modalRow) return []
+    const absoluteTime = secondsFromTimecode(modalRow.movie_segment || modalRow.timecode) + modalPlaybackSeconds
+    const nearestByTrack = new Map<string, { event: TrackerEvent; delta: number }>()
+    for (const event of trackerEvents) {
+      const delta = Math.abs(event.media_time_seconds - absoluteTime)
+      if (delta > 0.22) continue
+      const current = nearestByTrack.get(event.track_id)
+      if (!current || delta < current.delta) {
+        nearestByTrack.set(event.track_id, { event, delta })
+      }
+    }
+    return [...nearestByTrack.values()]
+      .sort((a, b) => a.event.track_id.localeCompare(b.event.track_id))
+      .map((item) => item.event)
+  }, [modalPlaybackSeconds, modalRow, trackerEvents])
+
   if (loadError) return <div style={{ padding: 24, color: '#ff4757' }}>Failed to load report: {loadError}</div>
   if (!reportWithDiff) return <div style={{ padding: 24, color: '#6b7a8f' }}>Loading Watch report...</div>
 
@@ -400,6 +489,7 @@ export function WatchReportView({
             const diff = row.diff_info
             const hasMismatch = !!diff
             const thumbSrc = sceneThumbUrl(row)
+            const clipSrc = videoUrl(row)
             return (
               <article key={row.index} onClick={() => setSelectedRow(row.index)}
                 style={{
@@ -441,6 +531,33 @@ export function WatchReportView({
                 <div>
                   <div style={{ width: '100%', height: 100, borderRadius: 6, border: '1px solid #1e2630', overflow: 'hidden', position: 'relative', background: '#1a1d23' }}>
                     {thumbSrc ? <img src={thumbSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                    {clipSrc && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setModalRowIndex(row.index)
+                          setModalPlaybackSeconds(0)
+                        }}
+                        title="Open event-backed tracking overlay"
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          width: 24,
+                          height: 24,
+                          borderRadius: 4,
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          background: 'rgba(0,0,0,0.55)',
+                          color: '#dbeafe',
+                          display: 'grid',
+                          placeItems: 'center',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Maximize2 size={13} />
+                      </button>
+                    )}
                     <div style={{ position: 'absolute', left: 8, right: 8, bottom: 6, display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.9)', fontSize: 10 }}>
                       <span>▶</span>
                       <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.25)', borderRadius: 99, overflow: 'hidden' }}>
@@ -744,6 +861,155 @@ export function WatchReportView({
           )}
         </div>
       </aside>
+      {modalRow && (
+        <TrackingModal
+          row={modalRow}
+          videoSrc={videoUrl(modalRow)}
+          trackerEvents={activeTrackerEvents}
+          trackerEventCount={trackerEvents.length}
+          streamStatus={trackerStreamStatus}
+          onTimeUpdate={setModalPlaybackSeconds}
+          onClose={() => {
+            setModalRowIndex(null)
+            setModalPlaybackSeconds(0)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function TrackingModal({
+  row,
+  videoSrc,
+  trackerEvents,
+  trackerEventCount,
+  streamStatus,
+  onTimeUpdate,
+  onClose,
+}: {
+  row: SceneElement
+  videoSrc: string | null
+  trackerEvents: TrackerEvent[]
+  trackerEventCount: number
+  streamStatus: string
+  onTimeUpdate: (seconds: number) => void
+  onClose: () => void
+}) {
+  const frameWidth = 512
+  const frameHeight = 278
+  const hasActiveBoxes = trackerEvents.length > 0
+
+  return (
+    <div
+      data-watch-tracking-modal="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(0,0,0,0.68)',
+        backdropFilter: 'blur(8px)',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '5vh 5vw',
+      }}
+    >
+      <div style={{ width: '90vw', maxWidth: 1400, background: 'rgba(8,10,13,0.96)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 24px 80px rgba(0,0,0,0.65)' }}>
+        <div style={{ height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: '#f7d774', fontFamily: 'ui-monospace, monospace', fontWeight: 800, letterSpacing: '0.08em' }}>{row.movie_segment || row.timecode}</span>
+            <span style={{ color: '#8795aa', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              {streamStatus} · {trackerEventCount} streamed events
+            </span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close tracking overlay" style={{ width: 34, height: 34, borderRadius: 6, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: '#dbe4f0', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ position: 'relative', background: '#000' }}>
+          {videoSrc ? (
+            <video
+              src={videoSrc}
+              controls
+              autoPlay
+              onTimeUpdate={(event) => onTimeUpdate(event.currentTarget.currentTime)}
+              style={{ width: '100%', maxHeight: 'calc(90vh - 54px)', display: 'block', objectFit: 'contain' }}
+            />
+          ) : (
+            <div style={{ height: '70vh', display: 'grid', placeItems: 'center', color: '#94a3b8' }}>No playable movie segment for this row.</div>
+          )}
+
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            {!hasActiveBoxes && (
+              <div data-watch-tracking-empty="true" style={{
+                position: 'absolute',
+                top: 18,
+                left: 18,
+                border: '1px solid rgba(247,215,116,0.45)',
+                background: 'rgba(10,8,0,0.74)',
+                color: '#f7d774',
+                padding: '8px 10px',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}>
+                Tracking overlay unavailable: no event-backed bbox for this segment/time
+              </div>
+            )}
+            {trackerEvents.map((event) => {
+              const entity = event.candidate_entities?.[0]
+              const [x1, y1, x2, y2] = event.bbox_xyxy
+              const left = (x1 / frameWidth) * 100
+              const top = (y1 / frameHeight) * 100
+              const width = ((x2 - x1) / frameWidth) * 100
+              const height = ((y2 - y1) / frameHeight) * 100
+              const identityPrefix = entity?.status === 'PROVISIONAL' || event.status === 'PROVISIONAL' ? 'PROVISIONAL ' : ''
+              const label = entity?.actor_name
+                ? `${identityPrefix}${entity.name} · ${entity.actor_name}`
+                : `${identityPrefix}${entity?.name || event.detected_class}`
+              const stroke = event.status === 'BOUNDARY_CANDIDATE' ? '#ffb300' : '#03dac6'
+              return (
+                <div
+                  data-watch-tracking-box="true"
+                  data-track-id={event.track_id}
+                  data-track-time={event.media_time_seconds}
+                  key={`${event.track_id}-${event.media_time_seconds}`}
+                  style={{
+                    position: 'absolute',
+                    left: `${left}%`,
+                    top: `${top}%`,
+                    width: `${width}%`,
+                    height: `${height}%`,
+                    border: `2px solid ${stroke}`,
+                    background: `${stroke}1a`,
+                    boxShadow: `0 0 18px ${stroke}33`,
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    left: -2,
+                    top: -26,
+                    background: stroke,
+                    color: '#00110f',
+                    padding: '4px 8px',
+                    fontFamily: 'ui-monospace, monospace',
+                    fontSize: 11,
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '0.06em',
+                  }}>
+                    {label} {entity?.confidence ? `${Math.round(entity.confidence * 100)}%` : ''}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -13,6 +13,11 @@ app.use(express.json())
 const WATCH_REPORT_PATH = process.env.WATCH_REPORT_PATH || '/tmp/watch-wex5uxs_/report.json'
 const WATCH_FRAMES_DIR = process.env.WATCH_FRAMES_DIR || '/mnt/storage12tb/media/watch-frames'
 const MEMORY_DAEMON = process.env.MEMORY_DAEMON_URL || 'http://127.0.0.1:8601'
+const WATCH_SKILL_DIR = path.resolve(__dirname, '..', '..')
+const WATCH_TRACKER_EVENTS_PATH = process.env.WATCH_TRACKER_EVENTS_PATH || path.join(
+  WATCH_SKILL_DIR,
+  'docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl',
+)
 
 // Serve report JSON
 app.get('/api/projects/watch/report', async (_req, res) => {
@@ -61,6 +66,71 @@ app.get('/api/projects/watch/media', async (req, res) => {
   }
   serveMediaFile(rawPath, req, res)
 })
+
+// Event-backed tracker stream. This replays live YOLO/ByteTrack event artifacts
+// through the same SSE shape the modal will use for an active tracker process.
+app.get('/api/projects/watch/tracker-events/stream', async (req, res) => {
+  const segmentId = typeof req.query.segment_id === 'string' ? req.query.segment_id : ''
+  const assetUid = typeof req.query.asset_uid === 'string' ? req.query.asset_uid : ''
+  const eventsPath = typeof req.query.path === 'string' ? req.query.path : WATCH_TRACKER_EVENTS_PATH
+
+  if (!eventsPath.startsWith(WATCH_SKILL_DIR) && !eventsPath.startsWith('/tmp')) {
+    res.status(403).json({ error: 'tracker event path outside allowed roots' })
+    return
+  }
+  if (!existsSync(eventsPath)) {
+    res.status(404).json({ error: 'tracker event log not found', events_path: eventsPath })
+    return
+  }
+
+  const events = readTrackerEvents(eventsPath).filter((event) => {
+    if (segmentId && event.segment_id !== segmentId) return false
+    if (assetUid && event.asset_uid !== assetUid) return false
+    return true
+  })
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders?.()
+
+  res.write(`event: meta\ndata: ${JSON.stringify({
+    schema: 'watch.tracker_event_stream.v1',
+    status: events.length > 0 ? 'REPLAYING_EVENT_LOG' : 'NO_MATCHING_EVENTS',
+    source: eventsPath,
+    total_events: events.length,
+    segment_id: segmentId || null,
+    asset_uid: assetUid || null,
+  })}\n\n`)
+
+  if (events.length === 0) {
+    res.write(`event: done\ndata: ${JSON.stringify({ status: 'NO_MATCHING_EVENTS' })}\n\n`)
+    res.end()
+    return
+  }
+
+  let index = 0
+  const interval = setInterval(() => {
+    if (index >= events.length) {
+      clearInterval(interval)
+      res.write(`event: done\ndata: ${JSON.stringify({ status: 'STREAM_COMPLETE', total_events: events.length })}\n\n`)
+      res.end()
+      return
+    }
+    res.write(`event: track_update\ndata: ${JSON.stringify(events[index])}\n\n`)
+    index += 1
+  }, 90)
+
+  req.on('close', () => clearInterval(interval))
+})
+
+function readTrackerEvents(eventsPath: string): any[] {
+  return readFileSync(eventsPath, 'utf-8')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+}
 
 function serveMediaFile(rawPath: string, req: express.Request, res: express.Response) {
   try {
