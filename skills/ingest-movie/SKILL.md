@@ -114,14 +114,14 @@ This skill follows the **verb-prefix composability pattern**: instead of duplica
 
 ```bash
 # 1. Find a release that ships with SDH subtitles
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-movie
+cd /path/to/agent-skills/skills/ingest-movie
 ./run.sh search "There Will Be Blood"
 
 # 2. Extract rage windows from the downloaded subtitles
 ./run.sh scenes extract \
-  --subtitle "/home/graham/Downloads/media/movies/There Will Be Blood (2007)/blood.en.srt" \
+  --subtitle "/path/to/media/movies/There Will Be Blood (2007)/blood.en.srt" \
   --tag rage \
-  --video "/home/graham/Downloads/media/movies/There Will Be Blood (2007)/There.Will.Be.Blood.2007.PROPER.1080p.BluRay.x264-ELBOWDOWN.mkv" \
+  --video "/path/to/media/movies/There Will Be Blood (2007)/There.Will.Be.Blood.2007.PROPER.1080p.BluRay.x264-ELBOWDOWN.mkv" \
   --clip-dir "./clips/there_will_be_blood_rage" \
   --output-json "./clips/there_will_be_blood_rage/scenes.json"
 
@@ -322,7 +322,7 @@ Add missing movies to Radarr with enforced constraints.
 Use `/dogpile` with the `movie_scenes` preset for comprehensive movie research:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile
+cd /path/to/agent-skills/skills/dogpile
 ./run.sh search "war movies betrayal scenes DDL intensity" --preset movie_scenes
 ```
 
