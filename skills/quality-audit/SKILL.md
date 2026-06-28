@@ -39,7 +39,7 @@ Works with **any project** - not tied to specific extraction tasks.
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/quality-audit
+cd /path/to/agent-skills/skills/quality-audit
 
 # Sample from extraction results
 ./run.sh sample --input results.jsonl --stratify framework --samples-per-stratum 5
