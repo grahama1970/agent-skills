@@ -31,6 +31,7 @@ LIVE_TRACKING_MEMORY_WINDOW_SCHEMA = "watch.live_tracking_memory_window_plan.v1"
 GRAPH_VECTOR_PERSISTENCE_SCHEMA = "watch.graph_vector_persistence_plan.v1"
 MEMORY_RECALL_VERIFICATION_SCHEMA = "watch.memory_recall_verification_plan.v1"
 IDENTITY_REINFORCEMENT_PLAN_SCHEMA = "watch.identity_reinforcement_plan.v1"
+REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA = "watch.reference_embedding_receipt_plan.v1"
 
 STATE_REFERENCE_PACKAGE_MISSING = "REFERENCE_PACKAGE_MISSING"
 STATE_REFERENCE_CANDIDATES_COLLECTED = "REFERENCE_CANDIDATES_COLLECTED"
@@ -1087,6 +1088,188 @@ def build_identity_reinforcement_plan(
                 "Jina embedding success",
                 "Qdrant write success",
                 "Arango write success",
+                "$memory recall success",
+                "supported character identity",
+                "real-time annotation tracking",
+            ],
+        },
+    }
+    _assert_no_raw_vectors(plan)
+    return plan
+
+
+def build_reference_embedding_receipt_plan(
+    reference_manifest: Mapping[str, Any],
+    identity_reinforcement_plan: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Build the planned reference-image embedding receipt gate.
+
+    This joins Brave/movie-domain reference-source URLs to explicit download,
+    approval, and Jina/Qdrant receipt requirements. It does not download
+    images, approve references, run embeddings, write Qdrant, write Arango, or
+    promote any scene identity.
+    """
+
+    if reference_manifest.get("schema_version") != "watch.identity_reference_manifest.v1":
+        raise ValueError(f"unsupported reference manifest schema: {reference_manifest.get('schema_version')!r}")
+    if identity_reinforcement_plan.get("schema") != IDENTITY_REINFORCEMENT_PLAN_SCHEMA:
+        raise ValueError(f"unsupported identity reinforcement schema: {identity_reinforcement_plan.get('schema')!r}")
+
+    asset = copy.deepcopy(dict(identity_reinforcement_plan.get("asset") or {}))
+    asset_id = asset.get("asset_id") or compute_asset_id(asset)
+    entity_requirements: List[Dict[str, Any]] = []
+    qdrant_point_plans: List[Dict[str, Any]] = []
+
+    for candidate in reference_manifest.get("candidates") or []:
+        entity_id = candidate.get("entity_id")
+        entity_name = candidate.get("name")
+        actor_name = candidate.get("actor_name")
+        approved_references = candidate.get("approved_references") or []
+        required_positive = int(candidate.get("required_positive_reference_count") or 3)
+        required_negative = int(candidate.get("required_negative_reference_count") or 3)
+        source_urls = [
+            url
+            for source in (candidate.get("reference_source_candidates") or [])
+            for url in (source.get("urls") or [])
+            if url
+        ]
+        planned_slots = []
+        for slot_kind, required_count in (("positive", required_positive), ("negative", required_negative)):
+            for index in range(required_count):
+                slot_id = stable_id("watch_reference_slot", {
+                    "asset_id": asset_id,
+                    "entity_id": entity_id,
+                    "slot_kind": slot_kind,
+                    "index": index,
+                })
+                point_id = qdrant_point_id(slot_id)
+                source_url = source_urls[index % len(source_urls)] if source_urls else None
+                slot = {
+                    "slot_id": slot_id,
+                    "slot_kind": slot_kind,
+                    "entity_id": entity_id,
+                    "entity_name": entity_name,
+                    "actor_name": actor_name,
+                    "source_url_candidate": source_url,
+                    "download_receipt_required": True,
+                    "approval_receipt_required": True,
+                    "embedding_receipt_required": True,
+                    "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+                    "scene_truth_allowed": False,
+                    "promotion_allowed": False,
+                    "qdrant_point_plan": {
+                        "collection": "watch_reference_image_embeddings",
+                        "point_id": point_id,
+                        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+                        "modality": "reference_image",
+                        "embedding_model": "jina-clip-v2-planned",
+                        "payload": {
+                            "asset_id": asset_id,
+                            "entity_id": entity_id,
+                            "entity_name": entity_name,
+                            "actor_name": actor_name,
+                            "slot_kind": slot_kind,
+                            "slot_index": index,
+                            "source_url_candidate": source_url,
+                            "domain_prior_only": True,
+                            "scene_truth_allowed": False,
+                        },
+                    },
+                }
+                planned_slots.append(slot)
+                qdrant_point_plans.append(slot["qdrant_point_plan"])
+
+        blocked = len(approved_references) < required_positive
+        entity_requirements.append({
+            "entity_id": entity_id,
+            "entity_name": entity_name,
+            "actor_name": actor_name,
+            "status": "BLOCKED_PENDING_APPROVED_REFERENCES" if blocked else "READY_FOR_REFERENCE_EMBEDDING",
+            "candidate_source_count": len(source_urls),
+            "approved_reference_count": len(approved_references),
+            "required_positive_reference_count": required_positive,
+            "required_negative_reference_count": required_negative,
+            "planned_reference_image_slot_count": len(planned_slots),
+            "planned_reference_image_slots": planned_slots,
+            "promotion_blockers": (
+                [
+                    "APPROVED_REFERENCE_IMAGES_MISSING",
+                    "REFERENCE_DOWNLOAD_RECEIPTS_MISSING",
+                    "REFERENCE_APPROVAL_RECEIPTS_MISSING",
+                    "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+                    "NEGATIVE_CONTROL_REFERENCES_MISSING",
+                ]
+                if blocked
+                else [
+                    "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+                    "NEGATIVE_CONTROL_REFERENCES_MISSING",
+                ]
+            ),
+        })
+
+    plan = {
+        "schema": REFERENCE_EMBEDDING_RECEIPT_PLAN_SCHEMA,
+        "status": "PLANNED_NOT_WRITTEN",
+        "asset": asset,
+        "source_reference_manifest_schema": reference_manifest.get("schema_version"),
+        "source_identity_reinforcement_schema": identity_reinforcement_plan.get("schema"),
+        "entity_reference_requirements": entity_requirements,
+        "qdrant_reference_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "write_status": PLANNED_NOT_WRITTEN,
+            "points": qdrant_point_plans,
+            "raw_vectors_in_plan": False,
+        },
+        "memory_requirements": {
+            "allowed_answer_path": "$memory recall",
+            "requires_intent_before_recall": True,
+            "requires_items_key": True,
+            "forbidden_results_key_dependency": True,
+            "direct_qdrant_or_arango_answer_allowed": False,
+        },
+        "receipt_requirements": {
+            "download_receipts_required": True,
+            "human_or_policy_approval_receipts_required": True,
+            "embedding_write_receipts_required": True,
+            "negative_control_receipts_required": True,
+            "similarity_comparison_receipts_required_before_identity_support": True,
+        },
+        "promotion_policy": {
+            "domain_reference_seed_can_promote_identity": False,
+            "reference_url_can_promote_identity": False,
+            "reference_embedding_without_track_crop_can_promote_identity": False,
+            "supported_identity_requires": [
+                "approved_reference_images",
+                "reference_image_embedding_receipts",
+                "track_crop_embedding_receipts",
+                "crop_reference_similarity_receipt_with_negative_controls",
+                "text_or_scene_row_corroboration",
+                "memory_recall_items_matching_asset_entity_time",
+            ],
+        },
+        "counts": {
+            "entity_requirement_count": len(entity_requirements),
+            "approved_reference_count": sum(req["approved_reference_count"] for req in entity_requirements),
+            "planned_reference_image_slot_count": sum(req["planned_reference_image_slot_count"] for req in entity_requirements),
+            "qdrant_reference_point_plan_count": len(qdrant_point_plans),
+        },
+        "proof_scope": [
+            "reference_embedding_receipt_contract",
+            "planned_not_written",
+        ],
+        "claims": {
+            "proves": [
+                "Brave/movie-domain reference URLs are converted into explicit download, approval, and embedding receipt requirements",
+                "Reference-image Qdrant plans contain point ids and payload metadata without raw vectors",
+                "Reference images remain priors and cannot become scene truth or supported identity without track-crop comparison and memory recall",
+            ],
+            "does_not_prove": [
+                "Brave image download success",
+                "approved reference images",
+                "Jina embedding success",
+                "Qdrant write success",
+                "Arango write success",
+                "track crop/reference similarity",
                 "$memory recall success",
                 "supported character identity",
                 "real-time annotation tracking",

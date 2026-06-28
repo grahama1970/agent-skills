@@ -41,6 +41,8 @@ not scene truth.
 | `build_watch_memory_recall_verification_plan.py` | Harness added | Converts graph/vector plans into question-shaped recall probes |
 | `watch_identity_reinforcement_plan.schema.json` | Contract added | Planned loop connecting domain references, crop embeddings, text evidence, and recall gates |
 | `build_watch_identity_reinforcement_plan.py` | Harness added | Converts reference, graph/vector, and recall plans into fail-closed identity-reinforcement requirements |
+| `watch_reference_embedding_receipt_plan.schema.json` | Contract added | Planned reference-image download, approval, and embedding receipt gate |
+| `build_watch_reference_embedding_receipt_plan.py` | Harness added | Converts reference-source candidates into fail-closed Qdrant reference-image point plans |
 | `bad_santa_domain_seed/brave_bad_santa_cast_search.json` | Raw Brave Search seed exists | Movie-domain source candidates only |
 | `bad_santa_marcus_0248_upsert_payloads/` | Dry-run payloads exist | `/upsert` request body proof; no live write |
 
@@ -271,6 +273,32 @@ Current canary proof:
   image download success, reference approval, Jina embedding, Qdrant writes,
   Arango writes, live memory recall, real-time annotation tracking, or supported
   identity.
+
+### Phase 2.9: Planned Reference Image Embedding Receipts
+
+Goal: make the missing Brave/movie-domain image path explicit before any
+character identity can become supported.
+
+Runtime path:
+
+```text
+Brave/movie-domain reference-source URLs
+  -> reference image download receipts
+  -> human/policy approval receipts
+  -> Jina reference-image embedding receipts
+  -> Qdrant watch_reference_image_embeddings point receipts
+  -> crop/reference similarity receipts with negative controls
+```
+
+Current canary proof:
+
+- Command: `python3 skills/watch/scripts/build_watch_reference_embedding_receipt_plan.py --reference-manifest skills/watch/docs/architecture/generated/bad_santa_marcus_0248_identity_references/watch_identity_reference_manifest.bad_santa_marcus.json --identity-reinforcement-plan skills/watch/docs/architecture/generated/bad_santa_marcus_0248_identity_reinforcement_plan/watch_identity_reinforcement_plan.bad_santa_marcus.json --out /tmp/watch-reference-embedding-receipt-plan.json`
+- Expected output: `reference_embedding_receipt_plan_ok 1 entities 6 reference slots status=PLANNED_NOT_WRITTEN`
+- Schema: `skills/watch/docs/architecture/schemas/watch_reference_embedding_receipt_plan.schema.json`
+- Boundary: this proves the reference-image receipt contract only. It does not
+  prove Brave image download success, approved reference images, Jina embedding,
+  Qdrant writes, crop/reference similarity, `$memory recall`, real-time
+  annotation tracking, or supported character identity.
 
 ### Phase 3: Verification and Bounded Observation
 

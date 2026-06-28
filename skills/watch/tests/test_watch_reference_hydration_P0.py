@@ -19,6 +19,7 @@ from watch_reference_hydration import (
     build_live_tracking_memory_window_plan,
     build_memory_recall_verification_plan,
     build_memory_trace_plan,
+    build_reference_embedding_receipt_plan,
     build_reference_hydration_plan,
     load_json,
     load_jsonl,
@@ -272,3 +273,72 @@ def test_identity_reinforcement_plan_keeps_brave_references_as_priors() -> None:
     domain_stage = next(stage for stage in plan["reinforcement_loop"] if stage["stage"] == "domain_reference_seed")
     assert domain_stage["scene_truth_allowed"] is False
     assert "movie_domain_entities/willie_bad_santa_2003" in plan["negative_controls"][0]["forbidden_entity_ids"]
+
+
+def test_reference_embedding_receipt_plan_blocks_identity_until_receipts_exist() -> None:
+    reference_manifest = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_identity_references"
+        / "watch_identity_reference_manifest.bad_santa_marcus.json"
+    )
+    identity_reinforcement_plan = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "generated"
+        / "bad_santa_marcus_0248_identity_reinforcement_plan"
+        / "watch_identity_reinforcement_plan.bad_santa_marcus.json"
+    )
+    plan = build_reference_embedding_receipt_plan(reference_manifest, identity_reinforcement_plan)
+    schema = load_json(
+        WATCH_ROOT
+        / "docs"
+        / "architecture"
+        / "schemas"
+        / "watch_reference_embedding_receipt_plan.schema.json"
+    )
+    Draft202012Validator(schema).validate(plan)
+
+    assert plan["schema"] == "watch.reference_embedding_receipt_plan.v1"
+    assert plan["status"] == "PLANNED_NOT_WRITTEN"
+    assert plan["memory_requirements"]["allowed_answer_path"] == "$memory recall"
+    assert plan["memory_requirements"]["requires_items_key"] is True
+    assert plan["memory_requirements"]["direct_qdrant_or_arango_answer_allowed"] is False
+    assert plan["promotion_policy"]["domain_reference_seed_can_promote_identity"] is False
+    assert plan["promotion_policy"]["reference_url_can_promote_identity"] is False
+    assert plan["promotion_policy"]["reference_embedding_without_track_crop_can_promote_identity"] is False
+
+    counts = plan["counts"]
+    assert counts["entity_requirement_count"] == 1
+    assert counts["approved_reference_count"] == 0
+    assert counts["planned_reference_image_slot_count"] == 6
+    assert counts["qdrant_reference_point_plan_count"] == 6
+
+    entity_plan = plan["entity_reference_requirements"][0]
+    assert entity_plan["entity_name"] == "Marcus"
+    assert entity_plan["status"] == "BLOCKED_PENDING_APPROVED_REFERENCES"
+    assert entity_plan["required_positive_reference_count"] == 3
+    assert entity_plan["required_negative_reference_count"] == 3
+    assert "APPROVED_REFERENCE_IMAGES_MISSING" in entity_plan["promotion_blockers"]
+    assert "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING" in entity_plan["promotion_blockers"]
+
+    slots = entity_plan["planned_reference_image_slots"]
+    assert {slot["slot_kind"] for slot in slots} == {"positive", "negative"}
+    assert all(slot["scene_truth_allowed"] is False for slot in slots)
+    assert all(slot["promotion_allowed"] is False for slot in slots)
+    assert all(slot["download_receipt_required"] is True for slot in slots)
+    assert all(slot["approval_receipt_required"] is True for slot in slots)
+    assert all(slot["embedding_receipt_required"] is True for slot in slots)
+
+    point_plan = plan["qdrant_reference_point_plan"]
+    assert point_plan["collection"] == "watch_reference_image_embeddings"
+    assert point_plan["raw_vectors_in_plan"] is False
+    assert all(point["embedding_status"] == "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE" for point in point_plan["points"])
+    assert all(point["payload"]["scene_truth_allowed"] is False for point in point_plan["points"])
+    assert not any(
+        any(key in point for key in ("embedding", "embeddings", "vector", "vectors"))
+        for point in point_plan["points"]
+    )

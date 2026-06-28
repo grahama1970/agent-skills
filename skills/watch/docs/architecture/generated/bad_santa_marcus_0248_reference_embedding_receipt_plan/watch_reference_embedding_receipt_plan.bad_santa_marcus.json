@@ -1,0 +1,400 @@
+{
+  "schema": "watch.reference_embedding_receipt_plan.v1",
+  "status": "PLANNED_NOT_WRITTEN",
+  "asset": {
+    "schema": "watch.asset_metadata.v1",
+    "asset_kind": "cinema_movie",
+    "title": "Bad Santa",
+    "release_year": 2003,
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d"
+  },
+  "source_reference_manifest_schema": "watch.identity_reference_manifest.v1",
+  "source_identity_reinforcement_schema": "watch.identity_reinforcement_plan.v1",
+  "entity_reference_requirements": [
+    {
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "status": "BLOCKED_PENDING_APPROVED_REFERENCES",
+      "candidate_source_count": 10,
+      "approved_reference_count": 0,
+      "required_positive_reference_count": 3,
+      "required_negative_reference_count": 3,
+      "planned_reference_image_slot_count": 6,
+      "planned_reference_image_slots": [
+        {
+          "slot_id": "watch_reference_slot:118f04438046dcdc1d33d9140f67d98a",
+          "slot_kind": "positive",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "positive",
+              "slot_index": 0,
+              "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        },
+        {
+          "slot_id": "watch_reference_slot:b519a1174631f463ba080556d93eb70b",
+          "slot_kind": "positive",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "positive",
+              "slot_index": 1,
+              "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        },
+        {
+          "slot_id": "watch_reference_slot:16f14da25d31652daffe17ae679093d2",
+          "slot_kind": "positive",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "positive",
+              "slot_index": 2,
+              "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        },
+        {
+          "slot_id": "watch_reference_slot:e9e45988e69735fd24a3eb6f1dd6471a",
+          "slot_kind": "negative",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "negative",
+              "slot_index": 0,
+              "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        },
+        {
+          "slot_id": "watch_reference_slot:4d8a45aeb21f00b556f6f4c110ba8d44",
+          "slot_kind": "negative",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "negative",
+              "slot_index": 1,
+              "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        },
+        {
+          "slot_id": "watch_reference_slot:02abbf0a9185b4eb93a349c36b6f79a4",
+          "slot_kind": "negative",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+          "download_receipt_required": true,
+          "approval_receipt_required": true,
+          "embedding_receipt_required": true,
+          "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+          "scene_truth_allowed": false,
+          "promotion_allowed": false,
+          "qdrant_point_plan": {
+            "collection": "watch_reference_image_embeddings",
+            "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+            "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+            "modality": "reference_image",
+            "embedding_model": "jina-clip-v2-planned",
+            "payload": {
+              "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+              "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+              "entity_name": "Marcus",
+              "actor_name": "Tony Cox",
+              "slot_kind": "negative",
+              "slot_index": 2,
+              "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+              "domain_prior_only": true,
+              "scene_truth_allowed": false
+            }
+          }
+        }
+      ],
+      "promotion_blockers": [
+        "APPROVED_REFERENCE_IMAGES_MISSING",
+        "REFERENCE_DOWNLOAD_RECEIPTS_MISSING",
+        "REFERENCE_APPROVAL_RECEIPTS_MISSING",
+        "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+        "NEGATIVE_CONTROL_REFERENCES_MISSING"
+      ]
+    }
+  ],
+  "qdrant_reference_point_plan": {
+    "collection": "watch_reference_image_embeddings",
+    "write_status": "PLANNED_NOT_WRITTEN",
+    "points": [
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "b9ab0da0-f7f4-5e2b-9744-92607d0dc222",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "positive",
+          "slot_index": 0,
+          "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      },
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "e4d68b45-068a-5eb4-ae63-1a790097233f",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "positive",
+          "slot_index": 1,
+          "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      },
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "92d0f30a-6be6-509b-8300-fb66de40aadc",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "positive",
+          "slot_index": 2,
+          "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      },
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "ca1df4b7-1d6e-5967-9f26-4b156ebdee85",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "negative",
+          "slot_index": 0,
+          "source_url_candidate": "https://entertainmentnow.com/christmas-movies-shows/photos-bad-santa-cast-then-now/",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      },
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "9142a546-8bd4-5383-81ab-38f8ec056e4b",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "negative",
+          "slot_index": 1,
+          "source_url_candidate": "https://www.tvguide.com/movies/bad-santa/cast/2000055377/",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      },
+      {
+        "collection": "watch_reference_image_embeddings",
+        "point_id": "0ec9607c-0258-5b63-8f12-59553c04ab81",
+        "embedding_status": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE",
+        "modality": "reference_image",
+        "embedding_model": "jina-clip-v2-planned",
+        "payload": {
+          "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+          "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+          "entity_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "slot_kind": "negative",
+          "slot_index": 2,
+          "source_url_candidate": "https://en.wikipedia.org/wiki/Bad_Santa",
+          "domain_prior_only": true,
+          "scene_truth_allowed": false
+        }
+      }
+    ],
+    "raw_vectors_in_plan": false
+  },
+  "memory_requirements": {
+    "allowed_answer_path": "$memory recall",
+    "requires_intent_before_recall": true,
+    "requires_items_key": true,
+    "forbidden_results_key_dependency": true,
+    "direct_qdrant_or_arango_answer_allowed": false
+  },
+  "receipt_requirements": {
+    "download_receipts_required": true,
+    "human_or_policy_approval_receipts_required": true,
+    "embedding_write_receipts_required": true,
+    "negative_control_receipts_required": true,
+    "similarity_comparison_receipts_required_before_identity_support": true
+  },
+  "promotion_policy": {
+    "domain_reference_seed_can_promote_identity": false,
+    "reference_url_can_promote_identity": false,
+    "reference_embedding_without_track_crop_can_promote_identity": false,
+    "supported_identity_requires": [
+      "approved_reference_images",
+      "reference_image_embedding_receipts",
+      "track_crop_embedding_receipts",
+      "crop_reference_similarity_receipt_with_negative_controls",
+      "text_or_scene_row_corroboration",
+      "memory_recall_items_matching_asset_entity_time"
+    ]
+  },
+  "counts": {
+    "entity_requirement_count": 1,
+    "approved_reference_count": 0,
+    "planned_reference_image_slot_count": 6,
+    "qdrant_reference_point_plan_count": 6
+  },
+  "proof_scope": [
+    "reference_embedding_receipt_contract",
+    "planned_not_written"
+  ],
+  "claims": {
+    "proves": [
+      "Brave/movie-domain reference URLs are converted into explicit download, approval, and embedding receipt requirements",
+      "Reference-image Qdrant plans contain point ids and payload metadata without raw vectors",
+      "Reference images remain priors and cannot become scene truth or supported identity without track-crop comparison and memory recall"
+    ],
+    "does_not_prove": [
+      "Brave image download success",
+      "approved reference images",
+      "Jina embedding success",
+      "Qdrant write success",
+      "Arango write success",
+      "track crop/reference similarity",
+      "$memory recall success",
+      "supported character identity",
+      "real-time annotation tracking"
+    ]
+  }
+}

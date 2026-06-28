@@ -156,6 +156,8 @@ See:
 - [`scripts/build_identity_reference_manifest.py`](scripts/build_identity_reference_manifest.py)
 - [`docs/architecture/generated/bad_santa_character_reference_sources/inspection.md`](docs/architecture/generated/bad_santa_character_reference_sources/inspection.md)
 - [`docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md`](docs/architecture/generated/bad_santa_marcus_0248_identity_references/inspection.md)
+- [`scripts/build_watch_reference_embedding_receipt_plan.py`](scripts/build_watch_reference_embedding_receipt_plan.py)
+- [`docs/architecture/generated/bad_santa_marcus_0248_reference_embedding_receipt_plan/watch_reference_embedding_receipt_plan.bad_santa_marcus.json`](docs/architecture/generated/bad_santa_marcus_0248_reference_embedding_receipt_plan/watch_reference_embedding_receipt_plan.bad_santa_marcus.json)
 - [`docs/architecture/generated/bad_santa_domain_seed/inspection.md`](docs/architecture/generated/bad_santa_domain_seed/inspection.md)
 
 For live character/asset tracking, install the optional tracking dependencies:
@@ -184,6 +186,12 @@ raw results for cast/Willie/Marcus sources. The Marcus identity-reference
 manifest links 2 relevant query groups and 10 candidate URLs to the 10 review
 crops. This is still `DOMAIN_PRIOR_ONLY`: no reference images have been
 downloaded, approved, embedded, or recalled through Qdrant yet.
+
+The reference embedding receipt plan makes that missing step explicit. It
+creates planned positive and negative reference-image slots and Qdrant
+`watch_reference_image_embeddings` point plans, but keeps every slot blocked
+until download receipts, approval receipts, embedding receipts, crop/reference
+similarity receipts, and `$memory /recall` proof exist.
 
 ## How to Use
 

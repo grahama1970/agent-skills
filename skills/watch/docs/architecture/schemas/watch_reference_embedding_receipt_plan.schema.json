@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_reference_embedding_receipt_plan.schema.json",
+  "title": "Watch Reference Embedding Receipt Plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "asset",
+    "entity_reference_requirements",
+    "qdrant_reference_point_plan",
+    "memory_requirements",
+    "receipt_requirements",
+    "promotion_policy",
+    "counts",
+    "proof_scope",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.reference_embedding_receipt_plan.v1"
+    },
+    "status": {
+      "const": "PLANNED_NOT_WRITTEN"
+    },
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "asset_kind"]
+    },
+    "entity_reference_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "entity_id",
+          "entity_name",
+          "status",
+          "candidate_source_count",
+          "approved_reference_count",
+          "required_positive_reference_count",
+          "required_negative_reference_count",
+          "planned_reference_image_slot_count",
+          "planned_reference_image_slots",
+          "promotion_blockers"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "BLOCKED_PENDING_APPROVED_REFERENCES",
+              "READY_FOR_REFERENCE_EMBEDDING"
+            ]
+          },
+          "planned_reference_image_slots": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "slot_id",
+                "slot_kind",
+                "download_receipt_required",
+                "approval_receipt_required",
+                "embedding_receipt_required",
+                "embedding_status",
+                "scene_truth_allowed",
+                "promotion_allowed",
+                "qdrant_point_plan"
+              ],
+              "properties": {
+                "slot_kind": {
+                  "enum": ["positive", "negative"]
+                },
+                "download_receipt_required": {
+                  "const": true
+                },
+                "approval_receipt_required": {
+                  "const": true
+                },
+                "embedding_receipt_required": {
+                  "const": true
+                },
+                "scene_truth_allowed": {
+                  "const": false
+                },
+                "promotion_allowed": {
+                  "const": false
+                }
+              }
+            }
+          },
+          "promotion_blockers": {
+            "type": "array",
+            "contains": {
+              "enum": [
+                "APPROVED_REFERENCE_IMAGES_MISSING",
+                "REFERENCE_IMAGE_EMBEDDING_RECEIPTS_MISSING",
+                "NEGATIVE_CONTROL_REFERENCES_MISSING"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "qdrant_reference_point_plan": {
+      "type": "object",
+      "required": ["collection", "write_status", "points", "raw_vectors_in_plan"],
+      "properties": {
+        "collection": {
+          "const": "watch_reference_image_embeddings"
+        },
+        "write_status": {
+          "const": "PLANNED_NOT_WRITTEN"
+        },
+        "raw_vectors_in_plan": {
+          "const": false
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["collection", "point_id", "embedding_status", "modality", "payload"],
+            "properties": {
+              "collection": {
+                "const": "watch_reference_image_embeddings"
+              },
+              "embedding_status": {
+                "const": "BLOCKED_PENDING_APPROVED_SOURCE_IMAGE"
+              },
+              "modality": {
+                "const": "reference_image"
+              }
+            }
+          }
+        }
+      }
+    },
+    "memory_requirements": {
+      "type": "object",
+      "required": [
+        "allowed_answer_path",
+        "requires_intent_before_recall",
+        "requires_items_key",
+        "forbidden_results_key_dependency",
+        "direct_qdrant_or_arango_answer_allowed"
+      ],
+      "properties": {
+        "allowed_answer_path": {
+          "const": "$memory recall"
+        },
+        "requires_items_key": {
+          "const": true
+        },
+        "forbidden_results_key_dependency": {
+          "const": true
+        },
+        "direct_qdrant_or_arango_answer_allowed": {
+          "const": false
+        }
+      }
+    },
+    "receipt_requirements": {
+      "type": "object",
+      "required": [
+        "download_receipts_required",
+        "human_or_policy_approval_receipts_required",
+        "embedding_write_receipts_required",
+        "negative_control_receipts_required",
+        "similarity_comparison_receipts_required_before_identity_support"
+      ],
+      "properties": {
+        "download_receipts_required": {
+          "const": true
+        },
+        "human_or_policy_approval_receipts_required": {
+          "const": true
+        },
+        "embedding_write_receipts_required": {
+          "const": true
+        },
+        "negative_control_receipts_required": {
+          "const": true
+        },
+        "similarity_comparison_receipts_required_before_identity_support": {
+          "const": true
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": [
+        "domain_reference_seed_can_promote_identity",
+        "reference_url_can_promote_identity",
+        "reference_embedding_without_track_crop_can_promote_identity",
+        "supported_identity_requires"
+      ],
+      "properties": {
+        "domain_reference_seed_can_promote_identity": {
+          "const": false
+        },
+        "reference_url_can_promote_identity": {
+          "const": false
+        },
+        "reference_embedding_without_track_crop_can_promote_identity": {
+          "const": false
+        },
+        "supported_identity_requires": {
+          "type": "array",
+          "contains": {
+            "const": "crop_reference_similarity_receipt_with_negative_controls"
+          }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "entity_requirement_count",
+        "approved_reference_count",
+        "planned_reference_image_slot_count",
+        "qdrant_reference_point_plan_count"
+      ]
+    },
+    "proof_scope": {
+      "type": "array",
+      "contains": {
+        "const": "planned_not_written"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  },
+  "additionalProperties": true
+}
