@@ -5,12 +5,13 @@ test("renders generated Battle artifacts", async ({ page }) => {
 
   await expect(page.getByText("Battle Monitor")).toBeVisible();
   await expect(page.getByText("battle-001", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "BLUE_SUCCESS" })).toBeVisible();
-  await expect(page.getByText("Isstvan")).toBeVisible();
-  await expect(page.getByText("Phalanx")).toBeVisible();
-  await expect(page.getByText("Battle Scorekeeper")).toBeVisible();
+  await expect(page.locator(".summaryGrid").getByRole("heading", { name: "BLUE_SUCCESS" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Isstvan" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Phalanx" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Battle Scorekeeper" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Battle Chat" })).toBeVisible();
   await expect(page.getByText("Shared Watch-style chat UX")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:svg"]')).toBeVisible();
   const artifactList = page.getByRole("list");
   await expect(artifactList.getByText("red-receipt.json", { exact: true })).toBeVisible();
   await expect(artifactList.getByText("scoreboard.json", { exact: true })).toBeVisible();
@@ -22,6 +23,33 @@ test("renders generated Battle artifacts", async ({ page }) => {
 
   await page.screenshot({
     path: "test-results/battle-monitor.png",
+    fullPage: true
+  });
+});
+
+test("renders generated Battle v1 context graph artifacts", async ({ page }) => {
+  await page.goto("/?artifactBase=/artifacts/battle-003-arena-context");
+
+  await expect(page.getByText("Battle Monitor")).toBeVisible();
+  await expect(page.getByText("battle-003", { exact: true })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "Arena Team" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "brandon-bailey" })).toBeVisible();
+  await expect(page.locator(".playersGrid").getByRole("heading", { name: "coder" })).toBeVisible();
+  await expect(page.locator(".summaryGrid").getByRole("heading", { name: "BLUE_SUCCESS" })).toBeVisible();
+  await expect(page.locator(".artifactList").getByText("context/memory-store-receipt.json")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:svg"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:memory"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:scan"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:brave"]')).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:node:signal:warm-pond"]')).toBeVisible();
+
+  await page.locator('[data-qid="battle:graph:node:signal:warm-pond"]').click();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("warm pond")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("PASS")).toBeVisible();
+  await expect(page.locator('[data-qid="battle:graph:inspector"]').getByText("16 combinations")).toBeVisible();
+
+  await page.screenshot({
+    path: "test-results/battle-monitor-v1-context-graph.png",
     fullPage: true
   });
 });

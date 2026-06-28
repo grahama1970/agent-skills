@@ -57,6 +57,20 @@ code must execute only inside Docker.
 
 Required production invariants:
 
+- Battle has three active roles plus one objective recorder. **Arena Team**
+  builds or selects the project/app/digital twin and secretly plants one or more
+  vulnerabilities. Arena Team is not the judge. **Red Team** attacks. **Blue
+  Team** scans, patches, hardens, and defends. **Scorekeeper/Judge** records
+  objective runtime outcomes from hidden oracles and receipts.
+- Production Red and Blue work asynchronously and dynamically, not as a fixed
+  Red-then-Blue script. Blue may scan for vulnerabilities, run `$ingest-code`
+  or `$treesitter`, recall CWE and patch history, research mitigations, and
+  patch before Red exploits a hidden bug. Red may simultaneously recall,
+  research, scan, mutate payloads, and exploit.
+- The scheduler should support bounded parallelism when advantageous. Multiple
+  personas/workers per team may run concurrently, with explicit budgets,
+  worker ids, persona ids, model choices, and receipts. Do not implement
+  unbounded thread spawning.
 - Red and Blue are subagent teams. Each dispatched subagent must include an
   explicit persona selected by the orchestrator for that turn. Multiple personas
   per team may run concurrently when the turn benefits from breadth.
@@ -73,13 +87,24 @@ Required production invariants:
   own subagent execution and use `scillm` as the LLM/model caller. Battle owns
   team selection, persona assignment, Docker runtimes, scorekeeping, artifacts,
   and memory promotion.
-- Model choice is strategic but routed through Tau/loop: SOTA models for
-  planning, small fast models for high-throughput mutation generation and
-  triage, specialist models for language/security niches, and batch calls for
-  broad candidate generation.
+- Model choice is strategic and may be persona-owned, but all calls route
+  through Tau/loop and `$scillm`. SOTA models may be used for planning, small or
+  local low-parameter models for high-throughput mutation generation and triage,
+  specialist models for language/security niches, and batch calls for broad
+  candidate generation. Receipts must record persona, model/surface, reason
+  selected, latency/cost when available, and proof scope.
 - Red and Blue have free research access through approved agent-side research
-  skills, including `dogpile`, `brave-search`, `memory`, GitHub/code search,
-  docs, papers, CVEs, and public writeups.
+  skills, including `dogpile`, `brave-search`, `memory`, `github-search`,
+  `arxiv`, `ingest-code`, `treesitter`, docs, papers, CVEs, and public
+  writeups.
+- Persona memory should be recalled before research and scan selection. Persona
+  framing can color `$brave-search`, `$dogpile`, `$github-search`, and `$arxiv`
+  queries, but scorekeeper evidence remains objective.
+- Workers may clone selected public GitHub repositories into bounded
+  `/tmp/battle-<run-id>/github-research/...` directories for read-only
+  inspection. Cloned PoC/exploit code must not execute on the host. If any
+  research code is run, built, fuzzed, or adapted into a probe, it must execute
+  inside Docker and produce a command receipt.
 - All target apps, exploit probes, fuzzers, payloads, repro scripts, patch
   builds, tests, migrations, dependency installs, and replay checks run in
   Docker. The host is control plane only.
@@ -103,9 +128,11 @@ Required production invariants:
 - Target containers default to no network. External research happens from the
   agent side through controlled skills unless a scenario explicitly grants
   target-container network access.
-- The scorekeeper records objective outcomes: system down, system still up after
-  the allotted time, exploit success, crash artifacts, patch timing, regression
-  behavior, resource limits, and replay results. It is not an LLM judge.
+- Each session is a hidden-vulnerability race. The scorekeeper records objective
+  outcomes: exploit-before-patch, patch-before-exploit, system down, system
+  still up after the allotted time, exploit success, crash artifacts, patch
+  timing, regression behavior, resource limits, and replay results. It is not
+  an LLM judge and is separate from Arena Team.
 
 Based on research into RvB framework, DARPA AIxCC, and Microsoft PyRIT:
 
@@ -219,6 +246,21 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run the deterministic Battle v0 fixture proof
 ./run.sh battle-fixture battle-001 --out /tmp/battle-001
+
+# Run the current Tau AgentHarness proof rung
+./run.sh tau-agentic-smoke battle-002 --out /tmp/battle-002-tau-agentic --fast-scan
+
+# Run the current Arena Team Docker race proof rung
+./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena
+
+# Run Arena Docker race with Tau AgentHarness action-selection receipts
+./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena-agentic --agentic --red-persona brandon-bailey --blue-persona coder
+
+# Run Arena Docker race with live Scillm chat planning plus Tau receipts
+./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena-scillm --agentic --scillm-plan --red-persona brandon-bailey --blue-persona coder --scillm-model opencode/kimi-k2.6
+
+# Run Arena Docker race with Scillm, Tau, and memory/code/research context receipts
+./run.sh arena-docker-smoke battle-003 --out /tmp/battle-003-arena-context --agentic --scillm-plan --context-receipts --red-persona brandon-bailey --blue-persona coder --scillm-model opencode/kimi-k2.6
 ```
 
 ## Battle v0 Fixture Proof
@@ -252,6 +294,110 @@ fixture only. It does not prove real Red or Blue agent behavior, scillm,
 OpenCode, anvil, code-runner, memory learning, Docker, QEMU, or multi-round
 campaign readiness. See `docs/BATTLE_V0.md` for the validation commands and
 artifact-backed monitor proof path.
+
+## Battle v1 Target Contract
+
+Battle v1 is the next proof ladder, not yet production-complete. It should add:
+
+- Arena Team fixture generation with hidden vulnerabilities and hidden ground
+  truth for the scorekeeper.
+- Asynchronous Red/Blue workers with bounded parallelism.
+- Persona-conditioned worker choice of research tools and `$scillm`
+  model/surface within scenario policy.
+- Blue-side proactive scanning: `$memory`, `$ingest-code`, `$treesitter`, CWE
+  context, research, patch, and regression checks.
+- Docker-only execution for target, probe, build, test, fuzz, PoC, and replay
+  commands.
+- Scorekeeper receipts for exploit-before-patch or patch-before-exploit race
+  outcomes.
+- React+D3 force-directed drill-down monitor backed only by real receipts,
+  ledger rows, and `$memory` graph/BM25 data.
+
+The current `tau-agentic-smoke` command proves only a narrow Tau
+`AgentHarness` boundary with a deterministic local provider:
+
+```text
+mocked: no
+live: local_fixture_with_tau_agent_harness
+agentic: true
+models_used: ["tau-local-deterministic-provider"]
+```
+
+It does not prove `$scillm`, Ollama/local model routing, hosted models,
+OpenCode delegate execution, Docker-contained target execution, hidden Arena
+Team vulnerability generation, asynchronous scheduling, or the React+D3 live
+monitor.
+
+The current `arena-docker-smoke` command proves the first hidden-vulnerability
+race boundary:
+
+```text
+mocked: no
+live: docker_hidden_vulnerability_race
+agentic: false by default, true with --agentic
+models_used: [] by default, ["tau-local-deterministic-provider"] with --agentic,
+  and also ["opencode/kimi-k2.6"] with --scillm-plan
+```
+
+It uses the `battle-003` fixture. Arena Team records hidden SQL injection and
+reflected XSS ground truth, Blue patches first inside Docker, Red attempts the
+hidden exploit later inside Docker, and the scorekeeper replays exploit-safe and
+regression checks inside Docker. The current local proof produced
+`BATTLE_ARENA_DOCKER_SMOKE_ASSERT_PASS`, `run.status=PASS`,
+`run.verdict=BLUE_SUCCESS`, `score.race.patch_before_exploit=True`,
+`judge.arena_team_is_judge=False`, `judge.exploit_blocked_after_patch=True`,
+and `judge.regression_tests_pass=True` under `/tmp/battle-003-arena`.
+
+With `--agentic`, the same command also runs Red and Blue action selection
+through Tau `AgentHarness`, writes Tau handoffs and Tau subagent receipts,
+validates those receipts, and records a SQLite event ledger. The current local
+agentic proof produced `BATTLE_ARENA_DOCKER_AGENTIC_ASSERT_PASS`,
+`tau.team.status=PASS`, `tau.team.tau_receipts_valid=True`,
+`tau.harness.red.status=PASS`, `tau.harness.blue.status=PASS`,
+`red.persona=brandon-bailey`, and `blue.persona=coder` under
+`/tmp/battle-003-arena-agentic`.
+
+With `--scillm-plan`, the same command additionally calls live Scillm chat for
+Red and Blue action selection before Tau and Docker. The current local Scillm
+proof produced `BATTLE_ARENA_DOCKER_SCILLM_ASSERT_PASS`,
+`run.execution.scillm_plan=True`, `models_used` containing
+`opencode/kimi-k2.6`, Red and Blue Scillm action-selection receipts with
+`status=PASS`, and 10 SQLite event rows under `/tmp/battle-003-arena-scillm`.
+
+With `--context-receipts`, the same command additionally calls `$memory` over
+HTTP for `/recall`, runs a Docker-contained fast scan, calls live Brave batch
+search from scan/persona context, extracts Python AST code context, writes a
+deterministic research seed receipt, generates warm-pond exploit/defense
+candidates, and stores one outcome document through `$memory` `/upsert` into
+`battle_round_memory`. The current local context proof produced
+`BATTLE_ARENA_DOCKER_CONTEXT_ASSERT_PASS` and
+`BATTLE_SCAN_BRAVE_WARM_POND_ASSERT_PASS`, with
+`run.execution.context_receipts=True`, `context.memory.recall_status=PASS`,
+`context.memory.store_status=PASS`, `memory.upsert.inserted=1`,
+`fast_scan.finding_count=2`, `brave_search.result_count=8`,
+`warm_pond.combination_count=16`, `code_context.symbol_count=7`, and 17 SQLite
+event rows under `/tmp/battle-003-arena-context`. Its Tree-sitter diagnostic is
+currently `BLOCKED` because the treesitter-tools environment is missing
+`click`; the Battle proof uses Python AST fallback for this rung.
+
+This proof does not exercise Scillm delegate, batch, or tool execution inside
+Battle, execution of the full warm-pond candidate matrix, multi-mutation
+swarms, memory graph promotion or cross-round reuse, Tau loop repair cycles,
+Tree-sitter success, or the React+D3 live monitor.
+
+The current monitor proof now renders a narrow React+D3 artifact graph over the
+generated `battle-003` context artifacts. `BattleForceGraph.tsx` uses D3 force
+layout math and React-owned SVG DOM to connect Arena/Red/Blue/Judge players,
+scorekeeper receipts, race signals, Docker fast scan, Brave research,
+warm-pond candidates, and the memory-upsert context node. It is artifact-backed
+and fail-closed through `loadBattleArtifacts`; it is not yet the final
+high-throughput Canvas/WebGL live attempt graph. Current proof artifacts:
+
+```text
+skills/battle/monitor/battle/test-results/battle-monitor-v1-context-graph.png
+.codex/ui-verification/latest.json
+/tmp/codex-ui-verification/agent-skills/battle-monitor-v1-context-graph/20260628T150035Z.png
+```
 
 ## Scoring System (AIxCC-style)
 
@@ -402,12 +548,14 @@ battle/
     blue_team.py             # Blue Team defense agent
     orchestrator.py          # Game loop orchestrator
     battle_fixture.py        # Deterministic fixture proof runner
+    arena_docker_smoke.py    # Arena hidden-vulnerability Docker race proof
     judge.py                 # Deterministic scorekeeper verifier
     receipts.py              # Receipt dataclasses and JSON writer
     report.py                # Report generation
     qemu_support.py          # QEMU emulator support
     qemu_peripherals.py      # QEMU peripheral emulation
   fixtures/battle-001/       # Deterministic local fixture
+  fixtures/battle-003/       # Arena hidden SQLi/XSS Docker race fixture
   monitor/battle/            # Artifact-backed React monitor
 ```
 

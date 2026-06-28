@@ -13,6 +13,7 @@ import {
 
 import { loadBattleArtifacts, type LoadedBattleArtifacts } from "./artifacts";
 import { BattleChatSidebar } from "./BattleChatSidebar";
+import { BattleForceGraph } from "./BattleForceGraph";
 import type { BattlePlayer, BattleTimelineStage } from "./types";
 
 type LoadState =
@@ -28,7 +29,15 @@ function statusClass(status: string): string {
   return "statusNeutral";
 }
 
+function statusFromReceipt(receipt: unknown): string {
+  if (receipt && typeof receipt === "object" && "status" in receipt) {
+    return String((receipt as { status?: unknown }).status ?? "UNKNOWN");
+  }
+  return "UNKNOWN";
+}
+
 function TeamIcon({ team }: { team: BattlePlayer["team"] }) {
+  if (team === "arena") return <Crosshair size={18} />;
   if (team === "red") return <Swords size={18} />;
   if (team === "blue") return <Shield size={18} />;
   return <Scale size={18} />;
@@ -182,6 +191,12 @@ function BlockedView({ error }: { error: string }) {
 
 function LoadedView({ data }: { data: LoadedBattleArtifacts }) {
   const { monitorIndex } = data;
+  const timeline =
+    monitorIndex.timeline ??
+    monitorIndex.players.map((player) => ({
+      stage: player.team === "arena" ? "prepare" : player.team === "judge" ? "judge" : player.team,
+      status: statusFromReceipt(data.receipts[player.team])
+    }));
 
   return (
     <main className="monitorShell">
@@ -236,11 +251,13 @@ function LoadedView({ data }: { data: LoadedBattleArtifacts }) {
           </div>
 
           <div className="timeline">
-            {monitorIndex.timeline.map((item) => (
+            {timeline.map((item) => (
               <TimelineNode key={item.stage} item={item} />
             ))}
           </div>
         </section>
+
+        <BattleForceGraph data={data} />
 
         <section className="lowerGrid">
           <ScoreCard data={data} />

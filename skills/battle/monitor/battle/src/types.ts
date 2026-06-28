@@ -1,4 +1,4 @@
-export type Team = "red" | "blue" | "judge";
+export type Team = "arena" | "red" | "blue" | "judge";
 export type Stage = "prepare" | "red" | "blue" | "judge" | "score";
 
 export interface BattlePlayer {
@@ -22,7 +22,7 @@ export interface BattleMonitorIndex {
   status: string;
   verdict: string;
   players: BattlePlayer[];
-  timeline: BattleTimelineStage[];
+  timeline?: BattleTimelineStage[];
   scoreboard: string;
   artifacts: string[];
 }
@@ -32,14 +32,32 @@ export interface BattleScoreboard {
   battle_id: string;
   status: string;
   verdict: string;
+  winner?: string;
+  race?: {
+    red_delay_seconds: number;
+    blue_delay_seconds: number;
+    red_finished_at_seconds: number;
+    blue_finished_at_seconds: number;
+    exploit_before_patch: boolean;
+    patch_before_exploit: boolean;
+  };
+  context?: {
+    enabled: boolean;
+    status: string;
+    memory_store_status?: string;
+    receipt?: string | null;
+  };
   red_score: number;
   blue_score: number;
   tdsr: number;
   fdsr: number;
   asc: number;
   receipts: {
+    arena?: string;
     red: string;
     blue: string;
     judge: string;
+    tau?: string;
+    context?: string;
   };
 }

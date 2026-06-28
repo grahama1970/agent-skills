@@ -1,0 +1,37 @@
+{
+  "schema": "battle.scenario.v1",
+  "battle_id": "battle-002",
+  "scenario_id": "simple-site-sqli-xss-001",
+  "title": "Battle-002 simple site SQL injection and XSS battle",
+  "mode": "copy",
+  "expected_changed_files": [
+    "app.py"
+  ],
+  "commands": {
+    "expect_vulnerable": [
+      "python3",
+      "exploit_check.py",
+      "--expect-vulnerable"
+    ],
+    "expect_safe": [
+      "python3",
+      "exploit_check.py",
+      "--expect-safe"
+    ],
+    "regression": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ]
+  },
+  "entry_point": {
+    "kind": "http",
+    "path": "/search?q=<term>",
+    "module": "app.py"
+  },
+  "stop_condition": "Red confirms SQL injection and XSS on /search, Blue applies patch, Scorekeeper verifies both exploits blocked and regression tests pass."
+}

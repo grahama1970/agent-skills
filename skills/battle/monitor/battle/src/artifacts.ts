@@ -35,8 +35,14 @@ function assertMonitorIndex(value: BattleMonitorIndex): void {
   if (!value.scoreboard) {
     throw new Error("monitor-index missing scoreboard path");
   }
-  if (!Array.isArray(value.players) || value.players.length !== 3) {
-    throw new Error("monitor-index must contain Red, Blue, and Judge players");
+  if (!Array.isArray(value.players) || value.players.length < 3) {
+    throw new Error("monitor-index must contain at least Red, Blue, and Judge players");
+  }
+  const teams = new Set(value.players.map((player) => player.team));
+  for (const team of ["red", "blue", "judge"] as const) {
+    if (!teams.has(team)) {
+      throw new Error(`monitor-index missing ${team} player`);
+    }
   }
 }
 
@@ -57,10 +63,22 @@ export async function loadBattleArtifacts(): Promise<LoadedBattleArtifacts> {
   const scoreboard = await fetchJson<BattleScoreboard>(baseUrl, monitorIndex.scoreboard);
   assertScoreboard(scoreboard);
 
-  const receipts: Record<string, unknown> = {};
+  const receiptPaths = new Map<string, string>();
   for (const player of monitorIndex.players) {
-    receipts[player.team] = await fetchJson<unknown>(baseUrl, player.receipt);
+    receiptPaths.set(player.team, player.receipt);
   }
+  for (const [name, path] of Object.entries(scoreboard.receipts ?? {})) {
+    if (path) {
+      receiptPaths.set(name, path);
+    }
+  }
+
+  const receiptEntries = await Promise.all(
+    [...receiptPaths.entries()].map(async ([name, path]) => {
+      return [name, await fetchJson<unknown>(baseUrl, path)] as const;
+    })
+  );
+  const receipts = Object.fromEntries(receiptEntries);
 
   return {
     baseUrl,

@@ -173,6 +173,103 @@ body {
   margin-bottom: 18px;
 }
 
+.forceGraphCard {
+  margin-bottom: 18px;
+}
+
+.forceGraphLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.forceGraph {
+  width: 100%;
+  min-height: 360px;
+  display: block;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    var(--panelDeep);
+  background-size: 36px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.graphLinks line {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.4;
+}
+
+.graphNode {
+  cursor: pointer;
+  outline: none;
+}
+
+.graphNode circle {
+  fill: #202833;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.graphNode text {
+  fill: var(--text);
+  font-size: 10px;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--panelDeep);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+.graphNode.receipt circle {
+  fill: #151a22;
+  stroke-dasharray: 4 3;
+}
+
+.graphNode.signal circle {
+  fill: #17231d;
+}
+
+.graphNode.selected circle,
+.graphNode:focus-visible circle {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.graphInspector {
+  min-width: 0;
+  background: var(--panelDeep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.graphInspector h3 {
+  margin: 6px 0 10px;
+  overflow-wrap: anywhere;
+}
+
+.graphInspector p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .timeline {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -589,7 +686,8 @@ body {
   .summaryGrid,
   .lowerGrid,
   .playersGrid,
-  .timeline {
+  .timeline,
+  .forceGraphLayout {
     grid-template-columns: 1fr;
   }
 

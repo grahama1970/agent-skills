@@ -176,6 +176,129 @@ def battle_fixture(
     run_battle_fixture_command(fixture, out)
 
 
+@app.command("subagent-smoke")
+def subagent_smoke(
+    fixture: str = typer.Argument("battle-002", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+    red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
+    blue_persona: str = typer.Option("coder", help="Blue team persona id"),
+    fast_scan: bool = typer.Option(
+        False,
+        "--fast-scan",
+        help="Run bounded Red reconnaissance through $hack audit before the fixture attack.",
+    ),
+):
+    """Run one Red/Blue Tau-shaped subagent smoke around a deterministic fixture."""
+    from .config import ARTIFACTS_DIR, SKILL_DIR
+    from .subagent_smoke import run_subagent_smoke
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (ARTIFACTS_DIR / fixture / "subagent-smoke")
+    result = run_subagent_smoke(
+        fixture_dir=fixture_dir,
+        out_dir=out_dir,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        fast_scan=fast_scan,
+    )
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
+@app.command("tau-agentic-smoke")
+def tau_agentic_smoke(
+    fixture: str = typer.Argument("battle-002", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+    red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
+    blue_persona: str = typer.Option("coder", help="Blue team persona id"),
+    fast_scan: bool = typer.Option(
+        False,
+        "--fast-scan",
+        help="Run bounded Red reconnaissance through $hack audit before the fixture attack.",
+    ),
+):
+    """Run one Red/Blue smoke through Tau AgentHarness and deterministic scorekeeper."""
+    from .config import ARTIFACTS_DIR, SKILL_DIR
+    from .subagent_smoke import run_subagent_smoke
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (ARTIFACTS_DIR / fixture / "tau-agentic-smoke")
+    result = run_subagent_smoke(
+        fixture_dir=fixture_dir,
+        out_dir=out_dir,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        fast_scan=fast_scan,
+        agentic=True,
+    )
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
+@app.command("arena-docker-smoke")
+def arena_docker_smoke(
+    fixture: str = typer.Argument("battle-003", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+    red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
+    blue_persona: str = typer.Option("coder", help="Blue team persona id"),
+    agentic: bool = typer.Option(
+        False,
+        "--agentic",
+        help="Run Red and Blue action selection through Tau AgentHarness before the Docker race.",
+    ),
+    scillm_plan: bool = typer.Option(
+        False,
+        "--scillm-plan",
+        help="Run Red and Blue action selection through live Scillm chat before Tau/Docker.",
+    ),
+    scillm_model: str = typer.Option(
+        "opencode/kimi-k2.6",
+        help="Scillm model selector used when --scillm-plan is enabled.",
+    ),
+    context_receipts: bool = typer.Option(
+        False,
+        "--context-receipts",
+        help="Record memory recall/store, code-context, and research seed receipts.",
+    ),
+):
+    """Run one Arena hidden-vulnerability race with Docker-contained commands."""
+    from .arena_docker_smoke import run_arena_docker_smoke
+    from .config import ARTIFACTS_DIR, SKILL_DIR
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (ARTIFACTS_DIR / fixture / "arena-docker-smoke")
+    result = run_arena_docker_smoke(
+        fixture_dir=fixture_dir,
+        out_dir=out_dir,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        agentic=agentic,
+        scillm_plan=scillm_plan,
+        scillm_model=scillm_model,
+        context_receipts=context_receipts,
+    )
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command()
 def status():
     """Check status of running or recent battles."""

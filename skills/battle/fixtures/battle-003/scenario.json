@@ -1,0 +1,49 @@
+{
+  "schema": "battle.scenario.v1",
+  "battle_id": "battle-003",
+  "scenario_id": "arena-hidden-sqli-xss-race-001",
+  "title": "Battle-003 Arena hidden vulnerability race",
+  "mode": "docker",
+  "docker_image": "python:3.12-slim",
+  "arena_team": {
+    "role": "builds_target_and_secretly_plants_vulnerability",
+    "public_brief": "Tiny search app with /search?q=<term> entry point.",
+    "hidden_ground_truth": "hidden/ground-truth.json"
+  },
+  "entry_point": {
+    "kind": "http",
+    "path": "/search?q=<term>",
+    "module": "app.py"
+  },
+  "expected_changed_files": [
+    "app.py"
+  ],
+  "race": {
+    "red_delay_seconds": 1.2,
+    "blue_delay_seconds": 0.2,
+    "timeout_seconds": 30,
+    "expected_winner": "blue"
+  },
+  "commands": {
+    "expect_vulnerable": [
+      "python",
+      "exploit_check.py",
+      "--expect-vulnerable"
+    ],
+    "expect_safe": [
+      "python",
+      "exploit_check.py",
+      "--expect-safe"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ]
+  },
+  "stop_condition": "Blue patches the hidden SQL injection/XSS before Red's delayed exploit attempt succeeds; Scorekeeper verifies exploit blocked and regressions pass."
+}

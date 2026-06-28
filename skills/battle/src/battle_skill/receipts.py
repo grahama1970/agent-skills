@@ -8,7 +8,7 @@ IO exceptions from ``Path.write_text`` rather than silent fallback behavior.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -76,8 +76,14 @@ class JudgeReceipt:
 
 
 def to_jsonable(value: Any) -> Any:
-    if hasattr(value, "__dataclass_fields__"):
+    if is_dataclass(value) and not isinstance(value, type):
         return asdict(value)
+    if isinstance(value, dict):
+        return {key: to_jsonable(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [to_jsonable(item) for item in value]
+    if isinstance(value, tuple):
+        return [to_jsonable(item) for item in value]
     return value
 
 
