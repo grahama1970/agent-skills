@@ -1,0 +1,460 @@
+.pdf-lab-parity-mockup-frame {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #05070a;
+}
+
+.pdf-lab-parity-mockup-frame > .pdf-lab-parity-proof {
+  width: 142.857%;
+  height: 142.857%;
+  transform: scale(0.7);
+  transform-origin: top left;
+}
+
+.pdf-lab-parity-proof {
+  --bg: #05070a;
+  --panel: #0d1118;
+  --panel-2: #111722;
+  --line: rgba(148, 163, 184, 0.14);
+  --line-strong: rgba(148, 163, 184, 0.24);
+  --text: #e5eefb;
+  --muted: #8da0b8;
+  --dim: #5b6b80;
+  --accent: #8b5cf6;
+  --success: #19c37d;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #60a5fa;
+  --mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  display: grid;
+  grid-template-rows: 44px 34px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.pdf-lab-parity-proof,
+.pdf-lab-parity-proof * {
+  box-sizing: border-box;
+}
+
+.pdf-lab-parity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  background: #000;
+  border-bottom: 1px solid var(--line);
+}
+
+.pdf-lab-parity-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pdf-lab-parity-brand span {
+  color: var(--accent);
+}
+
+.pdf-lab-parity-brand small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+}
+
+.pdf-lab-parity-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.pdf-lab-parity-proof button {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition-property: background-color, border-color, box-shadow, transform;
+  transition-duration: 160ms;
+  transition-timing-function: ease;
+}
+
+.pdf-lab-parity-proof button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.18);
+}
+
+.pdf-lab-parity-primary {
+  border-color: transparent !important;
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+.pdf-lab-parity-success {
+  border-color: rgba(25, 195, 125, 0.36) !important;
+  background: rgba(25, 195, 125, 0.16) !important;
+  color: #b6f3d7 !important;
+}
+
+.pdf-lab-parity-repair {
+  border-color: rgba(245, 158, 11, 0.36) !important;
+  background: rgba(245, 158, 11, 0.13) !important;
+  color: #fde68a !important;
+}
+
+.pdf-lab-parity-metrics {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  overflow: hidden;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pdf-lab-parity-metrics span {
+  margin-right: 4px;
+  color: var(--muted);
+}
+
+.pdf-lab-parity-metrics b {
+  color: var(--text);
+}
+
+.pdf-lab-parity-metrics .pass b { color: var(--success); }
+.pdf-lab-parity-metrics .warn b { color: var(--warning); }
+.pdf-lab-parity-metrics .fail b { color: var(--danger); }
+
+.pdf-lab-parity-main {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 340px;
+  min-height: 0;
+}
+
+.pdf-lab-parity-run,
+.pdf-lab-parity-compare,
+.pdf-lab-parity-triage {
+  min-height: 0;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.pdf-lab-parity-run {
+  border-right: 1px solid var(--line);
+}
+
+.pdf-lab-parity-compare {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #080a0f;
+}
+
+.pdf-lab-parity-triage {
+  border-left: 1px solid var(--line);
+}
+
+.pdf-lab-parity-pane-head,
+.pdf-lab-parity-compare-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #090d13;
+}
+
+.pdf-lab-parity-pane-head {
+  min-height: 66px;
+}
+
+.pdf-lab-parity-pane-head h2,
+.pdf-lab-parity-compare-head h1 {
+  margin: 0;
+}
+
+.pdf-lab-parity-pane-head h2 {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-pane-head p,
+.pdf-lab-parity-compare-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pdf-lab-parity-run-list {
+  height: calc(100% - 66px);
+  overflow-y: auto;
+}
+
+.pdf-lab-parity-run-item {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pdf-lab-parity-run-item.selected {
+  background: rgba(139, 92, 246, 0.11);
+  border-right: 2px solid var(--accent);
+}
+
+.pdf-lab-parity-page {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.pdf-lab-parity-run-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pdf-lab-parity-preset,
+.pdf-lab-parity-micro-grid div,
+.pdf-lab-parity-bbox {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.pdf-lab-parity-micro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pdf-lab-parity-micro-grid div {
+  padding: 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pdf-lab-parity-micro-grid b {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.pdf-lab-parity-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-pill.pass {
+  background: rgba(25, 195, 125, 0.1);
+  color: var(--success);
+}
+
+.pdf-lab-parity-pill.review {
+  background: rgba(245, 158, 11, 0.11);
+  color: var(--warning);
+}
+
+.pdf-lab-parity-compare-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.pdf-lab-parity-compare-head h1 {
+  font-size: 17px;
+}
+
+.pdf-lab-parity-score {
+  min-width: 142px;
+  padding: 9px 10px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.07);
+  text-align: right;
+}
+
+.pdf-lab-parity-score b {
+  display: block;
+  color: var(--warning);
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.pdf-lab-parity-score span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-legend {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pdf-lab-parity-legend span {
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.pdf-lab-parity-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.pdf-lab-parity-table-wrap table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.pdf-lab-parity-table-wrap th,
+.pdf-lab-parity-table-wrap td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pdf-lab-parity-table-wrap th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--panel);
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-table-wrap th:nth-child(1),
+.pdf-lab-parity-table-wrap td:nth-child(1) { width: 92px; }
+.pdf-lab-parity-table-wrap th:nth-child(4),
+.pdf-lab-parity-table-wrap td:nth-child(4) { width: 116px; }
+.pdf-lab-parity-table-wrap th:nth-child(5),
+.pdf-lab-parity-table-wrap td:nth-child(5) { width: 132px; }
+
+.pdf-lab-parity-table-wrap tr.matched { background: rgba(25, 195, 125, 0.025); }
+.pdf-lab-parity-table-wrap tr.missing { background: rgba(245, 158, 11, 0.055); }
+.pdf-lab-parity-table-wrap tr.extra { background: rgba(96, 165, 250, 0.035); }
+.pdf-lab-parity-table-wrap tr.ambiguous { background: rgba(239, 68, 68, 0.052); }
+
+.pdf-lab-parity-table-wrap td b,
+.pdf-lab-parity-table-wrap td span {
+  display: block;
+}
+
+.pdf-lab-parity-table-wrap td span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pdf-lab-parity-status {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-status.matched { color: var(--success); }
+.pdf-lab-parity-status.missing { color: var(--warning); }
+.pdf-lab-parity-status.extra { color: var(--info); }
+.pdf-lab-parity-status.ambiguous { color: var(--danger); }
+
+.pdf-lab-parity-card {
+  margin: 0 16px 10px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.pdf-lab-parity-card.summary {
+  margin-top: 14px;
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.07);
+}
+
+.pdf-lab-parity-card.hot {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.pdf-lab-parity-card strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--warning);
+  font-size: 22px;
+}
+
+.pdf-lab-parity-card small {
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pdf-lab-parity-card h3 {
+  margin: 7px 0;
+  font-size: 13px;
+}
+
+.pdf-lab-parity-card p,
+.pdf-lab-parity-card span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}

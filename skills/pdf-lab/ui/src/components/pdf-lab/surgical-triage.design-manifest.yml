@@ -1,0 +1,75 @@
+design_source:
+  artifact_type: gemini-response
+  artifact_path: "conversation: Gemini Final Design Decree for standalone Surgical Triage Viewport on 2026-04-27"
+  sha256: "not_available_conversation_artifact"
+  source_owner: gemini
+  viewport:
+    width: 1280
+    height: 813
+    device_scale_factor: 1
+  required_states:
+    - clean-room active triage item
+    - mocked PDF geometry with surrounding context
+    - right-margin satellite HUD with fallback deferred
+    - keyboard-first action triptych
+    - ultra-slim instrument header
+  non_negotiables:
+    - "Standalone React fixture first; no production PdfLabView transplant until fixture passes."
+    - "Active evidence bbox center must land at 55-65% viewport height."
+    - "HUD max width is 420px and must not overlap active evidence."
+    - "Dim opacity is rgba(0,0,0,0.85)."
+    - "Use CSS mask-image radial-gradient hard cutout with React-updatable bbox center variables."
+    - "Use persistent 2px #8b5cf6 bbox border."
+    - "Use active thread dot and 1px line rgba(245,158,11,0.4)."
+    - "Use 600ms cubic-bezier(0.22, 1, 0.36, 1) transform glide."
+    - "Reference viewport is 1280x813 at DPR 1."
+  forbidden_patterns:
+    - generic dashboard chrome
+    - old queue sidebar visible by default
+    - bottom-centered modal HUD
+    - fuzzy glow spotlight
+    - HUD covering active evidence
+    - transition: all
+patch_envelope:
+  files_expected_to_touch:
+    - packages/ux-lab/src/components/pdf-lab/SurgicalTriageViewport.tsx
+    - packages/ux-lab/src/components/pdf-lab/SurgicalTriageFixture.tsx
+    - packages/ux-lab/src/components/pdf-lab/PdfLabView.tsx
+    - packages/ux-lab/src/components/pdf-lab/PdfLabView.css
+    - packages/ux-lab/src/App.tsx
+    - packages/ux-lab/src/components/datalake-explorer/PdfCanvas.tsx
+    - packages/ux-lab/src/components/common/ReviewBundleButton.tsx
+    - packages/ux-lab/server/index.ts
+    - packages/ux-lab/src/components/pdf-lab/surgical-triage.design-manifest.yml
+  files_forbidden_to_touch:
+    - packages/ux-lab/package.json
+    - packages/ux-lab/vite.config.ts
+    - packages/ux-lab/src/main.tsx
+  visual_target:
+    - "Gemini clean-room Surgical Fixture: mocked PDF context, hard cutout, bbox at 60% Y, satellite HUD in right margin."
+  non_visual_changes_allowed: true
+  dependency_additions_allowed: false
+  opportunistic_refactors_allowed: false
+visual_contract:
+  acceptance_criteria:
+    - "Active evidence bbox is visible without user scrolling."
+    - "Active bbox center ratio is 0.55-0.65."
+    - "HUD/evidence overlap is 0px."
+    - "HUD max width is 420px."
+    - "Dim mask background is rgba(0, 0, 0, 0.85)."
+    - "No old app sidebar/dashboard chrome is visible in the fixture route."
+    - "Right-margin HUD contains breadcrumb, question, intent input, Reject/Skip/Confirm."
+    - "Camera transform uses 600ms cubic-bezier(0.22, 1, 0.36, 1)."
+    - "Hard CSS mask-image radial-gradient is present."
+    - "Header is 36px slim instrument chrome with Gemini Bundle and Audit / Repair ghost buttons."
+    - "Footer hotkey legend is present."
+    - "Typecheck passes."
+stop_conditions:
+  - "Stop and report failure if HUD overlaps active evidence."
+  - "Stop and report failure if screenshot shows dashboard sidebar regression."
+  - "After two failed visual passes, produce an escalation packet instead of solo patching."
+deviation_ledger:
+  - source_requirement: "Hard surgical mask from Gemini source"
+    current_state: "PdfCanvas owns rectangular dim/highlight; duplicate oval wrapper mask removed after failed pass."
+    failure_class: "MASK_FAILURE resolved / source implementation adjusted for real canvas transform"
+    rationale_or_action: "Wrapper mask was misaligned with transformed PDF; removed to prevent oval regression and evidence occlusion."

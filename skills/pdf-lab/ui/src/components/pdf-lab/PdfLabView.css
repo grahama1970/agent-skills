@@ -1,0 +1,1068 @@
+/* PdfLabView.css — pseudo-class support and animation for pdf-lab chrome */
+
+.pdf-lab-btn {
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease;
+}
+.pdf-lab-btn:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+.pdf-lab-btn:active {
+  transform: scale(0.96);
+}
+
+.pdf-lab-pane-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: "JetBrains Mono", "SF Mono", monospace;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.pdf-lab-pane-item[data-selected="true"] {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  border-left-color: #7c3aed;
+}
+.pdf-lab-pane-item:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: -2px;
+}
+.pdf-lab-pane-item:active {
+  transform: scale(0.98);
+}
+
+.pdf-lab-toc-entry {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  font-size: 10px;
+  font-family: "JetBrains Mono", monospace;
+  color: #e2e8f0;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s;
+}
+.pdf-lab-toc-entry:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: -2px;
+}
+.pdf-lab-toc-entry:active {
+  transform: scale(0.98);
+}
+
+@keyframes pdf-lab-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pdf-lab-tab-panel {
+  animation: pdf-lab-fade-up 150ms ease-out;
+}
+
+.pdf-lab-hero-enter {
+  animation: pdf-lab-fade-up 200ms ease-out;
+}
+
+/* Review Mode Overlay styles */
+.review-mode-hud-primary {
+  color: #7c3aed;
+  border-color: rgba(124, 58, 237, 0.27);
+  background-color: rgba(124, 58, 237, 0.08);
+}
+.review-mode-hud-primary:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+.review-mode-hud-primary:active {
+  transform: scale(0.96);
+}
+
+.review-mode-hud-secondary {
+  opacity: 0.7;
+}
+.review-mode-hud-secondary:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+.review-mode-canvas-glow {
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  box-shadow: inset 0 0 24px rgba(124, 58, 237, 0.06);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* PDF Lab Surgical Triage Viewport */
+.pdf-lab-surgical-viewport {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #050608;
+  color: #e2e8f0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pdf-lab-surgical-header {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  height: 56px;
+  flex: 0 0 56px;
+  padding: 0 20px;
+  background: rgba(15, 17, 23, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.surgical-header-left,
+.surgical-header-actions,
+.surgical-progress,
+.nav-controls,
+.action-row {
+  display: flex;
+  align-items: center;
+}
+
+.surgical-header-left {
+  min-width: 0;
+  gap: 12px;
+}
+
+.surgical-header-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.doc-title {
+  min-width: 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.surgical-progress {
+  flex: 0 0 auto;
+  gap: 10px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.progress-bar-bg {
+  width: min(280px, 22vw);
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pdf-lab-surgical-header .progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8b5cf6, #38bdf8);
+  transition-property: width;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pdf-lab-surgical-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.surgical-camera-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.surgical-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.6);
+  transition-property: mask-image, -webkit-mask-image, background-color;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pdf-lab-surgical-hud {
+  position: absolute;
+  z-index: 30;
+  right: 40px;
+  top: 50%;
+  width: min(380px, calc(100vw - 80px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 18, 25, 0.95);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  transform: translateY(-50%);
+  backdrop-filter: blur(20px);
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.graph-path {
+  overflow: hidden;
+  color: #a78bfa;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.severity-badge {
+  flex: 0 0 auto;
+  color: #f59e0b;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.severity-badge.high {
+  color: #ef4444;
+}
+
+.agent-question {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.agent-reasoning {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.intent-zone {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+}
+
+.intent-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+  color: #f8fafc;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.intent-input::placeholder {
+  color: #64748b;
+}
+
+.action-row {
+  gap: 10px;
+}
+
+.btn-reject,
+.btn-skip,
+.btn-accept,
+.pdf-lab-surgical-viewport .icon-btn,
+.audit-btn,
+.nav-controls button {
+  min-height: 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  background: #111827;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition-property: background-color, border-color, color, transform, box-shadow;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.btn-reject,
+.btn-skip,
+.btn-accept {
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+.btn-reject {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.btn-accept {
+  color: #bbf7d0;
+  border-color: rgba(16, 185, 129, 0.7);
+  background: rgba(16, 185, 129, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.15);
+}
+
+.btn-reject:active,
+.btn-skip:active,
+.btn-accept:active,
+.pdf-lab-surgical-viewport .icon-btn:active,
+.audit-btn:active,
+.nav-controls button:active {
+  transform: scale(0.96);
+}
+
+.btn-reject:focus-visible,
+.btn-skip:focus-visible,
+.btn-accept:focus-visible,
+.intent-input:focus-visible,
+.pdf-lab-surgical-viewport .icon-btn:focus-visible,
+.audit-btn:focus-visible,
+.nav-controls button:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+.pdf-lab-surgical-viewport .icon-btn,
+.nav-controls button {
+  min-width: 40px;
+  padding: 0 12px;
+}
+
+.audit-btn {
+  min-width: 116px;
+  padding: 0 14px;
+}
+
+.pdf-lab-surgical-footer {
+  position: relative;
+  z-index: 40;
+  flex: 0 0 48px;
+  height: 48px;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  color: #64748b;
+  background: rgba(10, 12, 16, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hotkey-legend {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hotkey-legend kbd {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+@media (max-width: 980px) {
+  .pdf-lab-surgical-header {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .surgical-progress {
+    display: none;
+  }
+
+  .pdf-lab-surgical-hud {
+    right: 16px;
+    left: 16px;
+    top: auto;
+    bottom: 64px;
+    width: auto;
+    transform: none;
+  }
+
+  .pdf-lab-surgical-footer {
+    padding: 0 12px;
+    grid-template-columns: auto 1fr;
+  }
+
+  .hotkey-legend {
+    text-align: right;
+    white-space: normal;
+  }
+}
+
+/* Clean-room Surgical Triage Fixture */
+.surgical-fixture {
+  --bbox-center-x: 486px;
+  --bbox-center-y: 488px;
+  --bbox-left: 250px;
+  --bbox-top: 408px;
+  --bbox-width: 472px;
+  --bbox-height: 160px;
+  --hud-left: 828px;
+  --hud-top: 265px;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  color: #e2e8f0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.surgical-fixture-header {
+  height: 36px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 15, 0.94);
+}
+
+.surgical-fixture-header-left,
+.surgical-fixture-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.surgical-fixture-actions {
+  justify-content: flex-end;
+}
+
+.surgical-fixture-title {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+}
+
+.surgical-fixture-progress {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.surgical-fixture-icon,
+.surgical-fixture-ghost {
+  min-height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.52);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  opacity: 0.62;
+  transition-property: opacity, transform, border-color, background-color;
+  transition-duration: 140ms;
+  transition-timing-function: ease;
+}
+
+.surgical-fixture-icon {
+  min-width: 30px;
+}
+
+.surgical-fixture-ghost {
+  padding: 0 12px;
+}
+
+.surgical-fixture-icon:hover,
+.surgical-fixture-ghost:hover {
+  opacity: 1;
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(30, 41, 59, 0.72);
+}
+
+.surgical-fixture-icon:active,
+.surgical-fixture-ghost:active,
+.fixture-triptych button:active {
+  transform: scale(0.96);
+}
+
+.surgical-fixture-icon:focus-visible,
+.surgical-fixture-ghost:focus-visible,
+.surgical-fixture-hud input:focus-visible,
+.fixture-triptych button:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+.surgical-fixture-stage {
+  position: relative;
+  height: calc(100vh - 80px);
+  overflow: hidden;
+  background: #000;
+}
+
+.surgical-fixture-pdf {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  transition-property: transform;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.surgical-fixture-page {
+  position: absolute;
+  left: 156px;
+  top: 54px;
+  width: 650px;
+  height: 910px;
+  background: #f8f6ef;
+  color: #111827;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.85);
+}
+
+.fixture-running-header {
+  position: absolute;
+  left: 54px;
+  right: 54px;
+  top: 40px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #1f2937;
+  padding-bottom: 10px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+.fixture-document {
+  position: absolute;
+  left: 74px;
+  top: 118px;
+  width: 520px;
+}
+
+.fixture-document h1 {
+  margin: 0 0 18px;
+  text-align: center;
+  color: #020617;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+.fixture-document p {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.28;
+  text-wrap: pretty;
+}
+
+.fixture-document a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.fixture-sentinel {
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fixture-active-bbox {
+  position: fixed;
+  left: var(--bbox-left);
+  top: var(--bbox-top);
+  width: var(--bbox-width);
+  height: var(--bbox-height);
+  padding: 14px 16px;
+  border: 2px solid #8b5cf6;
+  background: rgba(219, 234, 254, 0.78);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);
+  z-index: 11;
+  transition-property: left, top, width, height;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fixture-term-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.fixture-term-row b {
+  font-weight: 900;
+}
+
+.surgical-fixture-mask {
+  position: fixed;
+  inset: 36px 0 44px;
+  z-index: 10;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.85);
+  -webkit-mask-image: radial-gradient(ellipse 220px 160px at var(--bbox-center-x) var(--bbox-center-y), transparent 99%, black 100%);
+  mask-image: radial-gradient(ellipse 220px 160px at var(--bbox-center-x) var(--bbox-center-y), transparent 99%, black 100%);
+  transition-property: -webkit-mask-image, mask-image;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fixture-thread-dot {
+  position: absolute;
+  right: -7px;
+  top: calc(50% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.65);
+}
+
+.fixture-thread-line {
+  position: fixed;
+  left: calc(var(--bbox-left) + var(--bbox-width) + 8px);
+  top: var(--bbox-center-y);
+  width: calc(var(--hud-left) - var(--bbox-left) - var(--bbox-width) - 8px);
+  height: 1px;
+  z-index: 14;
+  pointer-events: none;
+  background: rgba(245, 158, 11, 0.4);
+}
+
+.surgical-fixture-hud {
+  position: fixed;
+  left: var(--hud-left);
+  top: var(--hud-top);
+  width: 420px;
+  max-width: 420px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 18, 25, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(20px);
+}
+
+.fixture-hud-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #a78bfa;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.fixture-hud-meta span:last-child {
+  color: #ef4444;
+}
+
+.surgical-fixture-hud h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.surgical-fixture-hud p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.42;
+  text-wrap: pretty;
+}
+
+.surgical-fixture-hud input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+  color: #f8fafc;
+  outline: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.fixture-triptych {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr;
+  gap: 10px;
+}
+
+.fixture-triptych button {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.fixture-triptych button:first-child {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.fixture-triptych button:last-child {
+  color: #bbf7d0;
+  border-color: rgba(16, 185, 129, 0.75);
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.surgical-fixture-footer {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 15, 0.96);
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.surgical-fixture-footer kbd {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+/* Gemini Final Design Decree: production Surgical Triage transplant */
+.pdf-lab-surgical-viewport {
+  height: 100vh;
+  width: 100vw;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e2e8f0;
+}
+
+.pdf-lab-surgical-header {
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 16px;
+  background: rgba(8, 10, 15, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.surgical-header-left,
+.surgical-header-actions,
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.surgical-header-actions {
+  justify-content: flex-end;
+}
+
+.surgical-header-title {
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ghost-btn,
+.nav-group button {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.28);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.ghost-btn:hover,
+.nav-group button:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(139, 92, 246, 0.14);
+  color: #fff;
+}
+
+.ghost-btn:active,
+.nav-group button:active {
+  transform: scale(0.96);
+}
+
+.pdf-lab-surgical-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.pdf-lab-surgical-hud {
+  position: absolute;
+  top: 50%;
+  width: 420px;
+  max-width: 420px;
+  transform: translateY(-50%);
+  z-index: 50;
+  padding: 24px;
+  background: rgba(15, 18, 25, 0.96);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hud-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.hud-meta .path {
+  color: #8b5cf6;
+}
+
+.hud-meta .severity {
+  color: #f59e0b;
+}
+
+.hud-meta .severity.high {
+  color: #ef4444;
+}
+
+.pdf-lab-surgical-hud h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.pdf-lab-surgical-hud p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.intent-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 750;
+  outline: none;
+}
+
+.intent-input:focus-visible {
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.action-triptych {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 10px;
+}
+
+.action-triptych button {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1e293b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.action-triptych button:active {
+  transform: scale(0.96);
+}
+
+.action-triptych .btn-reject {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.action-triptych .btn-skip {
+  color: #cbd5e1;
+}
+
+.action-triptych .btn-accept {
+  color: #bbf7d0;
+  border-color: rgba(16, 185, 129, 0.72);
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.pdf-lab-surgical-footer {
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 12, 16, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #475569;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.hotkeys kbd {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 10px;
+  margin: 0 2px;
+}
+
+.pdf-lab-surgical-footer .status {
+  color: #64748b;
+}

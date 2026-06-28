@@ -1,0 +1,398 @@
+.pdf-lab-cr-root {
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #000;
+  color: #e2e8f0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pdf-lab-cr-header {
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 15, 0.96);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.pdf-lab-cr-header-left,
+.pdf-lab-cr-header-actions,
+.pdf-lab-cr-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-lab-cr-header-actions {
+  justify-content: flex-end;
+}
+
+.pdf-lab-cr-title {
+  color: #f8fafc;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pdf-lab-cr-button,
+.pdf-lab-cr-nav button {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.28);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.pdf-lab-cr-button:hover,
+.pdf-lab-cr-nav button:hover {
+  border-color: rgba(139, 92, 246, 0.65);
+  background: rgba(139, 92, 246, 0.14);
+  color: #fff;
+}
+
+.pdf-lab-cr-button:active,
+.pdf-lab-cr-nav button:active,
+.pdf-lab-cr-actions button:active {
+  transform: scale(0.96);
+}
+
+.pdf-lab-cr-menu {
+  width: 28px;
+  padding: 0;
+  font-size: 16px;
+}
+
+.pdf-lab-cr-task-id {
+  max-width: 260px;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-cr-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.pdf-lab-cr-pdf-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.pdf-lab-cr-view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  justify-self: center;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.58);
+  backdrop-filter: blur(16px);
+}
+
+.pdf-lab-cr-view-controls button {
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.6);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+}
+
+.pdf-lab-cr-view-controls button:hover,
+.pdf-lab-cr-view-controls button.active {
+  border-color: rgba(139, 92, 246, 0.72);
+  background: rgba(139, 92, 246, 0.18);
+  color: #fff;
+}
+
+.pdf-lab-cr-view-controls button:active {
+  transform: scale(0.96);
+}
+
+.pdf-lab-cr-camera {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition-property: transform;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pdf-lab-cr-page-canvas {
+  display: block;
+  box-shadow: 0 0 90px rgba(0, 0, 0, 0.75);
+}
+
+.pdf-lab-cr-mask-root {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.pdf-lab-cr-mask-segment {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  transition-property: left, top, right, bottom, width, height;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pdf-lab-cr-bbox {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.22), 0 0 22px rgba(139, 92, 246, 0.35);
+  transition-property: left, top, width, height;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pdf-lab-cr-thread-dot {
+  position: absolute;
+  right: -7px;
+  top: calc(50% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+}
+
+.pdf-lab-cr-thread-dot::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  width: 72vw;
+  height: 2px;
+  background: rgba(245, 158, 11, 0.9);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.55);
+}
+
+.pdf-lab-cr-bbox-thread-left .pdf-lab-cr-thread-dot {
+  left: -7px;
+  right: auto;
+}
+
+.pdf-lab-cr-bbox-thread-left .pdf-lab-cr-thread-dot::after {
+  left: auto;
+  right: 10px;
+}
+
+.pdf-lab-cr-bbox-thread-below .pdf-lab-cr-thread-dot {
+  right: -8px;
+}
+
+.pdf-lab-cr-bbox-thread-below .pdf-lab-cr-thread-dot::after {
+  width: 42vw;
+}
+
+.pdf-lab-cr-hud {
+  position: absolute;
+  top: 50%;
+  width: 420px;
+  max-width: 420px;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 18, 25, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+}
+
+.pdf-lab-cr-hud-right {
+  right: 40px;
+}
+
+.pdf-lab-cr-hud-left {
+  left: 40px;
+}
+
+.pdf-lab-cr-hud-below {
+  top: auto;
+  right: 40px;
+  bottom: 64px;
+  transform: none;
+}
+
+.pdf-lab-cr-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-cr-path {
+  color: #8b5cf6;
+}
+
+.pdf-lab-cr-severity {
+  color: #f59e0b;
+}
+
+.pdf-lab-cr-severity.high {
+  color: #ef4444;
+}
+
+.pdf-lab-cr-hud h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.pdf-lab-cr-hud p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.42;
+  text-wrap: pretty;
+}
+
+.pdf-lab-cr-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+  color: #f8fafc;
+  outline: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pdf-lab-cr-input:focus-visible {
+  border-color: rgba(139, 92, 246, 0.85);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.pdf-lab-cr-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 10px;
+}
+
+.pdf-lab-cr-actions button {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition-property: transform, border-color, background-color, color;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+
+.pdf-lab-cr-reject {
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+}
+
+.pdf-lab-cr-confirm {
+  color: #bbf7d0 !important;
+  border-color: rgba(16, 185, 129, 0.75) !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+}
+
+.pdf-lab-cr-footer {
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 12, 16, 0.96);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+
+.pdf-lab-cr-hotkeys {
+  justify-self: center;
+  white-space: nowrap;
+}
+
+.pdf-lab-cr-hotkeys kbd {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 10px;
+  margin: 0 2px;
+}
+
+.pdf-lab-cr-loading,
+.pdf-lab-cr-error {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.pdf-lab-cr-error {
+  color: #ef4444;
+}

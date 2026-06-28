@@ -15,6 +15,7 @@ composes:
   - best-practices-react
   - review-design
   - watch
+  - pdf-lab
   - personaplex
 complies:
   - best-practices-skills
@@ -36,6 +37,7 @@ Use this skill when a project agent needs to mount, modify, audit, or migrate th
 
 - SPARTA Explorer slide-over chat
 - Watch report agent pane
+- PDF Lab standalone skill UI reference
 - final-site/chat
 - PersonaPlex voice/persona chat
 
@@ -87,6 +89,16 @@ import { SharedChatShell } from '@agent-skills/ux-lab-ui'
 ../../../agent-skills/skills/ux-lab/ui
 ```
 
+Project-specific product UX belongs with the owning skill. PDF Lab's product
+interface is self-contained at:
+
+```text
+../../../agent-skills/skills/pdf-lab/ui
+```
+
+`ux-lab` may link to or shell that route, but it must not become the source
+authority for PDF Lab product components or API bridges.
+
 ## UX invariants
 
 - `SharedChatShell` is the canonical wrapper.
@@ -96,6 +108,7 @@ import { SharedChatShell } from '@agent-skills/ux-lab-ui'
 - `MessageFooter` renders on every assistant turn.
 - PersonaPlex production traffic must not route to a separate PersonaPlex grid/CSS renderer.
 - Watch must keep its existing backend endpoint.
+- PDF Lab must keep its standalone skill UI under `skills/pdf-lab/ui`.
 - SPARTA must keep scope/depth controls in the host shell.
 - Preserve existing `data-qid` values when migrating imports.
 - Use lucide icons only. Do not add Google Material Symbols or bespoke icon fonts.

@@ -1,0 +1,178 @@
+/* DryRunPreviewPanel — three-state preview palette (NVIS dark). */
+
+.pdf-lab-dry-run-panel {
+  background: #11151a;
+  border: 1px solid #1f262d;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  color: #cfd6dc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+}
+
+.pdf-lab-dry-run-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93a1ad;
+  margin-bottom: 10px;
+}
+
+.pdf-lab-dry-run-summary {
+  display: inline-flex;
+  gap: 16px;
+}
+
+.pdf-lab-dry-run-state {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+}
+.pdf-lab-dry-run-state.resolved { color: #4ade80; }
+.pdf-lab-dry-run-state.rejected { color: #f87171; }
+.pdf-lab-dry-run-state.conflict { color: #fbbf24; }
+.pdf-lab-dry-run-state.warning  { color: #fb923c; }
+
+.pdf-lab-dry-run-section {
+  margin: 8px 0;
+  border-left: 3px solid #232b34;
+  padding-left: 12px;
+}
+.pdf-lab-dry-run-section.is-resolved { border-left-color: #4ade80; }
+.pdf-lab-dry-run-section.is-rejected { border-left-color: #f87171; }
+.pdf-lab-dry-run-section.is-conflict { border-left-color: #fbbf24; }
+.pdf-lab-dry-run-section.is-warning  { border-left-color: #fb923c; }
+
+.pdf-lab-dry-run-section summary {
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93a1ad;
+  padding: 4px 0;
+}
+
+.pdf-lab-dry-run-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 8px;
+}
+
+.pdf-lab-dry-run-section li {
+  padding: 3px 0;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.pdf-lab-dry-run-token { color: #e7e9ec; }
+.pdf-lab-dry-run-target { color: #6ea8ff; }
+
+.pdf-lab-dry-run-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.pdf-lab-dry-run-badge-auto_promote_candidate {
+  background: #14532d; color: #4ade80; border: 1px solid #166534;
+}
+.pdf-lab-dry-run-badge-queued_for_review {
+  background: #422006; color: #fbbf24; border: 1px solid #92400e;
+}
+.pdf-lab-dry-run-badge-warning_only {
+  background: #1f262d; color: #93a1ad; border: 1px solid #2c3540;
+}
+.pdf-lab-dry-run-badge-approximate_bbox {
+  background: #431407; color: #fb923c; border: 1px solid #c2410c;
+}
+
+.pdf-lab-dry-run-line-marker {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 1px solid #4a9eff;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #6ea8ff;
+  background: #142235;
+  cursor: help;
+}
+
+.pdf-lab-dry-run-reject-reason {
+  color: #f87171;
+  font-size: 10px;
+}
+
+.pdf-lab-dry-run-warning-kind {
+  color: #fb923c;
+  font-weight: 600;
+}
+
+.pdf-lab-dry-run-warning-msg {
+  color: #93a1ad;
+  font-size: 10px;
+}
+
+.pdf-lab-dry-run-conflict-agreement {
+  color: #fbbf24;
+  font-size: 10px;
+}
+
+.pdf-lab-dry-run-queue-all {
+  padding: 6px 0;
+  font-size: 11px;
+  color: #cfd6dc;
+}
+.pdf-lab-dry-run-queue-all label { cursor: pointer; }
+
+.pdf-lab-dry-run-disposition {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #93a1ad;
+}
+.pdf-lab-dry-run-disposition label { cursor: pointer; }
+
+.pdf-lab-dry-run-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #232b34;
+}
+
+.pdf-lab-dry-run-export {
+  background: #2563eb;
+  border: 1px solid #1d4ed8;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pdf-lab-dry-run-export:disabled {
+  background: #1f262d;
+  border-color: #2c3540;
+  color: #6b7782;
+  cursor: not-allowed;
+}
+
+.pdf-lab-dry-run-discard {
+  background: transparent;
+  border: 1px solid #2c3540;
+  color: #cfd6dc;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.pdf-lab-dry-run-gate-note {
+  font-size: 10px;
+  color: #6b7782;
+  font-style: italic;
+}

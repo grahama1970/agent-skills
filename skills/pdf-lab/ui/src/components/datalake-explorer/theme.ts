@@ -1,0 +1,20 @@
+export const NVIS = {
+	bg: "#141414",
+	surface: "#0f1216",
+	surface2: "#161b21",
+	border: "rgba(255,255,255,0.13)",
+	borderSolid: "#1e252d",
+	accent: "#4a9eff",
+	green: "#15803d",
+	amber: "#b45309",
+	red: "#dc2626",
+	white: "#c8c8c8",
+	dim: "#999999",
+	blue: "#44aaff",
+	cyan: "#00e5ff",
+	yellow: "#ffe600",
+	// WCAG-compliant status colors (Phase U)
+	green700: "#15803d",
+	amber700: "#b45309",
+	red600: "#dc2626",
+} as const;

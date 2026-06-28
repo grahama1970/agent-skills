@@ -88,7 +88,27 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab
 
 # Build a maintainer escalation packet when verify fails
 ./run.sh file-maintainer-ticket --job-dir /tmp/pdf-lab-job
+
+# Standalone PDF Lab UX
+cd /home/graham/workspace/experiments/agent-skills/skills/pdf-lab/ui
+npm install
+npm run dev:all
 ```
+
+If the workstation has exhausted file watchers, use the no-watch preview path:
+
+```bash
+npm run build
+npm run preview:all
+```
+
+The standalone UI runs at `http://127.0.0.1:3012/#pdf-lab`. In `dev:all`, the
+Vite app runs on port `3012` and the local API bridge runs on port `3013`. In
+`preview:all`, the API bridge serves the built UI and API together on port
+`3012`. The bridge serves real artifacts from
+`PDF_LAB_PUBLIC_ROOT` and `PDF_LAB_ARTIFACTS_ROOT`; if an artifact or runtime
+bridge is missing, endpoints fail closed with an explicit JSON error instead of
+returning mock operational state.
 
 ## How Fixes Get Written Back
 
@@ -165,6 +185,7 @@ pdf-lab/
   memory_integration.py      # Memory + Taxonomy hooks
   pyproject.toml             # Dependencies
   sanity.sh                  # Local behavioral sanity gate
+  ui/                        # Standalone Vite PDF Lab UX and local API bridge
   scripts/                   # Runtime verification and compliance helpers
   references/                # Maintainer escalation and long-form contracts
   agents/pdf-lab/AGENTS.md   # Worker post-run rules

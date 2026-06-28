@@ -1,0 +1,2570 @@
+/* PdfLabLabelingPage — 3-pane layout, NVIS dark palette. */
+
+.pdf-lab-labeling-root {
+  display: grid;
+  grid-template-columns: 220px 1fr 440px;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  background: #0b0d10;
+  color: #e7e9ec;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  font-size: 13px;
+}
+
+/* ---- left: family chip column ------------------------------------ */
+
+.pdf-lab-labeling-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #11151a;
+  border: 1px solid #1f262d;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.pdf-lab-labeling-chips-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93a1ad;
+  margin-bottom: 4px;
+}
+
+.pdf-lab-labeling-chips-hint {
+  font-size: 11px;
+  color: #6b7782;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.pdf-lab-labeling-one-page-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 10px;
+  background: #101820;
+  border: 1px solid #2c4a6e;
+  border-radius: 6px;
+}
+
+.pdf-lab-labeling-one-page-kicker {
+  color: #6ea8ff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-one-page-title {
+  color: #e7e9ec;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pdf-lab-labeling-one-page-meta,
+.pdf-lab-labeling-one-page-scope,
+.pdf-lab-labeling-one-page-reason {
+  color: #93a1ad;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pdf-lab-labeling-one-page-scope {
+  color: #cfd6dc;
+}
+
+.pdf-lab-labeling-one-page-open {
+  margin-top: 2px;
+  background: #142235;
+  border: 1px solid #4a9eff;
+  color: #d9e9ff;
+  border-radius: 4px;
+  padding: 7px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-one-page-open:hover {
+  background: #182c44;
+}
+
+/* ---- left: pages library (above family chips) -------------------- */
+
+.pdf-lab-labeling-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1f262d;
+}
+
+.pdf-lab-labeling-pages-section {
+  font-size: 10px;
+  color: #6b7782;
+  letter-spacing: 0.08em;
+  margin: 8px 0 2px;
+}
+
+.pdf-lab-labeling-pages-new {
+  background: #142235;
+  border: 1px dashed #2c4a6e;
+  color: #6ea8ff;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.pdf-lab-labeling-pages-new:hover {
+  background: #182c44;
+  border-color: #4a9eff;
+}
+
+.pdf-lab-labeling-pages-presets {
+  display: contents;
+}
+
+.pdf-lab-labeling-pages-preset,
+.pdf-lab-labeling-pages-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #cfd6dc;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-pages-preset:hover,
+.pdf-lab-labeling-pages-row:hover {
+  background: #1d2329;
+}
+
+.pdf-lab-labeling-pages-row.is-active {
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 1px #4a9eff inset;
+}
+
+.pdf-lab-labeling-pages-row.is-recommended {
+  border-color: #4a9eff;
+}
+
+.pdf-lab-labeling-pages-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  min-width: 0;
+}
+
+.pdf-lab-labeling-pages-row-slug {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: #e7e9ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-lab-labeling-pages-row-hint {
+  font-size: 10px;
+  color: #6b7782;
+}
+
+.pdf-lab-labeling-pages-row-del {
+  background: transparent;
+  border: 1px solid #232b34;
+  color: #6b7782;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 20px;
+}
+
+.pdf-lab-labeling-pages-row-del:hover {
+  background: #2a1015;
+  border-color: #5b1e26;
+  color: #ff6b6b;
+}
+
+.pdf-lab-labeling-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: #cfd6dc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 80ms ease, border-color 80ms ease;
+  text-align: left;
+}
+
+.pdf-lab-labeling-chip:hover {
+  background: #1d2329;
+  border-color: var(--chip-color);
+}
+
+.pdf-lab-labeling-chip.is-active {
+  background: #20272f;
+  border-color: var(--chip-color);
+  box-shadow: 0 0 0 1px var(--chip-color) inset;
+}
+
+.pdf-lab-labeling-chip-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--chip-color);
+  flex: 0 0 12px;
+}
+
+.pdf-lab-labeling-chip-label {
+  flex: 1;
+  font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 12px;
+}
+
+.pdf-lab-labeling-chip-hotkey {
+  font-size: 10px;
+  color: #6b7782;
+  background: #0b0d10;
+  border: 1px solid #232b34;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: ui-monospace, monospace;
+}
+
+/* ---- middle: canvas + toolbar ------------------------------------ */
+
+.pdf-lab-labeling-canvas-pane {
+  display: flex;
+  flex-direction: column;
+  background: #11151a;
+  border: 1px solid #1f262d;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pdf-lab-labeling-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #0e1216;
+  border-bottom: 1px solid #1f262d;
+  flex-wrap: wrap;
+}
+
+.pdf-lab-labeling-file {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #cfd6dc;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-file input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-file:hover {
+  background: #1d2329;
+  border-color: #2c3540;
+}
+
+.pdf-lab-labeling-spacer { flex: 1; }
+
+.pdf-lab-labeling-slug {
+  background: #181d23;
+  border: 1px solid #232b34;
+  color: #cfd6dc;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  width: 220px;
+}
+
+.pdf-lab-labeling-export {
+  background: #2563eb;
+  border: 1px solid #1d4ed8;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Sign-off is the primary workflow-advancing action — green to signal
+ * "commit + advance". Disabled state keeps the muted look so it doesn't
+ * draw attention when there's no project page loaded. */
+.pdf-lab-labeling-export.is-signoff {
+  background: #16a34a;
+  border-color: #15803d;
+}
+.pdf-lab-labeling-export.is-signoff:hover:not(:disabled) {
+  background: #22c55e;
+}
+.pdf-lab-labeling-export.is-signoff:disabled {
+  background: #1f2937;
+  border-color: #374151;
+  color: #6b7280;
+  opacity: 0.6;
+}
+
+/* AMEND verdict — the human edited the agent's regions. Each edit is a
+ * typed bug spec for pdf_oxide_core or the NIST ledger. Amber to signal
+ * "this is a code-change spec, not a green-light confirmation". */
+.pdf-lab-labeling-export.is-signoff-amend {
+  background: #d97706;
+  border-color: #b45309;
+}
+.pdf-lab-labeling-export.is-signoff-amend:hover:not(:disabled) {
+  background: #f59e0b;
+}
+.pdf-lab-labeling-export.is-signoff-amend:disabled {
+  background: #1f2937;
+  border-color: #374151;
+  color: #6b7280;
+  opacity: 0.6;
+}
+
+/* View-mode segmented toggle: Agent | Human | Diff */
+.pdf-lab-labeling-viewmode {
+  display: inline-flex;
+  border: 1px solid #232b34;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pdf-lab-labeling-viewmode-btn {
+  background: transparent;
+  color: #9aa0a6;
+  border: none;
+  padding: 5px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+}
+.pdf-lab-labeling-viewmode-btn + .pdf-lab-labeling-viewmode-btn {
+  border-left: 1px solid #232b34;
+}
+.pdf-lab-labeling-viewmode-btn:hover {
+  background: #1a2129;
+}
+.pdf-lab-labeling-viewmode-btn.is-active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #1d4ed8;
+}
+.pdf-lab-labeling-viewmode-btn.is-active:hover {
+  background: #2563eb;  /* no hover change when active */
+}
+
+/* Diff-mode region overlays. Each diff class layers a status outline over
+ * the existing region styling so the human can see at a glance where
+ * pdf_oxide + the ledger missed or got it wrong. */
+.pdf-lab-labeling-region.is-diff-added {
+  outline: 3px solid #22c55e;
+  outline-offset: 1px;
+}
+.pdf-lab-labeling-region.is-diff-removed {
+  outline: 3px dashed #ef4444;
+  outline-offset: 1px;
+  opacity: 0.5;
+}
+.pdf-lab-labeling-region.is-diff-bbox_edited {
+  outline: 3px solid #f59e0b;
+  outline-offset: 1px;
+}
+.pdf-lab-labeling-region.is-diff-family_relabeled {
+  outline: 3px solid #a855f7;
+  outline-offset: 1px;
+}
+.pdf-lab-labeling-region.is-diff-metadata_edited {
+  outline: 3px dotted #fbbf24;
+  outline-offset: 1px;
+}
+
+.pdf-lab-labeling-canvas {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  background: #060708;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  cursor: crosshair;
+  user-select: none;
+}
+
+/* Scaling wrapper — sized in JSX to (naturalWidth × zoom). All regions are
+ * positioned in % of this wrapper so they track the image at any zoom. */
+.pdf-lab-labeling-canvas-inner {
+  position: relative;
+  flex-shrink: 0;
+  margin: 16px;
+}
+
+.pdf-lab-labeling-canvas-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* mousedown should hit the wrapper for drag-to-draw */
+}
+
+/* --- zoom toolbar buttons --- */
+
+.pdf-lab-labeling-toolbar-divider {
+  width: 1px;
+  background: #232b34;
+  align-self: stretch;
+  margin: 0 4px;
+}
+
+.pdf-lab-labeling-zoom-btn {
+  background: #181d23;
+  border: 1px solid #232b34;
+  color: #cfd6dc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 38px;
+}
+
+.pdf-lab-labeling-zoom-btn:hover {
+  background: #1d2329;
+  border-color: #2c3540;
+}
+
+/* --- right-click context menu --- */
+
+.pdf-lab-labeling-ctx-menu {
+  position: fixed;
+  z-index: 100;
+  background: #0e1216;
+  border: 1px solid #2c3540;
+  border-radius: 5px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px 0;
+}
+
+.pdf-lab-labeling-ctx-menu button {
+  background: transparent;
+  border: none;
+  color: #cfd6dc;
+  padding: 6px 12px;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.pdf-lab-labeling-ctx-menu button:hover {
+  background: #1d2329;
+}
+
+.pdf-lab-labeling-ctx-divider {
+  height: 1px;
+  background: #232b34;
+  margin: 4px 0;
+}
+
+.pdf-lab-labeling-ctx-header {
+  font-size: 10px;
+  color: #6b7782;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-ctx-del {
+  color: #ff6b6b !important;
+}
+
+.pdf-lab-labeling-empty {
+  color: #6b7782;
+  font-size: 13px;
+  text-align: center;
+  padding: 40px;
+  line-height: 1.6;
+}
+
+.pdf-lab-labeling-empty small {
+  color: #4d5862;
+  font-size: 11px;
+}
+
+.pdf-lab-labeling-region {
+  position: absolute;
+  border: 2px solid #fff;
+  border-radius: 1px;
+  pointer-events: auto;
+  cursor: move;
+}
+
+.pdf-lab-labeling-region.is-selected {
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+.pdf-lab-labeling-region.is-preview {
+  border-style: dashed;
+  pointer-events: none;
+}
+
+/* Agent-origin regions (origin: agent_link_sweep | agent_dispatcher) —
+ * visually distinct from human-drawn regions: dashed outer ring + a
+ * slightly muted inner shadow. The chip tag still shows the family color
+ * so it can be read at a glance. */
+.pdf-lab-labeling-region.is-agent {
+  border-style: dashed;
+  border-width: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+.pdf-lab-labeling-region.is-agent.is-selected {
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+
+/* Project page rows: visual states for the agent-curated queue. */
+.pdf-lab-labeling-pages-row.is-queue-human-signed-off,
+.pdf-lab-labeling-pages-row.is-queue-second-pass-resolved {
+  border-color: rgba(46, 204, 113, 0.48);
+  background: linear-gradient(90deg, rgba(25, 135, 84, 0.22), #181d23 44%);
+}
+
+.pdf-lab-labeling-pages-row.is-queue-human-needed {
+  border-color: rgba(251, 188, 4, 0.65);
+  background: linear-gradient(90deg, rgba(130, 82, 0, 0.32), #181d23 46%);
+}
+
+.pdf-lab-labeling-pages-row.is-queue-in-review {
+  border-color: rgba(88, 166, 255, 0.55);
+}
+
+/* Project block in the side panel — groups the project header with its pages. */
+.pdf-lab-labeling-pages-project {
+  display: contents;
+}
+.pdf-lab-labeling-project-progress {
+  font-weight: normal;
+  opacity: 0.7;
+  margin-left: 6px;
+  font-size: 0.85em;
+}
+
+/* Compact project page rows: single-line layout with leading status icon.
+ * The default .pdf-lab-labeling-pages-row-main is flex-direction: column
+ * (slug above hint); override here for a single-line horizontal layout. */
+.pdf-lab-labeling-pages-row.pdf-lab-labeling-pages-row-compact .pdf-lab-labeling-pages-row-main {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.pdf-lab-labeling-pages-row-status {
+  flex: 0 0 14px;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1;
+  font-family: ui-monospace, monospace;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdf-lab-labeling-pages-row-status.is-status-pending {
+  color: #7a8491;
+}
+.pdf-lab-labeling-pages-row-status.is-status-in-review {
+  color: #58a6ff;
+}
+.pdf-lab-labeling-pages-row-status.is-status-human-signed-off {
+  color: #58a6ff;
+}
+.pdf-lab-labeling-pages-row-status.is-status-second-pass-resolved {
+  color: #35d07f;
+}
+.pdf-lab-labeling-pages-row-status.is-status-human-needed {
+  color: #fbbc04;
+}
+.pdf-lab-labeling-pages-row.pdf-lab-labeling-pages-row-compact .pdf-lab-labeling-pages-row-slug {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdf-lab-labeling-pages-row-hint-inline {
+  flex: 0 0 auto;
+  min-width: 58px;
+  border: 1px solid rgba(126, 143, 165, 0.28);
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.pdf-lab-labeling-pages-row-hint-inline.is-status-second-pass-resolved {
+  color: #baf7cf;
+  border-color: rgba(53, 208, 127, 0.45);
+  background: rgba(21, 97, 55, 0.34);
+}
+
+.pdf-lab-labeling-pages-row-hint-inline.is-status-human-needed {
+  color: #ffe49c;
+  border-color: rgba(251, 188, 4, 0.55);
+  background: rgba(98, 65, 0, 0.38);
+}
+
+.pdf-lab-labeling-pages-row-hint-inline.is-status-human-signed-off {
+  color: #c8e1ff;
+  border-color: rgba(88, 166, 255, 0.45);
+  background: rgba(25, 83, 142, 0.34);
+}
+
+.pdf-lab-labeling-pages-row-hint-inline.is-status-in-review {
+  color: #c8e1ff;
+}
+
+.pdf-lab-labeling-pages-row-hint-inline.is-status-pending {
+  color: #a4afbd;
+}
+
+/* Resize handles — 4 corners + 4 edges, shown only on the selected region. */
+.pdf-lab-labeling-region-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 1px solid #2563eb;
+  z-index: 3;
+  box-sizing: border-box;
+}
+.pdf-lab-labeling-region-handle.h-nw { top: -6px; left: -6px;  cursor: nw-resize; }
+.pdf-lab-labeling-region-handle.h-n  { top: -6px; left: 50%;   transform: translateX(-50%); cursor: n-resize;  }
+.pdf-lab-labeling-region-handle.h-ne { top: -6px; right: -6px; cursor: ne-resize; }
+.pdf-lab-labeling-region-handle.h-e  { top: 50%;  right: -6px; transform: translateY(-50%); cursor: e-resize;  }
+.pdf-lab-labeling-region-handle.h-se { bottom: -6px; right: -6px; cursor: se-resize; }
+.pdf-lab-labeling-region-handle.h-s  { bottom: -6px; left: 50%;   transform: translateX(-50%); cursor: s-resize;  }
+.pdf-lab-labeling-region-handle.h-sw { bottom: -6px; left: -6px;  cursor: sw-resize; }
+.pdf-lab-labeling-region-handle.h-w  { top: 50%;  left: -6px;  transform: translateY(-50%); cursor: w-resize;  }
+
+.pdf-lab-labeling-region-tag {
+  position: absolute;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #0b0d10;
+  padding: 1px 5px;
+  white-space: nowrap;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  z-index: 2;
+}
+
+/* Four anchored positions; click the tag to cycle. */
+.pdf-lab-labeling-region-tag.tag-anchor-top-outside {
+  top: -16px;
+  left: -2px;
+  border-radius: 2px 2px 0 0;
+}
+.pdf-lab-labeling-region-tag.tag-anchor-top-inside {
+  top: 0;
+  left: 0;
+  border-radius: 0 0 2px 0;
+}
+.pdf-lab-labeling-region-tag.tag-anchor-bottom-inside {
+  bottom: 0;
+  left: 0;
+  border-radius: 0 2px 0 0;
+}
+.pdf-lab-labeling-region-tag.tag-anchor-bottom-outside {
+  bottom: -16px;
+  left: -2px;
+  border-radius: 0 0 2px 2px;
+}
+
+.pdf-lab-labeling-warnings {
+  padding: 8px 12px;
+  background: #1a1206;
+  color: #f59e0b;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  border-top: 1px solid #422006;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* ---- right: regions pane ----------------------------------------- */
+
+.pdf-lab-labeling-regions-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #11151a;
+  border: 1px solid #1f262d;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.pdf-lab-labeling-regions-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93a1ad;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pdf-lab-labeling-regions-meta {
+  font-size: 10px;
+  color: #6b7782;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: ui-monospace, monospace;
+  margin-left: auto;
+}
+
+.pdf-lab-labeling-regions-empty {
+  color: #6b7782;
+  font-size: 12px;
+  padding: 16px 0;
+}
+
+.pdf-lab-labeling-regions-sort {
+  background: #181d23;
+  border: 1px solid #232b34;
+  color: #93a1ad;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 11px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+}
+.pdf-lab-labeling-regions-sort:hover {
+  background: #1d2329;
+  color: #cfd6dc;
+}
+
+.pdf-lab-labeling-region-row-grip {
+  width: 16px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1;
+  color: #6b7782;
+  cursor: grab;
+  user-select: none;
+  flex: 0 0 16px;
+}
+.pdf-lab-labeling-region-row-grip:active {
+  cursor: grabbing;
+}
+
+.pdf-lab-labeling-region-row.is-dragging {
+  opacity: 0.4;
+}
+.pdf-lab-labeling-region-row.is-drop-target {
+  border-top: 2px solid #4a9eff;
+  margin-top: -1px;
+}
+
+.pdf-lab-labeling-region-row {
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 5px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-region-row.is-selected {
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 1px #4a9eff inset;
+}
+
+.pdf-lab-labeling-region-row-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-lab-labeling-region-row-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: 0 0 10px;
+}
+
+.pdf-lab-labeling-region-row select {
+  flex: 1;
+  background: #0b0d10;
+  border: 1px solid #232b34;
+  color: #cfd6dc;
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.pdf-lab-labeling-region-row-del {
+  background: transparent;
+  border: 1px solid #232b34;
+  color: #93a1ad;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pdf-lab-labeling-region-row-del:hover {
+  background: #2a1015;
+  border-color: #5b1e26;
+  color: #ff6b6b;
+}
+
+.pdf-lab-labeling-region-row input,
+.pdf-lab-labeling-region-row textarea {
+  width: 100%;
+  background: #0b0d10;
+  border: 1px solid #232b34;
+  color: #cfd6dc;
+  border-radius: 3px;
+  padding: 5px 7px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  resize: vertical;
+}
+
+.pdf-lab-labeling-breadcrumb-editor {
+  border: 1px solid #232b34;
+  border-radius: 8px;
+  padding: 10px;
+  background: #101419;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #93a1ad;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-breadcrumb-editor-head button,
+.pdf-lab-labeling-breadcrumb-empty,
+.pdf-lab-labeling-breadcrumb-remove,
+.pdf-lab-labeling-breadcrumb-quick,
+.pdf-lab-labeling-breadcrumb-add-inline,
+.pdf-lab-labeling-breadcrumb-actions button,
+.pdf-lab-labeling-breadcrumb-advanced-actions button {
+  background: #181d23;
+  border: 1px solid #2c3540;
+  color: #cfd6dc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.pdf-lab-labeling-breadcrumb-editor button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pdf-lab-labeling-breadcrumb-editor-head button {
+  margin-left: auto;
+  padding: 3px 6px;
+}
+
+.pdf-lab-labeling-breadcrumb-help,
+.pdf-lab-labeling-breadcrumb-column-labels {
+  color: #7f8c98;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.pdf-lab-labeling-breadcrumb-empty {
+  width: 100%;
+  padding: 6px;
+  text-align: left;
+}
+
+.pdf-lab-labeling-breadcrumb-empty-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.pdf-lab-labeling-breadcrumb-quick {
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-breadcrumb-path {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pdf-lab-labeling-breadcrumb-chip-wrap {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pdf-lab-labeling-breadcrumb-path-sep {
+  color: #5e6c78;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.pdf-lab-labeling-breadcrumb-chip {
+  align-items: center;
+  background: #0d1117;
+  border: 1px solid #2c3540;
+  border-radius: 999px;
+  color: #d8dee9;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 6px 9px;
+}
+
+.pdf-lab-labeling-breadcrumb-chip:hover,
+.pdf-lab-labeling-breadcrumb-chip.is-editing {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.18);
+}
+
+.pdf-lab-labeling-breadcrumb-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-breadcrumb-chip em,
+.pdf-lab-labeling-breadcrumb-options em,
+.pdf-lab-labeling-breadcrumb-popover-title span {
+  color: #8b98a5;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-breadcrumb-add-inline {
+  border-style: dashed;
+  padding: 6px 9px;
+}
+
+.pdf-lab-labeling-breadcrumb-popover {
+  background: #0d1117;
+  border: 1px solid #2c3540;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.pdf-lab-labeling-breadcrumb-popover-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdf-lab-labeling-breadcrumb-popover-title strong {
+  color: #d8dee9;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-breadcrumb-popover input[type="search"],
+.pdf-lab-labeling-breadcrumb-advanced input,
+.pdf-lab-labeling-breadcrumb-advanced select {
+  background: #090c10;
+  border: 1px solid #232b34;
+  border-radius: 6px;
+  color: #cfd6dc;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 7px 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.pdf-lab-labeling-breadcrumb-options button {
+  align-items: center;
+  background: #111820;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #cfd6dc;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.pdf-lab-labeling-breadcrumb-options button:hover {
+  background: #17212b;
+  border-color: #314050;
+}
+
+.pdf-lab-labeling-breadcrumb-options button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-breadcrumb-no-options {
+  color: #8b98a5;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-actions,
+.pdf-lab-labeling-breadcrumb-advanced-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pdf-lab-labeling-breadcrumb-actions button,
+.pdf-lab-labeling-breadcrumb-advanced-actions button {
+  padding: 5px 7px;
+}
+
+.pdf-lab-labeling-breadcrumb-advanced {
+  border-top: 1px solid #1f2730;
+  color: #93a1ad;
+  padding-top: 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-advanced summary {
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-breadcrumb-advanced label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.pdf-lab-labeling-region-breadcrumb,
+.pdf-lab-labeling-selected-breadcrumb {
+  align-items: center;
+  color: #cfd6dc;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  line-height: 1.45;
+}
+
+.pdf-lab-labeling-region-breadcrumb-label {
+  color: #8b98a5;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  margin-right: 2px;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-region-breadcrumb-sep {
+  color: #6f7c88;
+  margin: 0 5px;
+}
+
+.pdf-lab-labeling-breadcrumb-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pdf-lab-labeling-breadcrumb-level {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(120px, 0.8fr) 126px 24px;
+  gap: 4px;
+  align-items: center;
+}
+
+.pdf-lab-labeling-breadcrumb-column-labels {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(120px, 0.8fr) 126px 24px;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pdf-lab-labeling-breadcrumb-level-index {
+  color: #6b7782;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  text-align: center;
+}
+
+.pdf-lab-labeling-breadcrumb-level input,
+.pdf-lab-labeling-breadcrumb-level select {
+  min-width: 0;
+  width: 100%;
+  background: #0b0d10;
+  border: 1px solid #232b34;
+  color: #cfd6dc;
+  border-radius: 3px;
+  padding: 4px 5px;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.pdf-lab-labeling-breadcrumb-remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #ffb4b4;
+}
+
+/* ---- Phase 50 canvas-first redesign overrides --------------------- */
+
+.pdf-lab-labeling-root {
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-lab-labeling-canvas-pane {
+  border: 0;
+  border-radius: 0;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.pdf-lab-labeling-canvas-toolbar {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-height: 48px;
+  max-height: 48px;
+  overflow-x: auto;
+  padding: 6px 10px;
+  scrollbar-width: thin;
+}
+
+.pdf-lab-labeling-file,
+.pdf-lab-labeling-export,
+.pdf-lab-labeling-zoom-btn,
+.pdf-lab-labeling-viewmode-btn {
+  border-radius: 8px;
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-canvas-toolbar > .pdf-lab-labeling-file,
+.pdf-lab-labeling-canvas-toolbar > .pdf-lab-labeling-export:not(.is-signoff):not(.is-signoff-amend) {
+  display: none;
+}
+
+.pdf-lab-labeling-overflow-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.pdf-lab-labeling-overflow-menu summary {
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 8px;
+  color: #cfd6dc;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  list-style: none;
+  padding: 7px 10px;
+}
+
+.pdf-lab-labeling-overflow-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.pdf-lab-labeling-overflow-panel {
+  background: #0e1216;
+  border: 1px solid #2c3540;
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.48);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  left: 0;
+  min-width: 250px;
+  padding: 10px;
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 40;
+}
+
+.pdf-lab-labeling-file {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-lab-labeling-slug {
+  flex: 0 0 260px;
+  height: 34px;
+}
+
+.pdf-lab-labeling-overlaymode .pdf-lab-labeling-viewmode-btn {
+  text-transform: capitalize;
+}
+
+.pdf-lab-labeling-canvas {
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+}
+
+.pdf-lab-labeling-canvas-inner {
+  margin: 10px;
+}
+
+.pdf-lab-labeling-region {
+  border-width: 1px;
+  background: transparent;
+}
+
+.pdf-lab-labeling-region:hover {
+  border-width: 2px;
+  z-index: 3;
+}
+
+.pdf-lab-labeling-region.is-selected {
+  border-width: 2px;
+  box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px rgba(37, 99, 235, 0.55);
+  z-index: 4;
+}
+
+.pdf-lab-labeling-region-tag {
+  background: transparent;
+  color: var(--region-color);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  padding: 0;
+  text-shadow:
+    0 1px 1px #ffffff,
+    0 -1px 1px #ffffff,
+    1px 0 1px #ffffff,
+    -1px 0 1px #ffffff;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-region-tag.tag-anchor-top-outside {
+  top: -11px;
+  left: 0;
+}
+
+.pdf-lab-labeling-region-tag.tag-anchor-bottom-outside {
+  bottom: -11px;
+  left: 0;
+}
+
+.pdf-lab-labeling-root.overlay-debug .pdf-lab-labeling-region-tag {
+  background: var(--region-color);
+  color: #05070a;
+  font-size: 9px;
+  padding: 1px 4px;
+  text-shadow: none;
+}
+
+.pdf-lab-labeling-region-tag.is-toc-entry,
+.pdf-lab-labeling-root.overlay-debug .pdf-lab-labeling-region-tag.is-toc-entry {
+  background: rgba(0, 88, 82, 0.92);
+  border: 1px solid rgba(20, 184, 166, 0.95);
+  border-radius: 2px;
+  color: #d7fffb;
+  font-size: 9px;
+  letter-spacing: 0;
+  padding: 1px 4px;
+  text-shadow: none;
+  text-transform: none;
+}
+
+.pdf-lab-labeling-region-tag.is-toc-heading,
+.pdf-lab-labeling-region-tag.is-toc-entry {
+  z-index: 5;
+}
+
+.pdf-lab-labeling-region-tag.is-toc-heading,
+.pdf-lab-labeling-root.overlay-debug .pdf-lab-labeling-region-tag.is-toc-heading {
+  background: rgba(43, 82, 0, 0.92);
+  border: 1px solid rgba(168, 255, 87, 0.95);
+  border-radius: 2px;
+  color: #efffd8;
+  font-size: 9px;
+  letter-spacing: 0;
+  padding: 1px 4px;
+  text-shadow: none;
+}
+
+.pdf-lab-labeling-region-tag:is(.is-toc-entry, .is-toc-heading) + .pdf-lab-labeling-region-handle {
+  z-index: 6;
+}
+
+.pdf-lab-labeling-region:has(.pdf-lab-labeling-region-tag.is-toc-heading) {
+  z-index: 4;
+}
+
+.pdf-lab-labeling-region:has(.pdf-lab-labeling-region-tag.is-toc-entry) {
+  z-index: 3;
+}
+
+.pdf-lab-labeling-region:has(.pdf-lab-labeling-region-tag:not(.is-toc-entry):not(.is-toc-heading)) {
+  z-index: 2;
+}
+
+.pdf-lab-labeling-region[style*="rgb(0, 212, 184)"],
+.pdf-lab-labeling-region:has(.pdf-lab-labeling-region-tag) {
+  pointer-events: auto;
+}
+
+.pdf-lab-labeling-region-tag:is(.is-toc-entry, .is-toc-heading) {
+  pointer-events: auto;
+}
+
+.pdf-lab-labeling-region-tag:not(.is-toc-entry):not(.is-toc-heading) {
+  pointer-events: auto;
+}
+
+.pdf-lab-labeling-region-tag.is-toc-entry {
+  transform: translateY(-2px);
+}
+
+.pdf-lab-labeling-region-tag.is-toc-heading {
+  transform: translateY(-4px);
+}
+
+.pdf-lab-labeling-root.overlay-debug .pdf-lab-labeling-region {
+  background-color: rgba(0, 0, 0, 0.16);
+}
+
+.pdf-lab-labeling-toc-inspector {
+  background: linear-gradient(180deg, rgba(0, 92, 82, 0.18), rgba(8, 13, 18, 0.92));
+  border: 1px solid rgba(20, 184, 166, 0.55);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+.pdf-lab-labeling-toc-inspector-head {
+  align-items: center;
+  color: #d7fffb;
+  display: flex;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  justify-content: space-between;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-toc-inspector-head strong {
+  color: #14b8a6;
+}
+
+.pdf-lab-labeling-toc-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.pdf-lab-labeling-toc-tree-row {
+  align-items: baseline;
+  border-left: 2px solid rgba(20, 184, 166, 0.45);
+  color: #d8fdf8;
+  display: grid;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-left: calc(var(--toc-depth, 0) * 14px);
+  padding: 3px 0 3px 8px;
+}
+
+.pdf-lab-labeling-toc-tree-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-toc-tree-row em {
+  color: #14b8a6;
+  font-style: normal;
+}
+
+.pdf-lab-labeling-toc-tree-more {
+  color: #8bbdb6;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 4px 0;
+}
+
+.pdf-lab-labeling-toc-json summary {
+  color: #a7f3d0;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.pdf-lab-labeling-toc-json pre {
+  background: #05080b;
+  border: 1px solid #1b3d3a;
+  border-radius: 8px;
+  color: #c7fff8;
+  font-size: 10px;
+  line-height: 1.35;
+  max-height: 320px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.pdf-lab-labeling-chips {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 44px;
+  height: 100%;
+  min-height: 0;
+  border-width: 0 1px 0 0;
+  border-radius: 0;
+  padding: 8px 6px;
+  overflow: hidden;
+  transition: width 160ms ease, box-shadow 160ms ease;
+}
+
+.pdf-lab-labeling-chips:hover,
+.pdf-lab-labeling-chips:focus-within {
+  width: 320px;
+  box-shadow: 14px 0 30px rgba(0, 0, 0, 0.45);
+}
+
+.pdf-lab-labeling-pages {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 0 8px;
+  border-bottom: 1px solid #1f262d;
+  border-right: 0;
+}
+
+.pdf-lab-labeling-pages-project {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.pdf-lab-labeling-pages .pdf-lab-labeling-chips-title,
+.pdf-lab-labeling-pages-section {
+  align-self: auto;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 0 auto;
+  padding: 6px 0;
+  border-left: 0;
+}
+
+.pdf-lab-labeling-chips:hover .pdf-lab-labeling-pages .pdf-lab-labeling-chips-title,
+.pdf-lab-labeling-chips:focus-within .pdf-lab-labeling-pages .pdf-lab-labeling-chips-title,
+.pdf-lab-labeling-chips:hover .pdf-lab-labeling-pages-section,
+.pdf-lab-labeling-chips:focus-within .pdf-lab-labeling-pages-section {
+  writing-mode: horizontal-tb;
+  transform: none;
+  margin: 8px 0 2px;
+  padding: 0;
+}
+
+.pdf-lab-labeling-pages-row,
+.pdf-lab-labeling-pages-preset,
+.pdf-lab-labeling-pages-new {
+  flex: 0 0 auto;
+  min-height: 40px;
+  width: 100%;
+}
+
+.pdf-lab-labeling-pages-row-main {
+  justify-content: center;
+}
+
+.pdf-lab-labeling-chip {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 7px 8px;
+}
+
+.pdf-lab-labeling-chips > .pdf-lab-labeling-chips-title,
+.pdf-lab-labeling-chips-hint {
+  display: none;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row-main,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row-del,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-new,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip-label,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip-hotkey {
+  display: none;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row {
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip {
+  justify-content: center;
+  padding: 7px 0;
+}
+
+.pdf-lab-labeling-regions-pane {
+  position: fixed;
+  right: 0;
+  top: 48px;
+  bottom: 0;
+  z-index: 18;
+  width: 300px;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  padding: 10px;
+  transition: transform 140ms ease;
+  box-shadow: -10px 0 26px rgba(0, 0, 0, 0.38);
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane {
+  transform: translateX(calc(100% - 16px));
+  padding-left: 16px;
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 999px;
+  background: #334155;
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane > * {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pdf-lab-labeling-region-row {
+  border-radius: 0;
+  gap: 7px;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-editor {
+  border-radius: 0;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-help,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-column-labels,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-levels,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-actions,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-advanced {
+  display: none;
+}
+
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) {
+  background: #0d1117;
+}
+
+.pdf-lab-labeling-warnings {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 22;
+  max-height: 28px;
+  overflow: hidden;
+  padding: 4px 10px;
+}
+
+/* ---- oc-kimi review-design gate: shared panes, no dashboard theater ---- */
+
+.pdf-lab-labeling-root {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pdf-lab-labeling-main {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pdf-lab-labeling-main > .pdf-lab-labeling-canvas-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pdf-lab-labeling-chips {
+  position: static;
+  z-index: auto;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+
+.pdf-lab-labeling-chips:hover,
+.pdf-lab-labeling-chips:focus-within {
+  width: auto;
+  box-shadow: none;
+}
+
+.pdf-lab-labeling-pages {
+  margin: 0;
+  padding: 0 0 8px;
+  border-bottom: 1px solid #1f262d;
+}
+
+.pdf-lab-labeling-pages .pdf-lab-labeling-chips-title,
+.pdf-lab-labeling-pages-section {
+  writing-mode: horizontal-tb;
+  transform: none;
+  margin: 8px 10px 2px;
+  padding: 0;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row-main,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row-del,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-new,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip-label,
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip-hotkey {
+  display: flex;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-pages-row {
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 6px 8px;
+}
+
+.pdf-lab-labeling-chips:not(:hover):not(:focus-within) .pdf-lab-labeling-chip {
+  justify-content: flex-start;
+  padding: 7px 8px;
+}
+
+.pdf-lab-labeling-canvas-toolbar {
+  flex-wrap: nowrap;
+  min-height: 44px;
+  max-height: 44px;
+  overflow: hidden;
+  gap: 6px;
+  padding: 5px 8px;
+}
+
+.pdf-lab-labeling-overflow-menu summary,
+.pdf-lab-labeling-file,
+.pdf-lab-labeling-export,
+.pdf-lab-labeling-zoom-btn,
+.pdf-lab-labeling-mode-select,
+.pdf-lab-labeling-family-picker select {
+  min-height: 32px;
+}
+
+.pdf-lab-labeling-family-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #93a1ad;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-family-picker select,
+.pdf-lab-labeling-mode-select {
+  background: #181d23;
+  border: 1px solid #232b34;
+  border-radius: 8px;
+  color: #cfd6dc;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.pdf-lab-labeling-family-picker select {
+  width: 180px;
+}
+
+.pdf-lab-labeling-mode-select {
+  width: 96px;
+}
+
+.pdf-lab-labeling-slug {
+  flex: 0 1 260px;
+  min-width: 160px;
+  height: 32px;
+}
+
+.pdf-lab-labeling-regions-pane {
+  position: static;
+  flex: 0 0 var(--data-pane-width, 320px);
+  width: var(--data-pane-width, 320px);
+  min-width: 280px;
+  max-width: 640px;
+  height: auto;
+  min-height: 0;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  padding: 10px;
+  overflow-y: auto;
+  transform: none;
+  box-shadow: none;
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane {
+  transform: none;
+  padding-left: 10px;
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane::before {
+  display: none;
+}
+
+.pdf-lab-labeling-root.no-selection .pdf-lab-labeling-regions-pane > * {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pdf-lab-labeling-regions-title {
+  align-items: center;
+  min-height: 28px;
+  margin-bottom: 6px;
+}
+
+.pdf-lab-labeling-pane-close {
+  margin-left: 4px;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #4a9eff;
+  background: #172033;
+  color: #e7e9ec;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pdf-lab-labeling-pane-close:hover {
+  background: #1d2b44;
+}
+
+.pdf-lab-labeling-selected-breadcrumb {
+  align-items: flex-start;
+  border: 1px solid #232b34;
+  border-radius: 8px;
+  background: #0d1117;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-selected-breadcrumb-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.pdf-lab-labeling-selected-breadcrumb-note {
+  color: #7f8c98;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.pdf-lab-labeling-selected-breadcrumb-error {
+  border: 1px solid rgba(251, 146, 60, 0.45);
+  border-radius: 8px;
+  background: rgba(251, 146, 60, 0.1);
+  color: #fdba74;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-breadcrumb-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pdf-lab-labeling-breadcrumb-empty,
+.pdf-lab-labeling-breadcrumb-quick {
+  flex: 1 1 130px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-help,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-column-labels,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-levels,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-actions,
+.pdf-lab-labeling-breadcrumb-editor:not(:focus-within) .pdf-lab-labeling-breadcrumb-advanced {
+  display: inherit;
+}
+
+/* ---- phase 53: inspector-focused production seed pass ------------------ */
+
+.pdf-lab-labeling-main {
+  background: #080b0f;
+}
+
+.pdf-lab-labeling-main > .left-pane {
+  flex: 0 0 260px;
+}
+
+.pdf-lab-labeling-canvas-pane {
+  border-radius: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 1px solid #1b2430;
+  border-right: 1px solid #1b2430;
+}
+
+.pdf-lab-labeling-canvas-toolbar {
+  background: #0a0f15;
+}
+
+.pdf-lab-labeling-family-picker {
+  display: none;
+}
+
+.pdf-lab-labeling-pages {
+  border-bottom: 0;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-pages-row,
+.pdf-lab-labeling-pages-preset {
+  background: #0f151d;
+  border-color: #1d2835;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.pdf-lab-labeling-pages-row.is-active {
+  background: #132238;
+  border-color: #58a6ff;
+  box-shadow: inset 3px 0 0 #58a6ff;
+}
+
+.pdf-lab-labeling-pages-row-slug {
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.pdf-lab-labeling-project-progress {
+  color: #8aa2bc;
+}
+
+.pdf-lab-labeling-regions-pane {
+  flex: 0 0 var(--data-pane-width, 340px);
+  width: var(--data-pane-width, 340px);
+  min-width: 280px;
+  max-width: 640px;
+  border: 0;
+  border-radius: 0;
+  background: #0c1117;
+  padding: 12px;
+}
+
+.pdf-lab-labeling-data-pane-resizer {
+  flex: 0 0 5px;
+  width: 5px;
+  cursor: col-resize;
+  background: #111923;
+  border-left: 1px solid #1f2a37;
+  border-right: 1px solid #0a0f15;
+}
+
+.pdf-lab-labeling-data-pane-resizer:hover,
+.pdf-lab-labeling-data-pane-resizer:focus {
+  background: #1f6feb;
+}
+
+.pdf-lab-labeling-inspector-hero {
+  border: 1px solid #223044;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #101926 0%, #0c131c 100%);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.pdf-lab-labeling-inspector-kicker {
+  color: #58a6ff;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-inspector-hero h2 {
+  margin: 4px 0 6px;
+  color: #f0f6fc;
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.pdf-lab-labeling-inspector-hero p {
+  margin: 0;
+  color: #9aa7b7;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.pdf-lab-labeling-inspector-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.pdf-lab-labeling-inspector-facts span {
+  border: 1px solid #253244;
+  border-radius: 999px;
+  background: #0a0f15;
+  color: #b7c3d0;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  padding: 3px 7px;
+}
+
+.pdf-lab-labeling-family-grid {
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pdf-lab-labeling-human-task {
+  border: 1px solid #3b2b12;
+  border-radius: 10px;
+  background: #171006;
+  color: #f8d49b;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.pdf-lab-labeling-human-task-kicker {
+  color: #f59e0b;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-human-task strong {
+  color: #ffe8bf;
+  display: block;
+  font-size: 12px;
+}
+
+.pdf-lab-labeling-human-task ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+}
+
+.pdf-lab-labeling-human-task li + li {
+  margin-top: 4px;
+}
+
+.pdf-lab-labeling-issue-card {
+  border: 1px solid #263446;
+  border-radius: 8px;
+  background: #0b1118;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.pdf-lab-labeling-issue-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pdf-lab-labeling-issue-card-head span {
+  display: block;
+  color: #ffaa00;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-issue-card-head strong {
+  display: block;
+  color: #f0f6fc;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.pdf-lab-labeling-issue-card-head button {
+  border: 1px solid #3b4b61;
+  border-radius: 6px;
+  background: #172033;
+  color: #f0f6fc;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
+.pdf-lab-labeling-issue-card-head button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pdf-lab-labeling-issue-card > p {
+  color: #8aa2bc;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.pdf-lab-labeling-issue-card ol {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pdf-lab-labeling-issue-card li {
+  border: 1px solid #1f2a37;
+  border-radius: 7px;
+  background: #070b10;
+  padding: 7px;
+}
+
+.pdf-lab-labeling-issue-card li span,
+.pdf-lab-labeling-issue-card li em {
+  display: inline-block;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  color: #c8d3df;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  margin: 0 4px 5px 0;
+  padding: 2px 6px;
+}
+
+.pdf-lab-labeling-issue-card li strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #f0f6fc;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.pdf-lab-labeling-issue-card li p {
+  color: #8aa2bc;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.pdf-lab-labeling-issue-card-more {
+  border-top: 1px solid #1f2a37;
+  color: #8aa2bc;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  margin-top: 8px;
+  padding-top: 7px;
+}
+
+.pdf-lab-labeling-extraction-card {
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 8px;
+  background: rgba(8, 20, 28, 0.92);
+  color: #c9eaf3;
+  margin: 8px 0;
+  padding: 9px;
+}
+
+.pdf-lab-labeling-extraction-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.pdf-lab-labeling-extraction-card-head span {
+  color: #67e8f9;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-extraction-card-head em {
+  color: #91a4b7;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-lab-labeling-extraction-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.pdf-lab-labeling-extraction-summary span {
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.08);
+  color: #d8f7ff;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.pdf-lab-labeling-extraction-card details {
+  border-top: 1px solid rgba(34, 211, 238, 0.18);
+  padding-top: 6px;
+}
+
+.pdf-lab-labeling-extraction-card summary {
+  color: #b7c6d5;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.pdf-lab-labeling-extraction-card pre {
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid #1f2a37;
+  border-radius: 6px;
+  background: #070b10;
+  color: #d6e8f0;
+  font-size: 10px;
+  line-height: 1.35;
+  margin: 0;
+  padding: 8px;
+  white-space: pre-wrap;
+}
+
+.pdf-lab-labeling-extraction-missing {
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  border-radius: 8px;
+  background: rgba(251, 146, 60, 0.08);
+  color: #fdba74;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+.pdf-lab-labeling-family-tile {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  border: 1px solid #253244;
+  border-radius: 7px;
+  background: #101721;
+  color: #d0d7de;
+  cursor: pointer;
+  padding: 5px 8px;
+  text-align: left;
+}
+
+.pdf-lab-labeling-family-tile:hover,
+.pdf-lab-labeling-family-tile.is-active {
+  border-color: var(--chip-color);
+  box-shadow: inset 0 0 0 1px var(--chip-color);
+}
+
+.pdf-lab-labeling-family-tile-key {
+  border-radius: 5px;
+  background: var(--chip-color);
+  color: #07111d;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-family-tile-label {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.pdf-lab-labeling-hotkey-strip {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  overflow-x: auto;
+  border-top: 1px solid #1f2a37;
+  background: #090d12;
+  padding: 6px 8px;
+}
+
+.pdf-lab-labeling-hotkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  border: 1px solid #253244;
+  border-radius: 999px;
+  background: #101721;
+  color: #b7c3d0;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.pdf-lab-labeling-hotkey:hover,
+.pdf-lab-labeling-hotkey.is-active {
+  border-color: var(--chip-color);
+  color: #f0f6fc;
+}
+
+.pdf-lab-labeling-hotkey-key {
+  min-width: 18px;
+  border-radius: 999px;
+  background: var(--chip-color);
+  color: #07111d;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-hotkey-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--chip-color);
+}
+
+.pdf-lab-labeling-hotkey-label {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.pdf-lab-labeling-family-popover {
+  position: fixed;
+  z-index: 50;
+  width: 360px;
+  max-width: min(360px, 46vw);
+  border: 1px solid #27384c;
+  border-radius: 10px;
+  background: rgba(8, 13, 19, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.42);
+  padding: 8px;
+}
+
+.pdf-lab-labeling-family-popover-title {
+  color: #8aa2bc;
+  cursor: move;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.pdf-lab-labeling-family-popover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 5px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.pdf-lab-labeling-family-popover-chip {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #263446;
+  border-radius: 7px;
+  background: #101721;
+  color: #c8d3df;
+  cursor: pointer;
+  padding: 5px;
+  text-align: left;
+}
+
+.pdf-lab-labeling-family-popover-chip:hover,
+.pdf-lab-labeling-family-popover-chip.is-active {
+  border-color: var(--chip-color);
+  box-shadow: inset 0 0 0 1px var(--chip-color);
+}
+
+.pdf-lab-labeling-family-popover-chip span {
+  border-radius: 5px;
+  background: var(--chip-color);
+  color: #06101b;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 17px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pdf-lab-labeling-family-popover-chip strong {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.pdf-lab-labeling-family-popover-custom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pdf-lab-labeling-family-popover-custom input {
+  min-width: 0;
+  border: 1px solid #263446;
+  border-radius: 7px;
+  background: #070b10;
+  color: #d8e2ec;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 7px 8px;
+}
+
+.pdf-lab-labeling-family-popover-custom button {
+  border: 1px solid #3b4b61;
+  border-radius: 7px;
+  background: #172033;
+  color: #f0f6fc;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
+.pdf-lab-labeling-family-popover-custom-list {
+  display: grid;
+  gap: 5px;
+  max-height: 116px;
+  overflow-y: auto;
+  border-top: 1px solid #263446;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.pdf-lab-labeling-family-popover-custom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.pdf-lab-labeling-family-popover-custom-row span {
+  overflow-wrap: anywhere;
+  color: #d8e2ec;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.pdf-lab-labeling-family-popover-custom-row em {
+  display: inline-block;
+  min-width: 16px;
+  border: 1px solid #3b4b61;
+  border-radius: 999px;
+  margin-left: 6px;
+  color: #8aa2bc;
+  font-style: normal;
+  line-height: 14px;
+  text-align: center;
+}
+
+.pdf-lab-labeling-family-popover-custom-row button {
+  border: 1px solid #3b4b61;
+  border-radius: 6px;
+  background: #101721;
+  color: #c8d3df;
+  cursor: pointer;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 7px;
+}
+
+.pdf-lab-labeling-family-popover-custom-row button:hover {
+  border-color: #d6bcfa;
+  color: #f0f6fc;
+}
+
+.pdf-lab-labeling-regions-title {
+  border-top: 1px solid #1f2a37;
+  padding-top: 10px;
+}

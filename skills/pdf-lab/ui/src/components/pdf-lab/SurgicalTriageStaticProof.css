@@ -1,0 +1,427 @@
+.pdf-lab-static-proof {
+  --proof-bg: #000000;
+  --proof-chrome: rgba(17, 19, 22, 0.88);
+  --proof-panel: rgba(42, 45, 45, 0.74);
+  --proof-panel-line: rgba(255, 255, 255, 0.18);
+  --proof-text: #f8fafc;
+  --proof-dim: rgba(0, 0, 0, 0.85);
+  --proof-purple: #8b5cf6;
+  --proof-yellow: #f59e0b;
+  --proof-red: #ff6b6b;
+  --proof-green: #22c55e;
+  --proof-stage-h: calc(100% - 56px);
+  --proof-page-h: var(--proof-stage-h);
+  --proof-page-w: calc(var(--proof-page-h) * 0.772727);
+  --proof-page-left: clamp(14px, 2vw, 48px);
+  --proof-page-top: 0px;
+  --proof-hud-gap: 56px;
+  --proof-hud-w: 286px;
+  --proof-bbox-x: 6.5%;
+  --proof-bbox-y: 8%;
+  --proof-bbox-w: 87%;
+  --proof-bbox-h: 80%;
+
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr) 44px;
+  overflow: hidden;
+  background: var(--proof-bg);
+  color: var(--proof-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pdf-lab-static-proof *,
+.pdf-lab-static-proof *::before,
+.pdf-lab-static-proof *::after {
+  box-sizing: border-box;
+}
+
+.pdf-lab-static-proof-header,
+.pdf-lab-static-proof-footer {
+  z-index: 30;
+  background: var(--proof-chrome);
+  border-color: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+}
+
+.pdf-lab-static-proof-header {
+  height: 36px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 1px 1px #000;
+}
+
+.pdf-lab-static-proof-header-left,
+.pdf-lab-static-proof-header-actions,
+.pdf-lab-static-proof-footer-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdf-lab-static-proof-header-actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pdf-lab-static-proof-title {
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.pdf-lab-static-proof-menu {
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.pdf-lab-static-proof button {
+  min-height: 27px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.pdf-lab-static-proof-copy {
+  border-color: rgba(139, 92, 246, 0.7) !important;
+  background: rgba(139, 92, 246, 0.18) !important;
+}
+
+.pdf-lab-static-proof-copy[data-copied="true"] {
+  border-color: rgba(34, 197, 94, 0.9) !important;
+  background: rgba(34, 197, 94, 0.18) !important;
+}
+
+.pdf-lab-static-proof-stage {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000000;
+}
+
+.pdf-lab-static-proof-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  pointer-events: none;
+}
+
+.pdf-lab-static-proof-page-well {
+  position: absolute;
+  z-index: 2;
+  left: var(--proof-page-left);
+  top: var(--proof-page-top);
+  width: var(--proof-page-w);
+  height: var(--proof-page-h);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+.pdf-lab-static-proof-page {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.pdf-lab-static-proof-fog,
+.pdf-lab-static-proof-bbox,
+.pdf-lab-static-proof-dim {
+  position: absolute;
+  pointer-events: none;
+}
+
+.pdf-lab-static-proof-fog {
+  inset: 0;
+  z-index: 4;
+}
+
+.pdf-lab-static-proof-dim {
+  background: var(--proof-dim);
+}
+
+.pdf-lab-static-proof-fog-top {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--proof-bbox-y);
+}
+
+.pdf-lab-static-proof-fog-bottom {
+  left: 0;
+  top: calc(var(--proof-bbox-y) + var(--proof-bbox-h));
+  width: 100%;
+  bottom: 0;
+}
+
+.pdf-lab-static-proof-fog-left {
+  left: 0;
+  top: var(--proof-bbox-y);
+  width: var(--proof-bbox-x);
+  height: var(--proof-bbox-h);
+}
+
+.pdf-lab-static-proof-fog-right {
+  left: calc(var(--proof-bbox-x) + var(--proof-bbox-w));
+  top: var(--proof-bbox-y);
+  right: 0;
+  height: var(--proof-bbox-h);
+}
+
+.pdf-lab-static-proof-bbox {
+  left: var(--proof-bbox-x);
+  top: var(--proof-bbox-y);
+  z-index: 8;
+  width: var(--proof-bbox-w);
+  height: var(--proof-bbox-h);
+  border: 3px solid var(--proof-purple);
+  border-radius: 2px;
+  background: transparent;
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.2),
+    0 0 30px rgba(139, 92, 246, 0.52);
+}
+
+.pdf-lab-static-proof-dot {
+  position: absolute;
+  left: calc(var(--proof-page-left) + (var(--proof-page-w) * 0.935) - 9px);
+  top: calc(var(--proof-page-top) + (var(--proof-page-h) * 0.48) - 9px);
+  z-index: 18;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--proof-yellow);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 0 18px rgba(245, 158, 11, 0.95);
+}
+
+.pdf-lab-static-proof-thread {
+  position: absolute;
+  left: calc(var(--proof-page-left) + (var(--proof-page-w) * 0.935) + 9px);
+  right: calc(100% - (var(--proof-page-left) + var(--proof-page-w) + var(--proof-hud-gap)));
+  top: calc(var(--proof-page-top) + (var(--proof-page-h) * 0.48));
+  z-index: 17;
+  height: 2px;
+  background: rgba(245, 158, 11, 0.95);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.55);
+}
+
+.pdf-lab-static-proof-hud {
+  position: absolute;
+  left: calc(var(--proof-page-left) + var(--proof-page-w) + var(--proof-hud-gap));
+  top: calc(var(--proof-page-top) + (var(--proof-page-h) * 0.28));
+  z-index: 20;
+  width: var(--proof-hud-w);
+  min-height: 310px;
+  padding: 16px 14px 13px;
+  border: 1px solid var(--proof-panel-line);
+  border-radius: 5px;
+  background: var(--proof-panel);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 1500px) {
+  .pdf-lab-static-proof {
+    --proof-stage-h: calc(100% - 56px);
+    --proof-page-left: 14px;
+    --proof-hud-gap: 28px;
+    --proof-hud-w: 230px;
+  }
+
+  .pdf-lab-static-proof-header {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+
+  .pdf-lab-static-proof-header-left,
+  .pdf-lab-static-proof-header-actions {
+    gap: 6px;
+  }
+
+  .pdf-lab-static-proof button {
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  .pdf-lab-static-proof-hud {
+    min-height: 250px;
+    padding: 13px 12px;
+  }
+
+  .pdf-lab-static-proof-hud h1 {
+    margin-bottom: 12px;
+    font-size: 17px;
+  }
+
+  .pdf-lab-static-proof-hud p {
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+
+  .pdf-lab-static-proof-actions button {
+    height: 42px;
+    font-size: 11px;
+  }
+}
+
+.pdf-lab-static-proof-hud-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: #b9a7ff;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pdf-lab-static-proof-hud-meta span:last-child {
+  color: var(--proof-red);
+}
+
+.pdf-lab-static-proof-hud h1 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.pdf-lab-static-proof-hud p {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.28;
+  text-wrap: pretty;
+}
+
+.pdf-lab-static-proof-intent {
+  width: 100%;
+  height: 31px;
+  margin-bottom: 13px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  outline: none;
+  background: rgba(20, 23, 25, 0.55);
+  color: #cdd2da;
+  font-size: 12px;
+}
+
+.pdf-lab-static-proof-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7px;
+}
+
+.pdf-lab-static-proof-actions button {
+  height: 50px;
+  border-radius: 6px;
+  background: rgba(15, 17, 22, 0.5);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: normal;
+}
+
+.pdf-lab-static-proof-actions button:active {
+  transform: scale(0.96);
+}
+
+.pdf-lab-static-proof-confirm {
+  border-color: rgba(34, 197, 94, 0.9) !important;
+  background: rgba(34, 197, 94, 0.28) !important;
+  color: #dcfce7 !important;
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.54);
+}
+
+.pdf-lab-static-proof-footer {
+  height: 44px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  text-shadow: 0 1px 1px #000;
+}
+
+.pdf-lab-static-proof-footer-nav {
+  gap: 8px;
+}
+
+.pdf-lab-static-proof-hotkeys {
+  letter-spacing: 0.02em;
+}
+
+.pdf-lab-static-proof kbd {
+  display: inline-flex;
+  min-width: 15px;
+  height: 15px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 10px;
+}
+
+.pdf-lab-static-proof-zen {
+  justify-self: end;
+}
+
+.pdf-lab-static-proof-footer-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.pdf-lab-static-proof-undo {
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #fde68a !important;
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pdf-lab-static-proof-star {
+  position: absolute;
+  right: 28px;
+  bottom: 15px;
+  width: 46px;
+  height: 46px;
+  opacity: 0.82;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.22));
+}
+
+.pdf-lab-static-proof-star::before {
+  content: "✦";
+  color: #f5f5f5;
+  font-size: 58px;
+}
