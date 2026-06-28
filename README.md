@@ -82,7 +82,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
-      <br/><strong>Surf</strong><br/><em>Agent + ChatGPT browser control</em>
+      <br/><strong>Surf</strong><br/><em>Agentic browser control</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
@@ -96,7 +96,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
         <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
       </a>
-      <br/><strong>Persona Dream</strong><br/><em>Memory into storyboards</em>
+      <br/><strong>Persona Dream</strong><br/><em>Agentic memories to movies</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
@@ -128,7 +128,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
         <img src="docs/assets/project-cards/debugger.webp" width="100%" alt="Debugger" />
       </a>
-      <br/><strong>Debugger</strong><br/><em>Live variables, less guessing</em>
+      <br/><strong>Debugger</strong><br/><em>Live debugger variables for agents</em>
     </td>
   </tr>
 </table>
