@@ -1,6 +1,20 @@
 ---
 name: plan-iterate
 description: Evidence-gated phase iteration for implementation plans. Use when a task must proceed phase by phase with deterministic artifacts, validation logs, named external reviewer verdicts, default scillm GPT-5.5 high review, optional reviewer comparison, blocker tracking, and fail-closed acceptance before advancing; especially for security, correctness, deployment, or report-hardening work.
+metadata:
+  short-description: Evidence-gated implementation phase iteration
+provides:
+  - phase-iteration-control
+  - evidence-review-packaging
+  - fail-closed-phase-acceptance
+composes:
+  - plan
+  - review-plan
+  - scillm
+  - ask
+complies:
+  - best-practices-skills
+  - best-practices-plan
 ---
 
 # Plan Iterate
