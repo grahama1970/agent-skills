@@ -8,6 +8,7 @@ It intentionally avoids mutating GitHub or changing cron state.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ from typing import Annotated, Any
 import typer
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
+UX_LAB_ROOT = Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab")
 WATCHDOG_ROOT = Path.home() / ".local/state/project-watchdog"
 WATCHDOG_RECEIPTS = WATCHDOG_ROOT / "receipts"
 WATCHDOG_LOG = WATCHDOG_ROOT / "logs/project-watchdog.log"
@@ -275,6 +277,102 @@ def sanity_payload() -> dict[str, Any]:
     }
 
 
+def chat_ui_proof_payload(
+    *,
+    url: str,
+    prompt: str,
+    out_dir: Path | None,
+    timeout_s: int,
+) -> dict[str, Any]:
+    """Run the repeatable UX Lab Tau same-message chat/TUI mirror proof."""
+    proof_out_dir = out_dir or Path(f"/tmp/tau-skill-chat-ui-proof-{datetime.now(UTC):%Y%m%dT%H%M%SZ}")
+    command = [
+        "node",
+        "scripts/tau-same-message-visible-tui-mirror-proof.mjs",
+    ]
+    run_env = {
+        "TAU_CHAT_URL": url,
+        "TAU_CHAT_PROMPT": prompt,
+        "TAU_PROOF_OUT_DIR": str(proof_out_dir),
+    }
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(UX_LAB_ROOT),
+            text=True,
+            capture_output=True,
+            timeout=timeout_s,
+            check=False,
+            env={**os.environ, **run_env},
+        )
+    except FileNotFoundError as exc:
+        return {
+            "schema": "agent_skills.tau.chat_ui_proof_receipt.v1",
+            "checked_at": now(),
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "command": command,
+            "cwd": str(UX_LAB_ROOT),
+            "error": str(exc),
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "schema": "agent_skills.tau.chat_ui_proof_receipt.v1",
+            "checked_at": now(),
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "command": command,
+            "cwd": str(UX_LAB_ROOT),
+            "exit_code": 124,
+            "stdout": exc.stdout or "",
+            "stderr": exc.stderr or "",
+            "proof_out_dir": str(proof_out_dir),
+        }
+
+    proof_json = proof_out_dir / "proof.json"
+    proof: dict[str, Any] | None = None
+    proof_error = None
+    try:
+        proof = json.loads(proof_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        proof_error = str(exc)
+
+    ok = completed.returncode == 0 and proof is not None and proof.get("ok") is True
+    return {
+        "schema": "agent_skills.tau.chat_ui_proof_receipt.v1",
+        "checked_at": now(),
+        "ok": ok,
+        "mocked": False,
+        "live": True,
+        "command": command,
+        "cwd": str(UX_LAB_ROOT),
+        "exit_code": completed.returncode,
+        "proof_out_dir": str(proof_out_dir),
+        "proof_json": str(proof_json),
+        "proof_error": proof_error,
+        "proof_schema": proof.get("schema") if proof else None,
+        "assertions": proof.get("assertions") if proof else {},
+        "memory_request_count": len(proof.get("memoryRequests", [])) if proof else 0,
+        "screenshot": proof.get("screenshot") if proof else None,
+        "stderr": completed.stderr,
+        "proof_boundary": {
+            "proves": [
+                "the checked-in UX Lab Tau chat UI proof runner executed",
+                "a live browser COMPLIANCE turn rendered the same-message chat/TUI mirror assertions when ok is true",
+            ],
+            "does_not_prove": [
+                "interactive Textual TUI embedding",
+                "PersonaPlex audio synthesis",
+                "applied GitHub mutation for this browser turn",
+                "semantic correctness of the evidence case",
+                "final Sparta Chat readiness",
+            ],
+        },
+    }
+
+
 def e2e_payload() -> dict[str, Any]:
     sanity_result = sanity_payload()
     status_result = status_payload()
@@ -316,6 +414,29 @@ def latest_proofs_command() -> None:
 def sanity_command() -> None:
     """Run bounded non-mutating Tau checks."""
     emit(sanity_payload())
+
+
+@app.command("chat-ui-proof")
+def chat_ui_proof_command(
+    url: Annotated[
+        str,
+        typer.Option("--url", help="Tau UX Lab URL to exercise."),
+    ] = "http://127.0.0.1:3002/#tau",
+    prompt: Annotated[
+        str,
+        typer.Option("--prompt", help="Prompt to submit through the Tau chat composer."),
+    ] = "How does Tau handle a CWE-287 SPARTA evidence case?",
+    out_dir: Annotated[
+        Path | None,
+        typer.Option("--out-dir", help="Output directory for proof.json and screenshot."),
+    ] = None,
+    timeout_s: Annotated[
+        int,
+        typer.Option("--timeout-s", help="Maximum seconds for the browser proof command."),
+    ] = 90,
+) -> None:
+    """Run the repeatable live Tau chat/TUI mirror browser proof."""
+    emit(chat_ui_proof_payload(url=url, prompt=prompt, out_dir=out_dir, timeout_s=timeout_s))
 
 
 @app.command("e2e")
