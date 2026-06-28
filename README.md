@@ -102,7 +102,7 @@ I maintain projects and skills continuously. Here's my current focus:
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
         <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
       </a>
-      <br/><strong>Extractor</strong><br/>Engineering docs to structured evidence
+      <br/><strong>Extractor</strong><br/>Docs into evidence trees
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab">
