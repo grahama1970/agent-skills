@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import time
+import ast
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -267,8 +268,7 @@ def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]
                 }
             )
 
-        content = "\n".join(lines)
-        if "import requests" in content or "from requests" in content:
+        if _imports_module(file_path, "requests"):
             violations.append(
                 {
                     "rule_pack": "best-practices-python",
@@ -280,6 +280,26 @@ def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]
             )
 
     return violations
+
+
+def _imports_module(file_path: Path, module_name: str) -> bool:
+    """Return True when a Python file imports a module, ignoring strings/comments."""
+    try:
+        tree = ast.parse(file_path.read_text(encoding="utf-8", errors="ignore"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.split(".", 1)[0]
+                if root == module_name:
+                    return True
+        elif isinstance(node, ast.ImportFrom):
+            root = (node.module or "").split(".", 1)[0]
+            if root == module_name:
+                return True
+    return False
 
 
 def kde_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]]:
