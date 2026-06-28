@@ -93,6 +93,6 @@ project agent needs a named subagent identity.
 
 ## Project Knowledge
 
-Read `docs/PROJECT_KNOWLEDGE.md` before making claims about current Tau
+Read `/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md` before making claims about current Tau
 coverage. It records which proof lanes have local evidence and which remain
 pending.
