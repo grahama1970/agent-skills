@@ -209,7 +209,7 @@ After sync, Horus can recall music via:
 
 ## Horus Music Taxonomy (HMT)
 
-Located at: `/home/graham/workspace/experiments/memory/persona/bridge/horus_music_taxonomy.py`
+Reference module: `memory/persona/bridge/horus_music_taxonomy.py`
 
 ### Tier 0: Bridge Attributes (cross-collection)
 | Bridge | Lore Connection | Music Indicators |
