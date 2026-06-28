@@ -1,0 +1,35 @@
+{
+  "grounding": {
+    "generic": [
+      {
+        "url": "https://www.imdb.com/title/tt0307987/characters/nm0000671/",
+        "title": "Bad Santa (2003) - Billy Bob Thornton as Willie - IMDb",
+        "snippets": [
+          "Character page identifying Billy Bob Thornton as Willie in Bad Santa.",
+          "Candidate source only; not scene-specific evidence."
+        ]
+      },
+      {
+        "url": "https://www.alamy.com/billy-bob-thornton-bad-santa-2003-image485726535.html",
+        "title": "BILLY BOB THORNTON, BAD SANTA, 2003 Stock Photo",
+        "snippets": [
+          "Editorial still candidate for Billy Bob Thornton in Bad Santa.",
+          "Requires source review and approval before embedding."
+        ]
+      }
+    ],
+    "map": []
+  },
+  "sources": {
+    "https://www.imdb.com/title/tt0307987/characters/nm0000671/": {
+      "title": "Bad Santa (2003) - Billy Bob Thornton as Willie - IMDb",
+      "hostname": "www.imdb.com",
+      "age": null
+    },
+    "https://www.alamy.com/billy-bob-thornton-bad-santa-2003-image485726535.html": {
+      "title": "BILLY BOB THORNTON, BAD SANTA, 2003 Stock Photo",
+      "hostname": "www.alamy.com",
+      "age": null
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "provider": "perplexity",
+  "query": "can you find 6 solo pictures of Billy Bob Thornton as the Willie character from Bad Santa 2003",
+  "leads": [
+    {
+      "query": "\"Billy Bob Thornton\" Willie \"Bad Santa\" solo portrait",
+      "url": "https://www.imdb.com/title/tt0307987/characters/nm0000671/",
+      "title": "IMDb character page for Billy Bob Thornton as Willie",
+      "snippet": "Useful character page lead. Candidate only.",
+      "publisher": "imdb.com",
+      "image_urls": [
+        "https://m.media-amazon.com/images/M/bad-santa-willie-candidate-1.jpg"
+      ]
+    },
+    {
+      "query": "\"Billy Bob Thornton\" \"Bad Santa\" publicity still",
+      "url": "https://www.shutterstock.com/editorial/image-editorial/billy-bob-thornton-5884897ag",
+      "title": "Billy Bob Thornton editorial image",
+      "snippet": "Editorial image lead that requires licensing/source review.",
+      "publisher": "shutterstock.com",
+      "image_urls": [
+        "https://image.shutterstock.com/editorial/bad-santa-willie-candidate-2.jpg",
+        "https://image.shutterstock.com/editorial/bad-santa-willie-candidate-3.jpg"
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from skills.watch.scripts.validate_watch_realtime_identity_memory_loop_P1 import assert_no_raw_vectors, validate
+from skills.watch.scripts.build_watch_candidate_reference_manifest import build_manifest
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "realtime_identity_memory_loop_P1"
@@ -29,6 +30,33 @@ def test_movie_assets_auto_plan_reference_hydration_without_identity_promotion()
     assert plan["candidate_source_refs"]
     assert plan["approved_reference_count"] == 0
     assert plan["identity_promotion_allowed"] is False
+
+
+def test_search_oracle_outputs_become_candidate_references_only():
+    plan = load_json("movie_asset_reference_plan.json")
+    brave_context = load_json("brave_llm_context_bad_santa_willie.sample.json")
+    perplexity_leads = load_json("perplexity_image_leads_bad_santa_willie.sample.json")
+    manifest = build_manifest(
+        plan,
+        brave_llm_context=brave_context,
+        perplexity_leads=perplexity_leads,
+    )
+
+    assert manifest["schema"] == "watch.reference_manifest.v1"
+    assert manifest["asset_id"] == "bad_santa_2003_canary"
+    assert manifest["source_type"] == "movie_domain_search"
+    assert manifest["scene_truth_claimed"] is False
+    assert manifest["identity_promotion_allowed"] is False
+    assert manifest["approved_reference_count"] == 0
+    assert manifest["embedded_reference_count"] == 0
+    assert {"brave_llm_context", "perplexity_image_leads"} <= set(manifest["providers"])
+    assert len(manifest["references"]) == 5
+    assert all(ref["entity_id"] == "character:bad_santa:willie" for ref in manifest["references"])
+    assert all(ref["candidate_only"] is True for ref in manifest["references"])
+    assert all(ref["approval_required"] is True for ref in manifest["references"])
+    assert all(ref["approval_status"] == "CANDIDATE" for ref in manifest["references"])
+    assert all(ref["download_status"] == "NOT_DOWNLOADED" for ref in manifest["references"])
+    assert all(ref["embedding_status"] == "NOT_EMBEDDED" for ref in manifest["references"])
 
 
 def test_drone_without_source_manifest_fails_closed_and_disables_public_search():
