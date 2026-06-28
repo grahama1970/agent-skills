@@ -11,9 +11,35 @@ from skills.watch.scripts.build_watch_reference_receipt_chain import (
     assert_no_raw_vectors as assert_no_receipt_vectors,
 )
 from skills.watch.scripts.validate_watch_realtime_identity_memory_loop_P1 import assert_no_raw_vectors, validate
+from skills.watch.scripts.run_realtime_identity_memory_loop import (
+    approval_receipt_allows_embedding,
+    attach_reference_approval,
+    approved_reference_records,
+    reference_approval_by_id,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "realtime_identity_memory_loop_P1"
+CANARY_REFERENCE_MANIFEST = (
+    ROOT
+    / "skills"
+    / "watch"
+    / "docs"
+    / "architecture"
+    / "generated"
+    / "bad_santa_marcus_0248_approved_reference_canary"
+    / "watch_approved_reference_manifest.bad_santa_marcus.canary.json"
+)
+CANARY_APPROVAL_RECEIPT = (
+    ROOT
+    / "skills"
+    / "watch"
+    / "docs"
+    / "architecture"
+    / "generated"
+    / "bad_santa_marcus_0248_reference_download_review_approval_receipt"
+    / "watch_reference_download_review_approval_receipt.bad_santa_marcus_canary.json"
+)
 
 
 def load_json(name: str):
@@ -186,6 +212,24 @@ def test_arango_fixture_uses_qdrant_pointers_not_raw_vectors():
     doc = load_json("arango_metadata_doc.no_vectors.json")
     assert doc["qdrant_point_ids"]
     assert_no_raw_vectors(doc)
+
+
+def test_live_reference_embedding_links_approval_receipt_before_similarity():
+    manifest = json.loads(CANARY_REFERENCE_MANIFEST.read_text(encoding="utf-8"))
+    approval_receipt = json.loads(CANARY_APPROVAL_RECEIPT.read_text(encoding="utf-8"))
+    approval_by_id = reference_approval_by_id(approval_receipt)
+    refs = [
+        attach_reference_approval(ref, approval_by_id)
+        for ref in approved_reference_records(manifest)
+    ]
+
+    assert len(refs) == 3
+    assert all(ref["approval_gate_status"] == "APPROVAL_RECEIPT_LINKED" for ref in refs)
+    assert all(ref["approval_receipt_id"] for ref in refs)
+    assert all(ref["approval_receipt_status"] == "APPROVED_CANARY_PIPELINE_ONLY" for ref in refs)
+    assert all(ref["approval_scope"] == "CANARY_PIPELINE_ONLY" for ref in refs)
+    assert all(approval_receipt_allows_embedding(ref) is True for ref in refs)
+    assert all(ref["approval_promotion_allowed"] is False for ref in refs)
 
 
 def test_overlay_event_can_render_without_claiming_supported_identity():

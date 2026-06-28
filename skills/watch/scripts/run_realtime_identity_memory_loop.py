@@ -51,6 +51,7 @@ def main() -> int:
     parser.add_argument("--events", type=Path, default=DEFAULT_EVENTS)
     parser.add_argument("--crop-manifest", type=Path, default=DEFAULT_CROPS)
     parser.add_argument("--reference-manifest", type=Path, help="Optional approved reference image manifest")
+    parser.add_argument("--reference-approval-receipt", type=Path, help="Optional concrete reference approval receipt")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--embedding-url", default=os.getenv("EMBEDDING_MULTIMODAL_URL", "http://127.0.0.1:8603"))
     parser.add_argument("--qdrant-url", default=os.getenv("QDRANT_URL", "http://127.0.0.1:6333"))
@@ -79,7 +80,8 @@ def main() -> int:
         crops=crops,
         args=args,
     )
-    reference_receipt = embed_and_write_references(args.reference_manifest, args)
+    reference_approval_receipt = load_reference_approval_receipt(args.reference_approval_receipt)
+    reference_receipt = embed_and_write_references(args.reference_manifest, reference_approval_receipt, args)
     similarity_receipt = build_similarity_receipts(crop_embedding_receipt, reference_receipt, args)
     memory_receipt = upsert_memory_records(
         events=events,
@@ -98,18 +100,21 @@ def main() -> int:
         "source_events": display_path(args.events),
         "source_crop_manifest": display_path(args.crop_manifest),
         "source_reference_manifest": display_path(args.reference_manifest) if args.reference_manifest else None,
+        "source_reference_approval_receipt": display_path(args.reference_approval_receipt) if args.reference_approval_receipt else None,
         "service_receipts": service_receipts,
         "counts": {
             "event_count": len(events),
             "crop_count": len(crops),
             "crop_embedding_write_count": crop_embedding_receipt["counts"]["qdrant_written"],
             "reference_embedding_write_count": reference_receipt["counts"]["qdrant_written"],
+            "reference_approval_receipt_count": reference_receipt["counts"].get("approval_receipt_count", 0),
             "similarity_receipt_count": similarity_receipt["counts"]["comparison_count"],
             "memory_document_count": memory_receipt["counts"]["document_count"],
             "recall_item_count": recall_receipt["counts"]["item_count"],
         },
         "receipts": {
             "crop_embeddings": crop_embedding_receipt,
+            "reference_approval": reference_approval_receipt,
             "reference_embeddings": reference_receipt,
             "crop_reference_similarity": similarity_receipt,
             "memory_upsert": memory_receipt,
@@ -221,7 +226,62 @@ def embed_and_write_crops(*, crops: list[dict[str, Any]], args: argparse.Namespa
     }
 
 
-def embed_and_write_references(reference_manifest_path: Path | None, args: argparse.Namespace) -> dict[str, Any]:
+def load_reference_approval_receipt(path: Path | None) -> dict[str, Any]:
+    if not path:
+        return {
+            "schema": "watch.reference_download_review_approval_receipt.v1",
+            "status": "NOT_PROVIDED",
+            "reference_receipts": [],
+            "counts": {"approved_reference_count": 0},
+        }
+    receipt = read_json(path)
+    if receipt.get("schema") != "watch.reference_download_review_approval_receipt.v1":
+        raise ValueError(f"unsupported reference approval receipt schema: {receipt.get('schema')!r}")
+    return receipt
+
+
+def reference_approval_by_id(approval_receipt: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    refs = approval_receipt.get("reference_receipts") or []
+    return {str(item.get("reference_id")): item for item in refs if item.get("reference_id")}
+
+
+def attach_reference_approval(
+    ref: dict[str, Any],
+    approval_by_id: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    reference_id = str(ref.get("reference_id") or ref.get("local_path"))
+    approval = approval_by_id.get(reference_id)
+    if not approval:
+        return {
+            **ref,
+            "approval_gate_status": "APPROVED_MANIFEST_ONLY_NO_RECEIPT",
+            "approval_receipt_id": None,
+            "approval_receipt_status": None,
+            "approval_scope": None,
+        }
+    receipt = approval.get("approval_receipt") or {}
+    return {
+        **ref,
+        "approval_gate_status": "APPROVAL_RECEIPT_LINKED",
+        "approval_receipt_id": receipt.get("receipt_id"),
+        "approval_receipt_status": receipt.get("status"),
+        "approval_scope": receipt.get("approval_scope"),
+        "approval_promotion_allowed": bool(approval.get("identity_promotion_allowed")),
+    }
+
+
+def approval_receipt_allows_embedding(ref: dict[str, Any]) -> bool:
+    status = str(ref.get("approval_receipt_status") or "").upper()
+    if not status:
+        return True
+    return status in {"APPROVED", "APPROVED_CANARY_PIPELINE_ONLY"}
+
+
+def embed_and_write_references(
+    reference_manifest_path: Path | None,
+    reference_approval_receipt: dict[str, Any],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
     if not reference_manifest_path:
         return {
             "schema": "watch.reference_embedding_live_receipt.v1",
@@ -229,10 +289,15 @@ def embed_and_write_references(reference_manifest_path: Path | None, args: argpa
             "qdrant_collection": args.reference_collection,
             "receipts": [],
             "failures": [],
-            "counts": {"approved_reference_count": 0, "qdrant_written": 0},
+            "counts": {"approved_reference_count": 0, "approval_receipt_count": 0, "qdrant_written": 0},
         }
     manifest = read_json(reference_manifest_path)
-    references = approved_reference_records(manifest)
+    approval_by_id = reference_approval_by_id(reference_approval_receipt)
+    references = [
+        attach_reference_approval(ref, approval_by_id)
+        for ref in approved_reference_records(manifest)
+    ]
+    references = [ref for ref in references if approval_receipt_allows_embedding(ref)]
     image_inputs = [data_uri(resolve_repo_path(reference_local_path(ref))) for ref in references]
     with httpx.Client(timeout=httpx.Timeout(300.0, connect=5.0)) as client:
         response = client.post(
@@ -259,6 +324,9 @@ def embed_and_write_references(reference_manifest_path: Path | None, args: argpa
                     "local_path": str(resolve_repo_path(reference_local_path(ref))),
                     "source_url": ref.get("source_url"),
                     "approval_status": ref.get("approval_status"),
+                    "approval_receipt_id": ref.get("approval_receipt_id"),
+                    "approval_receipt_status": ref.get("approval_receipt_status"),
+                    "approval_scope": ref.get("approval_scope"),
                 },
             }
         )
@@ -272,6 +340,11 @@ def embed_and_write_references(reference_manifest_path: Path | None, args: argpa
                 "qdrant_point_id": point_id,
                 "dimensions": len(vector),
                 "status": "WRITTEN",
+                "approval_gate_status": ref.get("approval_gate_status"),
+                "approval_receipt_id": ref.get("approval_receipt_id"),
+                "approval_receipt_status": ref.get("approval_receipt_status"),
+                "approval_scope": ref.get("approval_scope"),
+                "approval_promotion_allowed": bool(ref.get("approval_promotion_allowed")),
             }
         )
     if points:
@@ -282,7 +355,11 @@ def embed_and_write_references(reference_manifest_path: Path | None, args: argpa
         "qdrant_collection": args.reference_collection,
         "receipts": receipts,
         "failures": [],
-        "counts": {"approved_reference_count": len(references), "qdrant_written": len(points)},
+        "counts": {
+            "approved_reference_count": len(references),
+            "approval_receipt_count": len([ref for ref in references if ref.get("approval_receipt_id")]),
+            "qdrant_written": len(points),
+        },
     }
 
 
@@ -323,6 +400,9 @@ def build_similarity_receipts(
                     "entity_id": ref.get("entity_id"),
                     "character_name": ref.get("character_name"),
                     "actor_name": ref.get("actor_name"),
+                    "reference_approval_receipt_id": ref.get("approval_receipt_id"),
+                    "reference_approval_receipt_status": ref.get("approval_receipt_status"),
+                    "reference_approval_scope": ref.get("approval_scope"),
                     "cosine_similarity": round(score, 6) if score is not None else None,
                     "threshold": 0.72,
                     "status": "SIMILARITY_SCORED" if score is not None else "SIMILARITY_SCORE_MISSING_VECTOR",
@@ -455,6 +535,12 @@ def upsert_memory_records(
         "watch_evidence_cases": cases,
         "watch_content": watch_content_docs,
     }
+    similarity_comparisons = similarity_receipt.get("comparisons") or []
+    linked_approval_receipts = {
+        item.get("reference_approval_receipt_id")
+        for item in similarity_comparisons
+        if item.get("reference_approval_receipt_id")
+    }
     collection_receipts = []
     with httpx.Client(timeout=httpx.Timeout(60.0, connect=5.0)) as client:
         for collection, documents in payloads.items():
@@ -489,11 +575,15 @@ def upsert_memory_records(
         "status": "WRITTEN" if docs and cases else "FAILED_EMPTY_DOCUMENT_BATCH",
         "collections": collection_receipts,
         "similarity_status": similarity_receipt.get("status"),
+        "reference_approval_receipt_linked_count": len(linked_approval_receipts),
+        "similarity_comparison_count": len(similarity_comparisons),
         "counts": {
             "document_count": sum(len(documents) for documents in payloads.values()),
             "track_observation_count": len(docs),
             "evidence_case_count": len(cases),
             "watch_content_projection_count": len(watch_content_docs),
+            "reference_approval_receipt_linked_count": len(linked_approval_receipts),
+            "similarity_comparison_count": len(similarity_comparisons),
         },
     }
 
