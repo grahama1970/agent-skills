@@ -37,7 +37,7 @@ bounding boxes for text blocks, tables, figures, equations overlaid on the origi
 ### Single PDF (from run directory)
 
 ```bash
-cd /home/graham/workspace/experiments/extractor
+cd /path/to/extractor
 uv run python -m extractor.pipeline.tools.render_annotated_pdf from-run \
   --pdf /path/to/original.pdf \
   --run-dir /path/to/run_directory \
@@ -48,7 +48,7 @@ uv run python -m extractor.pipeline.tools.render_annotated_pdf from-run \
 ### Single PDF (by stem — auto-discovers run dir)
 
 ```bash
-cd /home/graham/.claude/skills/create-annotated-pdf
+cd /path/to/agent-skills/skills/create-annotated-pdf
 uv run --script annotate_from_stem.py <stem> [--out /tmp/annotated.pdf] [--png]
 ```
 
@@ -62,11 +62,11 @@ uv run --script annotate_from_stem.py --batch-blacklist [--out-dir /tmp/annotate
 
 ```bash
 # Terminal 1: API server
-cd /home/graham/workspace/experiments/extractor/prototypes/tabbed/api
+cd /path/to/extractor/prototypes/tabbed/api
 uv run --script review_server.py
 
 # Terminal 2: Frontend
-cd /home/graham/workspace/experiments/extractor/prototypes/tabbed/html
+cd /path/to/extractor/prototypes/tabbed/html
 VITE_REVIEW_API=http://127.0.0.1:8003 npm run dev
 
 # Open http://localhost:8080/review
@@ -92,8 +92,8 @@ VITE_REVIEW_API=http://127.0.0.1:8003 npm run dev
 ## Run Directory Discovery
 
 The skill searches these locations (NVMe first, then HDD):
-1. `/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs_staging/`
-2. `/mnt/storage12tb/skills/review-pdf/extracted_runs/`
+1. `$PI_HOME/skills/review-pdf/extracted_runs_staging/`
+2. `$ARTIFACT_STORAGE_ROOT/skills/review-pdf/extracted_runs/`
 
 Run directories are named `{stem}_{hash10}` and contain stage outputs as subdirectories.
 
