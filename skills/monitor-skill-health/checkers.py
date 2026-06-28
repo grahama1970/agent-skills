@@ -20,6 +20,7 @@ from loguru import logger
 
 from config import (
     ARTIFACT_STORAGE_ROOT,
+    ASSESS_REFERENCE_PATH_PARTS,
     ASSESS_PY,
     ASSESS_RUN,
     HEAVY_ARTIFACT_DIRS,
@@ -123,6 +124,26 @@ def _is_noise_location(skill_dir: Path, location: str) -> bool:
             return any(f"/{marker}/" in normalized for marker in NOISE_PATH_PARTS)
 
     return _is_noise_relative_path(Path(raw))
+
+
+def _is_reference_location(location: str) -> bool:
+    """Return True for documentation/review/example locations from assess."""
+    raw = (location or "").strip()
+    if not raw:
+        return False
+
+    path = Path(raw)
+    parts = path.parts
+    if path.is_absolute():
+        normalized = raw.replace("\\", "/")
+        return any(f"/{marker}/" in normalized for marker in ASSESS_REFERENCE_PATH_PARTS)
+
+    return any(part in ASSESS_REFERENCE_PATH_PARTS for part in parts)
+
+
+def _severity_for_assess_location(location: str) -> str:
+    """Keep executable/contract findings medium; make reference prose low."""
+    return "low" if _is_reference_location(location) else "medium"
 
 
 # ---------------------------------------------------------------------------
@@ -566,7 +587,7 @@ def normalize_assess_gaps(skill_dir: Path, entries: list[dict[str, Any]]) -> lis
             {
                 "rule_pack": "assess",
                 "rule": "aspirational",
-                "severity": "medium",
+                "severity": _severity_for_assess_location(location),
                 "file": location,
                 "message": entry.get("reason") or entry.get("feature", "aspirational item"),
             }
@@ -611,7 +632,7 @@ def audit_skill(skill_dir: Path) -> AuditResult:
             {
                 "rule_pack": "assess",
                 "rule": "brittle",
-                "severity": "medium",
+                "severity": _severity_for_assess_location(location),
                 "file": location,
                 "message": entry.get("reason") or entry.get("feature", "brittle item"),
             }

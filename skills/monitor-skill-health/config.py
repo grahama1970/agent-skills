@@ -124,6 +124,16 @@ NOISE_PATH_PARTS = {
     "fixtures",
 }
 
+ASSESS_REFERENCE_PATH_PARTS = {
+    "docs",
+    "examples",
+    "legacy-reports",
+    "review_output",
+    "review_our_changes",
+    "review_brutal_output",
+    "self_review_output",
+}
+
 HEAVY_ARTIFACT_DIRS = {
     "models",
     "outputs",
