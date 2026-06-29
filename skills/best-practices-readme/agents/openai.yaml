@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Readme"
+  short_description: "Write concise, welcoming, evidence-aware README files"
+  default_prompt: "Use best-practices-readme to draft or review a README for developer navigation, proof language, public/private runtime boundaries, and gallery card destination consistency."
