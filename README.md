@@ -6,7 +6,7 @@
 > [Explore Personas](personas/) |
 > [Check Maintenance Leads](reports/agent-maintainer/latest.md)
 
-**Agent Skills** is is my shared toolbox and playground for agent development. 
+**Agent Skills** is my shared toolbox and playground for agent development. 
 Whether you're working with browser automation, bounded workers, or persona contracts, 
 this is the place to house your reusable capabilities. 
 If you’ve ever found yourself rewriting a script you know you wrote months ago, 
