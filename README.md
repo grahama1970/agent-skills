@@ -111,10 +111,10 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab">
-        <img src="docs/assets/project-cards/pdf-lab.webp" width="100%" alt="PDF Lab" />
+      <a href="https://github.com/grahama1970/scillm">
+        <img src="docs/assets/project-cards/scillm.webp" width="100%" alt="Scillm" />
       </a>
-      <br/><strong>PDF Lab</strong><br/><em>Self-healing PDF extraction</em>
+      <br/><strong>Scillm</strong><br/><em>Local LLM routing layer</em>
     </td>
   </tr>
   <tr>
