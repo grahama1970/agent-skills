@@ -420,12 +420,15 @@ python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-b 
 With `--research-broker`, `battle-v1-operational` writes
 `context/research-broker-receipt.json`, runs Brave batch search plus Red/Blue
 GitHub and Dogpile retrieval lanes concurrently with
-`threadpool_as_completed`, and records completion order before warm-pond
+`threadpool_as_completed`, records completion order, and converts the live
+research lane receipts into a `research_signal_summary` before warm-pond
 candidate selection. Research lanes are agent-side retrieval only; cloned or
 discovered PoC code must not execute on the host. Current proof evidence under
-`/tmp/battle-v1-research-broker-002` recorded `status=PASS`,
-`passed_lane_count=5`, `blocked_lane_count=0`, and
-`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+`/tmp/battle-v1-research-dispatch-001` recorded `status=PASS`,
+`passed_lane_count=5`, `blocked_lane_count=0`, `research_weighted_candidate_count=6`,
+`research_weighted_combination_count=8`, Red and Blue worker
+`research_dispatch.research_boost=0.2`, Tau `scheduling.mode=asyncio.as_completed`,
+and `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent
 Dogpile processes shared one partial-results temp file. The fix is in

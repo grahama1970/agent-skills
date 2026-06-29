@@ -23,6 +23,7 @@ REQUIRED = [
     "scorekeeper/scorekeeper-receipt.json",
     "context/memory-recall-receipt.json",
     "context/research-broker-receipt.json",
+    "context/warm-pond-receipt.json",
     "context/memory-promotion-receipt.json",
     "context/context-receipt.json",
     "scoreboard.json",
@@ -100,6 +101,7 @@ def main() -> int:
     scorekeeper = load_json(root, "scorekeeper/scorekeeper-receipt.json")
     memory_recall = load_json(root, "context/memory-recall-receipt.json")
     research = load_json(root, "context/research-broker-receipt.json")
+    warm_pond = load_json(root, "context/warm-pond-receipt.json")
     memory_promotion = load_json(root, "context/memory-promotion-receipt.json")
     graph = load_json(root, "graph/battle-v1-force-graph.json")
     monitor = load_json(root, "monitor-index.json")
@@ -133,6 +135,11 @@ def main() -> int:
     red_workers = [load_json(root, rel) for rel in red["worker_receipts"]]
     blue_workers = [load_json(root, rel) for rel in blue["worker_receipts"]]
     assert any(intervals_overlap(r, b) for r in red_workers for b in blue_workers), "no worker timestamp overlap"
+    for receipt in [*red_workers, *blue_workers]:
+        dispatch = receipt.get("research_dispatch", {})
+        assert dispatch.get("first_research_lane"), receipt
+        assert float(dispatch.get("research_boost", 0.0)) > 0.0, receipt
+        assert dispatch.get("research_sources"), receipt
 
     assert memory_promotion["status"] == "PASS", memory_promotion
     assert memory_promotion["document_count"] >= 1, memory_promotion
@@ -148,6 +155,11 @@ def main() -> int:
     assert research["mode"] == "threadpool_as_completed", research
     assert research["passed_lane_count"] >= 1, research
     assert len(research["completion_order"]) >= 1, research
+    assert warm_pond["status"] == "PASS", warm_pond
+    assert "research-adjusted affinity" in warm_pond["selection_rule"], warm_pond
+    assert warm_pond["research_weighted_candidate_count"] >= 1, warm_pond
+    assert warm_pond["research_weighted_combination_count"] >= 1, warm_pond
+    assert warm_pond["research_signal_summary"]["passed_lane_count"] >= 1, warm_pond
 
     assert monitor["schema"] == "battle.monitor_index.v1", monitor
     assert monitor["graph"] == "graph/battle-v1-force-graph.json", monitor

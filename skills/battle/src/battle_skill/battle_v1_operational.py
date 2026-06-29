@@ -570,10 +570,12 @@ def build_operational_warm_pond(
             else str(item.get("family", "unknown"))
             for item in hidden.get("hidden_vulnerabilities", [])
         }
+    research_signals = build_research_signal_summary(research=research, families=families)
 
     exploit_candidates: list[dict[str, Any]] = []
     defense_candidates: list[dict[str, Any]] = []
     if "sql_injection" in families:
+        sqli_research = research_family_evidence(research_signals, "sql_injection")
         exploit_candidates.extend(
             [
                 {
@@ -582,6 +584,8 @@ def build_operational_warm_pond(
                     "symbol": "search_users",
                     "payload": "nomatch%' OR role='admin' --",
                     "source": "docker_scan_hidden_oracle_memory_seed",
+                    "research_weight": sqli_research["weight"],
+                    "research_sources": sqli_research["sources"],
                 },
                 {
                     "id": "exploit-sqli-like-wildcard",
@@ -589,6 +593,8 @@ def build_operational_warm_pond(
                     "symbol": "search_users",
                     "payload": "%' OR '1'='1' --",
                     "source": "warm_pond_mutation",
+                    "research_weight": sqli_research["weight"],
+                    "research_sources": sqli_research["sources"],
                 },
             ]
         )
@@ -598,9 +604,12 @@ def build_operational_warm_pond(
                 "family": "sql_injection",
                 "symbol": "search_users",
                 "strategy": "replace interpolated SQL with parameterized LIKE query",
+                "research_weight": sqli_research["weight"],
+                "research_sources": sqli_research["sources"],
             }
         )
     if "reflected_xss" in families:
+        xss_research = research_family_evidence(research_signals, "reflected_xss")
         exploit_candidates.extend(
             [
                 {
@@ -609,6 +618,8 @@ def build_operational_warm_pond(
                     "symbol": "render_search",
                     "payload": "<script>alert(1)</script>",
                     "source": "docker_scan_hidden_oracle_memory_seed",
+                    "research_weight": xss_research["weight"],
+                    "research_sources": xss_research["sources"],
                 },
                 {
                     "id": "exploit-xss-attribute-breakout",
@@ -616,6 +627,8 @@ def build_operational_warm_pond(
                     "symbol": "render_search",
                     "payload": '" autofocus onfocus=alert(1) x="',
                     "source": "warm_pond_mutation",
+                    "research_weight": xss_research["weight"],
+                    "research_sources": xss_research["sources"],
                 },
             ]
         )
@@ -625,23 +638,50 @@ def build_operational_warm_pond(
                 "family": "reflected_xss",
                 "symbol": "render_search",
                 "strategy": "HTML-escape query before rendering attributes or text",
+                "research_weight": xss_research["weight"],
+                "research_sources": xss_research["sources"],
             }
         )
 
     combinations: list[dict[str, Any]] = []
     for exploit in exploit_candidates:
         for defense in defense_candidates:
-            affinity = 1.0 if exploit["family"] == defense["family"] else 0.73
+            base_affinity = 1.0 if exploit["family"] == defense["family"] else 0.73
+            research_sources = sorted(
+                set(exploit.get("research_sources", []))
+                | set(defense.get("research_sources", []))
+            )
+            research_boost = round(
+                min(
+                    0.2,
+                    (
+                        float(exploit.get("research_weight", 0.0))
+                        + float(defense.get("research_weight", 0.0))
+                    )
+                    / 2.0,
+                ),
+                3,
+            )
+            affinity = round(base_affinity + research_boost, 3)
             combinations.append(
                 {
                     "id": f"{exploit['id']}__{defense['id']}",
                     "exploit": exploit["id"],
                     "defense": defense["id"],
                     "families": sorted({exploit["family"], defense["family"]}),
+                    "base_affinity": base_affinity,
+                    "research_boost": research_boost,
+                    "research_sources": research_sources,
+                    "first_research_lane": research_signals.get("first_passed_lane"),
                     "affinity": affinity,
                     "reason": "same-family direct countermeasure"
-                    if affinity == 1.0
+                    if base_affinity == 1.0
                     else "cross-family exploit/defense chain",
+                    "dispatch_reason": (
+                        "research-weighted same-family countermeasure"
+                        if base_affinity == 1.0
+                        else "research-weighted cross-family chain"
+                    ),
                 }
             )
 
@@ -657,6 +697,15 @@ def build_operational_warm_pond(
         "research_broker_status": research.get("status"),
         "research_passed_lane_count": research.get("passed_lane_count", 0),
         "research_completion_order": research.get("completion_order", []),
+        "research_signal_summary": research_signals,
+        "research_weighted_candidate_count": sum(
+            1
+            for item in [*exploit_candidates, *defense_candidates]
+            if float(item.get("research_weight", 0.0)) > 0
+        ),
+        "research_weighted_combination_count": sum(
+            1 for item in combinations if float(item.get("research_boost", 0.0)) > 0
+        ),
         "hidden_cwes": [
             item.get("cwe") for item in hidden.get("hidden_vulnerabilities", [])
         ],
@@ -667,7 +716,10 @@ def build_operational_warm_pond(
         "exploit_candidates": exploit_candidates,
         "defense_candidates": defense_candidates,
         "combinations": combinations,
-        "selection_rule": "highest affinity, deterministic id tiebreaker, Docker replay before memory promotion",
+        "selection_rule": (
+            "highest research-adjusted affinity, deterministic id tiebreaker, "
+            "Docker replay before memory promotion"
+        ),
         "created_at": utc_now(),
     }
 
@@ -860,6 +912,92 @@ def build_research_queries(
         "blue_github": f"{app_context} parameterized sqlite html escape patch examples",
         "red_dogpile": f"{red_persona} red team fast exploit research for {app_context}",
         "blue_dogpile": f"{blue_persona} blue team fast mitigation research for {app_context}",
+    }
+
+
+def build_research_signal_summary(
+    *,
+    research: dict[str, Any],
+    families: set[str],
+) -> dict[str, Any]:
+    """Extract deterministic family weights from live research lane receipts."""
+
+    completion_order = [
+        item
+        for item in research.get("completion_order", [])
+        if isinstance(item, dict)
+    ]
+    first_passed_lane = next(
+        (
+            str(item.get("lane"))
+            for item in completion_order
+            if item.get("status") == "PASS" and item.get("lane")
+        ),
+        None,
+    )
+    lanes = {
+        str(key): value
+        for key, value in research.get("lanes", {}).items()
+        if isinstance(value, dict)
+    }
+    query_context = {
+        str(key): str(value)
+        for key, value in research.get("query_context", {}).items()
+    }
+    family_keywords = {
+        "sql_injection": ["sql", "sqlite", "injection", "cwe-89", "parameterized"],
+        "reflected_xss": ["xss", "html", "escape", "reflection", "cwe-79"],
+    }
+    family_weights: dict[str, float] = {}
+    family_sources: dict[str, list[str]] = {}
+    for family in sorted(families):
+        keywords = family_keywords.get(family, [family.replace("_", " ")])
+        sources: list[str] = []
+        raw_score = 0
+        for lane, receipt in lanes.items():
+            if receipt.get("status") != "PASS":
+                continue
+            lane_text = " ".join(
+                [
+                    lane,
+                    str(receipt.get("query", "")),
+                    " ".join(query_context.values()),
+                    json.dumps(receipt.get("top_results", []), sort_keys=True),
+                ]
+            ).lower()
+            hits = sum(1 for keyword in keywords if keyword.lower() in lane_text)
+            if hits:
+                raw_score += hits
+                sources.append(lane)
+        family_weights[family] = round(min(0.2, raw_score * 0.025), 3)
+        family_sources[family] = sorted(set(sources))
+    return {
+        "status": "PASS" if research.get("status") == "PASS" else "BLOCKED",
+        "first_passed_lane": first_passed_lane,
+        "family_weights": family_weights,
+        "family_sources": family_sources,
+        "lane_count": research.get("lane_count", 0),
+        "passed_lane_count": research.get("passed_lane_count", 0),
+        "completion_order": completion_order,
+    }
+
+
+def research_family_evidence(
+    research_signals: dict[str, Any],
+    family: str,
+) -> dict[str, Any]:
+    weights = research_signals.get("family_weights", {})
+    sources = research_signals.get("family_sources", {})
+    if not isinstance(weights, dict):
+        weights = {}
+    if not isinstance(sources, dict):
+        sources = {}
+    family_sources = sources.get(family, [])
+    if not isinstance(family_sources, list):
+        family_sources = []
+    return {
+        "weight": float(weights.get(family, 0.0)),
+        "sources": [str(item) for item in family_sources],
     }
 
 
@@ -1314,6 +1452,12 @@ def red_worker_v1(
         "status": "PASS" if ok else "FAIL",
         "budget": {"max_commands": 1, "timeout_seconds": 60},
         "combination_id": combination["id"],
+        "research_dispatch": {
+            "first_research_lane": combination.get("first_research_lane"),
+            "research_boost": combination.get("research_boost", 0.0),
+            "research_sources": combination.get("research_sources", []),
+            "dispatch_reason": combination.get("dispatch_reason"),
+        },
         "exploit": exploit,
         "outcome": {"exploit_confirmed": ok},
         "async_timing": {
@@ -1381,6 +1525,12 @@ def blue_worker_v1(
         "status": "PASS" if ok else "FAIL",
         "budget": {"max_commands": 1, "timeout_seconds": 60},
         "combination_id": combination["id"],
+        "research_dispatch": {
+            "first_research_lane": combination.get("first_research_lane"),
+            "research_boost": combination.get("research_boost", 0.0),
+            "research_sources": combination.get("research_sources", []),
+            "dispatch_reason": combination.get("dispatch_reason"),
+        },
         "defense": defense,
         "outcome": {"patch_applied_and_regression_passed": ok},
         "async_timing": {
@@ -1885,6 +2035,13 @@ def build_context_receipt(
             "exploit_candidate_count": warm_pond.get("exploit_candidate_count", 0),
             "defense_candidate_count": warm_pond.get("defense_candidate_count", 0),
             "combination_count": warm_pond.get("combination_count", 0),
+            "research_weighted_candidate_count": warm_pond.get(
+                "research_weighted_candidate_count", 0
+            ),
+            "research_weighted_combination_count": warm_pond.get(
+                "research_weighted_combination_count", 0
+            ),
+            "selection_rule": warm_pond.get("selection_rule"),
         },
         "warm_pond_execution_summary": {
             "status": scorekeeper["status"],

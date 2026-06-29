@@ -545,14 +545,23 @@ Current local evidence from this rung:
 /tmp/battle-v1-research-broker-002/context/research-broker-receipt.json status=PASS
 /tmp/battle-v1-research-broker-002/context/research-broker-receipt.json passed_lane_count=5
 /tmp/battle-v1-research-broker-002 acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-research-dispatch-001/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-research-dispatch-001/tau-live/manifest.json status=PASS scheduling.mode=asyncio.as_completed
+/tmp/battle-v1-research-dispatch-001/context/warm-pond-receipt.json research_weighted_candidate_count=6
+/tmp/battle-v1-research-dispatch-001/context/warm-pond-receipt.json research_weighted_combination_count=8
+/tmp/battle-v1-research-dispatch-001/red/workers/red-0-exploit-sqli-admin-or/worker-receipt.json research_dispatch.research_boost=0.2
+/tmp/battle-v1-research-dispatch-001/blue/workers/blue-0-defense-parameterized-like/worker-receipt.json research_dispatch.research_boost=0.2
+/tmp/battle-v1-research-dispatch-001 acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
 ```
 
 Research broker note: `battle-v1-operational` now writes
 `context/research-broker-receipt.json`. It runs bounded live agent-side research
 lanes through Brave batch search, GitHub search, and Dogpile Red/Blue presets
 with `threadpool_as_completed`; target code and any exploit/patch execution
-remain Docker-only. The proof run at `/tmp/battle-v1-research-broker-002`
-recorded all five research lanes as `PASS` after fixing
+remain Docker-only. The proof run at `/tmp/battle-v1-research-dispatch-001`
+recorded all five research lanes as `PASS`, then used the live research signal
+summary to weight candidate selection before Red/Blue workers were dispatched.
+The earlier broker proof at `/tmp/battle-v1-research-broker-002` closed
 `agent-skills#51`, where concurrent Dogpile processes shared one
 partial-results temp file.
 

@@ -74,7 +74,7 @@ Current live research-broker proof:
 
 ```bash
 ./run.sh battle-v1-operational battle-003 \
-  --out /tmp/battle-v1-research-broker-002 \
+  --out /tmp/battle-v1-research-dispatch-001 \
   --red-workers 1 \
   --blue-workers 1 \
   --max-attempts 1 \
@@ -83,7 +83,7 @@ Current live research-broker proof:
   --research-broker
 
 python3 sanity/battle_v1_operational_acceptance.py \
-  /tmp/battle-v1-research-broker-002 \
+  /tmp/battle-v1-research-dispatch-001 \
   --allow-first-recall-empty \
   --min-red-workers 1 \
   --min-blue-workers 1
@@ -92,10 +92,17 @@ python3 sanity/battle_v1_operational_acceptance.py \
 Observed receipt fields:
 
 ```text
-/tmp/battle-v1-research-broker-002/run-receipt.json status=PASS verdict=BLUE_SUCCESS
-/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json status=PASS
-/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json mode=threadpool_as_completed
-/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json passed_lane_count=5
+/tmp/battle-v1-research-dispatch-001/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-research-dispatch-001/tau-live/manifest.json status=PASS
+/tmp/battle-v1-research-dispatch-001/tau-live/manifest.json scheduling.mode=asyncio.as_completed
+/tmp/battle-v1-research-dispatch-001/context/research-broker-receipt.json status=PASS
+/tmp/battle-v1-research-dispatch-001/context/research-broker-receipt.json mode=threadpool_as_completed
+/tmp/battle-v1-research-dispatch-001/context/research-broker-receipt.json passed_lane_count=5
+/tmp/battle-v1-research-dispatch-001/context/warm-pond-receipt.json selection_rule="highest research-adjusted affinity, deterministic id tiebreaker, Docker replay before memory promotion"
+/tmp/battle-v1-research-dispatch-001/context/warm-pond-receipt.json research_weighted_candidate_count=6
+/tmp/battle-v1-research-dispatch-001/context/warm-pond-receipt.json research_weighted_combination_count=8
+/tmp/battle-v1-research-dispatch-001/red/workers/red-0-exploit-sqli-admin-or/worker-receipt.json research_dispatch.research_boost=0.2
+/tmp/battle-v1-research-dispatch-001/blue/workers/blue-0-defense-parameterized-like/worker-receipt.json research_dispatch.research_boost=0.2
 acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
 ```
 

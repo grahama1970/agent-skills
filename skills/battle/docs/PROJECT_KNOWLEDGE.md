@@ -235,6 +235,15 @@
   `status=PASS`, `mode=threadpool_as_completed`, `lane_count=5`,
   `passed_lane_count=5`, and `blocked_lane_count=0`; the generated artifact set
   passed `sanity/battle_v1_operational_acceptance.py`.
+- Current research-dispatch local evidence:
+  `/tmp/battle-v1-research-dispatch-001/run-receipt.json` has `status=PASS`,
+  `verdict=BLUE_SUCCESS`, and `execution.tau_live_status=PASS`;
+  `tau-live/manifest.json` has `scheduling.mode=asyncio.as_completed`;
+  `context/warm-pond-receipt.json` has `selection_rule="highest research-adjusted affinity, deterministic id tiebreaker, Docker replay before memory promotion"`,
+  `research_weighted_candidate_count=6`, and
+  `research_weighted_combination_count=8`; Red and Blue worker receipts both
+  have `research_dispatch.research_boost=0.2`; the artifact set passed
+  `sanity/battle_v1_operational_acceptance.py --allow-first-recall-empty --min-red-workers 1 --min-blue-workers 1`.
 - The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
   searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
   one lane to fail with `FileNotFoundError`. The fix uses per-session
