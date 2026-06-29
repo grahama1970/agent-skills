@@ -12,7 +12,7 @@ this is the place to house your reusable capabilities.
 If you’ve ever found yourself rewriting a script you know you wrote months ago, 
 this repo is here to help you stop the cycle. I keep things contract-first: every 
 durable skill comes with a `SKILL.md`, a stable entrypoint, and a proof surface. 
-Browse freely, borrow what you need, and help us grow this collection before 
+Browse freely, borrow what you need, and help me grow this collection before 
 building something new from scratch.
 
 > **Public repo, private runtime.** The code, prompts, contracts, and docs are
