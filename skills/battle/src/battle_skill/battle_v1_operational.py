@@ -308,6 +308,47 @@ def run_battle_v1_operational(
         )
 
     selected = select_warm_pond_combinations(warm_pond, max_attempts=max_attempts)
+    async_execution = run_red_blue_async_workers(
+        battle_id=battle_id,
+        run_id=run_id,
+        image=image,
+        target=target,
+        patches=patches,
+        out_dir=out_dir,
+        ledger_path=ledger_path,
+        scenario=scenario,
+        warm_pond=warm_pond,
+        selected=selected,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        red_workers=red_workers,
+        blue_workers=blue_workers,
+        tau_live_receipt=None,
+    )
+    if async_execution["status"] != "PASS":
+        return write_blocked_v1(
+            out_dir=out_dir,
+            battle_id=battle_id,
+            run_id=run_id,
+            reason="async_red_blue_workers_failed",
+            extra={"async_execution": async_execution},
+        )
+
+    tau_context_bundle_path = write_tau_battle_context_bundle(
+        out_dir=out_dir,
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        memory_recall=memory_recall,
+        code_context=code_context,
+        scan=scan,
+        research=research,
+        warm_pond=warm_pond,
+        selected=selected,
+        async_execution=async_execution,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+    )
     tau_live_receipt = None
     if tau_live:
         tau_live_receipt = run_tau_live_handoff_bridge(
@@ -318,6 +359,8 @@ def run_battle_v1_operational(
             red_persona=red_persona,
             blue_persona=blue_persona,
             model=tau_live_model,
+            battle_context_json=tau_context_bundle_path,
+            handoff_granularity="worker",
         )
         record_event(
             ledger_path,
@@ -341,31 +384,6 @@ def run_battle_v1_operational(
                     "tau_live_manifest": "tau-live/manifest.json",
                 },
             )
-    async_execution = run_red_blue_async_workers(
-        battle_id=battle_id,
-        run_id=run_id,
-        image=image,
-        target=target,
-        patches=patches,
-        out_dir=out_dir,
-        ledger_path=ledger_path,
-        scenario=scenario,
-        warm_pond=warm_pond,
-        selected=selected,
-        red_persona=red_persona,
-        blue_persona=blue_persona,
-        red_workers=red_workers,
-        blue_workers=blue_workers,
-        tau_live_receipt=tau_live_receipt,
-    )
-    if async_execution["status"] != "PASS":
-        return write_blocked_v1(
-            out_dir=out_dir,
-            battle_id=battle_id,
-            run_id=run_id,
-            reason="async_red_blue_workers_failed",
-            extra={"async_execution": async_execution},
-        )
 
     scorekeeper = run_scorekeeper_replay(
         battle_id=battle_id,
@@ -486,6 +504,7 @@ def run_battle_v1_operational(
         "receipts": scoreboard["receipts"],
         "memory_recall_receipt": "context/memory-recall-receipt.json",
         "memory_promotion_receipt": "context/memory-promotion-receipt.json",
+        "tau_context_bundle": "context/tau-battle-context-bundle.json",
         "tau_live_manifest": "tau-live/manifest.json" if tau_live_receipt else None,
         "monitor_graph": "graph/battle-v1-force-graph.json",
         "artifacts": artifact_list(out_dir),
@@ -1158,6 +1177,122 @@ def select_warm_pond_combinations(
     )[:max_attempts]
 
 
+def write_tau_battle_context_bundle(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario: dict[str, Any],
+    memory_recall: dict[str, Any],
+    code_context: dict[str, Any],
+    scan: dict[str, Any],
+    research: dict[str, Any],
+    warm_pond: dict[str, Any],
+    selected: list[dict[str, Any]],
+    async_execution: dict[str, Any],
+    red_persona: str,
+    blue_persona: str,
+) -> Path:
+    """Write the bounded Battle context Tau should pass into Red/Blue handoffs."""
+
+    bundle_path = out_dir / "context" / "tau-battle-context-bundle.json"
+    red_team = async_execution.get("red_team_receipt", {})
+    blue_team = async_execution.get("blue_team_receipt", {})
+    artifacts = {
+        "battle_plan": str((out_dir / "battle-plan.json").resolve()),
+        "memory_recall": str((out_dir / "context" / "memory-recall-receipt.json").resolve()),
+        "code_context": str((out_dir / "context" / "code-context-receipt.json").resolve()),
+        "fast_scan": str((out_dir / "context" / "fast-scan-receipt.json").resolve()),
+        "research_broker": str((out_dir / "context" / "research-broker-receipt.json").resolve()),
+        "warm_pond": str((out_dir / "context" / "warm-pond-receipt.json").resolve()),
+        "red_team": str((out_dir / "red" / "team-receipt.json").resolve()),
+        "blue_team": str((out_dir / "blue" / "team-receipt.json").resolve()),
+    }
+    selected_attempts = [
+        {
+            "combination_id": item.get("id"),
+            "exploit": item.get("exploit"),
+            "defense": item.get("defense"),
+            "research_boost": item.get("research_boost", 0.0),
+            "first_research_lane": item.get("first_research_lane"),
+            "research_sources": item.get("research_sources", []),
+        }
+        for item in selected
+    ]
+    payload = {
+        "schema": "tau.battle_context_bundle.v1",
+        "bundle_path": str(bundle_path.resolve()),
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario.get("scenario_id"),
+        "artifacts": artifacts,
+        "summary": {
+            "run_receipt": {
+                "status": "PENDING",
+                "reason": "Battle run receipt is written after Tau and scorekeeper complete.",
+                "battle_id": battle_id,
+                "run_id": run_id,
+            },
+            "tau_live_manifest": {
+                "status": "PENDING",
+                "reason": "This bundle is the Tau handoff input.",
+            },
+            "memory_recall": {
+                "status": memory_recall.get("status"),
+                "found": memory_recall.get("found"),
+            },
+            "code_context": {
+                "status": code_context.get("status"),
+                "symbol_count": code_context.get("symbol_count", 0),
+            },
+            "fast_scan": {
+                "status": scan.get("status"),
+                "finding_count": scan.get("finding_count", 0),
+                "families": scan.get("families", []),
+            },
+            "research_broker": {
+                "status": research.get("status"),
+                "passed_lane_count": research.get("passed_lane_count", 0),
+                "lane_count": research.get("lane_count", 0),
+                "completion_order": research.get("completion_order", []),
+            },
+            "warm_pond": {
+                "status": warm_pond.get("status"),
+                "selection_rule": warm_pond.get("selection_rule"),
+                "selected_attempt_count": len(selected_attempts),
+                "selected_attempts": selected_attempts,
+                "research_weighted_candidate_count": warm_pond.get(
+                    "research_weighted_candidate_count", 0
+                ),
+                "research_weighted_combination_count": warm_pond.get(
+                    "research_weighted_combination_count", 0
+                ),
+            },
+            "teams": {
+                "red": {
+                    "persona": red_persona,
+                    "worker_count": red_team.get("worker_count", 0),
+                    "worker_receipts": red_team.get("worker_receipts", []),
+                },
+                "blue": {
+                    "persona": blue_persona,
+                    "worker_count": blue_team.get("worker_count", 0),
+                    "worker_receipts": blue_team.get("worker_receipts", []),
+                },
+            },
+        },
+        "claim_scope": "battle_context_for_tau_handoff_only",
+        "non_claims": [
+            "does_not_prove_tau_loop_repair_cycle",
+            "does_not_prove_unbounded_warm_pond_swarm",
+            "does_not_execute_research_code_on_host",
+        ],
+        "created_at": utc_now(),
+    }
+    write_json(bundle_path, payload)
+    return bundle_path
+
+
 def run_tau_live_handoff_bridge(
     *,
     out_dir: Path,
@@ -1167,6 +1302,8 @@ def run_tau_live_handoff_bridge(
     red_persona: str,
     blue_persona: str,
     model: str,
+    battle_context_json: Path | None = None,
+    handoff_granularity: str = "team",
 ) -> dict[str, Any]:
     """Call Tau's live Battle handoff bridge and return its manifest."""
 
@@ -1193,7 +1330,11 @@ def run_tau_live_handoff_bridge(
         blue_persona,
         "--model",
         model,
+        "--handoff-granularity",
+        handoff_granularity,
     ]
+    if battle_context_json is not None:
+        command.extend(["--battle-context-json", str(battle_context_json)])
     env = os.environ.copy()
     env.pop("UV_PROJECT_ENVIRONMENT", None)
     env.pop("VIRTUAL_ENV", None)

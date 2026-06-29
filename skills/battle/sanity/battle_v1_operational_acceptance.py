@@ -24,6 +24,7 @@ REQUIRED = [
     "context/memory-recall-receipt.json",
     "context/research-broker-receipt.json",
     "context/warm-pond-receipt.json",
+    "context/tau-battle-context-bundle.json",
     "context/memory-promotion-receipt.json",
     "context/context-receipt.json",
     "scoreboard.json",
@@ -102,6 +103,7 @@ def main() -> int:
     memory_recall = load_json(root, "context/memory-recall-receipt.json")
     research = load_json(root, "context/research-broker-receipt.json")
     warm_pond = load_json(root, "context/warm-pond-receipt.json")
+    tau_context = load_json(root, "context/tau-battle-context-bundle.json")
     memory_promotion = load_json(root, "context/memory-promotion-receipt.json")
     graph = load_json(root, "graph/battle-v1-force-graph.json")
     monitor = load_json(root, "monitor-index.json")
@@ -160,6 +162,36 @@ def main() -> int:
     assert warm_pond["research_weighted_candidate_count"] >= 1, warm_pond
     assert warm_pond["research_weighted_combination_count"] >= 1, warm_pond
     assert warm_pond["research_signal_summary"]["passed_lane_count"] >= 1, warm_pond
+    assert tau_context["schema"] == "tau.battle_context_bundle.v1", tau_context
+    assert tau_context["summary"]["research_broker"]["passed_lane_count"] >= 1, tau_context
+    assert tau_context["summary"]["warm_pond"]["research_weighted_candidate_count"] >= 1, tau_context
+    assert tau_context["summary"]["teams"]["red"]["worker_count"] >= args.min_red_workers, tau_context
+    assert tau_context["summary"]["teams"]["blue"]["worker_count"] >= args.min_blue_workers, tau_context
+    assert len(tau_context["summary"]["teams"]["red"]["worker_receipts"]) >= args.min_red_workers, tau_context
+    assert len(tau_context["summary"]["teams"]["blue"]["worker_receipts"]) >= args.min_blue_workers, tau_context
+
+    if run["execution"].get("tau_live_status") == "PASS":
+        tau_manifest = load_json(root, "tau-live/manifest.json")
+        assert tau_manifest["status"] == "PASS", tau_manifest
+        assert tau_manifest["scheduling"]["granularity"] == "worker", tau_manifest
+        expected_worker_count = red["worker_count"] + blue["worker_count"]
+        assert tau_manifest["scheduling"]["worker_count"] == expected_worker_count, tau_manifest
+        assert tau_manifest["scheduling"]["handoff_count"] == expected_worker_count, tau_manifest
+        assert tau_manifest["battle_context"]["research_broker_passed_lane_count"] >= 1, tau_manifest
+        for worker_receipt in [*red_workers, *blue_workers]:
+            team = worker_receipt["team"]
+            worker_id = worker_receipt["worker_id"]
+            handoff = load_json(root, f"tau-live/{team}/workers/{worker_id}/handoff.json")
+            context = handoff["context"]
+            battle_context = context["battle_context"]
+            worker_context = context["worker_context"]
+            assert str((root / "context" / "tau-battle-context-bundle.json").resolve()) in context["artifacts"], handoff
+            assert battle_context["research_broker_passed_lane_count"] >= 1, handoff
+            assert battle_context["warm_pond_research_weighted_candidate_count"] >= 1, handoff
+            assert battle_context["team"] == team, handoff
+            assert worker_context["worker_id"] == worker_id, handoff
+            assert worker_context["team"] == team, handoff
+            assert worker_context["source_worker_receipt"] == worker_receipt["receipt_path"], handoff
 
     assert monitor["schema"] == "battle.monitor_index.v1", monitor
     assert monitor["graph"] == "graph/battle-v1-force-graph.json", monitor
