@@ -103,6 +103,7 @@ Observed receipt fields:
 /tmp/battle-v1-multiround-tau-002/round-feedback/round-002-memory-recall-receipt.json status=PASS found=true exact_token_match=true
 /tmp/battle-v1-multiround-tau-002/rounds/round-002/context/warm-pond-receipt.json previous_round_memory_weighted_combination_count=6
 /tmp/battle-v1-multiround-tau-002/run-receipt.json negative_evidence_count=8
+/tmp/battle-v1-multiround-tau-002/round-feedback/negative-evidence-receipt.json status=PASS negative_evidence_count=8
 /tmp/battle-v1-multiround-tau-002/rounds/round-001/tau-live/manifest.json status=PASS scheduling.handoff_count=4
 /tmp/battle-v1-multiround-tau-002/rounds/round-002/tau-live/manifest.json status=PASS scheduling.handoff_count=4
 acceptance -> BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS

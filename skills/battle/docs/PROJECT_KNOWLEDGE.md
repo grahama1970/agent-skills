@@ -314,7 +314,9 @@
   has `status=PASS`, `found=true`, `exact_token_match=true`, and
   `matching_item_count=1`. Round 2
   `context/warm-pond-receipt.json` has
-  `previous_round_memory_weighted_combination_count=6`. Both round Tau live
+  `previous_round_memory_weighted_combination_count=6`.
+  `/tmp/battle-v1-multiround-tau-002/round-feedback/negative-evidence-receipt.json`
+  has `status=PASS` and `negative_evidence_count=8`. Both round Tau live
   manifests have `status=PASS`, `scheduling.granularity=worker`, and
   `handoff_count=4`. Acceptance command:
   `python3 sanity/battle_v1_multiround_acceptance.py /tmp/battle-v1-multiround-tau-002 --rounds 2 --min-red-workers 2 --min-blue-workers 2`
@@ -533,6 +535,7 @@ python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-generated-tau-
 python3 sanity/battle_v1_multiround_acceptance.py /tmp/battle-v1-multiround-tau-002 --rounds 2 --min-red-workers 2 --min-blue-workers 2 -> BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS
 /tmp/battle-v1-multiround-tau-002/round-feedback/round-002-memory-recall-receipt.json -> status=PASS, found=true, exact_token_match=true, endpoint=/recall
 /tmp/battle-v1-multiround-tau-002/rounds/round-002/context/warm-pond-receipt.json -> previous_round_memory_weighted_combination_count=6
+/tmp/battle-v1-multiround-tau-002/round-feedback/negative-evidence-receipt.json -> status=PASS, negative_evidence_count=8
 /tmp/battle-v1-multiround-tau-002/rounds/round-001/tau-live/manifest.json -> status=PASS, scheduling.handoff_count=4
 /tmp/battle-v1-multiround-tau-002/rounds/round-002/tau-live/manifest.json -> status=PASS, scheduling.handoff_count=4
 ```

@@ -67,7 +67,8 @@ feedback token through `/recall`, weights matching warm-pond combinations, and
 then runs Red/Blue workers plus Scorekeeper replay again. Local evidence from
 `/tmp/battle-v1-multiround-tau-002` recorded `status=PASS`,
 `verdict=BLUE_SUCCESS`, exact-token memory recall, 6 memory-influenced round-2
-combinations, 8 negative-evidence IDs, 4 Tau worker handoffs per round, and
+combinations, `round-feedback/negative-evidence-receipt.json` with 8 records,
+4 Tau worker handoffs per round, and
 `BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS`.
 
 ## Operating Contract

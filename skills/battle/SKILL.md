@@ -495,9 +495,10 @@ Local evidence under `/tmp/battle-v1-multiround-tau-002` recorded
 root `verdict=BLUE_SUCCESS`, exact-token `$memory` `/recall` in
 `round-feedback/round-002-memory-recall-receipt.json`, round-2
 `previous_round_memory_weighted_combination_count=6`, `negative_evidence_count=8`,
-and two Tau live manifests with `status=PASS`, `scheduling.granularity=worker`,
-and `handoff_count=4` per round. This proves bounded cross-round feedback only;
-it does not prove unbounded swarms, Tau loop repair, memory finetuning, QEMU/AFL
+`round-feedback/negative-evidence-receipt.json` with 8 records, and two Tau live
+manifests with `status=PASS`, `scheduling.granularity=worker`, and
+`handoff_count=4` per round. This proves bounded cross-round feedback only; it
+does not prove unbounded swarms, Tau loop repair, memory finetuning, QEMU/AFL
 campaigns, or live websocket monitoring.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent

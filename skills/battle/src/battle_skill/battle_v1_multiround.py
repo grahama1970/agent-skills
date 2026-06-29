@@ -169,6 +169,12 @@ def run_battle_v1_multiround(
         previous_feedback = feedback
 
     final_round = round_summaries[-1]
+    negative_evidence = build_negative_evidence_receipt(
+        battle_id=battle_id,
+        run_id=run_id,
+        round_summaries=round_summaries,
+    )
+    write_json(out_dir / "round-feedback" / "negative-evidence-receipt.json", negative_evidence)
     second_or_later = [item for item in round_summaries if item["round_number"] > 1]
     memory_influenced = any(
         item.get("previous_round_memory_weighted_combination_count", 0) > 0
@@ -181,9 +187,7 @@ def run_battle_v1_multiround(
         item.get("status") == "PASS" and item.get("found") and item.get("endpoint") == "/recall"
         for item in true_recall_receipts
     )
-    negative_evidence_count = sum(
-        len(item.get("negative_combination_ids", [])) for item in round_summaries
-    )
+    negative_evidence_count = int(negative_evidence["negative_evidence_count"])
     status = "PASS" if memory_influenced and true_recall_ok and negative_evidence_count else "BLOCKED"
     run_receipt = {
         "schema": "battle.multiround_run_receipt.v1",
@@ -204,6 +208,7 @@ def run_battle_v1_multiround(
         "round_count": rounds,
         "rounds": round_summaries,
         "feedback_receipts": [receipt_path_for_feedback(item) for item in feedback_receipts],
+        "negative_evidence_receipt": "round-feedback/negative-evidence-receipt.json",
         "true_recall_ok": true_recall_ok,
         "memory_influenced_round_count": len(
             [
@@ -365,6 +370,41 @@ def build_round_feedback(
             "warm_pond": round_summary.get("warm_pond"),
             "scorekeeper": round_summary.get("scorekeeper"),
         },
+        "created_at": utc_now(),
+    }
+
+
+def build_negative_evidence_receipt(
+    *,
+    battle_id: str,
+    run_id: str,
+    round_summaries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    records: list[dict[str, Any]] = []
+    for summary in round_summaries:
+        round_number = int(summary.get("round_number", 0) or 0)
+        for combination_id in summary.get("negative_combination_ids", []):
+            records.append(
+                {
+                    "round_number": round_number,
+                    "combination_id": str(combination_id),
+                    "negative_evidence_type": summary.get("negative_evidence_type"),
+                    "reason": "not_promoted_low_affinity_or_deprioritized_by_feedback",
+                    "source_round_summary": f"rounds/round-{round_number:03d}-summary.json",
+                }
+            )
+    return {
+        "schema": "battle.negative_evidence_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "status": "PASS" if records else "BLOCKED",
+        "negative_evidence_count": len(records),
+        "records": records,
+        "claim_scope": (
+            "Records unselected or deprioritized warm-pond combinations for this bounded "
+            "proof. These are negative strategy signals, not necessarily failed exploit "
+            "executions unless a scorekeeper attempt receipt says FAIL."
+        ),
         "created_at": utc_now(),
     }
 

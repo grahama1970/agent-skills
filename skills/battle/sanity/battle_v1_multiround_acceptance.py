@@ -170,6 +170,7 @@ def main() -> int:
         )
 
     recall = load_json(root, "round-feedback/round-002-memory-recall-receipt.json")
+    negative = load_json(root, "round-feedback/negative-evidence-receipt.json")
     assert recall["schema"] == "battle.round_feedback_recall_receipt.v1", recall
     assert recall["status"] == "PASS", recall
     assert recall["endpoint"] == "/recall", recall
@@ -181,6 +182,10 @@ def main() -> int:
     assert "fallback" not in recall, recall
     assert recall["feedback"]["promoted_combination_ids"], recall
     assert recall["feedback"]["negative_combination_ids"], recall
+    assert negative["schema"] == "battle.negative_evidence_receipt.v1", negative
+    assert negative["status"] == "PASS", negative
+    assert negative["negative_evidence_count"] == run["negative_evidence_count"], negative
+    assert negative["records"], negative
 
     round_two_warm_pond = round_artifacts[1]["warm_pond"]
     assert round_two_warm_pond["previous_round_feedback"]["provided"] is True, round_two_warm_pond
