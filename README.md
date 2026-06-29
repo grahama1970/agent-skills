@@ -104,7 +104,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
         <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
       </a>
-      <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
+      <br/><strong>Extractor</strong><br/><em>Docs into hierarchical evidence trees</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
