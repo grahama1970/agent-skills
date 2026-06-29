@@ -7,7 +7,7 @@
 > [Check Maintenance Leads](reports/agent-maintainer/latest.md)
 
 **Agent Skills** is my shared toolbox and playground for agent work: reusable
-capabilities, bounded workers, persona contracts, and lifecycle hooks. I have
+capabilities, bounded workers, persona contracts, and lifecycle hooks. I've
 spent hours re-solving problems I already solved once. This repo is here to
 stop that cycle by keeping useful agent patterns versioned, documented, and easy
 to find before I build something new from scratch.
@@ -366,6 +366,8 @@ Rerun the sweep after substantial changes. Use
 `reports/agent-maintainer/latest.md` before final maintenance decisions.
 
 <br>
+
+<sub><em>────────</em></sub>
 
 <p><sub><em>
 This public repository is for reusable agent patterns, contracts, prompts,
