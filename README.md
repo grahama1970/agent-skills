@@ -124,7 +124,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/scillm">
         <img src="docs/assets/project-cards/scillm.webp" width="100%" alt="Scillm" />
       </a>
-      <br/><strong>Scillm</strong><br/><em>Local LLM routing layer</em>
+      <br/><strong>Scillm</strong><br/><em>1-shot, exec, subagent, and DAG orch.</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
