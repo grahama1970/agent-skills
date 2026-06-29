@@ -90,7 +90,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
         <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
       </a>
-      <br/><strong>Battle</strong><br/><em>Red-Blue Team genetic fuzzing arena</em>
+      <br/><strong>Battle</strong><br/><em>Red-Blue Team genetic fuzzing</em>
     </td>
   </tr>
   <tr>
