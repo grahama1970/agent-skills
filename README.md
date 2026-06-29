@@ -76,38 +76,68 @@ Deploy to configured agent homes:
 
 I maintain (and sadly break) these kinds of projects and skills continuously. Here's my current focus:
 
-<div align="center">
-
-<a href="https://github.com/grahama1970/tau"><img src="docs/assets/project-cards/tau.webp" width="30%" alt="T'au" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf"><img src="docs/assets/project-cards/surf.webp" width="30%" alt="Surf" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile"><img src="docs/assets/project-cards/dogpile.webp" width="30%" alt="Dogpile" /></a>
-
-<br/>
-<strong>T'au</strong> <em>Memory-first subagent harness</em> &nbsp;&nbsp;&nbsp;
-<strong>Surf</strong> <em>ChatGPT browser control for agents</em> &nbsp;&nbsp;&nbsp;
-<strong>Dogpile</strong> <em>Search everything, cite it</em>
-<br/><br/>
-
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream"><img src="docs/assets/project-cards/persona-dream.webp" width="30%" alt="Persona Dream" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor"><img src="docs/assets/project-cards/extractor.webp" width="30%" alt="Extractor" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab"><img src="docs/assets/project-cards/pdf-lab.webp" width="30%" alt="PDF Lab" /></a>
-
-<br/>
-<strong>Persona Dream</strong> <em>Agentic memories to movies</em> &nbsp;&nbsp;&nbsp;
-<strong>Extractor</strong> <em>Docs into evidence trees</em> &nbsp;&nbsp;&nbsp;
-<strong>PDF Lab</strong> <em>Self-healing PDF extraction</em>
-<br/><br/>
-
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle"><img src="docs/assets/project-cards/battle.webp" width="30%" alt="Battle" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch"><img src="docs/assets/project-cards/watch.webp" width="30%" alt="Watch" /></a>
-<a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger"><img src="docs/assets/project-cards/debugger.webp" width="30%" alt="Debugger" /></a>
-
-<br/>
-<strong>Battle</strong> <em>Genetic fuzzing arena</em> &nbsp;&nbsp;&nbsp;
-<strong>Watch</strong> <em>Video that agents understand</em> &nbsp;&nbsp;&nbsp;
-<strong>Debugger</strong> <em>Live debugger variables for agents</em>
-
-</div>
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/tau">
+        <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
+      </a>
+      <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
+        <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
+      </a>
+      <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
+        <img src="docs/assets/project-cards/dogpile.webp" width="100%" alt="Dogpile" />
+      </a>
+      <br/><strong>Dogpile</strong><br/><em>Search everything, cite it</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
+        <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
+      </a>
+      <br/><strong>Persona Dream</strong><br/><em>Agentic memories to movies</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
+        <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
+      </a>
+      <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/pdf-lab">
+        <img src="docs/assets/project-cards/pdf-lab.webp" width="100%" alt="PDF Lab" />
+      </a>
+      <br/><strong>PDF Lab</strong><br/><em>Self-healing PDF extraction</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
+        <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
+      </a>
+      <br/><strong>Battle</strong><br/><em>Genetic fuzzing arena</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
+        <img src="docs/assets/project-cards/watch.webp" width="100%" alt="Watch" />
+      </a>
+      <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
+        <img src="docs/assets/project-cards/debugger.webp" width="100%" alt="Debugger" />
+      </a>
+      <br/><strong>Debugger</strong><br/><em>Live debugger variables for agents</em>
+    </td>
+  </tr>
+</table>
 
 ## What Lives Where
 
