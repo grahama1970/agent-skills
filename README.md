@@ -71,9 +71,9 @@ Deploy to configured agent homes:
 ./deploy.sh --check
 ```
 
-## What I'm Working On
+## Fun Stuff I'm Working On
 
-I maintain projects and skills continuously. Here's my current focus:
+I maintain (and sadly break) these kinds of projects and skills continuously. Here's my current focus:
 
 <table>
   <tr>
