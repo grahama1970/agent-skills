@@ -84,7 +84,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
-      <br/><strong>Surf</strong><br/><em>ChatGPT browser ctrl for agents</em>
+      <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
@@ -124,7 +124,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/scillm">
         <img src="docs/assets/project-cards/scillm.webp" width="100%" alt="Scillm" />
       </a>
-      <br/><strong>Scillm</strong><br/><em>1-shot, exec, subagent, and DAG orch.</em>
+      <br/><strong>Scillm</strong><br/><em>1-shot, exec, subagent, and DAG</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
