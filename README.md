@@ -79,16 +79,36 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/tau">
-        <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
+        <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
       </a>
-      <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
+      <br/><strong>Persona Dream</strong><br/><em>Agentic memories to movies</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
       <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
+        <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
+      </a>
+      <br/><strong>Battle</strong><br/><em>Genetic fuzzing arena</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/grahama1970/tau">
+        <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
+      </a>
+      <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
+    </td>
+    <td align="center">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
+        <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
+      </a>
+      <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
@@ -99,36 +119,16 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
-        <img src="docs/assets/project-cards/persona-dream.webp" width="100%" alt="Persona Dream" />
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
+        <img src="docs/assets/project-cards/watch.webp" width="100%" alt="Watch" />
       </a>
-      <br/><strong>Persona Dream</strong><br/><em>Agentic memories to movies</em>
-    </td>
-    <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
-        <img src="docs/assets/project-cards/extractor.webp" width="100%" alt="Extractor" />
-      </a>
-      <br/><strong>Extractor</strong><br/><em>Docs into evidence trees</em>
+      <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/scillm">
         <img src="docs/assets/project-cards/scillm.webp" width="100%" alt="Scillm" />
       </a>
       <br/><strong>Scillm</strong><br/><em>Local LLM routing layer</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
-        <img src="docs/assets/project-cards/battle.webp" width="100%" alt="Battle" />
-      </a>
-      <br/><strong>Battle</strong><br/><em>Genetic fuzzing arena</em>
-    </td>
-    <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
-        <img src="docs/assets/project-cards/watch.webp" width="100%" alt="Watch" />
-      </a>
-      <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
