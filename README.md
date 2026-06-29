@@ -84,7 +84,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
         <img src="docs/assets/project-cards/surf.webp" width="100%" alt="Surf" />
       </a>
-      <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
+      <br/><strong>Surf</strong><br/><em>ChatGPT browser ctrl for agents</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
