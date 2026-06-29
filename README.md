@@ -6,13 +6,14 @@
 > [Explore Personas](personas/) |
 > [Check Maintenance Leads](reports/agent-maintainer/latest.md)
 
-**Agent Skills** is a toolbox and playground for agent work: reusable
-capabilities, bounded workers, persona contracts, scheduler jobs, and lifecycle
-hooks. If you have ever written a browser automation script, then written
-another one three months later because you could not find the first, this repo
-is for you. We keep the reusable pieces **contract-first**: every durable skill
-has a `SKILL.md`, a stable entrypoint, and a proof surface. Browse freely,
-borrow patterns, and reuse what already exists before making a new utility.
+**Agent Skills** is is my shared toolbox and playground for agent development. 
+Whether you're working with browser automation, bounded workers, or persona contracts, 
+this is the place to house your reusable capabilities. 
+If you’ve ever found yourself rewriting a script you know you wrote months ago, 
+this repo is here to help you stop the cycle. I keep things contract-first: every 
+durable skill comes with a `SKILL.md`, a stable entrypoint, and a proof surface. 
+Browse freely, borrow what you need, and help us grow this collection before 
+building something new from scratch.
 
 > **Public repo, private runtime.** The code, prompts, contracts, and docs are
 > public, but some paths expect private infrastructure: memory services, browser
