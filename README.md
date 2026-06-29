@@ -7,10 +7,10 @@
 > [Check Maintenance Leads](reports/agent-maintainer/latest.md)
 
 **Agent Skills** is my shared toolbox and playground for agent work: reusable
-capabilities, bounded workers, persona contracts, and lifecycle hooks. We have
-all spent hours re-solving problems we already solved once. This repo is here to
+capabilities, bounded workers, persona contracts, and lifecycle hooks. I have
+spent hours re-solving problems I already solved once. This repo is here to
 stop that cycle by keeping useful agent patterns versioned, documented, and easy
-to find before we build something new from scratch.
+to find before I build something new from scratch.
 
 > **Public repo, private runtime.** The code, prompts, contracts, and docs are
 > public, but some paths expect private infrastructure: memory services, browser
@@ -365,12 +365,12 @@ no exercise of runtime behavior.
 Rerun the sweep after substantial changes. Use
 `reports/agent-maintainer/latest.md` before final maintenance decisions.
 
----
+<br>
 
-<sub>
+<p><sub><em>
 This public repository is for reusable agent patterns, contracts, prompts,
 hooks, and maintenance workflows. It is intentionally decoupled from controlled,
 proprietary, ITAR-restricted, or sensitive operational data. Private runtime
 context, credentials, regulated artifacts, and deployment-specific details stay
 outside this repo.
-</sub>
+</em></sub></p>
