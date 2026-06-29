@@ -1,7 +1,7 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-29 17:29 EDT by agent
-**Status:** Active development, generated Battle v1 fixture and bounded Tau live fanout proof passed
+**Last updated:** 2026-06-29 18:28 EDT by agent
+**Status:** Active development, bounded Battle v1 multi-round Tau/memory feedback proof passed
 
 ## Current Understanding
 
@@ -300,6 +300,30 @@
   `scheduling.worker_count=64`. This proves the highest currently safe bounded
   Tau live fanout for Battle's worker-granularity bridge; it does not prove
   unbounded 128-worker Tau live completion.
+- Battle now has a bounded multi-round feedback proof entry point:
+  `./run.sh battle-v1-multiround battle-005 --out /tmp/battle-v1-multiround-tau-002 --rounds 2 --red-workers 2 --blue-workers 2 --max-attempts 2 --require-memory --research-broker --tau-live`.
+  This composes two Docker-only Battle v1 operational rounds. Round 1 stores a
+  feedback document into `$memory` collection `lessons`; round 2 must retrieve
+  the exact feedback token through `/recall` before the recalled promoted and
+  negative combination IDs can influence warm-pond affinity. Current evidence:
+  `/tmp/battle-v1-multiround-tau-002/run-receipt.json` has `status=PASS`,
+  `verdict=BLUE_SUCCESS`, `execution.live=docker_multiround_memory_feedback`,
+  `execution.tau_live=true`, `true_recall_ok=true`,
+  `memory_influenced_round_count=1`, and `negative_evidence_count=8`.
+  `/tmp/battle-v1-multiround-tau-002/round-feedback/round-002-memory-recall-receipt.json`
+  has `status=PASS`, `found=true`, `exact_token_match=true`, and
+  `matching_item_count=1`. Round 2
+  `context/warm-pond-receipt.json` has
+  `previous_round_memory_weighted_combination_count=6`. Both round Tau live
+  manifests have `status=PASS`, `scheduling.granularity=worker`, and
+  `handoff_count=4`. Acceptance command:
+  `python3 sanity/battle_v1_multiround_acceptance.py /tmp/battle-v1-multiround-tau-002 --rounds 2 --min-red-workers 2 --min-blue-workers 2`
+  produced `BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS`.
+- During the first multi-round run, Battle exposed a memory timing/recall
+  weakness: `/upsert` to `lessons` succeeded, but immediate `/recall` initially
+  returned no items. Battle now records bounded `/recall` attempts and requires
+  an exact feedback-token match. `/list` remains diagnostic persistence
+  evidence only and is not accepted as cross-round recall proof.
 - The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
   searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
   one lane to fail with `FileNotFoundError`. The fix uses per-session
@@ -505,6 +529,12 @@ python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-generated-tau-
 /tmp/battle-v1-generated-tau-064-capped/context/tau-live-preflight-receipt.json -> capped=true, requested_handoff_count=128, max_live_handoffs=64, effective_handoff_count=64
 /tmp/battle-v1-generated-tau-064-capped/tau-live/manifest.json -> status=PASS, mocked=false, live=true, scheduling.granularity=worker, scheduling.mode=asyncio.as_completed, handoff_count=64, worker_count=64
 /tmp/battle-v1-generated-tau-064-capped/run-receipt.json -> status=PASS, verdict=BLUE_SUCCESS, execution.tau_live_status=PASS, models_used=["gpt-5.5"]
+./run.sh battle-v1-multiround battle-005 --out /tmp/battle-v1-multiround-tau-002 --rounds 2 --red-workers 2 --blue-workers 2 --max-attempts 2 --require-memory --research-broker --tau-live -> status=PASS
+python3 sanity/battle_v1_multiround_acceptance.py /tmp/battle-v1-multiround-tau-002 --rounds 2 --min-red-workers 2 --min-blue-workers 2 -> BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS
+/tmp/battle-v1-multiround-tau-002/round-feedback/round-002-memory-recall-receipt.json -> status=PASS, found=true, exact_token_match=true, endpoint=/recall
+/tmp/battle-v1-multiround-tau-002/rounds/round-002/context/warm-pond-receipt.json -> previous_round_memory_weighted_combination_count=6
+/tmp/battle-v1-multiround-tau-002/rounds/round-001/tau-live/manifest.json -> status=PASS, scheduling.handoff_count=4
+/tmp/battle-v1-multiround-tau-002/rounds/round-002/tau-live/manifest.json -> status=PASS, scheduling.handoff_count=4
 ```
 
 ## Non-Claims
@@ -515,9 +545,11 @@ Current Battle proof rungs do not yet prove:
 - real Blue agent behavior
 - Scillm delegate, batch, tool, or Tau-loop model execution
 - anvil or code-runner patch quality
-- multi-round learning
-- production multi-round Docker mode or QEMU mode
-- memory graph promotion or cross-round learning reuse
+- unbounded multi-round learning
+- production multi-round Docker mode or QEMU mode beyond the bounded
+  `battle-v1-multiround` fixture proof
+- memory graph promotion or cross-round learning reuse beyond exact-token
+  `/recall` from `lessons` in the bounded proof
 - Lean or QRA assurance
 - production Battle readiness
 - live Tau AgentHarness execution with scillm or an external model
@@ -533,7 +565,7 @@ Current Battle proof rungs do not yet prove:
 - Scillm delegate, batch, or tool execution inside Battle
 - asynchronous multi-worker swarm behavior beyond one Red worker and one Blue
   worker in the Docker proof
-- `$memory` graph promotion or cross-round reuse from the Docker race proof
+- `$memory` graph promotion from the Docker race proof
 - Tree-sitter success in the context proof until the treesitter-tools
   dependency issue is fixed
 

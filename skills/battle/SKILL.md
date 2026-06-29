@@ -273,6 +273,9 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run generated warm-pond Tau live at the current safe bounded fanout
 ./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064-capped --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --tau-live --research-broker
+
+# Run the bounded multi-round Tau/memory feedback proof
+./run.sh battle-v1-multiround battle-005 --out /tmp/battle-v1-multiround-tau-002 --rounds 2 --red-workers 2 --blue-workers 2 --max-attempts 2 --require-memory --tau-live --research-broker
 ```
 
 ## Battle v0 Fixture Proof
@@ -477,6 +480,25 @@ research-weighted warm-pond attempt pairs. Local evidence recorded
 128-handoff Tau failure is preserved as `grahama1970/tau#42`, which added
 structured Tau backpressure; Battle does not claim unbounded 128-worker live
 Tau completion.
+
+The current `battle-v1-multiround` command is the next cross-round feedback
+proof rung. It composes bounded `battle-v1-operational` rounds and proves that
+round feedback can flow through `$memory` before influencing the next round:
+
+```bash
+./run.sh battle-v1-multiround battle-005 --out /tmp/battle-v1-multiround-tau-002 --rounds 2 --red-workers 2 --blue-workers 2 --max-attempts 2 --require-memory --tau-live --research-broker
+python3 sanity/battle_v1_multiround_acceptance.py /tmp/battle-v1-multiround-tau-002 --rounds 2 --min-red-workers 2 --min-blue-workers 2
+```
+
+Local evidence under `/tmp/battle-v1-multiround-tau-002` recorded
+`BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS`, root `run-receipt.json status=PASS`,
+root `verdict=BLUE_SUCCESS`, exact-token `$memory` `/recall` in
+`round-feedback/round-002-memory-recall-receipt.json`, round-2
+`previous_round_memory_weighted_combination_count=6`, `negative_evidence_count=8`,
+and two Tau live manifests with `status=PASS`, `scheduling.granularity=worker`,
+and `handoff_count=4` per round. This proves bounded cross-round feedback only;
+it does not prove unbounded swarms, Tau loop repair, memory finetuning, QEMU/AFL
+campaigns, or live websocket monitoring.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent
 Dogpile processes shared one partial-results temp file. The fix is in

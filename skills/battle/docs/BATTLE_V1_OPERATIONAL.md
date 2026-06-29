@@ -70,6 +70,44 @@ python3 sanity/battle_v1_operational_acceptance.py \
   --require-recall-found
 ```
 
+## Multi-round feedback proof
+
+`battle-v1-multiround` composes bounded operational rounds and adds the first
+cross-round feedback gate. Round 1 stores a recallable feedback record in
+`$memory` `lessons`; round 2 must retrieve the exact feedback token through
+`/recall` before Battle passes the promoted and negative combination IDs into
+warm-pond weighting.
+
+```bash
+./run.sh battle-v1-multiround battle-005 \
+  --out /tmp/battle-v1-multiround-tau-002 \
+  --rounds 2 \
+  --red-workers 2 \
+  --blue-workers 2 \
+  --max-attempts 2 \
+  --require-memory \
+  --research-broker \
+  --tau-live
+
+python3 sanity/battle_v1_multiround_acceptance.py \
+  /tmp/battle-v1-multiround-tau-002 \
+  --rounds 2 \
+  --min-red-workers 2 \
+  --min-blue-workers 2
+```
+
+Observed receipt fields:
+
+```text
+/tmp/battle-v1-multiround-tau-002/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-multiround-tau-002/round-feedback/round-002-memory-recall-receipt.json status=PASS found=true exact_token_match=true
+/tmp/battle-v1-multiround-tau-002/rounds/round-002/context/warm-pond-receipt.json previous_round_memory_weighted_combination_count=6
+/tmp/battle-v1-multiround-tau-002/run-receipt.json negative_evidence_count=8
+/tmp/battle-v1-multiround-tau-002/rounds/round-001/tau-live/manifest.json status=PASS scheduling.handoff_count=4
+/tmp/battle-v1-multiround-tau-002/rounds/round-002/tau-live/manifest.json status=PASS scheduling.handoff_count=4
+acceptance -> BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS
+```
+
 Current live research-broker proof:
 
 ```bash

@@ -47,6 +47,29 @@ older raw 128-handoff Tau failure is filed and closed upstream as
 `grahama1970/tau#42`; treat unbounded 128-worker live Tau completion as a
 non-claim.
 
+Current multi-round proof rung:
+
+```bash
+./run.sh battle-v1-multiround battle-005 \
+  --out /tmp/battle-v1-multiround-tau-002 \
+  --rounds 2 \
+  --red-workers 2 \
+  --blue-workers 2 \
+  --max-attempts 2 \
+  --require-memory \
+  --research-broker \
+  --tau-live
+```
+
+This proves a bounded two-round Docker/Tau/memory feedback loop. Round 1 writes
+recallable feedback to `$memory` `lessons`; round 2 retrieves the exact prior
+feedback token through `/recall`, weights matching warm-pond combinations, and
+then runs Red/Blue workers plus Scorekeeper replay again. Local evidence from
+`/tmp/battle-v1-multiround-tau-002` recorded `status=PASS`,
+`verdict=BLUE_SUCCESS`, exact-token memory recall, 6 memory-influenced round-2
+combinations, 8 negative-evidence IDs, 4 Tau worker handoffs per round, and
+`BATTLE_V1_MULTIROUND_ACCEPTANCE_PASS`.
+
 ## Operating Contract
 
 Battle's production shape is intentionally simple:
@@ -243,6 +266,10 @@ independent Judge receipts.
    memory recall/promotion receipts, a SQLite event ledger, a generated force
    graph, and an artifact-backed monitor proof. It is still bounded and
    deterministic; it does not prove an unbounded swarm or Tau loop repair.
+6. **Battle v1 multi-round** for the current cross-round feedback proof over
+   `battle-005`. It composes bounded operational rounds, stores round feedback
+   in `$memory`, requires exact-token `/recall` before the next round, records
+   negative evidence, and passes recalled feedback into warm-pond weighting.
 
 Battle v0 is the safer first rung to run when checking the artifact contract. It
 does not exercise live Red or Blue agents.
@@ -335,6 +362,26 @@ Run the current four-party Battle v1 operational proof:
   --blue-workers 2 \
   --max-attempts 4 \
   --require-memory
+```
+
+Run the bounded multi-round Tau/memory feedback proof:
+
+```bash
+./run.sh battle-v1-multiround battle-005 \
+  --out /tmp/battle-v1-multiround-tau-002 \
+  --rounds 2 \
+  --red-workers 2 \
+  --blue-workers 2 \
+  --max-attempts 2 \
+  --require-memory \
+  --research-broker \
+  --tau-live
+
+python3 sanity/battle_v1_multiround_acceptance.py \
+  /tmp/battle-v1-multiround-tau-002 \
+  --rounds 2 \
+  --min-red-workers 2 \
+  --min-blue-workers 2
 ```
 
 Inspect recent battles:

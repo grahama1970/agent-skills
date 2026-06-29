@@ -94,6 +94,7 @@ def run_battle_v1_operational(
     memory_required: bool = True,
     memory_base_url: str = MEMORY_BASE_URL,
     research_broker: bool = True,
+    previous_round_feedback: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run one four-party Docker-only Battle v1 operational proof."""
 
@@ -287,6 +288,7 @@ def run_battle_v1_operational(
         research=research,
         red_persona=red_persona,
         blue_persona=blue_persona,
+        previous_round_feedback=previous_round_feedback,
     )
     write_json(context_dir / "warm-pond-receipt.json", warm_pond)
     record_event(
@@ -598,6 +600,7 @@ def build_operational_warm_pond(
     research: dict[str, Any],
     red_persona: str,
     blue_persona: str,
+    previous_round_feedback: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build deterministic warm-pond exploit/defense candidates for v1."""
 
@@ -818,8 +821,11 @@ def build_operational_warm_pond(
                 generated_defense_count += 1 if added else 0
 
     combinations: list[dict[str, Any]] = []
+    promoted_ids = set(_feedback_ids(previous_round_feedback, "promoted_combination_ids"))
+    negative_ids = set(_feedback_ids(previous_round_feedback, "negative_combination_ids"))
     for exploit in exploit_candidates:
         for defense in defense_candidates:
+            combination_id = f"{exploit['id']}__{defense['id']}"
             base_affinity = 1.0 if exploit["family"] == defense["family"] else 0.73
             research_sources = sorted(
                 set(exploit.get("research_sources", []))
@@ -836,15 +842,25 @@ def build_operational_warm_pond(
                 ),
                 3,
             )
-            affinity = round(base_affinity + research_boost, 3)
+            previous_round_boost = 0.05 if combination_id in promoted_ids else 0.0
+            previous_round_penalty = -0.05 if combination_id in negative_ids else 0.0
+            affinity = round(
+                base_affinity + research_boost + previous_round_boost + previous_round_penalty,
+                3,
+            )
             combinations.append(
                 {
-                    "id": f"{exploit['id']}__{defense['id']}",
+                    "id": combination_id,
                     "exploit": exploit["id"],
                     "defense": defense["id"],
                     "families": sorted({exploit["family"], defense["family"]}),
                     "base_affinity": base_affinity,
                     "research_boost": research_boost,
+                    "previous_round_memory_boost": previous_round_boost,
+                    "previous_round_memory_penalty": previous_round_penalty,
+                    "previous_round_memory_influenced": bool(
+                        previous_round_boost or previous_round_penalty
+                    ),
                     "research_sources": research_sources,
                     "first_research_lane": research_signals.get("first_passed_lane"),
                     "affinity": affinity,
@@ -872,6 +888,15 @@ def build_operational_warm_pond(
         "research_passed_lane_count": research.get("passed_lane_count", 0),
         "research_completion_order": research.get("completion_order", []),
         "research_signal_summary": research_signals,
+        "previous_round_feedback": {
+            "provided": previous_round_feedback is not None,
+            "source": previous_round_feedback.get("source") if previous_round_feedback else None,
+            "promoted_combination_ids": sorted(promoted_ids),
+            "negative_combination_ids": sorted(negative_ids),
+            "influenced_combination_count": sum(
+                1 for item in combinations if item["previous_round_memory_influenced"]
+            ),
+        },
         "warm_pond_generator": {
             "enabled": isinstance(configured_generator, dict),
             "generated_exploit_candidate_count": generated_exploit_count,
@@ -885,6 +910,11 @@ def build_operational_warm_pond(
         "research_weighted_combination_count": sum(
             1 for item in combinations if float(item.get("research_boost", 0.0)) > 0
         ),
+        "previous_round_memory_weighted_combination_count": sum(
+            1
+            for item in combinations
+            if item.get("previous_round_memory_influenced")
+        ),
         "hidden_cwes": [
             item.get("cwe") for item in hidden.get("hidden_vulnerabilities", [])
         ],
@@ -896,11 +926,23 @@ def build_operational_warm_pond(
         "defense_candidates": defense_candidates,
         "combinations": combinations,
         "selection_rule": (
-            "highest research-adjusted affinity, deterministic id tiebreaker, "
+            "highest research- and memory-adjusted affinity, deterministic id tiebreaker, "
             "Docker replay before memory promotion"
         ),
         "created_at": utc_now(),
     }
+
+
+def _feedback_ids(
+    previous_round_feedback: dict[str, Any] | None,
+    field_name: str,
+) -> list[str]:
+    if not previous_round_feedback:
+        return []
+    values = previous_round_feedback.get(field_name, [])
+    if not isinstance(values, list):
+        return []
+    return [str(value) for value in values if value]
 
 
 def run_research_broker(

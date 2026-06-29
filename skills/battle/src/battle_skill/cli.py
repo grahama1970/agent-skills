@@ -369,6 +369,72 @@ def battle_v1_operational(
         raise typer.Exit(1)
 
 
+@app.command("battle-v1-multiround")
+def battle_v1_multiround(
+    fixture: str = typer.Argument("battle-005", help="Fixture name under skills/battle/fixtures/"),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
+    rounds: int = typer.Option(2, min=2, max=5, help="Bounded multi-round proof length"),
+    red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
+    blue_persona: str = typer.Option("coder", help="Blue team persona id"),
+    red_workers: int = typer.Option(2, min=1, max=64, help="Bounded Red worker pool size"),
+    blue_workers: int = typer.Option(2, min=1, max=64, help="Bounded Blue worker pool size"),
+    max_attempts: int = typer.Option(4, min=1, max=128, help="Maximum warm-pond combinations per round"),
+    tau_live: bool = typer.Option(
+        False,
+        "--tau-live/--tau-deterministic",
+        help="Call Tau's live Battle handoff bridge for each round.",
+    ),
+    tau_live_model: str = typer.Option(
+        "gpt-5.5",
+        help="Scillm model/group for --tau-live handoff calls.",
+    ),
+    memory_required: bool = typer.Option(
+        True,
+        "--require-memory/--memory-optional",
+        help="Require $memory store and true /recall feedback between rounds.",
+    ),
+    memory_base_url: Optional[str] = typer.Option(
+        None,
+        help="$memory HTTP base URL; defaults to BATTLE_MEMORY_BASE_URL / BATTLE_MEMORY default.",
+    ),
+    research_broker: bool = typer.Option(
+        True,
+        "--research-broker/--no-research-broker",
+        help="Run bounded live Brave/GitHub/Dogpile research lanes before each round.",
+    ),
+):
+    """Run the bounded Battle v1 multi-round memory-feedback proof."""
+    from .arena_docker_smoke import MEMORY_BASE_URL
+    from .battle_v1_multiround import run_battle_v1_multiround
+    from .config import ARTIFACTS_DIR, SKILL_DIR
+
+    fixture_dir = SKILL_DIR / "fixtures" / fixture
+    if not fixture_dir.exists():
+        console.print(f"[red]Fixture not found: {fixture_dir}[/red]")
+        raise typer.Exit(1)
+
+    out_dir = out or (ARTIFACTS_DIR / fixture / "battle-v1-multiround")
+    result = run_battle_v1_multiround(
+        fixture_dir=fixture_dir,
+        out_dir=out_dir,
+        rounds=rounds,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        red_workers=red_workers,
+        blue_workers=blue_workers,
+        max_attempts=max_attempts,
+        tau_live=tau_live,
+        tau_live_model=tau_live_model,
+        memory_required=memory_required,
+        memory_base_url=memory_base_url or MEMORY_BASE_URL,
+        research_broker=research_broker,
+    )
+    console.print_json(data=result)
+
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command()
 def status():
     """Check status of running or recent battles."""
