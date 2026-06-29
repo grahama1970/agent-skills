@@ -364,3 +364,13 @@ no exercise of runtime behavior.
 
 Rerun the sweep after substantial changes. Use
 `reports/agent-maintainer/latest.md` before final maintenance decisions.
+
+---
+
+<sub>
+This public repository is for reusable agent patterns, contracts, prompts,
+hooks, and maintenance workflows. It is intentionally decoupled from controlled,
+proprietary, ITAR-restricted, or sensitive operational data. Private runtime
+context, credentials, regulated artifacts, and deployment-specific details stay
+outside this repo.
+</sub>
