@@ -22,6 +22,7 @@ REQUIRED = [
     "blue/team-receipt.json",
     "scorekeeper/scorekeeper-receipt.json",
     "context/memory-recall-receipt.json",
+    "context/research-broker-receipt.json",
     "context/memory-promotion-receipt.json",
     "context/context-receipt.json",
     "scoreboard.json",
@@ -98,6 +99,7 @@ def main() -> int:
     blue = load_json(root, "blue/team-receipt.json")
     scorekeeper = load_json(root, "scorekeeper/scorekeeper-receipt.json")
     memory_recall = load_json(root, "context/memory-recall-receipt.json")
+    research = load_json(root, "context/research-broker-receipt.json")
     memory_promotion = load_json(root, "context/memory-promotion-receipt.json")
     graph = load_json(root, "graph/battle-v1-force-graph.json")
     monitor = load_json(root, "monitor-index.json")
@@ -120,6 +122,8 @@ def main() -> int:
     assert scoreboard["operational"]["red_blue_async"] is True, scoreboard
     assert scoreboard["operational"]["scorekeeper_objective_replay"] is True, scoreboard
     assert scoreboard["context"]["memory_promotion_status"] == "PASS", scoreboard
+    assert scoreboard["context"]["research_broker_status"] == "PASS", scoreboard
+    assert scoreboard["context"]["research_passed_lane_count"] >= 1, scoreboard
 
     assert red["worker_count"] >= args.min_red_workers, red
     assert blue["worker_count"] >= args.min_blue_workers, blue
@@ -138,12 +142,26 @@ def main() -> int:
         assert memory_recall["found"] is True, memory_recall
     elif not args.allow_first_recall_empty:
         assert memory_recall["status"] == "PASS", memory_recall
+    assert research["status"] == "PASS", research
+    assert research["mocked"] is False, research
+    assert research["live"] is True, research
+    assert research["mode"] == "threadpool_as_completed", research
+    assert research["passed_lane_count"] >= 1, research
+    assert len(research["completion_order"]) >= 1, research
 
     assert monitor["schema"] == "battle.monitor_index.v1", monitor
     assert monitor["graph"] == "graph/battle-v1-force-graph.json", monitor
     assert graph["schema"] == "battle.force_graph.v1", graph
     node_ids = {node["id"] for node in graph["nodes"]}
-    for expected in ["team:arena", "team:red", "team:blue", "scorekeeper", "signal:memory-promotion", "signal:async-overlap"]:
+    for expected in [
+        "team:arena",
+        "team:red",
+        "team:blue",
+        "scorekeeper",
+        "signal:research-broker",
+        "signal:memory-promotion",
+        "signal:async-overlap",
+    ]:
         assert expected in node_ids, f"missing graph node {expected}"
 
     for json_path in root.rglob("*.json"):

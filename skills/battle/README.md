@@ -511,6 +511,7 @@ same `battle-003` hidden SQLi/XSS target, but the proof contract now includes:
 Arena Team writes target and hidden ground truth
 Red workers run bounded exploit probes asynchronously
 Blue workers run bounded patch/regression workers asynchronously
+Research broker runs live Brave/GitHub/Dogpile lanes concurrently before candidate selection
 Scorekeeper replays exploit-before-patch, patch, exploit-after-patch, and regression in Docker
 Successful warm-pond combinations are promoted to $memory
 Monitor renders generated receipts and force graph artifacts
@@ -521,13 +522,13 @@ Validation commands:
 ```bash
 cd skills/battle
 ./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a \
-  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory --research-broker
 python3 sanity/battle_v1_operational_acceptance.py \
   /tmp/battle-v1-operational-a \
   --allow-first-recall-empty
 
 ./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-b \
-  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+  --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory --research-broker
 python3 sanity/battle_v1_operational_acceptance.py \
   /tmp/battle-v1-operational-b \
   --require-recall-found
@@ -541,7 +542,19 @@ Current local evidence from this rung:
 /tmp/battle-v1-operational-b/run-receipt.json status=PASS verdict=BLUE_SUCCESS
 /tmp/battle-v1-operational-b/context/memory-recall-receipt.json found=true
 /tmp/battle-v1-operational-b acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json status=PASS
+/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json passed_lane_count=5
+/tmp/battle-v1-research-broker-002 acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
 ```
+
+Research broker note: `battle-v1-operational` now writes
+`context/research-broker-receipt.json`. It runs bounded live agent-side research
+lanes through Brave batch search, GitHub search, and Dogpile Red/Blue presets
+with `threadpool_as_completed`; target code and any exploit/patch execution
+remain Docker-only. The proof run at `/tmp/battle-v1-research-broker-002`
+recorded all five research lanes as `PASS` after fixing
+`agent-skills#51`, where concurrent Dogpile processes shared one
+partial-results temp file.
 
 Memory note: `$memory` `/upsert` stores `battle_mutation_memory` documents and
 Battle recalls them through `/recall` with
@@ -560,6 +573,7 @@ does_not_prove_scillm_delegate_batch_or_tool_execution
 does_not_integrate_qemu_or_afl_campaigns
 does_not_wire_chat_sidebar_to_orchestrator_actions
 does_not_stream_attempts_live_over_websocket
+does_not_execute_research_poc_code_on_host
 ```
 
 ## Battle Monitor

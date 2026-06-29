@@ -394,8 +394,9 @@ cycles, Tree-sitter success, or the React+D3 live monitor.
 The current `battle-v1-operational` command is the next bounded proof rung. It
 runs Arena, Red, Blue, and Scorekeeper roles against `battle-003`, dispatches
 bounded asynchronous Red/Blue worker pools, records memory recall and
-warm-pond promotion receipts, replays every selected attempt inside Docker, and
-writes a generated force graph for the monitor:
+live research-broker receipts, records warm-pond promotion receipts, replays
+every selected attempt inside Docker, and writes a generated force graph for the
+monitor:
 
 ```text
 mocked: no
@@ -409,12 +410,27 @@ models_used: ["tau-local-deterministic-provider"]
 Validation:
 
 ```bash
-./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory --research-broker
 python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-a --allow-first-recall-empty
 
-./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-b --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-b --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory --research-broker
 python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-operational-b --require-recall-found
 ```
+
+With `--research-broker`, `battle-v1-operational` writes
+`context/research-broker-receipt.json`, runs Brave batch search plus Red/Blue
+GitHub and Dogpile retrieval lanes concurrently with
+`threadpool_as_completed`, and records completion order before warm-pond
+candidate selection. Research lanes are agent-side retrieval only; cloned or
+discovered PoC code must not execute on the host. Current proof evidence under
+`/tmp/battle-v1-research-broker-002` recorded `status=PASS`,
+`passed_lane_count=5`, `blocked_lane_count=0`, and
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+
+The first live research-broker run exposed `agent-skills#51`: concurrent
+Dogpile processes shared one partial-results temp file. The fix is in
+`skills/dogpile/cli.py`: per-session partial-result paths plus PID-specific
+temp files.
 
 This proof still does not execute an unbounded swarm, Tau loop repair cycles,
 Scillm delegate/batch/tool execution, QEMU/AFL campaigns, orchestrator-mutating

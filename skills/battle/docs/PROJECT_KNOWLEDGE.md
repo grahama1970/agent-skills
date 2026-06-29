@@ -217,12 +217,29 @@
   bounded asynchronous Red/Blue worker pools, records memory recall and
   promotion receipts, replays every selected warm-pond attempt in Docker, writes
   a SQLite event ledger, and emits `graph/battle-v1-force-graph.json`.
+- Battle v1 operational now includes a live research broker before warm-pond
+  candidate selection. It writes `context/research-broker-receipt.json`, runs
+  Brave batch search plus Red/Blue GitHub and Dogpile research lanes with
+  `threadpool_as_completed`, and records completion order. Target execution
+  remains Docker-only; research lanes are agent-side retrieval and must not run
+  PoC code on the host.
 - Current Battle v1 operational local evidence:
   `/tmp/battle-v1-operational-a/run-receipt.json` and
   `/tmp/battle-v1-operational-b/run-receipt.json` both have `status=PASS` and
   `verdict=BLUE_SUCCESS`; both generated artifact sets passed
   `sanity/battle_v1_operational_acceptance.py`; the second run passed
   `--require-recall-found`.
+- Current research-broker local evidence:
+  `/tmp/battle-v1-research-broker-002/run-receipt.json` has `status=PASS` and
+  `verdict=BLUE_SUCCESS`; `context/research-broker-receipt.json` has
+  `status=PASS`, `mode=threadpool_as_completed`, `lane_count=5`,
+  `passed_lane_count=5`, and `blocked_lane_count=0`; the generated artifact set
+  passed `sanity/battle_v1_operational_acceptance.py`.
+- The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
+  searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
+  one lane to fail with `FileNotFoundError`. The fix uses per-session
+  partial-result paths and PID-specific temp files in `skills/dogpile/cli.py`;
+  the issue was closed with proof from `/tmp/battle-v1-research-broker-002`.
 - `$memory` accepted `battle_mutation_memory` documents through `/upsert`.
   Plain `/recall` with `collections=["battle_mutation_memory"]` can return no
   items for that custom collection, but `/recall` with

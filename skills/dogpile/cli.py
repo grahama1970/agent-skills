@@ -3,7 +3,7 @@
 
 Orchestrates searches across:
 - Brave Search (Web)
-- Perplexity (Deep Research)
+- Perplexity (retired; reported as skipped)
 - GitHub (Repos & Issues)
 - ArXiv (Papers)
 - YouTube (Videos)
@@ -17,6 +17,7 @@ Resilience features (based on 2025-2026 best practices):
 - Rate limit header parsing (Retry-After, x-ratelimit-*)
 """
 import json
+import os
 import sys
 import threading
 import time
@@ -61,7 +62,6 @@ from dogpile.codex import (
     analyze_query,
 )
 from dogpile.brave import search_brave, run_stage2_brave
-from dogpile.perplexity import search_perplexity
 from dogpile.arxiv_search import search_arxiv, run_stage2_arxiv
 from dogpile.github_search import search_github, search_github_via_skill
 from dogpile.github_deep import run_stage2_github
@@ -73,6 +73,14 @@ from dogpile.html_report import write_html_report
 from dogpile.synthesis import generate_report
 
 PARTIAL_RESULTS_PATH = _SCRIPT_DIR / "dogpile_partial_results.json"
+PERPLEXITY_SKIPPED = {
+    "skipped": "Perplexity is retired for dogpile; use Brave Search / brave-search instead.",
+    "hint": "The retired lane is kept visible so reports show why no Perplexity answer was attempted.",
+}
+CLAUDE_SKIPPED = {
+    "skipped": "Claude is not an active dogpile provider; LLM work must route through scillm.",
+    "hint": "Dogpile records this skipped lane for audit clarity and does not spend Claude quota.",
+}
 
 # Memory integration (graceful degradation)
 try:
@@ -177,14 +185,32 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
     return summary
 
 
+def partial_results_path_for_session(session_id: str | None) -> Path:
+    configured = os.getenv("DOGPILE_PARTIAL_RESULTS_PATH")
+    if configured:
+        return Path(configured).expanduser().resolve(strict=False)
+    if session_id:
+        safe = "".join(ch if ch.isalnum() or ch in "._-" else "-" for ch in session_id)
+        return _SCRIPT_DIR / f"dogpile_partial_results_{safe}.json"
+    return PARTIAL_RESULTS_PATH
+
+
 class PartialResultsPublisher:
     """Persist partial Dogpile results and emit machine-readable progress events."""
 
-    def __init__(self, requested_query: str):
-        self.path = PARTIAL_RESULTS_PATH
+    def __init__(
+        self,
+        requested_query: str,
+        request_context: Optional[Dict[str, str]] = None,
+        session_id: str | None = None,
+    ):
+        self.path = partial_results_path_for_session(session_id)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        request_context = request_context or {}
         self.state: Dict[str, Any] = {
             "requested_query": requested_query,
             "effective_query": requested_query,
+            "request_context": request_context,
             "status": "starting",
             "updated_at": time.time(),
             "partial_results_path": str(self.path),
@@ -200,12 +226,13 @@ class PartialResultsPublisher:
             {
                 "event": "search_started",
                 "requested_query": requested_query,
+                "request_context": request_context,
             }
         )
 
     def _write(self) -> None:
         self.state["updated_at"] = time.time()
-        tmp_path = self.path.with_suffix(".tmp")
+        tmp_path = self.path.with_name(f"{self.path.name}.{os.getpid()}.tmp")
         tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
         tmp_path.replace(self.path)
 
@@ -327,7 +354,7 @@ def run_stage1_searches(
         query: Original search query
         use_github_skill: Whether to use /github-search skill
         is_code_related: Whether query is code-related
-        with_perplexity: Include Perplexity (paid API, off by default)
+        with_perplexity: Deprecated; Perplexity is retired and reported as skipped
 
     Returns:
         Dict with results from each provider
@@ -354,7 +381,11 @@ def run_stage1_searches(
     }
 
     if with_perplexity:
-        providers["perplexity"] = (search_perplexity, [tailored["perplexity"]])
+        log_status(
+            "Perplexity requested but skipped: retired for dogpile",
+            provider="perplexity",
+            status="SKIPPED",
+        )
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}
@@ -426,6 +457,15 @@ def run_stage1_searches(
             if on_result:
                 on_result(name, results[name])
 
+    results["perplexity"] = dict(PERPLEXITY_SKIPPED)
+    results["claude"] = dict(CLAUDE_SKIPPED)
+    if publisher:
+        publisher.publish_result("stage1", "perplexity", results["perplexity"])
+        publisher.publish_result("stage1", "claude", results["claude"])
+    if on_result:
+        on_result("perplexity", results["perplexity"])
+        on_result("claude", results["claude"])
+
     return results
 
 
@@ -437,17 +477,42 @@ def search(
     tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
     use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
     auto_preset: bool = typer.Option(False, "--auto-preset", help="Auto-detect preset from query"),
-    with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Include Perplexity (paid API, off by default)"),
+    with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Deprecated; Perplexity is skipped and reported"),
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
+    persona: Optional[str] = typer.Option(None, "--persona", help="Reviewer or research persona to shape analysis"),
+    rationale: Optional[str] = typer.Option(None, "--rationale", help="Why this research is being run now"),
+    context: Optional[str] = typer.Option(None, "--context", help="Concrete problem context and constraints"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="Read additional context from a local file"),
 ):
     """Aggregate search results from multiple sources."""
 
     # Initialize error tracking, task-monitor, and execution collector
     session_id = start_error_session(query)
     monitor = start_monitor(query, name=f"dogpile-{session_id[-8:]}")
-    publisher = PartialResultsPublisher(query)
+    context_file_text = None
+    if context_file:
+        try:
+            context_file_text = context_file.read_text(errors="replace")
+        except OSError as e:
+            raise typer.BadParameter(f"Could not read context file: {e}") from e
+    request_context = {
+        key: value
+        for key, value in {
+            "persona": persona,
+            "rationale": rationale,
+            "context": context,
+            "context_file": str(context_file) if context_file else None,
+            "context_file_text": context_file_text,
+        }.items()
+        if value
+    }
+    publisher = PartialResultsPublisher(
+        query,
+        request_context=request_context,
+        session_id=session_id,
+    )
 
     from dogpile.utils import init_execution_collector
     init_execution_collector(session_id)
@@ -467,6 +532,7 @@ def search(
             open_report=open_report,
             report_file=report_file,
             publisher=publisher,
+            request_context=request_context,
         )
         search_success = True
     except Exception as e:
@@ -531,6 +597,7 @@ def _run_search(
     open_report: bool = False,
     report_file: Optional[Path] = None,
     publisher: Optional[PartialResultsPublisher] = None,
+    request_context: Optional[Dict[str, str]] = None,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -585,7 +652,7 @@ def _run_search(
             console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
     else:
         # Use same query for all services
-        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube", "readarr"]}
+        tailored = {svc: query for svc in ["arxiv", "brave", "github", "youtube", "readarr"]}
 
     # Override Brave query with preset-filtered query if active
     if preset_brave_query:
@@ -669,7 +736,7 @@ def _run_search(
         console.print("[dim]Continuing with partial results...[/dim]\n")
 
     brave_res = stage1_results["brave"]
-    perp_res = stage1_results.get("perplexity", {"skipped": "opt-in only (use --with-perplexity)"})
+    perp_res = stage1_results.get("perplexity", dict(PERPLEXITY_SKIPPED))
     github_res = stage1_results["github"]
     arxiv_res = stage1_results["arxiv"]
     youtube_res = stage1_results["youtube"]
@@ -726,7 +793,20 @@ def _run_search(
         youtube_res=youtube_res,
         youtube_transcripts=youtube_transcripts,
         code_explanation=code_explanation,
+        stage1_results=stage1_results,
+        stage2_results=stage2_results,
     )
+    if request_context:
+        context_lines = ["## Request Context"]
+        for key in ("persona", "rationale", "context", "context_file", "context_file_text"):
+            value = request_context.get(key)
+            if not value:
+                continue
+            label = key.replace("_", " ").title()
+            if key == "context_file_text" and len(value) > 2000:
+                value = value[:2000] + "\n...[truncated]"
+            context_lines.append(f"- **{label}:** {value}")
+        final_report = "\n".join(context_lines) + "\n\n" + final_report
     monitor.complete_stage("report")
 
     report_path = None
@@ -768,7 +848,7 @@ def _run_search(
                 ("youtube", youtube_res), ("readarr", readarr_res),
                 ("wayback", wayback_res), ("codex", codex_src_res),
             ]:
-                if res and not (isinstance(res, dict) and "error" in res):
+                if res and not (isinstance(res, dict) and ("error" in res or "skipped" in res)):
                     sources_searched.append(name)
 
             # Collect key URLs from brave results

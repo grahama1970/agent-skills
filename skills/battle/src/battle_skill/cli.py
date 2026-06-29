@@ -326,6 +326,11 @@ def battle_v1_operational(
         None,
         help="$memory HTTP base URL; defaults to BATTLE_MEMORY_BASE_URL / BATTLE_MEMORY default.",
     ),
+    research_broker: bool = typer.Option(
+        True,
+        "--research-broker/--no-research-broker",
+        help="Run bounded live Brave/GitHub/Dogpile research lanes before warm-pond selection.",
+    ),
 ):
     """Run the Battle v1 four-party Docker-only operational proof.
 
@@ -356,6 +361,7 @@ def battle_v1_operational(
         tau_live_model=tau_live_model,
         memory_required=memory_required,
         memory_base_url=memory_base_url or MEMORY_BASE_URL,
+        research_broker=research_broker,
     )
     console.print_json(data=result)
 

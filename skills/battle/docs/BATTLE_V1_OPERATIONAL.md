@@ -7,10 +7,12 @@ the proof contract from a one-shot race into a four-party session:
 1. Arena Team creates/selects the Docker target and hidden ground truth.
 2. Red Team runs bounded asynchronous exploit probe workers.
 3. Blue Team runs bounded asynchronous patch/regression workers.
-4. Scorekeeper replays objective outcomes inside Docker and derives the
+4. A live research broker runs agent-side Brave/GitHub/Dogpile lanes
+   concurrently before warm-pond candidate selection.
+5. Scorekeeper replays objective outcomes inside Docker and derives the
    scoreboard.
-5. Warm-pond winners and negative evidence are promoted to `$memory`.
-6. The monitor serves generated artifacts, including a force graph.
+6. Warm-pond winners and negative evidence are promoted to `$memory`.
+7. The monitor serves generated artifacts, including a force graph.
 
 ## Command
 
@@ -21,7 +23,8 @@ cd skills/battle
   --red-workers 2 \
   --blue-workers 2 \
   --max-attempts 4 \
-  --require-memory
+  --require-memory \
+  --research-broker
 ```
 
 Run a second time against the same memory service to prove recall of promoted
@@ -33,7 +36,8 @@ mutations:
   --red-workers 2 \
   --blue-workers 2 \
   --max-attempts 4 \
-  --require-memory
+  --require-memory \
+  --research-broker
 ```
 
 ## Required artifacts
@@ -44,6 +48,7 @@ red/team-receipt.json
 blue/team-receipt.json
 scorekeeper/scorekeeper-receipt.json
 context/memory-recall-receipt.json
+context/research-broker-receipt.json
 context/memory-promotion-receipt.json
 context/context-receipt.json
 scoreboard.json
@@ -63,6 +68,35 @@ python3 sanity/battle_v1_operational_acceptance.py \
 python3 sanity/battle_v1_operational_acceptance.py \
   /tmp/battle-v1-operational-b \
   --require-recall-found
+```
+
+Current live research-broker proof:
+
+```bash
+./run.sh battle-v1-operational battle-003 \
+  --out /tmp/battle-v1-research-broker-002 \
+  --red-workers 1 \
+  --blue-workers 1 \
+  --max-attempts 1 \
+  --require-memory \
+  --tau-live \
+  --research-broker
+
+python3 sanity/battle_v1_operational_acceptance.py \
+  /tmp/battle-v1-research-broker-002 \
+  --allow-first-recall-empty \
+  --min-red-workers 1 \
+  --min-blue-workers 1
+```
+
+Observed receipt fields:
+
+```text
+/tmp/battle-v1-research-broker-002/run-receipt.json status=PASS verdict=BLUE_SUCCESS
+/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json status=PASS
+/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json mode=threadpool_as_completed
+/tmp/battle-v1-research-broker-002/context/research-broker-receipt.json passed_lane_count=5
+acceptance -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
 ```
 
 Monitor proof:
@@ -99,5 +133,7 @@ to delete.
 - It does not route real Tau repair loops or Scillm batch tool execution.
 - It does not wire the right-sidebar chat to orchestration mutations.
 - It uses the existing deterministic `battle-003` tiny Python target.
+- Research lanes are retrieval only. They must not run cloned PoC or exploit
+  code on the host.
 - Memory promotion requires the `$memory` HTTP service unless the command is run
   with `--memory-optional`; acceptance should use `--require-memory`.

@@ -35,10 +35,12 @@ from .arena_docker_smoke import (
     build_code_context_receipt,
     ensure_docker_image,
     public_scenario,
+    run_brave_search_receipt,
     run_docker_command,
     run_fast_scan_receipt,
     safe_key,
 )
+from .config import SKILLS_DIR
 from .receipts import CommandResult, to_jsonable, utc_now, write_json
 from .subagent_smoke import TAU_ROOT, init_ledger, record_event
 
@@ -89,6 +91,7 @@ def run_battle_v1_operational(
     tau_live_model: str = "gpt-5.5",
     memory_required: bool = True,
     memory_base_url: str = MEMORY_BASE_URL,
+    research_broker: bool = True,
 ) -> dict[str, Any]:
     """Run one four-party Docker-only Battle v1 operational proof."""
 
@@ -238,6 +241,39 @@ def run_battle_v1_operational(
             extra={"context": {"scan": "context/fast-scan-receipt.json"}},
         )
 
+    research = run_research_broker(
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        hidden=hidden,
+        scan=scan,
+        code_context=code_context,
+        out_dir=out_dir,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+        enabled=research_broker,
+    )
+    write_json(context_dir / "research-broker-receipt.json", research)
+    record_event(
+        ledger_path,
+        run_id=run_id,
+        battle_id=battle_id,
+        team="orchestrator",
+        persona="battle-orchestrator",
+        event_type="research_broker",
+        status=str(research["status"]),
+        artifact_path=context_dir / "research-broker-receipt.json",
+        details=to_jsonable(research),
+    )
+    if research["status"] == "BLOCKED":
+        return write_blocked_v1(
+            out_dir=out_dir,
+            battle_id=battle_id,
+            run_id=run_id,
+            reason="research_broker_failed",
+            extra={"context": {"research_broker": "context/research-broker-receipt.json"}},
+        )
+
     warm_pond = build_operational_warm_pond(
         battle_id=battle_id,
         run_id=run_id,
@@ -246,6 +282,7 @@ def run_battle_v1_operational(
         scan=scan,
         code_context=code_context,
         memory_recall=memory_recall,
+        research=research,
         red_persona=red_persona,
         blue_persona=blue_persona,
     )
@@ -392,6 +429,7 @@ def run_battle_v1_operational(
         memory_recall=memory_recall,
         code_context=code_context,
         scan=scan,
+        research=research,
         warm_pond=warm_pond,
         async_execution=async_execution,
         scorekeeper=scorekeeper,
@@ -418,6 +456,7 @@ def run_battle_v1_operational(
         blue_team_receipt=async_execution["blue_team_receipt"],
         scorekeeper=scorekeeper,
         memory_recall=memory_recall,
+        research=research,
         memory_promotion=memory_promotion,
         selected=selected,
     )
@@ -514,6 +553,7 @@ def build_operational_warm_pond(
     scan: dict[str, Any],
     code_context: dict[str, Any],
     memory_recall: dict[str, Any],
+    research: dict[str, Any],
     red_persona: str,
     blue_persona: str,
 ) -> dict[str, Any]:
@@ -614,6 +654,9 @@ def build_operational_warm_pond(
         "red_persona": red_persona,
         "blue_persona": blue_persona,
         "memory_recall_found": memory_recall.get("found", False),
+        "research_broker_status": research.get("status"),
+        "research_passed_lane_count": research.get("passed_lane_count", 0),
+        "research_completion_order": research.get("completion_order", []),
         "hidden_cwes": [
             item.get("cwe") for item in hidden.get("hidden_vulnerabilities", [])
         ],
@@ -627,6 +670,342 @@ def build_operational_warm_pond(
         "selection_rule": "highest affinity, deterministic id tiebreaker, Docker replay before memory promotion",
         "created_at": utc_now(),
     }
+
+
+def run_research_broker(
+    *,
+    battle_id: str,
+    run_id: str,
+    scenario: dict[str, Any],
+    hidden: dict[str, Any],
+    scan: dict[str, Any],
+    code_context: dict[str, Any],
+    out_dir: Path,
+    red_persona: str,
+    blue_persona: str,
+    enabled: bool,
+) -> dict[str, Any]:
+    """Run bounded agent-side research lanes concurrently before candidate selection."""
+
+    if not enabled:
+        return {
+            "schema": "battle.research_broker_receipt.v1",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "status": "SKIPPED",
+            "reason": "research_broker_disabled",
+            "mocked": False,
+            "live": False,
+            "created_at": utc_now(),
+        }
+
+    started = time.monotonic()
+    research_dir = out_dir / "context" / "research"
+    research_dir.mkdir(parents=True, exist_ok=True)
+    query_context = build_research_queries(
+        scenario=scenario,
+        hidden=hidden,
+        scan=scan,
+        code_context=code_context,
+        red_persona=red_persona,
+        blue_persona=blue_persona,
+    )
+
+    lanes: list[tuple[str, Any]] = [
+        (
+            "brave",
+            lambda: run_brave_search_receipt(
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario=scenario,
+                hidden=hidden,
+                scan=scan,
+                code_context=code_context,
+                out_dir=out_dir,
+                red_persona=red_persona,
+                blue_persona=blue_persona,
+            ),
+        ),
+        (
+            "github_red",
+            lambda: run_github_research_lane(
+                battle_id=battle_id,
+                run_id=run_id,
+                query=query_context["red_github"],
+                lane="github_red",
+                persona=red_persona,
+                artifact_dir=research_dir / "github-red",
+            ),
+        ),
+        (
+            "github_blue",
+            lambda: run_github_research_lane(
+                battle_id=battle_id,
+                run_id=run_id,
+                query=query_context["blue_github"],
+                lane="github_blue",
+                persona=blue_persona,
+                artifact_dir=research_dir / "github-blue",
+            ),
+        ),
+        (
+            "dogpile_red",
+            lambda: run_dogpile_research_lane(
+                battle_id=battle_id,
+                run_id=run_id,
+                query=query_context["red_dogpile"],
+                preset="red_team",
+                lane="dogpile_red",
+                persona=red_persona,
+                artifact_dir=research_dir / "dogpile-red",
+            ),
+        ),
+        (
+            "dogpile_blue",
+            lambda: run_dogpile_research_lane(
+                battle_id=battle_id,
+                run_id=run_id,
+                query=query_context["blue_dogpile"],
+                preset="blue_team",
+                lane="dogpile_blue",
+                persona=blue_persona,
+                artifact_dir=research_dir / "dogpile-blue",
+            ),
+        ),
+    ]
+
+    lane_receipts: dict[str, dict[str, Any]] = {}
+    completion_order: list[dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=len(lanes)) as executor:
+        future_to_lane = {executor.submit(func): lane for lane, func in lanes}
+        for future in as_completed(future_to_lane, timeout=180):
+            lane = future_to_lane[future]
+            try:
+                receipt = future.result(timeout=1)
+            except Exception as exc:
+                receipt = {
+                    "schema": "battle.research_lane_receipt.v1",
+                    "battle_id": battle_id,
+                    "run_id": run_id,
+                    "lane": lane,
+                    "status": "BLOCKED",
+                    "reason": f"research_lane_exception: {type(exc).__name__}: {exc}",
+                    "mocked": False,
+                    "live": True,
+                    "created_at": utc_now(),
+                }
+            lane_receipts[lane] = receipt
+            completion_order.append(
+                {
+                    "lane": lane,
+                    "status": receipt.get("status"),
+                    "completed_at_seconds": round(time.monotonic() - started, 6),
+                }
+            )
+
+    passed = [item for item in lane_receipts.values() if item.get("status") == "PASS"]
+    blocked = [item for item in lane_receipts.values() if item.get("status") == "BLOCKED"]
+    status = "PASS" if passed else "BLOCKED"
+    return {
+        "schema": "battle.research_broker_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "status": status,
+        "mocked": False,
+        "live": True,
+        "mode": "threadpool_as_completed",
+        "surface": "agent_side_research_broker",
+        "target_container_network": "none",
+        "query_context": query_context,
+        "lane_count": len(lanes),
+        "passed_lane_count": len(passed),
+        "blocked_lane_count": len(blocked),
+        "completion_order": completion_order,
+        "lanes": lane_receipts,
+        "deployment_contract": (
+            "Research lanes complete through as_completed; first usable findings "
+            "seed warm-pond candidate weighting before Docker-only replay."
+        ),
+        "created_at": utc_now(),
+    }
+
+
+def build_research_queries(
+    *,
+    scenario: dict[str, Any],
+    hidden: dict[str, Any],
+    scan: dict[str, Any],
+    code_context: dict[str, Any],
+    red_persona: str,
+    blue_persona: str,
+) -> dict[str, str]:
+    families = " ".join(scan.get("families", []))
+    cwes = " ".join(
+        str(item.get("cwe"))
+        for item in hidden.get("hidden_vulnerabilities", [])
+        if item.get("cwe")
+    )
+    symbols = " ".join(
+        item.get("symbol", "")
+        for item in scan.get("findings", [])
+        if isinstance(item, dict)
+    )
+    functions = " ".join(item.get("name", "") for item in code_context.get("functions", []))
+    app_context = (
+        f"{scenario.get('scenario_id')} Python sqlite reflected XSS SQL injection "
+        f"{families} {cwes} symbols {symbols} functions {functions}"
+    )
+    return {
+        "red_github": f"{app_context} exploit proof payload examples",
+        "blue_github": f"{app_context} parameterized sqlite html escape patch examples",
+        "red_dogpile": f"{red_persona} red team fast exploit research for {app_context}",
+        "blue_dogpile": f"{blue_persona} blue team fast mitigation research for {app_context}",
+    }
+
+
+def run_github_research_lane(
+    *,
+    battle_id: str,
+    run_id: str,
+    query: str,
+    lane: str,
+    persona: str,
+    artifact_dir: Path,
+) -> dict[str, Any]:
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    stdout_path = artifact_dir / "github-search.stdout.json"
+    stderr_path = artifact_dir / "github-search.stderr.txt"
+    command = [
+        str(SKILLS_DIR / "github-search" / "run.sh"),
+        "search",
+        query,
+        "--limit",
+        "3",
+        "--json",
+    ]
+    return run_research_command_receipt(
+        schema="battle.github_search_receipt.v1",
+        battle_id=battle_id,
+        run_id=run_id,
+        lane=lane,
+        persona=persona,
+        surface="github_search_skill",
+        query=query,
+        command=command,
+        cwd=SKILLS_DIR / "github-search",
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        timeout_seconds=75,
+    )
+
+
+def run_dogpile_research_lane(
+    *,
+    battle_id: str,
+    run_id: str,
+    query: str,
+    preset: str,
+    lane: str,
+    persona: str,
+    artifact_dir: Path,
+) -> dict[str, Any]:
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    stdout_path = artifact_dir / "dogpile.stdout.md"
+    stderr_path = artifact_dir / "dogpile.stderr.txt"
+    command = [
+        str(SKILLS_DIR / "dogpile" / "run.sh"),
+        "search",
+        query,
+        "--preset",
+        preset,
+        "--no-interactive",
+        "--persona",
+        persona,
+        "--rationale",
+        "Battle v1 live research broker before Docker-contained exploit/defense replay",
+        "--context",
+        "Use retrieval only. Do not execute PoC code on the host.",
+    ]
+    return run_research_command_receipt(
+        schema="battle.dogpile_receipt.v1",
+        battle_id=battle_id,
+        run_id=run_id,
+        lane=lane,
+        persona=persona,
+        surface="dogpile_search_skill",
+        query=query,
+        command=command,
+        cwd=SKILLS_DIR / "dogpile",
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        timeout_seconds=90,
+    )
+
+
+def run_research_command_receipt(
+    *,
+    schema: str,
+    battle_id: str,
+    run_id: str,
+    lane: str,
+    persona: str,
+    surface: str,
+    query: str,
+    command: list[str],
+    cwd: Path,
+    stdout_path: Path,
+    stderr_path: Path,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    started = time.monotonic()
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout_seconds,
+        )
+        stdout = proc.stdout
+        stderr = proc.stderr
+        exit_code = proc.returncode
+        timeout_expired = False
+    except subprocess.TimeoutExpired as exc:
+        stdout = _decode_timeout_stream(exc.stdout)
+        stderr = _decode_timeout_stream(exc.stderr)
+        exit_code = 124
+        timeout_expired = True
+    stdout_path.write_text(stdout, encoding="utf-8")
+    stderr_path.write_text(stderr, encoding="utf-8")
+    status = "PASS" if exit_code == 0 and not timeout_expired else "BLOCKED"
+    receipt = {
+        "schema": schema,
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "lane": lane,
+        "persona": persona,
+        "status": status,
+        "surface": surface,
+        "mocked": False,
+        "live": True,
+        "query": query,
+        "command": command,
+        "exit_code": exit_code,
+        "timeout_seconds": timeout_seconds,
+        "timeout_expired": timeout_expired,
+        "duration_seconds": round(time.monotonic() - started, 6),
+        "stdout_path": str(stdout_path),
+        "stderr_path": str(stderr_path),
+        "stdout_bytes": len(stdout.encode("utf-8")),
+        "stderr_bytes": len(stderr.encode("utf-8")),
+        "created_at": utc_now(),
+    }
+    if timeout_expired:
+        receipt["reason"] = "research_command_timeout"
+    elif exit_code != 0:
+        receipt["reason"] = "research_command_failed"
+    return receipt
 
 
 def select_warm_pond_combinations(
@@ -1450,6 +1829,7 @@ def build_context_receipt(
     memory_recall: dict[str, Any],
     code_context: dict[str, Any],
     scan: dict[str, Any],
+    research: dict[str, Any],
     warm_pond: dict[str, Any],
     async_execution: dict[str, Any],
     scorekeeper: dict[str, Any],
@@ -1457,7 +1837,16 @@ def build_context_receipt(
 ) -> dict[str, Any]:
     ok = all(
         item["status"] == "PASS"
-        for item in [memory_recall, code_context, scan, warm_pond, async_execution, scorekeeper, memory_promotion]
+        for item in [
+            memory_recall,
+            code_context,
+            scan,
+            research,
+            warm_pond,
+            async_execution,
+            scorekeeper,
+            memory_promotion,
+        ]
     )
     return {
         "schema": "battle.context_receipt.v1",
@@ -1467,6 +1856,7 @@ def build_context_receipt(
         "memory_recall": "context/memory-recall-receipt.json",
         "code_context": "context/code-context-receipt.json",
         "fast_scan": "context/fast-scan-receipt.json",
+        "research_broker": "context/research-broker-receipt.json",
         "warm_pond": "context/warm-pond-receipt.json",
         "memory_promotion": "context/memory-promotion-receipt.json",
         "memory": {
@@ -1481,6 +1871,14 @@ def build_context_receipt(
             "status": scan["status"],
             "finding_count": scan.get("finding_count", 0),
             "families": scan.get("families", []),
+        },
+        "research": {
+            "status": research["status"],
+            "mode": research.get("mode"),
+            "lane_count": research.get("lane_count", 0),
+            "passed_lane_count": research.get("passed_lane_count", 0),
+            "blocked_lane_count": research.get("blocked_lane_count", 0),
+            "completion_order": research.get("completion_order", []),
         },
         "warm_pond_candidates": {
             "status": warm_pond["status"],
@@ -1504,6 +1902,7 @@ def build_context_receipt(
             "context/memory-recall-receipt.json",
             "context/code-context-receipt.json",
             "context/fast-scan-receipt.json",
+            "context/research-broker-receipt.json",
             "context/warm-pond-receipt.json",
             "context/memory-promotion-receipt.json",
             "red/team-receipt.json",
@@ -1548,6 +1947,8 @@ def build_scoreboard(
             "enabled": True,
             "status": context_receipt["status"],
             "receipt": "context/context-receipt.json",
+            "research_broker_status": context_receipt["research"]["status"],
+            "research_passed_lane_count": context_receipt["research"]["passed_lane_count"],
             "memory_store_status": memory_promotion["status"],
             "memory_promotion_status": memory_promotion["status"],
             "memory_promotion_count": memory_promotion.get("document_count", 0),
@@ -1572,6 +1973,7 @@ def build_monitor_graph(
     blue_team_receipt: dict[str, Any],
     scorekeeper: dict[str, Any],
     memory_recall: dict[str, Any],
+    research: dict[str, Any],
     memory_promotion: dict[str, Any],
     selected: list[dict[str, Any]],
 ) -> dict[str, Any]:
@@ -1581,6 +1983,7 @@ def build_monitor_graph(
         {"id": "team:blue", "label": blue_team_receipt["persona"], "kind": "team", "status": blue_team_receipt["status"]},
         {"id": "scorekeeper", "label": "Scorekeeper", "kind": "signal", "status": scorekeeper["status"]},
         {"id": "signal:memory-recall", "label": "memory recall", "kind": "signal", "status": memory_recall["status"]},
+        {"id": "signal:research-broker", "label": "research broker", "kind": "signal", "status": research["status"]},
         {"id": "signal:memory-promotion", "label": "memory promotion", "kind": "signal", "status": memory_promotion["status"]},
         {"id": "signal:async-overlap", "label": "async overlap", "kind": "signal", "status": "PASS" if scoreboard["async"]["overlap_evidence"]["overlap_detected"] else "BLOCKED"},
     ]
@@ -1590,6 +1993,8 @@ def build_monitor_graph(
         {"source": "team:blue", "target": "scorekeeper", "label": "patch evidence"},
         {"source": "signal:memory-recall", "target": "team:red", "label": "seeded"},
         {"source": "signal:memory-recall", "target": "team:blue", "label": "seeded"},
+        {"source": "signal:research-broker", "target": "team:red", "label": "research"},
+        {"source": "signal:research-broker", "target": "team:blue", "label": "research"},
         {"source": "scorekeeper", "target": "signal:memory-promotion", "label": "promotes"},
         {"source": "team:red", "target": "signal:async-overlap", "label": "overlaps"},
         {"source": "team:blue", "target": "signal:async-overlap", "label": "overlaps"},
