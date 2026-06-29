@@ -2,7 +2,7 @@
 
 Browser automation and WebGPT transport for agents.
 
-![Surf banner](docs/assets/surf-banner.png)
+![Surf card](../../docs/assets/project-cards/surf.webp)
 
 `surf` lets agents drive a real browser: list tabs, read pages with element
 refs, click and type, capture screenshots, stitch scroll containers, and submit

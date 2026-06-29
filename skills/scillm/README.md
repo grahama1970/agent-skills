@@ -1,6 +1,6 @@
 # scillm
 
-![scillm header](assets/scillm-header.webp)
+![Scillm card](../../docs/assets/project-cards/scillm.webp)
 
 Scillm is the model and agent execution surface behind my agent work. It gives
 project agents one path for any-model calls, image/VLM work, batch calls,

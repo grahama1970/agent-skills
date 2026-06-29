@@ -95,7 +95,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/tau">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/tau">
         <img src="docs/assets/project-cards/tau.webp" width="100%" alt="T'au" />
       </a>
       <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
@@ -121,7 +121,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/scillm">
+      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/scillm">
         <img src="docs/assets/project-cards/scillm.webp" width="100%" alt="Scillm" />
       </a>
       <br/><strong>Scillm</strong><br/><em>1-shot, exec, subagent, and DAG orch.</em>

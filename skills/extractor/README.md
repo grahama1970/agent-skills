@@ -1,6 +1,6 @@
 # extractor
 
-![Extractor header](assets/extractor-header.webp)
+![Extractor card](../../docs/assets/project-cards/extractor.webp)
 
 Extractor turns messy documents into structured material agents can inspect,
 route, and reuse. It profiles the input, chooses a preset, extracts sections,

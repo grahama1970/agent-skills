@@ -2,7 +2,7 @@
 
 <p align="center">
   <img
-    src="docs/assets/debugger-banner.png"
+    src="../../docs/assets/project-cards/debugger.webp"
     alt="debugger skill banner showing a vintage industrial DEBUGGER machine catching bugs in a glass inspection chamber"
     width="100%"
   />

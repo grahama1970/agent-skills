@@ -2,7 +2,7 @@
 
 <p align="center">
   <img
-    src="docs/assets/battle-header.png"
+    src="../../docs/assets/project-cards/battle.webp"
     alt="Humorous red versus blue tabletop-style battle scene for the Battle skill"
     style="max-width: 100%; height: auto; display: block;"
   />
