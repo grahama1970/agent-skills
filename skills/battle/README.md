@@ -16,23 +16,31 @@ The skill is designed for adversarial security work, not generic task routing:
 Red finds and proves vulnerabilities; Blue patches or hardens; the orchestrator
 tracks rounds, scores, termination conditions, and reports.
 
-Current expanded proof rung:
+Current generated proof rung:
 
 ```bash
-./run.sh battle-v1-operational battle-004 \
-  --out /tmp/battle-v1-expanded-tau-032 \
-  --red-workers 32 \
-  --blue-workers 32 \
-  --max-attempts 32 \
+./run.sh battle-v1-operational battle-005 \
+  --out /tmp/battle-v1-generated-no-tau-003 \
+  --red-workers 16 \
+  --blue-workers 16 \
+  --max-attempts 16 \
   --require-memory \
-  --tau-live \
+  --tau-deterministic \
   --research-broker
 ```
 
 This is a bounded Docker-only fixture proof, not production readiness. Local
-evidence from `/tmp/battle-v1-expanded-tau-032` recorded 96 warm-pond
-combinations, 64 Tau worker-granularity handoffs, and 32 scorekeeper replay
-attempts with `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+evidence from `/tmp/battle-v1-generated-no-tau-003` recorded the generated
+warm-pond fixture with 16 generated exploit candidates, 8 generated defense
+candidates, 200 total combinations, and 16 scorekeeper replay attempts with
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+
+The current Tau live scaling blocker is also recorded. A 64 Red + 64 Blue
+worker handoff run against `battle-005` wrote `/tmp/battle-v1-generated-tau-064`
+and stopped at `tau_live_handoff_failed`: Tau consumed 128 worker handoffs and
+wrote per-worker artifacts, but `tau-live/manifest.json` ended `BLOCKED`
+with 80 PASS and 48 BLOCKED Scillm calls. This is filed upstream as
+`grahama1970/tau#42`.
 
 ## Operating Contract
 

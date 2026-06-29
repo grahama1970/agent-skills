@@ -1,7 +1,7 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-29 19:45 EDT by agent
-**Status:** Active development, Battle v1 operational proof locally exercised
+**Last updated:** 2026-06-29 16:47 EDT by agent
+**Status:** Active development, generated Battle v1 fixture preflight passed; 64x64 Tau live fanout blocked upstream
 
 ## Current Understanding
 
@@ -258,6 +258,35 @@
   handoff pressure proof from 8x8 to 32x32 workers for the fixture. It still
   does not prove unbounded swarm execution, Tau loop repair cycles, Scillm
   delegate/batch/tool execution, or production hidden-vulnerability generation.
+- Battle now has a generated warm-pond fixture:
+  `./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-no-tau-003 --red-workers 16 --blue-workers 16 --max-attempts 16 --require-memory --research-broker --tau-deterministic`.
+  `battle-005` keeps the same Docker-only SQLi/XSS Arena app shape as
+  `battle-003`/`battle-004`, but generates warm-pond candidate metadata from a
+  compact `warm_pond_generator` block in `scenario.json`. Current local
+  evidence under `/tmp/battle-v1-generated-no-tau-003` has
+  `run.status=PASS`, `run.verdict=BLUE_SUCCESS`,
+  `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`,
+  `warm_pond.warm_pond_generator.enabled=True`,
+  `generated_exploit_candidate_count=16`,
+  `generated_defense_candidate_count=8`,
+  `warm_pond.exploit_candidate_count=20`,
+  `warm_pond.defense_candidate_count=10`,
+  `warm_pond.combination_count=200`, `scorekeeper.attempt_count=16`,
+  `scorekeeper.passed_attempt_count=16`, and `subagent-ledger.sqlite` event
+  count `56`.
+- The current 64x64 Tau live worker-fanout run is blocked upstream, not
+  accepted evidence. Repro:
+  `./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064 --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --research-broker --tau-live`.
+  Battle wrote `/tmp/battle-v1-generated-tau-064/run-receipt.json` with
+  `status=BLOCKED` and `reason=tau_live_handoff_failed`. Tau wrote
+  `/tmp/battle-v1-generated-tau-064/tau-live/manifest.json` with
+  `status=BLOCKED`, `scheduling.granularity=worker`, `handoff_count=128`,
+  `worker_count=128`, `process.exit_code=2`,
+  `process.timeout_expired=false`, and `process.duration_seconds=98.665392`.
+  Correct extraction over `manifest.teams` showed 80 worker calls `PASS` and 48
+  `BLOCKED`, all blocked calls reporting blank `scillm_http_error` with
+  `http_status=None` around 90 seconds. Upstream ticket:
+  `https://github.com/grahama1970/tau/issues/42`.
 - The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
   searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
   one lane to fail with `FileNotFoundError`. The fix uses per-session

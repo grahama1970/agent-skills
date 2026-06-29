@@ -662,6 +662,27 @@ def build_operational_warm_pond(
             }
         )
 
+    exploit_ids = {str(item.get("id")) for item in exploit_candidates}
+    defense_ids = {str(item.get("id")) for item in defense_candidates}
+    generated_exploit_count = 0
+    generated_defense_count = 0
+
+    def add_exploit_candidate(candidate: dict[str, Any]) -> bool:
+        candidate_id = str(candidate.get("id", ""))
+        if not candidate_id or candidate_id in exploit_ids:
+            return False
+        exploit_ids.add(candidate_id)
+        exploit_candidates.append(candidate)
+        return True
+
+    def add_defense_candidate(candidate: dict[str, Any]) -> bool:
+        candidate_id = str(candidate.get("id", ""))
+        if not candidate_id or candidate_id in defense_ids:
+            return False
+        defense_ids.add(candidate_id)
+        defense_candidates.append(candidate)
+        return True
+
     configured_warm_pond = scenario.get("warm_pond")
     if isinstance(configured_warm_pond, dict):
         for candidate in configured_warm_pond.get("extra_exploit_candidates", []):
@@ -673,7 +694,7 @@ def build_operational_warm_pond(
             if family not in families:
                 continue
             research_evidence = research_family_evidence(research_signals, family)
-            exploit_candidates.append(
+            add_exploit_candidate(
                 {
                     "id": str(candidate["id"]),
                     "family": family,
@@ -693,7 +714,7 @@ def build_operational_warm_pond(
             if family not in families:
                 continue
             research_evidence = research_family_evidence(research_signals, family)
-            defense_candidates.append(
+            add_defense_candidate(
                 {
                     "id": str(candidate["id"]),
                     "family": family,
@@ -703,6 +724,75 @@ def build_operational_warm_pond(
                     "research_sources": research_evidence["sources"],
                 }
             )
+
+    configured_generator = scenario.get("warm_pond_generator")
+    if isinstance(configured_generator, dict):
+        for spec in configured_generator.get("exploit_payloads", []):
+            if not isinstance(spec, dict):
+                continue
+            family = str(spec.get("family", ""))
+            if family not in families:
+                continue
+            symbol = str(spec.get("symbol", ""))
+            source = str(spec.get("source", "scenario_warm_pond_generator"))
+            research_evidence = research_family_evidence(research_signals, family)
+            payloads = spec.get("payloads", [])
+            if not isinstance(payloads, list):
+                continue
+            for index, payload_spec in enumerate(payloads, start=1):
+                if isinstance(payload_spec, dict):
+                    payload = str(payload_spec.get("payload", ""))
+                    payload_id = str(payload_spec.get("id") or f"{family}-{index:03d}")
+                else:
+                    payload = str(payload_spec)
+                    payload_id = f"{family}-{index:03d}"
+                if not payload:
+                    continue
+                added = add_exploit_candidate(
+                    {
+                        "id": f"exploit-{safe_key(payload_id)}",
+                        "family": family,
+                        "symbol": symbol,
+                        "payload": payload,
+                        "source": source,
+                        "research_weight": research_evidence["weight"],
+                        "research_sources": research_evidence["sources"],
+                    }
+                )
+                generated_exploit_count += 1 if added else 0
+        for spec in configured_generator.get("defense_strategies", []):
+            if not isinstance(spec, dict):
+                continue
+            family = str(spec.get("family", ""))
+            if family not in families:
+                continue
+            symbol = str(spec.get("symbol", ""))
+            source = str(spec.get("source", "scenario_warm_pond_generator"))
+            research_evidence = research_family_evidence(research_signals, family)
+            strategies = spec.get("strategies", [])
+            if not isinstance(strategies, list):
+                continue
+            for index, strategy_spec in enumerate(strategies, start=1):
+                if isinstance(strategy_spec, dict):
+                    strategy = str(strategy_spec.get("strategy", ""))
+                    strategy_id = str(strategy_spec.get("id") or f"{family}-{index:03d}")
+                else:
+                    strategy = str(strategy_spec)
+                    strategy_id = f"{family}-{index:03d}"
+                if not strategy:
+                    continue
+                added = add_defense_candidate(
+                    {
+                        "id": f"defense-{safe_key(strategy_id)}",
+                        "family": family,
+                        "symbol": symbol,
+                        "strategy": strategy,
+                        "source": source,
+                        "research_weight": research_evidence["weight"],
+                        "research_sources": research_evidence["sources"],
+                    }
+                )
+                generated_defense_count += 1 if added else 0
 
     combinations: list[dict[str, Any]] = []
     for exploit in exploit_candidates:
@@ -759,6 +849,11 @@ def build_operational_warm_pond(
         "research_passed_lane_count": research.get("passed_lane_count", 0),
         "research_completion_order": research.get("completion_order", []),
         "research_signal_summary": research_signals,
+        "warm_pond_generator": {
+            "enabled": isinstance(configured_generator, dict),
+            "generated_exploit_candidate_count": generated_exploit_count,
+            "generated_defense_candidate_count": generated_defense_count,
+        },
         "research_weighted_candidate_count": sum(
             1
             for item in [*exploit_candidates, *defense_candidates]

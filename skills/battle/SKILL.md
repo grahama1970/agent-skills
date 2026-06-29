@@ -267,6 +267,12 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run the expanded warm-pond Tau worker-fanout proof
 ./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-032 --red-workers 32 --blue-workers 32 --max-attempts 32 --require-memory --tau-live --research-broker
+
+# Run the generated warm-pond fixture preflight
+./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-no-tau-003 --red-workers 16 --blue-workers 16 --max-attempts 16 --require-memory --tau-deterministic --research-broker
+
+# Current Tau scaling blocker reproduction
+./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064 --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --tau-live --research-broker
 ```
 
 ## Battle v0 Fixture Proof
@@ -447,6 +453,24 @@ worker handoff adapter can drive Tau worker-granularity fanout at 32 Red and
 32 Blue workers for this fixture. It still does not prove unbounded swarm
 execution, Tau loop repair cycles, Scillm delegate/batch/tool execution, or a
 production hidden-vulnerability generator.
+
+The `battle-005` fixture adds compact scenario-driven warm-pond generation on
+the same Docker-only SQLi/XSS Arena app. Current local preflight evidence under
+`/tmp/battle-v1-generated-no-tau-003` recorded
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`,
+`warm_pond.warm_pond_generator.enabled=True`,
+`generated_exploit_candidate_count=16`,
+`generated_defense_candidate_count=8`, `combination_count=200`,
+`scorekeeper.attempt_count=16`, and `scorekeeper.passed_attempt_count=16`.
+
+The current live Tau scaling blocker is the 64 Red + 64 Blue worker run under
+`/tmp/battle-v1-generated-tau-064`. Battle generated 128 worker handoffs and
+Tau consumed them at worker granularity, but `tau-live/manifest.json` ended
+`status=BLOCKED`, `process.exit_code=2`, `timeout_expired=false`, with 80
+worker calls `PASS` and 48 `BLOCKED` on blank `scillm_http_error` at roughly
+90 seconds. This is filed upstream as `grahama1970/tau#42`. Treat 64x64 Tau
+live as pending until that Tau issue is resolved or Battle implements explicit
+bounded backpressure/degradation.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent
 Dogpile processes shared one partial-results temp file. The fix is in
