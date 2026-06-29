@@ -55,6 +55,8 @@ EXECUTION_SCOPE = {
     "models_used": ["tau-local-deterministic-provider"],
 }
 
+TAU_LIVE_MAX_WORKER_HANDOFFS = 64
+
 NON_CLAIMS = [
     "does_not_execute_unbounded_warm_pond_swarm",
     "does_not_prove_tau_loop_repair_cycle",
@@ -308,6 +310,26 @@ def run_battle_v1_operational(
         )
 
     selected = select_warm_pond_combinations(warm_pond, max_attempts=max_attempts)
+    tau_live_preflight = build_tau_live_preflight_receipt(
+        battle_id=battle_id,
+        run_id=run_id,
+        tau_live=tau_live,
+        requested_attempt_count=len(selected),
+        selected=selected,
+    )
+    write_json(context_dir / "tau-live-preflight-receipt.json", tau_live_preflight)
+    record_event(
+        ledger_path,
+        run_id=run_id,
+        battle_id=battle_id,
+        team="orchestrator",
+        persona="battle-orchestrator",
+        event_type="tau_live_preflight",
+        status=str(tau_live_preflight["status"]),
+        artifact_path=context_dir / "tau-live-preflight-receipt.json",
+        details=to_jsonable(tau_live_preflight),
+    )
+    selected = tau_live_preflight["selected_attempts"]
     async_execution = run_red_blue_async_workers(
         battle_id=battle_id,
         run_id=run_id,
@@ -504,6 +526,7 @@ def run_battle_v1_operational(
         "receipts": scoreboard["receipts"],
         "memory_recall_receipt": "context/memory-recall-receipt.json",
         "memory_promotion_receipt": "context/memory-promotion-receipt.json",
+        "tau_live_preflight_receipt": "context/tau-live-preflight-receipt.json",
         "tau_context_bundle": "context/tau-battle-context-bundle.json",
         "tau_live_manifest": "tau-live/manifest.json" if tau_live_receipt else None,
         "monitor_graph": "graph/battle-v1-force-graph.json",
@@ -1312,6 +1335,63 @@ def select_warm_pond_combinations(
         combinations,
         key=lambda item: (-float(item.get("affinity", 0.0)), str(item.get("id", ""))),
     )[:max_attempts]
+
+
+def build_tau_live_preflight_receipt(
+    *,
+    battle_id: str,
+    run_id: str,
+    tau_live: bool,
+    requested_attempt_count: int,
+    selected: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Cap worker-granularity Tau live handoffs before starting the worker pool."""
+
+    requested_handoff_count = requested_attempt_count * 2
+    if not tau_live:
+        effective_attempt_count = requested_attempt_count
+        effective_handoff_count = requested_handoff_count
+        capped = False
+        reason = "tau_live_disabled"
+    else:
+        effective_attempt_count = min(
+            requested_attempt_count,
+            max(1, TAU_LIVE_MAX_WORKER_HANDOFFS // 2),
+        )
+        effective_handoff_count = effective_attempt_count * 2
+        capped = effective_handoff_count < requested_handoff_count
+        reason = (
+            "requested_live_worker_handoffs_capped_to_tau_safe_limit"
+            if capped
+            else "requested_live_worker_handoffs_within_tau_safe_limit"
+        )
+
+    return {
+        "schema": "battle.tau_live_preflight_receipt.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "status": "PASS",
+        "mocked": False,
+        "live": tau_live,
+        "handoff_granularity": "worker",
+        "reason": reason,
+        "capped": capped,
+        "requested_attempt_count": requested_attempt_count,
+        "requested_handoff_count": requested_handoff_count,
+        "max_live_handoffs": TAU_LIVE_MAX_WORKER_HANDOFFS if tau_live else None,
+        "effective_attempt_count": effective_attempt_count,
+        "effective_handoff_count": effective_handoff_count,
+        "degrade_strategy": (
+            "preserve top research-weighted warm-pond combinations and run the highest safe Tau fanout"
+            if capped
+            else None
+        ),
+        "selected_attempt_ids": [
+            str(item.get("id")) for item in selected[:effective_attempt_count]
+        ],
+        "selected_attempts": selected[:effective_attempt_count],
+        "created_at": utc_now(),
+    }
 
 
 def write_tau_battle_context_bundle(

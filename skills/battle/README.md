@@ -35,12 +35,17 @@ warm-pond fixture with 16 generated exploit candidates, 8 generated defense
 candidates, 200 total combinations, and 16 scorekeeper replay attempts with
 `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
 
-The current Tau live scaling blocker is also recorded. A 64 Red + 64 Blue
-worker handoff run against `battle-005` wrote `/tmp/battle-v1-generated-tau-064`
-and stopped at `tau_live_handoff_failed`: Tau consumed 128 worker handoffs and
-wrote per-worker artifacts, but `tau-live/manifest.json` ended `BLOCKED`
-with 80 PASS and 48 BLOCKED Scillm calls. This is filed upstream as
-`grahama1970/tau#42`.
+The current Tau live proof is bounded by Tau's safe live worker-handoff cap.
+A 64 Red + 64 Blue requested run against `battle-005` now writes
+`context/tau-live-preflight-receipt.json`, caps the requested 128 worker
+handoffs to 64 safe live handoffs, and preserves the top 32 research-weighted
+warm-pond attempt pairs. Local evidence from
+`/tmp/battle-v1-generated-tau-064-capped` recorded `status=PASS`,
+`verdict=BLUE_SUCCESS`, `tau-live/manifest.json status=PASS`, and
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS` with 32 Red and 32 Blue workers. The
+older raw 128-handoff Tau failure is filed and closed upstream as
+`grahama1970/tau#42`; treat unbounded 128-worker live Tau completion as a
+non-claim.
 
 ## Operating Contract
 

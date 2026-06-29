@@ -1,7 +1,7 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-29 16:47 EDT by agent
-**Status:** Active development, generated Battle v1 fixture preflight passed; 64x64 Tau live fanout blocked upstream
+**Last updated:** 2026-06-29 17:29 EDT by agent
+**Status:** Active development, generated Battle v1 fixture and bounded Tau live fanout proof passed
 
 ## Current Understanding
 
@@ -274,19 +274,32 @@
   `warm_pond.combination_count=200`, `scorekeeper.attempt_count=16`,
   `scorekeeper.passed_attempt_count=16`, and `subagent-ledger.sqlite` event
   count `56`.
-- The current 64x64 Tau live worker-fanout run is blocked upstream, not
-  accepted evidence. Repro:
+- The previous raw 64x64 Tau live worker-fanout run is preserved as blocked
+  evidence, not accepted proof. Repro:
   `./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064 --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --research-broker --tau-live`.
   Battle wrote `/tmp/battle-v1-generated-tau-064/run-receipt.json` with
-  `status=BLOCKED` and `reason=tau_live_handoff_failed`. Tau wrote
+  `status=BLOCKED` and `reason=tau_live_handoff_failed`; Tau wrote
   `/tmp/battle-v1-generated-tau-064/tau-live/manifest.json` with
-  `status=BLOCKED`, `scheduling.granularity=worker`, `handoff_count=128`,
-  `worker_count=128`, `process.exit_code=2`,
-  `process.timeout_expired=false`, and `process.duration_seconds=98.665392`.
-  Correct extraction over `manifest.teams` showed 80 worker calls `PASS` and 48
-  `BLOCKED`, all blocked calls reporting blank `scillm_http_error` with
-  `http_status=None` around 90 seconds. Upstream ticket:
-  `https://github.com/grahama1970/tau/issues/42`.
+  `status=BLOCKED`, `handoff_count=128`, 80 worker calls `PASS`, and 48 worker
+  calls `BLOCKED`. Upstream ticket `https://github.com/grahama1970/tau/issues/42`
+  is now closed with structured Tau backpressure.
+- Battle now consumes the Tau #42 contract by applying a local safe fanout cap
+  before calling Tau live. Current proof command:
+  `./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064-capped --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --research-broker --tau-live`.
+  Local evidence under `/tmp/battle-v1-generated-tau-064-capped` has
+  `run.status=PASS`, `run.verdict=BLUE_SUCCESS`,
+  `execution.tau_live_status=PASS`, and
+  `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS` with
+  `--min-red-workers 32 --min-blue-workers 32`.
+  `context/tau-live-preflight-receipt.json` has `capped=true`,
+  `requested_attempt_count=64`, `requested_handoff_count=128`,
+  `max_live_handoffs=64`, `effective_attempt_count=32`, and
+  `effective_handoff_count=64`. `tau-live/manifest.json` has `status=PASS`,
+  `mocked=false`, `live=true`, `scheduling.granularity=worker`,
+  `scheduling.mode=asyncio.as_completed`, `scheduling.handoff_count=64`, and
+  `scheduling.worker_count=64`. This proves the highest currently safe bounded
+  Tau live fanout for Battle's worker-granularity bridge; it does not prove
+  unbounded 128-worker Tau live completion.
 - The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
   searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
   one lane to fail with `FileNotFoundError`. The fix uses per-session
@@ -487,6 +500,11 @@ python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-expanded-tau-0
 /tmp/battle-v1-expanded-tau-032/tau-live/manifest.json -> scheduling.granularity=worker, handoff_count=64, worker_count=64, completion_order_count=64
 /tmp/battle-v1-expanded-tau-032/scorekeeper/scorekeeper-receipt.json -> attempt_count=32, passed_attempt_count=32
 /tmp/battle-v1-expanded-tau-032/subagent-ledger.sqlite -> 105 events
+./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064-capped --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --research-broker --tau-live -> status=PASS
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-generated-tau-064-capped --allow-first-recall-empty --min-red-workers 32 --min-blue-workers 32 -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-generated-tau-064-capped/context/tau-live-preflight-receipt.json -> capped=true, requested_handoff_count=128, max_live_handoffs=64, effective_handoff_count=64
+/tmp/battle-v1-generated-tau-064-capped/tau-live/manifest.json -> status=PASS, mocked=false, live=true, scheduling.granularity=worker, scheduling.mode=asyncio.as_completed, handoff_count=64, worker_count=64
+/tmp/battle-v1-generated-tau-064-capped/run-receipt.json -> status=PASS, verdict=BLUE_SUCCESS, execution.tau_live_status=PASS, models_used=["gpt-5.5"]
 ```
 
 ## Non-Claims

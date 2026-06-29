@@ -271,8 +271,8 @@ For non-git directories. Creates simple file copies for each team.
 # Run the generated warm-pond fixture preflight
 ./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-no-tau-003 --red-workers 16 --blue-workers 16 --max-attempts 16 --require-memory --tau-deterministic --research-broker
 
-# Current Tau scaling blocker reproduction
-./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064 --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --tau-live --research-broker
+# Run generated warm-pond Tau live at the current safe bounded fanout
+./run.sh battle-v1-operational battle-005 --out /tmp/battle-v1-generated-tau-064-capped --red-workers 64 --blue-workers 64 --max-attempts 64 --require-memory --tau-live --research-broker
 ```
 
 ## Battle v0 Fixture Proof
@@ -463,14 +463,20 @@ the same Docker-only SQLi/XSS Arena app. Current local preflight evidence under
 `generated_defense_candidate_count=8`, `combination_count=200`,
 `scorekeeper.attempt_count=16`, and `scorekeeper.passed_attempt_count=16`.
 
-The current live Tau scaling blocker is the 64 Red + 64 Blue worker run under
-`/tmp/battle-v1-generated-tau-064`. Battle generated 128 worker handoffs and
-Tau consumed them at worker granularity, but `tau-live/manifest.json` ended
-`status=BLOCKED`, `process.exit_code=2`, `timeout_expired=false`, with 80
-worker calls `PASS` and 48 `BLOCKED` on blank `scillm_http_error` at roughly
-90 seconds. This is filed upstream as `grahama1970/tau#42`. Treat 64x64 Tau
-live as pending until that Tau issue is resolved or Battle implements explicit
-bounded backpressure/degradation.
+The `battle-005` Tau live proof now applies explicit bounded fanout before
+calling Tau. The 64 Red + 64 Blue requested run under
+`/tmp/battle-v1-generated-tau-064-capped` writes
+`context/tau-live-preflight-receipt.json` with
+`requested_handoff_count=128`, `max_live_handoffs=64`,
+`effective_handoff_count=64`, and `capped=true`, then runs the top 32
+research-weighted warm-pond attempt pairs. Local evidence recorded
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`, `run.status=PASS`,
+`run.verdict=BLUE_SUCCESS`, `execution.tau_live_status=PASS`,
+`tau-live/manifest.json status=PASS`, and
+`tau-live/manifest.json scheduling.handoff_count=64`. The previous raw
+128-handoff Tau failure is preserved as `grahama1970/tau#42`, which added
+structured Tau backpressure; Battle does not claim unbounded 128-worker live
+Tau completion.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent
 Dogpile processes shared one partial-results temp file. The fix is in
