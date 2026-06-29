@@ -1,0 +1,147 @@
+{
+  "schema": "battle.scenario.v1",
+  "battle_id": "battle-004",
+  "scenario_id": "arena-expanded-sqli-xss-race-001",
+  "title": "Battle-004 expanded Arena warm-pond race",
+  "mode": "docker",
+  "docker_image": "python:3.12-slim",
+  "arena_team": {
+    "role": "builds_target_and_secretly_plants_vulnerability",
+    "public_brief": "Tiny search app with /search?q=<term> entry point and expanded warm-pond payload search.",
+    "hidden_ground_truth": "hidden/ground-truth.json"
+  },
+  "entry_point": {
+    "kind": "http",
+    "path": "/search?q=<term>",
+    "module": "app.py"
+  },
+  "expected_changed_files": [
+    "app.py"
+  ],
+  "race": {
+    "red_delay_seconds": 1.2,
+    "blue_delay_seconds": 0.2,
+    "timeout_seconds": 30,
+    "expected_winner": "blue"
+  },
+  "commands": {
+    "expect_vulnerable": [
+      "python",
+      "exploit_check.py",
+      "--expect-vulnerable"
+    ],
+    "expect_safe": [
+      "python",
+      "exploit_check.py",
+      "--expect-safe"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ]
+  },
+  "warm_pond": {
+    "extra_exploit_candidates": [
+      {
+        "id": "exploit-sqli-comment-tail",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "payload": "x%' OR username LIKE '%a%' --",
+        "source": "scenario_warm_pond_sql_mutation"
+      },
+      {
+        "id": "exploit-sqli-role-admin-doublequote",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "payload": "%' OR role LIKE 'admin' --",
+        "source": "scenario_warm_pond_sql_mutation"
+      },
+      {
+        "id": "exploit-sqli-always-true-paren",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "payload": "%' OR ('x'='x') --",
+        "source": "scenario_warm_pond_sql_mutation"
+      },
+      {
+        "id": "exploit-sqli-union-admin",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "payload": "%' UNION SELECT username FROM users WHERE role='admin' --",
+        "source": "scenario_warm_pond_sql_mutation"
+      },
+      {
+        "id": "exploit-xss-img-onerror",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "payload": "<img src=x onerror=alert(1)>",
+        "source": "scenario_warm_pond_xss_mutation"
+      },
+      {
+        "id": "exploit-xss-svg-onload",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "payload": "<svg onload=alert(1)>",
+        "source": "scenario_warm_pond_xss_mutation"
+      },
+      {
+        "id": "exploit-xss-input-breakout",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "payload": "\"><script>alert(1)</script>",
+        "source": "scenario_warm_pond_xss_mutation"
+      },
+      {
+        "id": "exploit-xss-event-handler",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "payload": "<body onload=alert(1)>",
+        "source": "scenario_warm_pond_xss_mutation"
+      }
+    ],
+    "extra_defense_candidates": [
+      {
+        "id": "defense-sqli-bound-parameter",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "strategy": "bind all user input before SQL execution"
+      },
+      {
+        "id": "defense-sqli-query-builder-boundary",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "strategy": "isolate query construction and reject string interpolation"
+      },
+      {
+        "id": "defense-sqli-regression-oracle",
+        "family": "sql_injection",
+        "symbol": "search_users",
+        "strategy": "patch with parameter binding and replay SQLi oracle"
+      },
+      {
+        "id": "defense-xss-attribute-escape",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "strategy": "escape reflected query in attribute and text contexts"
+      },
+      {
+        "id": "defense-xss-template-boundary",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "strategy": "treat template rendering as an HTML encoding boundary"
+      },
+      {
+        "id": "defense-xss-output-regression",
+        "family": "reflected_xss",
+        "symbol": "render_search",
+        "strategy": "patch reflected output and replay script and attribute probes"
+      }
+    ]
+  },
+  "stop_condition": "Blue patches the hidden SQL injection/XSS before Red's delayed exploit attempt succeeds; Scorekeeper verifies all selected expanded warm-pond attempts are blocked and regressions pass."
+}

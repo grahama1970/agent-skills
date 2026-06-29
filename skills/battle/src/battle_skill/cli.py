@@ -305,9 +305,9 @@ def battle_v1_operational(
     out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
     red_persona: str = typer.Option("brandon-bailey", help="Red team persona id"),
     blue_persona: str = typer.Option("coder", help="Blue team persona id"),
-    red_workers: int = typer.Option(2, min=1, max=8, help="Bounded Red worker pool size"),
-    blue_workers: int = typer.Option(2, min=1, max=8, help="Bounded Blue worker pool size"),
-    max_attempts: int = typer.Option(4, min=1, max=16, help="Maximum warm-pond combinations to replay"),
+    red_workers: int = typer.Option(2, min=1, max=32, help="Bounded Red worker pool size"),
+    blue_workers: int = typer.Option(2, min=1, max=32, help="Bounded Blue worker pool size"),
+    max_attempts: int = typer.Option(4, min=1, max=64, help="Maximum warm-pond combinations to replay"),
     tau_live: bool = typer.Option(
         False,
         "--tau-live/--tau-deterministic",

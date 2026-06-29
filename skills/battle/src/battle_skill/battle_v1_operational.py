@@ -662,6 +662,48 @@ def build_operational_warm_pond(
             }
         )
 
+    configured_warm_pond = scenario.get("warm_pond")
+    if isinstance(configured_warm_pond, dict):
+        for candidate in configured_warm_pond.get("extra_exploit_candidates", []):
+            if not isinstance(candidate, dict):
+                continue
+            if not candidate.get("id"):
+                continue
+            family = str(candidate.get("family", ""))
+            if family not in families:
+                continue
+            research_evidence = research_family_evidence(research_signals, family)
+            exploit_candidates.append(
+                {
+                    "id": str(candidate["id"]),
+                    "family": family,
+                    "symbol": str(candidate.get("symbol", "")),
+                    "payload": str(candidate.get("payload", "")),
+                    "source": str(candidate.get("source", "scenario_warm_pond_seed")),
+                    "research_weight": research_evidence["weight"],
+                    "research_sources": research_evidence["sources"],
+                }
+            )
+        for candidate in configured_warm_pond.get("extra_defense_candidates", []):
+            if not isinstance(candidate, dict):
+                continue
+            if not candidate.get("id"):
+                continue
+            family = str(candidate.get("family", ""))
+            if family not in families:
+                continue
+            research_evidence = research_family_evidence(research_signals, family)
+            defense_candidates.append(
+                {
+                    "id": str(candidate["id"]),
+                    "family": family,
+                    "symbol": str(candidate.get("symbol", "")),
+                    "strategy": str(candidate.get("strategy", "")),
+                    "research_weight": research_evidence["weight"],
+                    "research_sources": research_evidence["sources"],
+                }
+            )
+
     combinations: list[dict[str, Any]] = []
     for exploit in exploit_candidates:
         for defense in defense_candidates:

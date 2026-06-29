@@ -16,6 +16,24 @@ The skill is designed for adversarial security work, not generic task routing:
 Red finds and proves vulnerabilities; Blue patches or hardens; the orchestrator
 tracks rounds, scores, termination conditions, and reports.
 
+Current expanded proof rung:
+
+```bash
+./run.sh battle-v1-operational battle-004 \
+  --out /tmp/battle-v1-expanded-tau-032 \
+  --red-workers 32 \
+  --blue-workers 32 \
+  --max-attempts 32 \
+  --require-memory \
+  --tau-live \
+  --research-broker
+```
+
+This is a bounded Docker-only fixture proof, not production readiness. Local
+evidence from `/tmp/battle-v1-expanded-tau-032` recorded 96 warm-pond
+combinations, 64 Tau worker-granularity handoffs, and 32 scorekeeper replay
+attempts with `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+
 ## Operating Contract
 
 Battle's production shape is intentionally simple:

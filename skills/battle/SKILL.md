@@ -264,6 +264,9 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run the four-party Docker operational proof
 ./run.sh battle-v1-operational battle-003 --out /tmp/battle-v1-operational-a --red-workers 2 --blue-workers 2 --max-attempts 4 --require-memory
+
+# Run the expanded warm-pond Tau worker-fanout proof
+./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-032 --red-workers 32 --blue-workers 32 --max-attempts 32 --require-memory --tau-live --research-broker
 ```
 
 ## Battle v0 Fixture Proof
@@ -429,6 +432,21 @@ discovered PoC code must not execute on the host. Current proof evidence under
 `research_weighted_combination_count=8`, Red and Blue worker
 `research_dispatch.research_boost=0.2`, Tau `scheduling.mode=asyncio.as_completed`,
 and `BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`.
+
+The `battle-004` fixture expands this proof rung without changing the target
+shape. It keeps the same Docker-only SQLi/XSS Arena app and scorekeeper oracle,
+but adds scenario-defined warm-pond exploit and defense candidates. Current
+local live evidence under `/tmp/battle-v1-expanded-tau-032` recorded
+`BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS`, `warm_pond.exploit_candidate_count=12`,
+`warm_pond.defense_candidate_count=8`, `warm_pond.combination_count=96`,
+`tau-live/manifest.json scheduling.granularity=worker`,
+`scheduling.handoff_count=64`, `scheduling.worker_count=64`,
+`scorekeeper.attempt_count=32`, `scorekeeper.passed_attempt_count=32`, and
+`subagent-ledger.sqlite` event count `105`. This proves the current Battle
+worker handoff adapter can drive Tau worker-granularity fanout at 32 Red and
+32 Blue workers for this fixture. It still does not prove unbounded swarm
+execution, Tau loop repair cycles, Scillm delegate/batch/tool execution, or a
+production hidden-vulnerability generator.
 
 The first live research-broker run exposed `agent-skills#51`: concurrent
 Dogpile processes shared one partial-results temp file. The fix is in

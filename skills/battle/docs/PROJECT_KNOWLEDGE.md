@@ -1,6 +1,6 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-06-28 15:45 EDT by agent
+**Last updated:** 2026-06-29 19:45 EDT by agent
 **Status:** Active development, Battle v1 operational proof locally exercised
 
 ## Current Understanding
@@ -244,6 +244,20 @@
   `research_weighted_combination_count=8`; Red and Blue worker receipts both
   have `research_dispatch.research_boost=0.2`; the artifact set passed
   `sanity/battle_v1_operational_acceptance.py --allow-first-recall-empty --min-red-workers 1 --min-blue-workers 1`.
+- Battle now has an expanded warm-pond worker-fanout fixture:
+  `./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-032 --red-workers 32 --blue-workers 32 --max-attempts 32 --require-memory --tau-live --research-broker`.
+  `battle-004` keeps the same tiny Docker-only SQLi/XSS Arena app shape as
+  `battle-003`, but adds scenario-defined extra exploit and defense candidates.
+  Current local evidence under `/tmp/battle-v1-expanded-tau-032` has
+  `run.status=PASS`, `run.verdict=BLUE_SUCCESS`,
+  `warm_pond.exploit_candidate_count=12`, `warm_pond.defense_candidate_count=8`,
+  `warm_pond.combination_count=96`, Tau `scheduling.granularity=worker`,
+  Tau `scheduling.handoff_count=64`, Tau `scheduling.worker_count=64`,
+  `scorekeeper.attempt_count=32`, `scorekeeper.passed_attempt_count=32`, and
+  `subagent-ledger.sqlite` event count `105`. This raises the current live Tau
+  handoff pressure proof from 8x8 to 32x32 workers for the fixture. It still
+  does not prove unbounded swarm execution, Tau loop repair cycles, Scillm
+  delegate/batch/tool execution, or production hidden-vulnerability generation.
 - The first research-broker proof exposed `agent-skills#51`: concurrent Dogpile
   searches shared `skills/dogpile/dogpile_partial_results.tmp/json`, causing
   one lane to fail with `FileNotFoundError`. The fix uses per-session
@@ -429,6 +443,21 @@ skills/battle/monitor/battle/test-results/battle-monitor-v1-context-graph.png ->
 ~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:4174/?artifactBase=/artifacts/battle-003-arena-context --name battle-monitor-v1-context-graph -> /tmp/codex-ui-verification/agent-skills/battle-monitor-v1-context-graph/20260628T150035Z.read.json
 .codex/ui-verification/latest.json -> battle-monitor-v1-context-graph meta marker
 skills/battle/sanity.sh -> BATTLE_SANITY_PASS
+./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-no-tau-001 --red-workers 12 --blue-workers 12 --max-attempts 12 --require-memory --research-broker --tau-deterministic -> status=PASS
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-expanded-no-tau-001 --allow-first-recall-empty --min-red-workers 12 --min-blue-workers 12 -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-expanded-no-tau-001/context/warm-pond-receipt.json -> exploit_candidate_count=12, defense_candidate_count=8, combination_count=96
+/tmp/battle-v1-expanded-no-tau-001/scorekeeper/scorekeeper-receipt.json -> attempt_count=12, passed_attempt_count=12
+./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-012 --red-workers 12 --blue-workers 12 --max-attempts 12 --require-memory --tau-live --research-broker -> status=PASS
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-expanded-tau-012 --allow-first-recall-empty --min-red-workers 12 --min-blue-workers 12 -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-expanded-tau-012/tau-live/manifest.json -> scheduling.granularity=worker, handoff_count=24, worker_count=24
+./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-024 --red-workers 24 --blue-workers 24 --max-attempts 24 --require-memory --tau-live --research-broker -> status=PASS
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-expanded-tau-024 --allow-first-recall-empty --min-red-workers 24 --min-blue-workers 24 -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-expanded-tau-024/tau-live/manifest.json -> scheduling.granularity=worker, handoff_count=48, worker_count=48
+./run.sh battle-v1-operational battle-004 --out /tmp/battle-v1-expanded-tau-032 --red-workers 32 --blue-workers 32 --max-attempts 32 --require-memory --tau-live --research-broker -> status=PASS
+python3 sanity/battle_v1_operational_acceptance.py /tmp/battle-v1-expanded-tau-032 --allow-first-recall-empty --min-red-workers 32 --min-blue-workers 32 -> BATTLE_V1_OPERATIONAL_ACCEPTANCE_PASS
+/tmp/battle-v1-expanded-tau-032/tau-live/manifest.json -> scheduling.granularity=worker, handoff_count=64, worker_count=64, completion_order_count=64
+/tmp/battle-v1-expanded-tau-032/scorekeeper/scorekeeper-receipt.json -> attempt_count=32, passed_attempt_count=32
+/tmp/battle-v1-expanded-tau-032/subagent-ledger.sqlite -> 105 events
 ```
 
 ## Non-Claims
