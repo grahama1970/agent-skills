@@ -682,23 +682,43 @@ def run_tau_live_handoff_bridge(
     env.pop("VIRTUAL_ENV", None)
     env["PYTHONPATH"] = f"{TAU_ROOT / 'src'}{os.pathsep}{env.get('PYTHONPATH', '')}"
     started = time.monotonic()
-    proc = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=210,
-        env=env,
-    )
+    try:
+        proc = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=210,
+            env=env,
+        )
+        exit_code = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+        timeout_expired = False
+    except subprocess.TimeoutExpired as exc:
+        exit_code = 124
+        stdout = _decode_timeout_stream(exc.stdout)
+        stderr = _decode_timeout_stream(exc.stderr)
+        timeout_expired = True
     process_receipt = {
         "schema": "battle.tau_live_bridge_process.v1",
         "command": command,
-        "exit_code": proc.returncode,
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
+        "exit_code": exit_code,
+        "stdout": stdout,
+        "stderr": stderr,
         "duration_seconds": round(time.monotonic() - started, 6),
+        "timeout_expired": timeout_expired,
     }
     write_json(tau_live_dir / "process-receipt.json", process_receipt)
+    if timeout_expired:
+        return {
+            "schema": "tau.battle_live_handoff_proof.v1",
+            "status": "BLOCKED",
+            "mocked": False,
+            "live": True,
+            "reason": "tau_live_process_timeout",
+            "process": process_receipt,
+        }
     manifest_path = tau_live_dir / "manifest.json"
     if not manifest_path.exists():
         return {
@@ -722,6 +742,14 @@ def run_tau_live_handoff_bridge(
     manifest["process"] = process_receipt
     write_json(manifest_path, manifest)
     return manifest
+
+
+def _decode_timeout_stream(value: bytes | str | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
 
 
 def run_red_blue_async_workers(
