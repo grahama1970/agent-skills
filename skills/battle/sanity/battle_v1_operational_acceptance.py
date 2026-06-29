@@ -82,6 +82,8 @@ def main() -> int:
     parser.add_argument("artifact_dir", type=Path)
     parser.add_argument("--require-recall-found", action="store_true")
     parser.add_argument("--allow-first-recall-empty", action="store_true")
+    parser.add_argument("--min-red-workers", type=int, default=2)
+    parser.add_argument("--min-blue-workers", type=int, default=2)
     args = parser.parse_args()
 
     root = args.artifact_dir.resolve()
@@ -119,8 +121,8 @@ def main() -> int:
     assert scoreboard["operational"]["scorekeeper_objective_replay"] is True, scoreboard
     assert scoreboard["context"]["memory_promotion_status"] == "PASS", scoreboard
 
-    assert red["worker_count"] >= 2, red
-    assert blue["worker_count"] >= 2, blue
+    assert red["worker_count"] >= args.min_red_workers, red
+    assert blue["worker_count"] >= args.min_blue_workers, blue
     assert red["overlap_evidence"]["overlap_detected"] is True, red
     assert blue["overlap_evidence"]["overlap_detected"] is True, blue
 

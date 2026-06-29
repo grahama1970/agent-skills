@@ -308,6 +308,15 @@ def battle_v1_operational(
     red_workers: int = typer.Option(2, min=1, max=8, help="Bounded Red worker pool size"),
     blue_workers: int = typer.Option(2, min=1, max=8, help="Bounded Blue worker pool size"),
     max_attempts: int = typer.Option(4, min=1, max=16, help="Maximum warm-pond combinations to replay"),
+    tau_live: bool = typer.Option(
+        False,
+        "--tau-live/--tau-deterministic",
+        help="Call the Tau live Scillm handoff bridge for one Red and one Blue receipt.",
+    ),
+    tau_live_model: str = typer.Option(
+        "gpt-5.5",
+        help="Scillm model/group for --tau-live Red/Blue handoff calls.",
+    ),
     memory_required: bool = typer.Option(
         True,
         "--require-memory/--memory-optional",
@@ -343,6 +352,8 @@ def battle_v1_operational(
         red_workers=red_workers,
         blue_workers=blue_workers,
         max_attempts=max_attempts,
+        tau_live=tau_live,
+        tau_live_model=tau_live_model,
         memory_required=memory_required,
         memory_base_url=memory_base_url or MEMORY_BASE_URL,
     )

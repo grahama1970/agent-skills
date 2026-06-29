@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import subprocess
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -38,7 +40,7 @@ from .arena_docker_smoke import (
     safe_key,
 )
 from .receipts import CommandResult, to_jsonable, utc_now, write_json
-from .subagent_smoke import init_ledger, record_event
+from .subagent_smoke import TAU_ROOT, init_ledger, record_event
 
 
 EXECUTION_SCOPE = {
@@ -61,6 +63,19 @@ NON_CLAIMS = [
 ]
 
 
+def battle_execution_scope(*, tau_live_receipt: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return the Battle execution scope, widened only for explicit Tau live runs."""
+
+    scope = dict(EXECUTION_SCOPE)
+    if tau_live_receipt is not None:
+        scope["live_tau_handoff"] = True
+        scope["tau_live_status"] = tau_live_receipt.get("status")
+        model = str(tau_live_receipt.get("model") or "")
+        scope["models_used"] = [model] if model else []
+        scope["tau_live_surface"] = tau_live_receipt.get("surface")
+    return scope
+
+
 def run_battle_v1_operational(
     *,
     fixture_dir: Path,
@@ -70,6 +85,8 @@ def run_battle_v1_operational(
     red_workers: int = 2,
     blue_workers: int = 2,
     max_attempts: int = 4,
+    tau_live: bool = False,
+    tau_live_model: str = "gpt-5.5",
     memory_required: bool = True,
     memory_base_url: str = MEMORY_BASE_URL,
 ) -> dict[str, Any]:
@@ -254,6 +271,39 @@ def run_battle_v1_operational(
         )
 
     selected = select_warm_pond_combinations(warm_pond, max_attempts=max_attempts)
+    tau_live_receipt = None
+    if tau_live:
+        tau_live_receipt = run_tau_live_handoff_bridge(
+            out_dir=out_dir,
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=str(scenario.get("scenario_id", battle_id)),
+            red_persona=red_persona,
+            blue_persona=blue_persona,
+            model=tau_live_model,
+        )
+        record_event(
+            ledger_path,
+            run_id=run_id,
+            battle_id=battle_id,
+            team="orchestrator",
+            persona="battle-orchestrator",
+            event_type="tau_live_handoff",
+            status=str(tau_live_receipt["status"]),
+            artifact_path=out_dir / "tau-live" / "manifest.json",
+            details=to_jsonable(tau_live_receipt),
+        )
+        if tau_live_receipt["status"] != "PASS":
+            return write_blocked_v1(
+                out_dir=out_dir,
+                battle_id=battle_id,
+                run_id=run_id,
+                reason="tau_live_handoff_failed",
+                extra={
+                    "tau_live": tau_live_receipt,
+                    "tau_live_manifest": "tau-live/manifest.json",
+                },
+            )
     async_execution = run_red_blue_async_workers(
         battle_id=battle_id,
         run_id=run_id,
@@ -269,6 +319,7 @@ def run_battle_v1_operational(
         blue_persona=blue_persona,
         red_workers=red_workers,
         blue_workers=blue_workers,
+        tau_live_receipt=tau_live_receipt,
     )
     if async_execution["status"] != "PASS":
         return write_blocked_v1(
@@ -383,18 +434,20 @@ def run_battle_v1_operational(
         blue_persona=blue_persona,
     )
 
+    execution_scope = battle_execution_scope(tau_live_receipt=tau_live_receipt)
     run_receipt = {
         "schema": "battle.run_receipt.v1",
         "battle_id": battle_id,
         "run_id": run_id,
         "status": scoreboard["status"],
         "verdict": scoreboard["verdict"],
-        "execution": EXECUTION_SCOPE,
+        "execution": execution_scope,
         "claim_scope": "battle_v1_four_party_docker_operational_proof",
         "non_claims": NON_CLAIMS,
         "receipts": scoreboard["receipts"],
         "memory_recall_receipt": "context/memory-recall-receipt.json",
         "memory_promotion_receipt": "context/memory-promotion-receipt.json",
+        "tau_live_manifest": "tau-live/manifest.json" if tau_live_receipt else None,
         "monitor_graph": "graph/battle-v1-force-graph.json",
         "artifacts": artifact_list(out_dir),
     }
@@ -588,6 +641,89 @@ def select_warm_pond_combinations(
     )[:max_attempts]
 
 
+def run_tau_live_handoff_bridge(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    red_persona: str,
+    blue_persona: str,
+    model: str,
+) -> dict[str, Any]:
+    """Call Tau's live Battle handoff bridge and return its manifest."""
+
+    tau_live_dir = out_dir / "tau-live"
+    command = [
+        "uv",
+        "run",
+        "--project",
+        str(TAU_ROOT),
+        "python",
+        "-m",
+        "tau_coding.battle_live_handoff",
+        "--out-dir",
+        str(tau_live_dir),
+        "--battle-id",
+        battle_id,
+        "--run-id",
+        run_id,
+        "--scenario-id",
+        scenario_id,
+        "--red-persona",
+        red_persona,
+        "--blue-persona",
+        blue_persona,
+        "--model",
+        model,
+    ]
+    env = os.environ.copy()
+    env.pop("UV_PROJECT_ENVIRONMENT", None)
+    env.pop("VIRTUAL_ENV", None)
+    env["PYTHONPATH"] = f"{TAU_ROOT / 'src'}{os.pathsep}{env.get('PYTHONPATH', '')}"
+    started = time.monotonic()
+    proc = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=210,
+        env=env,
+    )
+    process_receipt = {
+        "schema": "battle.tau_live_bridge_process.v1",
+        "command": command,
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr,
+        "duration_seconds": round(time.monotonic() - started, 6),
+    }
+    write_json(tau_live_dir / "process-receipt.json", process_receipt)
+    manifest_path = tau_live_dir / "manifest.json"
+    if not manifest_path.exists():
+        return {
+            "schema": "tau.battle_live_handoff_proof.v1",
+            "status": "BLOCKED",
+            "mocked": False,
+            "live": True,
+            "reason": "tau_live_manifest_missing",
+            "process": process_receipt,
+        }
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        return {
+            "schema": "tau.battle_live_handoff_proof.v1",
+            "status": "BLOCKED",
+            "mocked": False,
+            "live": True,
+            "reason": "tau_live_manifest_not_object",
+            "process": process_receipt,
+        }
+    manifest["process"] = process_receipt
+    write_json(manifest_path, manifest)
+    return manifest
+
+
 def run_red_blue_async_workers(
     *,
     battle_id: str,
@@ -604,6 +740,7 @@ def run_red_blue_async_workers(
     blue_persona: str,
     red_workers: int,
     blue_workers: int,
+    tau_live_receipt: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     exploit_by_id = {item["id"]: item for item in warm_pond["exploit_candidates"]}
     defense_by_id = {item["id"]: item for item in warm_pond["defense_candidates"]}
@@ -672,6 +809,8 @@ def run_red_blue_async_workers(
     blue_receipts = sorted(blue_receipts, key=lambda item: str(item["worker_id"]))
     overlap = compute_overlap(red_receipts, blue_receipts)
 
+    red_tau = _tau_live_team(tau_live_receipt, "red")
+    blue_tau = _tau_live_team(tau_live_receipt, "blue")
     red_team_receipt = {
         "schema": "battle.team_receipt.v1",
         "battle_id": battle_id,
@@ -679,8 +818,9 @@ def run_red_blue_async_workers(
         "team": "red",
         "status": "PASS" if red_receipts and all(r["status"] == "PASS" for r in red_receipts) else "FAIL",
         "persona": red_persona,
-        "model": "tau-local-deterministic-provider",
-        "surface": "deterministic_tau_shaped_worker_pool",
+        "model": str(red_tau.get("model") or "tau-local-deterministic-provider"),
+        "surface": str(red_tau.get("surface") or "deterministic_tau_shaped_worker_pool"),
+        "tau_live_subagent_receipt": _relative_or_none(out_dir, red_tau.get("subagent_receipt")),
         "async": True,
         "budget": {"max_workers": red_workers, "max_attempts": len(selected), "max_commands_per_worker": 1},
         "worker_count": len(red_receipts),
@@ -696,8 +836,9 @@ def run_red_blue_async_workers(
         "team": "blue",
         "status": "PASS" if blue_receipts and all(r["status"] == "PASS" for r in blue_receipts) else "FAIL",
         "persona": blue_persona,
-        "model": "tau-local-deterministic-provider",
-        "surface": "deterministic_tau_shaped_worker_pool",
+        "model": str(blue_tau.get("model") or "tau-local-deterministic-provider"),
+        "surface": str(blue_tau.get("surface") or "deterministic_tau_shaped_worker_pool"),
+        "tau_live_subagent_receipt": _relative_or_none(out_dir, blue_tau.get("subagent_receipt")),
         "async": True,
         "budget": {"max_workers": blue_workers, "max_attempts": len(selected), "max_commands_per_worker": 1},
         "worker_count": len(blue_receipts),
@@ -911,6 +1052,24 @@ def compute_overlap(red_receipts: list[dict[str, Any]], blue_receipts: list[dict
         "pairs": overlaps[:8],
         "evidence": "worker async_timing intervals overlap when red.start < blue.finish and blue.start < red.finish",
     }
+
+
+def _tau_live_team(tau_live_receipt: dict[str, Any] | None, team: str) -> dict[str, Any]:
+    if not tau_live_receipt:
+        return {}
+    teams = tau_live_receipt.get("teams")
+    if not isinstance(teams, list):
+        return {}
+    for item in teams:
+        if isinstance(item, dict) and item.get("team") == team:
+            return item
+    return {}
+
+
+def _relative_or_none(out_dir: Path, value: object) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    return relative_to_out(out_dir, value)
 
 
 def run_scorekeeper_replay(
