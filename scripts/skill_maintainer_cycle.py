@@ -620,6 +620,7 @@ def write_phase_started_receipt(
 def subagent_prompt(
     *,
     role: str,
+    phase: str,
     issue: dict[str, Any],
     route: dict[str, str],
     skills: list[str],
@@ -633,14 +634,19 @@ def subagent_prompt(
             f"Issue: #{issue.get('number')} {issue.get('title')}",
             f"URL: {issue.get('url')}",
             f"Route: {route['route']}",
+            f"Phase: {phase}",
             f"Target skills: {', '.join(skills) if skills else '(none detected)'}",
             f"Input packet: {packet}",
             f"Required receipt output: {output_file}",
+            "",
+            "Receipt contract:",
+            *subagent_receipt_contract(phase),
             "",
             "Rules:",
             "- Preserve unrelated worktree changes.",
             "- Do not close GitHub issues.",
             "- Do not treat WebGPT as deterministic proof.",
+            "- State mocked/live boundaries in evidence_summary.",
             "- Write the required receipt JSON before exiting.",
         ]
     )
@@ -949,6 +955,27 @@ def tau_agent_handoff(
     packet: Path,
     output_file: Path,
 ) -> dict[str, Any]:
+    receipt_contract: dict[str, Any]
+    if phase == "repair":
+        receipt_contract = {
+            "accepted_status": ["repaired", "completed"],
+            "required_fields": ["status", "commands_run", "evidence_summary", "changed_files"],
+            "repair_status_fields": ["summary", "files_changed", "proof"],
+        }
+    elif phase == "deterministic_verification":
+        receipt_contract = {
+            "accepted_status": ["completed"],
+            "required_fields": ["status", "decision", "commands_run", "evidence_summary"],
+            "accepted_decisions": ["pass", "passed", "no_findings"],
+            "blocking_findings_field": "blocking_findings",
+        }
+    else:
+        receipt_contract = {
+            "accepted_status": ["completed"],
+            "required_fields": ["status", "decision", "commands_run", "evidence_summary"],
+            "accepted_decisions": ["pass", "passed", "no_findings"],
+            "blocking_findings_field": "blocking_findings",
+        }
     return {
         "schema": "tau.agent_handoff.v1",
         "source": "agent-skill-maintainer",
@@ -960,8 +987,57 @@ def tau_agent_handoff(
         "lease_policy": "one_ticket_at_a_time",
         "packet": str(packet),
         "expected_receipt": str(output_file),
+        "receipt_contract": receipt_contract,
         "closure_rule": "Attach deterministic proof before ticket closure; WebGPT review alone is insufficient.",
     }
+
+
+def subagent_receipt_contract(role: str) -> list[str]:
+    if role == "repair":
+        return [
+            "Overwrite the receipt with JSON before exiting.",
+            "Accepted repair receipt shape:",
+            "{",
+            '  "phase": "repair",',
+            '  "status": "repaired",',
+            '  "summary": "short description of the concrete repair",',
+            '  "files_changed": ["relative/path"],',
+            '  "proof": ["command and result summary"],',
+            '  "commands_run": ["exact command(s)"],',
+            '  "evidence_summary": "what the commands proved and did not prove",',
+            '  "blocking_findings": []',
+            "}",
+            "Use status `blocked` or `failed` with `blocking_findings` if you cannot safely repair.",
+        ]
+    if role == "deterministic_verification":
+        return [
+            "Read the repair receipt and verify independently.",
+            "Overwrite the receipt with JSON before exiting.",
+            "Accepted verifier receipt shape:",
+            "{",
+            '  "phase": "deterministic_verification",',
+            '  "status": "completed",',
+            '  "decision": "pass",',
+            '  "commands_run": ["exact command(s)"],',
+            '  "evidence_summary": "what was exercised and what remains unverified",',
+            '  "blocking_findings": []',
+            "}",
+            "Use decision `fail` and populate `blocking_findings` when deterministic proof does not support closure.",
+        ]
+    return [
+        "Read the issue, repair receipt, and verifier receipt.",
+        "Overwrite the receipt with JSON before exiting.",
+        "Accepted reviewer receipt shape:",
+        "{",
+        '  "phase": "independent_review",',
+        '  "status": "completed",',
+        '  "decision": "pass",',
+        '  "commands_run": ["reviewed repair/verifier artifacts and targeted diffs"],',
+        '  "evidence_summary": "why the repair proof is sufficient or insufficient",',
+        '  "blocking_findings": []',
+        "}",
+        "Use decision `fail` and populate `blocking_findings` for unresolved risks.",
+    ]
 
 
 def build_subagent_specs(
@@ -981,6 +1057,7 @@ def build_subagent_specs(
     review_packet = issue_dir / "review-bundle.md"
     repair_prompt = subagent_prompt(
         role=route["repair_agent"],
+        phase="repair",
         issue=issue,
         route=route,
         skills=skills,
@@ -989,6 +1066,7 @@ def build_subagent_specs(
     )
     verifier_prompt = subagent_prompt(
         role=route["verifier_agent"],
+        phase="deterministic_verification",
         issue=issue,
         route=route,
         skills=skills,
@@ -997,6 +1075,7 @@ def build_subagent_specs(
     )
     review_prompt = subagent_prompt(
         role=route["review_agent"],
+        phase="independent_review",
         issue=issue,
         route=route,
         skills=skills,

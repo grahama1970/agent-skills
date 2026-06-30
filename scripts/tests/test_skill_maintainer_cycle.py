@@ -447,6 +447,35 @@ def test_command_fixture_specs_write_completed_receipts(tmp_path):
     assert review_spec["tau_handoff"]["phase"] == "independent_review"
 
 
+def test_real_subagent_specs_include_gateable_receipt_contracts(tmp_path):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue_dir = tmp_path / "issue-50"
+    issue_dir.mkdir()
+    route = cycle.ROUTES_BY_NAME["backend_python_or_skill_runtime"]
+
+    specs = cycle.build_subagent_specs(issue_dir, issue, route, ["ask"], command_fixture=False)
+
+    repair_spec = json.loads(Path(specs["repair_spec"]).read_text())
+    verifier_spec = json.loads(Path(specs["verifier_spec"]).read_text())
+    review_spec = json.loads(Path(specs["review_spec"]).read_text())
+
+    assert "Phase: repair" in repair_spec["prompt"]
+    assert '"status": "repaired"' in repair_spec["prompt"]
+    assert '"files_changed": ["relative/path"]' in repair_spec["prompt"]
+    assert "State mocked/live boundaries" in repair_spec["prompt"]
+    assert repair_spec["tau_handoff"]["receipt_contract"]["accepted_status"] == ["repaired", "completed"]
+    assert "changed_files" in repair_spec["tau_handoff"]["receipt_contract"]["required_fields"]
+
+    assert "Phase: deterministic_verification" in verifier_spec["prompt"]
+    assert '"decision": "pass"' in verifier_spec["prompt"]
+    assert verifier_spec["tau_handoff"]["receipt_contract"]["accepted_decisions"] == ["pass", "passed", "no_findings"]
+
+    assert "Phase: independent_review" in review_spec["prompt"]
+    assert "Read the issue, repair receipt, and verifier receipt." in review_spec["prompt"]
+    assert review_spec["tau_handoff"]["receipt_contract"]["blocking_findings_field"] == "blocking_findings"
+
+
 def test_github_dry_run_allows_live_local_dispatch(tmp_path, monkeypatch, capsys):
     cycle = load_cycle_module()
     issue = issue_fixture()
