@@ -6,7 +6,7 @@ set -euo pipefail
 # Fails loud on ANY broken path.
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="${1:-/home/graham/workspace/experiments/sparta}"
+PROJECT_DIR="${1:-$HOME/workspace/experiments/sparta}"
 
 echo "=== Checkpoint Skill E2E Sanity ==="
 echo "  skill: $SKILL_DIR"
