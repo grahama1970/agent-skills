@@ -1,0 +1,167 @@
+schema: best-practices-github-ticket.contract.v1
+issuer_required_fields:
+  - ticket_type
+  - target_path
+  - current_state
+  - requested_outcome
+  - required_proof
+issuer_recommended_fields:
+  - route
+  - requested_repair_agent
+  - non_goals
+ticket_types:
+  bug:
+    required:
+      - observed_failure
+      - expected_behavior
+      - reproduction_or_artifact
+    closure_gate: regression_proof
+  feature:
+    required:
+      - current_limitation
+      - proposed_capability
+      - user_workflow_unlocked
+      - acceptance_criteria
+    closure_gate: acceptance_criteria_proof
+  optimization:
+    required:
+      - current_cost_or_friction
+      - proposed_improvement
+      - measurable_target
+    closure_gate: before_after_or_bounded_improvement_evidence
+  maintenance:
+    required:
+      - invariant_to_preserve
+      - cleanup_target
+      - scoped_files
+    closure_gate: invariant_preserving_checks
+  question:
+    required:
+      - concrete_question
+      - source_scope
+      - expected_answer_format
+    closure_gate: sourced_answer_or_not_established
+  triage:
+    required:
+      - available_clues
+      - missing_data
+    closure_gate: type_route_or_needs_human_decision
+labels:
+  types:
+    - type:bug
+    - type:feature
+    - type:optimization
+    - type:maintenance
+    - type:question
+    - needs-triage
+  work_queue:
+    - skill-bug
+    - skill-maintenance
+    - skill-optimization
+    - agent-bug
+    - agent-maintenance
+    - agent-optimization
+    - skills-ci
+    - monitor-skill-health
+  routing_prefixes:
+    - "route:"
+    - "agent:"
+  state:
+    - maintainer-active
+    - maintainer-blocked
+    - needs-human
+    - external-owner
+routes:
+  backend_python_or_skill_runtime:
+    repair_agent: coder
+    verifier_agent: project-or-harness-verifier
+    review_agent: code-reviewer
+    proof:
+      - target sanity.sh or focused pytest
+      - py_compile for changed Python
+      - scoped skills-ci scan when applicable
+  design_or_ux:
+    repair_agent: designer
+    verifier_agent: qa-tester
+    review_agent: code-reviewer
+    proof:
+      - source-grounded design artifact
+      - screenshot or CDP evidence for visible UI claims
+  frontend_code:
+    repair_agent: frontend-coder
+    verifier_agent: qa-tester
+    review_agent: frontend-reviewer
+    proof:
+      - targeted frontend tests
+      - rendered screenshot evidence for UI claims
+  rust_or_binary:
+    repair_agent: coder
+    verifier_agent: project-or-harness-verifier
+    review_agent: code-reviewer
+    proof:
+      - cargo or binary-focused deterministic checks
+  ops_or_scheduler:
+    repair_agent: devops
+    verifier_agent: project-or-harness-verifier
+    review_agent: code-reviewer
+    proof:
+      - scheduler or service dry-run/status evidence
+      - rollback or safe-default behavior
+  documentation_or_report:
+    repair_agent: reporter
+    verifier_agent: code-reviewer
+    review_agent: proof-reader
+    proof:
+      - source-grounded docs diff
+      - no behavior closure claimed from prose alone
+  security_or_compliance:
+    repair_agent: cyber-analyst
+    verifier_agent: code-reviewer
+    review_agent: assurance
+    proof:
+      - deterministic local scan or evidence artifact
+      - assurance gaps explicitly named
+closure_gates:
+  - one_ticket_lease
+  - doctor_before_mutation
+  - dry_run_before_first_repo_mutation
+  - scoped_patch_only
+  - deterministic_local_proof
+  - separate_verifier_when_patched
+  - external_review_findings_reconciled
+  - issue_comment_cites_artifacts
+commands:
+  doctor:
+    purpose: verify gh, auth, repo issue access, and label readiness
+  ensure-labels:
+    purpose: idempotently create or update workflow labels
+  search:
+    purpose: flexible open ticket search
+  next:
+    purpose: canonical unleased ticket search
+    excludes:
+      - maintainer-active
+      - maintainer-blocked
+      - needs-human
+      - external-owner
+  show:
+    purpose: full ticket context before action
+  lease:
+    purpose: claim exactly one ticket
+    safeguards:
+      - fail_if_maintainer_active
+      - fail_if_needs_human
+      - fail_if_external_owner
+      - machine_readable_lease_comment
+  comment:
+    purpose: file-backed progress or evidence comment
+  block:
+    purpose: mark blocked and optionally release lease
+  release:
+    purpose: drop maintainer-active without closing
+  close:
+    purpose: proof-file closure with explicit close reason
+  close-duplicate:
+    purpose: proof-file duplicate closure
+  proof-template:
+    purpose: print proof, blocker, progress, or review template
