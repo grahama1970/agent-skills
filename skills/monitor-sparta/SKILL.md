@@ -181,6 +181,9 @@ python scripts/validation/monitor_sparta.py checkpoint \
 # Check status
 python scripts/validation/monitor_sparta.py status
 
+# Gate a worker/supervisor receipt before treating an issue as closed
+skills/monitor-sparta/run.sh receipt-gate /path/to/receipt.json --require-closure --json
+
 # Show convergence history
 python scripts/validation/monitor_sparta.py convergence
 
@@ -198,6 +201,7 @@ python scripts/validation/monitor_sparta.py stop
 | `status` | Show monitor status, label count, GPT readiness |
 | `convergence` | Show convergence history across checkpoints |
 | `stop` | Gracefully stop the running monitor |
+| `receipt-gate` | Validate that a worker or supervisor receipt does not claim closure without Tau handoff proof |
 
 ## Three-Tier Cascade
 
@@ -368,3 +372,6 @@ before `SPARTA_MONITOR_MUTATION_ENABLED=1` may be used.
 
 The monitor must not treat a report, WebGPT review, or CI green status as
 closure proof. Mutating SPARTA repairs remain review-gated and rollback-backed.
+Use `skills/monitor-sparta/run.sh receipt-gate ... --require-closure` before
+closing or reconciling any monitor-sparta queue item from a worker or supervisor
+receipt.
