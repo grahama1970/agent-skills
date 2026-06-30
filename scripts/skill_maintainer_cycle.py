@@ -21,7 +21,16 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = REPO_ROOT / ".artifacts" / "skill-maintainer"
-DEFAULT_LABELS = ["skill-bug", "skill-maintenance", "skills-ci", "skill-optimization"]
+DEFAULT_LABELS = [
+    "skill-bug",
+    "skill-maintenance",
+    "skill-optimization",
+    "agent-bug",
+    "agent-maintenance",
+    "agent-optimization",
+    "monitor-skill-health",
+    "skills-ci",
+]
 LEASE_LABEL = "maintainer-active"
 BLOCKED_LABELS = ["maintainer-blocked", "needs-human"]
 SKIP_LABELS = {LEASE_LABEL, *BLOCKED_LABELS, "external-owner"}
@@ -931,6 +940,30 @@ def dry_run_simulation(result: dict[str, Any], *, action: str, would_update: dic
     return simulated
 
 
+def tau_agent_handoff(
+    *,
+    issue: dict[str, Any],
+    route: dict[str, str],
+    phase: str,
+    agent: str,
+    packet: Path,
+    output_file: Path,
+) -> dict[str, Any]:
+    return {
+        "schema": "tau.agent_handoff.v1",
+        "source": "agent-skill-maintainer",
+        "issue": issue.get("number"),
+        "issue_url": issue.get("url"),
+        "phase": phase,
+        "requested_agent": agent,
+        "route": route["route"],
+        "lease_policy": "one_ticket_at_a_time",
+        "packet": str(packet),
+        "expected_receipt": str(output_file),
+        "closure_rule": "Attach deterministic proof before ticket closure; WebGPT review alone is insufficient.",
+    }
+
+
 def build_subagent_specs(
     issue_dir: Path,
     issue: dict[str, Any],
@@ -943,12 +976,15 @@ def build_subagent_specs(
     repair_output = issue_dir / "repair-response.json"
     verifier_output = issue_dir / "verifier-response.json"
     review_output = issue_dir / "review-response.json"
+    repair_packet = issue_dir / "repair-packet.json"
+    verifier_packet = issue_dir / "verification-packet.json"
+    review_packet = issue_dir / "review-bundle.md"
     repair_prompt = subagent_prompt(
         role=route["repair_agent"],
         issue=issue,
         route=route,
         skills=skills,
-        packet=issue_dir / "repair-packet.json",
+        packet=repair_packet,
         output_file=repair_output,
     )
     verifier_prompt = subagent_prompt(
@@ -956,7 +992,7 @@ def build_subagent_specs(
         issue=issue,
         route=route,
         skills=skills,
-        packet=issue_dir / "verification-packet.json",
+        packet=verifier_packet,
         output_file=verifier_output,
     )
     review_prompt = subagent_prompt(
@@ -964,7 +1000,7 @@ def build_subagent_specs(
         issue=issue,
         route=route,
         skills=skills,
-        packet=issue_dir / "review-bundle.md",
+        packet=review_packet,
         output_file=review_output,
     )
     specs = {
@@ -977,6 +1013,14 @@ def build_subagent_specs(
             "timeout_seconds": 1800,
             "idle_timeout_seconds": 300,
             "tags": ["skill-maintainer", "repair", route["repair_agent"]],
+            "tau_handoff": tau_agent_handoff(
+                issue=issue,
+                route=route,
+                phase="repair",
+                agent=route["repair_agent"],
+                packet=repair_packet,
+                output_file=repair_output,
+            ),
             "command": (
                 completed_worker_command(repair_output, phase="repair", agent=route["repair_agent"])
                 if command_fixture
@@ -993,6 +1037,14 @@ def build_subagent_specs(
             "timeout_seconds": 1800,
             "idle_timeout_seconds": 300,
             "tags": ["skill-maintainer", "verify", route["verifier_agent"]],
+            "tau_handoff": tau_agent_handoff(
+                issue=issue,
+                route=route,
+                phase="deterministic_verification",
+                agent=route["verifier_agent"],
+                packet=verifier_packet,
+                output_file=verifier_output,
+            ),
             "command": (
                 completed_worker_command(verifier_output, phase="deterministic_verification", agent=route["verifier_agent"])
                 if command_fixture
@@ -1009,6 +1061,14 @@ def build_subagent_specs(
             "timeout_seconds": 1800,
             "idle_timeout_seconds": 300,
             "tags": ["skill-maintainer", "review", route["review_agent"]],
+            "tau_handoff": tau_agent_handoff(
+                issue=issue,
+                route=route,
+                phase="independent_review",
+                agent=route["review_agent"],
+                packet=review_packet,
+                output_file=review_output,
+            ),
             "command": (
                 completed_worker_command(review_output, phase="independent_review", agent=route["review_agent"])
                 if command_fixture

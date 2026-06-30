@@ -245,6 +245,14 @@ def test_issue_list_filters_active_blocked_and_external_owner(monkeypatch):
     assert [issue["number"] for issue in selected] == [1]
 
 
+def test_default_labels_include_skill_agent_and_monitor_tickets():
+    cycle = load_cycle_module()
+
+    assert "skill-maintenance" in cycle.DEFAULT_LABELS
+    assert "agent-maintenance" in cycle.DEFAULT_LABELS
+    assert "monitor-skill-health" in cycle.DEFAULT_LABELS
+
+
 def test_dry_run_main_writes_prepared_only_blocked_result(tmp_path, monkeypatch, capsys):
     cycle = load_cycle_module()
     issue = issue_fixture()
@@ -425,6 +433,18 @@ def test_command_fixture_specs_write_completed_receipts(tmp_path):
         spec = json.loads(Path(specs[key]).read_text())
         assert spec["command"][:2] == ["python3", "-c"]
         assert "CONTROLLED_WORKER_DONE" in spec["command"][2]
+        assert spec["tau_handoff"]["schema"] == "tau.agent_handoff.v1"
+        assert spec["tau_handoff"]["issue"] == issue["number"]
+        assert spec["tau_handoff"]["route"] == "backend_python_or_skill_runtime"
+        assert spec["tau_handoff"]["lease_policy"] == "one_ticket_at_a_time"
+        assert spec["tau_handoff"]["expected_receipt"].endswith("-response.json")
+
+    repair_spec = json.loads(Path(specs["repair_spec"]).read_text())
+    verifier_spec = json.loads(Path(specs["verifier_spec"]).read_text())
+    review_spec = json.loads(Path(specs["review_spec"]).read_text())
+    assert repair_spec["tau_handoff"]["phase"] == "repair"
+    assert verifier_spec["tau_handoff"]["phase"] == "deterministic_verification"
+    assert review_spec["tau_handoff"]["phase"] == "independent_review"
 
 
 def test_github_dry_run_allows_live_local_dispatch(tmp_path, monkeypatch, capsys):
