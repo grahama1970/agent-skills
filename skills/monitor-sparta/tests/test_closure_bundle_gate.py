@@ -1,0 +1,109 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+
+SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+import closure_bundle_gate
+
+
+def write_json(path: Path, payload: dict) -> Path:
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def closure_receipt() -> dict:
+    return {
+        "schema": "ops_arango.issue_worker.receipt.v1",
+        "terminal_status": "DONE",
+        "tau_handoff": {
+            "ok": True,
+            "handoff_path": "/tmp/handoff.json",
+            "validation_path": "/tmp/validation.json",
+            "validation": {"ok": True, "errors": []},
+        },
+    }
+
+
+def verifier_receipt(closure_path: Path) -> dict:
+    return {
+        "schema": "monitor_sparta.verifier_receipt.v1",
+        "decision": "pass",
+        "independent": True,
+        "checked_receipt_path": str(closure_path),
+        "checks": [
+            {
+                "command": "skills/monitor-sparta/run.sh receipt-gate receipt.json --require-closure --json",
+                "exit_code": 0,
+                "artifact": "/tmp/receipt-gate.json",
+            }
+        ],
+    }
+
+
+def reviewer_receipt(closure_path: Path, verifier_path: Path) -> dict:
+    return {
+        "schema": "monitor_sparta.reviewer_receipt.v1",
+        "decision": "pass",
+        "independent": True,
+        "checked_receipt_path": str(closure_path),
+        "verifier_receipt_path": str(verifier_path),
+        "blocking_findings": [],
+        "reviewed_evidence": [str(closure_path), str(verifier_path)],
+    }
+
+
+def test_closure_bundle_requires_closure_verifier_and_reviewer(tmp_path: Path) -> None:
+    closure_path = write_json(tmp_path / "closure.json", closure_receipt())
+    verifier_path = write_json(tmp_path / "verifier.json", verifier_receipt(closure_path))
+    reviewer_path = write_json(tmp_path / "reviewer.json", reviewer_receipt(closure_path, verifier_path))
+
+    result = closure_bundle_gate.gate_bundle(
+        closure_receipt_path=closure_path,
+        verifier_receipt_path=verifier_path,
+        reviewer_receipt_path=reviewer_path,
+    )
+
+    assert result["ok"] is True
+    assert result["closure_gate"]["ok"] is True
+    assert result["verifier_decision"] == "pass"
+    assert result["reviewer_decision"] == "pass"
+
+
+def test_closure_bundle_rejects_missing_reviewer_proof(tmp_path: Path) -> None:
+    closure_path = write_json(tmp_path / "closure.json", closure_receipt())
+    verifier_path = write_json(tmp_path / "verifier.json", verifier_receipt(closure_path))
+    reviewer = reviewer_receipt(closure_path, verifier_path)
+    reviewer["blocking_findings"] = ["missing independent evidence"]
+    reviewer_path = write_json(tmp_path / "reviewer.json", reviewer)
+
+    result = closure_bundle_gate.gate_bundle(
+        closure_receipt_path=closure_path,
+        verifier_receipt_path=verifier_path,
+        reviewer_receipt_path=reviewer_path,
+    )
+
+    assert result["ok"] is False
+    assert "reviewer:reviewer_blocking_findings_present" in result["errors"]
+
+
+def test_closure_bundle_rejects_non_closing_receipt(tmp_path: Path) -> None:
+    closure = closure_receipt()
+    closure["terminal_status"] = "OPERATOR_REQUIRED"
+    closure_path = write_json(tmp_path / "closure.json", closure)
+    verifier_path = write_json(tmp_path / "verifier.json", verifier_receipt(closure_path))
+    reviewer_path = write_json(tmp_path / "reviewer.json", reviewer_receipt(closure_path, verifier_path))
+
+    result = closure_bundle_gate.gate_bundle(
+        closure_receipt_path=closure_path,
+        verifier_receipt_path=verifier_path,
+        reviewer_receipt_path=reviewer_path,
+    )
+
+    assert result["ok"] is False
+    assert "closure:closure_required_but_not_claimed" in result["errors"]
