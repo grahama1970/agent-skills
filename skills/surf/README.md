@@ -1,8 +1,8 @@
 # surf
 
-Browser automation and WebGPT transport for agents.
-
 ![Surf card](../../docs/assets/project-cards/surf.webp)
+
+Browser automation and WebGPT transport for agents.
 
 `surf` lets agents drive a real browser: list tabs, read pages with element
 refs, click and type, capture screenshots, stitch scroll containers, and submit

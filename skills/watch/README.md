@@ -1,9 +1,9 @@
 # watch
 
+![Watch card](../../docs/assets/project-cards/watch.webp)
+
 Turn video into timecode-aligned evidence that agents can inspect, report on,
 and later recall from memory.
-
-![Watch card](../../docs/assets/project-cards/watch.webp)
 
 `watch` accepts a YouTube URL, local video file, or resolvable movie title. It
 extracts frames, transcript text, subtitle scene cues, audio notes, and structured

@@ -12,6 +12,9 @@ The full public project lives at
 skill is the agent-skills operator guide: start here when a skill needs to call
 Scillm correctly.
 
+Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
+the human/operator guide.
+
 ## Use It For
 
 | Need | Start with |

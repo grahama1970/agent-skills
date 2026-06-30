@@ -1,12 +1,6 @@
 # Battle
 
-<p align="center">
-  <img
-    src="../../docs/assets/project-cards/battle.webp"
-    alt="Humorous red versus blue tabletop-style battle scene for the Battle skill"
-    style="max-width: 100%; height: auto; display: block;"
-  />
-</p>
+![Battle card](../../docs/assets/project-cards/battle.webp)
 
 Battle is a Red vs Blue security competition skill. It creates isolated target
 workspaces, lets Red attack and Blue defend, scores the round outcomes, and
@@ -15,6 +9,18 @@ preserves enough state to resume, report, or inspect a long-running campaign.
 The skill is designed for adversarial security work, not generic task routing:
 Red finds and proves vulnerabilities; Blue patches or hardens; the orchestrator
 tracks rounds, scores, termination conditions, and reports.
+
+Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
+the human/operator guide.
+
+## Use It For
+
+| Need | Start here |
+|---|---|
+| See available Battle commands | `./run.sh --help` |
+| Run a source-code Red vs Blue round | `./run.sh battle /path/to/codebase --rounds 10` |
+| Inspect recent battle state | `./run.sh status` |
+| Generate a battle report | `./run.sh report <battle-id>` |
 
 ## Operating Contract
 

@@ -75,19 +75,19 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md">
         <img src="docs/assets/project-cards/persona-dream.webp" width="320" alt="Persona Dream" />
       </a>
       <br/><strong>Persona Dream</strong><br/><em>Agentic memories to movies</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/surf">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md">
         <img src="docs/assets/project-cards/surf.webp" width="320" alt="Surf" />
       </a>
       <br/><strong>Surf</strong><br/><em>ChatGPT browser control for agents</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/battle">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md">
         <img src="docs/assets/project-cards/battle.webp" width="320" alt="Battle" />
       </a>
       <br/><strong>Battle</strong><br/><em>Red-Blue Team genetic fuzzing arena</em>
@@ -95,19 +95,19 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/tau">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md">
         <img src="docs/assets/project-cards/tau.webp" width="320" alt="T'au" />
       </a>
       <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/extractor">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md">
         <img src="docs/assets/project-cards/extractor-workshop.webp" width="320" alt="Extractor" />
       </a>
       <br/><strong>Extractor</strong><br/><em>Docs into hierarchical evidence trees</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md">
         <img src="docs/assets/project-cards/dogpile.webp" width="320" alt="Dogpile" />
       </a>
       <br/><strong>Dogpile</strong><br/><em>Search ArXiv, YT, GH, RSS, & Workspace</em>
@@ -115,19 +115,19 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/watch">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md">
         <img src="docs/assets/project-cards/watch.webp" width="320" alt="Watch" />
       </a>
       <br/><strong>Watch</strong><br/><em>Video that agents understand</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/scillm">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md">
         <img src="docs/assets/project-cards/scillm.webp" width="320" alt="Scillm" />
       </a>
       <br/><strong>Scillm</strong><br/><em>1-shot, exec, subagent, and DAG orch.</em>
     </td>
     <td align="center">
-      <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/debugger">
+      <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md">
         <img src="docs/assets/project-cards/debugger.webp" width="320" alt="Debugger" />
       </a>
       <br/><strong>Debugger</strong><br/><em>Live debugger variables for agents</em>

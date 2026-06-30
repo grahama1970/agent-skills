@@ -1,12 +1,6 @@
-# debugger — Stop Guessing, Inspect Runtime State
+# debugger
 
-<p align="center">
-  <img
-    src="../../docs/assets/project-cards/debugger.webp"
-    alt="debugger skill banner showing a vintage industrial DEBUGGER machine catching bugs in a glass inspection chamber"
-    width="100%"
-  />
-</p>
+![Debugger card](../../docs/assets/project-cards/debugger.webp)
 
 Agents can read code quickly, but reading code is not the same as knowing what
 the program did. The mistake usually happens in the gap between those two
@@ -20,6 +14,18 @@ a hunch.
 
 Use it when the question is not "what does the code say?" but "what was true at
 the moment the bug happened?"
+
+Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
+the human/operator guide.
+
+## Use It For
+
+| Need | Start here |
+|---|---|
+| Inspect live Python locals | `scripts/capture_breakpoints.py --break path/to/file.py:123` |
+| Prove a Node/TypeScript branch | use the JavaScript debugger launch path in `SKILL.md` |
+| Capture Rust runtime state | use the LLDB/GDB-backed launch path in `SKILL.md` |
+| Hand runtime state to a human | preserve breakpoint, frame, locals, and watch output |
 
 Most LLM debugging today is reactive: read stderr, read stdout, skim logs,
 patch, rerun, repeat. That works for simple errors, but it fails when the bug is
