@@ -69,7 +69,7 @@ manual summary, or an invented review for `$ask`.
 Run commands from this directory:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/ask
+cd skills/ask
 ./run.sh --help
 ./run.sh ask --help
 ```

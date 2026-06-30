@@ -22,7 +22,7 @@ from .webgpt_runtime import WebgptBackendError, call_webgpt
 REVIEW_PAGE_RUN = Path(
     os.environ.get(
         "ASK_REVIEW_PAGE_RUN",
-        "/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh",
+        str(Path(__file__).resolve().parents[3] / "review-page" / "run.sh"),
     )
 )
 
