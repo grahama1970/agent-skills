@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """Turn-aware state, output gate, and stale-callback fencing for PersonaPlex P0.
 

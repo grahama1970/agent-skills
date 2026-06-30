@@ -163,7 +163,7 @@ Margaret/Jennifer ask F-36 question
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/memory
+cd ${HOME}/workspace/experiments/memory
 
 # Start the continuous monitor (runs for days until A+)
 python scripts/validation/monitor_sparta.py start \

@@ -52,7 +52,7 @@ fi
 
 # Check 5: DB file check (WARN only, DB may not exist in all envs)
 echo -n "Check 5 - SPARTA DB: "
-DB_PATH="/home/graham/workspace/experiments/sparta/data/runs/run-recovery-verify/sparta.duckdb"
+DB_PATH="${HOME}/workspace/experiments/sparta/data/runs/run-recovery-verify/sparta.duckdb"
 if [[ -f "$DB_PATH" ]]; then
     echo "PASS (found)"
 else

@@ -140,7 +140,7 @@ None — all requirements clear from BFF alignment analysis.
        a skill's composability_score is below 0.3 (+2 ATP per coarse skill)
     4. Add `./run.sh granularity` command showing composability scores
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh scan --json 2>/dev/null | python3 -c "import sys,json; g=json.load(sys.stdin); assert any('composability_score' in v for v in g['skills'].values())"`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh scan --json 2>/dev/null | python3 -c "import sys,json; g=json.load(sys.stdin); assert any('composability_score' in v for v in g['skills'].values())"`
     - Assertion: scan_soup output includes composability_score for each skill
 
 ### P2: Integration (After P1)
@@ -181,7 +181,7 @@ None — all requirements clear from BFF alignment analysis.
        the last N warm pond sessions AND zero production traces get
        flagged as "extinction candidates"
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh evolve --status 2>&1 | grep -q "evolution"`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh evolve --status 2>&1 | grep -q "evolution"`
     - Assertion: evolve --status reports evolution health without error
 
 - [x] **Task 6**: Integrate all improvements into composer.py pipeline selection
@@ -204,7 +204,7 @@ None — all requirements clear from BFF alignment analysis.
     4. Add `--optimize` flag to `./run.sh run` that enables chain pruning
     5. Log the optimization decision to execution traces for future learning
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh run --task "extract PDF and store to memory" --json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'elegance' in str(d) or len(d) >= 0"`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skill-lab && ./run.sh run --task "extract PDF and store to memory" --json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'elegance' in str(d) or len(d) >= 0"`
     - Assertion: Pipeline output includes elegance scoring
 
 ### P3: Validation (After All)
@@ -230,7 +230,7 @@ None — all requirements clear from BFF alignment analysis.
        - `./run.sh evolve --status`
        - `./run.sh run --task "..." --optimize`
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skill-lab && bash sanity.sh`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skill-lab && bash sanity.sh`
     - Assertion: All sanity checks pass, all new commands return exit 0
 
 ## Completion Criteria

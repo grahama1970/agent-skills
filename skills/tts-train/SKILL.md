@@ -217,7 +217,7 @@ For overnight runs, register a scheduler job so training survives terminal drops
 .agent/skills/scheduler/run.sh register \
   --name "tts-train-<voice>" \
   --interval "12h" \
-  --workdir "/home/graham/workspace/experiments/memory" \
+  --workdir "${HOME}/workspace/experiments/memory" \
   --command ".agent/skills/tts-train/run.sh train-qwen3 --base-model Qwen/Qwen3-TTS-12Hz-1.7B-Base --data-manifest datasets/<voice>/train_manifest_qwen3.jsonl --out-dir artifacts/tts/<voice>_qwen3_1.7b --epochs 10 --batch-size 1 --lr 2e-6 --gradient-accumulation-steps 8 --use-lora --lora-r 16 --lora-alpha 32 --use-8bit-adam --gradient-checkpointing | tee logs/tts/<voice>_train.log"
 ```
 

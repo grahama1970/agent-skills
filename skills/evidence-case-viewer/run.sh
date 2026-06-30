@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # System python3 has PySide6. Add memory venv site-packages for graph_memory.
-MEMORY_SITE="/home/graham/workspace/experiments/memory/.venv/lib/python3.12/site-packages"
+MEMORY_SITE="${HOME}/workspace/experiments/memory/.venv/lib/python3.12/site-packages"
 export PYTHONPATH="${MEMORY_SITE}:${PYTHONPATH:-}"
 
 exec python3 "$SCRIPT_DIR/app.py" "$@"

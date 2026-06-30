@@ -13,7 +13,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     source "$PROJECT_ROOT/.env"
     set +a
 fi
-SPARTA_DIR="/home/graham/workspace/experiments/sparta"
+SPARTA_DIR="${HOME}/workspace/experiments/sparta"
 
 usage() {
     cat << EOF
@@ -197,7 +197,7 @@ case "$COMMAND" in
         ;;
     history)
         # Query memory for past findings
-        cd /home/graham/workspace/experiments/memory
+        cd ${HOME}/workspace/experiments/memory
         exec uv run --project "$SCRIPT_DIR" python -m graph_memory.agent_cli recall \
             --query "SPARTA reality check findings" \
             --scope sparta-qra \

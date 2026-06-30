@@ -13,28 +13,28 @@
 
 ### Core
 
-- [.pi/skills/consume-feed/cli.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/cli.py)
-- [.pi/skills/consume-feed/config.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/config.py)
-- [.pi/skills/consume-feed/storage.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/storage.py)
-- [.pi/skills/consume-feed/runner.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/runner.py)
+- [.pi/skills/consume-feed/cli.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/cli.py)
+- [.pi/skills/consume-feed/config.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/config.py)
+- [.pi/skills/consume-feed/storage.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/storage.py)
+- [.pi/skills/consume-feed/runner.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/runner.py)
 
 ### Sources
 
-- [.pi/skills/consume-feed/sources/base.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/sources/base.py)
-- [.pi/skills/consume-feed/sources/rss.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/sources/rss.py)
+- [.pi/skills/consume-feed/sources/base.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/sources/base.py)
+- [.pi/skills/consume-feed/sources/rss.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/sources/rss.py)
 
 ### Utilities
 
-- [.pi/skills/consume-feed/util/http.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/http.py)
-- [.pi/skills/consume-feed/util/dedupe.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/dedupe.py)
-- [.pi/skills/consume-feed/util/text.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/text.py)
+- [.pi/skills/consume-feed/util/http.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/http.py)
+- [.pi/skills/consume-feed/util/dedupe.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/dedupe.py)
+- [.pi/skills/consume-feed/util/text.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/util/text.py)
 
 ### Metadata
 
-- [.pi/skills/consume-feed/pyproject.toml](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/pyproject.toml)
-- [.pi/skills/consume-feed/SKILL.md](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/SKILL.md)
-- [.pi/skills/consume-feed/run.sh](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/run.sh)
-- [.pi/skills/consume-feed/walkthrough.md](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/consume-feed/walkthrough.md)
+- [.pi/skills/consume-feed/pyproject.toml](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/pyproject.toml)
+- [.pi/skills/consume-feed/SKILL.md](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/SKILL.md)
+- [.pi/skills/consume-feed/run.sh](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/run.sh)
+- [.pi/skills/consume-feed/walkthrough.md](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/consume-feed/walkthrough.md)
 
 ---
 

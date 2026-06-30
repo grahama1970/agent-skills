@@ -18,7 +18,7 @@ triggers:
   - camelot extract
 metadata:
   short-description: "Hybrid Rust+Python PDF table extraction (replaces Camelot)"
-  project-path: /home/graham/workspace/experiments/camelot
+  project-path: ${HOME}/workspace/experiments/camelot
 
 provides:
   - table-extraction

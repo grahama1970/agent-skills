@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 WATCHDOG_DIR="$SCRIPT_DIR/state/watchdogs"
 DEFAULT_ROOT="/mnt/storage12tb/extractor_corpus"
-REVIEW_PDF_EXTRACTED_RUNS="/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs"
+REVIEW_PDF_EXTRACTED_RUNS="${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs"
 
 if ! command -v uv &>/dev/null; then
     echo "ERROR: uv not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
@@ -566,7 +566,7 @@ _status_supervised() {
     fi
 }
 
-PROTOTYPE_API_DIR="/home/graham/workspace/experiments/extractor/prototypes/tabbed/api"
+PROTOTYPE_API_DIR="${HOME}/workspace/experiments/extractor/prototypes/tabbed/api"
 
 CMD="${1:-}"
 case "$CMD" in

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """P2 server callsite bridge for PersonaPlex golden-state chat sessions.
 

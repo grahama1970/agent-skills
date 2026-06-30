@@ -6,8 +6,8 @@ SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
 TESTS_DIR="$SKILL_DIR/tests"
 SCREENSHOT_DIR="$SKILL_DIR/screenshots/tests"
 BASELINE_DIR="$SKILL_DIR/fixtures/baseline"
-WEZTERM_DIR="/home/graham/workspace/experiments/pi-term"
-PI_MONO_DIR="/home/graham/workspace/experiments/pi-mono/packages/wezterm"
+WEZTERM_DIR="${HOME}/workspace/experiments/pi-term"
+PI_MONO_DIR="${HOME}/workspace/experiments/pi-mono/packages/wezterm"
 
 # Task-monitor integration
 TM_RUN="$SKILL_DIR/../task-monitor/run.sh"

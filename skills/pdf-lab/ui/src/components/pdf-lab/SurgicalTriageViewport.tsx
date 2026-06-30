@@ -109,7 +109,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
     <div className="pdf-lab-surgical-viewport" data-qid="pdf-lab:triage:root">
       <header className="pdf-lab-surgical-header">
         <div className="surgical-header-left">
-          <button
+          <button aria-label="Action"
             data-qid="pdf-lab:triage:queue"
             data-qs-action="OPEN_QUEUE"
             title="Show ambiguity queue"
@@ -139,7 +139,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
               workflowTaskIndex: props.taskIndex,
             }}
           />
-          <button
+          <button aria-label="Action"
             data-qid="pdf-lab:triage:audit"
             data-qs-action="OPEN_AUDIT"
             title="Enter full Audit/Repair mode"
@@ -182,7 +182,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
           </div>
 
           <div className="action-triptych">
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:triage:reject"
               data-qs-action="REJECT"
               title="Reject this card (R)"
@@ -191,7 +191,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
             >
               Reject (R)
             </button>
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:triage:skip"
               data-qs-action="SKIP"
               title="Skip this card (S)"
@@ -200,7 +200,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
             >
               Skip (S)
             </button>
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:triage:accept"
               data-qs-action="ACCEPT"
               title="Confirm this card (A)"
@@ -215,7 +215,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
 
       <footer className="pdf-lab-surgical-footer">
         <div className="nav-group">
-          <button
+          <button aria-label="Action"
             data-qid="pdf-lab:triage:previous"
             data-qs-action="PREVIOUS_CARD"
             title="Previous card"
@@ -223,7 +223,7 @@ export function SurgicalTriageViewport(props: SurgicalTriageViewportProps) {
           >
             ←
           </button>
-          <button
+          <button aria-label="Action"
             data-qid="pdf-lab:triage:next"
             data-qs-action="NEXT_CARD"
             title="Next card"

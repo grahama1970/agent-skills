@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """PersonaPlex P8 Deepgram WebSocket probe with real-audio auto-discovery.
 

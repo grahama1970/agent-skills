@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MEMORY_DIR="/home/graham/workspace/experiments/memory"
+MEMORY_DIR="${HOME}/workspace/experiments/memory"
 MONITOR_SCRIPT="$MEMORY_DIR/scripts/validation/monitor_sparta.py"
 
 echo "monitor-sparta sanity check..."

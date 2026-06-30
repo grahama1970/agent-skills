@@ -86,7 +86,7 @@ tests/test_cell_parity.py — runs cell-by-cell comparison, exits 0 only when AL
   - Description: `tests/test_cell_parity.py` exists and imports Camelot, runs all 8 PDFs through both Camelot and our extractor, compares cell-by-cell, and reports diffs. Exits 0 only when there are zero diffs.
   - Files: `tests/test_cell_parity.py`
   - **Definition of Done**:
-    - Test: `cd /home/graham/.claude/skills/extract-tables && python tests/test_cell_parity.py`
+    - Test: `cd ${HOME}/.claude/skills/extract-tables && python tests/test_cell_parity.py`
     - Assertion: Script runs without import errors, currently reports diffs (proving it detects the known gaps), exits non-zero
 
 ### P1: Whitespace and Spacing Normalization (Parallel)
@@ -215,7 +215,7 @@ tests/test_cell_parity.py — runs cell-by-cell comparison, exits 0 only when AL
     4. In the KDE visual debugger (future), display these predictions in a sidebar panel so the user can compare model predictions with their own judgment
   - Files: `src/python/strategy_router.py`, `src/python/parity_report.py`, `~/.pi/skills/assistant/run.sh`
   - **Definition of Done**:
-    - Test: `cd /home/graham/.claude/skills/extract-tables && python -c "from python.strategy_router import predict_strategy; r = predict_strategy('tests/fixtures/foo.pdf', 0); print(r); assert 'classifier' in r or 'heuristic' in r"`
+    - Test: `cd ${HOME}/.claude/skills/extract-tables && python -c "from python.strategy_router import predict_strategy; r = predict_strategy('tests/fixtures/foo.pdf', 0); print(r); assert 'classifier' in r or 'heuristic' in r"`
     - Assertion: Returns prediction dict with at least one tier's result. All three tiers (classifier, GPT, regressor) attempted.
 
 - [ ] **Task 10**: Add prediction display to parity report
@@ -231,7 +231,7 @@ tests/test_cell_parity.py — runs cell-by-cell comparison, exits 0 only when AL
     This makes the strategy selection process transparent — the human can see WHY a particular preset was chosen and override it.
   - Files: `src/python/parity_report.py`
   - **Definition of Done**:
-    - Test: `cd /home/graham/.claude/skills/extract-tables/src && python -m python.parity_report tests/fixtures/foo.pdf --output /tmp/pred_report --show-predictions && grep -c 'Predictions' /tmp/pred_report/report.md`
+    - Test: `cd ${HOME}/.claude/skills/extract-tables/src && python -m python.parity_report tests/fixtures/foo.pdf --output /tmp/pred_report --show-predictions && grep -c 'Predictions' /tmp/pred_report/report.md`
     - Assertion: Report contains a "Predictions" section for each table showing cascade tier results
 
 - [ ] **Task 11**: Build KDE/QML visual debugger for interactive table extraction
@@ -251,7 +251,7 @@ tests/test_cell_parity.py — runs cell-by-cell comparison, exits 0 only when AL
   - Follow `/best-practices-kde` for QML patterns.
   - Files: `src/debugger/` (new directory), `src/debugger/main.py`, `src/debugger/main.qml`, `src/debugger/backend.py`
   - **Definition of Done**:
-    - Test: `cd /home/graham/.claude/skills/extract-tables && python src/debugger/main.py --pdf tests/fixtures/foo.pdf --headless --screenshot /tmp/debugger_test.png && test -f /tmp/debugger_test.png`
+    - Test: `cd ${HOME}/.claude/skills/extract-tables && python src/debugger/main.py --pdf tests/fixtures/foo.pdf --headless --screenshot /tmp/debugger_test.png && test -f /tmp/debugger_test.png`
     - Assertion: Debugger launches, renders PDF with table overlays, shows predictions, exits cleanly in headless mode
 
 ### P5: Final Validation (Sequential)
@@ -262,16 +262,16 @@ tests/test_cell_parity.py — runs cell-by-cell comparison, exits 0 only when AL
   - Dependencies: Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7, Task 8
   - Description: Run the parity test. If any diffs remain, diagnose and fix. This task is not done until the test exits 0.
   - **Definition of Done**:
-    - Test: `cd /home/graham/.claude/skills/extract-tables && python tests/test_cell_parity.py`
+    - Test: `cd ${HOME}/.claude/skills/extract-tables && python tests/test_cell_parity.py`
     - Assertion: Exit code 0. Zero diffs. Zero table count mismatches. Zero shape mismatches. Every cell in every table across all 8 PDFs matches Camelot byte-for-byte.
 
 - [ ] **Task 13**: Update MEMORY.md with final status
   - Agent: general-purpose
   - Parallel: 4
   - Dependencies: Task 12
-  - Description: Update `/home/graham/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md` to reflect true cell-level parity status. Include: parity test results, strategy prediction integration status, KDE debugger status. Remove any hedging or qualifiers — state exactly what was verified and how.
+  - Description: Update `${HOME}/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md` to reflect true cell-level parity status. Include: parity test results, strategy prediction integration status, KDE debugger status. Remove any hedging or qualifiers — state exactly what was verified and how.
   - **Definition of Done**:
-    - Test: `grep -q 'Cell Parity Status' /home/graham/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md && grep -q 'MATCH\|PASS\|parity' /home/graham/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md`
+    - Test: `grep -q 'Cell Parity Status' ${HOME}/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md && grep -q 'MATCH\|PASS\|parity' ${HOME}/.claude/projects/-home-graham-workspace-experiments-camelot/memory/MEMORY.md`
     - Assertion: MEMORY.md contains "Cell Parity Status" section with concrete results (MATCH/PASS counts, not hedging)
 
 ## Completion Criteria

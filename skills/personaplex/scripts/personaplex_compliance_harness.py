@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """P0 PersonaPlex turn-aware memory/compliance harness.
 

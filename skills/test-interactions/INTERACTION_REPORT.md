@@ -7,7 +7,7 @@
 
 | Surface | Element | Action | Status | Evidence |
 |---------|---------|--------|--------|----------|
-| operator-controls | initial-controls | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| operator-controls | initial-controls | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='operator-prompt']): title='Enter task request' |
@@ -62,7 +62,7 @@
 | | | assertion | PASS | assert_qs_action([data-qid='composer-command-mode']): data-qs-action='OPEN_COMMAND_MODE' |
 | operator-controls | initial-controls | tab | PASS | tabbed 8x, focus path: ['submit-run', None, 'sidebar-toggle', 'sidebar-new-chat', 'sidebar-search-ch |
 | operator-controls | initial-controls | key | PASS | pressed Escape, focus on qid=conversation-conv_ui_xejy9gjli2 |
-| operator-controls | initial-controls | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| operator-controls | initial-controls | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='operator-prompt']): title='Enter task request' |
@@ -72,7 +72,7 @@
 | | | assertion | PASS | assert_min_size([data-qid='sidebar-new-chat'], 44x44): 249x48px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='sidebar-new-chat']): title='New chat' |
 | | | assertion | PASS | assert_qs_action([data-qid='sidebar-new-chat']): data-qs-action='NEW_CHAT' |
-| skill-suggestions | surface-reset | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| skill-suggestions | surface-reset | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_absent([data-qid='run-details-collapse']): correctly absent |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
@@ -147,7 +147,7 @@
 | | | assertion | PASS | assert_min_size([data-qid='sidebar-new-chat'], 44x44): 249x48px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='sidebar-new-chat']): title='New chat' |
 | | | assertion | PASS | assert_qs_action([data-qid='sidebar-new-chat']): data-qs-action='NEW_CHAT' |
-| composer-highlighting | surface-reset | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | surface-reset | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_absent([data-qid='run-details-collapse']): correctly absent |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
@@ -156,69 +156,69 @@
 | composer-highlighting | composer-highlighting | type | PASS | typed '$assess the current routing evidence', value='$assess the current routing evidence' |
 | | | assertion | PASS | assert_text('$assess'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$assess the current routing evidence' == '$assess the current routing evi |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$assess the current routing evidence' == '$assess the current routing evi |
 | composer-highlighting | composer-highlighting | type | PASS | typed '/assess the current routing evidence', value='/assess the current routing evidence' |
 | | | assertion | PASS | assert_text('/assess'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='/assess the current routing evidence' == '/assess the current routing evi |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='/assess the current routing evidence' == '/assess the current routing evi |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$create-figure render a sample task graph', value='$create-figure render a sample task graph' |
 | | | assertion | PASS | assert_text('$create-figure'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$create-figure render a sample task graph' == '$create-figure render a sa |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$create-figure render a sample task graph' == '$create-figure render a sa |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$create-evidence-case for CWE-287', value='$create-evidence-case for CWE-287' |
 | | | assertion | PASS | assert_text('$create-evidence-case'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$create-evidence-case for CWE-287' == '$create-evidence-case for CWE-287' |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$create-evidence-case for CWE-287' == '$create-evidence-case for CWE-287' |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$analytics summarize timing data', value='$analytics summarize timing data' |
 | | | assertion | PASS | assert_text('$analytics'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$analytics summarize timing data' == '$analytics summarize timing data' |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$analytics summarize timing data' == '$analytics summarize timing data' |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$memory recall the graph artifact run', value='$memory recall the graph artifact run' |
 | | | assertion | PASS | assert_text('$memory'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$memory recall the graph artifact run' == '$memory recall the graph artif |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$memory recall the graph artifact run' == '$memory recall the graph artif |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$fetcher ingest https://example.com', value='$fetcher ingest https://example.com' |
 | | | assertion | PASS | assert_text('$fetcher'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$fetcher ingest https://example.com' == '$fetcher ingest https://example. |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$fetcher ingest https://example.com' == '$fetcher ingest https://example. |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$extractor extract the largest PDF table', value='$extractor extract the largest PDF table' |
 | | | assertion | PASS | assert_text('$extractor'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$extractor extract the largest PDF table' == '$extractor extract the larg |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$extractor extract the largest PDF table' == '$extractor extract the larg |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$best-practices-react verify data-qid coverage', value='$best-practices-react verify data-qid |
 | | | assertion | PASS | assert_text('$best-practices-react'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$best-practices-react verify data-qid coverage' == '$best-practices-react |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$best-practices-react verify data-qid coverage' == '$best-practices-react |
 | composer-highlighting | composer-highlighting | type | PASS | typed '$scillm explain cache hit telemetry', value='$scillm explain cache hit telemetry' |
 | | | assertion | PASS | assert_text('$scillm'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$scillm explain cache hit telemetry' == '$scillm explain cache hit teleme |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$scillm explain cache hit telemetry' == '$scillm explain cache hit teleme |
 | composer-highlighting | composer-highlighting | type | PASS | typed 'expand the graph artifact', value='expand the graph artifact' |
 | | | assertion | PASS | assert_text('expand'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='expand the graph artifact' == 'expand the graph artifact' |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='expand the graph artifact' == 'expand the graph artifact' |
 | composer-highlighting | composer-highlighting | type | PASS | typed 'close the artifact sidebar', value='close the artifact sidebar' |
 | | | assertion | PASS | assert_text('close'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='close the artifact sidebar' == 'close the artifact sidebar' |
-| composer-highlighting | composer-highlighting | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| composer-highlighting | composer-highlighting | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='close the artifact sidebar' == 'close the artifact sidebar' |
 | chat-scenarios | surface-reset | click | PASS | clicked <BUTTON> 'New chat' |
 | | | assertion | PASS | assert_absent([data-qid='run-details-collapse']): correctly absent |
 | | | assertion | PASS | assert_min_size([data-qid='sidebar-new-chat'], 44x44): 249x48px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='sidebar-new-chat']): title='New chat' |
 | | | assertion | PASS | assert_qs_action([data-qid='sidebar-new-chat']): data-qs-action='NEW_CHAT' |
-| chat-scenarios | surface-reset | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| chat-scenarios | surface-reset | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_absent([data-qid='run-details-collapse']): correctly absent |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
@@ -409,9 +409,9 @@
 | | | assertion | PASS | assert_qs_action([data-qid='submit-run']): data-qs-action='SUBMIT_RUN' |
 | chat-scenarios | chat-scenarios | click | PASS | clicked <BUTTON> 'operator-directsuccessProject: agent-skillsMode: read_only' |
 | | | assertion | PASS | assert_text('2 + 2 = 4'): found in page |
-| chat-scenarios | chat-scenarios | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| chat-scenarios | chat-scenarios | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_text('2 + 2 = 4'): found in page |
-| inline-artifact-demo-expanded | inline-artifact-demo | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| inline-artifact-demo-expanded | inline-artifact-demo | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid^='inline-artifact-expand-'][data-qid*='findings-table-json']): text='Findings Tablefindings-table.jsontable' |
 | | | assertion | PASS | assert_text('Created an inline artifact sanity run'): found in page |
 | inline-artifact-demo-expanded | inline-artifact-demo | click | PASS | clicked <BUTTON> 'Findings Tablefindings-table.jsontable' |
@@ -436,21 +436,21 @@
 | | | assertion | PASS | assert_qs_action([data-qid='run-details-resize']): data-qs-action='RESIZE_RUN_DETAILS' |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | click | PASS | clicked <BUTTON> 'artifacts/findings-table.json' |
 | | | assertion | PASS | assert_selector([data-qid='artifact-tab-artifacts-findings-table-json']): text='artifacts/findings-table.json' |
-| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | tab | PASS | tabbed 2x, focus path: ['artifact-tab-artifacts-evidence-case-json', 'artifact-tab-artifacts-project |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | click | PASS | clicked <BUTTON> 'artifacts/project-graph.d3.json' |
 | | | assertion | PASS | assert_selector([data-qid='artifact-tab-artifacts-project-graph-d3-json']): text='artifacts/project-graph.d3.json' |
-| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | tab | PASS | tabbed 2x, focus path: ['d3-node-inline_artifacts_demo_5e60e822-artifacts-project-graph-d3-json-arti |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | click | PASS | clicked <BUTTON> 'artifacts/evidence-case.json' |
 | | | assertion | PASS | assert_selector([data-qid='artifact-tab-artifacts-evidence-case-json']): text='artifacts/evidence-case.json' |
-| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | tab | PASS | tabbed 2x, focus path: ['artifact-tab-artifacts-project-graph-d3-json', 'artifact-content-artifacts- |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | click | PASS | clicked <BUTTON> 'artifacts/gpt-5-5-figure.svg' |
 | | | assertion | PASS | assert_selector([data-qid='artifact-tab-artifacts-gpt-5-5-figure-svg']): text='artifacts/gpt-5-5-figure.svg' |
-| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| inline-artifact-demo-expanded | inline-artifact-demo-cycles | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | inline-artifact-demo-expanded | inline-artifact-demo-cycles | tab | PASS | tabbed 2x, focus path: [None, 'sidebar-toggle'] |
-| terminal-navigation | terminal-navigation | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| terminal-navigation | terminal-navigation | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='header-terminal']): text='' |
 | | | assertion | PASS | assert_min_size([data-qid='header-terminal'], 44x44): 44x44px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='header-terminal']): title='Terminal' |
@@ -460,8 +460,8 @@
 | | | assertion | PASS | assert_title([data-qid='header-terminal']): title='Terminal' |
 | | | assertion | PASS | assert_qs_action([data-qid='header-terminal']): data-qs-action='OPEN_TERMINAL' |
 | terminal-navigation | terminal-navigation | click | PASS | clicked <BUTTON> '' |
-| terminal-navigation | terminal-navigation | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
-| project-policy-answer | project-policy-answer | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| terminal-navigation | terminal-navigation | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| project-policy-answer | project-policy-answer | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='sidebar-project-select']): text='Agent SkillsSpartaPi MonoMemoryScillmPDF OxidePDF OxideExtractorFetcherHor |
 | | | assertion | PASS | assert_min_size([data-qid='sidebar-project-select'], 44x44): 159x44px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='sidebar-project-select']): title='Select project' |
@@ -476,16 +476,16 @@
 | | | assertion | PASS | assert_qs_action([data-qid='submit-run']): data-qs-action='SUBMIT_RUN' |
 | project-policy-answer | project-policy-answer | click | PASS | clicked <BUTTON> 'operator-policysuccessProject: agent-skillsMode: read_onlyme' |
 | | | assertion | PASS | assert_text('data-qid'): found in page |
-| project-policy-answer | project-policy-answer | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| project-policy-answer | project-policy-answer | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_text('data-qid'): found in page |
-| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='operator-prompt']): title='Enter task request' |
 | | | assertion | PASS | assert_qs_action([data-qid='operator-prompt']): data-qs-action='EDIT_TASK_REQUEST' |
 | memory-degraded-state | memory-degraded-state | type | PASS | typed '$memory recall agent-operator browser proof report', value='$memory recall agent-operator bro |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$memory recall agent-operator browser proof report' == '$memory recall ag |
-| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_text('$memory'): found in page |
 | | | assertion | PASS | assert_value([data-qid='operator-prompt']): value='$memory recall agent-operator browser proof report' == '$memory recall ag |
 | memory-degraded-state | memory-degraded-state | type | PASS | typed 'Use $memory to recall a fabricated browser-bank memory key AO-NO-SUCH-MEMORY-0001.', value='U |
@@ -495,9 +495,9 @@
 | | | assertion | PASS | assert_min_size([data-qid='submit-run'], 44x44): 91x48px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='submit-run']): title='Submit run' |
 | | | assertion | PASS | assert_qs_action([data-qid='submit-run']): data-qs-action='SUBMIT_RUN' |
-| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| memory-degraded-state | memory-degraded-state | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_text('memory'): found in page |
-| missing-input-clarification | missing-input-clarification | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| missing-input-clarification | missing-input-clarification | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_selector([data-qid='operator-prompt']): text='' |
 | | | assertion | PASS | assert_min_size([data-qid='operator-prompt'], 44x44): 990x64px >= 44x44px |
 | | | assertion | PASS | assert_title([data-qid='operator-prompt']): title='Enter task request' |
@@ -514,7 +514,7 @@
 | | | assertion | PASS | assert_text('clarification'): found in page |
 | missing-input-clarification | missing-input-clarification | click | PASS | clicked <BUTTON> 'clarification.json' |
 | | | assertion | PASS | assert_text('required_data'): found in page |
-| missing-input-clarification | missing-input-clarification | screenshot | PASS | captured /home/graham/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
+| missing-input-clarification | missing-input-clarification | screenshot | PASS | captured ${HOME}/workspace/experiments/agent-operator/.codex/test-interactions/hardening-sweep- |
 | | | assertion | PASS | assert_text('required_data'): found in page |
 
 ## Visual Design Review

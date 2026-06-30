@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """PersonaPlex P8-P9-P10 combined probe preserving the existing adapter seam."""
 

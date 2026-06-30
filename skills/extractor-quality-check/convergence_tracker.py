@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the extractor-quality-check skill."""
 """Convergence tracking via /memory queries.
 
 Replaces counter-based convergence tracking with score-trajectory queries

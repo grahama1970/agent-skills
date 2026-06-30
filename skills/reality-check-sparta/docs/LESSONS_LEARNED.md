@@ -167,14 +167,14 @@ Every answer must include at least one of:
 - `SIMPLE_SYSTEM_PROMPT` (line 564)
 - `TACTIC_CONTROL_PROMPT` (line 690)
 
-Path: `/home/graham/workspace/experiments/sparta/src/sparta/pipeline_duckdb/12_qra.py`
+Path: `${HOME}/workspace/experiments/sparta/src/sparta/pipeline_duckdb/12_qra.py`
 
 ## Brandon Bailey Persona Files
 
 - `BRANDON_BAILEY_PERSONA.md` - Full persona definition
 - `brandon_bailey_persona.yaml` - Create-persona manifest
 
-Path: `/home/graham/workspace/experiments/memory/.agents/skills/reality-check-sparta/`
+Path: `${HOME}/workspace/experiments/memory/.agents/skills/reality-check-sparta/`
 
 ## Recommended Batch Configuration
 
@@ -194,7 +194,7 @@ python -m sparta.pipeline_duckdb.12_qra \
   --max-pairs 50000
 
 # In parallel terminal, monitor with Brandon review
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/reality-check-sparta
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/reality-check-sparta
 ./run.sh watch --run-id run-recovery-verify --checkpoint 5000 --samples 20
 ```
 

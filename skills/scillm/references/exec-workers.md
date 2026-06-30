@@ -35,13 +35,13 @@ mutation, use `--sandbox workspace-write` plus one or more `--allow-write` paths
 
 ```bash
 scillm exec codex-gpt-5.5 \
-  --cwd /home/graham/workspace/project \
+  --cwd ${HOME}/workspace/project \
   --sandbox read-only \
   --reasoning-effort high \
   --prompt 'Inspect the bounded failure and return JSON only.'
 
 scillm exec pi-chutes-kimi \
-  --cwd /home/graham/workspace/project \
+  --cwd ${HOME}/workspace/project \
   --sandbox read-only \
   --prompt 'Inspect the bounded failure and return JSON only.'
 ```
@@ -58,8 +58,8 @@ scillm exec pi-chutes-kimi \
 `SCILLM_CODEX_EXEC_MODEL` (default `gpt-5.5`), `SCILLM_CODEX_EXEC_MODEL_VISION`
 (default `gpt-5.3-codex`).
 
-Pi exec: binary `SCILLM_PI_BINARY` (default `/home/graham/bin/pi` → pi-mono fork);
-Docker mounts `/home/graham/.pi/agent`. Read-only tools: `read,grep,find,ls`;
+Pi exec: binary `SCILLM_PI_BINARY` (default `${HOME}/bin/pi` → pi-mono fork);
+Docker mounts `${HOME}/.pi/agent`. Read-only tools: `read,grep,find,ls`;
 workspace-write adds `edit,write` (no `bash`).
 
 OpenCode exec: generated `opencode.config.json` per attempt; skills/web/shell denied.

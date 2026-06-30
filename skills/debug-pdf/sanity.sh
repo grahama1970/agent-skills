@@ -69,7 +69,7 @@ fi
 # 3. Check agent-inbox availability
 echo ""
 echo "3. Agent inbox..."
-MEMORY_SKILLS="${MEMORY_SKILLS_DIR:-/home/graham/workspace/experiments/memory/.agents/skills}"
+MEMORY_SKILLS="${MEMORY_SKILLS_DIR:-${HOME}/workspace/experiments/memory/.agents/skills}"
 if [[ -x "$MEMORY_SKILLS/agent-inbox/agent-inbox" ]]; then
     check "agent-inbox tool" "OK"
 elif [[ -x "$MEMORY_SKILLS/agent-inbox/run.sh" ]]; then

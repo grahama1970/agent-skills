@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """PersonaPlex P10 GPU proof probe via golden_state_server LMGen.step.
 
@@ -10,8 +11,8 @@ P10 GPU proof.
 The proof path is the checked-out ``personaplex_golden_state_server.py`` probe
 mode, executed under the PersonaPlex virtualenv:
 
-    /home/graham/workspace/experiments/personaplex/.venv/bin/python \
-      /home/graham/workspace/experiments/personaplex/personaplex_golden_state_server.py \
+    ${HOME}/workspace/experiments/personaplex/.venv/bin/python \
+      ${HOME}/workspace/experiments/personaplex/personaplex_golden_state_server.py \
       --probe-lmgen-step --json
 
 ``real_gpu_personaplex=true`` is written only when the subprocess exits 0 and
@@ -31,7 +32,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-DEFAULT_PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
+DEFAULT_PERSONAPLEX_ROOT = Path("${HOME}/workspace/experiments/personaplex")
 DEFAULT_VENV_PYTHON = DEFAULT_PERSONAPLEX_ROOT / ".venv" / "bin" / "python"
 DEFAULT_GOLDEN_STATE_SERVER = DEFAULT_PERSONAPLEX_ROOT / "personaplex_golden_state_server.py"
 DEFAULT_OUT_DIR = Path("artifacts/personaplex_sanity/p10c")
@@ -510,7 +511,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PersonaPlex P10c GPU LMGen.step proof via golden_state_server subprocess")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory where the receipt JSON will be written")
     parser.add_argument("--receipt-name", default=DEFAULT_RECEIPT_NAME, help="Receipt filename inside --out-dir")
-    parser.add_argument("--personaplex-root", default=None, help="PersonaPlex checkout root; defaults to /home/graham/workspace/experiments/personaplex")
+    parser.add_argument("--personaplex-root", default=None, help="PersonaPlex checkout root; defaults to ${HOME}/workspace/experiments/personaplex")
     parser.add_argument("--venv-python", default=None, help="PersonaPlex venv python path; defaults to <root>/.venv/bin/python")
     parser.add_argument("--golden-state-server", default=None, help="Path to personaplex_golden_state_server.py")
     parser.add_argument("--timeout-seconds", type=float, default=DEFAULT_TIMEOUT_SECONDS, help="Bounded subprocess timeout")

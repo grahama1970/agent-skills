@@ -126,9 +126,9 @@ claimed.
 ```bash
 skills/personaplex/run.sh from-orpheus \
   --reference-pack /path/to/personaplex-reference-pack.json \
-  --personaplex-root /home/graham/workspace/experiments/personaplex \
-  --personaplex-python /home/graham/workspace/experiments/personaplex/.venv/bin/python \
-  --human-input-wav /home/graham/workspace/experiments/personaplex/assets/test/input_assistant.wav \
+  --personaplex-root ${HOME}/workspace/experiments/personaplex \
+  --personaplex-python ${HOME}/workspace/experiments/personaplex/.venv/bin/python \
+  --human-input-wav ${HOME}/workspace/experiments/personaplex/assets/test/input_assistant.wav \
   --max-human-input-seconds 2.0 \
   --out-dir /mnt/storage12tb/skills/personaplex/outputs/horus
 ```
@@ -175,8 +175,8 @@ non-mocked while avoiding long opaque runs on 40s+ fixtures.
 ```bash
 skills/personaplex/run.sh verify-e2e \
   --reference-pack /path/to/personaplex-reference-pack.json \
-  --personaplex-root /home/graham/workspace/experiments/personaplex \
-  --human-input-wav /home/graham/workspace/experiments/personaplex/assets/test/input_assistant.wav \
+  --personaplex-root ${HOME}/workspace/experiments/personaplex \
+  --human-input-wav ${HOME}/workspace/experiments/personaplex/assets/test/input_assistant.wav \
   --max-human-input-seconds 2.0 \
   --out-dir /mnt/storage12tb/skills/personaplex/outputs/horus-e2e
 ```
@@ -202,8 +202,8 @@ Live E2E sanity:
 
 ```bash
 ORPHEUS_PERSONAPLEX_REFERENCE_PACK=/path/to/personaplex-reference-pack.json \
-PERSONAPLEX_ROOT=/home/graham/workspace/experiments/personaplex \
-PERSONAPLEX_HUMAN_INPUT_WAV=/home/graham/workspace/experiments/personaplex/assets/test/input_assistant.wav \
+PERSONAPLEX_ROOT=${HOME}/workspace/experiments/personaplex \
+PERSONAPLEX_HUMAN_INPUT_WAV=${HOME}/workspace/experiments/personaplex/assets/test/input_assistant.wav \
 skills/personaplex/sanity-e2e.sh
 ```
 

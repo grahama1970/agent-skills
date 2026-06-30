@@ -8,7 +8,7 @@ Implements Belief-Desire-Intention (BDI) architecture based on Horus persona sys
 - Mood computation from context
 - Dynamic persona state
 
-See: /home/graham/workspace/experiments/memory/persona for reference implementation.
+See: ${HOME}/workspace/experiments/memory/persona for reference implementation.
 """
 
 import importlib.util

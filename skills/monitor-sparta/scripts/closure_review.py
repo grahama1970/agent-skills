@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the monitor-sparta skill."""
 from __future__ import annotations
 
 import argparse

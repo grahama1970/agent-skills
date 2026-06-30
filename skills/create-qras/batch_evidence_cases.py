@@ -24,7 +24,7 @@ app = typer.Typer(help="Batch evidence case generation for sparta_qra")
 
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
 BATCH_SIZE = 100
-STATE_FILE = Path("/home/graham/.claude/skills/create-qras/.evidence_case_batch_state.json")
+STATE_FILE = Path("${HOME}/.claude/skills/create-qras/.evidence_case_batch_state.json")
 
 
 def get_memory_client() -> httpx.Client:

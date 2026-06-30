@@ -384,7 +384,7 @@ If `training_labels.jsonl` is writable by any process, an attacker could inject 
 
 ```bash
 # First run: validate T0 probes work
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-security
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/monitor-security
 uv run python monitor.py check --tier 0
 
 # Validate threat intel loop (dry run)

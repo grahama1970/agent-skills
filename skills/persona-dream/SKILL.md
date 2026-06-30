@@ -667,10 +667,10 @@ resolve `<<<voice_1>>>` and `<<<voice_2>>>` to real Kling voices. If the
 provider voice-clone endpoint requires a paid call and the run is dry-run mode
 (`--dry-run` flag), log the intent and skip.
 
-Local A5000 guidance from `/home/graham/workspace/experiments/Wan2.2/README.md`:
+Local A5000 guidance from `${HOME}/workspace/experiments/Wan2.2/README.md`:
 
 ```bash
-cd /home/graham/workspace/experiments/Wan2.2
+cd ${HOME}/workspace/experiments/Wan2.2
 python generate.py \
   --task ti2v-5B \
   --size 1280*704 \

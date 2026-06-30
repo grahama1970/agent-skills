@@ -46,7 +46,7 @@ Use this skill when a project agent needs to mount, modify, audit, or migrate th
 The shared chat source was extracted from:
 
 ```text
-/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/
+${HOME}/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/
 ```
 
 The creation bundle identifies commit `b98746993` as the committed pi-mono source state. Treat this as an extraction + import relocation. Do not redesign or rewrite the components during the relocation.
@@ -118,10 +118,10 @@ authority for PDF Lab product components or API bridges.
 Minimum validation after import relocation:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/ux-lab/ui
+cd ${HOME}/workspace/experiments/agent-skills/skills/ux-lab/ui
 npm run typecheck
 
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
+cd ${HOME}/workspace/experiments/pi-mono/packages/ux-lab
 npm run typecheck
 npm run build
 ```

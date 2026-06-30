@@ -22,8 +22,8 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SPARTA_DIR="/home/graham/workspace/experiments/sparta"
-PI_SKILLS="/home/graham/workspace/experiments/pi-mono/.pi/skills"
+SPARTA_DIR="${HOME}/workspace/experiments/sparta"
+PI_SKILLS="${HOME}/workspace/experiments/pi-mono/.pi/skills"
 
 cd "$SKILL_DIR"
 
@@ -51,7 +51,7 @@ run_reality_check() {
     case "$cmd" in
         check-direct)
             # Direct invocation via cli.py — proper typer arg parsing
-            cd /home/graham/workspace/experiments/sparta
+            cd ${HOME}/workspace/experiments/sparta
             exec uv run python "$PI_SKILLS/reality-check-sparta/cli.py" "$@"
             ;;
         *)

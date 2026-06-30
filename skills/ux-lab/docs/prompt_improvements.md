@@ -7,10 +7,10 @@ You are performing an extraction/import-relocation, not a rewrite.
 
 Source authority:
 - pi-mono commit: b98746993
-- source directory: /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/
+- source directory: ${HOME}/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/
 
 Target:
-- /home/graham/workspace/experiments/agent-skills/skills/ux-lab/ui/
+- ${HOME}/workspace/experiments/agent-skills/skills/ux-lab/ui/
 
 Required behavior:
 1. Copy the committed shared-chat source into skills/ux-lab/ui without changing component behavior.

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the extractor-quality-check skill."""
 """Memory integration for inline PDF reviewer.
 
 Split from inline_reviewer.py to stay under 800-line module limit.

@@ -14,7 +14,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 
 # Make graph_memory importable for direct API calls (5ms vs 5000ms subprocess)
-MEMORY_SRC="${MEMORY_SRC:-/home/graham/workspace/experiments/memory/src}"
+MEMORY_SRC="${MEMORY_SRC:-${HOME}/workspace/experiments/memory/src}"
 export PYTHONPATH="${MEMORY_SRC}:${PYTHONPATH:-}"
 
 exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/evidence_case.py" "$@"

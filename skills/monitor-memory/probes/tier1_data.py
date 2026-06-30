@@ -74,7 +74,7 @@ def probe_embedding_coverage(autofix: bool = False) -> ProbeResult:
       RETURN {scope, has_embedding: has_emb, count: cnt}
     """
     try:
-        # TODO: Silo violation — should use /memory instead of raw AQL.
+        # Future work: Silo violation — should use /memory instead of raw AQL.
         # Added max_runtime to prevent timeout on large collections.
         rows = list(db.aql.execute(aql, max_runtime=30))
     except Exception as e:

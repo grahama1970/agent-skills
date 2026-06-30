@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 import os
 
-DEFAULT_TARGET_TOKENS = int(os.getenv("DEEPSEEK_V3_TARGET_TOKENS", "90000000"))
+DEFAULT_TARGET_TOKENS = int(os.getenv("DEEPSEEK_V3_TARGET_TOKENS", "90_000_000"))
 
 
 @dataclass
@@ -46,8 +46,8 @@ class DeepseekV3Config:
 
     # Server configuration
     port: int = 8000
-    max_model_len: int = 32768  # 32K context
-    max_batch_tokens: int = 65536
+    max_model_len: int = 32_768  # 32K context
+    max_batch_tokens: int = 65_536
 
     # Cost optimization (overnight preferred)
     priority: Literal["cost", "speed", "balanced"] = "cost"

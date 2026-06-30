@@ -25,7 +25,7 @@ for forbidden in [
     "sk-test-secret-1234567890",
     "Bearer abc.def.ghi",
     "Bearer abcdef1234567890",
-    "/home/graham/workspace/private/app.py",
+    "${HOME}/workspace/private/app.py",
 ]:
     if forbidden in text:
         raise SystemExit(f"distilled lesson leaked forbidden value: {forbidden}")

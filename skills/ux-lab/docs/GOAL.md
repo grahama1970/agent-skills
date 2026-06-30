@@ -1,8 +1,8 @@
 # GOAL — Self-Contained ux-lab Skill
 
-**Slice id:** `ux-lab-skill-self-containment`  
-**Skill repo:** `/home/graham/workspace/experiments/agent-skills/skills/ux-lab`  
-**Current source:** `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/`  
+**Slice id:** `ux-lab-skill-self-containment`
+**Skill repo:** `${HOME}/workspace/experiments/agent-skills/skills/ux-lab`
+**Current source:** `${HOME}/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/`
 
 ## Product question
 

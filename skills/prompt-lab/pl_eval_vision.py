@@ -207,7 +207,7 @@ def eval_vision(
         )
         latency = (_time.perf_counter() - start_t) * 1000
         # Read the output file
-        output_dir = Path("/home/graham/workspace/experiments/embry-os/docs/review-output") / (Path(image_dir).name if image_dir else "eval")
+        output_dir = Path("${HOME}/workspace/experiments/embry-os/docs/review-output") / (Path(image_dir).name if image_dir else "eval")
         step1_file = output_dir / "round1_step1.md"
         if step1_file.exists():
             content = step1_file.read_text()

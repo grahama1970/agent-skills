@@ -125,7 +125,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, onEnti
             <div className={teaser ? 'chat-prose-table-teaser' : 'chat-prose-table'}>
               <table>{children}</table>
               {teaser && onOpenWorkspace ? (
-                <button type="button" className="chat-prose-table-workspace-link" data-qid="chat:markdown-table:workspace" onClick={onOpenWorkspace}>
+                <button aria-label="Action" type="button" className="chat-prose-table-workspace-link" data-qid="chat:markdown-table:workspace" onClick={onOpenWorkspace}>
                   ↗ View all{tableRowCount ? ` ${tableRowCount}` : ''} rows in Workspace
                 </button>
               ) : null}

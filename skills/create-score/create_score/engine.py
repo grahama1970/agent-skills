@@ -85,7 +85,7 @@ def _store_in_memory(result: ScoreResult) -> None:
             result.hmt.bridge_attributes,
             tags,
         )
-        # TODO: Implement actual memory storage — currently a no-op
+        # Future work: Implement actual memory storage — currently a no-op
         raise NotImplementedError("Memory storage for score results not yet implemented")
     except Exception as e:
         logger.warning("Failed to store in memory: {}", e)

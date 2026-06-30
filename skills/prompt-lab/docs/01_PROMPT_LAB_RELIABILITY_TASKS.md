@@ -33,7 +33,7 @@ None - all requirements clear from assessment findings.
   - Notes: The `test-sparta` command should support `--converge` flag like other test commands, enabling iterative feedback loop when thresholds fail
   - **Sanity**: None (standard library only)
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python prompt_lab.py test-sparta --help | grep -q converge`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python prompt_lab.py test-sparta --help | grep -q converge`
     - Assertion: --converge flag is documented in help output
 
 - [x] **Task 2**: Fix entity anchoring for phase 0 relationships
@@ -43,7 +43,7 @@ None - all requirements clear from assessment findings.
   - Notes: Ensure `EntityAnchoring.check_relationship()` is called for phase 0 QRAs in test-sparta. Currently may not be integrated into the main evaluation flow.
   - **Sanity**: None (uses existing qra_validators.py)
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python qra_validators.py`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python qra_validators.py`
     - Assertion: All 15 self-tests pass (10 standard + 5 relationship)
 
 - [x] **Task 3**: Add prompt sync markers for version tracking
@@ -53,7 +53,7 @@ None - all requirements clear from assessment findings.
   - Notes: Add version markers to prompt files (e.g., `# Version: 1.0.0`) and validate that prompts match expected versions during evaluation. This prevents stale prompt drift.
   - **Sanity**: None (file I/O only)
   - **Definition of Done**:
-    - Test: `grep -r "Version:" /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab/prompts/ | wc -l`
+    - Test: `grep -r "Version:" ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab/prompts/ | wc -l`
     - Assertion: At least 1 prompt file has Version marker
 
 ### P1: Code Quality (Parallel)
@@ -65,7 +65,7 @@ None - all requirements clear from assessment findings.
   - Notes: Move scattered validation logic (ambiguity gate, entity anchoring, citation validation) into a single coherent module. Currently spread across qra_evaluation.py, qra_validators.py, and citation_validator.py.
   - **Sanity**: None (refactoring only)
   - **Definition of Done**:
-    - Test: `cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python -c "from qra_validators import EntityAnchoring, AmbiguityGate; print('OK')"`
+    - Test: `cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab && python -c "from qra_validators import EntityAnchoring, AmbiguityGate; print('OK')"`
     - Assertion: Both classes importable from single module (may require moving AmbiguityGate)
 
 - [x] **Task 5**: Fix run.sh portability for cross-platform compatibility
@@ -75,7 +75,7 @@ None - all requirements clear from assessment findings.
   - Notes: Ensure run.sh works on both Linux and macOS. Check for bash-specific constructs that may not be portable.
   - **Sanity**: None (shell script review)
   - **Definition of Done**:
-    - Test: `bash -n /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab/run.sh && echo "OK"`
+    - Test: `bash -n ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab/run.sh && echo "OK"`
     - Assertion: Shell syntax check passes
 
 ### P2: Cleanup (After Quality Tasks)
@@ -87,7 +87,7 @@ None - all requirements clear from assessment findings.
   - Notes: If there's a legacy monolithic file (e.g., prompt_lab_monolith.py or similar), remove it after confirming all functionality has been migrated to the modular structure.
   - **Sanity**: None (file deletion)
   - **Definition of Done**:
-    - Test: `ls /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab/*monolith* 2>/dev/null || echo "No monolith found"`
+    - Test: `ls ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab/*monolith* 2>/dev/null || echo "No monolith found"`
     - Assertion: No monolith files exist OR explicit confirmation they're needed
 
 ## Completion Criteria

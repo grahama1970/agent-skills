@@ -26,14 +26,14 @@ LOCK_DIR = STATE_ROOT / "lock"
 CRON_MARKER = "# project-watchdog global issue cron"
 TAU_REPAIR_MARKER = "project-watchdog-action:add-tau-coder-command-spec"
 TAU_HANDOFF_DISPATCH_MARKER = "project-watchdog-action:tau-handoff-dispatch"
-TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
+TAU_ROOT = Path("${HOME}/workspace/experiments/tau")
 TAU_CODER_SPEC = (
     TAU_ROOT
     / "experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json"
 )
-AGENTS_ROOT = Path("/home/graham/workspace/experiments/agent-skills/agents")
+AGENTS_ROOT = Path("${HOME}/workspace/experiments/agent-skills/agents")
 TAU_ACTIVE_GOAL_HASH = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
-UV_BIN = Path("/home/graham/.local/bin/uv")
+UV_BIN = Path("${HOME}/.local/bin/uv")
 app = typer.Typer(add_completion=False, help="Run one bounded project watchdog tick.")
 
 

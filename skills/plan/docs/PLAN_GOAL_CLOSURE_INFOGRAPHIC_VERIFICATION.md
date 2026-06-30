@@ -13,7 +13,7 @@ chromium --headless --no-sandbox --disable-gpu \
   --hide-scrollbars --force-device-scale-factor=1 \
   --window-size=1440,2000 \
   --screenshot=skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.png \
-  file:///home/graham/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
+  file://${HOME}/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
 ```
 
 ## Visual Checks

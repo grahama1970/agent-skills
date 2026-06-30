@@ -143,7 +143,7 @@ def _already_assessed(pdf_path: Path) -> bool:
 _TIMEOUT_REGRESSOR = None
 _TIMEOUT_REGRESSOR_LOADED = False
 _REGRESSOR_MODEL_PATH = Path(
-    "/home/graham/.claude/skills/create-regressor/models/timeout-estimator__rf/model.joblib"
+    "${HOME}/.claude/skills/create-regressor/models/timeout-estimator__rf/model.joblib"
 )
 _REGRESSOR_SAFETY_MULTIPLIER = 3.0  # predict * 3 to avoid premature kills
 _REGRESSOR_MIN_TIMEOUT = 90          # floor: full pipeline overhead (subprocess + section build + ArangoDB)

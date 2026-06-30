@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCILLM_REPO="${SCILLM_REPO:-/home/graham/workspace/experiments/scillm}"
+SCILLM_REPO="${SCILLM_REPO:-${HOME}/workspace/experiments/scillm}"
 
 python3 -m py_compile "$SKILL_DIR/scripts/run_mvp_e2e.py"
 

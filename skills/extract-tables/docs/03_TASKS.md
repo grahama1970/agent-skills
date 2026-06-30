@@ -125,7 +125,7 @@ None — root cause identified, test PDFs located. Two missing table-lab modules
   - Parallel: 2
   - Dependencies: Task 1, Task 3
   - **Details**:
-    - **Step 1**: Create `table_lab/strategy_advisor.py` in `/home/graham/.claude/skills/table-lab/table_lab/`:
+    - **Step 1**: Create `table_lab/strategy_advisor.py` in `${HOME}/.claude/skills/table-lab/table_lab/`:
       - Function `suggest_fallback(evidence: dict) -> list[str]` — returns ranked fallback strategies (max 2) or empty list for "accept primary"
       - Evidence dict: `{pdf_path, page_index, primary_strategy, accuracy, table_count, shape}`
       - Uses existing `table_lab.evaluate.score_result` for quality scoring

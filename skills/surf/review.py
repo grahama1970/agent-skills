@@ -1,3 +1,4 @@
+"""Module support for the surf skill."""
 import os
 import base64
 import json
@@ -7,7 +8,7 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-image_path = "/home/graham/workspace/experiments/sparta/.reviews/sparta-chat/cursor-gemini-loop/compare-pane.png"
+image_path = "${HOME}/workspace/experiments/sparta/.reviews/sparta-chat/cursor-gemini-loop/compare-pane.png"
 base64_image = encode_image(image_path)
 
 prompt = """You are a strict design reviewer for the SPARTA Chat pane.

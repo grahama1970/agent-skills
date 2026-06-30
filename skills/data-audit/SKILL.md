@@ -10,7 +10,7 @@ triggers:
   - pipeline status
 metadata:
   short-description: SPARTA data completeness auditor.
-  project-path: /home/graham/workspace/experiments/pi-mono/.agent/skills/data-audit
+  project-path: ${HOME}/workspace/experiments/pi-mono/.agent/skills/data-audit
 
 provides:
   - data-audit

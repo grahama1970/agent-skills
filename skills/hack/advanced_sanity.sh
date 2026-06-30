@@ -2,7 +2,7 @@
 set -e
 
 # Project root
-PI_MONO_ROOT="/home/graham/workspace/experiments/pi-mono"
+PI_MONO_ROOT="${HOME}/workspace/experiments/pi-mono"
 HACK_SKILL="$PI_MONO_ROOT/.pi/skills/hack"
 MEMORY_SKILL="$PI_MONO_ROOT/.agent/skills/memory"
 

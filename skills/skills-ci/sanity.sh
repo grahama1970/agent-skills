@@ -2,8 +2,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DEFAULT="/home/graham/workspace/experiments/pi-mono/.pi/skills"
-WORKTREE_BASE_DEFAULT="/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci"
+ROOT_DEFAULT="${HOME}/workspace/experiments/pi-mono/.pi/skills"
+WORKTREE_BASE_DEFAULT="${HOME}/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci"
 FIXTURE_ROOT="$SCRIPT_DIR/tests/fixtures/skills_root"
 
 if command -v uv &> /dev/null; then

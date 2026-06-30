@@ -31,8 +31,8 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path("/home/graham/workspace/experiments/agent-skills")
-PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
+ROOT = Path("${HOME}/workspace/experiments/agent-skills")
+PERSONAPLEX_ROOT = Path("${HOME}/workspace/experiments/personaplex")
 PERSONAPLEX_PYTHON = PERSONAPLEX_ROOT / ".venv/bin/python"
 BRAVE_RUN = ROOT / "skills/brave-search/run.sh"
 MEMORY_URL = "http://127.0.0.1:8601"

@@ -391,8 +391,8 @@ cat /path/to/transcripts/.batch_state.json | jq '{completed: .completed | length
 ```
 
 **Active batch locations:**
-- Luetin09: `/home/graham/workspace/experiments/pi-mono/run/youtube-transcripts/luetin09`
-- Remembrancer: `/home/graham/workspace/experiments/pi-mono/run/youtube-transcripts/remembrancer`
+- Luetin09: `${HOME}/workspace/experiments/pi-mono/run/youtube-transcripts/luetin09`
+- Remembrancer: `${HOME}/workspace/experiments/pi-mono/run/youtube-transcripts/remembrancer`
 
 ## Troubleshooting
 

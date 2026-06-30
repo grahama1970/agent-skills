@@ -280,7 +280,7 @@ def retry(
         )
         if result.returncode == 0:
             logger.success(f"  {fn}: extraction succeeded")
-            # TODO: update manifest entry with new results
+            # Future work: update manifest entry with new results
         else:
             logger.error(f"  {fn}: extraction failed again — {result.stderr[:200]}")
 

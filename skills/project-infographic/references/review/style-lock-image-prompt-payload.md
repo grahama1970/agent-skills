@@ -26,7 +26,7 @@ PROMPT TEMPLATE
 See:
 
 ```text
-/home/graham/workspace/experiments/agent-skills/skills/project-infographic/references/style-lock-image-prompt-template.md
+${HOME}/workspace/experiments/agent-skills/skills/project-infographic/references/style-lock-image-prompt-template.md
 ```
 
 ================================================================================

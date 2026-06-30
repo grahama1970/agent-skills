@@ -199,7 +199,7 @@ export function DryRunPreviewPanel({ result, onExport, onDiscard }: Props) {
       )}
 
       <div className="pdf-lab-dry-run-actions">
-        <button
+        <button aria-label="Action"
           className="pdf-lab-dry-run-export"
           data-qid="pdf-lab:labeling:dry-run-export"
           disabled={!exportEnabled}
@@ -211,7 +211,7 @@ export function DryRunPreviewPanel({ result, onExport, onDiscard }: Props) {
           Export expected_elements.json
         </button>
         {onDiscard && (
-          <button className="pdf-lab-dry-run-discard" onClick={onDiscard}>
+          <button aria-label="Action" className="pdf-lab-dry-run-discard" onClick={onDiscard}>
             Discard preview
           </button>
         )}

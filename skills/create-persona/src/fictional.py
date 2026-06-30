@@ -445,7 +445,7 @@ def train_fictional_voice(
             "urls_found": len(ref.youtube_urls),
         })
 
-    # TODO: Integrate with /tts-train skill for actual training
+    # Future work: Integrate with /tts-train skill for actual training
     # This would:
     # 1. Download audio from collected URLs
     # 2. Segment by speaker

@@ -54,7 +54,7 @@ You are implementing `/thunderdome`, a tournament skill that trains N classifier
 ```yaml
 name: table-merge-classifier
 description: "Classify whether adjacent PDF tables should merge"
-data_dir: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split
+data_dir: ${HOME}/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split
 skill: classifier-lab
 
 scoring:
@@ -176,11 +176,11 @@ result = proc.stdout
 
 ## Data Location
 
-- Training images: `/home/graham/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split/`
+- Training images: `${HOME}/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split/`
   - `train/merge/` (891 images), `train/separate/` (812 images)
   - `val/merge/`, `val/separate/`
   - Images are 224x224 PNG
-- Skills directory: `/home/graham/workspace/experiments/pi-mono/.pi/skills/`
+- Skills directory: `${HOME}/workspace/experiments/pi-mono/.pi/skills/`
 
 ## Python Rules
 
@@ -194,9 +194,9 @@ result = proc.stdout
 
 This command produces F1~0.80 when run on the host:
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab && \
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/classifier-lab && \
   bash run.sh benchmark \
-    --data-dir /home/graham/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split \
+    --data-dir ${HOME}/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split \
     --modality paired \
     --backbones efficientnet_b0 \
     --epochs 2 \

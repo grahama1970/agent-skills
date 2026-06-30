@@ -94,7 +94,7 @@ def main() -> int:
 
 def find_surf_dir() -> Path:
     candidates = [
-        Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/surf"),
+        Path("${HOME}/workspace/experiments/pi-mono/.pi/skills/surf"),
         ROOT / ".pi" / "skills" / "surf",
         ROOT / "skills" / "surf",
     ]

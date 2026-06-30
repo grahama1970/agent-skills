@@ -581,7 +581,7 @@ def generate_sacm_ref(
     import subprocess
 
     cmd = [
-        "/home/graham/.claude/skills/create-gsn-diagram/run.sh",
+        "${HOME}/.claude/skills/create-gsn-diagram/run.sh",
         "export-sacm",
         "--control", control_id,
     ]
@@ -594,7 +594,7 @@ def generate_sacm_ref(
             capture_output=True,
             text=True,
             timeout=30,
-            cwd="/home/graham/.claude/skills/create-gsn-diagram",
+            cwd="${HOME}/.claude/skills/create-gsn-diagram",
         )
         if result.returncode != 0:
             return {"error": result.stderr[:200] or "export-sacm failed"}

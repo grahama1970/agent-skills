@@ -43,7 +43,7 @@ of signed-in ChatGPT behavior.
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/surf
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf
 
 # Verify setup
 ./run.sh setup

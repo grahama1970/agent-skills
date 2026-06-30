@@ -25,9 +25,9 @@ try:
     from discord_notify import notify_health, notify_error
 except ImportError:
     def notify_health(*a, **kw):
-        pass
+        return None
     def notify_error(*a, **kw):
-        pass
+        return None
 
 app = typer.Typer(help="Pi agent infrastructure health watchdog")
 

@@ -35,7 +35,7 @@ questions about the video.
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/watch
+cd ${HOME}/workspace/experiments/agent-skills/skills/watch
 
 # YouTube URL
 ./run.sh "https://youtube.com/watch?v=dQw4w9WgXcQ"

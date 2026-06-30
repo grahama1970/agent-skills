@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path("/home/graham/workspace/experiments/agent-skills")
-PERSONAPLEX_PYTHON = Path("/home/graham/workspace/experiments/personaplex/.venv/bin/python")
+ROOT = Path("${HOME}/workspace/experiments/agent-skills")
+PERSONAPLEX_PYTHON = Path("${HOME}/workspace/experiments/personaplex/.venv/bin/python")
 OUTPUT_ROOT = Path("/mnt/storage12tb/skills/personaplex/outputs/deepgram-live-probe/embry")
 DEFAULT_QUESTION = (
     "Embry, what is the weather like in Hawaii today, "

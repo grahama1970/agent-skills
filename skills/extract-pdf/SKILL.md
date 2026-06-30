@@ -15,7 +15,7 @@ triggers:
   - profile pdf
 metadata:
   short-description: "Rust-native PDF extraction replacing PyMuPDF (MIT)"
-  project-path: /home/graham/workspace/experiments/pdf_oxide
+  project-path: ${HOME}/workspace/experiments/pdf_oxide
 
 provides:
   - pdf-extraction

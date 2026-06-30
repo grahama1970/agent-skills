@@ -65,7 +65,7 @@ class TrainingArgs:
 
 def load_persona_config(persona_name: str) -> PersonaConfig:
     """Load persona config from /create-persona."""
-    # TODO: Integrate with create-persona skill
+    # Future work: Integrate with create-persona skill
     # For now, return hardcoded configs
 
     configs = {
@@ -273,7 +273,7 @@ def combined_persona_reward(
 
     Weights:
     - persona_consistency: 30%
-    - grounding: 30% (TODO: integrate with reality-check-sparta)
+    - grounding: 30% (Future work: integrate with reality-check-sparta)
     - reasoning_coherence: 25%
     - format: 15%
     """

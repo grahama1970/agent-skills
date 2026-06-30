@@ -1,3 +1,4 @@
+"""Module support for the get-subtitles skill."""
 from __future__ import annotations
 
 import asyncio

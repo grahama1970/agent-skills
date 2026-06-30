@@ -106,7 +106,7 @@ def _find_pdf_oxide_repo() -> Path | None:
     if env and Path(env).exists():
         return Path(env)
     candidates = [
-        Path("/home/graham/workspace/experiments/pdf_oxide"),
+        Path("${HOME}/workspace/experiments/pdf_oxide"),
         Path.home() / "workspace" / "experiments" / "pdf_oxide",
     ]
     for c in candidates:

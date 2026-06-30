@@ -45,7 +45,7 @@ CORPUS_ROOT = Path(os.environ.get("CORPUS_ROOT", "/mnt/storage12tb/extractor_cor
 EXTRACTOR_REGISTRY = Path(
     os.environ.get(
         "EXTRACTOR_REGISTRY",
-        "/home/graham/workspace/experiments/extractor/src/extractor/core/providers/registry.py",
+        "${HOME}/workspace/experiments/extractor/src/extractor/core/providers/registry.py",
     )
 )
 VIEWER_DIST = SKILL_ROOT / "viewer" / "dist"

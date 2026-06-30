@@ -3,8 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MCP_SERVER="/home/graham/workspace/experiments/embry-os/services/mcp-daemon/server.py"
-MCP_VENV="/home/graham/workspace/experiments/embry-os/services/mcp-daemon/.venv"
+MCP_SERVER="${HOME}/workspace/experiments/embry-os/services/mcp-daemon/server.py"
+MCP_VENV="${HOME}/workspace/experiments/embry-os/services/mcp-daemon/.venv"
 PROJECTS_JSON="$HOME/.agent-inbox/projects.json"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

@@ -33,7 +33,7 @@ Minimal test: Run `./sanity.sh` after the move to ensure the backup check still 
 
 ## Low
 1. Brittle local paths in worktree README artifacts. File: `.pi/skills/battle/worktrees/battle_20260205_113118/*/packages/coding-agent/examples/custom-tools/orchestrate/README.md`.
-Risk: Embedded absolute paths (e.g., `/home/graham/workspace/experiments/memory/.claude/hooks/quality-gate.sh`) reduce portability and trigger monitor alerts.
+Risk: Embedded absolute paths (e.g., `${HOME}/workspace/experiments/memory/.claude/hooks/quality-gate.sh`) reduce portability and trigger monitor alerts.
 Fix: Update the source template in the main repo (not the generated worktree copies) to use `$PI_MONO_ROOT` or a relative path. Consider excluding `worktrees/` from monitoring or repository tracking.
 Minimal test: Rebuild a worktree and confirm the README no longer contains absolute user paths.
 

@@ -174,7 +174,7 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
 ```json
 {
   "ingested_at": "2026-04-14T13:30:00",
-  "path": "/home/graham/workspace/my-project",
+  "path": "${HOME}/workspace/my-project",
   "stem": "my-project",
   "files_scanned": 968,
   "knowledge_stored": 1520,

@@ -48,7 +48,7 @@ This skill adds a **persistent daemon component** to the streamdeck project, ena
 
 ```bash
 # The skill auto-installs via uvx from git
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/ops-streamdeck
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/ops-streamdeck
 ./run.sh --help
 ```
 

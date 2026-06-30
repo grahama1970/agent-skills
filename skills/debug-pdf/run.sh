@@ -46,7 +46,7 @@ mkdir -p "$DATA_DIR"
 
 # Detect sibling skill paths (relative to pi-mono structure)
 PI_SKILLS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-MEMORY_SKILLS_DIR="${MEMORY_SKILLS_DIR:-/home/graham/workspace/experiments/memory/.agents/skills}"
+MEMORY_SKILLS_DIR="${MEMORY_SKILLS_DIR:-${HOME}/workspace/experiments/memory/.agents/skills}"
 
 # Validate Python environment
 ensure_venv() {

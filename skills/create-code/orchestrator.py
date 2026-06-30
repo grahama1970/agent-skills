@@ -262,7 +262,7 @@ def stage_3_sandbox(context: dict, project_dir: Path, mode: Optional[str], arch:
         run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "git_worktree"], cwd=project_dir)
     else:
         run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "docker", "--docker-image", image], cwd=project_dir)
-        # TODO: Capture twin container ID from battle output and save to context
+        # Future work: Capture twin container ID from battle output and save to context
         context['twin_mode'] = 'docker'
     
     # Optional security audit pass

@@ -21,13 +21,13 @@ class SkillMisuseGuard:
 SKILL_GUARDS: dict[str, SkillMisuseGuard] = {
     "memory": SkillMisuseGuard(
         skill_name="memory",
-        guard_path=Path("/home/graham/workspace/experiments/memory/src/graph_memory/service/app/_misuse_guard.py"),
+        guard_path=Path("${HOME}/workspace/experiments/memory/src/graph_memory/service/app/_misuse_guard.py"),
         corrections_var="COLLECTION_CORRECTIONS",
     ),
     # Add more skills as they adopt misuse guards:
     # "scillm": SkillMisuseGuard(
     #     skill_name="scillm",
-    #     guard_path=Path("/home/graham/workspace/experiments/scillm/src/scillm/proxy/_misuse_guard.py"),
+    #     guard_path=Path("${HOME}/workspace/experiments/scillm/src/scillm/proxy/_misuse_guard.py"),
     #     corrections_var="MODEL_CORRECTIONS",
     # ),
 }
@@ -62,7 +62,7 @@ def discover_guards() -> dict[str, Path]:
             continue
         for guard_file in base.rglob("_misuse_guard.py"):
             # Extract skill name from path
-            # e.g., /home/graham/workspace/experiments/memory/src/... → memory
+            # e.g., ${HOME}/workspace/experiments/memory/src/... → memory
             parts = guard_file.parts
             for i, part in enumerate(parts):
                 if part in ("experiments", "skills") and i + 1 < len(parts):

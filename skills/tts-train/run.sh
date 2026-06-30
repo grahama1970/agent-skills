@@ -73,7 +73,7 @@ case "$cmd" in
     ;;
   synthesize)
     # Model path: env var > MEMORY_PROJECT_PATH-derived > hardcoded fallback
-    MODEL_PATH="${HORUS_TTS_CHECKPOINT:-${MEMORY_PROJECT_PATH:-/home/graham/workspace/experiments/memory}/artifacts/tts/horus_qwen3_1.7b_repaired/checkpoint-epoch-9}"
+    MODEL_PATH="${HORUS_TTS_CHECKPOINT:-${MEMORY_PROJECT_PATH:-${HOME}/workspace/experiments/memory}/artifacts/tts/horus_qwen3_1.7b_repaired/checkpoint-epoch-9}"
     (cd "$SCRIPT_DIR" && uv run --project "$SCRIPT_DIR" python qwen3_infer_simple.py --model "$MODEL_PATH" "$@")
     ;;
   prep)

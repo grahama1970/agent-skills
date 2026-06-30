@@ -19,7 +19,7 @@ unset VIRTUAL_ENV
 #
 set -euo pipefail
 
-OPEN_PENCIL_DIR="/home/graham/workspace/experiments/open-pencil"
+OPEN_PENCIL_DIR="${HOME}/workspace/experiments/open-pencil"
 PID_FILE="/tmp/ux-lab.pid"
 VITE_PORT=3000
 BRIDGE_PORT=7600

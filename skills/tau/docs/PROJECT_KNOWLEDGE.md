@@ -1,6 +1,6 @@
 # T'au Project Knowledge
 
-This skill is a light wrapper around `/home/graham/workspace/experiments/tau`.
+This skill is a light wrapper around `${HOME}/workspace/experiments/tau`.
 It does not implement Tau behavior itself.
 
 ## Current Evidence Boundaries
@@ -9,9 +9,9 @@ It does not implement Tau behavior itself.
 - Live project-watchdog issue repair was observed on `grahama1970/tau#3`.
 - Tau commit pushed for that repair: `19cd3697d9d834fa049948a7a4fdfcab1076f0ec`.
 - Watchdog receipt for the live issue lane:
-  `/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260628T120401Z/receipt.json`.
+  `${HOME}/.local/state/project-watchdog/receipts/project-watchdog-20260628T120401Z/receipt.json`.
 - Project-watchdog cron is installed and writes receipts under:
-  `/home/graham/.local/state/project-watchdog/receipts/`.
+  `${HOME}/.local/state/project-watchdog/receipts/`.
 
 ## Pending Proof Boundaries
 

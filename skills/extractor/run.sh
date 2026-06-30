@@ -23,7 +23,7 @@ alias python3='uv run --project "$SCRIPT_DIR" python'
 
 # Try to detect extractor project relative to this skill (sibling in workspace)
 DEFAULT_ROOT="$(cd "$SCRIPT_DIR/../../../../extractor" >/dev/null 2>&1 && pwd)"
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${DEFAULT_ROOT:-/home/graham/workspace/experiments/extractor}}"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${DEFAULT_ROOT:-${HOME}/workspace/experiments/extractor}}"
 
 # Load environment if available
 [[ -f "$EXTRACTOR_ROOT/.env" ]] && { set -a; source "$EXTRACTOR_ROOT/.env"; set +a; }

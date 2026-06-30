@@ -659,7 +659,7 @@ Run the live E2E sanity gate after persona-memory code, schema, view, Qdrant, or
 book-extractor changes:
 
 ```bash
-cd /home/graham/workspace/experiments/memory
+cd ${HOME}/workspace/experiments/memory
 uv run pytest -q tests/health/test_persona_memory_recall_e2e.py
 ```
 
@@ -690,7 +690,7 @@ Run this after meaningful commits, before asking memory to summarize recent code
 work, or from a scheduled project-agent maintenance job:
 
 ```bash
-memory-agent activity ingest-git /home/graham/workspace/experiments/memory \
+memory-agent activity ingest-git ${HOME}/workspace/experiments/memory \
   --project memory \
   --scope memory \
   --since 2026-05-13T00:00:00 \
@@ -840,8 +840,8 @@ if (
     candidates = recall["items"]
 else:
     # Caller/orchestrator runs live discovery here, for example:
-    # rg --files /home/graham/workspace/experiments
-    # find /home/graham/workspace/experiments -maxdepth 3 -name AGENTS.md
+    # rg --files ${HOME}/workspace/experiments
+    # find ${HOME}/workspace/experiments -maxdepth 3 -name AGENTS.md
     # ops-workstation scan ...
     candidates = []
 ```
@@ -856,16 +856,16 @@ client.post("/upsert", json={
             "_key": "project:memory:root",
             "kind": "workspace_location",
             "project": "memory",
-            "path": "/home/graham/workspace/experiments/memory",
+            "path": "${HOME}/workspace/experiments/memory",
             "status": "current",
             "observed_at": "2026-06-09T17:40:00Z",
             "validated_at": "2026-06-09T17:40:00Z",
             "source": "project_agent_scan",
             "evidence": {
                 "commands": [
-                    "test -d /home/graham/workspace/experiments/memory",
-                    "test -f /home/graham/workspace/experiments/memory/AGENTS.md",
-                    "rg --files /home/graham/workspace/experiments/memory"
+                    "test -d ${HOME}/workspace/experiments/memory",
+                    "test -f ${HOME}/workspace/experiments/memory/AGENTS.md",
+                    "rg --files ${HOME}/workspace/experiments/memory"
                 ],
                 "markers": ["AGENTS.md", "pyproject.toml", ".git"]
             }
@@ -1186,13 +1186,13 @@ client.post("/upsert", json={
 This skill tree does not currently contain a `references/` directory. Use the
 memory repository docs and source as the detailed contract:
 
-- `/home/graham/workspace/experiments/memory/docs/guides/QDRANT_EMBEDDING_CONTRACT.md` — Qdrant vs Arango semantic vector contract.
-- `/home/graham/workspace/experiments/memory/docs/CONTRACT.md` — stable CLI and Python API contract.
-- `/home/graham/workspace/experiments/memory/docs/guides/QUICK_START.md` — setup and Python API quick start.
-- `/home/graham/workspace/experiments/memory/docs/INTENT_MODEL_WALKTHROUGH.md` — `/intent` and QuerySpec architecture.
-- `/home/graham/workspace/experiments/memory/docs/INTENT_MAPPER_WALKTHROUGH.md` — intent mapper failure modes, fixes, and validation notes.
-- `/home/graham/workspace/experiments/memory/README.md` — project-level Theory of Mind, entity extraction, intent, and intensity contract notes.
-- `/home/graham/workspace/experiments/memory/docs/guides/PERSONA_RECALL.md` — curated persona recall collection notes.
-- `/home/graham/workspace/experiments/memory/src/graph_memory/cli/tom.py` — primary ToM/persona CLI entrypoint.
-- `/home/graham/workspace/experiments/memory/src/graph_memory/cli/tom_advanced.py` — advanced ToM graph traversal and persona commands.
-- `/home/graham/workspace/experiments/memory/src/graph_memory/service/app/` — live FastAPI endpoint implementation, including `_intent.py`, `_core.py`, `_store.py`, `_persona.py`, and `_tom.py`.
+- `${HOME}/workspace/experiments/memory/docs/guides/QDRANT_EMBEDDING_CONTRACT.md` — Qdrant vs Arango semantic vector contract.
+- `${HOME}/workspace/experiments/memory/docs/CONTRACT.md` — stable CLI and Python API contract.
+- `${HOME}/workspace/experiments/memory/docs/guides/QUICK_START.md` — setup and Python API quick start.
+- `${HOME}/workspace/experiments/memory/docs/INTENT_MODEL_WALKTHROUGH.md` — `/intent` and QuerySpec architecture.
+- `${HOME}/workspace/experiments/memory/docs/INTENT_MAPPER_WALKTHROUGH.md` — intent mapper failure modes, fixes, and validation notes.
+- `${HOME}/workspace/experiments/memory/README.md` — project-level Theory of Mind, entity extraction, intent, and intensity contract notes.
+- `${HOME}/workspace/experiments/memory/docs/guides/PERSONA_RECALL.md` — curated persona recall collection notes.
+- `${HOME}/workspace/experiments/memory/src/graph_memory/cli/tom.py` — primary ToM/persona CLI entrypoint.
+- `${HOME}/workspace/experiments/memory/src/graph_memory/cli/tom_advanced.py` — advanced ToM graph traversal and persona commands.
+- `${HOME}/workspace/experiments/memory/src/graph_memory/service/app/` — live FastAPI endpoint implementation, including `_intent.py`, `_core.py`, `_store.py`, `_persona.py`, and `_tom.py`.

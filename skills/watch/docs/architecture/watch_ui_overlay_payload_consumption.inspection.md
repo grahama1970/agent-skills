@@ -13,7 +13,7 @@ This is not a live tracking proof. The payload is still `DRY_RUN_ONLY` and its
 
 ## Local implementation surface
 
-- Repo: `/home/graham/workspace/experiments/pi-mono`
+- Repo: `${HOME}/workspace/experiments/pi-mono`
 - Branch observed: `persona/tim-blazytko-1774553751276`
 - File changed locally: `packages/ux-lab/src/components/watch/WatchReportView.tsx`
 - Rendered route: `http://127.0.0.1:3002/#watch`
@@ -191,9 +191,9 @@ payload:
 - API route:
   `GET /api/projects/watch/overlay-payload`
 - Server file:
-  `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts`
+  `${HOME}/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts`
 - UI file:
-  `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchReportView.tsx`
+  `${HOME}/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchReportView.tsx`
 
 Endpoint checks:
 

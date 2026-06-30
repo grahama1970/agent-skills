@@ -57,7 +57,7 @@ canonical gate artifact is `review_result.json` with verdict
 
 `review-pdf` is the hard quality gate for PDF extraction in:
 
-- `/home/graham/workspace/experiments/extractor/src/extractor/pipeline`
+- `${HOME}/workspace/experiments/extractor/src/extractor/pipeline`
 
 It validates quality at document level and corpus level, then drives automatic escalation into helper skills when regressions are detected.
 
@@ -92,14 +92,14 @@ For every run:
 - per-document reports (`per_doc/*.json`)
 - aggregate report (`aggregate.json`, `aggregate.md`)
 - memory event append (mandatory) to:
-  - `/home/graham/workspace/experiments/pi-mono/.pi/skills/memory/.artifacts/review_pdf_events.jsonl`
+  - `${HOME}/workspace/experiments/pi-mono/.pi/skills/memory/.artifacts/review_pdf_events.jsonl`
 - optional graph-memory acquire calls per reviewed PDF (`--ingest-memory`)
 - optional taxonomy tags attached to per-doc reports (`--taxonomy-collection`)
 
 ## Commands
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf
 
 # Single run/doc check
 ./run.sh check /path/to/run_dir

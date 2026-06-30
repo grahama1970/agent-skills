@@ -54,7 +54,7 @@ This gives the model a chance to self-correct rather than silently failing.
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/prompt-lab
 
 # Find the smallest model that works (NEW!)
 ./run.sh find-minimum --ground-truth queryspec.json --threshold 0.80

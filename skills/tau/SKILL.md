@@ -1,7 +1,7 @@
 ---
 name: tau
 description: >
-  Operate and verify the local T'au project at /home/graham/workspace/experiments/tau.
+  Operate and verify the local T'au project at ${HOME}/workspace/experiments/tau.
   Use for Tau loop, harness, watchdog cron, GitHub issue orchestration, TUI,
   Memory-first chat, and E2E proof/status tasks. This skill is a light wrapper
   around the Tau repo and must report mocked/live proof boundaries explicitly.
@@ -41,7 +41,7 @@ taxonomy:
 Use this skill as the operator entrypoint for the local T'au project:
 
 ```text
-/home/graham/workspace/experiments/tau
+${HOME}/workspace/experiments/tau
 ```
 
 Do not duplicate Tau implementation in this skill. Use the scripts here to
@@ -98,11 +98,11 @@ the exercised commands and artifacts.
 ## Key Artifacts
 
 ```text
-/home/graham/.local/state/project-watchdog/logs/cron.log
-/home/graham/.local/state/project-watchdog/logs/project-watchdog.log
-/home/graham/.local/state/project-watchdog/receipts/
-/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/
-/home/graham/workspace/experiments/tau/ui/tau-chat-contract.json
+${HOME}/.local/state/project-watchdog/logs/cron.log
+${HOME}/.local/state/project-watchdog/logs/project-watchdog.log
+${HOME}/.local/state/project-watchdog/receipts/
+${HOME}/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/
+${HOME}/workspace/experiments/tau/ui/tau-chat-contract.json
 ```
 
 Use `agents/tau` for Tau-specific bounded worker turns when a global watchdog or

@@ -41,8 +41,8 @@ from typing import Any
 import torch
 
 
-ROOT = Path("/home/graham/workspace/experiments/agent-skills")
-PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
+ROOT = Path("${HOME}/workspace/experiments/agent-skills")
+PERSONAPLEX_ROOT = Path("${HOME}/workspace/experiments/personaplex")
 PERSONAPLEX_PYTHON = PERSONAPLEX_ROOT / ".venv/bin/python"
 DEFAULT_VOICE_PROMPT = Path(
     "/mnt/storage12tb/skills/personaplex/outputs/e2e/"

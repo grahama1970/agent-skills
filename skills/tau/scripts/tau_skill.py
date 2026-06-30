@@ -15,14 +15,14 @@ from typing import Annotated, Any
 
 import typer
 
-TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
+TAU_ROOT = Path("${HOME}/workspace/experiments/tau")
 WATCHDOG_ROOT = Path.home() / ".local/state/project-watchdog"
 WATCHDOG_RECEIPTS = WATCHDOG_ROOT / "receipts"
 WATCHDOG_LOG = WATCHDOG_ROOT / "logs/project-watchdog.log"
 WATCHDOG_CRON_LOG = WATCHDOG_ROOT / "logs/cron.log"
 PROOFS_ROOT = TAU_ROOT / "experiments/goal-locked-subagents/proofs"
 CHAT_CONTRACT = TAU_ROOT / "ui/tau-chat-contract.json"
-UV_BIN = "/home/graham/.local/bin/uv"
+UV_BIN = "${HOME}/.local/bin/uv"
 
 app = typer.Typer(add_completion=False, help="Operate and inspect the local T'au project.")
 

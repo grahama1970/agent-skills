@@ -13,7 +13,7 @@ REVIEW_CODE_LIVE_PINGPONG_E2E=1 \
 ```
 
 The test uses the real review bundle at
-`/home/graham/workspace/experiments/pi-mono/local/docs/scratch.md`, invokes
+`${HOME}/workspace/experiments/pi-mono/local/docs/scratch.md`, invokes
 `skills/review-code/run.sh ping-pong`, and requests:
 
 - reviewer: `ask:gpt-5.5`

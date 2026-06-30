@@ -222,7 +222,7 @@ and WebGPT adjudication.
 Use when: new page, missing contract, stale comparators, or human/plan says so.
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/dogpile
+cd ${HOME}/workspace/experiments/agent-skills/skills/dogpile
 ./run.sh search \
   "<task-specific query: cyber workflow + competitor/product patterns>" \
   --persona <lead-persona-slug> \
@@ -409,14 +409,14 @@ Setup: `$browser-oracle register` + `bind` + `doctor --from <dir>`. See `$browse
 
 ## CLI (installed skill)
 
-Run from any directory (defaults `SPARTA_ROOT=/home/graham/workspace/experiments/sparta`):
+Run from any directory (defaults `SPARTA_ROOT=${HOME}/workspace/experiments/sparta`):
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh list-pages
-/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh run-ti --page coverage --capture-suffix -r2
-/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh build --page coverage --capture-dir <captures-dir>
-/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh preflight --page coverage --capture-dir <captures-dir>
-/home/graham/workspace/experiments/agent-skills/skills/review-page/run.sh package --page coverage --round-label 2
+${HOME}/workspace/experiments/agent-skills/skills/review-page/run.sh list-pages
+${HOME}/workspace/experiments/agent-skills/skills/review-page/run.sh run-ti --page coverage --capture-suffix -r2
+${HOME}/workspace/experiments/agent-skills/skills/review-page/run.sh build --page coverage --capture-dir <captures-dir>
+${HOME}/workspace/experiments/agent-skills/skills/review-page/run.sh preflight --page coverage --capture-dir <captures-dir>
+${HOME}/workspace/experiments/agent-skills/skills/review-page/run.sh package --page coverage --round-label 2
 ```
 
 **Per-interaction step bundles (optional, for attach-limit-friendly review):**
@@ -430,7 +430,7 @@ Run from any directory (defaults `SPARTA_ROOT=/home/graham/workspace/experiments
 Full packet:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/ask
+cd ${HOME}/workspace/experiments/agent-skills/skills/ask
 ./run.sh ask webgpt "/review-page coverage round 2" \
   --browser-oracle-from <repo-subdir> \
   # or explicit: --webgpt-project sparta-explorer-review --webgpt-tab-id <tab> \

@@ -4,8 +4,8 @@ unset VIRTUAL_ENV
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
-MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+MEMORY_ROOT="${MEMORY_ROOT:-${HOME}/workspace/experiments/memory}"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${HOME}/workspace/experiments/extractor}"
 
 # Load .env from memory project if present
 if [ -f "$MEMORY_ROOT/.env" ]; then
@@ -53,8 +53,8 @@ case "$cmd" in
     echo "  stats                            Show edge collection counts and proof_jobs status"
     echo ""
     echo "Environment:"
-    echo "  MEMORY_ROOT    Memory project path (default: /home/graham/workspace/experiments/memory)"
-    echo "  EXTRACTOR_ROOT Extractor project path (default: /home/graham/workspace/experiments/extractor)"
+    echo "  MEMORY_ROOT    Memory project path (default: ${HOME}/workspace/experiments/memory)"
+    echo "  EXTRACTOR_ROOT Extractor project path (default: ${HOME}/workspace/experiments/extractor)"
     echo "  ARANGO_HOST    ArangoDB host (default: http://localhost:8529)"
     echo "  ARANGO_DB      Database name (default: memory)"
     ;;

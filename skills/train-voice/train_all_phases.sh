@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON="/home/graham/miniconda3/bin/python"
+PYTHON="${HOME}/miniconda3/bin/python"
 LOG="/tmp/all_phases_training.log"
 
 echo "Starting full voice training pipeline at $(date)" | tee -a "$LOG"

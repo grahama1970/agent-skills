@@ -122,7 +122,7 @@ Implemented wrapper spike:
 - Golden-state probe:
   `skills/personaplex/scripts/personaplex_golden_state_probe.py`
 - It imports Moshi/PersonaPlex modules directly from
-  `/home/graham/workspace/experiments/personaplex`, not from the skill venv.
+  `${HOME}/workspace/experiments/personaplex`, not from the skill venv.
 - It performs the Embry voice/persona pre-roll once at boot and clones
   `lm_gen.get_streaming_state()` for fast per-session restore.
 - It uses the real local API boundary:
@@ -270,7 +270,7 @@ Accepted follow-up findings and local repairs:
   the PersonaPlex venv Python, not the skill runtime. The validator now supports
   a subprocess-backed PersonaPlex Python path.
 - Live E2E with the default
-  `/home/graham/workspace/experiments/personaplex/assets/test/input_assistant.wav`
+  `${HOME}/workspace/experiments/personaplex/assets/test/input_assistant.wav`
   fixture was stopped after roughly 9 minutes because the fixture is 40.0s and
   `moshi.offline` writes output only after processing the full input. Use
   `--max-human-input-seconds 2.0` for bounded non-mocked smoke runs; the receipt

@@ -216,7 +216,7 @@ TEXT CLASSIFIER EXAMPLES:
 
     # Train timeout risk model from review-pdf aggregate reports
     ./run.sh timeout-train \\
-        --reports-root /home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports \\
+        --reports-root ${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports \\
         --output-dir models/timeout_predictor
 
     # Predict timeout risk for one PDF extraction context

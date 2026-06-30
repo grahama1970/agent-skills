@@ -51,8 +51,8 @@ testing, and visual regression.
 ## Architecture
 
 Pi Term is a two-repo project:
-- **WezTerm fork** (Rust): `/home/graham/workspace/experiments/wezterm/` — `feature/sidebar-widget` branch
-- **Pi Mono Lua config**: `/home/graham/workspace/experiments/pi-mono/packages/wezterm/`
+- **WezTerm fork** (Rust): `${HOME}/workspace/experiments/wezterm/` — `feature/sidebar-widget` branch
+- **Pi Mono Lua config**: `${HOME}/workspace/experiments/pi-mono/packages/wezterm/`
 
 ## Commands
 

@@ -3,7 +3,7 @@
 ## Download
 
 - Downloaded from WebGPT tab: `837356822`
-- Local source path: `/home/graham/Downloads/watch-realtime-identity-memory-loop-P1-solution.zip`
+- Local source path: `${HOME}/Downloads/watch-realtime-identity-memory-loop-P1-solution.zip`
 - Stored path: `skills/watch/docs/architecture/create-architecture/watch-realtime-identity-memory-loop-P1/solution/watch-realtime-identity-memory-loop-P1-solution.zip`
 
 ## Transport Proof

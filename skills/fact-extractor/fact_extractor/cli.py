@@ -1,3 +1,4 @@
+"""Module support for the fact-extractor skill."""
 from __future__ import annotations
 
 import asyncio

@@ -190,7 +190,7 @@ def alert(message: str, level: str = "warning"):
     else:
         logger.warning(f"⚠️ ALERT: {message}")
 
-    # TODO: Integrate with Discord via task-monitor discord_publisher
+    # Future work: Integrate with Discord via task-monitor discord_publisher
     # For now, just write to a notification file
     alert_file = Path("/tmp/grpo_alerts.log")
     with open(alert_file, "a") as f:

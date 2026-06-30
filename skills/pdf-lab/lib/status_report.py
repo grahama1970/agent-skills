@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_UX_LAB_PUBLIC = Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public")
+DEFAULT_UX_LAB_PUBLIC = Path("${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public")
 DEFAULT_STORAGE_EVIDENCE_ROOT = Path("/mnt/storage12tb/pdf-lab/evidence")
 
 

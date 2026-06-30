@@ -57,7 +57,7 @@ else
 fi
 
 # Check 7: SPARTA project directory exists
-SPARTA_DIR="/home/graham/workspace/experiments/sparta"
+SPARTA_DIR="${HOME}/workspace/experiments/sparta"
 if [[ ! -d "$SPARTA_DIR" ]]; then
     echo "  SKIP: SPARTA project not found at $SPARTA_DIR"
     echo "Result: PASS (SPARTA project not available, live tests skipped)"

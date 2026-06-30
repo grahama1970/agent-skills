@@ -187,7 +187,7 @@ def status_report(
     memory_qa: Optional[Path] = typer.Option(None, help="Memory/Qdrant final QA report"),
     second_pass_backlog: Optional[Path] = typer.Option(None, help="Agent second-pass engineering backlog JSON"),
     public_dir: Path = typer.Option(
-        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        Path("${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public"),
         help="UX Lab public directory used to discover default PDF Lab artifacts",
     ),
     output: Optional[Path] = typer.Option(None, "--out", help="HTML report output path"),
@@ -242,7 +242,7 @@ def memory_qa(
     evidence_manifest: Optional[Path] = typer.Option(None, help="Promoted evidence crop manifest"),
     output: Optional[Path] = typer.Option(None, "--out", help="Memory/Qdrant QA report output path"),
     public_dir: Path = typer.Option(
-        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        Path("${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public"),
         help="UX Lab public directory used to discover default PDF Lab artifacts",
     ),
     sample_size: int = typer.Option(8, help="Number of evidence elements to check through Qdrant recall"),
@@ -283,11 +283,11 @@ def memory_qa(
 def coverage_loop(
     status_report_path: Optional[Path] = typer.Option(None, "--status-report", help="Artifact-derived PDF Lab status report JSON"),
     public_dir: Path = typer.Option(
-        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        Path("${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public"),
         help="UX Lab public directory containing promoted PDF Lab artifacts",
     ),
     project_knowledge: Path = typer.Option(
-        Path("/home/graham/workspace/experiments/pdf_oxide/PROJECT_KNOWLEDGE.md"),
+        Path("${HOME}/workspace/experiments/pdf_oxide/PROJECT_KNOWLEDGE.md"),
         help="PDF Lab project-knowledge file containing anti-drift loop policy",
     ),
     active_plan: Optional[Path] = typer.Option(None, "--active-plan", help="Current repair/regenerate orchestration plan"),

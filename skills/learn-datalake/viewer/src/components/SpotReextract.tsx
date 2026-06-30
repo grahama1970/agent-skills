@@ -197,7 +197,7 @@ export default function SpotReextract({
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['section', 'page'] as const).map((s) => (
-                <button
+                <button aria-label="Action"
                   key={s}
                   onClick={() => setScope(s)}
                   disabled={running}
@@ -383,7 +383,7 @@ export default function SpotReextract({
           }}
         >
           {!running && !result && (
-            <button
+            <button aria-label="Action"
               onClick={runPipeline}
               style={{
                 fontFamily: 'monospace',
@@ -401,7 +401,7 @@ export default function SpotReextract({
             </button>
           )}
           {result && (
-            <button
+            <button aria-label="Action"
               onClick={() => onAccept(result)}
               style={{
                 fontFamily: 'monospace',
@@ -418,7 +418,7 @@ export default function SpotReextract({
               Accept
             </button>
           )}
-          <button
+          <button aria-label="Action"
             onClick={onCancel}
             disabled={running}
             style={{

@@ -475,7 +475,7 @@ else:
 
     # Expected button configurations
     expected = {
-        '1': ('/home/graham/workspace/streamdeck/icon/screen_sleep.png', 'Screen Sleep'),
+        '1': ('${HOME}/workspace/streamdeck/icon/screen_sleep.png', 'Screen Sleep'),
         '7': ('/tmp/streamdeck_clock_icon', 'Clock (dynamic)'),
         '15': ('/tmp/streamdeck_weather_icon', 'Weather (dynamic)'),
     }
@@ -574,7 +574,7 @@ if not restore_from_backup:
     deck_id = list(config['state'].keys())[0]
 
     fixes = {
-        '1': '/home/graham/workspace/streamdeck/icon/screen_sleep.png',
+        '1': '${HOME}/workspace/streamdeck/icon/screen_sleep.png',
         '15': '/tmp/streamdeck_weather_icon_0.png',
     }
 

@@ -62,6 +62,6 @@ assert result.returncode != 0, "path-like persona slug must fail validation"
 PY
 
 grep -q -- "--save-voice-embeddings" \
-  /home/graham/workspace/experiments/personaplex/moshi/moshi/offline.py
+  ${HOME}/workspace/experiments/personaplex/moshi/moshi/offline.py
 
 echo "personaplex sanity PASS"

@@ -5,7 +5,7 @@ description: >
   Runs pipeline steps, checks status, runs tests, launches Explorer UX.
   The real code lives at ~/workspace/experiments/sparta/src/sparta/pipeline/ —
   this skill is an interface, not a reimplementation.
-project-path: /home/graham/workspace/experiments/sparta
+project-path: ${HOME}/workspace/experiments/sparta
 triggers:
   - ingest sparta
   - sparta ingestion
@@ -32,7 +32,7 @@ taxonomy:
 # /ingest-sparta
 
 Thin skill wrapper around the real SPARTA pipeline at
-`/home/graham/workspace/experiments/sparta/`.
+`${HOME}/workspace/experiments/sparta/`.
 
 ## What This Skill Does
 
@@ -60,7 +60,7 @@ DuckDB remains as read-only data layer via SpartaDataBridge.
 
 ```bash
 # Run a specific pipeline step (from sparta project root)
-cd /home/graham/workspace/experiments/sparta
+cd ${HOME}/workspace/experiments/sparta
 python -m sparta.pipeline.steps.01d_map_cwe_nist --run-id myrun
 python -m sparta.pipeline.steps.12_qra --run-id myrun --limit 100
 python -m sparta.pipeline.steps.05d_chunk_url_content --dry-run
@@ -208,7 +208,7 @@ FOR q IN sparta_qra
 ## Environment
 
 ```bash
-SPARTA_ROOT=/home/graham/workspace/experiments/sparta  # auto-detected
+SPARTA_ROOT=${HOME}/workspace/experiments/sparta  # auto-detected
 # DuckDB: data/runs/<run-id>/sparta.duckdb
 # ArangoDB: via SpartaDataBridge (graph_memory)
 # Embedding: port 8602

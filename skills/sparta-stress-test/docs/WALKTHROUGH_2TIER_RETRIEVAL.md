@@ -292,7 +292,7 @@ Dynamic importlib load of `backfill_chunk_control_edges.py` from the memory repo
 
 ```bash
 # Test Tier 1 fast lookup (should be <50ms)
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 uv run python -c "
 from sparta_stress_test.conversation_sim import _tier1_lookup, _get_db
 db = _get_db()
@@ -327,7 +327,7 @@ for k in keys[:5]: print(f'  {k}')
 "
 
 # Dry-run nightly promotion
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/conversation-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/conversation-lab
 uv run python conversation_lab.py promote-nightly --dry-run
 
 # Kill: No long-running processes. Sessions are stateless.

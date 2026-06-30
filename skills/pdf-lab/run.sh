@@ -49,12 +49,12 @@ DATA_DIR="${PDF_LAB_DATA:-$HOME/.pi/pdf-lab}"
 mkdir -p "$DATA_DIR"
 
 # Extractor project root (resolve from skill location)
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${HOME}/workspace/experiments/extractor}"
 export EXTRACTOR_ROOT
 
 # Detect sibling skill paths
 PI_SKILLS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-MEMORY_SKILLS_DIR="${MEMORY_SKILLS_DIR:-/home/graham/workspace/experiments/memory/.agents/skills}"
+MEMORY_SKILLS_DIR="${MEMORY_SKILLS_DIR:-${HOME}/workspace/experiments/memory/.agents/skills}"
 
 show_help() {
     cat <<'EOF'

@@ -44,22 +44,22 @@ You MUST evaluate against ALL of the following best-practice rulesets and produc
 
 ### evidence_case.py (NEW — ~500 lines)
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/review-question/evidence_case.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/review-question/evidence_case.py
 ```
 
 ### review_question.py (MODIFIED — added evidence-case command)
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/review-question/review_question.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/review-question/review_question.py
 ```
 
 ### SKILL.md (MODIFIED — added evidence-case triggers/composes)
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/review-question/SKILL.md
+${HOME}/workspace/experiments/pi-mono/.pi/skills/review-question/SKILL.md
 ```
 
 ### pyproject.toml (EXISTING — check deps completeness)
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/review-question/pyproject.toml
+${HOME}/workspace/experiments/pi-mono/.pi/skills/review-question/pyproject.toml
 ```
 
 ## Review Deliverables Required

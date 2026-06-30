@@ -71,7 +71,7 @@ _FIX_INSTRUCTIONS: dict[str, str] = {
         "If this is the memory or embedding skill, add to _AQL_EXCEPTIONS in skills-ci scanner."
     ),
     "subprocess.hardcoded_skill_path": (
-        "Replace hardcoded absolute path to /home/graham/.../.pi/skills/ with "
+        "Replace hardcoded absolute path to ${HOME}/.../.pi/skills/ with "
         "Path(__file__).resolve().parent.parent / 'skill-name' / 'run.sh' or similar "
         "relative path computation."
     ),
@@ -178,7 +178,7 @@ def _violation_to_task(v: dict[str, Any], idx: int) -> dict[str, Any] | None:
         ),
         "definition_of_done": {
             "command": (
-                f"cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci && "
+                f"cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skills-ci && "
                 f"uv run python skills_ci.py --mode scan 2>&1 | "
                 f"grep -c '{rule}.*{skill}'"
             ),

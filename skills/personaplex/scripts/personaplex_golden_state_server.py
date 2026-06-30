@@ -22,8 +22,8 @@ import wave
 from pathlib import Path
 from typing import Any
 
-ROOT = Path("/home/graham/workspace/experiments/agent-skills")
-PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
+ROOT = Path("${HOME}/workspace/experiments/agent-skills")
+PERSONAPLEX_ROOT = Path("${HOME}/workspace/experiments/personaplex")
 PERSONAPLEX_PYTHON = PERSONAPLEX_ROOT / ".venv/bin/python"
 if PERSONAPLEX_PYTHON.exists() and Path(sys.executable).resolve() != PERSONAPLEX_PYTHON.resolve():
     if sys.argv[0].endswith(".py") and not any("unittest" in a for a in sys.argv):

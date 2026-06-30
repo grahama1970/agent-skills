@@ -164,7 +164,7 @@ export default function CascadeView() {
             const d = SAMPLE_CASCADE_DATA[dp]
             const isActive = dp === selected
             return (
-              <button
+              <button aria-label="Action"
                 key={dp}
                 onClick={() => setSelected(dp)}
                 className="w-full text-left rounded px-3 py-3 mb-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9eff]"

@@ -25,7 +25,7 @@ EMBRY_ROOT = SKILLS_DIR.parent.parent  # .pi/skills -> .pi -> repo root
 
 # Try to resolve the embry-os repo root (may differ if symlinked from pi-mono)
 _embry_os_candidates = [
-    Path("/home/graham/workspace/experiments/embry-os"),
+    Path("${HOME}/workspace/experiments/embry-os"),
     EMBRY_ROOT,
 ]
 EMBRY_OS_ROOT = next((p for p in _embry_os_candidates if (p / "embry.yaml").exists()), EMBRY_ROOT)

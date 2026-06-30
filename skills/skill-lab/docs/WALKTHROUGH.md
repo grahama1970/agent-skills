@@ -418,7 +418,7 @@ tests. But they test happy paths only.
 
 ```bash
 # Quick health check
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skill-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/skill-lab
 bash sanity.sh
 
 # See the soup

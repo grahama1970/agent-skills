@@ -113,7 +113,7 @@ None — all requirements clear. PyO3 0.23 is already in use; pyo3-polars 0.19 t
       - Uses Polars `null_count()` per column as expression
     - Create `#[pyfunction] detect_header_collapse(grid_df: PyDataFrame) -> PyResult<bool>`
       - Returns true if row 0 has a single cell containing `\n` (headers collapsed into one cell)
-    - Reference: `/home/graham/workspace/experiments/extractor/src/extractor/pipeline/utils/tables/metrics.py` (`has_column_collapse`, `has_header_collapse`)
+    - Reference: `${HOME}/workspace/experiments/extractor/src/extractor/pipeline/utils/tables/metrics.py` (`has_column_collapse`, `has_header_collapse`)
     - Add `#[cfg(test)]` Rust unit tests
   - **Definition of Done**:
     - Test: `cargo test test_detect_column_collapse` and `cargo test test_detect_header_collapse`
@@ -135,7 +135,7 @@ None — all requirements clear. PyO3 0.23 is already in use; pyo3-polars 0.19 t
       - `is_single_row: Boolean` (n_rows == 1 && n_cols > 3)
       - `column_collapse: Boolean` (from detect_column_collapse logic)
       - `header_collapse: Boolean` (from detect_header_collapse logic)
-    - Reference: `/home/graham/workspace/experiments/extractor/src/extractor/pipeline/utils/tables/metrics.py` (`generate_pandas_metrics`)
+    - Reference: `${HOME}/workspace/experiments/extractor/src/extractor/pipeline/utils/tables/metrics.py` (`generate_pandas_metrics`)
     - Add `#[cfg(test)]` Rust unit tests
   - **Definition of Done**:
     - Test: `cargo test test_table_integrity_metrics`

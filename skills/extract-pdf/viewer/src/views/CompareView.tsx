@@ -187,7 +187,7 @@ export default function CompareView() {
               const sectionDelta = comp.oxide_sections - comp.pymupdf_sections
 
               return (
-                <button
+                <button aria-label="Action"
                   key={comp.filename}
                   onClick={() => setSelectedIdx(idx)}
                   className="text-left rounded px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9eff]"

@@ -4,7 +4,7 @@
 
 **Analyze audio files to extract musical features and generate HMT taxonomy-mapped reviews for Horus persona.**
 
-Location: `/home/graham/workspace/experiments/pi-mono/.pi/skills/review-music`
+Location: `${HOME}/workspace/experiments/pi-mono/.pi/skills/review-music`
 
 ## Context
 

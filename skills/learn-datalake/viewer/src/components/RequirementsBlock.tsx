@@ -144,7 +144,7 @@ export default function RequirementsBlock({ block }: RequirementsBlockProps) {
           {PROOF_STATUS_LABELS[proofStatus]}
         </span>
 
-        <button
+        <button aria-label="Action"
           onClick={() => setFlagged((p) => !p)}
           style={{
             marginLeft: 'auto',
@@ -204,7 +204,7 @@ export default function RequirementsBlock({ block }: RequirementsBlockProps) {
           </select>
 
           {/* + Evidence Case button */}
-          <button
+          <button aria-label="Action"
             onClick={handleCreateEvidence}
             disabled={!selectedControl}
             style={{

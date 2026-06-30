@@ -35,7 +35,7 @@ def _load_json_cleaner():
     if project_root_env:
         candidates.append(Path(project_root_env) / ".agents" / "skills" / "json_utils.py")
     candidates.append(Path.cwd() / ".agents" / "skills" / "json_utils.py")
-    candidates.append(Path("/home/graham/workspace/experiments/sparta/.agents/skills/json_utils.py"))
+    candidates.append(Path("${HOME}/workspace/experiments/sparta/.agents/skills/json_utils.py"))
     for candidate in candidates:
         if not candidate.exists():
             continue
@@ -105,7 +105,7 @@ RELATIONSHIP_FRAMEWORKS = {"CWE", "CAPEC", "ATT&CK"}
 INDEPENDENT_FRAMEWORKS = {"NIST", "SPARTA"}
 
 # Worksheets.yaml location (single source of truth for framework registry)
-WORKSHEETS_YAML = Path("/home/graham/workspace/experiments/sparta/config/worksheets.yaml")
+WORKSHEETS_YAML = Path("${HOME}/workspace/experiments/sparta/config/worksheets.yaml")
 
 # Fallback map if worksheets.yaml unavailable
 _FALLBACK_FRAMEWORK_MAP = {
@@ -205,7 +205,7 @@ FRAMEWORK_SOURCE_MAP = _load_framework_source_map()
 FRAMEWORK_PROMPT_MAP = _load_framework_prompt_map()
 
 # Prompt template directory (centralized in prompt-lab)
-PROMPT_LAB_DIR = Path("/home/graham/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
+PROMPT_LAB_DIR = Path("${HOME}/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
 # Local prompts directory (for native mode prompts)
 
 

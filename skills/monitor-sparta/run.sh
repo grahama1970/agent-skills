@@ -9,7 +9,7 @@ shopt -s expand_aliases
 alias python='uv run --project "$SCRIPT_DIR" python'
 alias python3='uv run --project "$SCRIPT_DIR" python'
 
-MEMORY_DIR="/home/graham/workspace/experiments/memory"
+MEMORY_DIR="${HOME}/workspace/experiments/memory"
 MONITOR_SCRIPT="$MEMORY_DIR/scripts/validation/monitor_sparta.py"
 ECQ_SCRIPT="$MEMORY_DIR/scripts/validation/dimensions/evidence_case_quality.py"
 RECEIPT_GATE_SCRIPT="$SCRIPT_DIR/scripts/receipt_gate.py"

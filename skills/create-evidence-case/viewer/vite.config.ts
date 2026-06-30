@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 export default defineConfig({
   resolve: {
     alias: {
-      '@embry/logo/react': resolve('/home/graham/workspace/experiments/embry-os/packages/embry-logo/src/react.tsx'),
+      '@embry/logo/react': resolve('${HOME}/workspace/experiments/embry-os/packages/embry-logo/src/react.tsx'),
     },
   },
   plugins: [react(), tailwindcss()],
@@ -16,8 +16,8 @@ export default defineConfig({
     strictPort: true,
     fs: {
       allow: [
-        '/home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/viewer',
-        '/home/graham/workspace/experiments/embry-os/packages/embry-logo',
+        '${HOME}/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/viewer',
+        '${HOME}/workspace/experiments/embry-os/packages/embry-logo',
       ],
     },
     watch: {

@@ -2,7 +2,7 @@
 """
 Upgrade existing personas to Horus-depth.
 
-Applies the depth from /home/graham/workspace/experiments/memory/persona:
+Applies the depth from ${HOME}/workspace/experiments/memory/persona:
 1. Federated Taxonomy bridges (Precision, Resilience, Fragility, Corruption, Loyalty, Stealth)
 2. Theory of Mind (BDI) initialization
 3. Simulacrum validation with bridge traversal

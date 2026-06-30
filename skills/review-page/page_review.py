@@ -21,7 +21,7 @@ SKILL_DIR = Path(__file__).resolve().parent
 import os
 
 def _sparta_root() -> Path:
-    return Path(os.environ.get("SPARTA_ROOT", "/home/graham/workspace/experiments/sparta")).resolve()
+    return Path(os.environ.get("SPARTA_ROOT", "${HOME}/workspace/experiments/sparta")).resolve()
 
 REPO_ROOT = _sparta_root()
 PHASE63 = REPO_ROOT / ".plan-iterate/phase-63-sparta-explorer-review-repair-and-report"
@@ -29,7 +29,7 @@ TI_MANIFESTS = PHASE63 / "test-interactions" / "manifests"
 TI_CAPTURES = PHASE63 / "test-interactions" / "captures"
 PAGE_CONTRACTS = PHASE63 / "page-contracts"
 API_PROOFS = PHASE63 / "api-proofs"
-TI_RUN = Path("/home/graham/workspace/experiments/agent-skills/skills/test-interactions/run.sh")
+TI_RUN = Path("${HOME}/workspace/experiments/agent-skills/skills/test-interactions/run.sh")
 
 
 PERSONA_LENSES = {
@@ -718,7 +718,7 @@ def prepare_webgpt_steps_cmd(
     raise typer.Exit(0)
 
 
-ASK_RUN = Path(os.environ.get("ASK_RUN", "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh"))
+ASK_RUN = Path(os.environ.get("ASK_RUN", "${HOME}/workspace/experiments/agent-skills/skills/ask/run.sh"))
 
 
 @app.command("prepare-vlm")

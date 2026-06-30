@@ -77,7 +77,7 @@ None — all requirements clear from prior conversation.
   - **Work**:
     - Install missing dependencies:
       - `pip install polars mypy` (polars for DataFrames, mypy for mypyc)
-      - `cd /home/graham/workspace/experiments/pdf_oxide && pip install -e .` (or `maturin develop`)
+      - `cd ${HOME}/workspace/experiments/pdf_oxide && pip install -e .` (or `maturin develop`)
       - Verify `import pdf_oxide` works without sys.path hacks
     - Create `sanity/pdf_oxide.py`:
       - Import pdf_oxide, open `camelot/tests/files/foo.pdf`

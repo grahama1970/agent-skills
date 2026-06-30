@@ -36,7 +36,7 @@ except ImportError:
 # Inject memory project so we can import ControlCatalog + extract_candidates
 # without copying them.
 # ---------------------------------------------------------------------------
-MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", "/home/graham/workspace/experiments/memory"))
+MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", "${HOME}/workspace/experiments/memory"))
 _SCRIPTS_PATH = str(MEMORY_ROOT / "scripts")
 if _SCRIPTS_PATH not in sys.path:
     sys.path.insert(0, _SCRIPTS_PATH)

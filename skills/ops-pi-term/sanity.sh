@@ -45,8 +45,8 @@ check "xdotool available" command -v xdotool
 check "import (ImageMagick) available" command -v import
 
 # 6. WezTerm repo exists
-check "WezTerm repo exists" test -d /home/graham/workspace/experiments/wezterm
-check "Pi Mono Lua config exists" test -d /home/graham/workspace/experiments/pi-mono/packages/wezterm
+check "WezTerm repo exists" test -d ${HOME}/workspace/experiments/wezterm
+check "Pi Mono Lua config exists" test -d ${HOME}/workspace/experiments/pi-mono/packages/wezterm
 
 echo ""
 echo "  Sanity: $PASS pass, $FAIL fail"

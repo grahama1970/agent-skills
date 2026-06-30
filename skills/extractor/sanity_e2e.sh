@@ -4,7 +4,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$(dirname "$SCRIPT_DIR")"
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${HOME}/workspace/experiments/extractor}"
 CORPUS_ROOT="/mnt/storage12tb"
 PYTHON="${EXTRACTOR_ROOT}/.venv/bin/python"
 

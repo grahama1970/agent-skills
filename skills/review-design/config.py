@@ -9,7 +9,7 @@ from typing import Optional
 from pathlib import Path
 
 # Base output directory for review artifacts (surface subdirectory auto-derived from screenshots path)
-OUTPUT_BASE = Path("/home/graham/workspace/experiments/embry-os/docs/review-output")
+OUTPUT_BASE = Path("${HOME}/workspace/experiments/embry-os/docs/review-output")
 OUTPUT_DIR = OUTPUT_BASE  # Default; overridden at runtime by derive_output_dir()
 
 # Maximum image dimension (providers have limits)

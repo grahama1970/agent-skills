@@ -105,7 +105,7 @@ registered in `scripts/skill_registry.py`:
 SKILL_GUARDS = {
     "memory": SkillMisuseGuard(
         skill_name="memory",
-        guard_path=Path("/home/graham/workspace/experiments/memory/src/graph_memory/service/app/_misuse_guard.py"),
+        guard_path=Path("${HOME}/workspace/experiments/memory/src/graph_memory/service/app/_misuse_guard.py"),
         corrections_var="COLLECTION_CORRECTIONS",
     ),
     # Add your skill here after adopting misuse_guard

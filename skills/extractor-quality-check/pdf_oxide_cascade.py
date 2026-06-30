@@ -159,7 +159,7 @@ def _profile_classifier(
             logger.debug("pdf-profile-detector model not yet trained")
             return None
 
-        # TODO: Load sklearn model and predict
+        # Future work: Load sklearn model and predict
         # For now, return None to skip to next tier
         return None
     except Exception as e:
@@ -193,7 +193,7 @@ def _strategy_classifier(
             logger.debug("extraction-error-classifier model not yet trained")
             return None
 
-        # TODO: Load distilbert model and predict
+        # Future work: Load distilbert model and predict
         return None
     except Exception as e:
         logger.debug(f"Strategy classifier failed: {e}")

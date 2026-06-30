@@ -587,7 +587,7 @@ def _run_review_design(
             if result.returncode == 0:
                 review_dirs = [
                     captures / "review_output",
-                    Path("/home/graham/workspace/experiments/embry-os/docs/review-output") / screenshots_path.name,
+                    Path("${HOME}/workspace/experiments/embry-os/docs/review-output") / screenshots_path.name,
                     run_sh.parent / "review_output",
                 ]
                 for review_dir in review_dirs:

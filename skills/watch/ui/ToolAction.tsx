@@ -14,7 +14,7 @@ export const ToolAction = memo(function ToolAction({ label, qid }: ToolActionPro
 	const [expanded, setExpanded] = useState(false);
 	useRegisterAction(qid, { app: "shared-chat", action: "TOOL_ACTION_TOGGLE", label, description: `Toggle tool action: ${label}` });
 	return (
-		<button
+		<button aria-label="Action"
 			onClick={() => setExpanded((v) => !v)}
 			title={`${label} — click to ${expanded ? "collapse" : "expand"} details`}
 			style={{

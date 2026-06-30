@@ -25,7 +25,7 @@
 
 ## Existing Prototype — `prototypes/tabbed/html/`
 
-**Location**: `/home/graham/workspace/experiments/extractor/prototypes/tabbed/`
+**Location**: `${HOME}/workspace/experiments/extractor/prototypes/tabbed/`
 
 The full interactive UX already exists as a React/Vite/Tailwind/ShadCN app with FastAPI backends.
 

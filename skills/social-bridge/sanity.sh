@@ -20,7 +20,7 @@ echo "=== Social Bridge Sanity Check ==="
 echo ""
 
 # Use conda python if available, otherwise system python
-PYTHON="${CONDA_PYTHON:-/home/graham/miniconda3/bin/python}"
+PYTHON="${CONDA_PYTHON:-${HOME}/miniconda3/bin/python}"
 if [[ ! -x "$PYTHON" ]]; then
     PYTHON="python3"
 fi

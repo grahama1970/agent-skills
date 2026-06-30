@@ -67,7 +67,7 @@ from worker_pool import (
     summarize_review_output,
 )
 
-MATCH_REQUIREMENT_SKILL = Path("/home/graham/.claude/skills/match-requirement")
+MATCH_REQUIREMENT_SKILL = Path("${HOME}/.claude/skills/match-requirement")
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 quarantine_app = typer.Typer(no_args_is_help=True, add_completion=False, help="Review and resolve quarantined PDFs.")

@@ -80,7 +80,7 @@ Subtitle: `Explicit opt-in execution loop: plan-only stays plan-only unless the 
 chromium --headless --no-sandbox --disable-gpu \
   --window-size=1440,2000 \
   --screenshot=/tmp/plan-goal-closure-browser-verification.png \
-  file:///home/graham/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
+  file://${HOME}/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
 ```
 
 ## Source Image Prompt
@@ -96,7 +96,7 @@ chromium --headless --no-sandbox --disable-gpu \
   --hide-scrollbars --force-device-scale-factor=1 \
   --window-size=1440,2000 \
   --screenshot=skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.png \
-  file:///home/graham/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
+  file://${HOME}/workspace/experiments/agent-skills/skills/plan/docs/PLAN_GOAL_CLOSURE_INFOGRAPHIC.html
 ```
 
 ## Update Rules

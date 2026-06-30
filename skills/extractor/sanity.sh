@@ -5,7 +5,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$(dirname "$SCRIPT_DIR")"
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${HOME}/workspace/experiments/extractor}"
 FIXTURE_DIR="${EXTRACTOR_ROOT}/data/input/twins/preset_twin"
 
 echo "=== Extractor Skill Sanity Check (Modular) ==="

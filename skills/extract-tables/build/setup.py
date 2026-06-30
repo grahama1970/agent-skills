@@ -1,3 +1,4 @@
+"""Module support for the extract-tables skill."""
 from setuptools import setup
 from mypyc.build import mypycify
 

@@ -11,7 +11,7 @@ PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
 # Find the actual project .env — SCRIPT_DIR is ~/.claude/skills/doc2qra,
 # so PROJECT_ROOT (3 levels up) = ~/.claude, NOT the workspace.
 # Search for .env in known locations:
-EMBRY_ENV="${EMBRY_OS_ROOT:-/home/graham/workspace/experiments/embry-os}/.env"
+EMBRY_ENV="${EMBRY_OS_ROOT:-${HOME}/workspace/experiments/embry-os}/.env"
 
 if [ -f "$EMBRY_ENV" ]; then
     set -a

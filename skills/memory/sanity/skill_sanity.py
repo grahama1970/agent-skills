@@ -204,7 +204,7 @@ def test_function():
 class TestClass:
     """A test class."""
     def method(self):
-        pass
+        return None
 ''')
 
         result = subprocess.run(

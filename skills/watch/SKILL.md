@@ -57,7 +57,7 @@ Watch any video (URL or local file) and get:
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/watch
+cd ${HOME}/workspace/experiments/agent-skills/skills/watch
 
 # Watch a YouTube URL → auto-routes transcript to ingest-youtube (3-tier fallback)
 ./run.sh "https://youtube.com/watch?v=dQw4w9WgXcQ"
@@ -393,7 +393,7 @@ synthetic SFX generation, LoRA training, or training self-improvement loops.
 Handoff command:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills
+cd ${HOME}/workspace/experiments/agent-skills
 skills/voice-segment-selector/run.sh generate-orpheus-sfx \
   --speaker embry \
   --samples-per-tag 40 \

@@ -880,7 +880,7 @@ For serious or repeatedly false-green surfaces, run `$dogpile` first and pass
 the report or partial-results file as a modern reference packet:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/dogpile/run.sh search \
+${HOME}/workspace/experiments/agent-skills/skills/dogpile/run.sh search \
   "2026 modern DAG graph workflow editor UX node inspector evidence panel review queue React" \
   --persona margaret-chen \
   --rationale "Repeated false-green review-design results missed obvious workflow errors" \
@@ -891,7 +891,7 @@ the report or partial-results file as a modern reference packet:
   --manifest ./manifest.json \
   --persona margaret-chen \
   --provider scillm \
-  --modern-reference /home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json \
+  --modern-reference ${HOME}/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json \
   --reference-screenshots ./reference-screenshots/dag-editor \
   --require-modern-reference \
   --output-dir ./reviews/dag-editor/loop

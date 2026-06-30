@@ -54,7 +54,7 @@ It composes:
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake
 
 # One-shot run over a directory
 ./run.sh once /mnt/storage12tb/extractor_corpus --target-score 0.95
@@ -149,7 +149,7 @@ Use `run.sh` wrappers for stable process lifecycle:
 Command:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake
 ./run.sh start-supervised /mnt/storage12tb/extractor_corpus/nasa \
   --label nasa \
   --task-monitor \
@@ -332,7 +332,7 @@ Done      PDF-specific issue
 
 ```bash
 # Generate calibration fixture from problem PDF
-cd /home/graham/workspace/experiments/pdf_oxide
+cd ${HOME}/workspace/experiments/pdf_oxide
 python clone_pdf_v2.py \
   --source /path/to/problem.pdf \
   --output /tmp/calibration_fixture.pdf \

@@ -29,7 +29,7 @@ No new standalone systems. All existing skills composed.
 
 ### Task 1: Smoke test — verify imports and ArangoDB connection
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 .venv/bin/python -c "
 from sparta_stress_test.conversation_sim import _sparta_answer, _plan_query_strategy, _labeled_synthesize, _build_clarify_response
 print('All new functions importable')
@@ -39,7 +39,7 @@ print('All new functions importable')
 
 ### Task 2: Single-question dry run (bank question, no mining)
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 .venv/bin/python -m sparta_stress_test.cli simulate --count 1 --bank --no-archive --verbose
 ```
 Validates the full pipeline end-to-end on one question before burning API calls on 50.
@@ -47,7 +47,7 @@ Validates the full pipeline end-to-end on one question before burning API calls 
 
 ### Task 3: Calibration run — 50 mixed sessions from bank
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 .venv/bin/python -m sparta_stress_test.cli simulate --count 50 --bank --brandon --archive --verbose
 ```
 **DoD**: 50 sessions complete. Output saved to `results/`.
@@ -64,14 +64,14 @@ Check the run output for:
 
 ```bash
 # Quick metrics check
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 .venv/bin/python -m sparta_stress_test.cli report --last-run
 ```
 **DoD**: CLARIFY recall >80%, QUERY precision >80%, zero hallucinated frameworks.
 
 ### Task 5: Blame analysis on failing sessions
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/sparta-stress-test
 .venv/bin/python -m sparta_stress_test.cli blame --last-run
 ```
 Identifies which pipeline component failed for C/F sessions.

@@ -80,7 +80,7 @@ None — all requirements clear.
   - Parallel: 0
   - Dependencies: none
   - **Definition of Done**:
-    - Test: `bash /home/graham/workspace/experiments/pi-mono/.pi/skills/extract-pdf/sanity.sh`
+    - Test: `bash ${HOME}/workspace/experiments/pi-mono/.pi/skills/extract-pdf/sanity.sh`
     - Assertion: Exit code 0, output contains "Sanity: PASS", 0 errors.
     - Blind: `sanity.sh` is a pre-existing harness with 6 critical checks — agent sees only PASS/FAIL.
 
@@ -122,7 +122,7 @@ None — all requirements clear.
   - **Definition of Done**:
     - Test:
       ```bash
-      cd /home/graham/workspace/experiments/pi-mono/.pi/skills/extract-pdf
+      cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/extract-pdf
       ./run.sh pipeline /mnt/storage12tb/extractor_corpus/nist/nist_fips_140_3.pdf \
         --output-dir /tmp/test_pipeline_output
       ```

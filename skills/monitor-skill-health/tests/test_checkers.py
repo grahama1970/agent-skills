@@ -161,3 +161,95 @@ def test_readme_flagged_without_provides(tmp_path):
         for violation in violations
         if violation["rule"] == "avoid-extra-docs" and violation["file"] == "README.md"
     ]
+
+
+def test_python_violations_accepts_lexical_docstring_when_ast_parse_fails(tmp_path):
+    checkers = load_checkers_module()
+    skill_dir = tmp_path / "sample-skill"
+    skill_dir.mkdir()
+    script = skill_dir / "template.py"
+    script.write_text(
+        "#!/usr/bin/env python3\n"
+        "\"\"\"Template entrypoint.\"\"\"\n"
+        "def broken(:\n",
+        encoding="utf-8",
+    )
+
+    violations = checkers.python_violations(skill_dir, [script])
+
+    assert not [
+        violation
+        for violation in violations
+        if violation["rule"] == "style-module-docstring"
+    ]
+
+
+def test_monolith_waiver_requires_exact_target_file_and_rationale(tmp_path, monkeypatch):
+    checkers = load_checkers_module()
+    skills_root = tmp_path / "skills"
+    skill_dir = skills_root / "sample-skill"
+    skill_dir.mkdir(parents=True)
+    script = skill_dir / "large.py"
+    script.write_text(
+        "\"\"\"Large module.\"\"\"\n" + "print('x')\n" * 801,
+        encoding="utf-8",
+    )
+    waiver_file = tmp_path / "monoliths.json"
+    waiver_file.write_text(
+        "{\n"
+        '  "schema": "monitor-skill-health.waivers.v1",\n'
+        '  "waivers": [\n'
+        "    {\n"
+        '      "target": "skills/sample-skill",\n'
+        '      "file": "large.py",\n'
+        '      "rule": "style-max-800-lines",\n'
+        '      "rationale": "Tracked legacy monolith debt."\n'
+        "    }\n"
+        "  ]\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checkers, "MONOLITH_WAIVERS_FILE", waiver_file)
+
+    violations = checkers.python_violations(skill_dir, [script])
+
+    assert not [
+        violation
+        for violation in violations
+        if violation["rule"] == "style-max-800-lines"
+    ]
+
+
+def test_monolith_waiver_without_rationale_is_ignored(tmp_path, monkeypatch):
+    checkers = load_checkers_module()
+    skills_root = tmp_path / "skills"
+    skill_dir = skills_root / "sample-skill"
+    skill_dir.mkdir(parents=True)
+    script = skill_dir / "large.py"
+    script.write_text(
+        "\"\"\"Large module.\"\"\"\n" + "print('x')\n" * 801,
+        encoding="utf-8",
+    )
+    waiver_file = tmp_path / "monoliths.json"
+    waiver_file.write_text(
+        "{\n"
+        '  "schema": "monitor-skill-health.waivers.v1",\n'
+        '  "waivers": [\n'
+        "    {\n"
+        '      "target": "skills/sample-skill",\n'
+        '      "file": "large.py",\n'
+        '      "rule": "style-max-800-lines"\n'
+        "    }\n"
+        "  ]\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checkers, "MONOLITH_WAIVERS_FILE", waiver_file)
+
+    violations = checkers.python_violations(skill_dir, [script])
+
+    assert [
+        violation
+        for violation in violations
+        if violation["rule"] == "style-max-800-lines"
+    ]

@@ -81,7 +81,7 @@ if [[ "${1:-}" == "parse" ]]; then
 fi
 
 # Prefer local dev install if available, fall back to uvx from GitHub
-LOCAL_TREESITTER="/home/graham/workspace/experiments/treesitter-tools"
+LOCAL_TREESITTER="${HOME}/workspace/experiments/treesitter-tools"
 if [[ -f "$LOCAL_TREESITTER/.venv/bin/treesitter-tools" ]]; then
     exec "$LOCAL_TREESITTER/.venv/bin/treesitter-tools" "$@"
 else

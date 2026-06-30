@@ -160,7 +160,7 @@ Result:
 yolo_bytetrack_events_ok 80
 track_ids ['track_1', 'track_10', 'track_15', 'track_2', 'track_3', 'track_4', 'track_5', 'track_6', 'track_7', 'track_8']
 source_fps 23.975985652770184
-event_log /home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl
+event_log ${HOME}/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl
 ```
 
 The run emitted real Ultralytics/ByteTrack track events from the local clip. The

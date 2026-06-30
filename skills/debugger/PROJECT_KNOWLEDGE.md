@@ -62,9 +62,9 @@
   - Kimi review with actual file contents:
     `/tmp/ask-debugger-docs/debugger-readme-oc-kimi-review-inline-files/`
   - Kimi session:
-    `/home/graham/.pi/sessions/ask/20260526_ask-7f94cc6300c8.jsonl`
+    `${HOME}/.pi/sessions/ask/20260526_ask-7f94cc6300c8.jsonl`
   - Earlier GPT-5.5 high-reasoning code review:
-    `/home/graham/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/deep-review/20260526T204708Z/review.json`
+    `${HOME}/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/deep-review/20260526T204708Z/review.json`
   - Project-state quick report:
     `/tmp/debugger-project-state-quick.json`
 - Human authorization checkpoint: decide whether to start Phase 2, safe

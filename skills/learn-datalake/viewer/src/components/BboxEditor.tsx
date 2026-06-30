@@ -264,7 +264,7 @@ export default function BboxEditor({
 
       {/* Reclassify dropdown */}
       <div style={{ marginBottom: '8px' }}>
-        <button
+        <button aria-label="Action"
           onClick={() => setShowTypeDropdown((p) => !p)}
           style={{
             width: '100%',
@@ -309,7 +309,7 @@ export default function BboxEditor({
             {ALL_BLOCK_TYPES.map((t, i) => {
               const isActive = t === block.blockType
               return (
-                <button
+                <button aria-label="Action"
                   key={t}
                   onClick={() => {
                     logShadowReclassify(block, t)
@@ -409,7 +409,7 @@ function EditorButton({
   onClick: () => void
 }) {
   return (
-    <button
+    <button aria-label="Action"
       onClick={onClick}
       style={{
         fontFamily: 'monospace',

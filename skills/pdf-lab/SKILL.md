@@ -51,7 +51,7 @@ figures out what, fixes it, and makes the fix permanent.
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/pdf-lab
 
 # Main: diagnose, reproduce, converge, and write fix back
 ./run.sh tune /path/to/real.pdf \
@@ -90,7 +90,7 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab
 ./run.sh file-maintainer-ticket --job-dir /tmp/pdf-lab-job
 
 # Standalone PDF Lab UX
-cd /home/graham/workspace/experiments/agent-skills/skills/pdf-lab/ui
+cd ${HOME}/workspace/experiments/agent-skills/skills/pdf-lab/ui
 npm install
 npm run dev:all
 ```

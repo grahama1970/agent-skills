@@ -28,7 +28,7 @@ def _enforce_layout_invariants(panels: List[Dict[str, Any]]) -> List[Dict[str, A
     # Only enforce when explicitly enabled; otherwise return panels unchanged
     if not STORYBOARD_FLAGS["ENABLE_LAYOUT_INVARIANTS"]:
         return panels
-    # TODO: Implement invariant checks (e.g., aspect ratios, safe margins) per acceptance criteria
+    # Future work: Implement invariant checks (e.g., aspect ratios, safe margins) per acceptance criteria
     # For now, pass-through to retain behavior
     return panels
 

@@ -272,7 +272,7 @@ export default function BboxEditor({
 
       {/* Reclassify dropdown */}
       <div style={{ marginBottom: '8px' }}>
-        <button
+        <button aria-label="Action"
           data-qid="bbox:type:select" data-qs-action="BBOX_SELECT"
           title="Reclassify block type"
           onClick={() => setShowTypeDropdown((p) => !p)}
@@ -319,7 +319,7 @@ export default function BboxEditor({
             {ALL_BLOCK_TYPES.map((t, i) => {
               const isActive = t === block.blockType
               return (
-                <button
+                <button aria-label="Action"
                   key={t}
                 data-qid="bbox-editor:dyn-2" data-qs-action="BBOX-EDITOR_DYN_2"
                 title="Dyn 2"
@@ -425,7 +425,7 @@ function EditorButton({
   title?: string
 }) {
   return (
-    <button
+    <button aria-label="Action"
       data-qid={qid}
       title={titleProp}
       onClick={onClick}

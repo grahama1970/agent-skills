@@ -101,7 +101,7 @@ The skill implements an iterative self-correction workflow:
 ## Quick Start
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/reality-check-sparta
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/reality-check-sparta
 
 # Run adversarial check with fix suggestions
 ./run.sh check --run-id run-recovery-verify --samples 20

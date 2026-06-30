@@ -11,7 +11,7 @@ app = typer.Typer()
 
 PROFILE_SOURCES = [
     Path("/mnt/storage12tb/extractor_corpus/results"),
-    Path("/home/graham/workspace/experiments/extractor/.skills/review-pdf/extracted_runs"),
+    Path("${HOME}/workspace/experiments/extractor/.skills/review-pdf/extracted_runs"),
 ]
 
 

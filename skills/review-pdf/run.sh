@@ -57,7 +57,7 @@ EOF
 }
 
 PDF_OXIDE_ROOT="${PDF_OXIDE_ROOT:-$HOME/workspace/experiments/pdf_oxide}"
-PROTOTYPE_API_DIR="/home/graham/workspace/experiments/extractor/prototypes/tabbed/api"
+PROTOTYPE_API_DIR="${HOME}/workspace/experiments/extractor/prototypes/tabbed/api"
 
 case "${1:-help}" in
     check|review|audit|batch|iterate|loop|watch|compare|convergence|status|history)

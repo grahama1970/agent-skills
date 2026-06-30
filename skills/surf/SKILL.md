@@ -116,7 +116,7 @@ If `/tmp/surf.sock` exists (extension installed), all commands route through sur
 The reliable agent entrypoint is the skill-local wrapper:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/surf
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf
 ./run.sh tab.list --json
 ./run.sh webgpt.preflight --tab-id <id> --expect-url <url> --no-activate --json
 ```
@@ -165,7 +165,7 @@ surf snap                        # Screenshot
 If the bare `surf` command is unavailable, use the wrapper form:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/surf
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf
 ./run.sh tab.list
 ./run.sh read
 ./run.sh snap
@@ -978,7 +978,7 @@ surf webgpt.submit \
   --input bundle.md \
   --auto-download "solution.zip" \
   --verify-cmd "npx tsc --noEmit" \
-  --repo /home/graham/workspace/experiments/pi-mono/packages/ux-lab \
+  --repo ${HOME}/workspace/experiments/pi-mono/packages/ux-lab \
   --output ./round-1/response.md
 ```
 
@@ -1042,7 +1042,7 @@ surf webgpt.submit --input REQ.md --output RESP.md \
   --url "https://chatgpt.com/c/<uuid>" --no-activate
 
 # Through /ask:
-cd /home/graham/workspace/experiments/agent-skills/skills/ask
+cd ${HOME}/workspace/experiments/agent-skills/skills/ask
 ./run.sh ask webgpt "Review /tmp/review-bundle.md" \
   --webgpt-url "https://chatgpt.com/c/<uuid>" \
   --once
@@ -1429,7 +1429,7 @@ cropped = smart_crop(full_page_bytes, region="detail")
 
 | Problem                    | Solution                                        |
 | -------------------------- | ----------------------------------------------- |
-| `surf: command not found` | Use `cd /home/graham/workspace/experiments/agent-skills/skills/surf && ./run.sh ...`. This is a PATH issue, not proof that Surf transport is down. |
+| `surf: command not found` | Use `cd ${HOME}/workspace/experiments/agent-skills/skills/surf && ./run.sh ...`. This is a PATH issue, not proof that Surf transport is down. |
 | "Cannot connect to CDP"    | Run `surf cdp start` first                      |
 | Chrome not found           | Install Google Chrome or Chromium               |
 | Port already in use        | `surf cdp stop` then `surf cdp start`           |

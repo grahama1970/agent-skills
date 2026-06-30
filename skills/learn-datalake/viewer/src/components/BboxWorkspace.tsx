@@ -349,7 +349,7 @@ export default function BboxWorkspace({
           }}
         >
           {/* Edit mode toggle */}
-          <button
+          <button aria-label="Action"
             onClick={() => setEditMode((p) => !p)}
             style={{
               fontFamily: 'monospace',
@@ -379,7 +379,7 @@ export default function BboxWorkspace({
             const color = BLOCK_TYPE_COLORS[t]
             const count = typeCounts[t] ?? 0
             return (
-              <button
+              <button aria-label="Action"
                 key={t}
                 onClick={() => toggleTypeFilter(t)}
                 style={{
@@ -408,7 +408,7 @@ export default function BboxWorkspace({
           <div style={{ width: '1px', height: '18px', backgroundColor: NVIS.borderSolid }} />
 
           {/* Zoom controls */}
-          <button
+          <button aria-label="Action"
             onClick={() => setZoom((z) => Math.max(0.25, z - 0.25))}
             style={{
               fontFamily: 'monospace',
@@ -434,7 +434,7 @@ export default function BboxWorkspace({
           >
             {Math.round(zoom * 100)}%
           </span>
-          <button
+          <button aria-label="Action"
             onClick={() => setZoom((z) => Math.min(4, z + 0.25))}
             style={{
               fontFamily: 'monospace',
@@ -454,7 +454,7 @@ export default function BboxWorkspace({
           <div style={{ flex: 1 }} />
 
           {/* Page navigation */}
-          <button
+          <button aria-label="Action"
             onClick={() => onPageChange(Math.max(0, currentPage - 1))}
             disabled={currentPage === 0}
             style={{
@@ -480,7 +480,7 @@ export default function BboxWorkspace({
           >
             {currentPage + 1} / {pageCount}
           </span>
-          <button
+          <button aria-label="Action"
             onClick={() => onPageChange(Math.min(pageCount - 1, currentPage + 1))}
             disabled={currentPage >= pageCount - 1}
             style={{
@@ -566,7 +566,7 @@ export default function BboxWorkspace({
               {/* Inline reclassify dropdown (non-edit mode, triggered by `t`) */}
               {!editMode && (
                 <div style={{ position: 'relative' }}>
-                  <button
+                  <button aria-label="Action"
                     onClick={() => setInspectorTypeDropdown((p) => !p)}
                     style={{
                       width: '100%',
@@ -605,7 +605,7 @@ export default function BboxWorkspace({
                       {ALL_BLOCK_TYPES.map((t, i) => {
                         const isActive = t === selectedBlock.blockType
                         return (
-                          <button
+                          <button aria-label="Action"
                             key={t}
                             onClick={() => {
                               handleReclassify(selectedBlock.id, t)

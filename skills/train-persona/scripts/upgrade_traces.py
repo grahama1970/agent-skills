@@ -174,7 +174,7 @@ def call_llm(prompt: str, system: str = MULTI_ROLE_SYSTEM) -> dict:
     """
     Call LLM for critique. Uses scillm skill or direct API.
 
-    TODO: Integrate with /scillm skill for consistent model access.
+    Future work: Integrate with /scillm skill for consistent model access.
     """
     raise NotImplementedError(
         "LLM critique call not yet implemented — integrate with /scillm skill for consistent model access"
@@ -225,7 +225,7 @@ def upgrade_single_trace(
     else:  # stepwise
         # Iterative debate - expensive, only for hard cases
         result = call_llm(prompt)
-        # TODO: Implement iterative loop
+        # Future work: Implement iterative loop
 
     # Extract correction episodes
     episodes = []

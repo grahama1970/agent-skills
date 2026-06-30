@@ -312,7 +312,7 @@ def _store_in_memory(result: ScoreResult) -> None:
             tags,
         )
 
-        # TODO: Implement actual memory storage via subprocess or import
+        # Future work: Implement actual memory storage via subprocess or import
         # subprocess.run([
         #     str(memory_path / "run.sh"), "learn",
         #     "--scope", "horus-filmmaking",

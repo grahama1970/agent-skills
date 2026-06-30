@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UV_BIN="${UV_BIN:-/home/graham/.local/bin/uv}"
+UV_BIN="${UV_BIN:-${HOME}/.local/bin/uv}"
 if [[ ! -x "$UV_BIN" ]]; then
   UV_BIN="uv"
 fi

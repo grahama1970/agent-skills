@@ -287,10 +287,10 @@ export default function ExtractionReviewModal({
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleGenerateFixture} style={btnStyle(NVIS.accent)}>Generate Fixture</button>
-          {onReExtract && <button onClick={onReExtract} style={btnStyle(NVIS.amber)}>Re-extract</button>}
-          {onAccept && <button onClick={onAccept} style={btnStyle(NVIS.green)}>Accept as-is</button>}
-          <button onClick={onClose} style={btnStyle(NVIS.dim)}>Close (Esc)</button>
+          <button aria-label="Action" onClick={handleGenerateFixture} style={btnStyle(NVIS.accent)}>Generate Fixture</button>
+          {onReExtract && <button aria-label="Action" onClick={onReExtract} style={btnStyle(NVIS.amber)}>Re-extract</button>}
+          {onAccept && <button aria-label="Action" onClick={onAccept} style={btnStyle(NVIS.green)}>Accept as-is</button>}
+          <button aria-label="Action" onClick={onClose} style={btnStyle(NVIS.dim)}>Close (Esc)</button>
         </div>
       </div>
 
@@ -463,7 +463,7 @@ function NoFixturePlaceholder({ fixtureStatus, fixtureSpec, onGenerate }: {
               </div>
             </div>
           ) : (
-            <button onClick={onGenerate} style={btnStyle(NVIS.accent)}>Generate Fixture</button>
+            <button aria-label="Action" onClick={onGenerate} style={btnStyle(NVIS.accent)}>Generate Fixture</button>
           )}
         </>
       )}

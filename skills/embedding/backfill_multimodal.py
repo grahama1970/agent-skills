@@ -200,7 +200,7 @@ def _resolve_image_path(doc: dict, doc_path_cache: dict) -> Optional[str]:
     # Fallback: try under extractor corpus base with source hash as dir name
     source = doc.get("source", "")
     if source:
-        for base in [EXTRACTOR_CORPUS_BASE, Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs")]:
+        for base in [EXTRACTOR_CORPUS_BASE, Path("${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs")]:
             full_path = base / source / rel_path
             if full_path.exists():
                 return str(full_path)

@@ -150,7 +150,7 @@ export default function RequirementsBlock({ block }: RequirementsBlockProps) {
           {PROOF_STATUS_LABELS[proofStatus]}
         </span>
 
-        <button
+        <button aria-label="Action"
                 data-qid="req-block:item-1" data-qs-action="REQ-BLOCK_ITEM_1"
                 title="Item 1"
           onClick={() => setFlagged((p) => !p)}
@@ -214,7 +214,7 @@ export default function RequirementsBlock({ block }: RequirementsBlockProps) {
           </select>
 
           {/* + Evidence Case button */}
-          <button
+          <button aria-label="Action"
                 data-qid="req-block:item-3" data-qs-action="REQ-BLOCK_ITEM_3"
                 title="Item 3"
             onClick={handleCreateEvidence}

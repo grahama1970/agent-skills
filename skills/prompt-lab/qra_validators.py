@@ -5,7 +5,7 @@ This module implements the validation gates from SPARTA Stage 12 for use in prom
 1. Ambiguity Gate - Checks question length and context keyword usage
 2. Entity Anchoring - Verifies questions explicitly name the entities being asked about
 
-Based on: /home/graham/workspace/experiments/sparta/src/sparta/pipeline_duckdb/12_qra.py
+Based on: ${HOME}/workspace/experiments/sparta/src/sparta/pipeline_duckdb/12_qra.py
 
 Memory lessons:
 - https://github.com/sparta-qra/lessons/23015969 - Entity anchoring definition

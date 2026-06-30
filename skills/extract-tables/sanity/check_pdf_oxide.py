@@ -12,7 +12,7 @@ except ImportError:
     print("FAIL: pdf_oxide not installed")
     sys.exit(1)
 
-doc = pdf_oxide.PdfDocument("/home/graham/workspace/experiments/camelot/tests/files/foo.pdf")
+doc = pdf_oxide.PdfDocument("${HOME}/workspace/experiments/camelot/tests/files/foo.pdf")
 
 # page_count is a METHOD
 pc = doc.page_count()

@@ -296,21 +296,21 @@ JSONL append from a single process is safe. But if learn-datalake is restarted m
 
 ```bash
 # Start (with question book)
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake
 ./run.sh start-supervised
 
 # Monitor question book growth
-watch -n 60 'wc -l /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/.state/question_book.jsonl'
+watch -n 60 'wc -l ${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake/.state/question_book.jsonl'
 
 # View deferred questions
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/pdf-lab
 python pdf_lab.py book
 
 # Morning review
 python pdf_lab.py answer
 
 # Kill (graceful)
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake
 ./run.sh stop-supervised
 ```
 

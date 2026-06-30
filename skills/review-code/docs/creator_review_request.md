@@ -5,7 +5,7 @@
 - **Repo:** `owner/repo`
 - **Branch:** `main`
 - **Paths of interest:**
-  - `/home/graham/workspace/experiments/pi-mono/.pi/skills/icon-creator/creator.py`
+  - `${HOME}/workspace/experiments/pi-mono/.pi/skills/icon-creator/creator.py`
 
 ## Summary
 

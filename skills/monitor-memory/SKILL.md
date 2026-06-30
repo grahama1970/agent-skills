@@ -133,7 +133,7 @@ their update jobs should be registered here at 04:45-04:59.
 | `ARANGO_USER`         | `root`                      | Database user            |
 | `ARANGO_PASS`         | (empty)                     | Database password        |
 | `EMBEDDING_SERVICE_URL` | `http://localhost:8080`   | Embedding FastAPI        |
-| `MEMORY_PROJECT_PATH` | `/home/graham/.../memory`  | Memory project root      |
+| `MEMORY_PROJECT_PATH` | `${HOME}/.../memory`  | Memory project root      |
 
 ## Auto-Fix (Tier 1 only)
 

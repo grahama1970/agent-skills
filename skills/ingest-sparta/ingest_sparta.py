@@ -20,7 +20,7 @@ from pathlib import Path
 import typer
 from loguru import logger
 
-SPARTA_ROOT = Path(os.environ.get("SPARTA_ROOT", "/home/graham/workspace/experiments/sparta"))
+SPARTA_ROOT = Path(os.environ.get("SPARTA_ROOT", "${HOME}/workspace/experiments/sparta"))
 PIPELINE_STEPS = SPARTA_ROOT / "src" / "sparta" / "pipeline" / "steps"
 
 app = typer.Typer(help="SPARTA ingestion pipeline — thin wrapper around real pipeline.")
@@ -201,7 +201,7 @@ def explorer(
 # ---------------------------------------------------------------------------
 
 MEMORY_ROOT = Path(os.environ.get(
-    "MEMORY_ROOT", "/home/graham/workspace/experiments/memory"
+    "MEMORY_ROOT", "${HOME}/workspace/experiments/memory"
 ))
 
 @app.command()

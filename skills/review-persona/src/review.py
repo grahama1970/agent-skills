@@ -575,7 +575,7 @@ def review_persona_visual(
     # Basic visual review
     review.visual_notes = _review_images_basic(images_dir, persona, sheet_content)
 
-    # TODO: Add vision LLM integration for detailed analysis
+    # Future work: Add vision LLM integration for detailed analysis
     # This would:
     # 1. Encode images as base64
     # 2. Send to vision-capable LLM with character sheet

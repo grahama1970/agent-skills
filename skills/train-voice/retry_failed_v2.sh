@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON="/home/graham/miniconda3/bin/python"
+PYTHON="${HOME}/miniconda3/bin/python"
 LOG="/tmp/retry_failed_training_v2.log"
 STORAGE="/mnt/storage12tb/media/personas"
 

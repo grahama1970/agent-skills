@@ -35,8 +35,8 @@ Usage:
   ./run.sh apply [--best-practices LIST] [--root PATH] [--branch NAME] [--worktree-base PATH] [--lint] [--lint-scope changed|all] [--per-skill] [--per-skill-dir PATH] [--notify PROJECT]
 
 Defaults:
-  --root: /home/graham/workspace/experiments/pi-mono/.pi/skills
-  --worktree-base: /home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci
+  --root: ${HOME}/workspace/experiments/pi-mono/.pi/skills
+  --worktree-base: ${HOME}/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci
   --best-practices: all best-practices-* skills
 USAGE
   exit 0

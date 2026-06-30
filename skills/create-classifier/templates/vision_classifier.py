@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the create-classifier skill."""
 """
 Vision Classifier Template - Based on successful table classifier architecture
 

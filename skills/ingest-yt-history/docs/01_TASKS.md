@@ -4,7 +4,7 @@
 
 **Let Horus persona easily find music based on human's listening history.**
 
-Location: `/home/graham/workspace/experiments/memory/persona` needs to query music preferences.
+Location: `${HOME}/workspace/experiments/memory/persona` needs to query music preferences.
 
 ## Context
 
@@ -40,7 +40,7 @@ Music MUST use the Federated Taxonomy for `/memory` integration:
 - Psychoacoustic: roughness, dissonance, sharpness, dynamic_range
 - Entropy: spectral_entropy, temporal_entropy, harmonic_complexity
 
-HMT verifier: `/home/graham/workspace/experiments/memory/persona/bridge/horus_music_taxonomy.py`
+HMT verifier: `${HOME}/workspace/experiments/memory/persona/bridge/horus_music_taxonomy.py`
 
 ## Crucial Dependencies (Sanity Scripts)
 

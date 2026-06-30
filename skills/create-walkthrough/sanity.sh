@@ -43,7 +43,7 @@ TMPFILE=$(mktemp /tmp/walkthrough_sanity_XXXXXX.md)
 cat > "$TMPFILE" <<'EOF'
 # Test Walkthrough
 
-**File:** `/home/graham/workspace/experiments/pi-mono/.pi/skills/create-walkthrough/walkthrough.py` (500 lines)
+**File:** `${HOME}/workspace/experiments/pi-mono/.pi/skills/create-walkthrough/walkthrough.py` (500 lines)
 
 The `extract_claims()` function on line 156 handles extraction.
 

@@ -1,8 +1,8 @@
 # MIGRATION — Self-Contained ux-lab Skill
 
-Slice id: `ux-lab-skill-self-containment`  
-Target repo path: `/home/graham/workspace/experiments/agent-skills/skills/ux-lab`  
-Host app path: `/home/graham/workspace/experiments/pi-mono/packages/ux-lab`
+Slice id: `ux-lab-skill-self-containment`
+Target repo path: `${HOME}/workspace/experiments/agent-skills/skills/ux-lab`
+Host app path: `${HOME}/workspace/experiments/pi-mono/packages/ux-lab`
 
 ## Migration rule
 
@@ -13,7 +13,7 @@ This migration is an extraction + import relocation from committed pi-mono sourc
 Copy the delivered files into the agent-skills repo:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills
+cd ${HOME}/workspace/experiments/agent-skills
 mkdir -p skills/ux-lab
 cp -R /path/to/solution/skills/ux-lab/* skills/ux-lab/
 ```
@@ -32,7 +32,7 @@ skills/ux-lab/ui/memory-turn/*.ts
 Gate:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/ux-lab/ui
+cd ${HOME}/workspace/experiments/agent-skills/skills/ux-lab/ui
 npm install
 npm run typecheck
 ```
@@ -70,7 +70,7 @@ In `pi-mono/packages/ux-lab/tsconfig.json`, mirror the alias:
 Gate:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
+cd ${HOME}/workspace/experiments/pi-mono/packages/ux-lab
 npm run typecheck
 ```
 
@@ -115,7 +115,7 @@ Rollback: restore the single surface import that failed. Do not revert the whole
 Only after P2 proves every production import resolves from the skill package, remove local duplicates:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
+cd ${HOME}/workspace/experiments/pi-mono/packages/ux-lab
 rm -rf src/components/shared-chat
 ```
 

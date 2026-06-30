@@ -84,8 +84,8 @@ Once `claude remote-control` is running and you connect from iPad:
 
 ## MCP Server Location
 
-- **Server**: `/home/graham/workspace/experiments/embry-os/services/mcp-daemon/server.py`
-- **Venv**: `/home/graham/workspace/experiments/embry-os/services/mcp-daemon/.venv/`
+- **Server**: `${HOME}/workspace/experiments/embry-os/services/mcp-daemon/server.py`
+- **Venv**: `${HOME}/workspace/experiments/embry-os/services/mcp-daemon/.venv/`
 - **Config**: `~/.claude.json` (user-scoped MCP entry `embry-projects`)
 
 ## Why Not Agent Teams?

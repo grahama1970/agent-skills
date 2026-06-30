@@ -129,7 +129,7 @@ def _recommended_command(next_action: NextAction, active_plan_path: Path | None,
     if next_action == "stop_dogpile":
         return f"/dogpile --topic 'PDF Lab Coverage technical blocker: {area}'"
     if active_plan_path:
-        return f"/home/graham/workspace/experiments/agent-skills/skills/orchestrate/run.sh run {active_plan_path}"
+        return f"${HOME}/workspace/experiments/agent-skills/skills/orchestrate/run.sh run {active_plan_path}"
     return "Create a project-knowledge-checked orchestration plan for the active Coverage blocker, then run /orchestrate."
 
 

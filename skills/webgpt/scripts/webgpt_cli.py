@@ -15,7 +15,7 @@ import typer
 
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
-SURF = Path("/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh")
+SURF = Path("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh")
 
 
 GITHUB_REPO = "agent-skills"

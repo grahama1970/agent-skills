@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """Run the deterministic P0 multi-turn PersonaPlex/memory compliance probe."""
 

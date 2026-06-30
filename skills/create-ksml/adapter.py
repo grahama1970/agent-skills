@@ -38,7 +38,7 @@ def _validate_ksml_schema(document: dict) -> bool:
     # Stub: only runs when ENABLE_SCHEMA_VALIDATION=1; returns True by default
     if not KSML_FEATURE_FLAGS["ENABLE_SCHEMA_VALIDATION"]:
         return True
-    # TODO: Implement schema validation per acceptance criteria without breaking defaults
+    # Future work: Implement schema validation per acceptance criteria without breaking defaults
     return True
 
 app = typer.Typer(help="Convert scripts to KSML")

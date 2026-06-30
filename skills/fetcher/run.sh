@@ -27,9 +27,9 @@ load_dotenv() {
 load_dotenv
 
 # Load canonical fetcher .env for BRAVE_API_KEY if not already set
-if [[ -z "$BRAVE_API_KEY" && -f "/home/graham/workspace/experiments/fetcher/.env" ]]; then
+if [[ -z "$BRAVE_API_KEY" && -f "${HOME}/workspace/experiments/fetcher/.env" ]]; then
     set -a
-    source "/home/graham/workspace/experiments/fetcher/.env" 2>/dev/null || true
+    source "${HOME}/workspace/experiments/fetcher/.env" 2>/dev/null || true
     set +a
 fi
 

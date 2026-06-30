@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the personaplex skill."""
 from __future__ import annotations
 """Render PersonaPlex live voice session receipts as a SPARTA Chat-style UI.
 

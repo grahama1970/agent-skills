@@ -336,7 +336,7 @@ class StateManager:
         if persona_id not in state:
             return True
 
-        # TODO: Check if enough new samples since last training
+        # Future work: Check if enough new samples since last training
         return False
 
     # ─────────────────────────────────────────────────────────────────────────

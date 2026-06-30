@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the project-drift skill."""
 from __future__ import annotations
 
 import json

@@ -154,7 +154,7 @@ export QDRANT_TIMEOUT_SEC=60
 Example memory-owned Qdrant backfill:
 
 ```bash
-cd /home/graham/workspace/experiments/memory
+cd ${HOME}/workspace/experiments/memory
 export MEMORY_ARANGO_PORT=8531
 export SEMANTIC_VECTOR_BACKEND=qdrant
 export QDRANT_URL=http://127.0.0.1:6333

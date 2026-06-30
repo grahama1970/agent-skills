@@ -14,7 +14,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 
 # Use memory venv (graph_memory.entity_extraction is the data source)
-MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
+MEMORY_ROOT="${MEMORY_ROOT:-${HOME}/workspace/experiments/memory}"
 VENV="${MEMORY_ROOT}/.venv"
 if [[ -d "$VENV" ]]; then
     export PATH="$VENV/bin:$PATH"

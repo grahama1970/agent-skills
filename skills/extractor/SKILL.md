@@ -28,7 +28,7 @@ triggers:
   - extract with qra
 metadata:
   short-description: Preset-First document extraction (PDF/DOCX/HTML/XML/YouTube)
-  project-path: /home/graham/workspace/experiments/extractor
+  project-path: ${HOME}/workspace/experiments/extractor
 provides:
   - pdf-extraction
   - html-extraction
@@ -348,7 +348,7 @@ Status levels:
 
 Requires the extractor project with its virtual environment:
 
-- **Project**: `/home/graham/workspace/experiments/extractor`
+- **Project**: `${HOME}/workspace/experiments/extractor`
 - **Venv**: `.venv/bin/python`
 - **Dependencies**: `scillm`, `fetcher` (local paths)
 

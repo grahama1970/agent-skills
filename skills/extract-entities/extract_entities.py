@@ -32,7 +32,7 @@ app = typer.Typer(
 console = Console()
 
 _DEFAULT_SPARTA_SOURCE_WORKBOOK = Path(
-    "/home/graham/workspace/experiments/sparta/data/source/SPARTA-Data.xlsx"
+    "${HOME}/workspace/experiments/sparta/data/source/SPARTA-Data.xlsx"
 )
 
 _SPARTA_CONTROL_RETURN_FIELDS = [

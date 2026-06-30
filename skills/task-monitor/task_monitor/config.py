@@ -42,7 +42,7 @@ BATCH_REPORT_PATHS = [
 # =============================================================================
 
 # History settings
-MAX_HISTORY_ENTRIES = 10000
+MAX_HISTORY_ENTRIES = 10_000
 
 # Session settings
 MAX_SESSION_ENTRIES = 100

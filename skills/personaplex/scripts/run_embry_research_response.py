@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_PERSONAPLEX_ROOT = Path("/home/graham/workspace/experiments/personaplex")
+DEFAULT_PERSONAPLEX_ROOT = Path("${HOME}/workspace/experiments/personaplex")
 DEFAULT_PYTHON = DEFAULT_PERSONAPLEX_ROOT / ".venv/bin/python"
 DEFAULT_VOICE_DIR = Path(
     "/mnt/storage12tb/skills/personaplex/outputs/e2e/"

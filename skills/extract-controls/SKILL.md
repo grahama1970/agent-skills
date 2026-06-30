@@ -185,8 +185,8 @@ datalake_chunks/<key>  (SOURCE — the document chunk)
 | `MEMORY_ARANGO_DB` / `ARANGO_DB` | `memory` | Database name |
 | `ARANGO_USER` | `root` | ArangoDB username |
 | `ARANGO_PASSWORD` / `ARANGO_PASS` | (from .env) | ArangoDB password (managed by /memory — never hardcode) |
-| `MEMORY_ROOT` | `/home/graham/workspace/experiments/memory` | Memory project path |
-| `EXTRACTOR_ROOT` | `/home/graham/workspace/experiments/extractor` | Extractor project path |
+| `MEMORY_ROOT` | `${HOME}/workspace/experiments/memory` | Memory project path |
+| `EXTRACTOR_ROOT` | `${HOME}/workspace/experiments/extractor` | Extractor project path |
 
 ## Integration with lean4-prove
 

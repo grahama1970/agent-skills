@@ -28,7 +28,7 @@ DeepSeek Prover V2 is dead on all serverless providers. We're building a self-co
 
 **Definition of Done:**
 ```bash
-ls -la /home/graham/workspace/experiments/pi-mono/.pi/skills/lean4-prove/
+ls -la ${HOME}/workspace/experiments/pi-mono/.pi/skills/lean4-prove/
 # Shows: run.sh, prove.py, SKILL.md, sanity.sh
 ```
 
@@ -147,14 +147,14 @@ head -50 SKILL.md
 - Remove dead Prover V2 references from sanity.sh
 
 **Files to update:**
-- `/home/graham/workspace/experiments/memory/.agents/skills/scillm/prove.py`
-- `/home/graham/workspace/experiments/memory/.agents/skills/scillm/sanity.sh`
-- `/home/graham/workspace/experiments/memory/.agents/skills/scillm/docs/SCILLM_PAVED_PATH_CONTRACT.md`
-- `/home/graham/workspace/experiments/memory/src/graph_memory/integrations/proof_assessment.py`
+- `${HOME}/workspace/experiments/memory/.agents/skills/scillm/prove.py`
+- `${HOME}/workspace/experiments/memory/.agents/skills/scillm/sanity.sh`
+- `${HOME}/workspace/experiments/memory/.agents/skills/scillm/docs/SCILLM_PAVED_PATH_CONTRACT.md`
+- `${HOME}/workspace/experiments/memory/src/graph_memory/integrations/proof_assessment.py`
 
 **Definition of Done:**
 ```bash
-grep -r "deepseek-prover-v2" /home/graham/workspace/experiments/memory/src/
+grep -r "deepseek-prover-v2" ${HOME}/workspace/experiments/memory/src/
 # Returns: no matches (or only in comments noting deprecation)
 ```
 

@@ -26,6 +26,6 @@ echo -n "profile source 1: "
 if [[ -d "/mnt/storage12tb/extractor_corpus/results" ]]; then echo "OK"; else echo "MISSING"; fi
 
 echo -n "profile source 2: "
-if [[ -d "/home/graham/workspace/experiments/extractor/.skills/review-pdf/extracted_runs" ]]; then echo "OK"; else echo "MISSING"; fi
+if [[ -d "${HOME}/workspace/experiments/extractor/.skills/review-pdf/extracted_runs" ]]; then echo "OK"; else echo "MISSING"; fi
 
 echo "=== sanity PASSED ==="

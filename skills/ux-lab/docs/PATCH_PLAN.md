@@ -35,7 +35,7 @@ No behavior patch is required inside these files for the extraction. They are th
 File:
 
 ```text
-/home/graham/workspace/experiments/pi-mono/packages/ux-lab/vite.config.ts
+${HOME}/workspace/experiments/pi-mono/packages/ux-lab/vite.config.ts
 ```
 
 Patch shape:
@@ -60,7 +60,7 @@ If `resolve.alias` already exists, merge this key rather than replacing existing
 File:
 
 ```text
-/home/graham/workspace/experiments/pi-mono/packages/ux-lab/tsconfig.json
+${HOME}/workspace/experiments/pi-mono/packages/ux-lab/tsconfig.json
 ```
 
 Patch shape:
@@ -84,7 +84,7 @@ If `baseUrl` or `paths` already exist, merge entries without deleting existing p
 Search:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
+cd ${HOME}/workspace/experiments/pi-mono/packages/ux-lab
 grep -R "components/shared-chat\|../shared-chat\|./shared-chat" -n src
 ```
 
@@ -128,13 +128,13 @@ Route production chat to `SharedChatShell` from `@agent-skills/ux-lab-ui`. Keep 
 After all imports resolve from the skill package:
 
 ```bash
-rm -rf /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat
+rm -rf ${HOME}/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat
 ```
 
 Then confirm:
 
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
+cd ${HOME}/workspace/experiments/pi-mono/packages/ux-lab
 grep -R "src/components/shared-chat\|from ['\"].*shared-chat" -n src || true
 npm run typecheck
 npm run build

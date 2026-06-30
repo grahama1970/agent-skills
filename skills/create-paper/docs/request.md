@@ -39,7 +39,7 @@ Focus on these specific areas:
 - Check for any hardcoded paths or assumptions that could break
 
 ## Path
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-paper/paper_writer.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-paper/paper_writer.py
 
 ## Files
 - paper_writer.py (main file, ~4600 lines)

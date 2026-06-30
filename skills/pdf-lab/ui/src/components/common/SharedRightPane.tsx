@@ -78,7 +78,7 @@ export function SharedRightPane({
 						</div>
 					)}
 				</div>
-				<button
+				<button aria-label="Action"
 					data-qid="shared-right-pane:close"
 					data-qs-action="SHARED_RIGHT_PANE_CLOSE"
 					title="Close detail pane"
@@ -114,7 +114,7 @@ export function SharedRightPane({
 				{actions && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>}
 				<div style={{ display: "flex", gap: 8 }}>
 					{tabs.map((tab) => (
-						<button
+						<button aria-label="Action"
 							key={tab.id}
 							data-qid={`shared-right-pane:tab:${tab.id}`}
 							data-qs-action={`SHARED_RIGHT_PANE_TAB_${String(tab.id).replace(/[^a-z0-9]+/gi, "_").toUpperCase()}`}

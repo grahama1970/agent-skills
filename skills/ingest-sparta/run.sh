@@ -19,12 +19,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate the real SPARTA project
 DEFAULT_ROOT="$(cd "$SCRIPT_DIR/../../../../sparta" >/dev/null 2>&1 && pwd 2>/dev/null || true)"
-SPARTA_ROOT="${SPARTA_ROOT:-${DEFAULT_ROOT:-/home/graham/workspace/experiments/sparta}}"
+SPARTA_ROOT="${SPARTA_ROOT:-${DEFAULT_ROOT:-${HOME}/workspace/experiments/sparta}}"
 
 # Load environment
 for envfile in \
     "$SPARTA_ROOT/.env" \
-    "/home/graham/workspace/experiments/memory/.env" \
+    "${HOME}/workspace/experiments/memory/.env" \
     "$HOME/.env"; do
     if [[ -f "$envfile" ]]; then
         set -a

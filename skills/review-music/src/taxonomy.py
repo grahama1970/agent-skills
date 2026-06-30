@@ -4,7 +4,7 @@ HMT (Horus Music Taxonomy) Bridge Attribute Mapper.
 Maps audio features to Bridge Attributes for Horus persona integration.
 
 IMPORTANT: This module imports from the CANONICAL HMT at:
-    /home/graham/workspace/experiments/memory/persona/bridge/horus_music_taxonomy.py
+    ${HOME}/workspace/experiments/memory/persona/bridge/horus_music_taxonomy.py
 
 This ensures multi-hop graph traversal works across ALL collections (music, lore,
 operational, sparta, episodic) via shared Bridge Attributes.

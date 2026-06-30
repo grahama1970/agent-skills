@@ -36,6 +36,8 @@ from config import (
     STATE_DIR,
 )
 
+MONOLITH_WAIVERS_FILE = Path(__file__).resolve().parent / "waivers" / "monoliths.json"
+
 
 @dataclass
 class AuditResult:
@@ -277,6 +279,38 @@ def _frontmatter_keys(skill_md: Path) -> set[str]:
     return keys
 
 
+def _load_waivers(rule: str) -> set[tuple[str, str]]:
+    """Load exact target/file waivers for a monitor rule."""
+    if rule != "style-max-800-lines":
+        return set()
+    try:
+        payload = json.loads(MONOLITH_WAIVERS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return {
+        (str(item.get("target") or "").strip(), str(item.get("file") or "").strip())
+        for item in payload.get("waivers", [])
+        if isinstance(item, dict) and item.get("rule") == rule and item.get("rationale")
+        and item.get("target") and item.get("file")
+    }
+
+
+def _is_waived(skill_dir: Path, rel: str, rule: str) -> bool:
+    """Return True when a finding is covered by an explicit waiver manifest."""
+    return (f"skills/{skill_dir.name}", rel) in _load_waivers(rule)
+
+def _has_python_docstring(file_path: Path, lines: list[str]) -> bool:
+    """Detect a module docstring, falling back to lexical detection for templates."""
+    try:
+        return ast.get_docstring(ast.parse(file_path.read_text(encoding="utf-8", errors="ignore"))) is not None
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        pass
+    idx = 1 if lines and lines[0].startswith("#!") else 0
+    idx += int(idx < len(lines) and re.match(r"#.*coding[:=]\s*[-\w.]+", lines[idx]) is not None)
+    while idx < len(lines) and not lines[idx].strip():
+        idx += 1
+    return idx < len(lines) and lines[idx].lstrip().startswith(('"""', "'''"))
+
 def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]]:
     """Check Python files for convention violations."""
     violations: list[dict[str, Any]] = []
@@ -287,7 +321,7 @@ def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]
         rel = str(file_path.relative_to(skill_dir))
         lines = safe_read_lines(file_path)
 
-        if len(lines) > 800:
+        if len(lines) > 800 and not _is_waived(skill_dir, rel, "style-max-800-lines"):
             violations.append(
                 {
                     "rule_pack": "best-practices-python",
@@ -298,11 +332,7 @@ def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]
                 }
             )
 
-        try:
-            tree = ast.parse(file_path.read_text(encoding="utf-8", errors="ignore"))
-            has_module_docstring = ast.get_docstring(tree) is not None
-        except (OSError, SyntaxError, UnicodeDecodeError):
-            has_module_docstring = False
+        has_module_docstring = _has_python_docstring(file_path, lines)
         if lines and not has_module_docstring:
             violations.append(
                 {

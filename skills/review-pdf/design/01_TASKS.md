@@ -6,7 +6,7 @@
 
 ## Context
 
-A fully functional review UX already exists at `/home/graham/workspace/experiments/extractor/prototypes/tabbed/`:
+A fully functional review UX already exists at `${HOME}/workspace/experiments/extractor/prototypes/tabbed/`:
 - **ReviewLayout.tsx** (820 lines) — three-panel PDF review with bbox overlays, inspector, scores
 - **BboxEditor.tsx** (540 lines) — canvas-based bbox annotation with draw/select/move/resize/delete/undo
 - **QuarantineView.tsx** (485 lines) — verdict-filtered queue with bulk actions
@@ -15,8 +15,8 @@ A fully functional review UX already exists at `/home/graham/workspace/experimen
 
 **This is NOT a rebuild.** The migration scope is ~300 lines of changes across existing files.
 
-**Design Board**: `/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/design/DESIGN_BOARD.md`
-**Prototype**: `/home/graham/workspace/experiments/extractor/prototypes/tabbed/`
+**Design Board**: `${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/design/DESIGN_BOARD.md`
+**Prototype**: `${HOME}/workspace/experiments/extractor/prototypes/tabbed/`
 
 ## Capability Overlap
 
@@ -69,7 +69,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Agent: general-purpose
   - Parallel: 0
   - Dependencies: none
-  - **Description**: In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`, replace all 9 PyMuPDF (`fitz`) calls with pdf_oxide equivalents. There are exactly 2 functions to modify:
+  - **Description**: In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`, replace all 9 PyMuPDF (`fitz`) calls with pdf_oxide equivalents. There are exactly 2 functions to modify:
 
     **Function 1: `_get_page_dims()`** (currently at ~line 219):
     ```python
@@ -105,7 +105,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Agent: general-purpose
   - Parallel: 0
   - Dependencies: Task 1
-  - **Description**: In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/html/src/components/BboxEditor.tsx`, add per-box change tracking so the re-extraction agent knows which bboxes are human-verified ground truth vs. original predictions.
+  - **Description**: In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/html/src/components/BboxEditor.tsx`, add per-box change tracking so the re-extraction agent knows which bboxes are human-verified ground truth vs. original predictions.
 
     Changes:
     1. Track a `changes` array alongside existing annotations state: `{box_id, action: "added"|"modified"|"deleted", before?: Box, after?: Box}`
@@ -115,11 +115,11 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
     5. On undo: pop last change from `changes` array
     6. Export `changes` array alongside `annotations` in the save payload
 
-    In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/html/src/lib/review.ts`:
+    In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/html/src/lib/review.ts`:
     - Update `saveCorrections()` to include `changes` array in POST body
     - Add `CorrectionChange` type: `{box_id: string, action: "added"|"modified"|"deleted", before?: Box, after?: Box}`
 
-    In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`:
+    In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`:
     - Update the corrections save endpoint to persist the `changes` array alongside full annotations
     - When `changes` is non-empty, auto-write `reextract_requests/{stem}.json` (auto-trigger refinement from `/assess`)
 
@@ -133,7 +133,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Agent: general-purpose
   - Parallel: 1
   - Dependencies: none
-  - **Description**: In `/home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/pdf_discovery.py`, complete the interview wiring:
+  - **Description**: In `${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake/pdf_discovery.py`, complete the interview wiring:
 
     1. Add `generate_quarantine_questions(reason: str, entry: dict) -> list[dict]` that returns `/interview`-format questions based on quarantine reason:
        - `low_confidence` → questions about domain, extraction strategy override, section structure
@@ -150,7 +150,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
        - Reads response JSON from interview session
        - Calls `resolve_deferred(stem, resolution)` with interview answers mapped to extraction parameters
 
-    3. Add `review-quarantine` subcommand to `/home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/learn_datalake.py` CLI:
+    3. Add `review-quarantine` subcommand to `${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake/learn_datalake.py` CLI:
        - `review-quarantine list` — lists pending deferred items (stem, reason, confidence, timestamp)
        - `review-quarantine resolve <stem>` — launches interview for a specific PDF
        - `review-quarantine approve-all --min-confidence <float>` — batch resolution of entries above threshold
@@ -165,19 +165,19 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Dependencies: none
   - **Description**: Add shadow JSONL logging to both FastAPI backends so every human action becomes a training signal for `/create-classifier`.
 
-    In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`:
+    In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/api/review_server.py`:
     - On correction save: append to `shadow/corrections.jsonl` with format:
       `{timestamp, stem, page, changes: [...], human_id: "reviewer", action: "correction"}`
     - On approve/flag (if endpoints exist, or add them): append to `shadow/reviews.jsonl`:
       `{timestamp, stem, verdict: "approve"|"flag", notes: "...", action: "review"}`
 
-    In `/home/graham/workspace/experiments/extractor/prototypes/tabbed/api/datalake_api.py`:
+    In `${HOME}/workspace/experiments/extractor/prototypes/tabbed/api/datalake_api.py`:
     - On feedback submission: append to `shadow/feedback.jsonl`:
       `{timestamp, stem, feedback_action, params, action: "feedback"}`
     - On quarantine resolution: append to `shadow/quarantine.jsonl`:
       `{timestamp, stem, resolution, interview_answers, action: "resolve"}`
 
-    Shadow directory: `/home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/state/shadow/`
+    Shadow directory: `${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake/state/shadow/`
     Format must match existing cascade wiring pattern in `/extract-pdf/cascade/wiring.py`.
 
   - **Definition of Done**:
@@ -190,7 +190,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Agent: general-purpose
   - Parallel: 2
   - Dependencies: Task 4
-  - **Description**: Add `collect_review_pdf()` to `/home/graham/workspace/experiments/pi-mono/.pi/skills/dashboard/collectors.py`:
+  - **Description**: Add `collect_review_pdf()` to `${HOME}/workspace/experiments/pi-mono/.pi/skills/dashboard/collectors.py`:
     - Reads shadow JSONL files (`shadow/corrections.jsonl`, `shadow/reviews.jsonl`) from learn-datalake state dir
     - Counts: corrections_today, approvals_today, flags_today
     - Reads the review_server's run listing to get verdict distribution (PASS/WARN/FAIL counts)
@@ -198,7 +198,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
     - Register in `_COLLECTORS` dict as `"review_pdf"`
     - Catch all exceptions, return `{"error": str(e)}` on failure
 
-  Add corresponding panel in `/home/graham/workspace/experiments/pi-mono/.pi/skills/dashboard/tui.py`:
+  Add corresponding panel in `${HOME}/workspace/experiments/pi-mono/.pi/skills/dashboard/tui.py`:
     - Panel title: "PDF Review"
     - Show verdict distribution (PASS/WARN/FAIL counts), today's activity (approvals, flags, corrections)
     - Border color: NVIS_GREEN if >80% PASS, NVIS_AMBER if >50%, NVIS_RED otherwise
@@ -211,7 +211,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Agent: general-purpose
   - Parallel: 2
   - Dependencies: Task 3
-  - **Description**: Add `collect_quarantine()` to `/home/graham/workspace/experiments/pi-mono/.pi/skills/dashboard/collectors.py`:
+  - **Description**: Add `collect_quarantine()` to `${HOME}/workspace/experiments/pi-mono/.pi/skills/dashboard/collectors.py`:
     - Reads `~/.pi/skills/learn-datalake/state/deferred_review.jsonl`
     - Counts: pending (unresolved), resolved_today, by_reason breakdown (`{low_confidence: n, extraction_error: n, novel_layout: n, timeout: n}`)
     - Reads shadow JSONL (`shadow/quarantine.jsonl`) for resolution counts
@@ -219,7 +219,7 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
     - Register in `_COLLECTORS` dict as `"quarantine"`
     - Catch all exceptions, return `{"error": str(e)}` on failure
 
-  Add corresponding panel in `/home/graham/workspace/experiments/pi-mono/.pi/skills/dashboard/tui.py`:
+  Add corresponding panel in `${HOME}/workspace/experiments/pi-mono/.pi/skills/dashboard/tui.py`:
     - Panel title: "Quarantine"
     - Show pending count (large, colored by severity), by-reason breakdown, today's resolutions
     - Border color: NVIS_RED if pending > 20, NVIS_AMBER if > 5, NVIS_GREEN otherwise
@@ -236,12 +236,12 @@ None — design decisions resolved in DESIGN_BOARD.md Round 2 + `/assess` of the
   - Dependencies: Task 1, Task 2, Task 3, Task 4, Task 5, Task 6
   - **Description**: Final integration wiring:
 
-    1. Update `/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/run.sh`:
+    1. Update `${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/run.sh`:
        - Add `serve` subcommand that starts `review_server.py` via `uv run --directory $PDF_OXIDE_ROOT`
        - Default port 8003 (matching existing prototype)
        - Set `PYTHONPATH` to include prototype `api/` directory
 
-    2. Update `/home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/run.sh`:
+    2. Update `${HOME}/workspace/experiments/pi-mono/.pi/skills/learn-datalake/run.sh`:
        - Add `quarantine-ui` subcommand that starts `datalake_api.py` (port 8004)
        - Add `review-quarantine` subcommand that calls `learn_datalake.py review-quarantine`
 

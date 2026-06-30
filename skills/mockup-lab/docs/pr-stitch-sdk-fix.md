@@ -3,7 +3,7 @@
 **Upstream repo**: [google-labs-code/stitch-sdk](https://github.com/google-labs-code/stitch-sdk)
 **Fork**: [grahama1970/stitch-sdk](https://github.com/grahama1970/stitch-sdk)
 **Branch**: `fix/resilient-response-parsing`
-**Local path**: `/home/graham/workspace/experiments/stitch-sdk`
+**Local path**: `${HOME}/workspace/experiments/stitch-sdk`
 **SDK version**: 0.0.3
 **Status**: Testing locally before upstream PR
 
@@ -75,7 +75,7 @@ with no optional chaining or fallback.
 
 ```bash
 # pi-mono's package.json points to the local fork (npm install from path)
-npm install /home/graham/workspace/experiments/stitch-sdk/packages/sdk
+npm install ${HOME}/workspace/experiments/stitch-sdk/packages/sdk
 ```
 
 Any code that does `import { stitch } from "@google/stitch-sdk"` gets the patched version.

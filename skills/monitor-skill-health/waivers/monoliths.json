@@ -1,0 +1,425 @@
+{
+  "schema": "monitor-skill-health.waivers.v1",
+  "waivers": [
+    {
+      "target": "skills/ask",
+      "file": "scripts/live_sanity_report.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/oracle_adapters.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/ask_oracle.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/run_state.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/argue.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/ask.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/pipeline.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/ask_dag.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/webgpt_runtime.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/parallel_review.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ask",
+      "file": "src/ask/deep_review.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/checkpoint",
+      "file": "checkpoint.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/classifier-lab",
+      "file": "scripts/text_benchmark.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/classifier-lab",
+      "file": "scripts/benchmark.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/classifier-lab-subagent",
+      "file": "orchestrator.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/cleanup",
+      "file": "cleanup.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/code-runner",
+      "file": "tool_use.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/consume-movie",
+      "file": "book_context.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-architecture",
+      "file": "examples/chart_examples_good.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-classifier",
+      "file": "scripts/iterative_train.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-evidence-case",
+      "file": "evidence_case.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-evidence-case",
+      "file": "collect.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-evidence-case",
+      "file": "question_bank.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-intent-map",
+      "file": "scripts/train_grpo.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-movie",
+      "file": "create_movie/phases/dream_mode.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-qras",
+      "file": "amend_and_export.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/create-qras",
+      "file": "generator.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/dogpile",
+      "file": "cli.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/extract-entities",
+      "file": "extract_entities.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/extract-tables",
+      "file": "src/python/evidence_matrix.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/fact-extractor",
+      "file": "fact_extractor/cli.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/formalize-request",
+      "file": "formalize.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/get-subtitles",
+      "file": "scripts/cli.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/governance",
+      "file": "scripts/governance_loop.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/hack",
+      "file": "session_audit.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/hack",
+      "file": "evolutionary_campaign.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ingest-code",
+      "file": "ingest_code.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/learn-datalake",
+      "file": "learn_datalake.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/local-page-analysis-capture",
+      "file": "scripts/capture_lib.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/loop",
+      "file": "scripts/loop.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/mine-transcripts",
+      "file": "mine_transcripts.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/monitor-episodic-archiver",
+      "file": "monitor_archiver.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/monitor-personas",
+      "file": "backfill_taxonomy.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/oc-subagent",
+      "file": "scripts/run_mvp_e2e.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/ops-arango",
+      "file": "scripts/maintain.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/orchestrate",
+      "file": "structured_execute_helpers.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/orchestrate",
+      "file": "structured_execute.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/personaplex",
+      "file": "scripts/personaplex_golden_state_server.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/personaplex",
+      "file": "scripts/personaplex_cli.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/recommend-skill-chain",
+      "file": "src/recommender.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-code",
+      "file": "providers/scillm.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-conversation",
+      "file": "review_conversation.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-design",
+      "file": "review_design.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-extraction",
+      "file": "scripts/build_golden_slice_bundle.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-page",
+      "file": "page_review.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-pdf",
+      "file": "verify/scoring.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-plan",
+      "file": "review_plan.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-prompt",
+      "file": "review_prompt.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/review-question",
+      "file": "evidence_case.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/skills-ci",
+      "file": "scanners.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/sparta-stress-test",
+      "file": "sparta_stress_test/runner.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/sparta-stress-test",
+      "file": "sparta_stress_test/conversation_retrieval.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/sparta-stress-test",
+      "file": "sparta_stress_test/conversation_grading.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/sparta-stress-test",
+      "file": "sparta_stress_test/conversation_runner.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/test-interactions",
+      "file": "test_interactions.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/voice-lab",
+      "file": "voice_lab.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/voice-lab",
+      "file": "editor_bridge.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/voice-segment-selector",
+      "file": "scripts/lib/review.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/watch",
+      "file": "scripts/watch_reference_hydration.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    },
+    {
+      "target": "skills/watch",
+      "file": "scripts/run_realtime_identity_memory_loop.py",
+      "rule": "style-max-800-lines",
+      "rationale": "Existing mature module exceeds the line-count heuristic; tracked as monolith debt until safely refactored by a leased maintenance ticket."
+    }
+  ]
+}

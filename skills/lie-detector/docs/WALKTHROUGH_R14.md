@@ -266,22 +266,22 @@ for cross-session learning.
 
 ```bash
 # 1. Run conversations
-cd /home/graham/workspace/experiments/extractor
+cd ${HOME}/workspace/experiments/extractor
 uv run scripts/nico_asks_embry.py run --count 50 \
   --output /mnt/storage12tb/artifacts/canvas_sessions/nico_embry_stress_r14_50q.jsonl
 
 # 2. Audit with lie-detector (compare to R13)
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/lie-detector
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/lie-detector
 uv run python lie_detector.py audit \
   /mnt/storage12tb/artifacts/canvas_sessions/nico_embry_stress_r14_50q.jsonl \
   --previous /mnt/storage12tb/artifacts/canvas_sessions/nico_embry_stress_r13_honest_50q.jsonl \
   --output /tmp/lie_detector_audit_r14.json
 
 # 3. Review with /review-conversation
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/review-conversation
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/review-conversation
 ./run.sh list /mnt/storage12tb/artifacts/canvas_sessions/nico_embry_stress_r14_50q.jsonl
 
 # 4. Diagnose with /conversation-lab
-cd /home/graham/workspace/experiments/pi-mono/.pi/skills/conversation-lab
+cd ${HOME}/workspace/experiments/pi-mono/.pi/skills/conversation-lab
 ./run.sh diagnose /mnt/storage12tb/artifacts/canvas_sessions/nico_embry_stress_r14_50q.jsonl
 ```

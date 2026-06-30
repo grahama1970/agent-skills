@@ -9,7 +9,7 @@ from pathlib import Path
 from loguru import logger
 from PIL import Image
 
-_SCREENSHOT_DIR = Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-screenshot")
+_SCREENSHOT_DIR = Path("${HOME}/workspace/experiments/pi-mono/.pi/skills/pdf-screenshot")
 if str(_SCREENSHOT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCREENSHOT_DIR))
 

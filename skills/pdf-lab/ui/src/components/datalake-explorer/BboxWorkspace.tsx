@@ -384,7 +384,7 @@ export default function BboxWorkspace({
           }}
         >
           {/* Edit mode toggle */}
-          <button data-qid="bbox:el-1" data-qs-action="BBOX_EL_1" title="El 1"
+          <button aria-label="Action" data-qid="bbox:el-1" data-qs-action="BBOX_EL_1" title="El 1"
             onClick={() => setEditMode((p) => !p)}
             style={{
               fontFamily: 'monospace',
@@ -414,7 +414,7 @@ export default function BboxWorkspace({
             const color = BLOCK_TYPE_COLORS[t]
             const count = typeCounts[t] ?? 0
             return (
-              <button
+              <button aria-label="Action"
                 key={t}
                 data-qid={`bbox:filter:${t}`}
                 title={`Filter: ${BLOCK_TYPE_LABELS[t]}`}
@@ -445,7 +445,7 @@ export default function BboxWorkspace({
           <div style={{ width: '1px', height: '18px', backgroundColor: NVIS.borderSolid }} />
 
           {/* Zoom controls */}
-          <button data-qid="bbox:el-2" data-qs-action="BBOX_EL_2" title="El 2"
+          <button aria-label="Action" data-qid="bbox:el-2" data-qs-action="BBOX_EL_2" title="El 2"
             onClick={() => setZoom((z) => Math.max(0.25, z - 0.25))}
             style={{
               fontFamily: 'monospace',
@@ -471,7 +471,7 @@ export default function BboxWorkspace({
           >
             {Math.round(zoom * 100)}%
           </span>
-          <button data-qid="bbox:el-3" data-qs-action="BBOX_EL_3" title="El 3"
+          <button aria-label="Action" data-qid="bbox:el-3" data-qs-action="BBOX_EL_3" title="El 3"
             onClick={() => setZoom((z) => Math.min(4, z + 0.25))}
             style={{
               fontFamily: 'monospace',
@@ -489,7 +489,7 @@ export default function BboxWorkspace({
 
           {/* Save button */}
           {dirtyBlockIds.size > 0 && (
-            <button data-qid="bbox:save" data-qs-action="BBOX_SAVE" title="Save block changes" onClick={handleSave} disabled={saving} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '2px 8px', borderRadius: '3px', border: 'none', background: '#b45309', color: '#fff', cursor: saving ? 'wait' : 'pointer' }}>
+            <button aria-label="Action" data-qid="bbox:save" data-qs-action="BBOX_SAVE" title="Save block changes" onClick={handleSave} disabled={saving} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '2px 8px', borderRadius: '3px', border: 'none', background: '#b45309', color: '#fff', cursor: saving ? 'wait' : 'pointer' }}>
               {saving ? 'Saving...' : `Save ${dirtyBlockIds.size} changes`}
             </button>
           )}
@@ -498,7 +498,7 @@ export default function BboxWorkspace({
           <div style={{ flex: 1 }} />
 
           {/* Page navigation */}
-          <button
+          <button aria-label="Action"
             data-qid="bbox:page:prev" data-qs-action="BBOX_PREV"
             title="Previous page"
             onClick={() => onPageChange(Math.max(0, currentPage - 1))}
@@ -528,7 +528,7 @@ export default function BboxWorkspace({
           >
             {currentPage + 1} / {pageCount}
           </span>
-          <button
+          <button aria-label="Action"
             data-qid="bbox:page:next" data-qs-action="BBOX_NEXT"
             title="Next page"
             onClick={() => onPageChange(Math.min(pageCount - 1, currentPage + 1))}
@@ -616,7 +616,7 @@ export default function BboxWorkspace({
               {/* Inline reclassify dropdown (non-edit mode, triggered by `t`) */}
               {!editMode && (
                 <div style={{ position: 'relative' }}>
-                  <button data-qid="bbox:el-4" data-qs-action="BBOX_EL_4" title="El 4"
+                  <button aria-label="Action" data-qid="bbox:el-4" data-qs-action="BBOX_EL_4" title="El 4"
                     onClick={() => setInspectorTypeDropdown((p) => !p)}
                     style={{
                       width: '100%',
@@ -655,7 +655,7 @@ export default function BboxWorkspace({
                       {ALL_BLOCK_TYPES.map((t, i) => {
                         const isActive = t === selectedBlock.blockType
                         return (
-                          <button data-qid="bbox:t" data-qs-action="BBOX_T" title="T"
+                          <button aria-label="Action" data-qid="bbox:t" data-qs-action="BBOX_T" title="T"
                             key={t}
                             onClick={() => {
                               handleReclassify(selectedBlock.id, t)

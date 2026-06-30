@@ -13,7 +13,7 @@ alias python3='uv run --project "$SCRIPT_DIR" python'
 cd "$SCRIPT_DIR"
 
 # Load environment from sparta (for API keys etc)
-SPARTA_ENV="/home/graham/workspace/experiments/sparta/.env"
+SPARTA_ENV="${HOME}/workspace/experiments/sparta/.env"
 if [ -f "$SPARTA_ENV" ]; then
     set -a
     source "$SPARTA_ENV"

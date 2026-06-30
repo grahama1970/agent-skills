@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the lean4-prove skill."""
 """
 Ingest DeepSeek-Prover-V1 dataset into ArangoDB for retrieval-augmented proving.
 

@@ -55,7 +55,7 @@ export function SurgicalTriageFixture() {
     <div className="surgical-fixture" data-qid="pdf-lab:surgical-fixture">
       <header className="surgical-fixture-header" data-qid="pdf-lab:surgical-fixture:header">
         <div className="surgical-fixture-header-left">
-          <button
+          <button aria-label="Action"
             className="surgical-fixture-icon"
             data-qid="pdf-lab:surgical-fixture:queue"
             data-qs-action="PDF_LAB_SURGICAL_FIXTURE_QUEUE"
@@ -68,7 +68,7 @@ export function SurgicalTriageFixture() {
         </div>
         <strong className="surgical-fixture-title">NIST SP 800-53 Rev. 5 · Surgical Triage</strong>
         <div className="surgical-fixture-actions">
-          <button
+          <button aria-label="Action"
             className="surgical-fixture-ghost"
             data-qid="pdf-lab:surgical-fixture:gemini-bundle"
             data-qs-action="PDF_LAB_SURGICAL_FIXTURE_GEMINI_BUNDLE"
@@ -77,7 +77,7 @@ export function SurgicalTriageFixture() {
           >
             Gemini Bundle
           </button>
-          <button
+          <button aria-label="Action"
             className="surgical-fixture-ghost"
             data-qid="pdf-lab:surgical-fixture:audit"
             data-qs-action="PDF_LAB_SURGICAL_FIXTURE_AUDIT"
@@ -143,7 +143,7 @@ export function SurgicalTriageFixture() {
             placeholder="Type intent correction: table, move box up, split row 2…"
           />
           <div className="fixture-triptych">
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:surgical-fixture:reject"
               data-qs-action="PDF_LAB_SURGICAL_FIXTURE_REJECT"
               title="Reject this card"
@@ -151,7 +151,7 @@ export function SurgicalTriageFixture() {
             >
               Reject (R)
             </button>
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:surgical-fixture:skip"
               data-qs-action="PDF_LAB_SURGICAL_FIXTURE_SKIP"
               title="Skip this card"
@@ -159,7 +159,7 @@ export function SurgicalTriageFixture() {
             >
               Skip (S)
             </button>
-            <button
+            <button aria-label="Action"
               data-qid="pdf-lab:surgical-fixture:confirm"
               data-qs-action="PDF_LAB_SURGICAL_FIXTURE_CONFIRM"
               title="Confirm this card"

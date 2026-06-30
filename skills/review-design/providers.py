@@ -135,7 +135,7 @@ def call_openai(
     except ImportError:
         raise RuntimeError(
             "openai package required for OpenAI provider. "
-            "Install with: uv sync --project /home/graham/workspace/experiments/agent-skills/skills/review-design"
+            "Install with: uv sync --project ${HOME}/workspace/experiments/agent-skills/skills/review-design"
         )
 
     content = []

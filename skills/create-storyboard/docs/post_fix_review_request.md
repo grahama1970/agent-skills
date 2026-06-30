@@ -45,11 +45,11 @@ This is a follow-up review to verify that the issues identified in the brutal re
 ## Files to Review
 
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/orchestrator.py
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/collaboration.py
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/creative_suggestions.py
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/memory_bridge.py
-/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/research_bridge.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-storyboard/orchestrator.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-storyboard/collaboration.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-storyboard/creative_suggestions.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-storyboard/memory_bridge.py
+${HOME}/workspace/experiments/pi-mono/.pi/skills/create-storyboard/research_bridge.py
 ```
 
 ## Review Focus

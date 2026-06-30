@@ -44,7 +44,7 @@ PDF Input
 ## File Structure
 
 ```
-/home/graham/workspace/experiments/pi-mono/.pi/skills/extractor/
+${HOME}/workspace/experiments/pi-mono/.pi/skills/extractor/
 ├── SKILL.md        # User-facing skill documentation
 ├── README.md       # This maintainer guide
 ├── run.sh          # Entry point wrapper
@@ -68,7 +68,7 @@ PDF Input
 
 1. Add preset to extractor project's `PRESET_REGISTRY`:
    ```python
-   # /home/graham/workspace/experiments/extractor/src/extractor/core/presets.py
+   # ${HOME}/workspace/experiments/extractor/src/extractor/core/presets.py
    PRESET_REGISTRY["new_preset"] = {
        "description": "Description for prompt",
        "detection": {
@@ -128,6 +128,6 @@ PDF Input
 ## Dependencies
 
 The skill depends on the extractor project at:
-`/home/graham/workspace/experiments/extractor`
+`${HOME}/workspace/experiments/extractor`
 
 The extractor virtual environment is used for all operations.

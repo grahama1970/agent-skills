@@ -2,7 +2,7 @@
 
 ## Repository and branch
 
-- **Repo:** `/home/graham/workspace/experiments/pi-mono`
+- **Repo:** `${HOME}/workspace/experiments/pi-mono`
 - **Branch:** (current working tree)
 - **Paths of interest:**
   - `bridge.py`

@@ -29,19 +29,19 @@ Perform a **brutal** 2-round review.
 
 ### File Contents
 
-#### [SKILL.md](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/create-code/SKILL.md)
+#### [SKILL.md](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/create-code/SKILL.md)
 
 ```markdown
 <Viewed earlier>
 ```
 
-#### [run.sh](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/create-code/run.sh)
+#### [run.sh](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/create-code/run.sh)
 
 ```bash
 <Viewed earlier>
 ```
 
-#### [orchestrator.py](file:///home/graham/workspace/experiments/pi-mono/.pi/skills/create-code/orchestrator.py)
+#### [orchestrator.py](file://${HOME}/workspace/experiments/pi-mono/.pi/skills/create-code/orchestrator.py)
 
 ```python
 <Viewed earlier>

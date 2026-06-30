@@ -16,7 +16,7 @@ from loguru import logger
 import typer
 
 
-DEFAULT_EXTENSION = Path("/home/graham/.vscode/extensions/ms-python.debugpy-2026.6.0")
+DEFAULT_EXTENSION = Path("${HOME}/.vscode/extensions/ms-python.debugpy-2026.6.0")
 
 
 def parse_breakpoint(raw: str) -> tuple[Path, int]:

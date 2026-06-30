@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module support for the sfx-catalog skill."""
 """Train bridge-tag classifier from heuristic labels with hyperparameter sweep.
 
 Uses /classifier-lab pattern: train → evaluate → sweep → select best.

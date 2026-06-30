@@ -324,7 +324,7 @@ def generate_inconclusive(start_id: int) -> list[dict]:
 
 
 def main():
-    existing = json.load(open("/home/graham/.claude/skills/evidence-case-lab/state/questions_combined.json"))
+    existing = json.load(open("${HOME}/.claude/skills/evidence-case-lab/state/questions_combined.json"))
     print(f"Existing questions: {len(existing)}", file=sys.stderr)
 
     all_new = []
@@ -409,7 +409,7 @@ def main():
     print(f"\nTotal: {len(combined)} questions ({len(existing)} existing + {len(all_new)} new)", file=sys.stderr)
 
     # Write expanded question file
-    outfile = "/home/graham/.claude/skills/evidence-case-lab/state/questions_1000.json"
+    outfile = "${HOME}/.claude/skills/evidence-case-lab/state/questions_1000.json"
     with open(outfile, "w") as f:
         json.dump(combined, f, indent=2)
     print(f"Written to {outfile}", file=sys.stderr)

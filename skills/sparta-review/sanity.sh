@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PI_SKILLS="/home/graham/workspace/experiments/pi-mono/.pi/skills"
+PI_SKILLS="${HOME}/workspace/experiments/pi-mono/.pi/skills"
 
 echo "=== sparta-review sanity ==="
 
@@ -23,7 +23,7 @@ echo -n "ask consult exists... "
 
 # 4. SPARTA DB accessible
 echo -n "SPARTA DuckDB exists... "
-DB="/home/graham/workspace/experiments/sparta/data/runs/run-recovery-verify/sparta.duckdb"
+DB="${HOME}/workspace/experiments/sparta/data/runs/run-recovery-verify/sparta.duckdb"
 [[ -f "$DB" ]] && echo "OK ($(du -h "$DB" | cut -f1))" || echo "MISSING"
 
 # 5. Brandon persona file

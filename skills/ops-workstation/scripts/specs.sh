@@ -293,7 +293,7 @@ show_file_organization() {
   echo "## File Organization"
   echo ""
 
-  echo "### Home Directory (/home/graham)"
+  echo "### Home Directory (${HOME})"
   echo ""
   echo "| Directory | Purpose |"
   echo "|-----------|---------|"
@@ -304,7 +304,7 @@ show_file_organization() {
   echo "| .local/ | User applications and data |"
   echo ""
 
-  echo "### Workspace Structure (/home/graham/workspace)"
+  echo "### Workspace Structure (${HOME}/workspace)"
   echo ""
   echo "| Directory | Purpose |"
   echo "|-----------|---------|"

@@ -58,7 +58,7 @@ if [[ -f ".env" ]]; then
 fi
 
 # Use full path to uv (needed for scheduler/cron environments)
-UV="${UV:-/home/graham/.local/bin/uv}"
+UV="${UV:-${HOME}/.local/bin/uv}"
 if [[ ! -x "$UV" ]]; then
     UV="$(which uv 2>/dev/null || echo "uv")"
 fi

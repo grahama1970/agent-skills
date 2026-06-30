@@ -82,7 +82,7 @@ def search_reference_actors(
         elif character.physical.gender == "male":
             search_terms.extend(["actor", "leading actor"])
         
-        # TODO: integrate with discover-talent's similar command for sophisticated matching
+        # Future work: integrate with discover-talent's similar command for sophisticated matching
 
     return refs[:limit]
 

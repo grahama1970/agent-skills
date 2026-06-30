@@ -5,8 +5,8 @@ Collects entity extraction + recall evidence for each question.
 Outputs JSON evidence files for agent review.
 
 Usage:
-    PYTHONPATH=/home/graham/workspace/experiments/memory/src uv run python run_stress_test.py
-    PYTHONPATH=/home/graham/workspace/experiments/memory/src uv run python run_stress_test.py --count 5
+    PYTHONPATH=${HOME}/workspace/experiments/memory/src uv run python run_stress_test.py
+    PYTHONPATH=${HOME}/workspace/experiments/memory/src uv run python run_stress_test.py --count 5
 """
 from __future__ import annotations
 

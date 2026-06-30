@@ -127,17 +127,17 @@ This PR modularizes the fixture-graph skill from a 5397-line monolith into 12 fo
 
 Please review these files in the following order:
 
-1. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/config.py`
-2. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/utils.py`
-3. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/graphviz_backend.py`
-4. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/mermaid_backend.py`
-5. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/networkx_backend.py`
-6. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/matplotlib_backend.py`
-7. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/plotly_backend.py`
-8. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/control_systems.py`
-9. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/ml_visualizations.py`
-10. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/analysis.py`
-11. `/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-graph/fixture_graph.py`
+1. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/config.py`
+2. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/utils.py`
+3. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/graphviz_backend.py`
+4. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/mermaid_backend.py`
+5. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/networkx_backend.py`
+6. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/matplotlib_backend.py`
+7. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/plotly_backend.py`
+8. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/control_systems.py`
+9. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/ml_visualizations.py`
+10. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/analysis.py`
+11. `${HOME}/workspace/experiments/pi-mono/.pi/skills/fixture-graph/fixture_graph.py`
 
 ## Review Focus Areas
 

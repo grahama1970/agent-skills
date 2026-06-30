@@ -28,7 +28,7 @@ from PIL import Image
 # ── Config ──────────────────────────────────────────────────────────
 
 RENDERED_BASE = Path("/mnt/storage12tb/extractor_corpus/rendered_regions")
-EXTRACTED_RUNS = Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs")
+EXTRACTED_RUNS = Path("${HOME}/workspace/experiments/pi-mono/.pi/skills/review-pdf/extracted_runs")
 MEMORY_SOCK = "/run/user/1000/embry/memory.sock"
 
 
