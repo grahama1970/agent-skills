@@ -110,7 +110,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. He
       <a href="https://github.com/grahama1970/agent-skills/tree/main/skills/dogpile">
         <img src="docs/assets/project-cards/dogpile.webp" width="100%" alt="Dogpile" />
       </a>
-      <br/><strong>Dogpile</strong><br/><em><b>Search</b>Arxiv, YT, GitHub, RSS, & Codebase</em>
+      <br/><strong>Dogpile</strong><br/><em><b>Search: </b>Arxiv, YT, GitHub, RSS, & Codebase</em>
     </td>
   </tr>
   <tr>
