@@ -19,8 +19,8 @@ CATEGORIES = {
     "outstanding": []      # Exceptional quality
 }
 
-PENDING_PATTERN = re.compile(r'T\s*O\s*D\s*O[:\s]+(.*)', re.IGNORECASE)
-KNOWN_ISSUE_PATTERN = re.compile(r'F\s*I\s*X\s*M\s*E[:\s]+(.*)', re.IGNORECASE)
+PENDING_PATTERN = re.compile(r'\bT\s*O\s*D\s*O\b\s*:\s*(.*)', re.IGNORECASE)
+KNOWN_ISSUE_PATTERN = re.compile(r'\bF\s*I\s*X\s*M\s*E\b\s*:\s*(.*)', re.IGNORECASE)
 
 def scan_for_issues(root_path: Path) -> Dict[str, Any]:
     """
