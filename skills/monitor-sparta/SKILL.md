@@ -185,6 +185,15 @@ python scripts/validation/monitor_sparta.py status
 skills/monitor-sparta/run.sh receipt-gate /path/to/receipt.json --require-closure --json
 
 # Gate closure with separate verifier and reviewer receipts
+skills/monitor-sparta/run.sh closure-review verify \
+  --closure-receipt /path/to/worker-or-supervisor-receipt.json \
+  --output /path/to/verifier-receipt.json \
+  --json
+skills/monitor-sparta/run.sh closure-review review \
+  --closure-receipt /path/to/worker-or-supervisor-receipt.json \
+  --verifier-receipt /path/to/verifier-receipt.json \
+  --output /path/to/reviewer-receipt.json \
+  --json
 skills/monitor-sparta/run.sh closure-bundle-gate \
   --closure-receipt /path/to/worker-or-supervisor-receipt.json \
   --verifier-receipt /path/to/verifier-receipt.json \
@@ -209,6 +218,7 @@ python scripts/validation/monitor_sparta.py stop
 | `convergence` | Show convergence history across checkpoints |
 | `stop` | Gracefully stop the running monitor |
 | `receipt-gate` | Validate that a worker or supervisor receipt does not claim closure without Tau handoff proof |
+| `closure-review` | Produce separate verifier and reviewer receipts for a closure candidate |
 | `closure-bundle-gate` | Validate closure receipt plus separate verifier and reviewer receipts before reconciliation |
 
 ## Three-Tier Cascade
@@ -383,7 +393,10 @@ closure proof. Mutating SPARTA repairs remain review-gated and rollback-backed.
 Use `skills/monitor-sparta/run.sh receipt-gate ... --require-closure` before
 closing or reconciling any monitor-sparta queue item from a worker or supervisor
 receipt.
-Use `skills/monitor-sparta/run.sh closure-bundle-gate ...` when a queue item is
-ready to reconcile: it requires a closing worker/supervisor receipt, a separate
-`monitor_sparta.verifier_receipt.v1`, and a separate
-`monitor_sparta.reviewer_receipt.v1` with no blocking findings.
+Use `skills/monitor-sparta/run.sh closure-review verify ...` and
+`skills/monitor-sparta/run.sh closure-review review ...` to produce separate
+`monitor_sparta.verifier_receipt.v1` and `monitor_sparta.reviewer_receipt.v1`
+artifacts. Use `skills/monitor-sparta/run.sh closure-bundle-gate ...` when a
+queue item is ready to reconcile: it requires a closing worker/supervisor
+receipt, the verifier receipt, and the reviewer receipt with no blocking
+findings.
