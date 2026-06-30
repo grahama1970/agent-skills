@@ -272,13 +272,12 @@ def python_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]
                 }
             )
 
-        first_non_empty = ""
-        for line in lines:
-            stripped = line.strip()
-            if stripped:
-                first_non_empty = stripped
-                break
-        if first_non_empty and not (first_non_empty.startswith('"""') or first_non_empty.startswith("''")):
+        try:
+            tree = ast.parse(file_path.read_text(encoding="utf-8", errors="ignore"))
+            has_module_docstring = ast.get_docstring(tree) is not None
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            has_module_docstring = False
+        if lines and not has_module_docstring:
             violations.append(
                 {
                     "rule_pack": "best-practices-python",
