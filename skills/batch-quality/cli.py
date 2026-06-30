@@ -53,7 +53,7 @@ SCRIPT_DIR = Path(__file__).parent
 TASK_MONITOR_DIR = SCRIPT_DIR.parent / "task-monitor"
 
 # SPARTA paths
-SPARTA_ROOT = Path(os.environ.get("SPARTA_ROOT", "/home/graham/workspace/experiments/sparta"))
+SPARTA_ROOT = Path(os.environ.get("SPARTA_ROOT", Path.home() / "workspace" / "experiments" / "sparta"))
 CONTRACTS_DIR = SPARTA_ROOT / "tools" / "pipeline_gates" / "fixtures" / "D3-FEV" / "contracts"
 
 # Stage-specific prompts

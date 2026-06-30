@@ -149,7 +149,7 @@ uv run python .pi/skills/batch-quality/cli.py validate \
 ## Configuration
 
 **Environment variables:**
-- `SPARTA_ROOT`: Path to SPARTA project (default: `/home/graham/workspace/experiments/sparta`)
+- `SPARTA_ROOT`: Path to SPARTA project (defaults to `~/workspace/experiments/sparta`)
 - `CHUTES_API_KEY`: API key for LLM calls
 - `CHUTES_API_BASE`: API base URL (default: `https://llm.chutes.ai/v1`)
 - `CHUTES_TEXT_MODEL`: Model ID for text extraction
