@@ -1,0 +1,15 @@
+version: "1.0"
+project: agent-skills
+workdir: /home/graham/workspace/experiments/agent-skills
+
+scheduled:
+  skill-maintainer-daytime:
+    description: "Every five minutes during weekday work hours, process one eligible skill or agent GitHub issue through repair, verifier, review, and WebGPT gates."
+    cron: "*/5 9-17 * * 1-5"
+    command: "python3 scripts/skill_maintainer_cycle.py --mode daytime --max-issues 1 --require-webgpt --dispatch-subagents --run-webgpt"
+    enabled: false
+  skill-maintainer-nightly:
+    description: "Nightly stable maintenance pass over one eligible skill or agent GitHub issue through repair, verifier, review, and WebGPT gates."
+    cron: "17 2 * * *"
+    command: "python3 scripts/skill_maintainer_cycle.py --mode nightly --max-issues 1 --require-webgpt --refresh-baseline --dispatch-subagents --run-webgpt"
+    enabled: false

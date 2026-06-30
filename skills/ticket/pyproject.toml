@@ -1,0 +1,13 @@
+[project]
+name = "ticket"
+version = "0.1.0"
+description = "GitHub ticket filing and lifecycle CLI for agent-resolved issues"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "loguru>=0.7.0,<0.7.3",
+    "pyyaml>=6.0.0",
+    "typer>=0.9.0",
+]
+
+[tool.uv]
+package = false

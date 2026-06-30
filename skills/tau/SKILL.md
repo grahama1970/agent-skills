@@ -78,6 +78,23 @@ GitHub issues.
 - Human goal changes must use `tau.human_goal_change.v1`; non-human agents may
   propose but not apply immutable goal changes.
 
+## Maintainer Handoff Pattern
+
+For agent-skills maintenance, Tau is the lease and handoff boundary between
+reporters and repair workers:
+
+1. Reporter skills such as `monitor-skill-health` and `monitor-sparta` create
+   normalized findings, manifests, or `$ticket` work items.
+2. A maintainer identity such as `agent-skill-maintainer` leases one item at a
+   time.
+3. Repair and verification are separate bounded subagent handoffs using
+   `tau.agent_handoff.v1`.
+4. Closure requires deterministic proof attached to the ticket or manifest.
+
+Tau status or watchdog receipts prove the harness state only. They do not prove
+that a specific maintenance ticket was repaired unless the ticket proof names
+the exercised commands and artifacts.
+
 ## Key Artifacts
 
 ```text

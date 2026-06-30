@@ -28,6 +28,7 @@ import json
 import os
 import subprocess
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import typer
@@ -64,6 +65,7 @@ from config import (
     SCHEDULER_RUN,
     SKILLS_ROOT,
     STATE_DIR,
+    TICKET_DRAFTS_DIR,
     THIS_SKILL_DIR,
     app,
     console,
@@ -83,6 +85,198 @@ from review import run_high_risk_review  # noqa: F401 -- re-export
 # ---------------------------------------------------------------------------
 # CLI commands
 # ---------------------------------------------------------------------------
+
+
+TICKET_RUN = THIS_SKILL_DIR.parent / "ticket" / "run.sh"
+
+
+def _load_latest_results() -> list[dict[str, Any]]:
+    if not LATEST_RESULTS_FILE.exists():
+        raise typer.BadParameter("No latest results exist yet. Run audit first.")
+
+    rows: list[dict[str, Any]] = []
+    for line_number, line in enumerate(LATEST_RESULTS_FILE.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            raise typer.BadParameter(f"Invalid JSON on {LATEST_RESULTS_FILE}:{line_number}: {exc}") from exc
+    return rows
+
+
+def _skill_target(row: dict[str, Any]) -> str:
+    raw_path = str(row.get("path") or "").strip()
+    if raw_path:
+        path = Path(raw_path)
+        try:
+            return path.resolve().relative_to(SKILLS_ROOT.parent).as_posix()
+        except ValueError:
+            return raw_path
+    skill = str(row.get("skill") or "unknown").strip()
+    return f"skills/{skill}" if skill else "skills/unknown"
+
+
+def _finding_location(finding: dict[str, Any], target: str) -> str:
+    for key in ("file", "path", "location"):
+        value = str(finding.get(key) or "").strip()
+        if value:
+            return value
+    return target
+
+
+def _route_for_target(target: str) -> str:
+    if target.startswith("agents/") or target.endswith(".md") or "/docs/" in target:
+        return "documentation_or_report"
+    if target.startswith("skills/"):
+        return "backend_python_or_skill_runtime"
+    return "unknown"
+
+
+def _ticket_title(skill: str, finding: dict[str, Any], category: str, sequence: int) -> str:
+    rule = str(finding.get("rule") or finding.get("message") or category or "finding").strip()
+    rule = " ".join(rule.split())
+    if len(rule) > 72:
+        rule = rule[:69].rstrip() + "..."
+    return f"[monitor-skill-health] {skill}: {rule} ({sequence})"
+
+
+def _ticket_draft_for(
+    *,
+    row: dict[str, Any],
+    finding: dict[str, Any],
+    category: str,
+    sequence: int,
+    agent: str,
+) -> dict[str, Any]:
+    skill = str(row.get("skill") or "unknown")
+    target = _skill_target(row)
+    location = _finding_location(finding, target)
+    severity = str(finding.get("severity") or "medium")
+    rule_pack = str(finding.get("rule_pack") or "monitor-skill-health")
+    rule = str(finding.get("rule") or category)
+    message = str(finding.get("message") or finding.get("reason") or finding.get("feature") or "monitor finding")
+    title = _ticket_title(skill, finding, category, sequence)
+    proof = (
+        f"skills/monitor-skill-health/run.sh audit --skill {skill} "
+        "--no-memory --no-deep-review --json, plus any focused test required by the changed file."
+    )
+    invariant = (
+        f"{target} must satisfy monitor-skill-health rule {rule_pack}/{rule} "
+        f"without introducing unrelated skill or agent changes."
+    )
+    cleanup = (
+        f"{severity} {category} finding at {location}: {message}"
+    )
+    route = _route_for_target(target)
+    return {
+        "schema": "agent_skills.monitor_skill_health.ticket_draft.v1",
+        "title": title,
+        "type": "maintenance",
+        "target": target,
+        "invariant": invariant,
+        "cleanup": cleanup,
+        "scoped_files": location,
+        "proof": proof,
+        "route": route,
+        "agent": agent,
+        "labels": ["monitor-skill-health", "agent-skill-maintainer", f"severity:{severity}"],
+        "source": {
+            "run_id": row.get("run_id"),
+            "skill": skill,
+            "status": row.get("status"),
+            "category": category,
+            "finding": finding,
+        },
+        "tau_handoff": {
+            "schema": "tau.agent_handoff.v1",
+            "requested_agent": agent,
+            "lease_policy": "one_ticket_at_a_time",
+            "objective": f"Repair one monitor-skill-health finding for {skill}",
+            "target": target,
+            "proof_required": proof,
+            "closure_rule": "Attach deterministic proof before ticket closure; WebGPT review alone is insufficient.",
+        },
+    }
+
+
+def _build_ticket_drafts(
+    rows: list[dict[str, Any]],
+    *,
+    include_aspirational: bool,
+    agent: str,
+    max_tickets: int,
+) -> list[dict[str, Any]]:
+    drafts: list[dict[str, Any]] = []
+    sequence = 0
+    for row in rows:
+        findings: list[tuple[str, dict[str, Any]]] = []
+        findings.extend(("needs_fix", item) for item in row.get("needs_fix", []) if isinstance(item, dict))
+        if include_aspirational:
+            findings.extend(
+                ("aspirational_gap", item)
+                for item in row.get("aspirational_gaps", [])
+                if isinstance(item, dict)
+            )
+        for category, finding in findings:
+            sequence += 1
+            drafts.append(
+                _ticket_draft_for(
+                    row=row,
+                    finding=finding,
+                    category=category,
+                    sequence=sequence,
+                    agent=agent,
+                )
+            )
+            if max_tickets and len(drafts) >= max_tickets:
+                return drafts
+    return drafts
+
+
+def _ticket_command(draft: dict[str, Any], *, repo: str, apply: bool) -> list[str]:
+    cmd = [
+        str(TICKET_RUN),
+        "maintenance",
+        draft["title"],
+        "--target",
+        draft["target"],
+        "--invariant",
+        draft["invariant"],
+        "--cleanup",
+        draft["cleanup"],
+        "--scoped-files",
+        draft["scoped_files"],
+        "--proof",
+        draft["proof"],
+        "--route",
+        draft["route"],
+        "--agent",
+        draft["agent"],
+        "--non-goals",
+        "Do not bundle unrelated monitor findings or broad cleanup into this ticket.",
+    ]
+    for label in draft.get("labels", []):
+        cmd.extend(["--label", str(label)])
+    if repo:
+        cmd.extend(["--repo", repo])
+    if apply:
+        cmd.append("--apply")
+    return cmd
+
+
+def _write_ticket_drafts(drafts: list[dict[str, Any]], run_id: str) -> Path:
+    TICKET_DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
+    path = TICKET_DRAFTS_DIR / f"{run_id}.json"
+    payload = {
+        "schema": "agent_skills.monitor_skill_health.ticket_drafts.v1",
+        "run_id": run_id,
+        "created_at": now_utc(),
+        "draft_count": len(drafts),
+        "drafts": drafts,
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
 
 
 @app.command()
@@ -105,6 +299,11 @@ def audit(
         "--deep-review-max",
         min=0,
         help="Max high-risk skills to deep-review (0 means all high-risk skills)",
+    ),
+    repo_report: bool = typer.Option(
+        False,
+        "--repo-report",
+        help="Compatibility flag for agent-maintainer scheduled reports; audit artifacts are already persisted.",
     ),
 ) -> None:
     """Run audit over registered skills and write aggregate reports."""
@@ -200,6 +399,12 @@ def audit(
             result.deep_review = {"status": "skipped", "reason": "disabled"}
 
     summary = build_summary(results, run_id=run_id, started_at=start)
+    if repo_report:
+        summary["repo_report"] = {
+            "status": "persisted",
+            "latest_results": str(LATEST_RESULTS_FILE),
+            "latest_summary": str(LATEST_SUMMARY_FILE),
+        }
     persist_results(results, summary)
     push_summary_to_memory(summary, no_memory=no_memory)
 
@@ -235,6 +440,63 @@ def audit(
             f"Aggregate summary written: {LATEST_SUMMARY_FILE}\n"
             f"Per-skill results written: {LATEST_RESULTS_FILE}"
         )
+
+
+@app.command("tickets")
+def tickets(
+    include_aspirational: bool = typer.Option(
+        False,
+        "--include-aspirational",
+        help="Also draft tickets for aspirational gaps; default is concrete violations only.",
+    ),
+    max_tickets: int = typer.Option(0, "--max", min=0, help="Limit number of ticket drafts, 0 means all."),
+    agent: str = typer.Option("agent-skill-maintainer", "--agent", help="Requested repair agent label."),
+    repo: str = typer.Option("", "--repo", "-R", help="GitHub repo for --apply, for example owner/name."),
+    apply: bool = typer.Option(False, "--apply", help="Create GitHub issues instead of previewing drafts."),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON"),
+) -> None:
+    """Draft or create one normalized maintenance ticket per current monitor finding."""
+    rows = _load_latest_results()
+    run_id = str((rows[0].get("run_id") if rows else None) or f"msh-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
+    drafts = _build_ticket_drafts(
+        rows,
+        include_aspirational=include_aspirational,
+        agent=agent,
+        max_tickets=max_tickets,
+    )
+    path = _write_ticket_drafts(drafts, run_id)
+
+    payload = {
+        "schema": "agent_skills.monitor_skill_health.ticket_preview.v1",
+        "run_id": run_id,
+        "draft_count": len(drafts),
+        "draft_file": str(path),
+        "apply": apply,
+        "commands": [_ticket_command(draft, repo=repo, apply=apply) for draft in drafts],
+    }
+
+    if apply:
+        if not TICKET_RUN.exists():
+            raise typer.BadParameter(f"ticket skill runner not found: {TICKET_RUN}")
+        for draft in drafts:
+            subprocess.run(_ticket_command(draft, repo=repo, apply=True), check=True)
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    console.print(
+        Panel(
+            f"Draft file: {path}\n"
+            f"Tickets: {len(drafts)}\n"
+            f"Mode: {'apply' if apply else 'preview'}",
+            title="Monitor Skill Health Ticket Handoff",
+        )
+    )
+    for draft in drafts[:25]:
+        typer.echo(f"- {draft['title']} -> {draft['target']}")
+    if len(drafts) > 25:
+        typer.echo(f"... {len(drafts) - 25} more")
 
 
 @app.command()

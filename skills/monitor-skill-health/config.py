@@ -61,6 +61,7 @@ LATEST_RESULTS_FILE = STATE_DIR / "latest_results.jsonl"
 LATEST_SUMMARY_FILE = STATE_DIR / "latest_summary.json"
 HISTORY_FILE = STATE_DIR / "history.jsonl"
 TASK_STATE_FILE = STATE_DIR / "task_state.json"
+TICKET_DRAFTS_DIR = STATE_DIR / "ticket_drafts"
 
 # ---------------------------------------------------------------------------
 # Console / logging

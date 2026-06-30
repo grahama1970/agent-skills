@@ -19,12 +19,15 @@ provides:
   - skill-health-monitoring
   - aggregate-reporting
   - trend-tracking
+  - ticket-draft-handoff
 composes:
   - assess
   - review-code
   - memory
   - scheduler
   - task-monitor
+  - ticket
+  - tau
 
 taxonomy:
   - validation
@@ -44,15 +47,23 @@ Monitors all registered skills and reports:
 
 ## Continuous Operation (Non-Negotiable)
 
-This skill is **always-on**. It:
-- Runs on its configured schedule indefinitely — it NEVER stops unless explicitly halted by the user
-- The agent MUST NOT stop and wait for the human to ask for status or remember to check
-- If a cycle fails, diagnose the failure, attempt auto-repair, and continue
-- Only escalate to the human if genuinely blocked after exhausting /dogpile research
+This skill is **always-on as a reporter and ticket producer**. It:
+- Runs on its configured schedule indefinitely until explicitly halted by the user
+- Writes durable audit state and trend artifacts on every cycle
+- Converts concrete violations into preview-first `$ticket` maintenance drafts
+- May create GitHub tickets only when the caller explicitly passes `tickets --apply`
+- Does not patch skills, deprecate agents, or close issues from the monitor path
 - Gracefully handles restarts and maintains state across cycles
 - Is designed for multi-day/week/month autonomous operation
 
-**Anti-pattern**: Reporting status and waiting for the human to ask "what next?" is UNACCEPTABLE. The agent must proactively fix issues and continue the monitoring loop.
+Repair work belongs to the Tau-backed maintainer lane. `monitor-skill-health`
+creates normalized work items; `agent-skill-maintainer` leases exactly one item,
+routes a bounded repair subagent, dispatches an independent verifier, attaches
+deterministic proof, and closes only after the proof gate is satisfied.
+
+**Anti-pattern**: Letting the monitor silently patch broad findings or close
+tickets from its own report is UNACCEPTABLE. The monitor owns observation,
+normalization, and ticket handoff; the maintainer owns one-ticket repair.
 
 ## Commands
 
@@ -68,6 +79,12 @@ This skill is **always-on**. It:
 
 # Single skill
 ./run.sh audit --skill monitor-taxonomy --json
+
+# Draft one maintenance ticket per concrete violation from the latest audit
+./run.sh tickets --json
+
+# Create GitHub tickets explicitly after inspecting the preview artifact
+./run.sh tickets --apply --repo grahama1970/agent-skills
 
 # Show latest aggregate summary
 ./run.sh status
@@ -89,6 +106,7 @@ Generated artifacts:
 - `latest_summary.json` - aggregate summarized report for latest run
 - `history.jsonl` - run-over-run trend entries
 - `task_state.json` - task-monitor compatible progress snapshot
+- `ticket_drafts/<run_id>.json` - preview-first maintenance tickets with `tau.agent_handoff.v1` metadata
 - `runs/<run_id>/...` - immutable per-run archive
 
 ## Composition Strategy
@@ -112,3 +130,18 @@ Each run writes `latest_summary.json` with:
 - `top_issues` (highest-severity normalized findings)
 
 This summary is designed so project agents can immediately decide what to fix next.
+
+## Ticket Handoff Contract
+
+`./run.sh tickets` reads `latest_results.jsonl` and emits one maintenance draft
+per concrete `needs_fix` violation. Aspirational gaps are excluded by default
+and require `--include-aspirational`.
+
+Each draft contains:
+- `$ticket` fields: title, target, invariant, cleanup, scoped files, required proof, route, requested repair agent, and labels
+- `tau.agent_handoff.v1` metadata for one-ticket-at-a-time maintainer leasing
+- the originating monitor run, skill, status, and normalized finding
+
+Default mode is preview-only. `--apply` is the only mode that creates GitHub
+issues. Ticket closure remains outside this skill and requires deterministic
+proof attached through `$ticket`.

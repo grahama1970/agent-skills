@@ -292,12 +292,13 @@ hooks/prompts/
 
 ## Maintainer Loop
 
-Two roles, one issue at a time:
+Three roles, one issue at a time:
 
 | Role | Owns | Does not own |
 |---|---|---|
-| `agent-maintainer` | Scheduled report-only sweeps; latest reports; candidate next actions | Automatic deprecation, deletion, repair, or issue closure |
-| `skill-maintainer` | One GitHub issue lease at a time; repair routing; verifier/review/WebGPT evidence bundle; proof-based issue disposition | Broad untracked cleanup, multi-issue repair, closure from WebGPT alone |
+| `agent-maintainer` | Scheduled sweeps; latest reports; preview-first ticket drafts | Automatic deprecation, deletion, repair, or issue closure |
+| `monitor-skill-health` / `monitor-sparta` | Normalized findings, manifests, and `$ticket` handoffs | Patching leased targets or closing issues |
+| `agent-skill-maintainer` (`agents/skill-maintainer`) | One GitHub issue lease at a time; Tau handoff; repair routing; verifier/review/WebGPT evidence bundle; proof-based issue disposition | Broad untracked cleanup, multi-issue repair, closure from WebGPT alone |
 
 Run the report-only sweep:
 
@@ -308,6 +309,20 @@ skills/monitor-skill-health/run.sh audit \
   --no-deep-review \
   --repo-report \
   --json > reports/agent-maintainer/last_run.json
+```
+
+Draft tickets from the latest concrete monitor violations:
+
+```bash
+skills/monitor-skill-health/run.sh tickets --json
+```
+
+Create those tickets only after reviewing the preview artifact:
+
+```bash
+skills/monitor-skill-health/run.sh tickets \
+  --repo grahama1970/agent-skills \
+  --apply
 ```
 
 The scheduled job is registered in `agents/agent-maintainer/services.yaml` but

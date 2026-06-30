@@ -1,0 +1,10 @@
+version: "1.0"
+project: agent-skills
+workdir: /home/graham/workspace/experiments/agent-skills
+
+scheduled:
+  agent-maintainer-nightly-report:
+    description: "Nightly report-only sweep of skills/ and agents/ for human/project-agent decisions."
+    cron: "23 2 * * *"
+    command: "mkdir -p reports/agent-maintainer && skills/monitor-skill-health/run.sh audit --no-memory --no-deep-review --repo-report --json > reports/agent-maintainer/last_run.json"
+    enabled: false

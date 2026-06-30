@@ -353,3 +353,18 @@ Former automatic remediation lanes are now review-gated:
 
 Each mutating lane requires approved patch artifacts and rollback manifests
 before `SPARTA_MONITOR_MUTATION_ENABLED=1` may be used.
+
+## Shared Maintainer Architecture
+
+`/monitor-sparta` follows the same reporter/fixer/reviewer split used by
+`/monitor-skill-health`:
+
+1. Monitor lanes observe live state and write normalized findings, manifests, or
+   tickets.
+2. Tau-backed maintainer lanes lease one work item at a time.
+3. A bounded repair subagent changes only the leased target.
+4. A separate verifier/reviewer attaches deterministic proof.
+5. Tickets or manifests close only after proof is attached and reconciled.
+
+The monitor must not treat a report, WebGPT review, or CI green status as
+closure proof. Mutating SPARTA repairs remain review-gated and rollback-backed.
