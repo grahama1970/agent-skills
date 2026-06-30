@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+"""Claim and process one monitor-sparta UX coverage queue item."""
+
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -22,7 +25,7 @@ from lane_worker_common import (
 
 DEFAULT_QUEUE = Path("/mnt/storage12tb/media/agents/shared/monitor-sparta/repair_queue.jsonl")
 DEFAULT_RUN_ROOT = Path("/mnt/storage12tb/skills/review-db/outputs/ux-coverage-auditor")
-DEFAULT_MEMORY_ROOT = Path("/home/graham/workspace/experiments/memory")
+DEFAULT_MEMORY_ROOT = Path(os.environ.get("MONITOR_SPARTA_MEMORY_ROOT", Path.home() / "workspace" / "experiments" / "memory"))
 ALLOWED_LANES = {"ux_coverage"}
 
 

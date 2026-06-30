@@ -52,3 +52,58 @@ def test_python_violations_flags_missing_module_docstring(tmp_path):
         for violation in violations
         if violation["rule"] == "style-module-docstring"
     ]
+
+
+def test_agent_violations_require_operational_frontmatter(tmp_path):
+    checkers = load_checkers_module()
+    agent_dir = tmp_path / "sample-agent"
+    agent_dir.mkdir()
+    (agent_dir / "AGENTS.md").write_text(
+        "---\n"
+        "id: sample-agent\n"
+        "kind: worker\n"
+        "---\n"
+        "\n"
+        "# Sample Agent\n",
+        encoding="utf-8",
+    )
+
+    violations = checkers.agent_violations(agent_dir)
+
+    missing = {violation["message"] for violation in violations}
+    assert "Agent frontmatter is missing required key: title." in missing
+    assert "Agent frontmatter is missing required key: mode." in missing
+    assert "Agent frontmatter is missing required key: composes." in missing
+
+
+def test_agent_violations_accept_complete_contract(tmp_path):
+    checkers = load_checkers_module()
+    agent_dir = tmp_path / "sample-agent"
+    agent_dir.mkdir()
+    (agent_dir / "AGENTS.md").write_text(
+        "---\n"
+        "id: sample-agent\n"
+        "kind: worker\n"
+        "title: Sample Agent\n"
+        "mode: workspace_write\n"
+        "composes:\n"
+        "- memory\n"
+        "---\n"
+        "\n"
+        "# Sample Agent\n",
+        encoding="utf-8",
+    )
+
+    assert checkers.agent_violations(agent_dir) == []
+
+
+def test_discover_agents_reads_agents_root(tmp_path, monkeypatch):
+    checkers = load_checkers_module()
+    agents_root = tmp_path / "agents"
+    (agents_root / "worker-a").mkdir(parents=True)
+    (agents_root / "worker-a" / "AGENTS.md").write_text("# Worker A\n", encoding="utf-8")
+    (agents_root / "tests").mkdir()
+    (agents_root / "tests" / "AGENTS.md").write_text("# Ignored\n", encoding="utf-8")
+    monkeypatch.setattr(checkers, "AGENTS_ROOT", agents_root)
+
+    assert [path.name for path in checkers.discover_agents()] == ["worker-a"]

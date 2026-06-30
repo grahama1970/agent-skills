@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Validate book-extractor controller ledgers and terminal state."""
+
 from __future__ import annotations
 
 import argparse

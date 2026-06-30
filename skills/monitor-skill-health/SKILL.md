@@ -1,20 +1,22 @@
 ---
 name: monitor-skill-health
 description: >
-  Nightly skill quality monitor that scans registered skills for best-practice
-  violations, aspirational gaps, and trend drift. Produces per-skill findings and
-  an aggregate summarized report for tracking over time.
+  Nightly skill and agent quality monitor that scans registered skills plus
+  agents for best-practice violations, aspirational gaps, and trend drift.
+  Produces per-target findings and an aggregate summarized report for tracking
+  over time.
 triggers:
   - monitor skill health
   - nightly skill audit
   - scan all skills for violations
+  - scan all agents for violations
   - aggregate skill health report
   - skill best-practices monitor
 allowed-tools:
   - Bash
   - Read
 metadata:
-  short-description: Nightly best-practice and aspirational quality monitor for skills
+  short-description: Nightly best-practice and aspirational quality monitor for skills and agents
 provides:
   - skill-health-monitoring
   - aggregate-reporting
@@ -39,8 +41,9 @@ taxonomy:
 
 # Monitor Skill Health
 
-Monitors all registered skills and reports:
+Monitors all registered skills and agents and reports:
 - Best-practice violations (`best-practices-kde`, `best-practices-python`, `best-practices-react`, `best-practices-skills`)
+- Agent contract violations (`best-practices-agent`)
 - Missing and aspirational code signals
 - What works well, what needs fixing, and explicit next steps
 - Aggregate summarized report for nightly tracking
@@ -68,7 +71,7 @@ normalization, and ticket handoff; the maintainer owns one-ticket repair.
 ## Commands
 
 ```bash
-# Run full audit over registered skills
+# Run full audit over registered skills and agents
 ./run.sh audit
 
 # Run full audit but skip deep code review stage
@@ -79,6 +82,9 @@ normalization, and ticket handoff; the maintainer owns one-ticket repair.
 
 # Single skill
 ./run.sh audit --skill monitor-taxonomy --json
+
+# Single agent
+./run.sh audit --agent skill-maintainer --json
 
 # Draft one maintenance ticket per concrete violation from the latest audit
 ./run.sh tickets --json
@@ -102,7 +108,7 @@ State directory (default):
 `~/.pi/monitor-skill-health`
 
 Generated artifacts:
-- `latest_results.jsonl` - one JSON finding per skill
+- `latest_results.jsonl` - one JSON finding per skill or agent target
 - `latest_summary.json` - aggregate summarized report for latest run
 - `history.jsonl` - run-over-run trend entries
 - `task_state.json` - task-monitor compatible progress snapshot
@@ -123,7 +129,8 @@ This skill is intentionally thin and composes existing capabilities:
 Each run writes `latest_summary.json` with:
 - `run_id`, `started_at`, `finished_at`
 - `overall_status` (`healthy`, `warning`, `critical`)
-- `total_skills`
+- `total_skills` / `total_targets`
+- `target_type_counts`
 - `status_counts`
 - `severity_counts`
 - `rule_pack_counts`
@@ -140,7 +147,7 @@ and require `--include-aspirational`.
 Each draft contains:
 - `$ticket` fields: title, target, invariant, cleanup, scoped files, required proof, route, requested repair agent, and labels
 - `tau.agent_handoff.v1` metadata for one-ticket-at-a-time maintainer leasing
-- the originating monitor run, skill, status, and normalized finding
+- the originating monitor run, target type, skill/agent id, status, and normalized finding
 
 Default mode is preview-only. `--apply` is the only mode that creates GitHub
 issues. Ticket closure remains outside this skill and requires deterministic

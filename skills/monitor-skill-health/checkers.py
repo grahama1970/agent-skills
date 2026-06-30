@@ -19,6 +19,7 @@ from typing import Any
 from loguru import logger
 
 from config import (
+    AGENTS_ROOT,
     ARTIFACT_STORAGE_ROOT,
     ASSESS_REFERENCE_PATH_PARTS,
     ASSESS_PY,
@@ -38,7 +39,7 @@ from config import (
 
 @dataclass
 class AuditResult:
-    """Result of auditing a single skill directory."""
+    """Result of auditing a single skill or agent directory."""
 
     skill: str
     path: str
@@ -49,6 +50,8 @@ class AuditResult:
     aspirational_gaps: list[dict[str, Any]]
     next_steps: list[str]
     errors: list[str]
+    target_type: str = "skill"
+    target: str = ""
     deep_review: dict[str, Any] | None = None
 
 
@@ -76,6 +79,29 @@ def discover_skills() -> list[Path]:
         if (child / "SKILL.md").exists():
             skills.append(child)
     return skills
+
+
+def discover_agents() -> list[Path]:
+    """Return sorted list of agent directories containing AGENTS.md."""
+    agents: list[Path] = []
+    if not AGENTS_ROOT.exists():
+        return agents
+    for child in sorted(AGENTS_ROOT.iterdir()):
+        if not child.is_dir():
+            continue
+        if child.name.startswith(".") or child.name in {"tests"}:
+            continue
+        if (child / "AGENTS.md").exists():
+            agents.append(child)
+    return agents
+
+
+def discover_targets(include_agents: bool = True) -> list[tuple[str, Path]]:
+    """Return sorted auditable targets as (target_type, directory)."""
+    targets: list[tuple[str, Path]] = [("skill", path) for path in discover_skills()]
+    if include_agents:
+        targets.extend(("agent", path) for path in discover_agents())
+    return sorted(targets, key=lambda item: (item[0], item[1].name))
 
 
 def collect_source_files(skill_dir: Path) -> list[Path]:
@@ -439,6 +465,60 @@ def skills_violations(skill_dir: Path) -> list[dict[str, Any]]:
     return violations
 
 
+def agent_violations(agent_dir: Path) -> list[dict[str, Any]]:
+    """Check agent contract structure (AGENTS.md frontmatter and required keys)."""
+    violations: list[dict[str, Any]] = []
+    agents_md = agent_dir / "AGENTS.md"
+
+    if not agents_md.exists():
+        return [
+            {
+                "rule_pack": "best-practices-agent",
+                "rule": "agent-contract-required",
+                "severity": "critical",
+                "file": "AGENTS.md",
+                "message": "Agent directory is missing AGENTS.md.",
+            }
+        ]
+
+    if not _has_yaml_frontmatter(agents_md):
+        return [
+            {
+                "rule_pack": "best-practices-agent",
+                "rule": "agent-frontmatter-required",
+                "severity": "critical",
+                "file": "AGENTS.md",
+                "message": "AGENTS.md is missing valid YAML frontmatter.",
+            }
+        ]
+
+    keys = _frontmatter_keys(agents_md)
+    for required in ("id", "kind", "title", "mode", "composes"):
+        if required not in keys:
+            violations.append(
+                {
+                    "rule_pack": "best-practices-agent",
+                    "rule": "agent-frontmatter",
+                    "severity": "high",
+                    "file": "AGENTS.md",
+                    "message": f"Agent frontmatter is missing required key: {required}.",
+                }
+            )
+
+    if agent_dir.name != (next((line.split(":", 1)[1].strip() for line in safe_read_lines(agents_md) if line.strip().startswith("id:")), "") or agent_dir.name):
+        violations.append(
+            {
+                "rule_pack": "best-practices-agent",
+                "rule": "agent-id-directory-match",
+                "severity": "medium",
+                "file": "AGENTS.md",
+                "message": "Agent id should match its directory name for registry routing.",
+            }
+        )
+
+    return violations
+
+
 # ---------------------------------------------------------------------------
 # Assess runner
 # ---------------------------------------------------------------------------
@@ -594,9 +674,9 @@ def normalize_assess_gaps(skill_dir: Path, entries: list[dict[str, Any]]) -> lis
     return gaps
 
 
-def rule_packs_for(files: list[Path]) -> list[str]:
+def rule_packs_for(files: list[Path], target_type: str = "skill") -> list[str]:
     """Determine which rule packs apply based on file extensions."""
-    packs = {"best-practices-skills"}
+    packs = {"best-practices-agent"} if target_type == "agent" else {"best-practices-skills"}
     if any(path.suffix == ".py" for path in files):
         packs.add("best-practices-python")
     if any(path.suffix.lower() == ".qml" for path in files):
@@ -613,19 +693,32 @@ def rule_packs_for(files: list[Path]) -> list[str]:
 
 def audit_skill(skill_dir: Path) -> AuditResult:
     """Run all checkers against a single skill and return an AuditResult."""
-    files = collect_source_files(skill_dir)
-    assess_report, assess_errors = run_assess(skill_dir)
+    return audit_target(skill_dir, target_type="skill")
+
+
+def audit_agent(agent_dir: Path) -> AuditResult:
+    """Run all checkers against a single agent and return an AuditResult."""
+    return audit_target(agent_dir, target_type="agent")
+
+
+def audit_target(target_dir: Path, target_type: str = "skill") -> AuditResult:
+    """Run all checkers against a single skill or agent and return an AuditResult."""
+    files = collect_source_files(target_dir)
+    assess_report, assess_errors = run_assess(target_dir)
 
     needs_fix: list[dict[str, Any]] = []
-    needs_fix.extend(skills_violations(skill_dir))
-    needs_fix.extend(python_violations(skill_dir, files))
-    needs_fix.extend(kde_violations(skill_dir, files))
-    needs_fix.extend(react_violations(skill_dir, files))
+    if target_type == "agent":
+        needs_fix.extend(agent_violations(target_dir))
+    else:
+        needs_fix.extend(skills_violations(target_dir))
+    needs_fix.extend(python_violations(target_dir, files))
+    needs_fix.extend(kde_violations(target_dir, files))
+    needs_fix.extend(react_violations(target_dir, files))
 
     brittle = assess_report.get("categories", {}).get("brittle", []) if assess_report else []
     for entry in brittle:
         location = str(entry.get("location", "unknown"))
-        if _is_noise_location(skill_dir, location):
+        if _is_noise_location(target_dir, location):
             continue
         needs_fix.append(
             {
@@ -638,7 +731,7 @@ def audit_skill(skill_dir: Path) -> AuditResult:
         )
 
     aspirational_entries = assess_report.get("categories", {}).get("aspirational", []) if assess_report else []
-    aspirational = normalize_assess_gaps(skill_dir, aspirational_entries)
+    aspirational = normalize_assess_gaps(target_dir, aspirational_entries)
 
     works_well = []
     for entry in assess_report.get("categories", {}).get("working_well", []) if assess_report else []:
@@ -653,13 +746,15 @@ def audit_skill(skill_dir: Path) -> AuditResult:
     status = status_for(needs_fix, errors)
 
     return AuditResult(
-        skill=skill_dir.name,
-        path=str(skill_dir),
+        skill=target_dir.name,
+        path=str(target_dir),
         status=status,
-        rule_packs=rule_packs_for(files),
+        rule_packs=rule_packs_for(files, target_type=target_type),
         works_well=works_well,
         needs_fix=needs_fix,
         aspirational_gaps=aspirational,
         next_steps=next_steps(needs_fix, aspirational),
         errors=errors,
+        target_type=target_type,
+        target=f"{'agents' if target_type == 'agent' else 'skills'}/{target_dir.name}",
     )

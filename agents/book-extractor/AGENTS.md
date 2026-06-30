@@ -508,7 +508,7 @@ The review bundle must include:
 Run from the ask skill directory:
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/ask
+cd skills/ask
 ./run.sh webgpt-review \
   --bundle <book_extractor_review_bundle.md> \
   --review-type code \

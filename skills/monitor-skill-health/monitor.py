@@ -8,12 +8,12 @@ This is the CLI entry point. Business logic is split across:
 - reporting.py -- summary building, persistence, rendering, memory
 
 Inputs:
-- CLI options selecting a skill subset and output behavior.
-- Existing skills under `.pi/skills/*/SKILL.md`.
+- CLI options selecting a skill/agent subset and output behavior.
+- Existing skills under `skills/*/SKILL.md` and agents under `agents/*/AGENTS.md`.
 - Structured output from composed skills (`assess`, `memory`, `scheduler`).
 
 Outputs:
-- Per-skill findings (`latest_results.jsonl`).
+- Per-target findings (`latest_results.jsonl`).
 - Aggregate summary (`latest_summary.json`) for longitudinal tracking.
 - Optional memory records for high-value run summaries.
 - Task-monitor style state file for live progress visibility.
@@ -39,9 +39,13 @@ from rich.table import Table
 # Re-export public API so that external callers importing from monitor still work.
 from checkers import (  # noqa: F401 -- re-exports
     AuditResult,
+    audit_agent,
     audit_skill,
+    audit_target,
     collect_source_files,
+    discover_agents,
     discover_skills,
+    discover_targets,
     is_high_risk,
     kde_violations,
     normalize_assess_gaps,
@@ -52,6 +56,7 @@ from checkers import (  # noqa: F401 -- re-exports
     rule_packs_for,
     run_assess,
     safe_read_lines,
+    agent_violations,
     skills_violations,
     status_for,
     storage_policy_violations,
@@ -106,6 +111,9 @@ def _load_latest_results() -> list[dict[str, Any]]:
 
 
 def _skill_target(row: dict[str, Any]) -> str:
+    explicit = str(row.get("target") or "").strip()
+    if explicit:
+        return explicit
     raw_path = str(row.get("path") or "").strip()
     if raw_path:
         path = Path(raw_path)
@@ -150,6 +158,7 @@ def _ticket_draft_for(
     agent: str,
 ) -> dict[str, Any]:
     skill = str(row.get("skill") or "unknown")
+    target_type = str(row.get("target_type") or "skill")
     target = _skill_target(row)
     location = _finding_location(finding, target)
     severity = str(finding.get("severity") or "medium")
@@ -158,7 +167,7 @@ def _ticket_draft_for(
     message = str(finding.get("message") or finding.get("reason") or finding.get("feature") or "monitor finding")
     title = _ticket_title(skill, finding, category, sequence)
     proof = (
-        f"skills/monitor-skill-health/run.sh audit --skill {skill} "
+        f"skills/monitor-skill-health/run.sh audit --{target_type} {skill} "
         "--no-memory --no-deep-review --json, plus any focused test required by the changed file."
     )
     invariant = (
@@ -184,6 +193,8 @@ def _ticket_draft_for(
         "source": {
             "run_id": row.get("run_id"),
             "skill": skill,
+            "target_type": target_type,
+            "target": target,
             "status": row.get("status"),
             "category": category,
             "finding": finding,
@@ -282,7 +293,9 @@ def _write_ticket_drafts(drafts: list[dict[str, Any]], run_id: str) -> Path:
 @app.command()
 def audit(
     skill: str = typer.Option("", help="Run only one skill by exact directory name"),
-    limit: int = typer.Option(0, min=0, help="Limit number of skills for dry runs"),
+    agent: str = typer.Option("", help="Run only one agent by exact directory name"),
+    include_agents: bool = typer.Option(True, "--agents/--no-agents", help="Include agents/*/AGENTS.md targets"),
+    limit: int = typer.Option(0, min=0, help="Limit number of targets for dry runs"),
     json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON"),
     no_memory: bool = typer.Option(False, "--no-memory", help="Skip memory.learn summary write"),
     deep_review: bool = typer.Option(
@@ -306,42 +319,49 @@ def audit(
         help="Compatibility flag for agent-maintainer scheduled reports; audit artifacts are already persisted.",
     ),
 ) -> None:
-    """Run audit over registered skills and write aggregate reports."""
+    """Run audit over registered skills and agents and write aggregate reports."""
     start = now_utc()
     run_id = f"msh-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    skills = discover_skills()
+    if skill and agent:
+        raise typer.BadParameter("Use either --skill or --agent, not both.")
+
+    targets = discover_targets(include_agents=include_agents)
     if skill:
-        skills = [entry for entry in skills if entry.name == skill]
+        targets = [entry for entry in targets if entry[0] == "skill" and entry[1].name == skill]
+    if agent:
+        targets = [entry for entry in targets if entry[0] == "agent" and entry[1].name == agent]
     if limit > 0:
-        skills = skills[:limit]
+        targets = targets[:limit]
 
-    if not skills:
-        raise typer.BadParameter("No matching skills found")
+    if not targets:
+        raise typer.BadParameter("No matching skills or agents found")
 
-    logger.info("Auditing {} skills", len(skills))
+    logger.info("Auditing {} targets", len(targets))
     run_dir = RUNS_DIR / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
     results: list[AuditResult] = []
     stats = {"healthy": 0, "warning": 0, "critical": 0}
-    update_task_state(current_item="starting", completed=0, total=len(skills), status="running", stats=stats)
+    update_task_state(current_item="starting", completed=0, total=len(targets), status="running", stats=stats)
 
-    for idx, skill_dir in enumerate(skills, start=1):
-        logger.info("[{}/{}] {}", idx, len(skills), skill_dir.name)
-        result = audit_skill(skill_dir)
+    for idx, (target_type, target_dir) in enumerate(targets, start=1):
+        logger.info("[{}/{}] {}:{}", idx, len(targets), target_type, target_dir.name)
+        result = audit_target(target_dir, target_type=target_type)
         results.append(result)
         stats[result.status] = stats.get(result.status, 0) + 1
         update_task_state(
-            current_item=skill_dir.name,
+            current_item=f"{target_type}:{target_dir.name}",
             completed=idx,
-            total=len(skills),
+            total=len(targets),
             status="running",
             stats=stats,
         )
 
     if deep_review:
-        ranked_high_risk_list = rank_high_risk(results)
+        ranked_high_risk_list = [
+            item for item in rank_high_risk(results) if item[1].target_type == "skill"
+        ]
         selected = ranked_high_risk_list if deep_review_max == 0 else ranked_high_risk_list[:deep_review_max]
         deferred = ranked_high_risk_list[len(selected):]
         selected_by_skill = {result.skill: rs for rs, result in selected}
@@ -372,8 +392,8 @@ def audit(
         for idx, (rs, result) in enumerate(selected, start=1):
             update_task_state(
                 current_item=f"deep-review:{result.skill}",
-                completed=len(skills),
-                total=len(skills),
+                completed=len(targets),
+                total=len(targets),
                 status="running",
                 stats=stats,
             )
@@ -381,7 +401,7 @@ def audit(
                 "[deep {}/{}] {} provider={} model={}",
                 idx,
                 len(selected),
-                result.skill,
+                f"{result.target_type}:{result.skill}",
                 review_provider,
                 review_model,
             )
@@ -421,8 +441,8 @@ def audit(
 
     update_task_state(
         current_item="complete",
-        completed=len(skills),
-        total=len(skills),
+        completed=len(targets),
+        total=len(targets),
         status="completed",
         stats=stats,
     )

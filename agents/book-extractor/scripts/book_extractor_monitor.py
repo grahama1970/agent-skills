@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Monitor a book-extractor controller run and manage its cron/tmux helpers."""
+
 from __future__ import annotations
 
 import argparse

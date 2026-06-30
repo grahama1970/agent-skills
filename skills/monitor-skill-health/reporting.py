@@ -70,7 +70,7 @@ def update_task_state(
 
 
 def build_summary(results: list[AuditResult], run_id: str, started_at: str) -> dict[str, Any]:
-    """Aggregate per-skill results into a run summary."""
+    """Aggregate per-target results into a run summary."""
     status_counts = {"healthy": 0, "warning": 0, "critical": 0}
     severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     pack_counts: dict[str, int] = {}
@@ -100,6 +100,8 @@ def build_summary(results: list[AuditResult], run_id: str, started_at: str) -> d
             top_issues.append(
                 {
                     "skill": result.skill,
+                    "target_type": result.target_type,
+                    "target": result.target or f"{result.target_type}s/{result.skill}",
                     "severity": sev,
                     "rule": issue.get("rule", "unknown"),
                     "file": issue.get("file", "unknown"),
@@ -118,16 +120,22 @@ def build_summary(results: list[AuditResult], run_id: str, started_at: str) -> d
     ranked_high_risk = rank_high_risk(results)
 
     # Build figure_data for visualization
-    skills_with_violations = sum(1 for result in results if result.needs_fix or result.aspirational_gaps)
-    skills_passing = len(results) - skills_with_violations
+    targets_with_violations = sum(1 for result in results if result.needs_fix or result.aspirational_gaps)
+    targets_passing = len(results) - targets_with_violations
+    target_type_counts: dict[str, int] = {}
+    for result in results:
+        target_type_counts[result.target_type] = target_type_counts.get(result.target_type, 0) + 1
     total_violations = sum(len(result.needs_fix) for result in results)
 
     figure_data = {
         "bar": {
             "metrics": {
                 "total_skills_scanned": len(results),
-                "skills_passing_all_checks": skills_passing,
-                "skills_with_violations": skills_with_violations,
+                "total_targets_scanned": len(results),
+                "skills_passing_all_checks": targets_passing,
+                "targets_passing_all_checks": targets_passing,
+                "skills_with_violations": targets_with_violations,
+                "targets_with_violations": targets_with_violations,
                 "total_violations_found": total_violations,
                 "critical_violations": severity_counts.get("critical", 0),
                 "high_violations": severity_counts.get("high", 0),
@@ -142,13 +150,20 @@ def build_summary(results: list[AuditResult], run_id: str, started_at: str) -> d
         "started_at": started_at,
         "finished_at": now_utc(),
         "total_skills": len(results),
+        "total_targets": len(results),
+        "target_type_counts": target_type_counts,
         "overall_status": overall_status,
         "status_counts": status_counts,
         "severity_counts": severity_counts,
         "rule_pack_counts": pack_counts,
         "top_issues": top_issues[:25],
         "high_risk_queue": [
-            {"skill": result.skill, "risk_score": rs} for rs, result in ranked_high_risk[:25]
+            {
+                "skill": result.skill,
+                "target_type": result.target_type,
+                "target": result.target or f"{result.target_type}s/{result.skill}",
+                "risk_score": rs,
+            } for rs, result in ranked_high_risk[:25]
         ],
         "deep_review_counts": deep_review_counts,
         "figure_data": figure_data,
@@ -174,6 +189,8 @@ def persist_results(results: list[AuditResult], summary: dict[str, Any]) -> None
             "run_id": summary["run_id"],
             "timestamp": summary["finished_at"],
             "skill": result.skill,
+            "target_type": result.target_type,
+            "target": result.target or f"{result.target_type}s/{result.skill}",
             "path": result.path,
             "status": result.status,
             "rule_packs": result.rule_packs,
@@ -208,6 +225,8 @@ def persist_results(results: list[AuditResult], summary: dict[str, Any]) -> None
         "timestamp": summary["finished_at"],
         "overall_status": summary["overall_status"],
         "total_skills": summary["total_skills"],
+        "total_targets": summary.get("total_targets", summary["total_skills"]),
+        "target_type_counts": summary.get("target_type_counts", {}),
         "status_counts": summary["status_counts"],
         "severity_counts": summary["severity_counts"],
     }
@@ -237,7 +256,8 @@ def push_summary_to_memory(summary: dict[str, Any], no_memory: bool) -> None:
 
     problem = (
         f"monitor-skill-health run {summary['run_id']} evaluated "
-        f"{summary['total_skills']} skills with overall status {summary['overall_status']}."
+        f"{summary.get('total_targets', summary['total_skills'])} skills/agents with overall status "
+        f"{summary['overall_status']}."
     )
     solution = (
         f"Status counts={summary['status_counts']}, "
@@ -279,7 +299,7 @@ def render_table(results: list[AuditResult], summary: dict[str, Any]) -> None:
     console.print(
         Panel(
             f"[{color} bold]{summary['overall_status'].upper()}[/{color} bold]  "
-            f"skills={summary['total_skills']}  "
+            f"targets={summary.get('total_targets', summary['total_skills'])}  "
             f"status={summary['status_counts']}  "
             f"severity={summary['severity_counts']}",
             title="Monitor Skill Health",
@@ -288,7 +308,7 @@ def render_table(results: list[AuditResult], summary: dict[str, Any]) -> None:
     )
 
     table = Table(show_header=True, header_style="bold")
-    table.add_column("Skill", min_width=20)
+    table.add_column("Target", min_width=26)
     table.add_column("Status", width=10)
     table.add_column("Issues", justify="right", width=8)
     table.add_column("Aspirational", justify="right", width=12)
@@ -300,7 +320,7 @@ def render_table(results: list[AuditResult], summary: dict[str, Any]) -> None:
             "white",
         )
         table.add_row(
-            result.skill,
+            result.target or f"{result.target_type}s/{result.skill}",
             f"[{style}]{result.status}[/{style}]",
             str(len(result.needs_fix)),
             str(len(result.aspirational_gaps)),
@@ -314,6 +334,8 @@ def as_dict(result: AuditResult) -> dict[str, Any]:
     """Serialise an AuditResult to a plain dictionary."""
     return {
         "skill": result.skill,
+        "target_type": result.target_type,
+        "target": result.target or f"{result.target_type}s/{result.skill}",
         "path": result.path,
         "status": result.status,
         "rule_packs": result.rule_packs,

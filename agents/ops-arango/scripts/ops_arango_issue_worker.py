@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Claim and process one monitor-sparta backup freshness queue item."""
+
 from __future__ import annotations
 
 import argparse
@@ -24,7 +26,7 @@ from lane_worker_common import (
 
 DEFAULT_QUEUE = Path("/mnt/storage12tb/media/agents/shared/monitor-sparta/repair_queue.jsonl")
 DEFAULT_RUN_ROOT = Path("/mnt/storage12tb/skills/review-db/outputs/ops-arango")
-DEFAULT_MEMORY_ROOT = Path("/home/graham/workspace/experiments/memory")
+DEFAULT_MEMORY_ROOT = Path(os.environ.get("MONITOR_SPARTA_MEMORY_ROOT", Path.home() / "workspace" / "experiments" / "memory"))
 ALLOWED_LANES = {"backup_freshness"}
 
 
