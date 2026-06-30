@@ -107,7 +107,7 @@ Example:
   "title": "Fix authentication bug",
   "prompt": "Fix the TypeError in src/auth.py without changing public API behavior.",
   "backend": "codex",
-  "cwd": "/home/graham/workspace/project",
+  "cwd": "/path/to/project",
   "output_dir": "/tmp/code-runner-output",
   "allowlist": ["src/auth.py", "tests/test_auth.py"],
   "definition_of_done": {
