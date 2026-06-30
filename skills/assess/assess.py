@@ -19,8 +19,13 @@ CATEGORIES = {
     "outstanding": []      # Exceptional quality
 }
 
-PENDING_PATTERN = re.compile(r'\bT\s*O\s*D\s*O\b\s*:\s*(.*)', re.IGNORECASE)
-KNOWN_ISSUE_PATTERN = re.compile(r'\bF\s*I\s*X\s*M\s*E\b\s*:\s*(.*)', re.IGNORECASE)
+PENDING_PATTERN = re.compile(r'(?m)^\s*(?:#|//|<!--)?\s*T\s*O\s*D\s*O\b\s*:\s*(.*)', re.IGNORECASE)
+KNOWN_ISSUE_PATTERN = re.compile(r'(?m)^\s*(?:#|//|<!--)?\s*F\s*I\s*X\s*M\s*E\b\s*:\s*(.*)', re.IGNORECASE)
+
+
+def strip_markdown_code_fences(content: str) -> str:
+    """Remove fenced code blocks so prose examples do not become active findings."""
+    return re.sub(r"(?ms)^```.*?^```", "", content)
 
 def scan_for_issues(root_path: Path) -> Dict[str, Any]:
     """
@@ -76,8 +81,10 @@ def scan_for_issues(root_path: Path) -> Dict[str, Any]:
                             "status": "Has companion test file"
                         })
 
+                marker_content = strip_markdown_code_fences(content) if file_path.suffix == ".md" else content
+
                 # Check Aspirational (placeholder tasks)
-                todos = PENDING_PATTERN.findall(content)
+                todos = PENDING_PATTERN.findall(marker_content)
                 for todo in todos:
                     report["categories"]["aspirational"].append({
                         "feature": "Pending Task",
@@ -86,7 +93,7 @@ def scan_for_issues(root_path: Path) -> Dict[str, Any]:
                     })
 
                 # Check Brittle (known issue notes, hardcoded secrets heuristic)
-                fixmes = KNOWN_ISSUE_PATTERN.findall(content)
+                fixmes = KNOWN_ISSUE_PATTERN.findall(marker_content)
                 for fixme in fixmes:
                     report["categories"]["brittle"].append({
                         "feature": "Known Issue",
