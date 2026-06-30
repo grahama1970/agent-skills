@@ -116,3 +116,43 @@ def test_ops_arango_worker_emits_tau_handoff_for_operator_required(tmp_path: Pat
     assert handoff["previous_subagent"] == "ops-arango"
     assert handoff["next_agent"]["name"] == "human"
     assert "latest_backup_receipt.json exists" in handoff["required_evidence"]
+
+
+def test_ops_arango_worker_closes_already_satisfied_issue_with_tau_handoff(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(ops_arango_issue_worker, "write_tau_handoff_artifacts", fake_tau_handoff)
+    queue = tmp_path / "repair_queue.jsonl"
+    run_root = tmp_path / "runs"
+    append_issue(
+        queue,
+        {
+            "schema": "monitor_sparta.repair_issue.v1",
+            "issue_id": "backup-fresh",
+            "status": "READY",
+            "lane": "backup_freshness",
+            "owner_subagent": "ops-arango",
+            "priority": 90,
+            "success_condition": {"backup_age_hours_lte": 24},
+            "source_check": {"age_hours": 1, "max_age_hours": 24},
+            "slice": {"age_hours": 1, "max_age_hours": 24},
+        },
+    )
+
+    rc, receipt = ops_arango_issue_worker.run(
+        argparse.Namespace(
+            run_id="ops-fresh-run",
+            run_root=run_root,
+            queue=queue,
+            memory_root=tmp_path / "memory",
+            issue_id=None,
+            apply=False,
+            timeout_s=10,
+        )
+    )
+
+    assert rc == 0
+    assert receipt["terminal_status"] == "DONE"
+    assert receipt["already_satisfied"] is True
+    assert receipt["mutation_applied"] is False
+    assert receipt["tau_handoff"]["ok"] is True
+    handoff = json.loads(Path(receipt["tau_handoff"]["handoff_path"]).read_text(encoding="utf-8"))
+    assert handoff["next_agent"]["name"] == "monitor-sparta-supervisor"

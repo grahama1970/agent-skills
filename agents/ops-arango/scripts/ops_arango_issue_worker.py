@@ -68,6 +68,24 @@ def backup_plan(issue: Mapping[str, Any], *, run_dir: Path) -> dict[str, Any]:
     return plan
 
 
+def issue_already_satisfies_backup_freshness(issue: Mapping[str, Any]) -> bool:
+    slice_ = issue.get("slice") if isinstance(issue.get("slice"), Mapping) else {}
+    source_check = issue.get("source_check") if isinstance(issue.get("source_check"), Mapping) else {}
+    success_condition = issue.get("success_condition") if isinstance(issue.get("success_condition"), Mapping) else {}
+    age_raw = slice_.get("age_hours", source_check.get("age_hours"))
+    max_raw = (
+        success_condition.get("backup_age_hours_lte")
+        or slice_.get("max_age_hours")
+        or source_check.get("max_age_hours")
+    )
+    try:
+        age_hours = float(age_raw)
+        max_age_hours = float(max_raw)
+    except (TypeError, ValueError):
+        return False
+    return age_hours <= max_age_hours
+
+
 def run_backup(*, run_dir: Path, timeout_s: int) -> dict[str, Any]:
     script = DEFAULT_MEMORY_ROOT / "scripts" / "overnight_backup.sh"
     stdout_path = run_dir / "overnight_backup.stdout.log"
@@ -135,7 +153,25 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
     write_json(run_dir / "issue.json", issue)
     plan = backup_plan(issue, run_dir=run_dir)
     backup_result: dict[str, Any] | None = None
-    if args.apply:
+    already_satisfied = issue_already_satisfies_backup_freshness(issue)
+    if already_satisfied:
+        queue_update = update_issue(
+            queue,
+            issue,
+            status="DONE",
+            run_id=run_id,
+            event="ops_arango_backup_freshness_already_satisfied",
+            fields={
+                "blocked_reason": None,
+                "dispatch_terminal_status": "DONE",
+                "backup_freshness_plan_path": str(run_dir / "backup_freshness_plan.json"),
+                "mutation_applied": False,
+                "already_satisfied": True,
+                "mocked": False,
+                "live": True,
+            },
+        )
+    elif args.apply:
         backup_result = run_backup(run_dir=run_dir, timeout_s=args.timeout_s)
         if backup_result.get("terminal_status") == "DONE":
             queue_update = update_issue(
@@ -190,7 +226,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
                 "live": True,
             },
         )
-    terminal_status = "DONE" if backup_result and backup_result.get("terminal_status") == "DONE" else "OPERATOR_REQUIRED"
+    terminal_status = "DONE" if already_satisfied or (backup_result and backup_result.get("terminal_status") == "DONE") else "OPERATOR_REQUIRED"
     tau_handoff = write_tau_handoff_artifacts(
         run_dir,
         filename_stem="ops_arango_issue_worker",
@@ -205,7 +241,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
             result_status=terminal_status,
             result_summary=(
                 f"Ops Arango claimed one backup freshness issue. issue_id={issue.get('issue_id')}, "
-                f"backup_started={bool(backup_result)}, mutation_applied={bool(backup_result and backup_result.get('terminal_status') == 'DONE')}."
+                f"backup_started={bool(backup_result)}, already_satisfied={already_satisfied}, "
+                f"mutation_applied={bool(backup_result and backup_result.get('terminal_status') == 'DONE')}."
             ),
             context_summary="monitor-sparta queued one backup freshness issue for ops-arango.",
             rationale="The worker claims one queue issue, writes a backup freshness plan, optionally runs the approved backup command, updates the queue, and exits.",
@@ -238,6 +275,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict[str, Any]]:
         "backup_result": backup_result,
         "queue_update": queue_update,
         "mutation_applied": bool(backup_result and backup_result.get("terminal_status") == "DONE"),
+        "already_satisfied": already_satisfied,
         "mocked": False,
         "live": True,
         "forbidden_paths": {
