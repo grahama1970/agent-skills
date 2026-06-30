@@ -448,17 +448,27 @@ def skills_violations(skill_dir: Path) -> list[dict[str, Any]]:
                 }
             )
 
-    for extra_doc in ("README.md", "CHANGELOG.md"):
-        if (skill_dir / extra_doc).exists():
-            violations.append(
-                {
-                    "rule_pack": "best-practices-skills",
-                    "rule": "avoid-extra-docs",
-                    "severity": "low",
-                    "file": extra_doc,
-                    "message": "Prefer a single SKILL.md; extra docs are discouraged.",
-                }
-            )
+    if (skill_dir / "README.md").exists() and "provides" not in keys:
+        violations.append(
+            {
+                "rule_pack": "best-practices-skills",
+                "rule": "avoid-extra-docs",
+                "severity": "low",
+                "file": "README.md",
+                "message": "README.md is allowed only for skills that declare provides.",
+            }
+        )
+
+    if (skill_dir / "CHANGELOG.md").exists():
+        violations.append(
+            {
+                "rule_pack": "best-practices-skills",
+                "rule": "avoid-extra-docs",
+                "severity": "low",
+                "file": "CHANGELOG.md",
+                "message": "Prefer a single SKILL.md; extra docs are discouraged.",
+            }
+        )
 
     violations.extend(storage_policy_violations(skill_dir))
 

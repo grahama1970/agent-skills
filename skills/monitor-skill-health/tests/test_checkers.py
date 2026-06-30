@@ -107,3 +107,57 @@ def test_discover_agents_reads_agents_root(tmp_path, monkeypatch):
     monkeypatch.setattr(checkers, "AGENTS_ROOT", agents_root)
 
     assert [path.name for path in checkers.discover_agents()] == ["worker-a"]
+
+
+def test_readme_allowed_when_skill_declares_provides(tmp_path):
+    checkers = load_checkers_module()
+    skill_dir = tmp_path / "sample-skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: sample-skill\n"
+        "description: >\n"
+        "  Sample skill.\n"
+        "provides:\n"
+        "- sample-capability\n"
+        "composes: []\n"
+        "---\n"
+        "\n"
+        "# Sample Skill\n",
+        encoding="utf-8",
+    )
+    (skill_dir / "README.md").write_text("# Human docs\n", encoding="utf-8")
+
+    violations = checkers.skills_violations(skill_dir)
+
+    assert not [
+        violation
+        for violation in violations
+        if violation["rule"] == "avoid-extra-docs" and violation["file"] == "README.md"
+    ]
+
+
+def test_readme_flagged_without_provides(tmp_path):
+    checkers = load_checkers_module()
+    skill_dir = tmp_path / "sample-skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: sample-skill\n"
+        "description: >\n"
+        "  Sample skill.\n"
+        "composes: []\n"
+        "---\n"
+        "\n"
+        "# Sample Skill\n",
+        encoding="utf-8",
+    )
+    (skill_dir / "README.md").write_text("# Human docs\n", encoding="utf-8")
+
+    violations = checkers.skills_violations(skill_dir)
+
+    assert [
+        violation
+        for violation in violations
+        if violation["rule"] == "avoid-extra-docs" and violation["file"] == "README.md"
+    ]
