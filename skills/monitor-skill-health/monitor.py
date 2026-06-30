@@ -180,7 +180,7 @@ def _ticket_draft_for(
         "proof": proof,
         "route": route,
         "agent": agent,
-        "labels": ["monitor-skill-health", "agent-skill-maintainer", f"severity:{severity}"],
+        "labels": ["monitor-skill-health"],
         "source": {
             "run_id": row.get("run_id"),
             "skill": skill,
