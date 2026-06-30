@@ -94,6 +94,68 @@ def test_issue_body_route_metadata_wins_over_misleading_text():
     assert route["selection_reason"] == "route:backend_python_or_skill_runtime"
 
 
+def test_ticket_skill_maintenance_body_routes_and_targets():
+    cycle = load_cycle_module()
+    body = "\n".join(
+        [
+            "## Type",
+            "",
+            "maintenance",
+            "",
+            "## Target",
+            "",
+            "skills/monitor-skill-health",
+            "",
+            "## Target paths",
+            "",
+            "- skills/monitor-skill-health",
+            "",
+            "## Current state",
+            "",
+            "low needs_fix finding at monitor.py",
+            "",
+            "## Requested outcome",
+            "",
+            "Preserve invariant: focused monitor re-audit passes",
+            "",
+            "## Required proof",
+            "",
+            "skills/monitor-skill-health/run.sh audit --skill monitor-skill-health --no-memory --no-deep-review --json",
+            "",
+            "## Route",
+            "",
+            "backend_python_or_skill_runtime",
+            "",
+            "## Maintainer route",
+            "",
+            "backend_python_or_skill_runtime",
+            "",
+            "## Requested repair agent",
+            "",
+            "agent-skill-maintainer",
+        ]
+    )
+    issue = {
+        "number": 91,
+        "title": "[monitor-skill-health] monitor-skill-health: style-module-docstring",
+        "labels": [
+            {"name": "type:maintenance"},
+            {"name": "skill-maintenance"},
+            {"name": "monitor-skill-health"},
+            {"name": "route:backend_python_or_skill_runtime"},
+            {"name": "agent:agent-skill-maintainer"},
+        ],
+        "body": body,
+    }
+
+    route = cycle.classify(issue)
+
+    assert route["route"] == "backend_python_or_skill_runtime"
+    assert route["selection_source"] == "issue_label"
+    assert cycle.target_paths(issue) == ["skills/monitor-skill-health"]
+    assert cycle.target_skills(issue) == ["monitor-skill-health"]
+
+
 def test_ask_webgpt_command_uses_dedicated_review_code_project(tmp_path):
     cycle = load_cycle_module()
     cmd = cycle.ask_webgpt_command(tmp_path / "bundle.md")

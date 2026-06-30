@@ -142,10 +142,12 @@ def _body(
     lines = [
         _section("Type", ticket_type),
         _section("Target", target),
+        _section("Target paths", f"- {target}"),
         _section("Current state", current_state),
         _section("Requested outcome", requested_outcome),
         _section("Required proof", proof),
         _section("Route", route),
+        _section("Maintainer route", route),
         _section("Requested repair agent", agent or "Not specified."),
         _section("Non-goals", non_goals or "No unrelated refactors or scope expansion."),
     ]
