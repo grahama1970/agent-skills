@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STEMS_SKILL="/home/graham/workspace/experiments/pi-mono/.pi/skills/create-stems"
+SKILLS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+STEMS_SKILL="${CREATE_STEMS_SKILL:-${SKILLS_ROOT}/create-stems}"
 
 echo "=== Demucs Sanity Check ==="
 

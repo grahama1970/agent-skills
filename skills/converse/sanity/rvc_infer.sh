@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MUSIC_SKILL="/home/graham/workspace/experiments/pi-mono/.pi/skills/create-music"
+SKILLS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+MUSIC_SKILL="${CREATE_MUSIC_SKILL:-${SKILLS_ROOT}/create-music}"
 RVC_DIR="${MUSIC_SKILL}/rvc"
 RVC_MODELS="/mnt/storage12tb/media/music/rvc-models/voice"
 

@@ -62,7 +62,7 @@ None — all requirements clear.
   - Details: Train an RVC v2 model on Embry's 43 existing voice samples at
     `/mnt/storage12tb/media/personas/embry/tts_output/`. Use learn-artist
     skill with `--source-dir` flag. Target: 200 epochs, batch size 4.
-  - Skill: `/home/graham/workspace/experiments/pi-mono/.pi/skills/learn-artist`
+  - Skill: `skills/learn-artist`
   - Command: `./run.sh train "embry" --source-dir /mnt/storage12tb/media/personas/embry/tts_output --category voice --epochs 200`
   - **Definition of Done**:
     - Test: `ls /mnt/storage12tb/media/music/rvc-models/voice/embry/embry-infer.pth`
@@ -76,7 +76,7 @@ None — all requirements clear.
   - Dependencies: Task 1
   - Details: Use yt-dlp to download audio from https://youtu.be/Dordpe3KX_I.
     Save as WAV at a known path for stemming.
-  - Skill: `/home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-youtube`
+  - Skill: `skills/ingest-youtube`
   - **Definition of Done**:
     - Test: Downloaded WAV exists and is >1MB
     - Assertion: `file <output>.wav` shows "WAVE audio"
@@ -88,7 +88,7 @@ None — all requirements clear.
   - Details: Register the track in consume-music with HMT taxonomy metadata:
     bridge_attributes=["Loyalty", "Resilience"], mood=["playful", "curious"],
     persona_connection="Linguistics degree, Hawaiian cultural ties"
-  - Skill: `/home/graham/workspace/experiments/pi-mono/.pi/skills/consume-music`
+  - Skill: `skills/consume-music`
   - **Definition of Done**:
     - Test: `./run.sh search "Hawaiian War Chant"` returns the track
     - Assertion: Track found in registry with bridge attributes
@@ -101,7 +101,7 @@ None — all requirements clear.
   - Dependencies: Task 3 (downloaded audio must exist)
   - Details: Run Demucs htdemucs_6s to separate vocals from the full mix.
     Store vocal stem for RVC conversion.
-  - Skill: `/home/graham/workspace/experiments/pi-mono/.pi/skills/create-stems`
+  - Skill: `skills/create-stems`
   - Command: `./run.sh separate --mix <downloaded.wav> --out /tmp/stems/hawaiian-war-chant --instrument vocals`
   - **Definition of Done**:
     - Test: Vocal stem WAV exists at output path
@@ -115,7 +115,7 @@ None — all requirements clear.
   - Dependencies: Task 2 (Embry RVC model), Task 5 (vocal stem)
   - Details: Run RVC inference with Embry's model to convert the Lennon Sisters
     vocal performance into Embry's voice timbre. Output to hum-cache.
-  - Skill: `/home/graham/workspace/experiments/pi-mono/.pi/skills/create-music`
+  - Skill: `skills/create-music`
   - Command: `./run.sh rvc-infer --input <vocals.wav> --model embry --output /mnt/storage12tb/media/personas/embry/hum-cache/hawaiian_war_chant.wav`
   - **Definition of Done**:
     - Test: Converted WAV exists and is playable
@@ -143,7 +143,7 @@ None — all requirements clear.
     audio preferred over raw music). When hum_tune behavior triggers, load from
     cache, play through mixer "humming" channel. Verify ducking works: humming
     stops when Embry speaks.
-  - File: `/home/graham/workspace/experiments/pi-mono/.pi/skills/converse/idler.py`
+  - File: `skills/converse/idler.py`
   - **Definition of Done**:
     - Test: `python3 -c "from idler import Idler; i = Idler(); import asyncio; asyncio.run(i.test_hum('playful'))"`
     - Assertion: Audio plays from hum-cache, not silence
