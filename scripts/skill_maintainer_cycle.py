@@ -860,8 +860,12 @@ def scoped_publication_paths(result: dict[str, Any], repair: dict[str, Any]) -> 
             abs_path.relative_to(REPO_ROOT.resolve())
         except ValueError:
             continue
-        if not abs_path.exists() or not abs_path.is_file():
+        if abs_path.exists() and not abs_path.is_file():
             continue
+        if not abs_path.exists():
+            tracked_cp = git_run(["ls-files", "--error-unmatch", "--", norm])
+            if tracked_cp.returncode != 0:
+                continue
         if norm not in seen:
             scoped.append(norm)
             seen.add(norm)

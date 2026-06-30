@@ -1242,6 +1242,38 @@ def test_scoped_publication_paths_exclude_artifacts_and_abs_paths(tmp_path, monk
     assert paths == ["skills/fact-extractor/SKILL.md", "scripts/tool.py"]
 
 
+def test_scoped_publication_paths_accepts_tracked_deleted_file(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    deleted = tmp_path / "skills" / "agent-status" / "README.md"
+    deleted.parent.mkdir(parents=True)
+    deleted.write_text("duplicate docs\n")
+    monkeypatch.setattr(cycle, "REPO_ROOT", tmp_path)
+    calls = []
+
+    class _CP:
+        def __init__(self, returncode=0):
+            self.returncode = returncode
+            self.stdout = ""
+            self.stderr = ""
+
+    def fake_git_run(args, check=False):
+        calls.append(args)
+        if args == ["ls-files", "--error-unmatch", "--", "skills/agent-status/README.md"]:
+            return _CP(0)
+        return _CP(1)
+
+    monkeypatch.setattr(cycle, "git_run", fake_git_run)
+    deleted.unlink()
+
+    paths = cycle.scoped_publication_paths(
+        {"target_paths": ["skills/agent-status"]},
+        {"files_changed": ["skills/agent-status/README.md"]},
+    )
+
+    assert paths == ["skills/agent-status/README.md"]
+    assert ["ls-files", "--error-unmatch", "--", "skills/agent-status/README.md"] in calls
+
+
 def test_publish_scoped_changes_commits_only_allowlisted_paths(tmp_path, monkeypatch):
     cycle = load_cycle_module()
     issue_dir = tmp_path / "issue"
