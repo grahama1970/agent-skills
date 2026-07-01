@@ -70,7 +70,7 @@ Deploy to configured agent homes:
 
 ## Fun Stuff I'm Working On
 
-I maintain (and sadly break) these kinds of projects and skills continuously. Here's my current focus:
+I maintain (and sadly break) these kinds of projects and skills continuously. Apologies in advance for a static table. Here's my current focus:
 
 <table>
   <tr>
