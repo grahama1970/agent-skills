@@ -1,4 +1,4 @@
-# debugger
+# debugger—Agents can stop guesss runtime states
 
 ![Debugger card](../../docs/assets/project-cards/debugger.webp)
 
