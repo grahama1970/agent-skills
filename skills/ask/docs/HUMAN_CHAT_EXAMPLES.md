@@ -80,23 +80,22 @@ Kimi, DeepSeek, GLM, MiMo/Mini, MiniMax, or Qwen. `chutes` uses scillm's
 configured Chutes aliases, such as `text-kimi`, while still accepting exact
 catalog-style model IDs when scillm supports them.
 
-## Browser-backed oracle (WebGPT, WebGemini, WebKimi, WebPerplexity)
+## Browser-backed oracle (WebGemini, WebKimi, WebPerplexity, Cursor Browser)
 
 These routes use your **signed-in Chrome session** via `$surf`. They are for
 high-value review or research, not bulk loops. Browser tabs cannot read bare
 filesystem paths — provide a **concatenated** `.md`/`.txt` review bundle or a
-**zip** (WebGPT only, ≤5 files).
+single readable prompt. WebGPT/ChatGPT browser workflows belong to `$webgpt`,
+not `$ask`.
 
 ```text
-$ask webgpt review /tmp/review-bundle.md
-$ask webgpt review /tmp/review-bundle.zip
-$ask webgpt /review-code our recent changes over 2 rounds
 $ask webgemini review /tmp/review-bundle.md
 $ask webkimi review /tmp/review-bundle.md
 $ask webperplexity summarize the current state of space-based cybersecurity in 2026
-$ask chatgpt review /tmp/review-bundle.md
 $ask gemini review /tmp/review-bundle.md
 $ask perplexity what changed in NIST SP 800-171 since 2023?
+Wrong: $ask webgpt review /tmp/review-bundle.md
+Right: $webgpt review /tmp/review-bundle.md
 ```
 
 Expected route (concatenated bundle, all browser backends except zip):
@@ -104,32 +103,16 @@ Expected route (concatenated bundle, all browser backends except zip):
 ```bash
 cat /tmp/evidence/REVIEW_REQUEST.md /tmp/evidence/gate_output.json > /tmp/review-bundle.md
 
-./run.sh ask webgpt "Review /tmp/review-bundle.md. Return VERDICT: PASS | NEEDS_CHANGES | BLOCKED." \
-  --webgpt-project my-review --once
-
 ./run.sh ask webgemini "Review /tmp/review-bundle.md" --oracle --gemini-tab-id <id>
 ./run.sh ask webkimi "Review /tmp/review-bundle.md" --oracle --kimi-tab-id <id>
 ./run.sh ask webperplexity "summarize current state of X" --oracle
 ```
 
-Zip attach (WebGPT only):
-
-```bash
-zip -j /tmp/review-bundle.zip REVIEW_REQUEST.md gate_output.json diagnosis.json
-./run.sh ask webgpt "Review /tmp/review-bundle.zip" --webgpt-project my-review --once
-```
-
-Bounded `/review-*` loop (WebGPT only; multi-round ping-pong with local fixes):
-
-```bash
-./run.sh ask webgpt /review-code our recent changes over 2 rounds --webgpt-project my-review
-```
-
 Wrong (path-only manifest — returns `needs_attention`, exit code 2):
 
 ```text
-Wrong: $ask webgpt review /tmp/bundle/REVIEW_REQUEST.md; see also /tmp/bundle/gate_output.json
-Right: concatenate into one file or zip ≤5 files (WebGPT zip only), then reference that single path.
+Wrong: $ask webgemini review /tmp/bundle/REVIEW_REQUEST.md; see also /tmp/bundle/gate_output.json
+Right: concatenate into one file, then reference that single path.
 ```
 
 ## Persona Oracle

@@ -287,16 +287,14 @@ def test_documented_deep_review_prompt_maps_to_deep_review(monkeypatch):
 
 
 
-def test_documented_webgpt_prompt_maps_to_webgpt_oracle(monkeypatch):
+def test_documented_webgpt_prompt_fails_closed(monkeypatch):
     result, captured = _invoke_chat_prompt(
         "$ask webgpt review /tmp/review-bundle.md",
         monkeypatch,
     )
 
-    assert result.exit_code == 0
-    assert captured["oracle_backend"] == "webgpt"
-    assert captured["oracle_model"] == "webgpt"
-    assert "review-bundle" in captured["question"]
+    assert result.exit_code != 0
+    assert "$webgpt" in result.output
 
 
 def test_documented_webgemini_prompt_maps_to_webgemini_oracle(monkeypatch):
@@ -340,9 +338,8 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "mustard",
         "CM0001",
         "needs_attention",
-        "$ask webgpt review /tmp/review-bundle.md",
         "$ask webgemini review /tmp/review-bundle.md",
         "$ask webperplexity summarize the current state of space-based cybersecurity in 2026",
-        "Wrong: $ask webgpt review /tmp/bundle/REVIEW_REQUEST.md",
+        "Wrong: $ask webgpt review /tmp/review-bundle.md",
     ]:
         assert required in examples

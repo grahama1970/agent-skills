@@ -13,17 +13,6 @@ from .models import DelegateError, DelegateRegistry, RegistryEntry, normalize_to
 
 BROWSER_ORACLE_ENTRIES = (
     RegistryEntry(
-        id="webgpt",
-        kind="oracle",
-        aliases=("chatgpt",),
-        target_type="browser_oracle",
-        default_mode="browser_review",
-        allowed_modes=("browser_review", "oracle_review"),
-        default_runtime="webgpt_browser",
-        eligible_runtimes=("webgpt_browser",),
-        title="WebGPT",
-    ),
-    RegistryEntry(
         id="webgemini",
         kind="oracle",
         aliases=("gemini",),

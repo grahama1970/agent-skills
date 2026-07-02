@@ -148,7 +148,7 @@ def _build_route_decision(
     evidence_policy = "runtime_artifacts"
     if selected_mode in {"deep_review", "parallel_review", "cae_gap_review", "argue"}:
         evidence_policy = "runtime_artifacts_and_verifier"
-    elif selected_backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "cursor-browser"}:
+    elif selected_backend in {"webgemini", "webkimi", "webperplexity", "cursor-browser"}:
         evidence_policy = "browser_sentinel_and_runtime_artifacts"
     elif selected_backend == "scillm":
         evidence_policy = "scillm_response_and_runtime_artifacts"
@@ -201,7 +201,7 @@ def _build_route_decision(
         "alternatives_considered": alternatives,
         "required_evidence_policy": evidence_policy,
         "fail_closed": selected_mode in {"deep_review", "parallel_review", "cae_gap_review", "argue"}
-        or selected_backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "cursor-browser"},
+        or selected_backend in {"webgemini", "webkimi", "webperplexity", "cursor-browser"},
         "unavailable_lane_reasons": unavailable_lane_reasons,
     }
 
@@ -275,11 +275,6 @@ def ask(
     cae_reviewers: Optional[str] = None,
     cae_judge: str = DEFAULT_CAE_JUDGE,
     cae_max_rounds: int = 3,
-    webgpt_tab_id: str = "",
-    webgpt_url: str = "",
-    webgpt_create_tab: bool = False,
-    webgpt_project: str = "",
-    browser_oracle_from: str = "",
     gemini_tab_id: str = "",
     gemini_url: str = "",
     kimi_tab_id: str = "",
@@ -510,18 +505,6 @@ def ask(
             }
         result["oracle"]["dogpile_mode"] = dogpile_mode
         result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
-
-        if webgpt_tab_id:
-            result["oracle"]["webgpt_tab_id"] = webgpt_tab_id
-        if webgpt_url:
-            result["oracle"]["webgpt_url"] = webgpt_url
-        if webgpt_project:
-            result["oracle"]["webgpt_project"] = webgpt_project
-        if browser_oracle_from:
-            result["oracle"]["browser_oracle_from"] = browser_oracle_from
-        elif not (webgpt_tab_id or webgpt_url or webgpt_create_tab):
-            import os as _os_bo
-            result["oracle"]["browser_oracle_from"] = browser_oracle_from or _os_bo.getcwd()
 
     deep_review_request = None
     if deep_review:
@@ -901,11 +884,6 @@ def ask(
             parallel_review_focus=parallel_review_focus,
             parallel_review_role_preset=parallel_review_role_preset,
             deep_review_request=deep_review_request,
-            webgpt_tab_id=webgpt_tab_id,
-            webgpt_url=webgpt_url,
-            webgpt_create_tab=webgpt_create_tab,
-            webgpt_project=webgpt_project,
-            browser_oracle_from=browser_oracle_from,
             cursor_browser_view_id=cursor_browser_view_id,
             cursor_browser_url=cursor_browser_url,
             cursor_browser_project=cursor_browser_project,
@@ -1470,290 +1448,6 @@ def _question_too_large_for_child_argv(question: str) -> bool:
 
 
 
-def _handle_webgpt_page_review_dispatch(
-    page_id: str,
-    round_label: str,
-    run_ti: bool,
-    capture_suffix: str,
-    force: bool,
-    step_loop: bool,
-    max_steps: int,
-    webgpt_tab_id: str,
-    webgpt_url: str,
-    webgpt_project: str,
-    browser_oracle_from: str,
-    webgpt_create_tab: bool,
-    oracle_timeout: float,
-    as_json: bool,
-) -> None:
-    """Run /review-page packet build, then $ask webgpt adjudication."""
-    import json as _json
-    from pathlib import Path
-
-    from .webgpt_page_review import WebgptPageReviewRequest, run_webgpt_page_review
-
-    if not page_id:
-        err = {
-            "status": "failed",
-            "error": "missing page id; use `$ask webgpt /review-page coverage`",
-        }
-        if as_json:
-            print(_json.dumps(err, indent=2))
-        else:
-            print(err["error"])
-        raise typer.Exit(code=2)
-
-    from .browser_oracle_client import apply_webgpt_browser_oracle
-    import os as _os_page
-
-    project = webgpt_project or "sparta-explorer-review"
-    tab_id = webgpt_tab_id
-    url = webgpt_url
-    bo_from = browser_oracle_from or _os_page.getcwd()
-    project, tab_id, url, _bo_meta = apply_webgpt_browser_oracle(
-        from_path=bo_from,
-        project=project,
-        tab_id=tab_id,
-        url=url,
-        create_tab=webgpt_create_tab,
-    )
-
-    req = WebgptPageReviewRequest(
-        page_id=page_id,
-        round_label=round_label,
-        capture_suffix=capture_suffix,
-        run_ti=run_ti,
-        force=force,
-        step_loop=step_loop,
-        max_steps=max_steps,
-        tab_id=tab_id,
-        url=url,
-        project=project,
-        create_tab=webgpt_create_tab,
-        timeout=oracle_timeout,
-    )
-
-    try:
-        result = run_webgpt_page_review(req)
-    except Exception as exc:
-        err = {
-            "status": "failed",
-            "error": f"{type(exc).__name__}: {exc}",
-            "page_id": page_id,
-        }
-        if as_json:
-            print(_json.dumps(err, indent=2))
-        else:
-            print(f"webgpt /review-page failed: {err['error']}")
-        raise typer.Exit(code=1)
-
-    payload = {
-        "status": "blocked" if result.blocked_before_webgpt else "completed",
-        "page_id": result.page_id,
-        "verdict": result.verdict,
-        "page_verdict": result.page_verdict,
-        "next_step": result.next_step,
-        "step_loop": step_loop,
-        "blocked_before_webgpt": result.blocked_before_webgpt,
-        "block_reason": result.block_reason,
-        "controlled_tab_id": result.controlled_tab_id,
-        "artifact_dir": result.artifact_dir,
-        "package": {
-            "out_dir": result.package.get("out_dir"),
-            "review_packet": result.package.get("review_packet"),
-            "review_bundle_zip": result.package.get("review_bundle_zip"),
-            "ask_blocked": result.package.get("ask_blocked"),
-            "webgpt_steps_manifest": str(
-                Path(str(result.package.get("out_dir") or "")) / "webgpt-steps" / "webgpt_steps_manifest.json"
-            ),
-            "webgpt_step_rollup": str(
-                Path(str(result.package.get("out_dir") or "")) / "webgpt-steps" / "webgpt-step-rollup.md"
-            ),
-        },
-    }
-
-    if as_json:
-        print(_json.dumps(payload, indent=2))
-    else:
-        mode = "step-loop" if step_loop else "packet"
-        print(f"\n-- $ask webgpt /review-page {result.page_id} ({mode}) --\n")
-        if result.blocked_before_webgpt:
-            print(f"Blocked before WebGPT: {result.block_reason}")
-            print(f"Package: {result.package.get('out_dir')}")
-        else:
-            print(f"Verdict:      {result.verdict or 'UNPARSEABLE'}")
-            print(f"Page verdict: {result.page_verdict or 'pending'}")
-            print(f"Next step:    {result.next_step or 'NONE'}")
-            print(f"Tab:          {result.controlled_tab_id}")
-            print(f"Artifacts:    {result.artifact_dir}")
-            print(f"Packet dir:   {result.package.get('out_dir')}")
-        print()
-
-    if result.blocked_before_webgpt:
-        raise typer.Exit(code=2)
-    raise typer.Exit(code=0 if result.verdict == "PASS" else 1)
-
-
-def _handle_webgpt_review_dispatch(
-    review_type: str,
-    description: str,
-    parsed_rounds: int,
-    webgpt_tab_id: str,
-    webgpt_url: str,
-    webgpt_project: str,
-    browser_oracle_from: str,
-    cursor_browser_view_id: str,
-    cursor_browser_url: str,
-    cursor_browser_project: str,
-    webgpt_create_tab: bool,
-    oracle_timeout: float,
-    as_json: bool,
-) -> None:
-    """Run the webgpt-review ping-pong loop and print the result.
-
-    Triggered when `$ask webgpt /review-(code|design|prompt|plan) …` is
-    parsed. Owns its own /interview-driven ambiguity resolution for diff
-    scope and project binding; the rest of `/ask`'s synthesis chain is
-    bypassed because the answer here is the webgpt verdict, not a
-    memory-grounded synthesis.
-    """
-    import json as _json
-    import os as _os
-    import subprocess as _subprocess
-    from pathlib import Path as _Path
-
-    from .webgpt_review import (
-        WebgptReviewRequest,
-        resolve_diff,
-        run_webgpt_review,
-    )
-    from .ask_webgpt_interview import (
-        clarify_diff_scope,
-        clarify_max_rounds,
-    )
-
-    # Resolve the diff scope.
-    # Default: HEAD~5..HEAD ("recent" without dragging in months of branch
-    # work). For long-lived feature branches the full origin/main..HEAD can be
-    # hundreds of KB which trips the OS argv limit on surf chatgpt — prefer a
-    # smaller default and ask /interview when the description is ambiguous or
-    # missing.
-    diff_scope = "HEAD~5..HEAD"
-    if not description or description.strip() in {"", "this", "the diff"}:
-        chosen = clarify_diff_scope(description or "(no description given)")
-        if chosen is not None:
-            diff_scope = chosen
-    diff_text = resolve_diff(diff_scope) if diff_scope else resolve_diff("")
-
-    # Resolve rounds. Parsed-from-query wins; otherwise default 1, escalated
-    # to 2 if the description mentions "iterate" without a number.
-    rounds = parsed_rounds
-    if rounds <= 1 and any(
-        kw in (description or "").lower() for kw in ("iterate", "ping-pong", "back and forth")
-    ):
-        chosen_rounds = clarify_max_rounds(description)
-        if chosen_rounds is not None:
-            rounds = chosen_rounds
-
-    from .browser_oracle_client import apply_webgpt_browser_oracle
-
-    project = webgpt_project
-    tab_id = webgpt_tab_id
-    url = webgpt_url
-    bo_from = browser_oracle_from or _os.getcwd()
-    project, tab_id, url, _bo_meta = apply_webgpt_browser_oracle(
-        from_path=bo_from,
-        project=project,
-        tab_id=tab_id,
-        url=url,
-        create_tab=webgpt_create_tab,
-    )
-
-    req = WebgptReviewRequest(
-        review_type=review_type,
-        description=description,
-        diff_scope=diff_scope,
-        diff_text=diff_text,
-        max_rounds=rounds,
-        tab_id=tab_id,
-        url=url,
-        project=project,
-        create_tab=webgpt_create_tab,
-        timeout=oracle_timeout,
-    )
-
-    try:
-        result = run_webgpt_review(req)
-    except Exception as exc:
-        err = {
-            "status": "failed",
-            "error": f"{type(exc).__name__}: {exc}",
-            "review_type": review_type,
-            "diff_scope": diff_scope,
-            "rounds_requested": rounds,
-        }
-        if as_json:
-            print(_json.dumps(err, indent=2))
-        else:
-            print(f"webgpt /review-{review_type} failed: {err['error']}")
-        raise typer.Exit(code=1)
-
-    payload = {
-        "status": "completed",
-        "review_type": result.review_type,
-        "final_verdict": result.final_verdict,
-        "final_verdict_data": result.final_verdict_data,
-        "halt_reason": result.halt_reason,
-        "controlled_tab_id": result.controlled_tab_id,
-        "project": result.project,
-        "diff_scope": diff_scope,
-        "rounds_completed": len(result.rounds),
-        "rounds_requested": rounds,
-        "rounds": [
-            {
-                "round": r.round_num,
-                "verdict": r.verdict,
-                "artifact_dir": r.artifact_dir,
-                "took_ms": r.took_ms,
-                "raw_contains_sentinel": r.raw_contains_sentinel,
-            }
-            for r in result.rounds
-        ],
-    }
-
-    if as_json:
-        print(_json.dumps(payload, indent=2))
-    else:
-        print(f"\n-- $ask webgpt /review-{result.review_type} --\n")
-        print(f"Verdict:      {result.final_verdict or 'UNPARSEABLE'}")
-        print(f"Halt reason:  {result.halt_reason}")
-        print(f"Rounds:       {len(result.rounds)}/{rounds}")
-        print(f"Tab:          {result.controlled_tab_id}")
-        if result.project:
-            print(f"Project:      {result.project}")
-        print(f"Diff scope:   {diff_scope}")
-        print()
-        if result.final_verdict_data.get("blocking_findings"):
-            print("Blocking findings:")
-            for f in result.final_verdict_data["blocking_findings"]:
-                if isinstance(f, dict):
-                    loc = f.get("file", "")
-                    if f.get("lines"):
-                        loc = f"{loc}:{f['lines']}" if loc else str(f["lines"])
-                    print(f"  - {f.get('summary', '')}" + (f"  [{loc}]" if loc else ""))
-                else:
-                    print(f"  - {f}")
-        elif result.final_verdict_data.get("conditions"):
-            print("Conditions:")
-            for c in result.final_verdict_data["conditions"]:
-                print(f"  - {c if isinstance(c, str) else _json.dumps(c)}")
-        print()
-        print("Per-round artifacts:")
-        for r in result.rounds:
-            print(f"  round {r.round_num}: {r.artifact_dir}")
-        print()
-    raise typer.Exit(code=0 if result.final_verdict == "SAFE" else 1)
-
 
 def _record_ask_telemetry(
     result: dict,
@@ -1907,19 +1601,9 @@ def main(
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
     overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
     resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
-    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="Chrome tab id to control for --oracle-backend webgpt. Optional: auto-resolved from a single open chatgpt.com tab."),
-    webgpt_url: str = typer.Option("", "--webgpt-url", help="ChatGPT conversation URL to resolve to an open Chrome tab for --oracle-backend webgpt."),
-    webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Skip auto-resolve and let surf create/pick a background chatgpt.com tab for --oracle-backend webgpt. The controlled tab id is reported back in oracle_model_served so the agent can reuse it on follow-up rounds."),
-    webgpt_project: str = typer.Option("", "--webgpt-project", help="Bind this call to a project name; the controlled ChatGPT tab is persisted at ~/.pi/webgpt-projects/<name>.json and reused across calls. First call for a new project auto-creates a background tab; manually-bound projects (webgpt-project bind ...) never auto-replace their tab."),
-    browser_oracle_from: str = typer.Option("", "--browser-oracle-from", help="Directory for $browser-oracle walk-up (.ask/browser-oracles.yaml). Defaults to cwd when resolving webgpt tab/project without explicit --webgpt-tab-id/--webgpt-url/--webgpt-project."),
     cursor_browser_view_id: str = typer.Option("", "--cursor-browser-view-id", help="Cursor Browser viewId for --oracle-backend cursor-browser (from browser_tabs; NOT a Chrome tab id)."),
     cursor_browser_url: str = typer.Option("", "--cursor-browser-url", help="ChatGPT URL to resolve in Cursor Browser for --oracle-backend cursor-browser."),
     cursor_browser_project: str = typer.Option("", "--cursor-browser-project", help="Bind to ~/.pi/cursor-browser-projects/<name>.json (stores viewId)."),
-    webgpt_once: bool = typer.Option(
-        False,
-        "--once",
-        help="Single-round WebGPT oracle on the controlled tab (disables default multi-turn unless --oracle-iterations is set explicitly).",
-    ),
     gemini_tab_id: str = typer.Option("", "--gemini-tab-id", help="Chrome tab id to control for --oracle-backend webgemini. Optional: auto-resolved from a single open gemini.google.com tab."),
     gemini_url: str = typer.Option("", "--gemini-url", help="Gemini conversation URL to resolve to an open Chrome tab for --oracle-backend webgemini."),
     kimi_tab_id: str = typer.Option("", "--kimi-tab-id", help="Chrome tab id to control for --oracle-backend webkimi. Optional: auto-resolved from a single open kimi.com tab."),
@@ -1951,67 +1635,6 @@ def main(
         oracle = True
         oracle_backend = model_alias_route.oracle_backend
         oracle_model = model_alias_route.resolved_model
-
-    # Early dispatch: $ask webgpt /review-X … routes to the webgpt review
-    # loop (multi-round ping-pong + content-aware follow-ups + /interview
-    # ambiguity resolution) instead of plain oracle synthesis.
-    if (
-        model_alias_route
-        and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
-    ):
-        from .ask_routing import _parse_webgpt_page_review_query, _parse_webgpt_review_query
-        page_matched, page_id, round_label, run_ti, capture_suffix, force, step_loop, max_steps = (
-            _parse_webgpt_page_review_query(question_parts)
-        )
-        if page_matched:
-            _handle_webgpt_page_review_dispatch(
-                page_id=page_id,
-                round_label=round_label,
-                run_ti=run_ti,
-                capture_suffix=capture_suffix,
-                force=force,
-                step_loop=step_loop,
-                max_steps=max_steps,
-                webgpt_tab_id=webgpt_tab_id,
-                webgpt_url=webgpt_url,
-                webgpt_project=webgpt_project,
-                browser_oracle_from=browser_oracle_from,
-                webgpt_create_tab=webgpt_create_tab,
-                oracle_timeout=oracle_timeout,
-                as_json=as_json,
-            )
-            return
-        rt, desc, parsed_rounds = _parse_webgpt_review_query(question_parts)
-        if rt in {"code", "design", "prompt", "plan"}:
-            _handle_webgpt_review_dispatch(
-                review_type=rt,
-                description=desc,
-                parsed_rounds=parsed_rounds,
-                webgpt_tab_id=webgpt_tab_id,
-                webgpt_url=webgpt_url,
-                webgpt_project=webgpt_project,
-                browser_oracle_from=browser_oracle_from,
-            cursor_browser_view_id=cursor_browser_view_id,
-            cursor_browser_url=cursor_browser_url,
-            cursor_browser_project=cursor_browser_project,
-                webgpt_create_tab=webgpt_create_tab,
-                oracle_timeout=oracle_timeout,
-                as_json=as_json,
-            )
-            return
-
-    explicit_webgpt_oracle = bool(
-        model_alias_route
-        and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
-    )
-    if explicit_webgpt_oracle:
-        if webgpt_once and oracle_iterations > 1:
-            oracle_iterations = 1
-        elif not webgpt_once and oracle_iterations == 1:
-            import os as _os
-
-            default_iters = int(_os.environ.get("ASK_WEBGPT_DEFAULT_ITERATIONS", "2"))
-            oracle_iterations = max(1, min(10, default_iters))
 
     visible_subagent_route: dict | None = None
     dag_orchestration_attention: dict | None = None
@@ -2401,7 +2024,7 @@ def main(
     mentioned_skills = _extract_skill_mentions(original_utterance)
     should_draft_dag = (
         orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
-    ) and not visible_subagent_route and not explicit_webgpt_oracle and not parallel_review and not delegate_dry_run
+    ) and not visible_subagent_route and not parallel_review and not delegate_dry_run
     if should_draft_dag and not ask_dag:
         try:
             ask_dag = draft_ask_dag_from_question(
@@ -2809,11 +2432,6 @@ def main(
             cae_reviewers=cae_reviewers,
             cae_judge=cae_judge,
             cae_max_rounds=cae_max_rounds,
-            webgpt_tab_id=webgpt_tab_id,
-            webgpt_url=webgpt_url,
-            webgpt_create_tab=webgpt_create_tab,
-            webgpt_project=webgpt_project,
-            browser_oracle_from=browser_oracle_from,
             cursor_browser_view_id=cursor_browser_view_id,
             cursor_browser_url=cursor_browser_url,
             cursor_browser_project=cursor_browser_project,

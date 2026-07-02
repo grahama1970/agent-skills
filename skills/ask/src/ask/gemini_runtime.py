@@ -148,7 +148,7 @@ _PATH_TOKEN_RE = re.compile(r"(?:(?:^|\s)|`)((?:~|/|\./|\.\./)[^\s`]+)")
 def extract_file_attachments(question: str, *, max_bytes: int = 2_000_000) -> list[dict[str, Any]]:
     """Find file paths referenced in the question and read them.
 
-    Same implementation as webgpt_runtime.extract_file_attachments.
+    Same attachment policy as browser_review_runtime.extract_file_attachments.
     """
     seen: set[Path] = set()
     out: list[dict[str, Any]] = []

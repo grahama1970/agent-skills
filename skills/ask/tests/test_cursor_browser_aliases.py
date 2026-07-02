@@ -27,9 +27,9 @@ def test_cursor_browser_alias_sets_backend():
     assert route.question == "what is 2+2?"
 
 
-def test_cursor_browser_webgpt_shorthand():
+def test_cursor_browser_chatgpt_shorthand():
     route = resolve_model_alias_route(
-        ["cursor-browser", "webgpt", "capital", "of", "Texas"],
+        ["cursor-browser", "chatgpt", "capital", "of", "Texas"],
         scillm_base_url="http://scillm.test",
         scillm_api_key="test",
     )

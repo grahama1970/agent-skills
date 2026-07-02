@@ -1,6 +1,6 @@
 """Perplexity oracle backend (one-shot CDP via surf).
 
-Unlike webgpt/webgemini, Perplexity does not preserve conversation context on
+Unlike tab-persistent browser lanes, Perplexity does not preserve conversation context on
 a standing tab — each query opens a fresh search session. Use for fresh web
 research oracle synthesis, not multi-turn review loops on the same thread.
 """

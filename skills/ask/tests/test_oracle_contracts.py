@@ -6,16 +6,16 @@ from ask.oracle_contracts import normalize_oracle_failure, normalize_oracle_turn
 
 def test_normalize_browser_turns_records_artifacts_and_sentinel_policy():
     response = normalize_oracle_turns(
-        backend="webgpt",
-        model_served="webgpt:123",
+        backend="webgemini",
+        model_served="webgemini:123",
         turns=[
             {
                 "iteration": 1,
-                "backend": "webgpt",
+                "backend": "webgemini",
                 "controlled_tab_id": "123",
                 "took_ms": 42,
                 "content": "answer",
-                "artifact_dir": "/tmp/ask-webgpt",
+                "artifact_dir": "/tmp/ask-webgemini",
                 "raw_contains_sentinel": True,
                 "focus_changed": False,
             }
@@ -23,10 +23,10 @@ def test_normalize_browser_turns_records_artifacts_and_sentinel_policy():
     )
 
     assert response["schema_version"] == "ask.oracle_adapter_response.v1"
-    assert response["backend"] == "webgpt"
+    assert response["backend"] == "webgemini"
     assert response["status"] == "ok"
     assert response["sentinel_required"] is True
-    assert response["artifacts"] == ["/tmp/ask-webgpt"]
+    assert response["artifacts"] == ["/tmp/ask-webgemini"]
     assert response["turns"][0]["controlled_tab_id"] == "123"
     assert response["turns"][0]["latency_ms"] == 42
     assert response["turns"][0]["content_chars"] == 6

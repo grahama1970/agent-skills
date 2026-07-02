@@ -132,32 +132,15 @@ def resolve_model_alias_route(
 ) -> ModelAliasRoute | None:
     """Resolve leading provider-family shorthand, if present."""
 
-    # WebGPT shorthand: `$ask webgpt ...` routes to --oracle-backend webgpt.
-    # This is a browser-driven oracle backed by the human's signed-in ChatGPT
-    # tab via surf; the tab id is auto-resolved (or supplied via --webgpt-tab-id).
-    # Accept both unquoted ($ask webgpt foo bar) and quoted ($ask "webgpt foo bar")
-    # forms by splitting the first arg on whitespace before checking the alias.
     if question_parts:
         first_arg = question_parts[0]
         first_tokens = first_arg.split()
         first_clean = _clean_token(first_tokens[0]).lower() if first_tokens else ""
         if first_clean in {"webgpt", "chatgpt"}:
-            tail_of_first = " ".join(first_tokens[1:]).strip()
-            remaining = ([tail_of_first] if tail_of_first else []) + list(question_parts[1:])
-            if not remaining:
-                raise ValueError(f"{first_tokens[0]} requires a question after the model shorthand.")
-            return ModelAliasRoute(
-                provider_hint="webgpt",
-                family="webgpt",
-                resolved_model="webgpt",
-                question_parts=remaining,
-                raw_alias=first_tokens[0],
-                source="webgpt-controlled-tab",
-                oracle_backend="webgpt",
-                input_capabilities={"text": True, "image": False, "pdf": False},
+            raise ValueError(
+                "WebGPT integration moved out of $ask. Use $webgpt for ChatGPT/WebGPT browser workflows."
             )
-        if first_clean in {"cursor-browser", "cursorbrowser", "cursor"} and len(first_tokens) >= 2 and first_tokens[1].lower() in {"webgpt", "chatgpt", "browser"}:
-            # $ask cursor-browser webgpt ...
+        if first_clean in {"cursor-browser", "cursorbrowser", "cursor"} and len(first_tokens) >= 2 and first_tokens[1].lower() in {"chatgpt", "browser"}:
             tail = " ".join(first_tokens[2:]).strip()
             remaining = ([tail] if tail else []) + list(question_parts[1:])
             if not remaining:

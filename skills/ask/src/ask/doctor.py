@@ -127,7 +127,7 @@ def build_oracle_lane_health(checks: list[dict[str, Any]] | None = None) -> list
                 })
             else:
                 health.append(_lane_state(backend, required_path=surf_path))
-        elif backend in {"webgpt", "webgemini", "webkimi", "webperplexity"}:
+        elif backend in {"webgemini", "webkimi", "webperplexity"}:
             health.append(_lane_state(backend, required_path=surf_path))
         else:
             health.append({
@@ -153,7 +153,7 @@ def probe_selected_oracle_lane(backend: str) -> dict[str, Any]:
         }
     if backend == "cursor-browser":
         return next(item for item in build_oracle_lane_health([]) if item["lane"] == "cursor-browser")
-    if backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "subagent-runner", "auto"}:
+    if backend in {"webgemini", "webkimi", "webperplexity", "subagent-runner", "auto"}:
         return next(item for item in build_oracle_lane_health([]) if item["lane"] == backend)
     return {
         "lane": backend,

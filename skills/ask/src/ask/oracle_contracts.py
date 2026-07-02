@@ -37,7 +37,6 @@ def normalize_oracle_turns(
         if turn.get("artifact_dir")
     ]
     sentinel_required = backend in {
-        "webgpt",
         "webgemini",
         "webkimi",
         "webperplexity",
@@ -73,7 +72,6 @@ def normalize_oracle_failure(
         "turns_count": 0,
         "artifacts": [],
         "sentinel_required": backend in {
-            "webgpt",
             "webgemini",
             "webkimi",
             "webperplexity",

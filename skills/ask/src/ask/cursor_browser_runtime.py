@@ -28,16 +28,8 @@ from .ask_config import (
     SURF_RUN,
 )
 from . import cursor_browser_project
-from .webgpt_runtime import (
-    WebgptBackendError,
-    build_webgpt_prompt,
-    extract_file_attachments,
-    resolve_web_review_delivery,
-)
-
-# Reuse webgpt tab error naming for callers
 CursorBrowserTabError = type("CursorBrowserTabError", (RuntimeError,), {})
-CursorBrowserBackendError = WebgptBackendError
+CursorBrowserBackendError = type("CursorBrowserBackendError", (RuntimeError,), {})
 
 
 @dataclass(frozen=True)

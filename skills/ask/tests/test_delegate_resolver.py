@@ -136,15 +136,13 @@ def test_builtin_persona_resolves_to_scillm_chat(delegate_root: Path):
     assert envelope["policy"]["mutation"] == "read_only"
 
 
-def test_browser_oracle_resolves_without_worker_runtime(delegate_root: Path):
+def test_webgpt_delegate_fails_closed(delegate_root: Path):
     registry = load_delegate_registry(delegate_root)
 
-    envelope = resolve_delegate_invocation("$ask webgpt to review REVIEW_BUNDLE_MD", registry)
+    with pytest.raises(DelegateError) as exc_info:
+        resolve_delegate_invocation("$ask webgpt to review REVIEW_BUNDLE_MD", registry)
 
-    assert envelope["actor"]["id"] == "webgpt"
-    assert envelope["actor"]["kind"] == "oracle"
-    assert envelope["actor"]["target_type"] == "browser_oracle"
-    assert envelope["runtime"]["selected"] == "webgpt_browser"
+    assert exc_info.value.reason == "unknown_actor"
 
 
 def test_skill_used_as_actor_fails_closed(delegate_root: Path):

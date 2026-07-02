@@ -2018,9 +2018,9 @@ def test_doctor_reports_runtime_sections():
     assert any(check["name"] == "runtime_artifact_schema" for check in result["checks"])
     assert any(check["name"] == "skill:memory" for check in result["checks"])
     lane_health = {item["lane"]: item for item in result["oracle_lane_health"]}
-    assert {"auto", "scillm", "subagent-runner", "webgpt", "cursor-browser"} <= set(lane_health)
+    assert {"auto", "scillm", "subagent-runner", "cursor-browser"} <= set(lane_health)
     assert all(item["state"] in {"available", "needs_attention", "blocked"} for item in lane_health.values())
-    assert lane_health["webgpt"]["safe_default"]
+    assert "webgpt" not in lane_health
 
 
 def test_doctor_lane_health_marks_failed_live_scillm_needs_attention(monkeypatch):

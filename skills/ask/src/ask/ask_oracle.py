@@ -1,7 +1,6 @@
 """Oracle synthesis and subagent orchestration for the ask skill."""
 
 import json
-import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -46,14 +45,11 @@ from .cursor_browser_runtime import (
     CursorBrowserTabError,
     call_cursor_browser,
 )
-from .webgpt_runtime import (
-    WebgptBackendError,
-    WebgptTabError,
-    WebReviewBundleError,
-    build_webgpt_oracle_prompt,
-    call_webgpt,
+from .browser_review_runtime import (
+    BrowserReviewBundleError,
+    build_browser_oracle_prompt,
     extract_file_attachments,
-    resolve_web_review_delivery,
+    resolve_browser_review_delivery,
 )
 from .gemini_runtime import (
     GeminiBackendError,
@@ -109,93 +105,6 @@ def _rank_items(items: list[dict]) -> list[dict]:
     # Fallback: return all items if everything is meta (shouldn't happen)
     return items
 
-def _run_oracle_webgpt(
-    base_prompt: str,
-    question: str,
-    persona: Optional[str],
-    iterations: int,
-    timeout: float,
-    webgpt_tab_id: str,
-    webgpt_url: str,
-    webgpt_create_tab: bool,
-    webgpt_project: str,
-    run_state: object | None,
-    oracle_state: dict,
-) -> tuple[str, str, list[dict]]:
-    """Send one /ask synthesis prompt to the controlled ChatGPT tab via surf.
-
-    iterations: each /ask call is one round. Multi-turn iteration is achieved
-    by calling /ask repeatedly with the same controlled tab — ChatGPT
-    preserves conversation state on the tab. We honour the requested
-    iterations count by issuing that many turns in a single /ask call only
-    when the caller asked for them, but the canonical N-round pattern is
-    handled by re-calling /ask externally.
-    """
-    tab_id = (webgpt_tab_id or str(oracle_state.get("webgpt_tab_id", "") or "")).strip()
-    url = (webgpt_url or str(oracle_state.get("webgpt_url", "") or "")).strip()
-    create_tab = bool(webgpt_create_tab)
-    project = (webgpt_project or str(oracle_state.get("webgpt_project", "") or "")).strip()
-    browser_oracle_from = str(
-        oracle_state.get("browser_oracle_from")
-        or os.environ.get("ASK_BROWSER_ORACLE_FROM", "")
-        or os.getcwd()
-    ).strip()
-    attachments = extract_file_attachments(question)
-    attach_file = resolve_web_review_delivery(question, attachments, backend="webgpt")
-    prompt = build_webgpt_oracle_prompt(
-        base_prompt,
-        question,
-        attachments,
-        attach_file=attach_file,
-    )
-
-    turns: list[dict] = []
-    last_content = ""
-    total_iterations = max(1, int(iterations))
-    for index in range(total_iterations):
-        turn_number = index + 1
-        try:
-            result = call_webgpt(
-                prompt if turn_number == 1 else _format_webgpt_followup_prompt(turns, turn_number, total_iterations),
-                tab_id=tab_id,
-                url=url,
-                create_tab=create_tab and turn_number == 1,
-                project=project,
-                attach_file=attach_file if turn_number == 1 else "",
-                timeout=timeout,
-                no_activate=True,
-                browser_oracle_from=browser_oracle_from,
-                run_state=run_state,
-                iteration=turn_number,
-                persona=persona,
-            )
-        except WebgptTabError as exc:
-            raise WebgptBackendError(
-                f"WebGPT oracle could not resolve a ChatGPT tab on round {turn_number}: {exc}"
-            ) from exc
-        # Lock in the resolved tab for subsequent rounds so the conversation
-        # context is preserved.
-        if not tab_id and result.controlled_tab_id:
-            tab_id = result.controlled_tab_id
-        turns.append({
-            "iteration": turn_number,
-            "backend": "webgpt",
-            "controlled_tab_id": result.controlled_tab_id,
-            "took_ms": result.took_ms,
-            "content": result.response,
-            "artifact_dir": str(result.artifact_dir),
-            "no_activate": result.no_activate,
-            "focus_changed": result.focus_changed,
-            "raw_contains_sentinel": result.raw_contains_sentinel,
-        })
-        last_content = result.response
-
-    model_served = f"webgpt:{tab_id}" if tab_id else "webgpt"
-    return last_content, model_served, turns
-
-
-
-
 def _run_oracle_cursor_browser(
     base_prompt: str,
     question: str,
@@ -212,8 +121,8 @@ def _run_oracle_cursor_browser(
     url = (cursor_browser_url or str(oracle_state.get("cursor_browser_url", "") or "")).strip()
     project = (cursor_browser_project or str(oracle_state.get("cursor_browser_project", "") or "")).strip()
     attachments = extract_file_attachments(question)
-    resolve_web_review_delivery(question, attachments, backend="cursor-browser")
-    prompt = build_webgpt_prompt(
+    resolve_browser_review_delivery(question, attachments, backend="cursor-browser")
+    prompt = build_browser_oracle_prompt(
         base_prompt,
         attachments,
         system_preamble=(
@@ -228,7 +137,7 @@ def _run_oracle_cursor_browser(
         turn_number = index + 1
         try:
             result = call_cursor_browser(
-                prompt if turn_number == 1 else _format_webgpt_followup_prompt(turns, turn_number, total_iterations),
+                prompt if turn_number == 1 else _format_browser_followup_prompt(turns, turn_number, total_iterations),
                 view_id=view_id,
                 url=url,
                 project=project,
@@ -276,7 +185,7 @@ def _run_oracle_webgemini(
     tab_id = (gemini_tab_id or str(oracle_state.get("gemini_tab_id", "") or "")).strip()
     url = (gemini_url or str(oracle_state.get("gemini_url", "") or "")).strip()
     attachments = extract_file_attachments(question)
-    resolve_web_review_delivery(question, attachments, backend="webgemini")
+    resolve_browser_review_delivery(question, attachments, backend="webgemini")
     prompt = build_gemini_prompt(
         base_prompt,
         attachments,
@@ -360,7 +269,7 @@ def _run_oracle_webkimi(
     tab_id = (kimi_tab_id or str(oracle_state.get("kimi_tab_id", "") or "")).strip()
     url = (kimi_url or str(oracle_state.get("kimi_url", "") or "")).strip()
     attachments = extract_file_attachments(question)
-    resolve_web_review_delivery(question, attachments, backend="webkimi")
+    resolve_browser_review_delivery(question, attachments, backend="webkimi")
     prompt = build_kimi_prompt(
         base_prompt,
         attachments,
@@ -436,7 +345,7 @@ def _run_oracle_webperplexity(
 ) -> tuple[str, str, list[dict]]:
     """One-shot Perplexity research oracle via surf (no standing tab)."""
     attachments = extract_file_attachments(question)
-    resolve_web_review_delivery(question, attachments, backend="webperplexity")
+    resolve_browser_review_delivery(question, attachments, backend="webperplexity")
     prompt = build_perplexity_prompt(
         base_prompt,
         attachments,
@@ -463,16 +372,12 @@ def _run_oracle_webperplexity(
     return result.response, "webperplexity", turns
 
 
-def _format_webgpt_followup_prompt(
+def _format_browser_followup_prompt(
     turns: list[dict],
     turn_number: int,
     total_iterations: int,
 ) -> str:
-    """Build a follow-up prompt that nudges ChatGPT to refine the prior answer.
-
-    The previous turn's content stays in ChatGPT's own conversation memory on
-    the tab — we don't need to re-include it. We only frame this turn.
-    """
+    """Build a follow-up prompt for browser-backed iterative refinement."""
     return (
         f"This is iteration {turn_number}/{total_iterations} on the same /ask oracle question. "
         "Review your previous answer in this conversation. Identify the weakest claim or "
@@ -510,11 +415,6 @@ def _apply_oracle_synthesis(
     parallel_review_personas: Optional[str] = None,
     parallel_review_focus: Optional[str] = None,
     parallel_review_role_preset: str = "adversarial-review",
-    webgpt_tab_id: str = "",
-    webgpt_url: str = "",
-    webgpt_create_tab: bool = False,
-    webgpt_project: str = "",
-    browser_oracle_from: str = "",
     cursor_browser_view_id: str = "",
     cursor_browser_url: str = "",
     cursor_browser_project: str = "",
@@ -611,21 +511,6 @@ def _apply_oracle_synthesis(
                 peer_model=peer_model,
                 image_paths=oracle_image_paths or [],
                 run_state=run_state,
-            )
-            protocol_state = {}
-        elif effective_backend == "webgpt":
-            content, model_served, turns = _run_oracle_webgpt(
-                base_prompt=prompt,
-                question=question,
-                persona=persona,
-                iterations=iterations,
-                timeout=timeout,
-                webgpt_tab_id=webgpt_tab_id,
-                webgpt_url=webgpt_url,
-                webgpt_create_tab=webgpt_create_tab,
-                webgpt_project=webgpt_project,
-                run_state=run_state,
-                oracle_state={**result.get("oracle", {}), "browser_oracle_from": browser_oracle_from},
             )
             protocol_state = {}
         elif effective_backend == "cursor-browser":
@@ -770,7 +655,7 @@ def _apply_oracle_synthesis(
             "rule": "memory citations support knowledge answers but not code/review safety claims",
         }
         log.info("Oracle synthesis complete: model=%s reasoning=%s", model, reasoning_effort)
-    except WebReviewBundleError as exc:
+    except BrowserReviewBundleError as exc:
         result["answer"] = str(exc)
         result["oracle"] = {
             "model": model,

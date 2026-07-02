@@ -1,8 +1,8 @@
 ---
 name: ask
 description: >
-  Use when the user asks to query project memory, ask an oracle, use WebGPT or
-  another browser-backed reviewer, run persona/roundtable/deep-review workflows,
+  Use when the user asks to query project memory, ask an oracle, use supported
+  browser-backed reviewers, run persona/roundtable/deep-review workflows,
   generate image prompts, check OS/project health through composed skills, or run
   an ask DAG. This skill is the executable /ask runtime; do not replace it with
   an informal subagent, plain web search, or hand-written review.
@@ -10,7 +10,6 @@ triggers:
   - $ask
   - /ask
   - ask oracle
-  - WebGPT review
   - deep review
   - parallel review
   - roundtable
@@ -21,7 +20,7 @@ triggers:
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
-    browser-backed review, persona workflows, image generation, and DAG runs.
+    supported browser-backed review, persona workflows, image generation, and DAG runs.
   - >
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
@@ -30,7 +29,6 @@ composes:
   - scillm
   - surf
   - subagent-runner
-  - browser-oracle
   - create-report
 taxonomy:
   - orchestration
@@ -55,7 +53,7 @@ allowed-tools:
 
 ## Stop First
 
-If the user names `$ask`, `/ask`, an ask mode, WebGPT, oracle, deep review,
+If the user names `$ask`, `/ask`, an ask mode, oracle, deep review,
 parallel review, roundtable, argue, CAE gap review, or ask DAG, read this whole
 file before acting. Then use the real runtime entrypoint unless the user
 explicitly asks for a fallback or the runtime is unavailable and that fallback
@@ -95,7 +93,7 @@ ask artifacts.
   acceptance gates.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
-- Report artifact paths as evidence. WebGPT, browser reviewers, or model
+- Report artifact paths as evidence. Browser reviewers or model
   reviewers are not deterministic proof by themselves.
 - Close only from local deterministic proof appropriate to the task: tests,
   schema checks, endpoint responses, screenshots, database/query evidence, or
@@ -114,7 +112,7 @@ Use the narrowest mode that matches the user request.
 | --- | --- | --- |
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
-| WebGPT/browser review | `./run.sh ask "<question>" --webgpt ... --json` or documented browser mode | Use bound tab/config; attach local target content when browser cannot read paths. |
+| Browser review | `./run.sh ask "<question>" --oracle --oracle-backend webgemini|webkimi|webperplexity|cursor-browser --json` or documented browser mode | Use supported browser backend flags; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
 | Parallel review | `./run.sh ask "<question>" --parallel-review ... --json` | State reviewer count/focus and preserve per-reviewer outputs. |
 | Roundtable/argue | `./run.sh ask "<question>" --roundtable ... --json` or argue mode | Name personas and rounds; do not invent missing personas silently. |
@@ -124,7 +122,12 @@ Use the narrowest mode that matches the user request.
 | OS/project health | `./run.sh os ... --json`, `./run.sh doctor ... --json` | Report degraded dependencies, not green-by-absence. |
 | Status/config | `./run.sh status ... --json`, `./run.sh config doctor ... --json` | Use for artifact inspection and readiness preflight. |
 
-## Browser And WebGPT Rules
+## Browser Rules
+
+WebGPT/ChatGPT browser workflows have moved out of `$ask` to `$webgpt`.
+`$ask webgpt`, `$ask chatgpt`, `--oracle-backend webgpt`, `--webgpt-*`, and
+`webgpt-project` must fail closed; do not recreate or route those flows through
+ask.
 
 - A browser tab cannot inspect bare local paths unless the runtime attaches file
   contents or serves an artifact URL. Include readable target content in the
@@ -146,9 +149,7 @@ Load only the reference needed for the selected mode:
 - Argue/roundtable: `docs/ASK_ARGUE_CONTRACT.md`
 - CAE gap review: `docs/ASK_CAE_GAP_REVIEW_CONTRACT.md`
 - SPARTA preflight: `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`
-- Collaboration/status: `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`
 - Human chat examples: `docs/HUMAN_CHAT_EXAMPLES.md`
-- WebGPT reliability: `docs/WEBGPT_EXECUTION_RELIABILITY.md`
 - Project knowledge: `docs/PROJECT_KNOWLEDGE.md`
 - Review chains: `docs/chains/`
 - Reviewer definitions: `docs/reviewers/`
