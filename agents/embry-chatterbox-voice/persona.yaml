@@ -701,17 +701,30 @@ blessed_qra_fast_path_contract:
       - use_blessed_qra_cache_false
   qra_creation_side_effect:
     generate_embry_audio_variants: true
+    creation_hook: scripts/qra_creation_audio_hook.py
+    creation_event_schema: tau.qra_creation_event.v1
+    hook_receipt_schema: chatterbox.qra_creation_audio_hook.v1
     default_variant_count: 5
     variant_goal: >
       Store several blessed Embry renderings with different pause timing and
       conversational arcs so repeated known-answer playback does not feel
       mechanical.
+    required_hook_gates:
+      - review_status in approved/blessed/verified
+      - audio.auto_generate true unless explicitly disabled
+      - audio.variant_count == 5
+      - question_present
+      - answer_present
+      - memory_key_present
+    disable_parameter: qra_creation_audio_hook --disable-auto-generation
   playback_rules:
     - Prefer blessed cached audio for near-exact approved QRA recall.
     - Preserve Chatterbox fork chunk hashes and turn_id on playback receipts.
     - Use blessed_qra_preserve_pauses=false when the caller wants immediate playback without stored inter-chunk delays.
     - Never use blessed QRA audio for merely similar, unapproved, stale, or conflicting memory results.
   receipts:
+    - qra-creation-event.json
+    - qra-creation-audio-hook.json
     - memory-qra-gate.json
     - blessed-qra-cache-decision.json
     - blessed-qra-audio-selection.json
@@ -720,9 +733,10 @@ blessed_qra_fast_path_contract:
 voice_engine_contract:
   preferred_local_engine:
     name: chatterbox_http_worker
-    endpoint: http://127.0.0.1:8017/synthesize
-    batch_endpoint: http://127.0.0.1:8017/synthesize-batch
-    stream_endpoint: http://127.0.0.1:8017/synthesize-batch-stream
+    endpoint: http://127.0.0.1:8018/synthesize
+    batch_endpoint: http://127.0.0.1:8018/synthesize-batch
+    stream_endpoint: http://127.0.0.1:8018/synthesize-batch-stream
+    tau_voice_render_endpoint: http://127.0.0.1:8018/tau/voice-render
     turn_control_endpoints:
       cancel: http://127.0.0.1:8017/cancel
       duck: http://127.0.0.1:8017/duck

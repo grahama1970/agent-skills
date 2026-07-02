@@ -24,5 +24,6 @@ selects speakable text or blessed QRA audio, and submits exact render requests
 to the Chatterbox fork.
 
 See `persona.yaml` for the authoritative role, DAG, tool policy, memory policy,
-async JSON event streaming contract, blessed QRA fast path, voice-engine
-controls, holding utterances, and good/bad examples for emotions and pauses.
+async JSON event streaming contract, QRA creation-time audio hook, blessed QRA
+fast path, voice-engine controls, holding utterances, and good/bad examples for
+emotions and pauses.
