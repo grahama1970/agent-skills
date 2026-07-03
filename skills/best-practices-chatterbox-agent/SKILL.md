@@ -273,11 +273,132 @@ coordinator` belong in logs and receipts. Embry's audible response should only
 contain pause communication and the answer itself unless the human explicitly
 asks about the system mechanics.
 
+## Tonal Delivery Vocabulary
+
+Use this controlled vocabulary for voice coordinator events, QRA response
+overlays, blessed-QRA audio variants, Chatterbox receipts, and future
+style-capable TTS adapters. These values are operational metadata. Do not speak
+the enum names aloud.
+
+Do not invent new delivery values casually. If a project needs a new value,
+update this skill or record `custom_tone_reason` in the receipt so reviewers can
+see why the standard set was not enough.
+
+Canonical `tone` values:
+
+| tone | Use when |
+| --- | --- |
+| `neutral_warm` | Default concise Embry delivery for ordinary helpful answers. |
+| `calm_precise` | Factual, technical, security, compliance, or source-grounded answers. |
+| `careful_concerned` | Risk, uncertainty, safety-sensitive, or emotionally delicate turns. |
+| `serious_low_energy` | High-stakes, angry-user, legal, medical, security, or grief-adjacent contexts. |
+| `memory_confident` | Speaker-scoped memory or exact QRA hit has strong evidence. |
+| `memory_uncertain` | Memory is weak, missing, conflicting, or needs clarification. |
+| `curious_searching` | Memory/search/tool work is pending and a non-factual bridge is needed. |
+| `playful_light` | Casual, low-risk, explicitly playful, or entertainment-friendly turns. |
+| `relieved` | A confusion, error, or tense thread has resolved. |
+| `firm_boundary` | Stop, cancel, refusal, safety, or turn-taking boundary. |
+| `identity_clarification` | Speaker is unknown or ambiguous and personal recall must fail closed. |
+| `one_at_a_time_interrupt` | Multiple non-Embry speakers overlap and the agent should stop and ask for one speaker. |
+| `deflect_calm` | Off-topic, unsafe, unsupported, or no-match response without escalation. |
+| `grief_safe` | Grief, trauma, sadness, or highly vulnerable user state. |
+| `wait_presence` | Low-content presence while live work continues. |
+
+Canonical `delivery_stage` values:
+
+```text
+setup
+slightly_concerned
+neutral
+positive
+satisfied
+clarify
+boundary
+interrupted
+deflect
+wait
+```
+
+Canonical `pace` values:
+
+```text
+brief
+measured
+slow_careful
+quick_light
+firm_short
+```
+
+Canonical `pause_strategy` values:
+
+```text
+short_answer_no_filler
+chunk_pause_150_350ms
+careful_setup_pause
+clarify_direct_no_completion
+boundary_stop_then_prompt
+wait_filler_then_progress
+hum_duck_on_speech
+```
+
+Canonical `wait_activity` values:
+
+```text
+none
+soft_hum
+low_singing
+quiet_rhythm
+prime_counting
+playful_check_in
+curious_observation
+```
+
+Canonical `chatterbox_tags` values, only when the active Chatterbox model or API
+documents support them:
+
+```text
+[chuckle]
+[sigh]
+[gasp]
+[whispering]
+[laugh]
+```
+
+For exact speaker-scoped QRA hits, the memory pipeline may request cached Embry
+audio instead of live rendering. Only do this when `$memory` returns a near-exact
+QRA match for the resolved speaker and the cache entry records the source QRA
+key, text hash, speaker/persona scope, rendered TTS text hash, variant metadata,
+and interruption policy.
+
+Recommended blessed-QRA variant set for five Embry versions:
+
+```text
+variant 1: calm_precise
+variant 2: neutral_warm
+variant 3: memory_confident
+variant 4: careful_concerned
+variant 5: playful_light, only when context is safe; otherwise serious_low_energy
+```
+
+Each variant should record `variant_id`, `tone`, `delivery_arc`,
+`pause_strategy`, `chatterbox_tags`, `source_qra_key`, `answer_text_hash`,
+`tts_render_text_hash`, audio artifact hashes, and whether stale chunks may be
+cancelled before playback. Cached QRA delivery should remove live-thinking
+delays; it should still preserve deterministic chunk pauses and interruption.
+
+Overlap and identity handling are not personal recall. If pyannote, RealtimeSTT,
+or the listener service detects two non-Embry speakers at once, map the turn to
+`one_at_a_time_interrupt` or `firm_boundary`, cancel current Embry speech, and
+ask for one person at a time. Do not let overlapping-speaker handling become a
+memory fact unless `$memory` has separately resolved identity evidence.
+
 ## Multi-Chunk Response Arc
 
 Long final answers should be split into sentence-aware chunks, usually around
 300 characters, but the emotional delivery must remain one continuous response.
 Do not restart a small emotional performance after every spaCy sentence chunk.
+Use the canonical `tone` and `delivery_stage` values above; the four-stage arc
+below is the default final-answer arc, not the full tone inventory.
 
 For a four-chunk answer, use this arc:
 
@@ -288,12 +409,20 @@ chunk 3: positive - clearer and more confident; show the answer resolving
 chunk 4: satisfied - settled and lightly pleased; close with the usable answer
 ```
 
-For fewer or more chunks, interpolate across the same arc. A one-chunk answer
-may simply be `satisfied` if it is already a direct answer. Store the chosen
-`delivery_stage`, `delivery_tone`, `delivery_role`, and `arc_position` in JSON
-events and receipts. The stage metadata is operational guidance for the voice
-coordinator and future style-capable TTS adapters; it should not be spoken as
-debug text.
+For fewer or more chunks, interpolate across the same arc:
+
+```text
+1 chunk: satisfied, or memory_confident for a direct exact-memory answer
+2 chunks: setup -> satisfied
+3 chunks: setup -> neutral -> satisfied
+4 chunks: setup -> neutral -> positive -> satisfied
+5+ chunks: interpolate without restarting the emotion on each chunk
+```
+
+Store the chosen `delivery_stage`, `tone`, `delivery_role`, `pace`,
+`pause_strategy`, and `arc_position` in JSON events and receipts. The stage
+metadata is operational guidance for the voice coordinator and future
+style-capable TTS adapters; it should not be spoken as debug text.
 
 Between final-answer chunks, use short deterministic playback-layer pauses
 rather than repeated filler phrases. Fillers like "Hmm" or "Give me another
