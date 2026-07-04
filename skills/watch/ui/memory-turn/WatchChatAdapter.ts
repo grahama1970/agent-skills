@@ -33,6 +33,7 @@ export type WatchChatAdapterProps = {
   projectLabel?: 'Watch'
   reportPath: string
   answerModel: string
+  reportRows?: WatchSceneRow[]
   sceneContext?: { timecode?: string; rowIndex?: number; movieTitle?: string; movieSegment?: string }
   onMatchedRows?: (rows: WatchSceneRow[]) => void
   onAnnotationTab?: () => void
@@ -76,6 +77,7 @@ export class WatchChatAdapter implements MemoryTurnAdapter {
       projectLabel: options.projectLabel ?? 'Watch',
       reportPath: options.reportPath,
       answerModel: options.answerModel,
+      reportRows: options.reportRows,
       sceneContext: options.sceneContext,
       onMatchedRows: options.onMatchedRows,
       onAnnotationTab: options.onAnnotationTab,

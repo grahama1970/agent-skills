@@ -274,6 +274,63 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
   const querySpec = meta._querySpec ?? meta.querySpec ?? meta.query_spec
   const figureArtifact = meta.figureArtifact ?? meta.figure_artifact
   const tableData = meta.tableData ?? meta.table_data
+  const hasEvidenceCase: boolean = evidenceCaseData != null
+  const hasFigureArtifact: boolean = figureArtifact != null
+  const hasTableData: boolean = tableData != null
+  const messageContent = typeof message.content === 'string' ? message.content : String(message.content ?? '')
+  const evidenceCaseNode: React.ReactNode = !isUser && hasEvidenceCase ? <InlineEvidenceCase data={evidenceCaseData as any} /> : null
+  const figureNode: React.ReactNode = !isUser && hasFigureArtifact ? (
+    <div data-qid="shared-chat:figure" style={{ marginTop: 8 }}>
+      <img src={(figureArtifact as any).url ?? (figureArtifact as any).src} alt={(figureArtifact as any).alt ?? 'Figure'} style={{ maxWidth: '100%', borderRadius: 12 }} />
+    </div>
+  ) : null
+  const tableNode: React.ReactNode = !isUser && hasTableData ? (
+    <div data-qid="shared-chat:table" style={{ marginTop: 8, overflowX: 'auto' }}>
+      <MarkdownRenderer content={renderTable(tableData as any)} />
+    </div>
+  ) : null
+  const contentNode: React.ReactNode = messageContent ? <MarkdownRenderer content={messageContent} /> : null
+  const recallNode: React.ReactNode = !isUser && Array.isArray(recallItems) && recallItems.length > 0 ? (
+    <RecallCard items={recallItems as any} resultCount={typeof resultCount === 'number' ? resultCount : recallItems.length} />
+  ) : null
+  const matrixNode: React.ReactNode = !isUser && matrixSummary != null ? (
+    <ThreatMatrixCard summary={matrixSummary as any} />
+  ) : null
+  const entitiesNode: React.ReactNode = !isUser && Array.isArray(entities) && entities.length > 0 ? (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+      {(entities as any[]).map((e: any, i: number) => (
+        <span key={i} style={{ padding: '3px 8px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', fontSize: 11, color: '#bcd0e7' }}>
+          {String(e?.label ?? e?.id ?? e)}
+        </span>
+      ))}
+    </div>
+  ) : null
+  const gateChainNode: React.ReactNode = !isUser && verdict != null && !hasEvidenceCase ? (
+    <GateChain gates={(verdict as any).gates ?? []} verdict={(verdict as any).state ?? 'INCONCLUSIVE'} tier={(verdict as any).tier} />
+  ) : null
+  const querySpecNode: React.ReactNode = !isUser && querySpec != null ? (
+    <details style={{ marginTop: 6, fontSize: 11 }}>
+      <summary style={{ color: '#9ba8b8', cursor: 'pointer' }}>QuerySpec</summary>
+      <pre style={{ color: '#9ba8b8', fontSize: 11, whiteSpace: 'pre-wrap', marginTop: 4, padding: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 6, overflow: 'auto', maxHeight: 150 }}>
+        {JSON.stringify(querySpec, null, 2)}
+      </pre>
+    </details>
+  ) : null
+  const artifactNodes: React.ReactNode = (
+    <>
+      {evidenceCaseNode}
+      {figureNode}
+      {tableNode}
+      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55, fontSize: 14, marginTop: (!isUser && (hasEvidenceCase || hasFigureArtifact || hasTableData)) ? 12 : 0 }}>
+        {contentNode}
+      </div>
+      {recallNode}
+      {matrixNode}
+      {entitiesNode}
+      {gateChainNode}
+      {querySpecNode}
+    </>
+  )
 
   return (
     <article
@@ -292,65 +349,9 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
     >
 
       {/* Tool action line */}
-      {!isUser && message.skillUsed && <ToolAction label={`Ran /${message.skillUsed}`} qid={`chat:skill:${message.skillUsed}`} />}
+      {!isUser && Boolean(message.skillUsed) ? <ToolAction label={`Ran /${message.skillUsed}`} qid={`chat:skill:${message.skillUsed}`} /> : null}
 
-      {/* Evidence Case */}
-      {!isUser && evidenceCaseData && <InlineEvidenceCase data={evidenceCaseData as any} />}
-
-      {/* Figure artifact */}
-      {!isUser && figureArtifact && (
-        <div data-qid="shared-chat:figure" style={{ marginTop: 8 }}>
-          <img src={(figureArtifact as any).url ?? (figureArtifact as any).src} alt={(figureArtifact as any).alt ?? 'Figure'} style={{ maxWidth: '100%', borderRadius: 12 }} />
-        </div>
-      )}
-
-      {/* Table data */}
-      {!isUser && tableData && (
-        <div data-qid="shared-chat:table" style={{ marginTop: 8, overflowX: 'auto' }}>
-          <MarkdownRenderer content={renderTable(tableData as any)} />
-        </div>
-      )}
-
-      {/* Content text */}
-      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55, fontSize: 14, marginTop: (!isUser && (evidenceCaseData || figureArtifact || tableData)) ? 12 : 0 }}>
-        {message.content ? <MarkdownRenderer content={message.content} /> : null}
-      </div>
-
-      {/* Recall cards */}
-      {!isUser && recallItems && Array.isArray(recallItems) && recallItems.length > 0 && (
-        <RecallCard items={recallItems as any} resultCount={typeof resultCount === 'number' ? resultCount : recallItems.length} />
-      )}
-
-      {/* Threat matrix card */}
-      {!isUser && matrixSummary && (
-        <ThreatMatrixCard summary={matrixSummary as any} />
-      )}
-
-      {/* Entity pills */}
-      {!isUser && entities && Array.isArray(entities) && entities.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-          {(entities as any[]).map((e: any, i: number) => (
-            <span key={i} style={{ padding: '3px 8px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', fontSize: 11, color: '#bcd0e7' }}>
-              {e.label ?? e.id ?? e}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Gate chain */}
-      {!isUser && verdict && !evidenceCaseData && (
-        <GateChain gates={(verdict as any).gates ?? []} verdict={(verdict as any).state ?? 'INCONCLUSIVE'} tier={(verdict as any).tier} />
-      )}
-
-      {/* QuerySpec collapsible */}
-      {!isUser && querySpec && (
-        <details style={{ marginTop: 6, fontSize: 11 }}>
-          <summary style={{ color: '#9ba8b8', cursor: 'pointer' }}>QuerySpec</summary>
-          <pre style={{ color: '#9ba8b8', fontSize: 11, whiteSpace: 'pre-wrap', marginTop: 4, padding: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 6, overflow: 'auto', maxHeight: 150 }}>
-            {JSON.stringify(querySpec, null, 2)}
-          </pre>
-        </details>
-      )}
+      {artifactNodes}
 
       {/* Thinking trace */}
       {!isUser && steps.length > 0 && (
