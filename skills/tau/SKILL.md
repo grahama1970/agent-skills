@@ -124,10 +124,15 @@ Authoring rules for project subagents:
   not in prose.
 - Put allowed transitions in `edges[]`, not in prompt instructions.
 - Put proof requirements in `required_evidence`, not only in task summaries.
-- Use `executor: local` for local command-spec nodes, `executor: provider` only
-  for provider-adapter nodes, and `executor: human` for the boundary node.
+- Use `executor: local` for local command-spec nodes, including local adapter
+  nodes that invoke provider machinery. Use provider-specific executors such as
+  `codex`, `opencode`, or `scillm` only when the active Tau runner explicitly
+  supports that route. Do not use `executor: provider`; it is not a valid
+  `tau.agent_handoff.v1` executor.
 - Include `command_spec` for executable local nodes unless the node is an
-  explicit virtual/control node such as `start` or `human`.
+  explicit virtual/control node such as `start` or `human`. Relative
+  `command_spec` paths resolve relative to the DAG contract file; use absolute
+  paths or store the DAG contract where the relative paths are valid.
 - Include a `human` terminal node unless the workflow has a different explicit
   terminal boundary.
 - Include every invariant Tau should block in `fail_closed_on`.
@@ -239,7 +244,8 @@ limits:
 nodes:
   - id: provider-task
     agent: coder
-    executor: provider
+    executor: local
+    command_spec: experiments/goal-locked-subagents/agent-command-specs/provider-task/tau-dispatch-command.json
     provider:
       adapter: generic-provider-dag-node
       allowed_providers:
@@ -298,12 +304,13 @@ limits:
 nodes:
   - id: start
     agent: goal-guardian
-    executor: local
+    executor: scheduler
     max_attempts: 1
   - id: researcher
     agent: research-auditor
     executor: local
     max_attempts: 1
+    command_spec: experiments/goal-locked-subagents/agent-command-specs/research-auditor/tau-dispatch-command.json
     required_evidence:
       - source_summary
       - citations_or_local_artifacts
@@ -311,6 +318,7 @@ nodes:
     agent: coder
     executor: local
     max_attempts: 2
+    command_spec: experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json
     required_evidence:
       - changed_files
       - focused_tests
@@ -318,6 +326,7 @@ nodes:
     agent: reviewer
     executor: local
     max_attempts: 1
+    command_spec: experiments/goal-locked-subagents/agent-command-specs/reviewer/tau-dispatch-command.json
     join:
       requires_completed:
         - researcher
