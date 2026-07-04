@@ -17,7 +17,10 @@ from skills.watch.scripts.run_realtime_identity_memory_loop import (
     approved_reference_records,
     reference_approval_by_id,
 )
-from skills.watch.scripts.build_watch_identity_gate_receipt import build_identity_gate_receipt
+from skills.watch.scripts.build_watch_identity_gate_receipt import (
+    build_identity_gate_receipt,
+    build_qdrant_recall_identity_stop_receipt,
+)
 from skills.watch.scripts.build_watch_negative_control_receipt import build_negative_control_receipt
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -51,6 +54,17 @@ LIVE_APPROVAL_LINKED_RECEIPT = (
     / "generated"
     / "watch_realtime_identity_memory_loop_live_approval_linked_20260628T1315Z"
     / "watch_realtime_identity_memory_loop_live_receipt.json"
+)
+LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT = (
+    ROOT
+    / "skills"
+    / "watch"
+    / "docs"
+    / "architecture"
+    / "generated"
+    / "watch_identity_qdrant_marcus_eval"
+    / "20260704T172759115162Z_yolo_track_2_only"
+    / "watch_identity_qdrant_yolo_track_2_interpolated_marcus_eval.json"
 )
 
 
@@ -303,3 +317,159 @@ def test_identity_gate_consumes_failed_negative_control_receipt():
     assert gate["input_receipt_statuses"]["negative_control"] == "FAILED_CANARY_REFERENCES_NOT_INDEPENDENT"
     assert all("NEGATIVE_CONTROL_FAILED" in item["blockers"] for item in gate["candidates"])
     assert all("NEGATIVE_CONTROL_RECEIPT_MISSING" not in item["blockers"] for item in gate["candidates"])
+
+
+def test_qdrant_recall_high_confidence_other_actor_requires_identity_stop():
+    source = {
+        "schema": "watch.identity_qdrant_eval.v1",
+        "mocked": False,
+        "live": True,
+        "input_transport": "image_data_url",
+        "results": [
+            {
+                "sample_index": 16,
+                "time_seconds": 17.205,
+                "yolo_track_key": "detector_9_track_2",
+                "crop_path": "/tmp/crops/sample_16.png",
+                "top_suggestion": {
+                    "character_name": "Willie",
+                    "actor_name": "Billy Bob Thornton",
+                    "confidence": 0.932243,
+                    "display_label": "Willie? 0.93",
+                },
+                "items": [
+                    {
+                        "character_name": "Willie",
+                        "actor_name": "Billy Bob Thornton",
+                        "confidence": 0.932243,
+                        "visual_score": 0.932243,
+                        "crop_path": "/tmp/willie_ref.png",
+                    }
+                ],
+            }
+        ],
+    }
+
+    receipt = build_qdrant_recall_identity_stop_receipt(
+        source,
+        source_path=Path("/tmp/live_qdrant_eval.json"),
+        accepted_character="Marcus",
+        conflict_threshold=0.90,
+        suggestion_threshold=0.82,
+    )
+
+    assert receipt["schema"] == "watch.qdrant_recall_identity_stop_receipt.v1"
+    assert receipt["mocked"] is False
+    assert receipt["live"] is True
+    assert receipt["status"] == "IDENTITY_RECALL_CONFLICTS_FOUND"
+    assert receipt["counts"]["conflict_count"] == 1
+    assert receipt["counts"]["stop_control_required_count"] == 1
+    assert receipt["counts"]["training_eligible_count"] == 0
+    decision = receipt["decisions"][0]
+    assert decision["status"] == "IDENTITY_CONFLICT_STOP_REQUIRED"
+    assert decision["ui_label_policy"] == "RENDER_CONFLICT_AND_STOP_TRACK_PROPAGATION"
+    assert decision["label_to_render"] == "Willie? 0.93"
+    assert decision["stop_control_required"] is True
+    assert decision["eligible_for_training"] is False
+    assert "MEMORY_RECALL_HIGH_CONFIDENCE_OTHER_ACTOR" in decision["blockers"]
+
+
+def test_qdrant_recall_matching_accepted_label_can_count_for_readiness():
+    source = {
+        "mocked": False,
+        "live": True,
+        "results": [
+            {
+                "sample_index": 1,
+                "time_seconds": 0.625,
+                "yolo_track_key": "detector_9_track_2",
+                "top_suggestion": {
+                    "character_name": "Marcus",
+                    "actor_name": "Tony Cox",
+                    "confidence": 0.978397,
+                    "display_label": "Marcus? 0.98",
+                },
+            }
+        ],
+    }
+
+    receipt = build_qdrant_recall_identity_stop_receipt(
+        source,
+        source_path=Path("/tmp/live_qdrant_eval.json"),
+        accepted_character="Marcus",
+    )
+
+    assert receipt["status"] == "IDENTITY_RECALL_SUPPORTED"
+    assert receipt["counts"]["supported_count"] == 1
+    assert receipt["counts"]["training_eligible_count"] == 1
+    assert receipt["counts"]["conflict_count"] == 0
+    decision = receipt["decisions"][0]
+    assert decision["status"] == "ACCEPTED_LABEL_SUPPORTED_BY_RECALL"
+    assert decision["ui_label_policy"] == "ALLOW_ACCEPTED_TRACK_LABEL"
+    assert decision["label_to_render"] == "Marcus"
+    assert decision["eligible_for_training"] is True
+    assert decision["stop_control_required"] is False
+
+
+def test_qdrant_recall_without_accepted_label_stays_tentative():
+    source = {
+        "mocked": False,
+        "live": True,
+        "results": [
+            {
+                "sample_index": 2,
+                "time_seconds": 1.250,
+                "yolo_track_key": "detector_9_track_2",
+                "top_suggestion": {
+                    "character_name": "Marcus",
+                    "actor_name": "Tony Cox",
+                    "confidence": 0.86,
+                    "display_label": "Marcus? 0.86",
+                },
+            }
+        ],
+    }
+
+    receipt = build_qdrant_recall_identity_stop_receipt(
+        source,
+        source_path=Path("/tmp/live_qdrant_eval.json"),
+        accepted_character=None,
+    )
+
+    assert receipt["status"] == "IDENTITY_RECALL_SUPPORTED"
+    assert receipt["counts"]["tentative_suggestion_count"] == 1
+    assert receipt["counts"]["training_eligible_count"] == 0
+    decision = receipt["decisions"][0]
+    assert decision["status"] == "TENTATIVE_RECALL_SUGGESTION"
+    assert decision["ui_label_policy"] == "RENDER_TENTATIVE_SUGGESTION_UNTIL_ACCEPTED"
+    assert decision["label_to_render"] == "Marcus? 0.86"
+    assert decision["eligible_for_training"] is False
+    assert "HUMAN_ACCEPTANCE_REQUIRED" in decision["blockers"]
+
+
+def test_live_yolo_track_qdrant_eval_receipt_marks_handoff_frame_as_stop():
+    source = json.loads(LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT.read_text(encoding="utf-8"))
+
+    receipt = build_qdrant_recall_identity_stop_receipt(
+        source,
+        source_path=LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT,
+        accepted_character="Marcus",
+        conflict_threshold=0.90,
+        suggestion_threshold=0.82,
+    )
+
+    assert receipt["mocked"] is False
+    assert receipt["live"] is True
+    assert receipt["input_transport"] == "image_data_url"
+    assert receipt["status"] == "IDENTITY_RECALL_CONFLICTS_FOUND"
+    assert receipt["counts"]["evaluated_count"] == 18
+    assert receipt["counts"]["supported_count"] == 17
+    assert receipt["counts"]["conflict_count"] == 1
+    assert receipt["counts"]["stop_control_required_count"] == 1
+    conflict = [item for item in receipt["decisions"] if item["status"] == "IDENTITY_CONFLICT_STOP_REQUIRED"][0]
+    assert conflict["time_seconds"] == 17.205
+    assert conflict["accepted_character"] == "Marcus"
+    assert conflict["top_character"] == "Willie"
+    assert conflict["top_confidence"] >= 0.93
+    assert conflict["eligible_for_training"] is False
+    assert conflict["supporting_items"][0]["character_name"] == "Willie"

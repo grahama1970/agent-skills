@@ -1,0 +1,1008 @@
+{
+  "schema": "watch.qdrant_recall_identity_stop_receipt.v1",
+  "status": "IDENTITY_RECALL_CONFLICTS_FOUND",
+  "created_at": "2026-07-04T17:51:43Z",
+  "source_qdrant_eval_receipt": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/watch_identity_qdrant_yolo_track_2_interpolated_marcus_eval.json",
+  "accepted_character": "Marcus",
+  "conflict_threshold": 0.9,
+  "suggestion_threshold": 0.82,
+  "input_transport": "image_data_url",
+  "mocked": false,
+  "live": true,
+  "claim_boundary": {
+    "proves": [
+      "live Memory/Qdrant crop recall was evaluated against the accepted track label",
+      "high-confidence recall for another character creates an identity stop requirement",
+      "only supported accepted-label samples are eligible for training/readiness counting"
+    ],
+    "does_not_prove": [
+      "browser UI applied the stop point",
+      "future frames are correctly labeled without re-running recall"
+    ]
+  },
+  "counts": {
+    "evaluated_count": 18,
+    "supported_count": 17,
+    "conflict_count": 1,
+    "tentative_suggestion_count": 0,
+    "no_suggestion_count": 0,
+    "training_eligible_count": 17,
+    "stop_control_required_count": 1
+  },
+  "decisions": [
+    {
+      "sample_index": 1,
+      "time_seconds": 0.625,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_01_0.625_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.978397,
+      "top_display_label": "Marcus? 0.98",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.978397,
+          "visual_score": 0.978397,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.974235,
+          "visual_score": 0.974235,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.974125,
+          "visual_score": 0.974125,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.9721,
+          "visual_score": 0.9721,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.961688,
+          "visual_score": 0.961688,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703180123677_row0009_marcus_01277f761e4d923094f5.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 2,
+      "time_seconds": 1.04,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_02_1.040_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.976182,
+      "top_display_label": "Marcus? 0.98",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.976182,
+          "visual_score": 0.976182,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.974182,
+          "visual_score": 0.974182,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.973935,
+          "visual_score": 0.973935,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.973744,
+          "visual_score": 0.973744,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.961486,
+          "visual_score": 0.961486,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182446398_row0009_marcus_01277f761e4d923094f5.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 3,
+      "time_seconds": 1.46,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_03_1.460_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.978839,
+      "top_display_label": "Marcus? 0.98",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.978839,
+          "visual_score": 0.978839,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.974134,
+          "visual_score": 0.974134,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.973688,
+          "visual_score": 0.973688,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.973222,
+          "visual_score": 0.973222,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.962314,
+          "visual_score": 0.962314,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182446398_row0009_marcus_01277f761e4d923094f5.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 4,
+      "time_seconds": 4.17,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_04_4.170_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.934361,
+      "top_display_label": "Marcus? 0.93",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.934361,
+          "visual_score": 0.934361,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.928909,
+          "visual_score": 0.928909,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.924279,
+          "visual_score": 0.924279,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.91523,
+          "visual_score": 0.91523,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.915168,
+          "visual_score": 0.915168,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945509_row0009_marcus_79f041795c2203515d31.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 5,
+      "time_seconds": 4.59,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_05_4.590_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.943585,
+      "top_display_label": "Marcus? 0.94",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.943585,
+          "visual_score": 0.943585,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.934603,
+          "visual_score": 0.934603,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945509_row0009_marcus_79f041795c2203515d31.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.930452,
+          "visual_score": 0.930452,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.924907,
+          "visual_score": 0.924907,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.921334,
+          "visual_score": 0.921334,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 6,
+      "time_seconds": 5.005,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_06_5.005_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.929814,
+      "top_display_label": "Marcus? 0.93",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.929814,
+          "visual_score": 0.929814,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.928219,
+          "visual_score": 0.928219,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.926377,
+          "visual_score": 0.926377,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.924405,
+          "visual_score": 0.924405,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.922635,
+          "visual_score": 0.922635,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 7,
+      "time_seconds": 5.42,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_07_5.420_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.947782,
+      "top_display_label": "Marcus? 0.95",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.947782,
+          "visual_score": 0.947782,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140210176_row0009_marcus_d66c873bdd6c98868e59.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.934008,
+          "visual_score": 0.934008,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209336_row0009_marcus_08b174729e3d149cf96c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.922689,
+          "visual_score": 0.922689,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.921721,
+          "visual_score": 0.921721,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945076_row0009_marcus_0a4151b0ce1841046582.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.92051,
+          "visual_score": 0.92051,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 8,
+      "time_seconds": 6.045,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_08_6.045_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.921198,
+      "top_display_label": "Marcus? 0.92",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.921198,
+          "visual_score": 0.921198,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.913374,
+          "visual_score": 0.913374,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.912757,
+          "visual_score": 0.912757,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.9125,
+          "visual_score": 0.9125,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.911398,
+          "visual_score": 0.911398,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 9,
+      "time_seconds": 6.67,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_09_6.670_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.93494,
+      "top_display_label": "Marcus? 0.93",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.93494,
+          "visual_score": 0.93494,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.934064,
+          "visual_score": 0.934064,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140210617_row0009_marcus_742f87b3b263772715e4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.92127,
+          "visual_score": 0.92127,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.918793,
+          "visual_score": 0.918793,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.918619,
+          "visual_score": 0.918619,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 10,
+      "time_seconds": 10.01,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_10_10.010_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.967177,
+      "top_display_label": "Marcus? 0.97",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.967177,
+          "visual_score": 0.967177,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.945742,
+          "visual_score": 0.945742,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.944689,
+          "visual_score": 0.944689,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.94226,
+          "visual_score": 0.94226,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.941667,
+          "visual_score": 0.941667,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 11,
+      "time_seconds": 10.635,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_11_10.635_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.962942,
+      "top_display_label": "Marcus? 0.96",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.962942,
+          "visual_score": 0.962942,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.96038,
+          "visual_score": 0.96038,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.952034,
+          "visual_score": 0.952034,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.949332,
+          "visual_score": 0.949332,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.946301,
+          "visual_score": 0.946301,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 12,
+      "time_seconds": 11.05,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_12_11.050_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.964414,
+      "top_display_label": "Marcus? 0.96",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.964414,
+          "visual_score": 0.964414,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.963528,
+          "visual_score": 0.963528,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.960173,
+          "visual_score": 0.960173,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.942977,
+          "visual_score": 0.942977,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.942894,
+          "visual_score": 0.942894,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 13,
+      "time_seconds": 11.47,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_13_11.470_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.969485,
+      "top_display_label": "Marcus? 0.97",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.969485,
+          "visual_score": 0.969485,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.963167,
+          "visual_score": 0.963167,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.948925,
+          "visual_score": 0.948925,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.941638,
+          "visual_score": 0.941638,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.927612,
+          "visual_score": 0.927612,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 14,
+      "time_seconds": 11.89,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_14_11.890_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.963513,
+      "top_display_label": "Marcus? 0.96",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.963513,
+          "visual_score": 0.963513,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.949145,
+          "visual_score": 0.949145,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.948907,
+          "visual_score": 0.948907,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.941052,
+          "visual_score": 0.941052,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.927745,
+          "visual_score": 0.927745,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 15,
+      "time_seconds": 12.515,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_15_12.515_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.966373,
+      "top_display_label": "Marcus? 0.97",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.966373,
+          "visual_score": 0.966373,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.953965,
+          "visual_score": 0.953965,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.944098,
+          "visual_score": 0.944098,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.941398,
+          "visual_score": 0.941398,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.933215,
+          "visual_score": 0.933215,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 16,
+      "time_seconds": 17.205,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_16_17.205_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Willie",
+      "top_actor": "Billy Bob Thornton",
+      "top_confidence": 0.932243,
+      "top_display_label": "Willie? 0.93",
+      "status": "IDENTITY_CONFLICT_STOP_REQUIRED",
+      "ui_label_policy": "RENDER_CONFLICT_AND_STOP_TRACK_PROPAGATION",
+      "label_to_render": "Willie? 0.93",
+      "stop_control_required": true,
+      "eligible_for_training": false,
+      "blockers": [
+        "MEMORY_RECALL_HIGH_CONFIDENCE_OTHER_ACTOR"
+      ],
+      "supporting_items": [
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.932243,
+          "visual_score": 0.932243,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703200903506_row0009_willie_7faffa77a0be6d677c55.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.927645,
+          "visual_score": 0.927645,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181858378_row0009_willie_3672b99aa680bd0e36c4.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.926158,
+          "visual_score": 0.926158,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182315023_row0009_willie_ae375bb829c2fa3a4760.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.92461,
+          "visual_score": 0.92461,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181920664_row0009_willie_4b6710fae35d6bda0072.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.923681,
+          "visual_score": 0.923681,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181912096_row0009_willie_4db378237e10a4cfce1d.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 17,
+      "time_seconds": 18.04,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_17_18.040_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.855547,
+      "top_display_label": "Marcus? 0.86",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.855547,
+          "visual_score": 0.855547,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260701170849016_row0007_marcus_2cc1198459cbfa38e1b3.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.850997,
+          "visual_score": 0.850997,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212876_row0009_marcus_c548229700e98c0beb67.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.845381,
+          "visual_score": 0.845381,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703203443650_row0009_willie_d7b33ee4e8a79903bbc6.png"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "confidence": 0.838609,
+          "visual_score": 0.838609,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181858378_row0009_willie_3672b99aa680bd0e36c4.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.832394,
+          "visual_score": 0.832394,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211142_row0009_marcus_5b3e09f93e8ff394007f.png"
+        }
+      ]
+    },
+    {
+      "sample_index": 18,
+      "time_seconds": 18.77,
+      "yolo_track_key": "detector_9_track_2",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_18_18.770_marcus_detector_9_track_2_interpolated.png",
+      "accepted_character": "Marcus",
+      "top_character": "Marcus",
+      "top_actor": "Tony Cox",
+      "top_confidence": 0.923913,
+      "top_display_label": "Marcus? 0.92",
+      "status": "ACCEPTED_LABEL_SUPPORTED_BY_RECALL",
+      "ui_label_policy": "ALLOW_ACCEPTED_TRACK_LABEL",
+      "label_to_render": "Marcus",
+      "stop_control_required": false,
+      "eligible_for_training": true,
+      "blockers": [],
+      "supporting_items": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.923913,
+          "visual_score": 0.923913,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703145144204_row0009_marcus_828b4e17cd3c9aabb761.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.916373,
+          "visual_score": 0.916373,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144948118_row0009_marcus_e8dd75a5144ab1564028.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.91447,
+          "visual_score": 0.91447,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703133518081_row0009_marcus_6f47d0300c3948339604.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.911736,
+          "visual_score": 0.911736,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703145117280_row0009_marcus_839f0d21d4b5533c43f5.png"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "confidence": 0.908765,
+          "visual_score": 0.908765,
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703133509479_row0009_marcus_df87c79cf91393bdcdc2.png"
+        }
+      ]
+    }
+  ]
+}
