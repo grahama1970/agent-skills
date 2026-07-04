@@ -3274,6 +3274,30 @@ function coverageNoteForScriptRow(index: number, rows: Array<Record<string, unkn
   return [entity ? `${entity}:` : '', interaction || 'Coverage row is present but has no script evidence note.', missingText].join(' ').replace(/\s+/g, ' ').trim()
 }
 
+type ScriptCoverageStatus = 'verified' | 'failed' | 'pending'
+
+function scriptCoverageStatusForRow(index: number, rows: Array<Record<string, unknown>>): ScriptCoverageStatus {
+  if (rows.length === 0) return 'pending'
+  const row = rows[index % rows.length]
+  const missing = Array.isArray(row.missing_script_details) ? row.missing_script_details : []
+  const hasEvidence = Boolean(
+    String(row.environment_interaction ?? row.script_evidence ?? row.script_function ?? row.dynamics ?? '').trim(),
+  )
+  if (row.described_in_script === false || row.covered_in_script === false || missing.length > 0) return 'failed'
+  if (row.described_in_script === true || row.covered === true || row.covered_in_script === true || hasEvidence) return 'verified'
+  return 'pending'
+}
+
+function scriptCoverageStatusTitle(status: ScriptCoverageStatus, index: number, rows: Array<Record<string, unknown>>): string {
+  if (rows.length === 0) return 'Pending: no persisted interaction-matrix coverage is loaded.'
+  const row = rows[index % rows.length]
+  const entity = String(row.entity ?? row.name ?? row.source_seed_id ?? 'matrix row').trim()
+  const missing = Array.isArray(row.missing_script_details) ? row.missing_script_details.map((item) => String(item)).join(', ') : ''
+  if (status === 'failed') return missing ? `Failed: ${entity} missing ${missing}` : `Failed: ${entity} needs script coverage`
+  if (status === 'verified') return `Verified: ${entity} is described in the script coverage`
+  return `Pending: ${entity} has not been reviewed yet`
+}
+
 function ScriptCoverageTable({ rows }: { rows: Array<Record<string, unknown>> }) {
   if (!rows.length) return null
   return (
@@ -3330,18 +3354,72 @@ function ScriptTable({
 
   return (
     <div data-qid="dream:script:structured-table" style={nvis.scriptTableShell}>
-      {rows.map((row, index) => (
-        <div key={`${row.element}-${index}`} style={nvis.scriptTableRow}>
-          <div style={nvis.scriptBeatHeader}>
-            <span style={nvis.scriptElementTag}>{row.element}</span>
-            <span style={nvis.scriptDurationTag}>{durationLabel(index)}</span>
+      {rows.map((row, index) => {
+        const status = scriptCoverageStatusForRow(index, coverageRows)
+        const statusStyle = status === 'verified'
+          ? nvis.scriptStatusNodeVerified
+          : status === 'failed'
+            ? nvis.scriptStatusNodeFailed
+            : nvis.scriptStatusNodePending
+        return (
+          <div
+            key={`${row.element}-${index}`}
+            style={{
+              ...nvis.scriptTableRow,
+              ...(status === 'failed' ? nvis.scriptTableRowFailed : null),
+            }}
+          >
+            <span
+              data-qid={`dream:script:status-node:${index}`}
+              data-status={status}
+              title={scriptCoverageStatusTitle(status, index, coverageRows)}
+              style={{ ...nvis.scriptStatusNodeBase, ...statusStyle }}
+            />
+            <div style={nvis.scriptBeatHeader}>
+              <span style={nvis.scriptElementTag}>{row.element}</span>
+              <span style={nvis.scriptDurationTag}>{durationLabel(index)}</span>
+            </div>
+            <div style={nvis.scriptContentBlock}>{highlightWithGlossary(row.content, glossary)}</div>
+            <div style={nvis.scriptNotesCell}>{coverageNoteForScriptRow(index, coverageRows)}</div>
           </div>
-          <div style={nvis.scriptContentBlock}>{highlightWithGlossary(row.content, glossary)}</div>
-          <div style={nvis.scriptNotesCell}>{coverageNoteForScriptRow(index, coverageRows)}</div>
-        </div>
-      ))}
+        )
+      })}
       <ScriptCoverageTable rows={coverageRows} />
     </div>
+  )
+}
+
+function ScriptAssetTile({ asset }: { asset: LinkedStoryAsset }) {
+  const [broken, setBroken] = useState(false)
+  const mediaType = dreamInferMediaType(asset.url, asset.mediaType)
+  const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif'].includes(mediaType)
+  const isVideo = ['mp4', 'mov', 'webm', 'avi'].includes(mediaType)
+  const isAudio = ['wav', 'mp3', 'ogg'].includes(mediaType)
+  const Icon = isAudio ? Volume2 : isVideo ? Film : isImage ? Image : FileText
+  const label = asset.title || asset.id
+  return (
+    <button
+      type="button"
+      data-qid={`dream:script:asset:${asset.id}`}
+      title={`${label}${asset.description ? ` — ${asset.description}` : ''}`}
+      onClick={() => asset.url && window.open(asset.url, '_blank', 'noopener,noreferrer')}
+      style={nvis.scriptAssetTile}
+    >
+      {isImage && asset.url && !broken ? (
+        <img
+          src={asset.url}
+          alt={label}
+          style={nvis.scriptAssetThumb}
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <span style={nvis.scriptAssetFallback}>
+          <Icon size={18} />
+        </span>
+      )}
+      <span style={nvis.scriptAssetTitle}>{compactCrewText(label, 58)}</span>
+      <span style={nvis.scriptAssetMeta}>{isAudio ? 'audio' : isVideo ? 'video' : isImage ? 'image' : 'text'}</span>
+    </button>
   )
 }
 
@@ -3871,8 +3949,9 @@ function ScriptConsole({
     <section data-qid="dream:script:console" style={nvis.crewConsole}>
       <div style={nvis.crewTopBar}>
         <div style={nvis.crewTopMeta}>
-          <div style={nvis.sectionLabel}><FileText size={13} /> Phase 06 Script</div>
-          <p style={nvis.crewIntro}>Generate screenplay JSON from the accepted idea, Phase 02 story, interaction matrix, crew choices, contact sheets, voices, and linked assets.</p>
+          <p data-qid="dream:script:phase-description" style={nvis.scriptPhaseDescription}>
+            Generate screenplay JSON from the accepted idea, Phase 02 story, interaction matrix, crew choices, contact sheets, voices, and linked assets.
+          </p>
         </div>
         <div style={nvis.crewActions}>
           <label style={nvis.directorSliderGroup}>
@@ -3952,7 +4031,7 @@ function ScriptConsole({
           <span style={nvis.crewRoleLabel}><Images size={13} /> Assets</span>
           <div style={nvis.scriptAssetGrid}>
             {linkedAssets.slice(0, 6).map((asset) => (
-              <img key={asset.id} src={asset.url} alt={asset.title} title={asset.description || asset.title} style={nvis.scriptAssetThumb} />
+              <ScriptAssetTile key={asset.id} asset={asset} />
             ))}
             {linkedAssets.length === 0 && <span style={nvis.crewContextText}>No linked assets loaded.</span>}
           </div>
@@ -3967,7 +4046,11 @@ function ScriptConsole({
       )}
 
       <div style={nvis.scriptStoryAreaWrap}>
-        <span style={nvis.directorLabel}><FileText size={12} /> Script Area</span>
+        <div style={nvis.scriptSectionHeader}>
+          <span style={nvis.scriptSectionRule} />
+          <span style={nvis.scriptSectionTitle}><FileText size={13} /> Script Area</span>
+          <span style={nvis.scriptSectionRuleWide} />
+        </div>
         <div style={nvis.directorStoryContent}>
           <div data-qid="dream:script:canvas" style={nvis.directorStoryCanvas}>
             <ScriptTable draft={draft} storyContract={storyContract} durationSeconds={durationSeconds} />
@@ -6961,6 +7044,13 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.55,
     maxWidth: 980,
   },
+  scriptPhaseDescription: {
+    margin: 0,
+    color: '#9ca3af',
+    fontSize: 13,
+    lineHeight: 1.5,
+    maxWidth: '75ch',
+  },
   crewActions: {
     display: 'flex',
     alignItems: 'center',
@@ -7570,9 +7660,37 @@ const nvis: Record<string, CSSProperties> = {
   scriptStoryAreaWrap: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 18,
     padding: '0 16px',
     minWidth: 0,
+  },
+  scriptSectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    marginTop: 18,
+    marginBottom: 2,
+  },
+  scriptSectionRule: {
+    flex: '0 0 56px',
+    height: 1,
+    background: 'rgba(255,255,255,0.10)',
+  },
+  scriptSectionRuleWide: {
+    flex: 1,
+    height: 1,
+    background: 'rgba(255,255,255,0.10)',
+  },
+  scriptSectionTitle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    color: '#f3f4f6',
+    fontSize: 12,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    whiteSpace: 'nowrap' as const,
   },
   directorStoryContent: {
     display: 'flex',
@@ -7586,7 +7704,7 @@ const nvis: Record<string, CSSProperties> = {
     borderRadius: 12,
     border: 'none',
     background: 'transparent',
-    color: '#e2e8f0',
+    color: '#d1d5db',
     fontSize: 16,
     lineHeight: 1.7,
     fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
@@ -7602,16 +7720,24 @@ const nvis: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    marginTop: 16,
+    marginTop: 2,
+    paddingLeft: 22,
+    position: 'relative',
     background: 'transparent',
     overflow: 'hidden',
   },
+  scriptTableShellBefore: {},
   scriptTableRow: {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
-    padding: '18px 0',
+    position: 'relative',
+    padding: '20px 0 20px 22px',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
+    borderLeft: '1px solid rgba(74,158,255,0.18)',
+  },
+  scriptTableRowFailed: {
+    borderLeft: '1px solid rgba(239,68,68,0.55)',
   },
   scriptTableHeader: {
     background: 'rgba(255,255,255,0.035)',
@@ -7632,17 +7758,18 @@ const nvis: Record<string, CSSProperties> = {
   },
   scriptContentBlock: {
     minWidth: 0,
-    padding: '16px 24px',
-    marginLeft: 8,
-    borderLeft: '2px solid rgba(255,255,255,0.10)',
-    color: '#d4d4d4',
+    padding: '8px 0 0',
+    marginLeft: 0,
+    borderLeft: 'none',
+    color: '#d1d5db',
     fontSize: 15,
-    lineHeight: 1.7,
+    lineHeight: 1.72,
+    fontFamily: '"Courier Prime", "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     whiteSpace: 'pre-wrap' as const,
     overflowWrap: 'break-word' as const,
   },
   scriptNotesCell: {
-    paddingTop: 10,
+    paddingTop: 12,
     borderTop: '1px solid rgba(255,255,255,0.06)',
     color: '#94a3b8',
     fontSize: 12,
@@ -7654,7 +7781,31 @@ const nvis: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
+    position: 'relative',
   },
+  scriptStatusNodeBase: {
+    position: 'absolute',
+    left: -5,
+    top: 30,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    display: 'inline-block',
+    zIndex: 2,
+  },
+  scriptStatusNodeVerified: {
+    background: '#10B981',
+    boxShadow: '0 0 8px rgba(16,185,129,0.4)',
+  },
+  scriptStatusNodeFailed: {
+    background: '#EF4444',
+    boxShadow: '0 0 8px rgba(239,68,68,0.5)',
+  },
+  scriptStatusNodePending: {
+    background: 'transparent',
+    border: '1px solid #6B7280',
+  },
+  scriptBeatHeaderDot: {},
   scriptElementTag: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -7766,13 +7917,50 @@ const nvis: Record<string, CSSProperties> = {
     border: '1px dashed rgba(255,255,255,0.12)',
     background: 'rgba(255,255,255,0.02)',
   },
-  scriptAssetThumb: {
-    width: 120,
-    height: 80,
-    objectFit: 'cover' as const,
-    borderRadius: 8,
+  scriptAssetTile: {
+    width: 128,
+    minHeight: 104,
+    padding: 0,
+    overflow: 'hidden',
+    borderRadius: 10,
     border: '1px solid rgba(255,255,255,0.10)',
-    background: '#050505',
+    background: 'rgba(10,12,16,0.74)',
+    color: '#d1d5db',
+    display: 'grid',
+    gridTemplateRows: '72px auto auto',
+    textAlign: 'left' as const,
+    cursor: 'pointer',
+  },
+  scriptAssetThumb: {
+    width: '100%',
+    height: 72,
+    objectFit: 'cover' as const,
+    background: '#111827',
+    display: 'block',
+  },
+  scriptAssetFallback: {
+    height: 72,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#93c5fd',
+    background: 'linear-gradient(135deg, rgba(74,158,255,0.14), rgba(255,255,255,0.025))',
+  },
+  scriptAssetTitle: {
+    padding: '8px 9px 2px',
+    color: '#d1d5db',
+    fontSize: 11,
+    lineHeight: 1.25,
+    fontWeight: 700,
+  },
+  scriptAssetMeta: {
+    padding: '0 9px 8px',
+    color: '#64748b',
+    fontSize: 9,
+    lineHeight: 1.2,
+    fontWeight: 800,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
   },
   scriptActionBar: {
     position: 'sticky' as const,
