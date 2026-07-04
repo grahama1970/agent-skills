@@ -12,6 +12,7 @@ import {
   type SpartaComplianceAdapterOptions,
   type StreamingStep,
   type TurnInput,
+  type TurnBranch,
   type TurnSurface,
   type WatchChatAdapterOptions,
 } from './memory-turn'
@@ -115,7 +116,7 @@ export function SharedChatShell({
 
   async function handleSend(text: string): Promise<void> {
     const trimmed = text.trim()
-    if (!trimmed || isStreaming) return
+    if (!trimmed || displayIsStreaming) return
 
     if (onSend) {
       await onSend(trimmed)
