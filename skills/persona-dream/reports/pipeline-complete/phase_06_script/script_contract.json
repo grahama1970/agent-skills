@@ -1,0 +1,404 @@
+{
+  "action_blocks": [
+    {
+      "action": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+      "beat_id": "beat-01",
+      "end_s": 10.0,
+      "start_s": 0.0
+    }
+  ],
+  "artifact_id": "run_script_contract",
+  "asset_usage": [
+    {
+      "asset_id": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+      "title": "Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png. Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby."
+    },
+    {
+      "asset_id": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+      "title": "Embry/Kai is a young surfer in a dark blue shirt crouched low on a white surfboard, riding inside a curling turquoise barrel wave with one hand skimming the water for balance. Warm golden light hits her focused face as spray arcs overhead, with tropical palms, green mountains, rocky shore, and partly cloudy sky visible beyond the wave.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png. Embry/Kai is a young surfer in a dark blue shirt crouched low on a white surfboard, riding inside a curling turquoise barrel wave with one hand skimming the water for balance. Warm golden light hits her focused face as spray arcs overhead, with tropical palms, green mountains, rocky shore, and partly cloudy sky visible beyond the wave."
+    },
+    {
+      "asset_id": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+      "title": "Kai Akana, a young surfer in a black rash guard and board shorts, carves low on a small glassy wave as spray bursts around his white surfboard. Behind him, the Big Island coastline shows dark lava rocks, palm trees, and steep green mountains under warm golden light with low clouds, setting up a focused surfing moment for Embry/Kai.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png. Kai Akana, a young surfer in a black rash guard and board shorts, carves low on a small glassy wave as spray bursts around his white surfboard. Behind him, the Big Island coastline shows dark lava rocks, palm trees, and steep green mountains under warm golden light with low clouds, setting up a focused surfing moment for Embry/Kai."
+    },
+    {
+      "asset_id": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+      "title": "Embry and Kai lie prone on their surfboards in clear ocean water, scanning opposite directions for incoming waves with focused, expectant expressions. Warm low-angle sunlight, calm rolling swell, a tropical coastline with palms, dark rocks, green mountains, and soft clouds set a quiet \u201cwaiting for the right wave\u201d moment.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png. Embry and Kai lie prone on their surfboards in clear ocean water, scanning opposite directions for incoming waves with focused, expectant expressions. Warm low-angle sunlight, calm rolling swell, a tropical coastline with palms, dark rocks, green mountains, and soft clouds set a quiet \u201cwaiting for the right wave\u201d moment."
+    },
+    {
+      "asset_id": "embry_media_asset__assets_character_sheet_montage_jpg",
+      "title": "Embry is a young woman with brown hair tied back, expressive green-brown eyes, and a navy polo, shown in multiple reference poses neutral, focused at a computer, explaining with her hand raised, tired in a hoodie, smiling outdoors, and working at a multi-monitor desk with notes, mugs, and office items. The settings alternate between bright office interiors and warm coastal balcony/beach views with palm trees, ocean, and golden sunlight, establishing her as a thoughtful tech-savvy character ready to enter a 10-second Embry/Kai surfing story.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_media_asset__assets_character_sheet_montage_jpg. Embry is a young woman with brown hair tied back, expressive green-brown eyes, and a navy polo, shown in multiple reference poses: neutral, focused at a computer, explaining with her hand raised, tired in a hoodie, smiling outdoors, and working at a multi-monitor desk with notes, mugs, and office items. The settings alternate between bright office interiors and warm coastal balcony/beach views with palm trees, ocean, and golden sunlight, establishing her as a thoughtful tech-savvy character ready to enter a 10-second Embry/Kai surfing story."
+    },
+    {
+      "asset_id": "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+      "title": "Kai Akana is a young Hawaiian/Norwegian/Japanese surfer with tan skin, curly dark hair, athletic build, and expressive brown eyes, shown in navy tees, a black wetsuit, and post-surf shirtless with a white surfboard. Use him on a bright tropical beach with blue ocean, green mountains, palms, and warm sun, actively carrying or steadying his board after a surf session while looking toward Embry with an easy, engaged smile.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png. Kai Akana is a young Hawaiian/Norwegian/Japanese surfer with tan skin, curly dark hair, athletic build, and expressive brown eyes, shown in navy tees, a black wetsuit, and post-surf shirtless with a white surfboard. Use him on a bright tropical beach with blue ocean, green mountains, palms, and warm sun, actively carrying or steadying his board after a surf session while looking toward Embry with an easy, engaged smile."
+    },
+    {
+      "asset_id": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+      "title": "Aerial drone view of a massive dark-blue Nazar\u00e9 wave rolling across open ocean under bright clear daylight, with white spray and foam tracing the breaking crest. A tiny surfer or jet ski cuts along the face near the foamy section, useful for an Embry/Kai big-wave rescue or tow-in surfing moment.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4. Aerial drone view of a massive dark-blue Nazar\u00e9 wave rolling across open ocean under bright clear daylight, with white spray and foam tracing the breaking crest. A tiny surfer or jet ski cuts along the face near the foamy section, useful for an Embry/Kai big-wave rescue or tow-in surfing moment."
+    },
+    {
+      "asset_id": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+      "title": "Keyframe thumbnail extracted from the surf video reference so video assets can render visually in the memory graph and board.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg. Keyframe thumbnail extracted from the surf video reference so video assets can render visually in the memory graph and board."
+    },
+    {
+      "asset_id": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+      "title": "Ambient audio led by Ocean, with supporting cues of Waves, surf, Wind, Wind noise (microphone).",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav. Ambient audio led by Ocean, with supporting cues of Waves, surf, Wind, Wind noise (microphone)."
+    },
+    {
+      "asset_id": "asset-9",
+      "title": "Contact sheet for Kona Coast public reef-break environment, beach pressure, shared-water etiquette, heat, glare, and Big Island geography.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: persona_dream_visual_asset__contact_sheet_kona_coast_png. Contact sheet for Kona Coast public reef-break environment, beach pressure, shared-water etiquette, heat, glare, and Big Island geography."
+    },
+    {
+      "asset_id": "asset-10",
+      "title": "Contact sheet for shallow lava reef constraints dark rock under clear water, safe channels, line adjustment, and visible physical stakes.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: persona_dream_visual_asset__contact_sheet_lava_reef_png. Contact sheet for shallow lava reef constraints: dark rock under clear water, safe channels, line adjustment, and visible physical stakes."
+    },
+    {
+      "asset_id": "asset-11",
+      "title": "Contact sheet for June swell timing quiet water, approaching lump, glare on the face, paddle decision, commitment, and consequence.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: persona_dream_visual_asset__contact_sheet_june_swell_png. Contact sheet for June swell timing: quiet water, approaching lump, glare on the face, paddle decision, commitment, and consequence."
+    },
+    {
+      "asset_id": "asset-12",
+      "title": "Contact sheet for Embry\u2019s older or borrowed white performance shortboard with waxed deck, rail pressure, grip, and reef-risk continuity.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: persona_dream_visual_asset__contact_sheet_embry_surfboard_png. Contact sheet for Embry\u2019s older or borrowed white performance shortboard with waxed deck, rail pressure, grip, and reef-risk continuity."
+    },
+    {
+      "asset_id": "asset-13",
+      "title": "Contact sheet for Kai\u2019s familiar white shortboard with worn rail marks, waxed deck, efficient trim, and reef-line decision continuity.",
+      "use_in_story": "visual continuity reference for script staging",
+      "visual_consistency_note": "Persona media asset key: persona_dream_visual_asset__contact_sheet_kai_surfboard_png. Contact sheet for Kai\u2019s familiar white shortboard with worn rail marks, waxed deck, efficient trim, and reef-line decision continuity."
+    }
+  ],
+  "created_at": "2026-07-04T13:37:51Z",
+  "dialogue_blocks": [
+    {
+      "end_s": 10.0,
+      "speaker": "Kai",
+      "start_s": 0.0,
+      "text": "If we paddle now, we're cutting across the lineup.",
+      "voice_direction": "quiet, practical restraint"
+    }
+  ],
+  "entity_environment_script_table": [
+    {
+      "category": "character",
+      "described_in_script": true,
+      "entity": "Embry",
+      "environment_interaction": "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+      "missing_script_details": [],
+      "objects_used": [
+        "navy rashguard",
+        "phone",
+        "family obligations",
+        "borrowed/older shortboard"
+      ],
+      "script_evidence": "Navy rashguard dark at collar and ribs; sweat on upper lip; salt at temples; palm slips on softened wax; she wipes sweat and complains about the heat.",
+      "script_function": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+      "source_seed_id": "seed-0",
+      "visible_or_audible": true
+    },
+    {
+      "category": "character",
+      "described_in_script": true,
+      "entity": "Kai",
+      "environment_interaction": "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+      "missing_script_details": [],
+      "objects_used": [
+        "black rashguard",
+        "phone call",
+        "surf ritual",
+        "familiar shortboard"
+      ],
+      "script_evidence": "Black rashguard shines with spray; he reads locals, channel, reef, and Embry's paddle cadence; he waits instead of taking the easy wave.",
+      "script_function": "Kai demonstrates competence by yielding to a local, conserving energy, and giving one practical channel cue rather than taking over Embry\u2019s choice.",
+      "source_seed_id": "seed-1",
+      "visible_or_audible": true
+    },
+    {
+      "category": "character_object",
+      "described_in_script": true,
+      "entity": "Embry surfboard",
+      "environment_interaction": "Sun and humidity soften the wax on the older white performance shortboard, so Embry\u2019s palm slips and her rail pressure must be reset before the wave reaches the reef.",
+      "missing_script_details": [],
+      "objects_used": [
+        "White shortboard",
+        "performance shape",
+        "visibly waxed deck",
+        "likely older/borrowed",
+        "rail pressure matters over shallow reef."
+      ],
+      "script_evidence": "Borrowed white shortboard has softened wax; Embry's right palm skids and she resets rail grip before committing.",
+      "script_function": "The board converts heat and reef caution into visible mechanics: grip, balance, and commitment are not abstract feelings.",
+      "source_seed_id": "seed-2",
+      "visible_or_audible": true
+    },
+    {
+      "category": "character_object",
+      "described_in_script": true,
+      "entity": "Kai surfboard",
+      "environment_interaction": "The well-used waxed board lets Kai trim efficiently under glare and chop, making small corrections while he waits outside the danger line.",
+      "missing_script_details": [],
+      "objects_used": [
+        "White shortboard with darker underside/rail marks",
+        "well-used and waxed",
+        "familiar enough for quick reef-line decisions."
+      ],
+      "script_evidence": "Kai waits on a familiar white board and uses it for position, restraint, and lineup etiquette rather than showing off.",
+      "script_function": "Kai\u2019s familiar board makes his restraint legible as skill: he can move quickly, but chooses patience and positioning.",
+      "source_seed_id": "seed-3",
+      "visible_or_audible": true
+    },
+    {
+      "category": "environmental_force",
+      "described_in_script": true,
+      "entity": "June Swell",
+      "environment_interaction": "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+      "missing_script_details": [],
+      "objects_used": [
+        "sets",
+        "tide window",
+        "wave face"
+      ],
+      "script_evidence": "A silver lump gathers, first peak passes to a local, and the next clean shoulder creates the decisive commitment.",
+      "script_function": "The swell supplies the ten-second clock and turns hesitation, etiquette, and trust into immediate action.",
+      "source_seed_id": "seed-4",
+      "visible_or_audible": true
+    },
+    {
+      "category": "environmental_force",
+      "described_in_script": true,
+      "entity": "Lava Reef",
+      "environment_interaction": "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it.",
+      "missing_script_details": [],
+      "objects_used": [
+        "sharp rock",
+        "shallow line",
+        "safe channel"
+      ],
+      "script_evidence": "Dark lava shapes show through clear water and force Embry to time her line around the safe channel.",
+      "script_function": "The reef prevents generic surf action by making every movement accountable to a visible physical consequence.",
+      "source_seed_id": "seed-5",
+      "visible_or_audible": true
+    },
+    {
+      "category": "location_social_system",
+      "described_in_script": true,
+      "entity": "Kona Coast",
+      "environment_interaction": "The public bay and reef break require waiting turns and reading locals; heat and crowded patience make Kai\u2019s yield and Embry\u2019s timing socially as well as physically necessary.",
+      "missing_script_details": [],
+      "objects_used": [
+        "bay",
+        "local etiquette",
+        "reef break"
+      ],
+      "script_evidence": "Kahalu'u Bay, Kona Coast, Big Island, daylight surf window, local lineup, beach bag, channel, and public etiquette all frame the stolen day.",
+      "script_function": "The location makes their private sick-day escape depend on shared-water rules, preventing reckless or isolated decision-making.",
+      "source_seed_id": "seed-6",
+      "visible_or_audible": true
+    }
+  ],
+  "interaction_matrix_coverage": [
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-0"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-1"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-2"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-3"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-4"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-5"
+    },
+    {
+      "coverage_note": "Mapped into entity_environment_script_table and screenplay staging.",
+      "covered": true,
+      "source_seed_id": "seed-6"
+    }
+  ],
+  "quality_checks": {
+    "covered_seed_ids": [
+      "seed-0",
+      "seed-1",
+      "seed-2",
+      "seed-3",
+      "seed-4",
+      "seed-5",
+      "seed-6"
+    ],
+    "live": true,
+    "matrix_completeness": 7,
+    "missing_seed_ids": [],
+    "mocked": false,
+    "provider_model_call": false,
+    "used_core_idea": true,
+    "used_environment": true,
+    "used_location": true,
+    "used_story": true
+  },
+  "realism_contract": {
+    "dynamic_object_ledger": [
+      {
+        "environment_driver": "Hot, humid Kona Coast air, glare, saltwater, and exertion.",
+        "object": "Embry's skin and rashguard",
+        "observable_script_evidence": "Sweat beads on upper lip, salt at temples, navy rashguard dark at collar and ribs."
+      },
+      {
+        "environment_driver": "Sun and humidity soften wax, changing hand contact and board control.",
+        "object": "Embry surfboard wax and rails",
+        "observable_script_evidence": "Soft wax under palms; right palm skids; rail grip is reset before commitment."
+      },
+      {
+        "environment_driver": "Swell timing, local etiquette, and reef channel positioning.",
+        "object": "Kai surfboard and body position",
+        "observable_script_evidence": "Kai waits outside on a familiar white board and holds position."
+      },
+      {
+        "environment_driver": "Shallow reef, summer swell rhythm, and safe channel constraints.",
+        "object": "Lava reef and June swell",
+        "observable_script_evidence": "Dark lava shapes under clear water; silver lump and clean shoulder decide timing."
+      }
+    ],
+    "entity_rows_described": [
+      "seed-0",
+      "seed-1",
+      "seed-2",
+      "seed-3",
+      "seed-4",
+      "seed-5",
+      "seed-6"
+    ],
+    "human_skin_face_ledger": [
+      {
+        "character": "Embry",
+        "environment_response": "Humidity and glare make fatigue and autonomy visible in body language.",
+        "skin_face_evidence": "Sweat on upper lip, salt at temples, mouth wiped with wrist, heat complaint."
+      },
+      {
+        "character": "Kai",
+        "environment_response": "Spray, reef reading, and local etiquette shape his calm restraint.",
+        "skin_face_evidence": "Black rashguard shining with spray; restrained watchfulness rather than expository dialogue."
+      }
+    ],
+    "schema": "persona_dream.script_realism_contract.v1",
+    "script_forbidden_artifacts_absent": true,
+    "status": "SELF_CHECKED_PENDING_VERIFIER"
+  },
+  "review_evidence": {
+    "basis": "Derived from the Phase 06 prompt payload and accepted upstream artifacts.",
+    "provider_calls": {
+      "script_reviewer_model": false,
+      "script_writer_model": false
+    },
+    "review_status": "ACCEPTED_AUTOMATED",
+    "reviewed_by": "tau.script-writer"
+  },
+  "schema": "persona_dream.script_contract.v1",
+  "script": "EXT. KAHALU'U BAY - DAY\n\nA hot, humid daylight surf window holds over Kahalu'u Bay, Kona Coast, Big Island.\nHot, humid Kona Coast surf conditions with summer swell timing, lava rock reef constraints, glare, saltwater, softened wax, fatigue, and local lineup etiquette. heat, humidity, glare, saltwater, fatigue, lava rock reef, summer swell, local surf etiquette\nEmbry's navy rashguard has gone dark at the collar and ribs. Sweat beads on her upper lip, salt dries white at her temples, and the heat makes the borrowed white shortboard's wax feel soft under her palms.\n\nACTION\nEmbry\u2019s phone buzzes on the beach bag like obligation had learned echolocation.\nA silver lump gathers outside the lineup. Embry checks the dark lava shapes under the clear water, resets her rail grip when her right palm skids, and forces herself to breathe before the board yaws across the swell.\nKai, black rashguard shining with spray, waits farther out on his familiar white board. He watches the locals, the channel, and Embry's paddle cadence, then holds position instead of taking the easy wave.\n\nDIALOGUE\nEMBRY\nThis heat is trying to surf the board before I do.\n\nKAI\nIf we paddle now, we're cutting across the lineup.\n\nEMBRY\nThen we wait until it is ours.\n\nACTION\nHer phone buzzes from the beach bag and stops. Embry wipes sweat from her mouth with the back of her wrist, lets the first peak pass to the local already angled in, and turns only when the next clean shoulder stands up over the reef. Kai gives one small nod toward the safe channel. Embry commits with tired arms, not because the day is harmless, but because this choice is finally hers.",
+  "source_context_summary": {
+    "core_idea": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+    "environment": {
+      "active_pressures": [
+        "heat",
+        "humidity",
+        "glare",
+        "saltwater",
+        "fatigue",
+        "lava rock reef",
+        "summer swell",
+        "local surf etiquette"
+      ],
+      "description": "Hot, humid Kona Coast surf conditions with summer swell timing, lava rock reef constraints, glare, saltwater, softened wax, fatigue, and local lineup etiquette."
+    },
+    "location": {
+      "island": "Big Island",
+      "month": "June",
+      "place": "Kahalu'u Bay",
+      "region": "Kona Coast",
+      "time_window": "daylight surf window",
+      "weekday": "Wednesday",
+      "year": 2024
+    },
+    "story_excerpt": "Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave."
+  },
+  "source_paths": {
+    "prompt_payload": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/prompt-payload.json",
+    "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260704T134200Z/input_script_contract_work_order.json"
+  },
+  "status": "ACCEPTED_AUTOMATED",
+  "task": {
+    "kind": "phase_06_script",
+    "scene_count": 1,
+    "target_duration_s": 10.0,
+    "target_pages": 1
+  },
+  "timed_beats": [
+    {
+      "action": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+      "beat_id": "beat-01",
+      "end_s": 10.0,
+      "environment_driver": "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+      "focus_entity": "Embry",
+      "start_s": 0.0
+    }
+  ],
+  "timed_transcript": [
+    {
+      "end_s": 10.0,
+      "speaker": null,
+      "start_s": 0.0,
+      "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+      "voice_direction": "action description"
+    },
+    {
+      "end_s": 10.0,
+      "speaker": "Kai",
+      "start_s": 0.0,
+      "text": "If we paddle now, we're cutting across the lineup.",
+      "voice_direction": "quiet, practical restraint"
+    }
+  ]
+}

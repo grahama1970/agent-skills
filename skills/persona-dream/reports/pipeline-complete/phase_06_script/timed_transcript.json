@@ -1,0 +1,16 @@
+[
+  {
+    "end_s": 10.0,
+    "speaker": null,
+    "start_s": 0.0,
+    "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+    "voice_direction": "action description"
+  },
+  {
+    "end_s": 10.0,
+    "speaker": "Kai",
+    "start_s": 0.0,
+    "text": "If we paddle now, we're cutting across the lineup.",
+    "voice_direction": "quiet, practical restraint"
+  }
+]
