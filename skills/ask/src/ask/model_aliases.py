@@ -132,13 +132,17 @@ def resolve_model_alias_route(
 ) -> ModelAliasRoute | None:
     """Resolve leading provider-family shorthand, if present."""
 
+    # WebGPT/ChatGPT browser routing is intentionally no longer part of /ask.
+    # Fail closed so agents do not silently reintroduce ChatGPT tab control via
+    # the old shorthand.
     if question_parts:
         first_arg = question_parts[0]
         first_tokens = first_arg.split()
         first_clean = _clean_token(first_tokens[0]).lower() if first_tokens else ""
         if first_clean in {"webgpt", "chatgpt"}:
             raise ValueError(
-                "WebGPT integration moved out of $ask. Use $webgpt for ChatGPT/WebGPT browser workflows."
+                "WebGPT/ChatGPT routing has been removed from /ask. "
+                "Use $surf webgpt.submit or the project-level $webgpt workflow directly."
             )
         if first_clean in {"cursor-browser", "cursorbrowser", "cursor"} and len(first_tokens) >= 2 and first_tokens[1].lower() in {"chatgpt", "browser"}:
             tail = " ".join(first_tokens[2:]).strip()

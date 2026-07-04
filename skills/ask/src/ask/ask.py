@@ -82,6 +82,11 @@ from .hybrid import ask_hybrid, learn_back
 from .image_generation import generate_image_with_scillm
 from .model_aliases import ModelAliasRoute, resolve_model_alias_route
 
+WEBGPT_DEPRECATION_MESSAGE = (
+    "WebGPT/ChatGPT routing has been removed from /ask. "
+    "Use $surf webgpt.submit or the project-level $webgpt workflow directly."
+)
+
 app = typer.Typer(help="/ask ask - Query accumulated knowledge")
 
 SKILL_MENTION_RE = re.compile(
@@ -275,6 +280,11 @@ def ask(
     cae_reviewers: Optional[str] = None,
     cae_judge: str = DEFAULT_CAE_JUDGE,
     cae_max_rounds: int = 3,
+    webgpt_tab_id: str = "",
+    webgpt_url: str = "",
+    webgpt_create_tab: bool = False,
+    webgpt_project: str = "",
+    webgpt_once: bool = False,
     gemini_tab_id: str = "",
     gemini_url: str = "",
     kimi_tab_id: str = "",
@@ -337,7 +347,7 @@ def ask(
         implement_with: Implementation backend (code-runner handoff or scillm-agent standing worker).
         apply_fixes: Alias for explicit code-runner implementation intent.
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
-        deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
+        deep_review: Run deep review with JSON/markdown artifacts.
         cae_gap_review: Run evidence-case-backed CAE reviewer/judge loop.
         visible_subagent: Visible subagent routing contract from the CLI.
         mentioned_skills: Skill names detected in the original visible-subagent utterance.
@@ -346,6 +356,9 @@ def ask(
     Returns:
         dict with answer, sources, bridges.
     """
+    if any([oracle_backend == "webgpt", webgpt_tab_id, webgpt_url, webgpt_create_tab, webgpt_project, webgpt_once]):
+        raise ValueError(WEBGPT_DEPRECATION_MESSAGE)
+
     started_at = time.time()
     session = SessionWriter(scope=scope, persona_id=persona_id)
     session.add_turn("user", question)
@@ -1601,9 +1614,19 @@ def main(
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
     overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
     resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
+    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="Deprecated. WebGPT/ChatGPT routing has been removed from /ask and this option fails closed."),
+    webgpt_url: str = typer.Option("", "--webgpt-url", help="Deprecated. WebGPT/ChatGPT routing has been removed from /ask and this option fails closed."),
+    webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Deprecated. WebGPT/ChatGPT routing has been removed from /ask and this option fails closed."),
+    webgpt_project: str = typer.Option("", "--webgpt-project", help="Deprecated. WebGPT/ChatGPT routing has been removed from /ask and this option fails closed."),
+    browser_oracle_from: str = typer.Option("", "--browser-oracle-from", help="Directory for $browser-oracle walk-up (.ask/browser-oracles.yaml) for supported browser backends."),
     cursor_browser_view_id: str = typer.Option("", "--cursor-browser-view-id", help="Cursor Browser viewId for --oracle-backend cursor-browser (from browser_tabs; NOT a Chrome tab id)."),
     cursor_browser_url: str = typer.Option("", "--cursor-browser-url", help="ChatGPT URL to resolve in Cursor Browser for --oracle-backend cursor-browser."),
     cursor_browser_project: str = typer.Option("", "--cursor-browser-project", help="Bind to ~/.pi/cursor-browser-projects/<name>.json (stores viewId)."),
+    webgpt_once: bool = typer.Option(
+        False,
+        "--once",
+        help="Deprecated WebGPT-only flag. Fails closed when provided.",
+    ),
     gemini_tab_id: str = typer.Option("", "--gemini-tab-id", help="Chrome tab id to control for --oracle-backend webgemini. Optional: auto-resolved from a single open gemini.google.com tab."),
     gemini_url: str = typer.Option("", "--gemini-url", help="Gemini conversation URL to resolve to an open Chrome tab for --oracle-backend webgemini."),
     kimi_tab_id: str = typer.Option("", "--kimi-tab-id", help="Chrome tab id to control for --oracle-backend webkimi. Optional: auto-resolved from a single open kimi.com tab."),
@@ -1635,6 +1658,14 @@ def main(
         oracle = True
         oracle_backend = model_alias_route.oracle_backend
         oracle_model = model_alias_route.resolved_model
+
+    if any([oracle_backend == "webgpt", webgpt_tab_id, webgpt_url, webgpt_create_tab, webgpt_project, webgpt_once]):
+        raise typer.BadParameter(
+            WEBGPT_DEPRECATION_MESSAGE,
+            param_hint="--oracle-backend",
+        )
+
+    explicit_webgpt_oracle = False
 
     visible_subagent_route: dict | None = None
     dag_orchestration_attention: dict | None = None

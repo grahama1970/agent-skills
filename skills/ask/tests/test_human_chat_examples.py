@@ -287,14 +287,16 @@ def test_documented_deep_review_prompt_maps_to_deep_review(monkeypatch):
 
 
 
-def test_documented_webgpt_prompt_fails_closed(monkeypatch):
+def test_documented_webgpt_prompt_is_rejected(monkeypatch):
     result, captured = _invoke_chat_prompt(
         "$ask webgpt review /tmp/review-bundle.md",
         monkeypatch,
     )
 
     assert result.exit_code != 0
-    assert "$webgpt" in result.output
+    assert captured == {}
+    assert "WebGPT/ChatGPT routing has been removed" in result.output
+    assert "$surf webgpt.submit" in result.output
 
 
 def test_documented_webgemini_prompt_maps_to_webgemini_oracle(monkeypatch):
@@ -338,8 +340,11 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "mustard",
         "CM0001",
         "needs_attention",
+        "$ask webgpt review /tmp/review-bundle.md",
+        "$ask chatgpt review /tmp/review-bundle.md",
+        "Use `$surf webgpt.submit` or the project-level `$webgpt` workflow directly",
         "$ask webgemini review /tmp/review-bundle.md",
         "$ask webperplexity summarize the current state of space-based cybersecurity in 2026",
-        "Wrong: $ask webgpt review /tmp/review-bundle.md",
+        "Wrong: $ask webgemini review /tmp/bundle/REVIEW_REQUEST.md",
     ]:
         assert required in examples

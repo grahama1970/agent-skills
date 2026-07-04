@@ -102,7 +102,12 @@ Ask Options:
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
 
-  Browser oracle backends (--oracle-backend):
+  WebGPT/ChatGPT routing:
+  WebGPT has been removed from /ask. Stale webgpt/chatgpt aliases and
+  --webgpt-* flags fail closed. Use $surf webgpt.submit or the project-level
+  $webgpt workflow directly.
+
+  Other browser oracle backends (--oracle-backend):
   --gemini-tab-id <id>         Chrome tab id for webgemini
   --gemini-url <url>           Gemini conversation URL
   --kimi-tab-id <id>           Chrome tab id for webkimi
@@ -135,6 +140,13 @@ Ask Options:
   --resume              Resume a non-terminal existing run directory for --ask-id
   --json                JSON output
   --debug               Enable debug logging
+
+
+Browser-oracle setup (sibling skill: skills/browser-oracle):
+  ./run.sh doctor --from <working-dir> --json
+  Use browser-oracle directly for non-WebGPT reviewer tab bindings.
+  See: skills/browser-oracle/SKILL.md
+
 Status Options:
   --scope <scope>       Filter by scope
   --run <id|path>       Show runtime status for an ask id, run dir, or status file
@@ -267,6 +279,11 @@ case "${1:-help}" in
     nightly)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
+        ;;
+    webgpt-project)
+        shift
+        echo "WebGPT/ChatGPT routing has been removed from /ask. Use \$surf webgpt.submit or the project-level \$webgpt workflow directly." >&2
+        exit 2
         ;;
     cursor-browser-project)
         shift
