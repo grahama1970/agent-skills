@@ -6,5 +6,12 @@ export { default as ThinkingTrace, ThinkingTrace as ThinkingTraceComponent } fro
 export type { ThinkingTraceProps, ThinkingTraceStep } from './ThinkingTrace'
 export { default as MessageFooter, MessageFooter as MessageFooterComponent } from './MessageFooter'
 export type { MessageFooterProps } from './MessageFooter'
+export { default as EmbryVoiceChatLab, EmbryVoiceChatLab as EmbryVoiceChatLabComponent } from './EmbryVoiceChatLab'
+export type {
+  EmbryVoiceAudioArtifact,
+  EmbryVoiceChatLabProps,
+  EmbryVoiceSanityRun,
+  EmbryVoiceTurnEvidence,
+} from './EmbryVoiceChatLab'
 export * from './thinkingTraceHelpers'
 export * from './memory-turn'

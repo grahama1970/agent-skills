@@ -17,6 +17,12 @@ export type {
   WatchSceneRow,
 } from './WatchChatAdapter'
 
+export { EmbryVoiceChatAdapter } from './EmbryVoiceChatAdapter'
+export type {
+  EmbryVoiceChatAdapterOptions,
+  EmbryVoiceFetchLike,
+} from './EmbryVoiceChatAdapter'
+
 export { PersonaPlexAdapter } from './PersonaPlexAdapter'
 export type {
   PersonaPlexAdapterOptions,
