@@ -91,13 +91,14 @@ export function highlightEntities(text: string): ReactNode[] {
       <span
         key={i}
         style={{
-          color: style.color,
+          color: '#e2e8f0',
           fontWeight: type === 'control' || type === 'cwe' || type === 'attack' || type === 'sparta' ? 700 : 600,
           background: 'transparent',
-          boxShadow: `inset 0 -0.28em 0 ${style.bg}`,
-          borderBottom: `1px solid ${style.color}44`,
-          padding: '0 1px',
+          boxShadow: 'none',
+          borderBottom: '1px dashed rgba(255,255,255,0.32)',
+          padding: 0,
           fontFamily: type === 'skill' ? 'var(--font-mono, monospace)' : 'inherit',
+          cursor: 'pointer',
         }}
         data-qs-action={type === 'skill' ? `SKILL_INVOKE_${part.slice(1).toUpperCase().replace(/-/g, '_')}` : `NAVIGATE_ENTITY_${part.replace(/[^A-Za-z0-9]/g, '_').toUpperCase()}`}
         data-qid={type === 'skill' ? `skill:${part.slice(1)}:ref` : `entity:${part}`}
@@ -129,13 +130,14 @@ export function highlightWithGlossary(text: string, glossary: GlossaryTerm[]): R
       <span
         key={i}
         style={{
-          color: style.color,
+          color: '#e2e8f0',
           fontWeight: type === 'control' || type === 'cwe' || type === 'attack' || type === 'sparta' ? 700 : 600,
           background: 'transparent',
-          boxShadow: `inset 0 -0.28em 0 ${style.bg}`,
-          borderBottom: `1px solid ${style.color}44`,
-          padding: '0 1px',
+          boxShadow: 'none',
+          borderBottom: '1px dashed rgba(255,255,255,0.32)',
+          padding: 0,
           fontFamily: type === 'skill' ? 'var(--font-mono, monospace)' : 'inherit',
+          cursor: 'pointer',
         }}
         data-qs-action={type === 'skill' ? `SKILL_INVOKE_${part.slice(1).toUpperCase().replace(/-/g, '_')}` : `NAVIGATE_ENTITY_${part.replace(/[^A-Za-z0-9]/g, '_').toUpperCase()}`}
         data-qid={type === 'skill' ? `skill:${part.slice(1)}:ref` : `entity:${part}`}
