@@ -539,6 +539,22 @@ function statusTone(status: string): StatusTone {
   return 'unknown'
 }
 
+function statusLabel(status: string): string {
+  const normalized = status.toUpperCase()
+  if (
+    normalized.includes('PASS')
+    || normalized.includes('EVIDENCE_FOUND')
+    || normalized.includes('READY')
+    || normalized.includes('CALLED')
+    || normalized.includes('AUTHORIZED')
+  ) return 'Pass'
+  if (normalized.includes('MISSING')) return 'Missing evidence'
+  if (normalized.includes('BLOCK')) return 'Blocked'
+  if (normalized.includes('FAIL')) return 'Fail'
+  if (normalized.includes('DRY_RUN')) return 'Dry run'
+  return status.replace(/_/g, ' ')
+}
+
 const toneStyles: Record<StatusTone, CSSProperties> = {
   pass: { borderColor: 'rgba(52, 211, 153, 0.38)', background: 'rgba(52, 211, 153, 0.1)', color: '#a7f3d0' },
   dry: { borderColor: 'rgba(56, 189, 248, 0.38)', background: 'rgba(56, 189, 248, 0.1)', color: '#bae6fd' },
@@ -549,10 +565,11 @@ const toneStyles: Record<StatusTone, CSSProperties> = {
 function StatusBadge({ status }: { status: string }) {
   const tone = statusTone(status)
   const Icon = tone === 'pass' ? CheckCircle2 : tone === 'blocked' ? ShieldAlert : AlertTriangle
+  const label = statusLabel(status)
   return (
-    <span style={{ ...styles.badge, ...toneStyles[tone] }}>
+    <span title={label} aria-label={`Status: ${label}`} style={{ ...styles.badge, ...toneStyles[tone] }}>
       <Icon size={12} />
-      {status}
+      {label}
     </span>
   )
 }
@@ -561,7 +578,7 @@ function GateMiniBadge({ status, label }: { status: string; label: string }) {
   const tone = statusTone(status)
   const Icon = tone === 'pass' ? CheckCircle2 : tone === 'blocked' ? ShieldAlert : AlertTriangle
   return (
-    <span title={status} aria-label={`${label}: ${status}`} style={{ ...styles.gateMiniBadge, ...toneStyles[tone] }}>
+    <span title={statusLabel(status)} aria-label={`${label}: ${statusLabel(status)}`} style={{ ...styles.gateMiniBadge, ...toneStyles[tone] }}>
       <Icon size={12} />
       <span>{label}</span>
     </span>
@@ -737,46 +754,53 @@ function StageCard({
 
 function StageCardHeader({ stage }: { stage: DreamStage }) {
   return (
-    <div style={styles.stageCardHeader}>
-      <div style={styles.stageIdentity}>
-        <span style={styles.stageIcon}>
-          <PhaseIcon phaseId={stage.id} />
-        </span>
-        <div style={styles.phaseHeaderText}>
-          <div style={styles.stageId}>{stage.id.replace(/_/g, ' ')}</div>
-          <h2 style={styles.stageTitle}>{phaseShortLabels[stage.id] ?? stage.title}</h2>
-          <div style={styles.stageTitleRule} />
+    <div style={styles.stageHeaderStack}>
+      <div style={styles.stageCardHeader}>
+        <div style={styles.stageIdentity}>
+          <span style={styles.stageIcon}>
+            <PhaseIcon phaseId={stage.id} />
+          </span>
+          <div style={styles.phaseHeaderText}>
+            <div style={styles.stageId}>{stage.id.replace(/_/g, ' ')}</div>
+            <h2 style={styles.stageTitle}>{phaseShortLabels[stage.id] ?? stage.title}</h2>
+            <div style={styles.stageTitleRule} />
+          </div>
+        </div>
+        <div style={styles.stageHeaderActions}>
+          {stage.id === '02' && (
+            <button
+              type="button"
+              data-qid="dream:story:header-copy-payload"
+              title="Copy full Phase 02 story prompt payload"
+              aria-label="Copy full Phase 02 story prompt payload"
+              onClick={() => window.dispatchEvent(new Event('dream:copy-story-payload'))}
+              style={styles.stageHeaderCopyBtn}
+            >
+              <Copy size={14} />
+              <span style={styles.stageHeaderCopyLabel}>Prompt Payload</span>
+            </button>
+          )}
+          {stage.id === '03' && (
+            <button
+              type="button"
+              data-qid="dream:crew:header-copy-payload"
+              title="Copy full Phase 03 crew prompt payload"
+              aria-label="Copy full Phase 03 crew prompt payload"
+              onClick={() => window.dispatchEvent(new Event('dream:copy-crew-payload'))}
+              style={styles.stageHeaderCopyBtn}
+            >
+              <Copy size={14} />
+              <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
+            </button>
+          )}
+          <StatusBadge status={stage.status} />
         </div>
       </div>
-      <div style={styles.stageHeaderActions}>
-        {stage.id === '02' && (
-          <button
-            type="button"
-            data-qid="dream:story:header-copy-payload"
-            title="Copy full Phase 02 story prompt payload"
-            aria-label="Copy full Phase 02 story prompt payload"
-            onClick={() => window.dispatchEvent(new Event('dream:copy-story-payload'))}
-            style={styles.stageHeaderCopyBtn}
-          >
-            <Copy size={14} />
-            <span style={styles.stageHeaderCopyLabel}>Prompt Payload</span>
-          </button>
-        )}
-        {stage.id === '03' && (
-          <button
-            type="button"
-            data-qid="dream:crew:header-copy-payload"
-            title="Copy full Phase 03 crew prompt payload"
-            aria-label="Copy full Phase 03 crew prompt payload"
-            onClick={() => window.dispatchEvent(new Event('dream:copy-crew-payload'))}
-            style={styles.stageHeaderCopyBtn}
-          >
-            <Copy size={14} />
-            <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
-          </button>
-        )}
-        <StatusBadge status={stage.status} />
-      </div>
+      {!isStagePassed(stage) && (
+        <div style={styles.stageStatusHelp}>
+          {stageMissingMessage(stage)}
+        </div>
+      )}
     </div>
   )
 }
@@ -5837,7 +5861,7 @@ function AgentPane({
         <div style={styles.agentContext}>
           <ArtifactField label="Run" value={selectedRun?.title} />
           <ArtifactField label="Active phase" value={selectedStage ? `${phaseNumber(selectedStage.id)} ${phaseShortLabels[selectedStage.id] ?? selectedStage.title}` : undefined} />
-          <ArtifactField label="Gate state" value={selectedStage?.status} />
+          <ArtifactField label="Gate state" value={selectedStage ? statusLabel(selectedStage.status) : undefined} />
           {selectedRun && (
             <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedRun.runRoot.split('/').pop()}
@@ -5970,7 +5994,7 @@ function PipelineNav({
               data-qid={`timeline-${p.id}`}
               data-qs-action="DREAM_STAGE_NAVIGATE"
               title={`Phase ${p.id}: ${p.label} · ${stage?.status ?? 'MISSING'}`}
-              aria-label={`Navigate to phase ${p.id}: ${p.label}. Status ${stage?.status ?? 'MISSING'}`}
+              aria-label={`Navigate to phase ${p.id}: ${p.label}. Status ${statusLabel(stage?.status ?? 'MISSING')}`}
               aria-current={active ? 'step' : undefined}
               onClick={() => onPhaseChange(p.id)}
               style={{
@@ -9990,6 +10014,10 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     gap: 14,
   },
+  stageHeaderStack: {
+    display: 'grid',
+    gap: 10,
+  },
   stageIdentity: {
     display: 'flex',
     alignItems: 'flex-start',
@@ -10025,6 +10053,17 @@ const styles: Record<string, CSSProperties> = {
   },
   stageHeaderCopyLabel: {
     display: 'inline-block',
+  },
+  stageStatusHelp: {
+    justifySelf: 'end',
+    maxWidth: 760,
+    borderRadius: 12,
+    border: '1px solid rgba(251, 191, 36, 0.28)',
+    background: 'rgba(251, 191, 36, 0.08)',
+    padding: '10px 12px',
+    color: '#fde68a',
+    fontSize: 12,
+    lineHeight: 1.45,
   },
   phaseHeaderText: {
     minWidth: 0,
