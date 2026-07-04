@@ -1,0 +1,7 @@
+{
+  "panel_id": "panel_001",
+  "schema": "persona_dream.generation_receipt.v1",
+  "source_receipt": null,
+  "source_receipt_status": "DRY_RUN_REFERENCE_LOCKED",
+  "status": "FAIL"
+}

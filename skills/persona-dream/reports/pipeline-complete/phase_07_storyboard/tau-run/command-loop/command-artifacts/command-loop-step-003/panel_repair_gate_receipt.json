@@ -1,0 +1,70 @@
+{
+  "callback_or_polling_plan": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/callback_or_polling_plan.json",
+  "claims": {
+    "does_not_prove": [
+      "provider media URL accessibility",
+      "provider eligibility",
+      "Kling readiness",
+      "public upload"
+    ],
+    "proves": [
+      "Tau emitted a persona-dream-compatible repair gate receipt.",
+      "The receipt preserves the local generated image path and sha256."
+    ]
+  },
+  "cost_estimate": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/cost_estimate.json",
+  "created_at": "2026-07-04T23:12:01Z",
+  "dry_run_one_scene_kling_request": null,
+  "external_task_id": "persona-dream-panel_001",
+  "gemini_fallback_used": false,
+  "generated_image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+  "generation_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/generation_receipt.json",
+  "kling_api_call_performed": false,
+  "live_call_performed": false,
+  "media_hashes": {
+    "panel_001": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914"
+  },
+  "nano_banana_fallback_used": false,
+  "no_overlay_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/no_overlay_receipt.json",
+  "no_overlay_status": "PASS",
+  "paid_call_performed": false,
+  "panel_id": "panel_001",
+  "post_generation_script_coverage_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/post_generation_script_coverage_receipt.json",
+  "post_generation_script_coverage_status": "FAIL",
+  "provider_eligibility": false,
+  "provider_media_probe_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/provider_media_probe_receipt.json",
+  "provider_media_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+  "provider_media_status": "FAIL",
+  "provider_media_urls": [
+    "https://raw.githubusercontent.com/grahama1970/tau/main/provider-media/not-published/panel_001.png"
+  ],
+  "provider_mode": "std",
+  "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+  "provider_resolution": "720p",
+  "provider_voice_ids": {},
+  "public_upload_performed": false,
+  "reference_evidence_status": "PASS",
+  "reference_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/reference_receipt.json",
+  "remaining_blockers": [
+    "real panel-creator generation receipt is missing",
+    "loop final receipt for a panel repair attempt is missing",
+    "post-generation script coverage receipt is missing or failed"
+  ],
+  "requirement_matrix": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/requirement_matrix.json",
+  "run_id": "phase_07_storyboard",
+  "schema": "persona_dream.panel_repair_gate_receipt.v1",
+  "script_coverage_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/script_coverage_receipt.json",
+  "script_coverage_status": "PASS",
+  "source_artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/phase_07_storyboard_tau_dag_contract.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-001/panel_creator_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-002/panel_reviewer_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json"
+  ],
+  "status": "BLOCKED_PENDING_INDEPENDENT_VERIFICATION",
+  "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
+  "visual_review_status": "PASS",
+  "visual_style_status": "PASS_PHOTOREAL_CINEMATIC",
+  "voice_id_status": "SILENT_SCENE"
+}

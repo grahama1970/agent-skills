@@ -1,0 +1,26 @@
+{
+  "blocking_findings": [],
+  "claims": {
+    "does_not_prove": [
+      "no visual PASS is claimed when source status is not PASS"
+    ],
+    "proves": [
+      "panel-reviewer command consumed the creator route",
+      "panel-reviewer command wrote a read-only receipt tied to a concrete review source",
+      "panel-reviewer did not initiate a live Scillm VLM call"
+    ]
+  },
+  "created_at": "2026-07-04T23:12:00Z",
+  "kling_api_call_performed": false,
+  "live_call_performed": false,
+  "paid_call_performed": false,
+  "panel_id": "panel_001",
+  "passed_entities": [],
+  "public_upload_performed": false,
+  "reviewer_readonly": true,
+  "reviewer_source": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
+  "reviewer_source_status": "PASS",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.panel_reviewer_receipt.v1",
+  "status": "PASS"
+}

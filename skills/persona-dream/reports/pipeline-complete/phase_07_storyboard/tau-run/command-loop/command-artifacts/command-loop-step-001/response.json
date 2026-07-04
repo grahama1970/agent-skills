@@ -1,0 +1,51 @@
+{
+  "context": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/phase_07_storyboard_tau_dag_contract.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-001/panel_creator_receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png"
+    ],
+    "persona_dream_panel": {
+      "image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+      "panel_id": "panel_001",
+      "panel_prompt": "Storyboard panel for the accepted 10-second Kahalu'u Bay script: Embry in a navy rashguard commits to a careful surf decision in heat, glare, saltwater, softened wax, summer swell timing, lava rock reef constraints, and local lineup etiquette while Kai in a black rashguard waits outside and gives restrained practical guidance.",
+      "post_generation_script_coverage": "Phase 07 must preserve the accepted Phase 06 script coverage and not introduce text overlays, unrelated characters, or continuity drift.",
+      "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard",
+      "source_panel": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+      "source_panel_summary": "One 10-second scene at Kahalu'u Bay: Embry ignores a buzzing phone long enough to make a careful, competent surf decision while Kai reads the lineup and reef without taking over.",
+      "source_script_coverage": "Phase 06 script_contract.json covers seed-0 through seed-6: Embry, Kai, Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast.",
+      "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
+      "write_receipts_to_panel_run_root": "true"
+    },
+    "summary": "Panel Creator locked a one-panel local reference artifact for review."
+  },
+  "github": {
+    "repo": "grahama1970/agent-skills",
+    "target": "persona-dream#phase-07-storyboard"
+  },
+  "goal": {
+    "goal_hash": "sha256:persona-dream-phase-07-storyboard-pipeline-complete",
+    "goal_id": "persona-dream-phase-07-storyboard",
+    "goal_version": 1
+  },
+  "next_agent": {
+    "executor": "local",
+    "name": "panel-reviewer",
+    "reason": "Panel Reviewer must inspect or fail closed on the creator receipt."
+  },
+  "previous_subagent": "panel-creator",
+  "rationale": "A concrete local panel artifact and creator receipt now exist, so the next bounded step is independent panel review.",
+  "required_evidence": [
+    "Panel Reviewer writes panel_reviewer_receipt.json or visual_review_receipt evidence."
+  ],
+  "result": {
+    "evidence": [
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-001/panel_creator_receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914"
+    ],
+    "status": "COMPLETED",
+    "summary": "Panel Creator wrote a local panel_creator_receipt with image artifact path and hash; no public upload or Kling call occurred."
+  },
+  "schema": "tau.agent_handoff.v1",
+  "stop_condition": "Panel Reviewer emits a Tau handoff with receipt paths."
+}

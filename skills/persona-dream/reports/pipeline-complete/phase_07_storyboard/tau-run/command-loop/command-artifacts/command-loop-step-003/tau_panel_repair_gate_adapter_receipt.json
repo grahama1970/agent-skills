@@ -1,0 +1,40 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "no full panel repair loop ran",
+      "no provider-ready packet is claimed",
+      "no Kling or paid provider call occurred"
+    ],
+    "proves": [
+      "repair-gate command consumed the reviewer route",
+      "repair-gate command wrote a terminal receipt from creator/reviewer evidence"
+    ]
+  },
+  "created_at": "2026-07-04T23:12:01Z",
+  "dry_run_one_scene_kling_request": null,
+  "kling_api_call_performed": false,
+  "live_call_performed": false,
+  "paid_call_performed": false,
+  "panel_id": "panel_001",
+  "persona_dream_panel_repair_gate_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-003/panel_repair_gate_receipt.json",
+  "persona_dream_panel_source_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/panel_source_receipt.json",
+  "provider_eligibility": false,
+  "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+  "public_upload_performed": false,
+  "remaining_blockers": [
+    "real panel-creator generation receipt is missing",
+    "loop final receipt for a panel repair attempt is missing",
+    "post-generation script coverage receipt is missing or failed"
+  ],
+  "role": "persona-dream-panel-repair-gate",
+  "run_root_panel_repair_gate_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/panel_repair_gate_receipt.json",
+  "schema": "tau.persona_dream.panel_repair_gate_adapter_receipt.v1",
+  "source_artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/phase_07_storyboard_tau_dag_contract.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-001/panel_creator_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/tau-run/command-loop/command-artifacts/command-loop-step-002/panel_reviewer_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json"
+  ],
+  "status": "BLOCKED_PENDING_INDEPENDENT_VERIFICATION"
+}
