@@ -1,0 +1,95 @@
+{
+  "schema": "watch.row9_yolo_identity_e2e_summary.v1",
+  "created_at": "2026-07-05T13:30:00Z",
+  "mocked": false,
+  "live": true,
+  "target": {
+    "url": "http://127.0.0.1:3002/watch#watch?clipRow=9",
+    "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+    "row_index": 9,
+    "segment": "03:36-04:00"
+  },
+  "api_identity_probe": {
+    "artifact": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T_live_watch_ui_api_e2e/watch_ui_detector_suggest_label_track2_marcus.json",
+    "endpoint": "http://127.0.0.1:3002/api/projects/watch/detector-candidates/suggest-label",
+    "http_status": 200,
+    "memory_endpoint": "/watch/identity/recall-crop",
+    "frame_source": "server_ffmpeg_clip_frame",
+    "track_id": "track_2",
+    "time_seconds": 0,
+    "suggestion": {
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "confidence": 0.9449,
+      "neighbor_count": 15,
+      "tentative_not_accepted_truth": true
+    },
+    "assertions": {
+      "status_200": true,
+      "schema_ok": true,
+      "memory_called": true,
+      "memory_found": true,
+      "suggestion_character_is_marcus": true,
+      "suggestion_confidence_ge_0_82": true,
+      "neighbor_count_ge_2": true,
+      "tentative_not_accepted_truth": true
+    }
+  },
+  "browser_probe": {
+    "artifact_dir": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T_live_watch_ui_api_e2e/browser_fresh_current",
+    "loaded_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T_live_watch_ui_api_e2e/browser_fresh_current/01_loaded.png",
+    "clicked_candidate_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T_live_watch_ui_api_e2e/browser_fresh_current/02_clicked_candidate.png",
+    "summary_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T_live_watch_ui_api_e2e/browser_fresh_current/browser_fresh_summary.json",
+    "visual_inspection": [
+      "row 9 Watch annotation island rendered with YOLO person boxes",
+      "clicking the visible Marcus YOLO label opened an inline character select at the label",
+      "inline select included YOLO track_2 reset plus Willie, Marcus, Sue, Gin, Lois, Grandma, Roger, Santa, Opal, and Herb",
+      "Reset to YOLO track_2 was visible after selecting a labeled YOLO box",
+      "no new freehand human annotation box appeared after clicking the YOLO label",
+      "Identity Readiness showed Marcus and Willie as ready characters"
+    ],
+    "dom_measurements": {
+      "clicked_label_text": "Marcus",
+      "clicked_label_z_index": 180,
+      "clicked_label_pointer_events": "auto",
+      "has_new_target_after_click": false,
+      "yolo_candidates_loaded": 313
+    },
+    "readiness_text": {
+      "marcus": "75 accepted / 75 embedded / 3 rows / 8 tracks / 2 rejected",
+      "willie": "18 accepted / 18 embedded / 3 rows / 8 tracks / 2 rejected",
+      "global": "2/5 characters count-ready for YOLO identity suggestions. Held-out Qdrant: 59/64 (92%) ready. YOLO-linked labels: 2/2 ready."
+    }
+  },
+  "direct_memory_crop_probe": {
+    "artifact": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T130920Z_current_live_e2e/summary.json",
+    "expected_marcus": {
+      "visual_truth": "Marcus",
+      "memory_top_character": "Marcus",
+      "confidence": 0.978397,
+      "display_label": "Marcus? 0.98"
+    },
+    "identity_conflict": {
+      "visual_truth": "Willie",
+      "memory_top_character": "Willie",
+      "confidence": 0.932243,
+      "display_label": "Willie? 0.93",
+      "interpretation": "Qdrant returned Willie for a visual Willie crop, so track/interpolation identity handoffs must be stopped rather than blindly inherited as Marcus."
+    }
+  },
+  "claims": {
+    "proves": [
+      "the live row 9 UI loads YOLO person candidates",
+      "the live UX Lab Watch API can crop a YOLO detector box and call Memory/Qdrant for identity recall",
+      "the current row 9 track_2 crop recalls Marcus with confidence above the configured 0.82 suggestion threshold",
+      "the label UI supports inline character selection from the YOLO label and exposes reset back to YOLO track_N",
+      "accepted-label readiness counts are visible for Marcus and Willie"
+    ],
+    "does_not_prove": [
+      "every YOLO track in the full 24 second segment has stable identity",
+      "identity handoff stop/control behavior has been exhaustively checked across all frames",
+      "suggested labels are accepted truth before the human accepts them",
+      "the pi-mono production build passes"
+    ]
+  }
+}

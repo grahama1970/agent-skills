@@ -1,0 +1,258 @@
+{
+  "schema": "memory.watch_identity_crop_recall.v1",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 9,
+  "found": true,
+  "confidence": 0.932243,
+  "suggestions": [
+    {
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "hit_count": 9,
+      "top_visual_score": 0.932243,
+      "average_visual_score": 0.91876,
+      "context_score": 0.0,
+      "confidence": 0.932243,
+      "tentative": true,
+      "display_label": "Willie? 0.93"
+    },
+    {
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "hit_count": 1,
+      "top_visual_score": 0.915686,
+      "average_visual_score": 0.915686,
+      "context_score": 0.0,
+      "confidence": 0.915686,
+      "tentative": true,
+      "display_label": "Marcus? 0.92"
+    }
+  ],
+  "items": [
+    {
+      "point_id": "2e34656a-461c-5e67-aba8-78b7c2c8d642",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703200903506_row0009_willie_7faffa77a0be6d677c55:236_02",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.932243,
+      "context_score": 0.0,
+      "confidence": 0.932243,
+      "bbox": [
+        0.18828125,
+        0.09482758620689655,
+        0.4640625,
+        0.992816091954023
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703200903506_row0009_willie_7faffa77a0be6d677c55.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 236.02,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "ba1f6f77-9fe3-5944-860c-23d0d40d8f9c",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181858378_row0009_willie_3672b99aa680bd0e36c4:233_31",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.927645,
+      "context_score": 0.0,
+      "confidence": 0.927645,
+      "bbox": [
+        0.74453125,
+        0.03735632183908046,
+        0.984375,
+        0.9813218390804598
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181858378_row0009_willie_3672b99aa680bd0e36c4.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 233.31,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "52a5be00-86a4-53c5-a8de-f9d37980f156",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703182315023_row0009_willie_ae375bb829c2fa3a4760:234_98",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.926158,
+      "context_score": 0.0,
+      "confidence": 0.926158,
+      "bbox": [
+        0.18984375,
+        0.09913793103448276,
+        0.46171875,
+        0.9841954022988506
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182315023_row0009_willie_ae375bb829c2fa3a4760.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 234.98,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "576da250-4ce2-508d-8d15-c568610becd7",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181920664_row0009_willie_4b6710fae35d6bda0072:236_65",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.92461,
+      "context_score": 0.0,
+      "confidence": 0.92461,
+      "bbox": [
+        0.19375,
+        0.09913793103448276,
+        0.46953125,
+        0.9899425287356322
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181920664_row0009_willie_4b6710fae35d6bda0072.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 236.65,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "1a6e304d-9718-5c36-b2b9-c2ed8d31be4b",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181912096_row0009_willie_4db378237e10a4cfce1d:235_60",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.923681,
+      "context_score": 0.0,
+      "confidence": 0.923681,
+      "bbox": [
+        0.178125,
+        0.09339080459770115,
+        0.45390625,
+        0.9956896551724138
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181912096_row0009_willie_4db378237e10a4cfce1d.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 235.6,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "a707a1ce-2b29-556e-b561-662a5b3ee5fd",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703161944630_row0009_willie_4a89a195687d6fea0d62:235_31",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.923541,
+      "context_score": 0.0,
+      "confidence": 0.923541,
+      "bbox": [
+        0.24296724165753394,
+        0.017978725308389194,
+        0.42573015355809835,
+        0.7591796058237461
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703161944630_row0009_willie_4a89a195687d6fea0d62.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 235.307,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "3b4bfa90-5d14-5bc8-86d2-a17af31f3fc3",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_17_31_016f8aa20f:233_31",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "visual_score": 0.915686,
+      "context_score": 0.0,
+      "confidence": 0.915686,
+      "bbox": [
+        0.74453125,
+        0.03735632183908046,
+        0.984375,
+        0.9813218390804598
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704201143005_row0009_marcus_f58dc400ed978a2228a6.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 233.31,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "7a1e8da7-8ab7-5d03-ac7b-3ef8580a0c2d",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181937585_row0009_willie_0c3c8ecb40952e675eb6:238_73",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.910897,
+      "context_score": 0.0,
+      "confidence": 0.910897,
+      "bbox": [
+        0.18828125,
+        0.10632183908045977,
+        0.465625,
+        0.9899425287356322
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181937585_row0009_willie_0c3c8ecb40952e675eb6.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 238.73,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "afee2f87-6fb2-5f2e-ad2e-dd547be4f41f",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181928254_row0009_willie_f218d0397fd1f4d5a66c:237_48",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.907394,
+      "context_score": 0.0,
+      "confidence": 0.907394,
+      "bbox": [
+        0.196875,
+        0.09195402298850575,
+        0.478125,
+        0.9870689655172413
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181928254_row0009_willie_f218d0397fd1f4d5a66c.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 237.48,
+      "lifecycle_status": "current",
+      "hydrated": true
+    },
+    {
+      "point_id": "5862ca74-3e14-5a5b-a592-0fa1d5732c14",
+      "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:keyframe-mr2e9b7y-1900:235_00",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "visual_score": 0.892671,
+      "context_score": 0.0,
+      "confidence": 0.892671,
+      "bbox": [
+        0.2599597943470392,
+        0.07755869079726128,
+        0.44847305814286664,
+        1
+      ],
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260701181334612_row0009_willie_4d17d4a4f5ad6b72d986.png",
+      "row_index": 9,
+      "keyframe_time_seconds": 235,
+      "lifecycle_status": "cleared",
+      "hydrated": true
+    }
+  ],
+  "qdrant": {
+    "collection": "watch_track_crop_embeddings_jina_v5_1024",
+    "vector_name": null,
+    "returned_hits": 12,
+    "usable_hits": 10,
+    "skipped_stale_or_deleted": 2
+  },
+  "embedding": {
+    "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+    "model_version": "v5-omni-small",
+    "role": "query"
+  },
+  "proof_scope": {
+    "mocked": false,
+    "live": true,
+    "exercised": [
+      "image_embedding",
+      "qdrant_crop_similarity_query",
+      "arangodb_watch_keyframe_hydration"
+    ],
+    "does_not_prove": [
+      "the Watch browser click flow saved labels",
+      "the suggested identity is accepted ground truth"
+    ]
+  }
+}

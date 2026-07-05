@@ -181,12 +181,17 @@ def embed_and_write_crops(*, crops: list[dict[str, Any]], args: argparse.Namespa
     receipts = []
     for crop, vector in zip(valid_crops, vectors):
         point_id = point_id_for("crop", crop.get("overlay_id") or crop.get("crop_path"))
+        bbox = normalized_bbox_xyxy(crop.get("bbox_xyxy"), crop.get("source_frame_size") or {})
         payload = {
             "asset_uid": crop.get("asset_uid"),
             "segment_id": crop.get("segment_id"),
             "track_id": crop.get("track_id"),
             "overlay_id": crop.get("overlay_id"),
             "media_time_seconds": crop.get("media_time_seconds"),
+            "bbox_xyxy": crop.get("bbox_xyxy"),
+            "source_frame_size": crop.get("source_frame_size"),
+            "bbox": bbox,
+            "bbox_format": "normalized_xyxy" if bbox else None,
             "crop_path": str(resolve_repo_path(crop.get("crop_path"))),
             "candidate_entity": crop.get("candidate_entity"),
             "identity_evidence_status": crop.get("identity_evidence_status"),
@@ -440,6 +445,8 @@ def upsert_memory_records(
         point = point_by_overlay.get(crop.get("overlay_id"))
         if not point:
             continue
+        bbox = normalized_bbox_xyxy(crop.get("bbox_xyxy"), crop.get("source_frame_size") or {})
+        payload_key = f"watch_track_observations/{key_for(crop.get('overlay_id'))}#crop"
         doc = {
             "_key": key_for(crop.get("overlay_id")),
             "schema": "watch.track_observation.live.v1",
@@ -449,6 +456,11 @@ def upsert_memory_records(
             "track_id": crop.get("track_id"),
             "overlay_id": crop.get("overlay_id"),
             "media_time_seconds": crop.get("media_time_seconds"),
+            "bbox_xyxy": crop.get("bbox_xyxy"),
+            "source_frame_size": crop.get("source_frame_size"),
+            "bbox": bbox,
+            "bbox_format": "normalized_xyxy" if bbox else None,
+            "bbox_source": "watch_live_ultralytics_detector_track",
             "candidate_entity": crop.get("candidate_entity"),
             "tags": watch_tags(crop),
             "identity_status": "IDENTITY_INCONCLUSIVE",
@@ -465,8 +477,23 @@ def upsert_memory_records(
                     "point_id": point["qdrant_point_id"],
                     "modality": "track_crop_image",
                     "embedding_model": point.get("embedding_model"),
+                    "payload_key": payload_key,
                 }
             ],
+            "qdrant_refs": {
+                "crop_points": [
+                    {
+                        "collection": point["qdrant_collection"],
+                        "point_id": point["qdrant_point_id"],
+                        "model": point.get("embedding_model"),
+                        "dimensions": point.get("dimensions"),
+                        "modality": "person_crop",
+                        "source": "detector_track_crop",
+                        "payload_key": payload_key,
+                    }
+                ],
+                "reference_image_points": [],
+            },
             "retrieval_text": retrieval_text(crop),
             "source": "watch_realtime_identity_memory_loop",
             "updated_at": utc_now(),
@@ -694,6 +721,30 @@ def retrieval_text(crop: dict[str, Any]) -> str:
         f"segment {crop.get('segment_id')} at {crop.get('media_time_seconds')} seconds. "
         "This is an observation with crop embedding and Qdrant pointer; identity remains inconclusive."
     )
+
+
+def normalized_bbox_xyxy(bbox_xyxy: Any, source_frame_size: dict[str, Any]) -> list[float] | None:
+    if not isinstance(bbox_xyxy, list) or len(bbox_xyxy) != 4:
+        return None
+    width = source_frame_size.get("width")
+    height = source_frame_size.get("height")
+    if not isinstance(width, (int, float)) or not isinstance(height, (int, float)):
+        return None
+    if width <= 0 or height <= 0:
+        return None
+    try:
+        x1, y1, x2, y2 = [float(value) for value in bbox_xyxy]
+    except (TypeError, ValueError):
+        return None
+    normalized = [
+        max(0.0, min(1.0, x1 / width)),
+        max(0.0, min(1.0, y1 / height)),
+        max(0.0, min(1.0, x2 / width)),
+        max(0.0, min(1.0, y2 / height)),
+    ]
+    if normalized[2] <= normalized[0] or normalized[3] <= normalized[1]:
+        return None
+    return [round(value, 6) for value in normalized]
 
 
 def approved_reference_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:

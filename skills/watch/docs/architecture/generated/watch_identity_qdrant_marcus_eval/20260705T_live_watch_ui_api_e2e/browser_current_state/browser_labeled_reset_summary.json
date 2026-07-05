@@ -1,0 +1,43 @@
+{
+  "schema": "watch.browser_labeled_reset_probe.v1",
+  "created_at": "2026-07-05T13:19:16.385Z",
+  "mocked": false,
+  "live": true,
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/watch-row9-yolo-identity-playwright/20260705T_current_state/03_after_click_marcus_label.png",
+  "selects": [
+    {
+      "value": "Marcus",
+      "text": "YOLO track_2WillieMarcusSueGinLoisGrandmaRogerSantaOpalHerb"
+    }
+  ],
+  "clears": [
+    {
+      "text": "Reset to YOLO track_2",
+      "trackId": "track_2"
+    }
+  ],
+  "status": "track_2 is labeled Marcus. Pick another character here, or choose YOLO track_2 to reset.",
+  "labels": [
+    {
+      "text": "YOLO track_1",
+      "trackId": "track_1",
+      "zIndex": "180"
+    },
+    {
+      "text": "Marcus",
+      "trackId": "track_2",
+      "zIndex": "180"
+    },
+    {
+      "text": "YOLO track_3",
+      "trackId": "track_3",
+      "zIndex": "180"
+    }
+  ],
+  "assertions": {
+    "clicked_labeled_marcus_track": true,
+    "inline_select_open": true,
+    "reset_control_available": true,
+    "labels_front_layer_z_index_set": true
+  }
+}
