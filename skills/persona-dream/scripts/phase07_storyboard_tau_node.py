@@ -177,6 +177,7 @@ def _run_reviewer(
 ) -> dict[str, Any]:
     review = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
     status = "PASS_PANEL_REVIEWED" if not review["blockers"] else "BLOCKED_PANEL_REVIEW"
+    accepted = status == "PASS_PANEL_REVIEWED"
     reference_coverage_path = receipts_dir / "storyboard_reference_coverage.json"
     entity_coverage_path = receipts_dir / "storyboard_entity_coverage.json"
     verdict_path = receipts_dir / "storyboard_review_verdict.json"
@@ -191,7 +192,7 @@ def _run_reviewer(
         "storyboard_packet_sha256": _sha256(packet_path),
         "panel_count": len(packet.get("panels") or []),
         "duration_seconds": packet.get("duration_seconds"),
-        "accepted": status == "PASS_PANEL_REVIEWED",
+        "accepted": accepted,
         "blockers": review["blockers"],
         "per_panel": review["per_panel"],
         "reference_coverage": str(reference_coverage_path),
@@ -229,9 +230,13 @@ def _run_reviewer(
             else "Panel-reviewer rejected the storyboard packet with exact blockers."
         ),
         evidence=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(packet_path)],
-        next_subagent="human",
-        next_executor="human",
-        next_reason="Human reviews the Tau receipt and storyboard pane rendering.",
+        next_subagent="human" if accepted else "panel-creator",
+        next_executor="human" if accepted else "local",
+        next_reason=(
+            "Human reviews the accepted Tau receipt and storyboard pane rendering."
+            if accepted
+            else "Panel creator must repair the storyboard packet with accepted per-panel frame evidence before review can pass."
+        ),
     )
     _write_json(tau_receipt_path, tau_receipt)
     return _handoff(
@@ -242,11 +247,23 @@ def _run_reviewer(
         evidence=tau_receipt["evidence"],
         artifacts=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(tau_receipt_path), str(packet_path)],
         context_update={"persona_dream_phase07_storyboard": dict(context)},
-        next_agent="human",
-        next_executor="human",
-        next_reason="Phase 07 storyboard panel review reached a terminal verdict.",
-        required_evidence="Fresh CDP verification of http://localhost:3002/dream#storyboard.",
-        stop_condition="Stop because panel-reviewer accepted or rejected with concrete blockers.",
+        next_agent="human" if accepted else "panel-creator",
+        next_executor="human" if accepted else "local",
+        next_reason=(
+            "Phase 07 storyboard panel review accepted the packet."
+            if accepted
+            else "Panel-reviewer rejected the packet; Tau should route back to panel-creator until retry budget is exhausted."
+        ),
+        required_evidence=(
+            "Fresh CDP verification of http://localhost:3002/dream#storyboard."
+            if accepted
+            else "Repaired storyboard_packet.json containing accepted per-panel storyboard frame evidence."
+        ),
+        stop_condition=(
+            "Stop because panel-reviewer accepted."
+            if accepted
+            else "Continue until panel-reviewer accepts or Tau max attempts are exceeded."
+        ),
     )
 
 

@@ -16,7 +16,7 @@
       "Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."
     ]
   },
-  "created_at": "2026-07-05T20:00:50.666702+00:00",
+  "created_at": "2026-07-05T20:00:50.531677+00:00",
   "duration_seconds": 10,
   "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
   "live": true,

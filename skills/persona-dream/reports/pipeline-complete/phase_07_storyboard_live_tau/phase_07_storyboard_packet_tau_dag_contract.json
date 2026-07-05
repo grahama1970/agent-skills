@@ -28,7 +28,7 @@
       "agent": "panel-creator",
       "executor": "local",
       "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/command-specs/panel-creator/tau-dispatch-command.json",
-      "max_attempts": 1,
+      "max_attempts": 2,
       "required_evidence": [
         "storyboard_packet.json",
         "storyboard_panel_manifest.json",
@@ -40,7 +40,7 @@
       "agent": "panel-reviewer",
       "executor": "local",
       "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/command-specs/panel-reviewer/tau-dispatch-command.json",
-      "max_attempts": 1,
+      "max_attempts": 2,
       "required_evidence": [
         "storyboard_review_verdict.json",
         "storyboard_reference_coverage.json",
@@ -60,7 +60,13 @@
     },
     {
       "from": "panel-reviewer",
-      "to": "human"
+      "to": "panel-creator",
+      "condition": "reviewer_requests_revision"
+    },
+    {
+      "from": "panel-reviewer",
+      "to": "human",
+      "condition": "reviewer_pass_or_max_attempts"
     }
   ],
   "required_evidence": [
@@ -85,6 +91,6 @@
   "limits": {
     "resume": false,
     "default_timeout_seconds": 120,
-    "max_total_attempts": 2
+    "max_total_attempts": 4
   }
 }
