@@ -8,6 +8,8 @@ It intentionally avoids mutating GitHub or changing cron state.
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,14 +17,19 @@ from typing import Annotated, Any
 
 import typer
 
-TAU_ROOT = Path("${HOME}/workspace/experiments/tau")
+TAU_ROOT = Path(
+    os.environ.get("TAU_ROOT", str(Path.home() / "workspace/experiments/tau"))
+).expanduser().resolve()
 WATCHDOG_ROOT = Path.home() / ".local/state/project-watchdog"
 WATCHDOG_RECEIPTS = WATCHDOG_ROOT / "receipts"
 WATCHDOG_LOG = WATCHDOG_ROOT / "logs/project-watchdog.log"
 WATCHDOG_CRON_LOG = WATCHDOG_ROOT / "logs/cron.log"
 PROOFS_ROOT = TAU_ROOT / "experiments/goal-locked-subagents/proofs"
 CHAT_CONTRACT = TAU_ROOT / "ui/tau-chat-contract.json"
-UV_BIN = "${HOME}/.local/bin/uv"
+HOME_UV_BIN = Path.home() / ".local/bin/uv"
+UV_BIN = os.environ.get("UV_BIN") or (
+    str(HOME_UV_BIN) if HOME_UV_BIN.exists() else shutil.which("uv") or "uv"
+)
 
 app = typer.Typer(add_completion=False, help="Operate and inspect the local T'au project.")
 
@@ -79,6 +86,103 @@ def uv_command(*parts: str) -> list[str]:
     return [UV_BIN, *parts]
 
 
+def command_path(name: str) -> str | None:
+    """Return the resolved executable path for a command, if available."""
+    if "/" in name:
+        return name if Path(name).exists() else None
+    return shutil.which(name)
+
+
+def doctor_payload() -> dict[str, Any]:
+    """Report whether the Tau skill wrapper can find and invoke local Tau."""
+    uv_path = command_path(UV_BIN)
+    git_path = command_path("git")
+    gh_path = command_path("gh")
+    herdr_path = command_path("herdr")
+    tau_help = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "--help"), timeout_s=60)
+    tau_doctor = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "doctor"), timeout_s=60)
+    tau_doctor_payload: dict[str, Any] | None = None
+    if tau_doctor["exit_code"] == 0:
+        try:
+            parsed_doctor = json.loads(tau_doctor["stdout"] or "{}")
+            if isinstance(parsed_doctor, dict):
+                tau_doctor_payload = parsed_doctor
+        except json.JSONDecodeError:
+            tau_doctor_payload = None
+    git_status = (
+        run(["git", "status", "--short"], timeout_s=30)
+        if TAU_ROOT.exists()
+        else {
+            "command": ["git", "status", "--short"],
+            "cwd": str(TAU_ROOT),
+            "exit_code": 1,
+            "stdout": "",
+            "stderr": "Tau root does not exist",
+        }
+    )
+    errors: list[str] = []
+    if not TAU_ROOT.exists():
+        errors.append("tau_root_missing")
+    if not uv_path:
+        errors.append("uv_missing")
+    if tau_help["exit_code"] != 0:
+        errors.append("tau_help_failed")
+    if tau_doctor["exit_code"] != 0:
+        errors.append("tau_doctor_failed")
+    if git_status["exit_code"] != 0:
+        errors.append("git_status_failed")
+
+    return {
+        "schema": "agent_skills.tau.doctor.v1",
+        "checked_at": now(),
+        "ok": not errors,
+        "mocked": False,
+        "live": True,
+        "provider_live": False,
+        "command": "doctor",
+        "tau_root": str(TAU_ROOT),
+        "resolved_tau_root": str(TAU_ROOT),
+        "uv": uv_path,
+        "resolved_uv_bin": UV_BIN,
+        "git": git_path,
+        "gh": gh_path,
+        "herdr": herdr_path,
+        "memory_url": os.environ.get("MEMORY_URL", "http://127.0.0.1:7331"),
+        "scillm_url": os.environ.get("SCILLM_URL", "http://127.0.0.1:4001"),
+        "chat_contract_exists": CHAT_CONTRACT.exists(),
+        "chat_contract": str(CHAT_CONTRACT),
+        "can_call_tau_cli": tau_help["exit_code"] == 0,
+        "can_call_tau_doctor": tau_doctor["exit_code"] == 0,
+        "can_run_local_sanity": tau_help["exit_code"] == 0,
+        "can_run_herdr_lane": bool(herdr_path),
+        "can_run_provider_live_lane": False,
+        "can_run_github_dry_run_lane": bool(gh_path),
+        "can_run_github_apply_lane": False,
+        "can_run_browser_cdp_lane": False,
+        "commands": {
+            "tau_help": tau_help,
+            "tau_doctor": tau_doctor,
+            "git_status": git_status,
+        },
+        "tau_runtime_doctor": tau_doctor_payload,
+        "errors": errors,
+        "proof_boundary": {
+            "proves": [
+                "Tau skill wrapper resolved the Tau root path",
+                "Tau skill wrapper resolved uv or reported it missing",
+                "Tau CLI help was invoked through the wrapper when available",
+                "Tau runtime doctor was invoked through the wrapper when available",
+            ],
+            "does_not_prove": [
+                "Herdr provider DAG execution",
+                "browser/CDP UI proof",
+                "GitHub live mutation",
+                "provider/model semantic quality",
+            ],
+        },
+    }
+
+
 def status_payload() -> dict[str, Any]:
     git_status = run(["git", "status", "--short"])
     head = run(["git", "log", "-1", "--oneline", "--decorate"])
@@ -107,6 +211,8 @@ def status_payload() -> dict[str, Any]:
         "mocked": False,
         "live": True,
         "tau_root": str(TAU_ROOT),
+        "resolved_tau_root": str(TAU_ROOT),
+        "resolved_uv_bin": UV_BIN,
         "git": {
             "head": head["stdout"].strip(),
             "remote_main": remote["stdout"].strip(),
@@ -249,16 +355,17 @@ def sanity_payload() -> dict[str, Any]:
     }
 
 
-def e2e_payload() -> dict[str, Any]:
+def proof_status_payload() -> dict[str, Any]:
     sanity_result = sanity_payload()
     status_result = status_payload()
     ok = sanity_result["ok"] and status_result["ok"]
     return {
-        "schema": "agent_skills.tau.e2e_receipt.v1",
+        "schema": "agent_skills.tau.proof_status_receipt.v1",
         "checked_at": now(),
         "ok": ok,
         "mocked": "mixed",
         "live": "mixed",
+        "command": "proof-status",
         "sanity": sanity_result,
         "status": status_result,
         "required_next_for_ui_claims": [
@@ -266,6 +373,22 @@ def e2e_payload() -> dict[str, Any]:
             "Inspect screenshot for visible Memory stage trace and content rendering.",
         ],
     }
+
+
+def e2e_payload() -> dict[str, Any]:
+    payload = proof_status_payload()
+    return {
+        **payload,
+        "schema": "agent_skills.tau.e2e_receipt.v1",
+        "command": "e2e",
+        "alias_for": "proof-status",
+    }
+
+
+@app.command("doctor")
+def doctor_command() -> None:
+    """Run read-only Tau operator preflight and runtime doctor."""
+    emit(doctor_payload())
 
 
 @app.command("status")
@@ -302,8 +425,22 @@ def e2e_command(
         ),
     ] = False,
 ) -> None:
-    """Run bounded Tau checks plus live status/proof inspection."""
+    """Compatibility alias for proof-status."""
     emit(e2e_payload())
+
+
+@app.command("proof-status")
+def proof_status_command(
+    _note: Annotated[
+        bool,
+        typer.Option(
+            "--ack-boundary",
+            help="No-op flag documenting that this is not browser UI production proof.",
+        ),
+    ] = False,
+) -> None:
+    """Run bounded Tau checks plus live status/proof inspection."""
+    emit(proof_status_payload())
 
 
 if __name__ == "__main__":
