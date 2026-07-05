@@ -110,6 +110,19 @@ observability evidence. The canonical gate remains Tau work orders, work-order
 hashes, provider readiness receipts, node receipts, cleanup receipts, and DAG
 receipts.
 
+When Tau launches Herdr agents for DAG-backed work, Herdr agent names must carry
+the DAG address, not only the provider or run id. Prefer names composed from:
+
+```text
+{dag_id}-{node_id}-{agent}-{provider_id}
+```
+
+Append attempt metadata when the pane is attempt-specific. If a launch path is
+not DAG-backed, keep a stable run/provider fallback. Work orders, runtime
+manifests, and pane records should preserve the selected Herdr `agent_name` and
+the DAG naming fields so project agents can map visible Herdr panes back to DAG
+nodes without knowing provider internals.
+
 ### Adaptive DAG Lane
 
 Adaptive DAG changes must follow:
