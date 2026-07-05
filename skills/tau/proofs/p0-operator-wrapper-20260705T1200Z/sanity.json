@@ -1,0 +1,45 @@
+{
+  "checked_at": "2026-07-05T12:00:33Z",
+  "commands": [
+    {
+      "command": [
+        "/home/graham/.local/bin/uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/tau",
+        "pytest",
+        "-q",
+        "tests/test_subagent_receipt.py",
+        "tests/test_agent_harness.py",
+        "tests/test_tui_adapter.py",
+        "tests/test_live_memory_chat_command_loop_proofs.py"
+      ],
+      "cwd": "/home/graham/workspace/experiments/tau",
+      "exit_code": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/skills/tau/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+      "stdout": ".............................................                            [100%]\n45 passed in 0.85s\n"
+    }
+  ],
+  "json_checks": [
+    {
+      "error": null,
+      "ok": true,
+      "path": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json"
+    }
+  ],
+  "live": "mixed",
+  "mocked": "mixed",
+  "ok": true,
+  "proof_boundary": {
+    "does_not_prove": [
+      "fresh browser chat UI rendering",
+      "fresh live provider semantics",
+      "production Sparta Chat readiness"
+    ],
+    "proves": [
+      "targeted Tau receipt, harness, TUI adapter, and proof-manifest checks run",
+      "coder command-spec JSON is readable"
+    ]
+  },
+  "schema": "agent_skills.tau.sanity_receipt.v1"
+}
