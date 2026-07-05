@@ -98,7 +98,7 @@ I maintain (and sadly break) these kinds of projects and skills continuously. My
       <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md">
         <img src="docs/assets/project-cards/tau.webp" width="320" alt="T'au" />
       </a>
-      <br/><strong>T'au</strong><br/><em>Memory-first subagent harness</em>
+      <br/><strong>T'au</strong><br/><em>Memory-First Zero-Trust Agent Harness</em>
     </td>
     <td align="center">
       <a href="https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md">
