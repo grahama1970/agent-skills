@@ -219,6 +219,45 @@ The UI is an inspection surface for reports and scene rows. It is not proof by
 itself; source artifacts, report JSON, frame paths, and memory recall remain the
 evidence.
 
+## YOLO Person Boxes And Character Identity
+
+Watch can use YOLOAnalytics person boxes as the source regions for character
+annotation. The intended loop is:
+
+1. YOLOAnalytics supplies person boxes and stable track ids such as
+   `track_2`.
+2. A human accepts, rejects, or resets a character label on the YOLO box.
+3. Watch crops accepted boxes, embeds them, and stores the identity evidence for
+   Memory/Qdrant recall.
+4. Future YOLO crops are queried against that evidence and rendered as tentative
+   suggestions, for example `Marcus? 0.82`.
+5. Suggestions stay tentative until accepted. Rejected or reset boxes are tracked
+   separately and must not become training evidence.
+6. If Qdrant recall finds a high-confidence different character on an accepted
+   track, Watch must treat that as an identity handoff/stop requirement rather
+   than blindly propagating the old label.
+
+Current Bad Santa row 9 proof artifacts live under:
+
+```text
+docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/
+```
+
+The current proof state is:
+
+| Check | Current result |
+|---|---|
+| Marcus held-out identity recall | `11/12` correct |
+| Marcus/Willie held-out recall | `22/24` correct |
+| Tentative UI suggestion | Proven once with `Willie? 0.89` |
+| Reset/reject path | Proven for one live browser path |
+| Identity handoff stop | Proven for one live Qdrant conflict |
+| Broad handoff-stop coverage | Still pending |
+
+Use this feature for tentative auto-labeling, not silent auto-accept. The point
+is to reduce human labeling work while keeping a fast accept/reject/reset path
+for the wrong cases.
+
 ## Orpheus Dataset Boundary
 
 `watch` can find and curate movie-derived Orpheus evidence, but it does not own
