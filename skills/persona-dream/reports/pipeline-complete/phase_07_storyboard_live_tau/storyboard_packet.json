@@ -100,6 +100,18 @@
         "director": "Establish that freedom has rules before any wave action.",
         "scriptwriter": "Let the environment explain the stakes before dialogue.",
         "continuity": "Identity references are required for Embry and Kai; location and reef references remain blocking inputs."
+      },
+      "generation_prompt": {
+        "panel_prompt": "Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.",
+        "start_frame_prompt": "Start frame: Embry and Kai sit separated from the takeoff path, boards angled parallel to the reef, locals holding priority, waterline camera low enough to see reef shapes under clear water.",
+        "end_frame_prompt": "End frame: the pair still wait as a small lift in the water and a flash of glare signal the next swell, with Kai's restraint confirming the lineup rule.",
+        "reference_requirements": [
+          "Use Embry character sheet for identity only.",
+          "Use Kai character sheet for identity only.",
+          "Do not use contact sheets as the panel image.",
+          "Requires final Kona Coast/Lava Reef environment references before provider generation."
+        ],
+        "negative_prompt": "No generic private beach, no heroic takeoff, no empty tropical postcard, no cropped reef, no contact-sheet collage, no unrelated surfers."
       }
     },
     {
@@ -182,6 +194,17 @@
         "director": "Make Embry's choice bodily: breath, hand placement, and timing.",
         "scriptwriter": "The phone obligation stays implied; the board and reef carry the pressure.",
         "continuity": "Embry surfboard, June Swell, and Lava Reef references remain blocking inputs for final provider generation."
+      },
+      "generation_prompt": {
+        "panel_prompt": "Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.",
+        "start_frame_prompt": "Start frame: Embry's right hand presses into softened wax on the white shortboard, face salt-wet and focused, reef line still visible as a hazard.",
+        "end_frame_prompt": "End frame: Embry deliberately resets her rail grip and breathes before committing, with the approaching swell and reef line creating the decision pressure.",
+        "reference_requirements": [
+          "Use Embry surfing reference for action continuity if available.",
+          "Requires Embry surfboard, June Swell, and Lava Reef references before provider generation.",
+          "Board contact points must be visible."
+        ],
+        "negative_prompt": "No panic, no wipeout, no rescue framing, no cropped board contact, no generic swimsuit surfer, no hidden reef."
       }
     },
     {
@@ -272,6 +295,17 @@
         "director": "Kai's competence is negative space: what he does not take, force, or explain.",
         "scriptwriter": "Dialogue must stay sparse and practical.",
         "continuity": "Kai surfboard and Kona Coast references remain blocking inputs for final provider generation."
+      },
+      "generation_prompt": {
+        "panel_prompt": "Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.",
+        "start_frame_prompt": "Start frame: Kai waits slightly outside, reading the channel and locals while Embry holds nearer the decision line.",
+        "end_frame_prompt": "End frame: Kai gives one small practical cue and stays out of Embry's way; Embry absorbs it without surrendering agency.",
+        "reference_requirements": [
+          "Use Kai character sheet for identity only.",
+          "Use Kai surfing reference for action continuity if available.",
+          "Requires Kai surfboard and Kona Coast references before provider generation."
+        ],
+        "negative_prompt": "No lecturer pose, no rescue pose, no private empty ocean, no grand gesture, no dialogue-heavy composition, no contact-sheet collage."
       }
     },
     {
@@ -361,6 +395,17 @@
         "director": "The win is embodied agency, not spectacle.",
         "scriptwriter": "End with temporary freedom still carrying obligation.",
         "continuity": "Embry, Kai, surfboards, June Swell, Lava Reef, and Kona Coast all require final grounded visual references."
+      },
+      "generation_prompt": {
+        "panel_prompt": "Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.",
+        "start_frame_prompt": "Start frame: the clean shoulder begins to stand over the reef boundary; Embry is set on the safe line while Kai remains outside as quiet support.",
+        "end_frame_prompt": "End frame: Embry commits toward the safe channel only after the lineup opens; Kai's response is understated and does not steal the beat.",
+        "reference_requirements": [
+          "Requires Embry and Kai identity continuity.",
+          "Requires Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast references before provider generation.",
+          "Rejected candidate image is not authoritative."
+        ],
+        "negative_prompt": "No generic surf couple, no victory pose, no wipeout disaster, no hidden reef, no heroic rescue, no final provider image until references are complete."
       }
     }
   ],

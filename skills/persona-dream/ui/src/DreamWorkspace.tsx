@@ -970,6 +970,7 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const cameraPlan = storyboardRecord(panel.camera)
   const lightingPlan = storyboardRecord(panel.lighting)
   const productionNotes = storyboardRecord(panel.production_notes)
+  const generationPrompt = storyboardRecord(panel.generation_prompt)
   const actingBeats = storyboardStringList(panel.acting_beats)
   const primaryReference = references.find((reference) => {
     const role = String(reference.role ?? '').toLowerCase()
@@ -1012,6 +1013,7 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
       <div style={nvis.storyboardPanelBody}>
         <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
         {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
+        <StoryboardPromptBlock prompt={generationPrompt} />
         <div style={nvis.storyboardSupportGrid}>
           <StoryboardSupportBlock
             title="Start Frame"
@@ -1073,6 +1075,36 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
         )}
       </div>
     </article>
+  )
+}
+
+function StoryboardPromptBlock({ prompt }: { prompt: Record<string, unknown> }) {
+  const panelPrompt = String(prompt.panel_prompt ?? 'Missing storyboard panel generation prompt')
+  const startPrompt = String(prompt.start_frame_prompt ?? 'Missing start-frame prompt')
+  const endPrompt = String(prompt.end_frame_prompt ?? 'Missing end-frame prompt')
+  const requirements = storyboardStringList(prompt.reference_requirements)
+  const negativePrompt = String(prompt.negative_prompt ?? 'Missing negative prompt')
+  return (
+    <div style={nvis.storyboardPromptBlock}>
+      <div style={nvis.storyboardPromptHeader}>Panel Generation Prompt</div>
+      <p style={nvis.storyboardPromptText}>{panelPrompt}</p>
+      <div style={nvis.storyboardPromptPair}>
+        <div>
+          <span style={nvis.storyboardPromptLabel}>Start</span>
+          <p>{startPrompt}</p>
+        </div>
+        <div>
+          <span style={nvis.storyboardPromptLabel}>End</span>
+          <p>{endPrompt}</p>
+        </div>
+      </div>
+      {requirements.length > 0 && (
+        <div style={nvis.storyboardPromptRequirements}>
+          {requirements.map((item) => <span key={item}>{item}</span>)}
+        </div>
+      )}
+      <div style={nvis.storyboardNegativePrompt}>Must not: {negativePrompt}</div>
+    </div>
   )
 }
 
@@ -9021,6 +9053,54 @@ const nvis: Record<string, CSSProperties> = {
     color: '#93a4bb',
     fontSize: 11,
     lineHeight: 1.35,
+  },
+  storyboardPromptBlock: {
+    border: '1px solid rgba(245,158,11,0.18)',
+    borderRadius: 12,
+    background: 'rgba(245,158,11,0.045)',
+    padding: '11px 12px',
+    display: 'grid',
+    gap: 9,
+  },
+  storyboardPromptHeader: {
+    color: '#fbbf24',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardPromptText: {
+    margin: 0,
+    color: '#e2e8f0',
+    fontSize: 12,
+    lineHeight: 1.48,
+  },
+  storyboardPromptPair: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 9,
+    color: '#b6c4d6',
+    fontSize: 11,
+    lineHeight: 1.38,
+  },
+  storyboardPromptLabel: {
+    display: 'block',
+    marginBottom: 3,
+    color: '#f59e0b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardPromptRequirements: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardNegativePrompt: {
+    color: '#fca5a5',
+    fontSize: 11,
+    lineHeight: 1.38,
   },
   storyboardSeedRow: {
     display: 'flex',
