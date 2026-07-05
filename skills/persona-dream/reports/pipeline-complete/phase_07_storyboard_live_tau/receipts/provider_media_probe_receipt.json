@@ -1,0 +1,8 @@
+{
+  "blockers": [
+    "No provider-accessible public image URL has been authorized or probed."
+  ],
+  "panel_id": "panel_001",
+  "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+  "status": "BLOCKED_PROVIDER_MEDIA_URLS"
+}

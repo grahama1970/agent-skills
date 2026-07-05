@@ -1,0 +1,27 @@
+{
+  "panel": {
+    "image_generation_receipt": "",
+    "image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+    "panel_id": "panel_001",
+    "panel_prompt": "Create a provider-ready storyboard panel for the accepted 10-second Kahalu'u Bay script. Show Embry in a navy rashguard on an older white shortboard during a hot, humid daylight surf window at Kahalu'u Bay, Kona Coast, Big Island. Her skin shows sweat, salt, glare, fatigue, and careful rail grip as softened wax and lava rock reef constraints force a precise decision. Kai, in a black rashguard on a familiar white shortboard, waits outside the line and guides through restraint rather than rescue. Include summer swell timing, shallow lava reef caution, bright glare, public beach pressure, and local lineup etiquette. Cinematic naturalism, waterline surf photography, no text overlays, no logos, no UI chrome, no unrelated characters.",
+    "panel_repair_work_order": "",
+    "post_generation_script_coverage": "Phase 07 must preserve the accepted Phase 06 script coverage and not introduce text overlays, unrelated characters, or continuity drift.",
+    "provider_media_probe_receipt": "",
+    "provider_media_url": "",
+    "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau",
+    "scillm_base_url": "http://127.0.0.1:4001",
+    "scillm_image_auth": "codex-oauth",
+    "scillm_image_model": "gpt-image-2",
+    "scillm_image_quality": "high",
+    "scillm_image_timeout_s": "900",
+    "scillm_live_panel": "true",
+    "scillm_vlm_model": "vlm",
+    "scillm_vlm_timeout_s": "180",
+    "source_panel": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+    "source_panel_summary": "One 10-second scene at Kahalu'u Bay: Embry ignores a buzzing phone long enough to make a careful, competent surf decision while Kai reads the lineup and reef without taking over.",
+    "source_script_coverage": "Phase 06 script_contract.json covers seed-0 through seed-6: Embry, Kai, Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast.",
+    "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
+    "write_receipts_to_panel_run_root": "true"
+  },
+  "role": "persona-dream-panel-repair-gate"
+}

@@ -1,0 +1,7 @@
+{
+  "estimated_cost_usd": 0,
+  "paid_call_authorized": false,
+  "panel_id": "panel_001",
+  "schema": "persona_dream.provider_cost_estimate.v1",
+  "status": "DRY_RUN_ONLY"
+}
