@@ -1,0 +1,21 @@
+{
+  "blockers": [
+    "repair_gate_status_not_final_reviewed:BLOCKED_PROVIDER_MEDIA_URLS",
+    "provider_media_status_not_pass:FAIL",
+    "provider_eligibility_not_true"
+  ],
+  "final_panel_eligible": false,
+  "image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+  "nano_banana_fallback_used": false,
+  "panel_id": "panel_001",
+  "photoreal_status": "PASS_PHOTOREAL_CINEMATIC",
+  "producer": {
+    "kind": "subagent",
+    "name": "persona-dream-panel-repair-gate",
+    "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+  },
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.panel_source_receipt.v1",
+  "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+  "status": "BLOCKED"
+}
