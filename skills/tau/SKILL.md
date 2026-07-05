@@ -49,23 +49,46 @@ locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
 ## Commands
 
+Currently implemented skill-wrapper commands:
+
 ```bash
+skills/tau/run.sh doctor
 skills/tau/run.sh status
 skills/tau/run.sh sanity
-skills/tau/run.sh e2e
+skills/tau/run.sh proof-status
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
 ```
 
-`status` reports current repo, GitHub issue, watchdog cron, and latest receipt
-state. `sanity` runs bounded checks that do not mutate GitHub. `e2e` runs the
-same checks plus recent live-proof inspection; it does not create or close new
-GitHub issues.
+Compatibility alias:
+
+```bash
+skills/tau/run.sh e2e
+```
+
+`doctor` checks that the wrapper can resolve the Tau repo, `uv`, Git, optional
+operator tools, and the Tau runtime `doctor` command. `status` reports current
+repo, GitHub issue, watchdog cron, and latest receipt state. `sanity` runs
+bounded checks that do not mutate GitHub. `proof-status` runs the same checks
+plus recent proof/status inspection; it does not create or close new GitHub
+issues. `e2e` is retained only as a compatibility alias for `proof-status` and
+must report `alias_for: proof-status`.
+
+Tau runtime lanes may be available even when the skill wrapper only exposes
+read-only operator commands. Use `doctor` to inspect lanes such as Herdr,
+provider-live, GitHub dry-run/apply, browser/CDP proof, and local sanity before
+claiming any of them.
+
+Planned or Tau-runtime commands that are not listed above are not skill-wrapper
+commands until `skills/tau/run.sh <command>` supports them.
 
 ## Proof Rules
 
 - State `mocked` and `live` boundaries for every result.
 - Unit tests are not E2E proof.
+- `proof-status` is a proof index/status command, not closure proof.
+- `e2e` is a compatibility alias and must not be used to overclaim end-to-end
+  production behavior.
 - Loop and harness claims require fresh command-loop/watchdog receipts.
 - TUI claims require targeted Textual/TUI checks.
 - Chat UI claims require browser/CDP screenshot verification from the host app.
@@ -77,6 +100,18 @@ GitHub issues.
 - Subagent handoffs must use `tau.agent_handoff.v1`.
 - Human goal changes must use `tau.human_goal_change.v1`; non-human agents may
   propose but not apply immutable goal changes.
+
+## Research References
+
+Tau's adaptive-DAG research references live in the Tau repo, especially
+`${HOME}/workspace/experiments/tau/docs/adaptive-dag-research-references.md`
+and `${HOME}/workspace/experiments/tau/docs/tau-research-evidence-lane-critique.md`.
+
+Treat ArXiv, paper, web, and video sources as design input unless a
+`tau.research_source_receipt.v1` and deterministic local proof say otherwise.
+The known YouTube reference is still pending formal citation unless the Tau
+repo contains a verified title, URL, retrieval date, and transcript/source
+receipt. A video ID alone is not closure proof.
 
 ## Default Project-Agent Interface: DAG Contracts
 
