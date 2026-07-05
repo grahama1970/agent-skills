@@ -1,0 +1,90 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-phase-07-storyboard-packet-panel-review",
+  "goal": {
+    "goal_id": "persona-dream-phase-07-storyboard-panels-accepted",
+    "goal_version": 1,
+    "goal_hash": "sha256:phase07-storyboard-panels-accepted-20260705",
+    "summary": "Run the Phase 07 creator/reviewer Tau DAG until panel-reviewer accepts the storyboard panels or emits concrete blockers."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+  },
+  "context": {
+    "persona_dream_phase07_storyboard": {
+      "run_id": "phase_07_storyboard_live_tau",
+      "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau",
+      "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json"
+    }
+  },
+  "entry_node": "panel-creator",
+  "terminal_nodes": [
+    "human"
+  ],
+  "nodes": [
+    {
+      "id": "panel-creator",
+      "agent": "panel-creator",
+      "executor": "local",
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/command-specs/panel-creator/tau-dispatch-command.json",
+      "max_attempts": 1,
+      "required_evidence": [
+        "storyboard_packet.json",
+        "storyboard_panel_manifest.json",
+        "storyboard_creator_receipt.json"
+      ]
+    },
+    {
+      "id": "panel-reviewer",
+      "agent": "panel-reviewer",
+      "executor": "local",
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/command-specs/panel-reviewer/tau-dispatch-command.json",
+      "max_attempts": 1,
+      "required_evidence": [
+        "storyboard_review_verdict.json",
+        "storyboard_reference_coverage.json",
+        "storyboard_entity_coverage.json"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "panel-creator",
+      "to": "panel-reviewer"
+    },
+    {
+      "from": "panel-reviewer",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "storyboard_packet.json",
+    "storyboard_panel_manifest.json",
+    "storyboard_creator_receipt.json",
+    "storyboard_review_verdict.json",
+    "storyboard_reference_coverage.json",
+    "storyboard_entity_coverage.json"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff",
+    "reviewer_goal_hash_mismatch"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 2
+  }
+}

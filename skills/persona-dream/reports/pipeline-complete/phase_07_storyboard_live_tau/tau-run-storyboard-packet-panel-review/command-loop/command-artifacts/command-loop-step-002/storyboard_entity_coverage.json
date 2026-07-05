@@ -1,0 +1,24 @@
+{
+  "covered_entities": [
+    "Embry",
+    "Embry surfboard",
+    "June Swell",
+    "Kai",
+    "Kai surfboard",
+    "Kona Coast",
+    "Lava Reef"
+  ],
+  "covered_seed_ids": [
+    "seed-0",
+    "seed-1",
+    "seed-2",
+    "seed-3",
+    "seed-4",
+    "seed-5",
+    "seed-6"
+  ],
+  "missing_seed_ids": [],
+  "schema": "persona_dream.storyboard_entity_coverage.v1",
+  "status": "PASS",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json"
+}
