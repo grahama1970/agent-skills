@@ -49,7 +49,58 @@
           "role": "identity_reference"
         }
       ],
-      "prompt_fragment": "Keep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach."
+      "prompt_fragment": "Keep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach.",
+      "start_frame": {
+        "description": "Waterline view just outside the lineup. Embry and Kai sit separated from the takeoff path, both boards angled parallel to the reef while locals hold priority.",
+        "visual_requirements": [
+          "Embry in navy rashguard, visibly hot and salt-wet",
+          "Kai in black rashguard, outside and watchful",
+          "clear water reveals dark lava reef shapes below",
+          "public lineup pressure is visible, not an empty private beach"
+        ],
+        "negative_constraints": [
+          "do not use a character contact sheet as the panel frame",
+          "do not show Embry and Kai cutting across the lineup",
+          "do not hide the reef boundary"
+        ]
+      },
+      "end_frame": {
+        "description": "The pair still wait. The incoming water lifts slightly, glare flashes across the surface, and Kai's restraint confirms the rule of the lineup before the action tightens.",
+        "visual_requirements": [
+          "same Embry and Kai identity continuity",
+          "waterline scale keeps reef and shared lineup readable",
+          "heat and glare remain active pressures"
+        ],
+        "negative_constraints": [
+          "no heroic takeoff yet",
+          "no generic tropical postcard composition"
+        ]
+      },
+      "camera": {
+        "shot_code": "WS",
+        "height": "waterline",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "movement": "slow observational drift with the swell, no dramatic push",
+        "composition": "Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
+        "camera_equipment": "water-housed action or cinema camera for the waterline plate; shore safety B-camera optional"
+      },
+      "lighting": {
+        "time_of_day": "daylight surf window in hot, humid June",
+        "quality": "hard coastal glare softened by water spray",
+        "direction": "high side-front sunlight reflecting off the wave face",
+        "continuity": "skin, rashguards, and boards stay wet; glare and humidity affect visibility"
+      },
+      "acting_beats": [
+        "Embry scans the lineup and chooses not to rush.",
+        "Kai watches the reef and the locals before giving any cue.",
+        "Both characters show autonomy through restraint rather than speech."
+      ],
+      "production_notes": {
+        "producer": "Keep the opening inexpensive and practical: waterline plate, minimal crowd, clear safety geography.",
+        "director": "Establish that freedom has rules before any wave action.",
+        "scriptwriter": "Let the environment explain the stakes before dialogue.",
+        "continuity": "Identity references are required for Embry and Kai; location and reef references remain blocking inputs."
+      }
     },
     {
       "panel_id": "sb_002",
@@ -81,7 +132,57 @@
           "role": "surf_action_reference"
         }
       ],
-      "prompt_fragment": "Do not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment."
+      "prompt_fragment": "Do not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment.",
+      "start_frame": {
+        "description": "Medium frame on Embry and the borrowed white shortboard. Her right hand presses into softened wax while sweat and salt mark her face.",
+        "visual_requirements": [
+          "Embry's navy rashguard is darker at the wet collar and ribs",
+          "borrowed white shortboard deck and rail are visible",
+          "sun-softened wax and slick hand placement are readable",
+          "lava reef line remains a visible hazard in the water"
+        ],
+        "negative_constraints": [
+          "do not make Embry reckless or panicked",
+          "do not crop out the board contact points"
+        ]
+      },
+      "end_frame": {
+        "description": "Embry resets her rail grip and breathes before the decision. The phone pressure is implied from shore while the swell approaches the reef line.",
+        "visual_requirements": [
+          "hand grip changes from slip to controlled placement",
+          "fatigue is visible in posture and breath",
+          "swell timing becomes the immediate pressure"
+        ],
+        "negative_constraints": [
+          "no catastrophic wipeout",
+          "no savior framing from Kai"
+        ]
+      },
+      "camera": {
+        "shot_code": "MS",
+        "height": "low waterline close to the board rail",
+        "lens": "moderate wide water-housing perspective, approximately 28-40mm equivalent",
+        "movement": "small handheld/swell movement tracking Embry's grip reset",
+        "composition": "Hands, rail, wax, Embry's face, and reef line all remain legible.",
+        "camera_equipment": "water housing with close-focus capability; safety spotter required near reef"
+      },
+      "lighting": {
+        "time_of_day": "daylight surf window",
+        "quality": "bright glare off clear water with wet skin highlights",
+        "direction": "sun catches sweat, salt, and wax texture",
+        "continuity": "heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue"
+      },
+      "acting_beats": [
+        "Embry notices the palm skid without melodrama.",
+        "She resets her grip deliberately instead of pretending she is fine.",
+        "The physical correction is the autonomy beat."
+      ],
+      "production_notes": {
+        "producer": "This is a close practical water shot; prioritize safety and readable board detail over spectacle.",
+        "director": "Make Embry's choice bodily: breath, hand placement, and timing.",
+        "scriptwriter": "The phone obligation stays implied; the board and reef carry the pressure.",
+        "continuity": "Embry surfboard, June Swell, and Lava Reef references remain blocking inputs for final provider generation."
+      }
     },
     {
       "panel_id": "sb_003",
@@ -120,7 +221,58 @@
           "role": "surf_action_reference"
         }
       ],
-      "prompt_fragment": "Kai is competent through restraint. Avoid lecturer, rescuer, or hero framing."
+      "prompt_fragment": "Kai is competent through restraint. Avoid lecturer, rescuer, or hero framing.",
+      "start_frame": {
+        "description": "Two-character lineup frame. Kai waits slightly outside and reads the channel while Embry holds closer to the decision point.",
+        "visual_requirements": [
+          "Kai in black rashguard on a familiar white shortboard",
+          "Embry remains in frame but not managed by Kai",
+          "public lineup and safe channel are spatially clear",
+          "Kona Coast environment remains visible"
+        ],
+        "negative_constraints": [
+          "do not frame Kai as a rescuer",
+          "do not make the scene private or empty",
+          "do not turn the cue into a lecture"
+        ]
+      },
+      "end_frame": {
+        "description": "Kai gives one restrained cue and stays out of Embry's way. Embry absorbs the information without surrendering the decision.",
+        "visual_requirements": [
+          "Kai's cue is small and practical",
+          "Embry remains the decision-maker",
+          "lineup etiquette is visible through spacing and waiting"
+        ],
+        "negative_constraints": [
+          "no grand gesture",
+          "no dialogue-heavy staging"
+        ]
+      },
+      "camera": {
+        "shot_code": "MWS",
+        "height": "waterline, slightly outside the pair",
+        "lens": "wide-to-normal water-housing perspective, approximately 30-45mm equivalent",
+        "movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
+        "composition": "Kai, Embry, channel, and shared lineup geometry are all visible.",
+        "camera_equipment": "water housing with operator outside the path; optional shore lens for continuity"
+      },
+      "lighting": {
+        "time_of_day": "same hot daylight surf window",
+        "quality": "wet rashguard highlights and high water glare",
+        "direction": "sun reveals spray on Kai's black rashguard and glare on the channel",
+        "continuity": "same humidity, salt, and public beach pressure as previous panels"
+      },
+      "acting_beats": [
+        "Kai conserves energy and waits.",
+        "He notices the lineup first, then the channel, then Embry's cadence.",
+        "His cue is restrained; Embry keeps agency."
+      ],
+      "production_notes": {
+        "producer": "Two-character water staging needs controlled blocking and a readable safe channel.",
+        "director": "Kai's competence is negative space: what he does not take, force, or explain.",
+        "scriptwriter": "Dialogue must stay sparse and practical.",
+        "continuity": "Kai surfboard and Kona Coast references remain blocking inputs for final provider generation."
+      }
     },
     {
       "panel_id": "sb_004",
@@ -156,7 +308,60 @@
           "role": "rejected_candidate_reference"
         }
       ],
-      "prompt_fragment": "The final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable."
+      "prompt_fragment": "The final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable.",
+      "start_frame": {
+        "description": "Clean shoulder begins to stand over the visible reef boundary. Embry is set on the safe line while Kai remains outside as a quiet reference point.",
+        "visual_requirements": [
+          "Embry's identity and navy rashguard remain consistent",
+          "Kai is present or spatially implied without becoming the focus",
+          "borrowed white shortboard and softened wax remain relevant",
+          "June swell and lava reef line are visibly linked to the decision"
+        ],
+        "negative_constraints": [
+          "do not use a generic surf couple",
+          "do not hide the reef",
+          "do not turn the beat into a rescue or disaster"
+        ]
+      },
+      "end_frame": {
+        "description": "Embry commits only when the lineup opens, angled toward the safe channel. The phones and obligations remain offscreen but unresolved.",
+        "visual_requirements": [
+          "Embry's commitment is controlled, not reckless",
+          "the safe channel is readable",
+          "Kai's understated response supports but does not validate her",
+          "environmental constraints remain the source of tension"
+        ],
+        "negative_constraints": [
+          "no victory pose",
+          "no melodramatic wipeout",
+          "no final provider image unless reference blockers are closed"
+        ]
+      },
+      "camera": {
+        "shot_code": "POV",
+        "height": "waterline just inside the wave shoulder",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "movement": "brief forward glide with the shoulder as Embry chooses the safe line",
+        "composition": "Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
+        "camera_equipment": "water-housed camera for the accepted keyframe; B-camera can confirm geography from shore"
+      },
+      "lighting": {
+        "time_of_day": "hot daylight, same surf window",
+        "quality": "bright silver glare on the wave face with spray highlights",
+        "direction": "side-front sun catches the face of the wave and wet board rail",
+        "continuity": "heat, salt, fatigue, and reef caution stay visible through the final beat"
+      },
+      "acting_beats": [
+        "Embry lets the wrong moment pass.",
+        "She commits only when the water and lineup give permission.",
+        "Kai's reaction is understated and does not steal the beat."
+      ],
+      "production_notes": {
+        "producer": "This is the highest-risk water panel; do not advance to provider generation until reference blockers close.",
+        "director": "The win is embodied agency, not spectacle.",
+        "scriptwriter": "End with temporary freedom still carrying obligation.",
+        "continuity": "Embry, Kai, surfboards, June Swell, Lava Reef, and Kona Coast all require final grounded visual references."
+      }
     }
   ],
   "missing_reference_blockers": [

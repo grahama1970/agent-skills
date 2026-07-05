@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Clock,
   CheckCircle2,
   Copy,
   ClipboardCheck,
@@ -894,8 +895,8 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
     <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
       <div style={nvis.storyboardHeader}>
         <div>
-          <div style={nvis.storyboardEyebrow}>Storyboard Packet</div>
-          <h3 style={nvis.storyboardTitle}>Timed panels, source references, and coverage</h3>
+          <div style={nvis.storyboardEyebrow}>Animatic Storyboard</div>
+          <h3 style={nvis.storyboardTitle}>Four timed panels for a 10-second Kling scene</h3>
         </div>
         <div style={nvis.storyboardMetaRow}>
           <span style={isBlocked ? nvis.storyboardStatusBlocked : nvis.storyboardStatusPass}>
@@ -920,7 +921,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
 
       {blockers.length > 0 && (
         <div style={nvis.storyboardBlockerList}>
-          <div style={nvis.storyboardBlockerTitle}>Missing reference inputs</div>
+          <div style={nvis.storyboardBlockerTitle}>Reference blockers before image generation</div>
           {blockers.map((blocker, index) => (
             <div key={`${String(blocker.entity)}-${index}`} style={nvis.storyboardBlockerItem}>
               <span>{String(blocker.entity ?? 'Unknown entity')}</span>
@@ -964,45 +965,150 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const references = Array.isArray(panel.references) ? panel.references as Array<Record<string, unknown>> : []
   const seeds = Array.isArray(panel.coverage_seed_ids) ? panel.coverage_seed_ids.map(String) : []
   const entities = Array.isArray(panel.required_entities) ? panel.required_entities.map(String) : []
+  const startFrame = storyboardRecord(panel.start_frame)
+  const endFrame = storyboardRecord(panel.end_frame)
+  const cameraPlan = storyboardRecord(panel.camera)
+  const lightingPlan = storyboardRecord(panel.lighting)
+  const productionNotes = storyboardRecord(panel.production_notes)
+  const actingBeats = storyboardStringList(panel.acting_beats)
+  const primaryReference = references.find((reference) => {
+    const role = String(reference.role ?? '').toLowerCase()
+    const hasImage = Boolean(dreamAssetUrl(String(reference.path || reference.url || '')))
+    const isAcceptedStoryboardFrame = role.includes('accepted_storyboard_frame') || role.includes('storyboard_frame') || role.includes('panel_frame')
+    return hasImage && isAcceptedStoryboardFrame
+  })
+  const primaryReferenceUrl = primaryReference ? dreamAssetUrl(String(primaryReference.path || primaryReference.url || '')) : ''
+  const timeLabel = `${String(range.start_s ?? '?')}s-${String(range.end_s ?? '?')}s`
+  const shotText = String(panel.shot ?? 'Missing shot direction')
+  const shotCode = storyboardShotCode(shotText)
 
   return (
     <article data-qid="dream:storyboard:panel" style={nvis.storyboardPanelCard}>
-      <div style={nvis.storyboardPanelTopline}>
-        <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')}</span>
-        <span style={nvis.storyboardPanelTime}>{String(range.start_s ?? '?')}s-{String(range.end_s ?? '?')}s</span>
-      </div>
-      <div style={nvis.storyboardShot}>{String(panel.shot ?? 'Missing shot direction')}</div>
-      <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
-      {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
-      <div style={nvis.storyboardSeedRow}>
-        {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
-      </div>
-      <div style={nvis.storyboardEntityRow}>
-        {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
-      </div>
-      {references.length > 0 && (
-        <div style={nvis.storyboardReferenceGrid}>
-          {references.map((reference) => {
-            const raw = String(reference.path || reference.url || '')
-            const url = dreamAssetUrl(raw)
-            return (
-              <div key={String(reference.id ?? reference.title ?? raw)} style={nvis.storyboardReferenceCard}>
-                {url ? (
-                  <img src={url} alt={String(reference.title ?? reference.id ?? 'reference')} style={nvis.storyboardReferenceThumb} />
-                ) : (
-                  <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
-                )}
-                <div style={nvis.storyboardReferenceText}>
-                  <span>{String(reference.title ?? reference.id ?? 'Reference')}</span>
-                  <small>{String(reference.role ?? reference.memory_key ?? 'reference')}</small>
-                </div>
-              </div>
-            )
-          })}
+      <div style={nvis.storyboardFrame}>
+        {primaryReferenceUrl ? (
+          <img
+            src={primaryReferenceUrl}
+            alt={String(primaryReference?.title ?? panel.panel_id ?? 'storyboard reference')}
+            style={nvis.storyboardFrameImage}
+          />
+        ) : (
+          <div style={nvis.storyboardFrameMissing}>
+            <span style={nvis.storyboardFrameGuideLabel}>{String(panel.panel_id ?? 'panel')} · {shotCode}</span>
+            <span style={nvis.storyboardFrameGuideLine}>Storyboard frame pending</span>
+            <small>Start and end frame specs below</small>
+          </div>
+        )}
+        <div style={nvis.storyboardFrameShade} />
+        <div style={nvis.storyboardFrameTop}>
+          <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')}</span>
+          <span style={nvis.storyboardPanelTime}><Clock size={12} /> {timeLabel}</span>
         </div>
-      )}
+        <div style={nvis.storyboardFrameBottom}>
+          <span style={nvis.storyboardShotCode}><Camera size={12} /> {shotCode}</span>
+          <span style={nvis.storyboardFrameCaption}>{shotText}</span>
+        </div>
+      </div>
+
+      <div style={nvis.storyboardPanelBody}>
+        <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
+        {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
+        <div style={nvis.storyboardSupportGrid}>
+          <StoryboardSupportBlock
+            title="Start Frame"
+            body={String(startFrame.description ?? 'Missing start-frame description')}
+            items={storyboardStringList(startFrame.visual_requirements)}
+          />
+          <StoryboardSupportBlock
+            title="End Frame"
+            body={String(endFrame.description ?? 'Missing end-frame description')}
+            items={storyboardStringList(endFrame.visual_requirements)}
+          />
+          <StoryboardSupportBlock
+            title="Camera / Lighting"
+            body={`${String(cameraPlan.movement ?? 'Missing camera movement')} ${String(cameraPlan.composition ?? '')}`.trim()}
+            items={[
+              String(cameraPlan.camera_equipment ?? 'camera equipment missing'),
+              String(lightingPlan.time_of_day ?? 'time of day missing'),
+              String(lightingPlan.quality ?? 'lighting quality missing'),
+            ]}
+          />
+          <StoryboardSupportBlock
+            title="Acting Beats"
+            body={actingBeats.length ? actingBeats.join(' ') : 'Missing acting beats'}
+            items={[
+              `Producer: ${String(productionNotes.producer ?? 'missing')}`,
+              `Director: ${String(productionNotes.director ?? 'missing')}`,
+              `Scriptwriter: ${String(productionNotes.scriptwriter ?? 'missing')}`,
+            ]}
+          />
+        </div>
+        <div style={nvis.storyboardTrackRow}>
+          <div style={nvis.storyboardSeedRow}>
+            {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
+          </div>
+          <div style={nvis.storyboardEntityRow}>
+            {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
+          </div>
+        </div>
+        {references.length > 0 && (
+          <div style={nvis.storyboardReferenceRail}>
+            {references.map((reference) => {
+              const raw = String(reference.path || reference.url || '')
+              const url = dreamAssetUrl(raw)
+              return (
+                <div key={String(reference.id ?? reference.title ?? raw)} style={nvis.storyboardReferenceCard}>
+                  {url ? (
+                    <img src={url} alt={String(reference.title ?? reference.id ?? 'reference')} style={nvis.storyboardReferenceThumb} />
+                  ) : (
+                    <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
+                  )}
+                  <div style={nvis.storyboardReferenceText}>
+                    <span>{String(reference.title ?? reference.id ?? 'Reference')}</span>
+                    <small>{String(reference.role ?? reference.memory_key ?? 'reference')}</small>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </article>
   )
+}
+
+function StoryboardSupportBlock({ title, body, items }: { title: string; body: string; items: string[] }) {
+  return (
+    <div style={nvis.storyboardSupportBlock}>
+      <div style={nvis.storyboardSupportTitle}>{title}</div>
+      <p style={nvis.storyboardSupportBody}>{body}</p>
+      {items.length > 0 && (
+        <ul style={nvis.storyboardSupportList}>
+          {items.slice(0, 4).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function storyboardRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function storyboardStringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String).filter(Boolean) : []
+}
+
+function storyboardShotCode(shot: string): string {
+  const value = shot.toLowerCase()
+  if (value.includes('extreme wide')) return 'EWS'
+  if (value.includes('wide') || value.includes('establish')) return 'WS'
+  if (value.includes('medium')) return 'MS'
+  if (value.includes('close')) return 'CU'
+  if (value.includes('waterline')) return 'POV'
+  if (value.includes('two-character') || value.includes('two character')) return 'MWS'
+  return 'SHOT'
 }
 
 function EvidenceCard({ title, status, children }: { title: string; status: string; children: React.ReactNode }) {
@@ -8622,7 +8728,7 @@ const nvis: Record<string, CSSProperties> = {
   storyboardConsole: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 18,
+    gap: 20,
   },
   storyboardHeader: {
     display: 'flex',
@@ -8703,12 +8809,14 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.45,
   },
   storyboardBlockerList: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-    gap: 10,
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'stretch',
+    padding: '10px 0 4px',
   },
   storyboardBlockerTitle: {
-    gridColumn: '1 / -1',
+    flex: '1 0 100%',
     color: '#7f9bbd',
     fontSize: 11,
     fontWeight: 800,
@@ -8719,24 +8827,115 @@ const nvis: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 5,
-    borderTop: '1px solid rgba(245,158,11,0.32)',
-    paddingTop: 10,
+    minWidth: 142,
+    maxWidth: 190,
+    border: '1px solid rgba(245,158,11,0.28)',
+    borderRadius: 10,
+    background: 'rgba(245,158,11,0.055)',
+    padding: '9px 10px',
     color: '#facc15',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 750,
   },
   storyboardPanelGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: 16,
+    gap: 18,
   },
   storyboardPanelCard: {
-    borderTop: '1px solid rgba(255,255,255,0.11)',
-    paddingTop: 16,
+    border: '1px solid rgba(148,163,184,0.18)',
+    borderRadius: 14,
+    overflow: 'hidden',
+    background: 'rgba(7,10,16,0.72)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
     minWidth: 0,
+  },
+  storyboardFrame: {
+    position: 'relative',
+    aspectRatio: '16 / 9',
+    background: 'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(2,6,23,0.95))',
+    overflow: 'hidden',
+  },
+  storyboardFrameImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+    display: 'block',
+    filter: 'saturate(0.88) contrast(0.95)',
+  },
+  storyboardFrameMissing: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameGuideLabel: {
+    color: '#f59e0b',
+    fontSize: 18,
+    fontWeight: 850,
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameGuideLine: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameShade: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(2,6,23,0.58) 0%, rgba(2,6,23,0.06) 36%, rgba(2,6,23,0.76) 100%)',
+    pointerEvents: 'none',
+  },
+  storyboardFrameTop: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  storyboardFrameBottom: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    bottom: 10,
+    display: 'grid',
+    gap: 7,
+  },
+  storyboardShotCode: {
+    justifySelf: 'start',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    border: '1px solid rgba(74,158,255,0.32)',
+    background: 'rgba(2,6,23,0.70)',
+    color: '#bfdbfe',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.12em',
+  },
+  storyboardFrameCaption: {
+    color: '#f8fafc',
+    fontSize: 13,
+    lineHeight: 1.3,
+    fontWeight: 750,
+    textShadow: '0 1px 12px rgba(0,0,0,0.75)',
   },
   storyboardPanelTopline: {
     display: 'flex',
@@ -8745,16 +8944,27 @@ const nvis: Record<string, CSSProperties> = {
     gap: 10,
   },
   storyboardPanelId: {
-    color: '#e2e8f0',
+    color: '#dbeafe',
+    background: 'rgba(2,6,23,0.66)',
+    border: '1px solid rgba(219,234,254,0.18)',
+    borderRadius: 999,
+    padding: '4px 8px',
     fontSize: 11,
     fontWeight: 850,
     letterSpacing: '0.16em',
     textTransform: 'uppercase',
   },
   storyboardPanelTime: {
-    color: '#4a9eff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    color: '#7dd3fc',
+    background: 'rgba(2,6,23,0.66)',
+    border: '1px solid rgba(125,211,252,0.20)',
+    borderRadius: 999,
+    padding: '4px 8px',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 800,
   },
   storyboardShot: {
@@ -8765,7 +8975,7 @@ const nvis: Record<string, CSSProperties> = {
   },
   storyboardAction: {
     margin: 0,
-    color: '#a8b6ca',
+    color: '#cbd5e1',
     fontSize: 13,
     lineHeight: 1.55,
   },
@@ -8776,10 +8986,55 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.45,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
   },
+  storyboardSupportGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+    paddingTop: 2,
+  },
+  storyboardSupportBlock: {
+    minWidth: 0,
+    border: '1px solid rgba(148,163,184,0.13)',
+    borderRadius: 10,
+    background: 'rgba(15,23,42,0.36)',
+    padding: '10px 11px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 7,
+  },
+  storyboardSupportTitle: {
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardSupportBody: {
+    margin: 0,
+    color: '#dbeafe',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  storyboardSupportList: {
+    margin: 0,
+    paddingLeft: 15,
+    color: '#93a4bb',
+    fontSize: 11,
+    lineHeight: 1.35,
+  },
   storyboardSeedRow: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: 6,
+  },
+  storyboardPanelBody: {
+    display: 'grid',
+    gap: 12,
+    padding: 14,
+  },
+  storyboardTrackRow: {
+    display: 'grid',
+    gap: 8,
   },
   storyboardSeed: {
     color: '#9ed0ff',
@@ -8802,9 +9057,15 @@ const nvis: Record<string, CSSProperties> = {
     fontSize: 12,
     fontWeight: 750,
   },
+  storyboardReferenceRail: {
+    display: 'flex',
+    gap: 8,
+    overflowX: 'auto' as const,
+    paddingTop: 2,
+  },
   storyboardReferenceGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    display: 'flex',
+    flexWrap: 'wrap',
     gap: 8,
   },
   storyboardReferenceCard: {
@@ -8812,6 +9073,7 @@ const nvis: Record<string, CSSProperties> = {
     gridTemplateColumns: '44px 1fr',
     gap: 9,
     alignItems: 'center',
+    flex: '0 0 186px',
     minWidth: 0,
     border: '1px solid rgba(255,255,255,0.07)',
     borderRadius: 8,

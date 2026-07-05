@@ -7,6 +7,10 @@
   "panel_count": 4,
   "duration_seconds": 10,
   "text_panels_present": true,
+  "start_end_frame_specs_present": true,
+  "camera_lighting_specs_present": true,
+  "acting_beats_present": true,
+  "production_notes_present": true,
   "coverage_seed_ids_present": true,
   "references_present": true,
   "candidate_generated_panel_count": 1,
@@ -22,6 +26,8 @@
   "claims": {
     "proves": [
       "A storyboard packet with four timed text panels exists.",
+      "Each panel now includes start-frame and end-frame specifications.",
+      "Each panel now includes camera, lighting, acting beat, and production-note support data.",
       "The packet maps panels to Phase 06 interaction-matrix seed IDs.",
       "The previous single generated image is explicitly rejected as sufficient storyboard evidence.",
       "The replacement Tau DAG contract now includes prompt-reviewer, reference-gate, creator, and reviewer nodes with fail-closed evidence checks."
