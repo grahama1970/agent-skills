@@ -147,6 +147,8 @@ export function ComplianceChatWell({
         >
           <textarea
             data-qid={`${qid}:input`}
+            data-qs-action="SHARED_CHAT_EDIT_MESSAGE"
+            title="Type chat message"
             value={draft}
             onChange={(event) => setDraft(event.currentTarget.value)}
             onKeyDown={(event) => {
@@ -174,6 +176,7 @@ export function ComplianceChatWell({
           <button
             type="submit"
             data-qid={`${qid}:send`}
+            data-qs-action="SHARED_CHAT_SEND_MESSAGE"
             disabled={disabled || composerDisabled || isStreaming || !draft.trim()}
             title="Send"
             style={{
@@ -221,8 +224,11 @@ function EmptyState({
               key={chip.label}
               type="button"
               data-qid={chip.dataQid ?? 'shared-chat:starter-chip'}
+              data-qs-action="SHARED_CHAT_STARTER_CHIP"
+              title={chip.prompt}
               onClick={() => onChip(chip.prompt)}
               style={{
+                minHeight: 44,
                 borderRadius: 999,
                 border: '1px solid rgba(255,255,255,0.12)',
                 background: 'rgba(255,255,255,0.05)',
