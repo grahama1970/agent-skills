@@ -3,8 +3,9 @@ name: tau
 description: >
   Operate and verify the local T'au project at ${HOME}/workspace/experiments/tau.
   Use for Tau loop, harness, watchdog cron, GitHub issue orchestration, TUI,
-  Memory-first chat, and E2E proof/status tasks. This skill is a light wrapper
-  around the Tau repo and must report mocked/live proof boundaries explicitly.
+  Memory-first zero-trust agent harness, and proof/status tasks. This skill is
+  a light wrapper around the Tau repo and must report mocked/live proof
+  boundaries explicitly.
 triggers:
   - tau
   - t'au
@@ -37,6 +38,10 @@ taxonomy:
 ---
 
 # Tau
+
+T'au is the Memory-First Zero-Trust Agent Harness for untrusted agent work.
+Agents can produce claims; Tau decides what counts by checking memory, policy,
+data boundaries, DAG contracts, receipts, evidence, and explicit non-claims.
 
 Use this skill as the operator entrypoint for the local T'au project:
 
@@ -79,8 +84,48 @@ read-only operator commands. Use `doctor` to inspect lanes such as Herdr,
 provider-live, GitHub dry-run/apply, browser/CDP proof, and local sanity before
 claiming any of them.
 
+Current Tau runtime lanes that may exist in the Tau repo, depending on
+checkout/version:
+
+```bash
+uv run tau doctor
+uv run tau zero-trust-doctor
+uv run tau dag-run
+uv run tau herdr-cleanup
+uv run tau dag-expansion-validate
+uv run tau dag-expansion-policy
+uv run tau dag-expansion-apply
+uv run tau dag-route-memory-candidates
+uv run tau dag-route-memory-sync
+uv run tau dag-branch-locks-validate
+uv run tau dag-motif-validate
+uv run tau research-source-receipt
+uv run tau github-redact-projection
+uv run tau github-apply-policy-check
+```
+
 Planned or Tau-runtime commands that are not listed above are not skill-wrapper
 commands until `skills/tau/run.sh <command>` supports them.
+
+### Zero-Trust Policy/Data-Boundary Lane
+
+Use Tau's zero-trust preflight when a DAG opts into a policy profile or a
+high-stakes data boundary. This lane is a gate, not compliance certification.
+It blocks missing or incompatible policy/profile metadata before DAG dispatch
+and emits `tau.zero_trust_preflight_receipt.v1`.
+
+Minimum runtime command shape:
+
+```bash
+uv run tau zero-trust-doctor \
+  --policy-profile experiments/goal-locked-subagents/fixtures/zero-trust-policy.json \
+  --data-boundary experiments/goal-locked-subagents/fixtures/itar-data-boundary.json
+```
+
+This proves only that Tau inspected policy and data-boundary inputs for that
+run. It does not prove ITAR compliance, export-control legal sufficiency,
+sandbox isolation, signed provenance, human identity verification,
+provider/model semantic safety, or compliance package completeness.
 
 ## Proof Rules
 
