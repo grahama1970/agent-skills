@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import SharedChatShell from './SharedChatShell'
 import type { ChatMessage, MemoryTurnAdapter, UnknownRecord } from './memory-turn'
-import { EmbryVoiceChatAdapter, type EmbryVoiceChatAdapterOptions } from './memory-turn'
+import { EmbryVoiceChatAdapter, type EmbryTurnAuthority, type EmbryVoiceAudioAuthority, type EmbryVoiceChatAdapterOptions } from './memory-turn'
 
 export interface EmbryVoiceAudioArtifact {
   id?: string
@@ -37,6 +37,8 @@ export interface EmbryVoiceTurnEvidence {
   qraCacheHit?: boolean
   interruptionOldBytesAfterCancel?: number
   receiptPath?: string
+  audioAuthority?: EmbryVoiceAudioAuthority
+  turnAuthority?: EmbryTurnAuthority
   audioArtifacts?: EmbryVoiceAudioArtifact[]
   latencyMs?: Record<string, number>
   mocked?: boolean
@@ -650,6 +652,8 @@ function turnsToMessages(turns: EmbryVoiceTurnEvidence[]): ChatMessage[] {
         speakerId: turn.speakerId,
         tone: turn.tone,
         receiptPath: turn.receiptPath,
+        audioAuthority: turn.audioAuthority ?? turn.turnAuthority?.audioAuthority,
+        turnAuthority: turn.turnAuthority ?? turnAuthorityFromEvidence(turn),
         audioArtifacts: turn.audioArtifacts,
         simultaneousTextVoice: true,
         memoryFirst: true,
@@ -667,18 +671,22 @@ function mergeTurnsFromMessages(turns: EmbryVoiceTurnEvidence[], messages: ChatM
     const message = messages[index]
     if (message.role !== 'assistant') continue
     const metadata = (message.metadata ?? {}) as UnknownRecord
-    const audioArtifacts = normalizeAudioArtifacts(metadata.audioArtifacts ?? metadata.audio_artifacts)
+    const turnAuthority = normalizeTurnAuthority(metadata.turnAuthority ?? metadata.turn_authority)
+    const audioAuthority = normalizeAudioAuthority(metadata.audioAuthority ?? metadata.audio_authority ?? turnAuthority?.audioAuthority)
+    const audioArtifacts = normalizeAudioArtifacts(metadata.audioArtifacts ?? metadata.audio_artifacts, audioAuthority)
     if (!audioArtifacts.length) continue
     const previous = previousUserMessage(messages, index)
-    const id = stringValue(metadata.turnId ?? metadata.turn_id) ?? message.id
+    const id = stringValue(metadata.turnId ?? metadata.turn_id ?? turnAuthority?.turnId) ?? message.id
     if (merged.some((turn) => turn.id === id)) continue
     merged.push({
       id,
-      userText: previous?.content ?? '',
-      assistantText: message.content,
-      speakerId: stringValue(metadata.speakerId ?? metadata.speaker_id),
+      userText: turnAuthority?.userText ?? previous?.content ?? '',
+      assistantText: turnAuthority?.assistantText ?? message.content,
+      speakerId: stringValue(metadata.speakerId ?? metadata.speaker_id ?? turnAuthority?.speakerId),
       tone: stringValue(metadata.tone),
-      receiptPath: stringValue(metadata.receiptPath ?? metadata.receipt_path),
+      receiptPath: stringValue(metadata.receiptPath ?? metadata.receipt_path ?? turnAuthority?.receiptPath),
+      audioAuthority,
+      turnAuthority,
       audioArtifacts,
       live: true,
       mocked: false,
@@ -720,9 +728,10 @@ function turnToThinkingSteps(turn: EmbryVoiceTurnEvidence): ChatMessage['reasoni
   ]
 }
 
-function normalizeAudioArtifacts(value: unknown): EmbryVoiceAudioArtifact[] {
-  if (!Array.isArray(value)) return []
-  return value.filter(isRecord).map((item, index) => ({
+function normalizeAudioArtifacts(value: unknown, audioAuthority?: EmbryVoiceAudioAuthority): EmbryVoiceAudioArtifact[] {
+  const records = Array.isArray(value) ? value.filter(isRecord) : []
+  if (!records.length && audioAuthority && (audioAuthority.url || audioAuthority.path)) records.push(audioAuthority as UnknownRecord)
+  return records.map((item, index) => ({
     id: stringValue(item.id) ?? `audio-${index + 1}`,
     label: stringValue(item.label),
     path: stringValue(item.path),
@@ -733,6 +742,64 @@ function normalizeAudioArtifacts(value: unknown): EmbryVoiceAudioArtifact[] {
     transcript: stringValue(item.transcript),
     tone: stringValue(item.tone),
   }))
+}
+
+function turnAuthorityFromEvidence(turn: EmbryVoiceTurnEvidence): EmbryTurnAuthority {
+  return {
+    turnId: turn.id,
+    userText: turn.userText,
+    assistantText: turn.assistantText,
+    personaId: 'embry',
+    speakerId: turn.speakerId,
+    createdAt: new Date().toISOString(),
+    memoryFirst: true,
+    simultaneousTextVoice: true,
+    receiptPath: turn.receiptPath,
+    audioAuthority: turn.audioAuthority,
+    audioArtifacts: (turn.audioArtifacts ?? []) as UnknownRecord[],
+    live: turn.live,
+    mocked: turn.mocked,
+  }
+}
+
+function normalizeTurnAuthority(value: unknown): EmbryTurnAuthority | undefined {
+  if (!isRecord(value)) return undefined
+  const turnId = stringValue(value.turnId ?? value.turn_id)
+  const userText = stringValue(value.userText ?? value.user_text)
+  const assistantText = stringValue(value.assistantText ?? value.assistant_text)
+  if (!turnId || !userText || !assistantText) return undefined
+  return {
+    turnId,
+    userText,
+    assistantText,
+    personaId: stringValue(value.personaId ?? value.persona_id) ?? 'embry',
+    speakerId: stringValue(value.speakerId ?? value.speaker_id),
+    sessionId: stringValue(value.sessionId ?? value.session_id),
+    createdAt: stringValue(value.createdAt ?? value.created_at) ?? new Date().toISOString(),
+    memoryFirst: true,
+    simultaneousTextVoice: true,
+    receiptPath: stringValue(value.receiptPath ?? value.receipt_path),
+    audioAuthority: normalizeAudioAuthority(value.audioAuthority ?? value.audio_authority),
+    audioArtifacts: Array.isArray(value.audioArtifacts) ? value.audioArtifacts.filter(isRecord) : [],
+    memoryTrace: value.memoryTrace ?? value.memory_trace,
+    tauTrace: value.tauTrace ?? value.tau_trace,
+    live: value.live === true,
+    mocked: value.mocked === true,
+  }
+}
+
+function normalizeAudioAuthority(value: unknown): EmbryVoiceAudioAuthority | undefined {
+  if (!isRecord(value)) return undefined
+  return {
+    authority: stringValue(value.authority),
+    artifactId: stringValue(value.artifactId ?? value.artifact_id),
+    url: stringValue(value.url),
+    path: stringValue(value.path),
+    sha256: stringValue(value.sha256),
+    durationMs: numberValue(value.durationMs ?? value.duration_ms),
+    localPlayback: isRecord(value.localPlayback) ? value.localPlayback : isRecord(value.local_playback) ? value.local_playback : null,
+    envelope: isRecord(value.envelope) ? value.envelope : undefined,
+  }
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
