@@ -198,6 +198,22 @@ is the durable instruction; Tau owns dispatch, receipt validation, route
 continuity, resume behavior, timeout/max-attempt handling, immutable-goal
 enforcement, and fail-closed drift detection.
 
+Tau must monitor observable subagent behavior for blocked-agent drift. If a
+subagent is failing and devolves into test-only churn without task evidence,
+Tau should stop normal retry, emit a course-correction artifact, and route to a
+reviewer or goal-guardian instead of allowing more pointless unit tests. Unit
+tests are useful evidence only when they are tied to the active task and paired
+with the required implementation or artifact evidence. The course-correction
+artifact must require a blocked report that states the blocker, what was
+attempted, why further test churn is not progress, and the next non-test action.
+
+When a Tau-managed subagent has failed two attempts and still has retry budget,
+Tau must require `$brave-search` before another attempt. The requirement must be
+durable: record the failed node, attempt count, blocker, search query, and the
+Brave Search command or receipt path. Do not silently continue to a third local
+retry from the same stale context, and do not accept a third attempt until the
+blocker report and Brave Search receipt are present.
+
 Default flow:
 
 ```text
