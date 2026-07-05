@@ -1,5 +1,5 @@
 import express from 'express'
-import { readFileSync, existsSync, statSync, realpathSync } from 'fs'
+import { readFileSync, existsSync, statSync, realpathSync, mkdirSync, writeFileSync } from 'fs'
 import { createReadStream } from 'fs'
 import { spawn } from 'child_process'
 import path from 'path'
@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 const PORT = Number(process.env.WATCH_API_PORT || 3003)
 
-app.use(express.json())
+app.use(express.json({ limit: '2mb' }))
 
 const WATCH_REPORT_PATH = process.env.WATCH_REPORT_PATH || '/tmp/watch-wex5uxs_/report.json'
 const WATCH_FRAMES_DIR = process.env.WATCH_FRAMES_DIR || '/mnt/storage12tb/media/watch-frames'
@@ -21,6 +21,66 @@ const WATCH_TRACKER_EVENTS_PATH = process.env.WATCH_TRACKER_EVENTS_PATH || path.
 )
 const WATCH_TRACKER_SCRIPT = process.env.WATCH_TRACKER_SCRIPT || path.join(WATCH_SKILL_DIR, 'scripts/track_yolo_bytetrack.py')
 const WATCH_TRACKER_MODEL = process.env.WATCH_TRACKER_MODEL || path.join(WATCH_SKILL_DIR, 'yolo11n.pt')
+const WATCH_YOLO_LABEL_DIR = process.env.WATCH_YOLO_LABEL_DIR || path.join(
+  WATCH_SKILL_DIR,
+  'docs/architecture/generated/watch_yolo_track_labels',
+)
+const WATCH_OVERLAY_PAYLOAD_PATH = process.env.WATCH_OVERLAY_PAYLOAD_PATH || path.join(
+  WATCH_SKILL_DIR,
+  'docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json',
+)
+
+function safeFilePart(value: unknown, fallback: string): string {
+  const raw = typeof value === 'string' && value.trim() ? value.trim() : fallback
+  return raw.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/^_+|_+$/g, '') || fallback
+}
+
+function yoloLabelFilePath(assetUid: unknown, rowIndex: unknown): string {
+  const asset = safeFilePart(assetUid, 'watch_asset')
+  const row = Number.isFinite(Number(rowIndex)) ? String(Number(rowIndex)).padStart(4, '0') : 'unknown'
+  return path.join(WATCH_YOLO_LABEL_DIR, `${asset}_row${row}.json`)
+}
+
+function readYoloLabelReceipt(assetUid: unknown, rowIndex: unknown): any {
+  const receiptPath = yoloLabelFilePath(assetUid, rowIndex)
+  if (!existsSync(receiptPath)) {
+    return {
+      schema: 'watch.yolo_track_labels.v1',
+      asset_uid: assetUid || null,
+      row_index: rowIndex ?? null,
+      labels: {},
+      events: [],
+      receipt_path: receiptPath,
+      updated_at: null,
+    }
+  }
+  return JSON.parse(readFileSync(receiptPath, 'utf-8'))
+}
+
+async function storeYoloLabelInMemory(document: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8_000)
+  try {
+    const resp = await fetch(`${MEMORY_DAEMON}/store`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Caller-Skill': 'watch',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        collection: 'watch_yolo_track_labels',
+        document,
+      }),
+    })
+    if (!resp.ok) return { ok: false, error: `memory_store_http_${resp.status}` }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: String(err) }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 
 // Serve report JSON
 app.get('/api/projects/watch/report', async (_req, res) => {
@@ -29,6 +89,44 @@ app.get('/api/projects/watch/report', async (_req, res) => {
     res.json(JSON.parse(raw))
   } catch (err) {
     res.status(500).json({ error: String(err), report_path: WATCH_REPORT_PATH })
+  }
+})
+
+app.get('/api/projects/watch/overlay-payload', async (req, res) => {
+  const requestedPath = typeof req.query.path === 'string' && req.query.path.trim()
+    ? req.query.path.trim()
+    : WATCH_OVERLAY_PAYLOAD_PATH
+
+  try {
+    const realPayloadPath = realpathSync(requestedPath)
+    const realWatchSkillDir = realpathSync(WATCH_SKILL_DIR)
+    const realTmpDir = realpathSync('/tmp')
+    const allowed = realPayloadPath.startsWith(`${realWatchSkillDir}${path.sep}`) ||
+      realPayloadPath.startsWith(`${realTmpDir}${path.sep}`)
+
+    if (!allowed) {
+      res.status(403).json({ error: 'overlay payload path is outside allowed roots', path: requestedPath })
+      return
+    }
+
+    const raw = readFileSync(realPayloadPath, 'utf-8')
+    const payload = JSON.parse(raw)
+    const schema = payload?.schema || payload?.schema_version
+    if (schema !== 'watch.ui_overlay_payload.v1') {
+      res.status(422).json({
+        error: 'unexpected overlay payload schema',
+        schema: schema || null,
+        path: realPayloadPath,
+      })
+      return
+    }
+    res.json(payload)
+  } catch (err) {
+    res.status(404).json({
+      error: String(err),
+      path: requestedPath,
+      default_path: WATCH_OVERLAY_PAYLOAD_PATH,
+    })
   }
 })
 
@@ -371,6 +469,179 @@ app.post('/api/projects/watch/question', async (req, res) => {
       evidence: { local_row_count: matchedRows.length, sources: ['local'] },
     })
   }
+})
+
+// Identity suggestion proxy. Watch owns character identity, but it must ask
+// Memory/Qdrant rather than reaching into vector stores directly from the UI.
+app.post('/api/projects/watch/identity-suggestions', async (req, res) => {
+  const trackId = typeof req.body?.track_id === 'string' ? req.body.track_id : ''
+  const imageDataUrl = typeof req.body?.image_data_url === 'string' ? req.body.image_data_url : ''
+  const imagePath = typeof req.body?.image_path === 'string' ? req.body.image_path : ''
+  const q = typeof req.body?.q === 'string' && req.body.q.trim()
+    ? req.body.q.trim()
+    : `Who does this Watch YOLO person crop most look like?`
+
+  if (!trackId) {
+    res.status(400).json({ error: 'track_id is required' })
+    return
+  }
+  if (!imageDataUrl && !imagePath) {
+    res.status(400).json({ error: 'image_data_url or image_path is required' })
+    return
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const resp = await fetch(`${MEMORY_DAEMON}/watch/identity/recall-crop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Caller-Skill': 'watch',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        q,
+        image_data_url: imageDataUrl || undefined,
+        image_path: imagePath || undefined,
+        k: 10,
+        asset_uid: req.body?.asset_uid,
+        row_index: req.body?.row_index,
+        time_seconds: req.body?.time_seconds,
+        track_id: trackId,
+      }),
+    })
+    const memoryData = await resp.json() as any
+    const topSuggestion = Array.isArray(memoryData?.suggestions) ? memoryData.suggestions[0] : null
+    res.status(resp.ok ? 200 : 502).json({
+      schema: 'watch.identity_suggestions.v1',
+      status: resp.ok ? 'ok' : 'memory_error',
+      track_id: trackId,
+      suggestion: topSuggestion
+        ? {
+            character_name: topSuggestion.character_name,
+            actor_name: topSuggestion.actor_name,
+            confidence: topSuggestion.confidence,
+            basis: ['memory_qdrant_crop_recall'],
+            tentative: true,
+            display_label: topSuggestion.display_label,
+          }
+        : null,
+      memory: memoryData,
+    })
+  } catch (err) {
+    res.status(502).json({
+      schema: 'watch.identity_suggestions.v1',
+      status: 'memory_unavailable',
+      track_id: trackId,
+      error: String(err),
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+})
+
+app.get('/api/projects/watch/yolo-labels', async (req, res) => {
+  const assetUid = typeof req.query.asset_uid === 'string' ? req.query.asset_uid : ''
+  const rowIndex = typeof req.query.row_index === 'string' ? Number(req.query.row_index) : NaN
+  if (!assetUid || !Number.isFinite(rowIndex)) {
+    res.status(400).json({ error: 'asset_uid and row_index are required' })
+    return
+  }
+  try {
+    const receipt = readYoloLabelReceipt(assetUid, rowIndex)
+    res.json(receipt)
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+app.post('/api/projects/watch/yolo-labels', async (req, res) => {
+  const assetUid = typeof req.body?.asset_uid === 'string' ? req.body.asset_uid : ''
+  const rowIndex = Number(req.body?.row_index)
+  const trackId = typeof req.body?.track_id === 'string' ? req.body.track_id : ''
+  const action = typeof req.body?.action === 'string' ? req.body.action : 'accept'
+  if (!assetUid || !Number.isFinite(rowIndex) || !trackId) {
+    res.status(400).json({ error: 'asset_uid, row_index, and track_id are required' })
+    return
+  }
+
+  const receiptPath = yoloLabelFilePath(assetUid, rowIndex)
+  const now = new Date().toISOString()
+  const receipt = readYoloLabelReceipt(assetUid, rowIndex)
+  const labels = receipt.labels && typeof receipt.labels === 'object' ? { ...receipt.labels } : {}
+  const events = Array.isArray(receipt.events) ? receipt.events : []
+  const event: Record<string, unknown> = {
+    id: `yolo_label_${Date.now()}_${safeFilePart(trackId, 'track')}`,
+    action,
+    asset_uid: assetUid,
+    row_index: rowIndex,
+    timecode: req.body?.timecode || null,
+    movie_segment: req.body?.movie_segment || null,
+    time_seconds: req.body?.time_seconds ?? null,
+    track_id: trackId,
+    created_at: now,
+  }
+
+  if (action === 'reset' || action === 'reject') {
+    delete labels[trackId]
+    event.status = action
+  } else {
+    const characterName = typeof req.body?.character_name === 'string' ? req.body.character_name.trim() : ''
+    if (!characterName || characterName === 'Unassigned') {
+      res.status(400).json({ error: 'character_name is required for accepted labels' })
+      return
+    }
+    const label = {
+      trackId,
+      characterName,
+      actorName: typeof req.body?.actor_name === 'string' ? req.body.actor_name : '',
+      status: 'accepted',
+      source: 'human',
+      confidence: typeof req.body?.confidence === 'number' ? req.body.confidence : 1,
+      updatedAt: now,
+    }
+    labels[trackId] = label
+    event.status = 'accepted'
+    event.character_name = label.characterName
+    event.actor_name = label.actorName
+    event.confidence = label.confidence
+  }
+
+  const nextReceipt = {
+    schema: 'watch.yolo_track_labels.v1',
+    asset_uid: assetUid,
+    row_index: rowIndex,
+    timecode: req.body?.timecode || receipt.timecode || null,
+    movie_segment: req.body?.movie_segment || receipt.movie_segment || null,
+    labels,
+    events: [...events, event],
+    receipt_path: receiptPath,
+    updated_at: now,
+  }
+
+  mkdirSync(path.dirname(receiptPath), { recursive: true })
+  writeFileSync(receiptPath, JSON.stringify(nextReceipt, null, 2))
+  const memorySync = await storeYoloLabelInMemory({
+    _key: `${safeFilePart(assetUid, 'watch_asset')}_row${String(rowIndex).padStart(4, '0')}_${safeFilePart(trackId, 'track')}`,
+    kind: 'watch_yolo_track_label',
+    schema: 'watch_yolo_track_label.v1',
+    asset_uid: assetUid,
+    row_index: rowIndex,
+    track_id: trackId,
+    action,
+    label: labels[trackId] || null,
+    receipt_path: receiptPath,
+    retrieval_text: labels[trackId]
+      ? `Watch YOLO person box ${trackId} for ${assetUid} row ${rowIndex} accepted as ${(labels[trackId] as any).characterName}.`
+      : `Watch YOLO person box ${trackId} for ${assetUid} row ${rowIndex} reset to unlabeled YOLO track state.`,
+    updated_at: now,
+  })
+  res.json({
+    ...nextReceipt,
+    memory_sync: memorySync.ok ? 'stored' : 'failed',
+    memory_sync_error: memorySync.error,
+  })
 })
 
 function buildLocalAnswer(question: string, rows: any[]): string {

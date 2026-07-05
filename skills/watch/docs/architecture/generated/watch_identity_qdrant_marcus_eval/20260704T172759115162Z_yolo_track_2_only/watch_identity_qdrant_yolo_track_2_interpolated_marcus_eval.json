@@ -1,0 +1,4207 @@
+{
+  "schema": "watch.identity_qdrant_yolo_track_interpolated_crop_eval.v1",
+  "run_id": "20260704T172759115162Z_yolo_track_2_only",
+  "created_at": "2026-07-04T17:28:02.161260+00:00",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 9,
+  "truth_character": "Marcus",
+  "yolo_track_key": "detector_9_track_2",
+  "video_path": "/mnt/storage12tb/media/watch-frames/badsantaunrated2003brripxvidhd720p-npw/clips/segment_0010.mp4",
+  "video_probe": {
+    "width": 1280,
+    "height": 696,
+    "fps": 23.975985652770184,
+    "duration_seconds": 23.98233
+  },
+  "counts": {
+    "all_row9_marcus_annotations_seen": 193,
+    "yolo_track_qdrant_anchors_used": 22,
+    "adjacent_interpolation_pairs": 18,
+    "interpolated_crops_evaluated": 18,
+    "top1_marcus_pass": 17,
+    "top1_marcus_fail": 1,
+    "top1_accuracy": 0.944444,
+    "http_200_count": 18
+  },
+  "memory_endpoint": "http://127.0.0.1:8601/watch/identity/recall-crop",
+  "input_transport": "image_data_url",
+  "mocked": false,
+  "live": true,
+  "proves": [
+    "YOLO-track-linked Marcus labels can be linearly interpolated into additional person crops",
+    "Memory can embed those interpolated crops and recall Marcus from Qdrant/Arango when top1_marcus_pass is true"
+  ],
+  "does_not_prove": [
+    "Watch browser click flow persistence",
+    "automatic acceptance of tentative labels",
+    "non-Marcus confusion behavior"
+  ],
+  "anchors": [
+    {
+      "file": "20260704144943669_row0009_marcus_72eda85f33ff1e944ccf.json",
+      "id": "20260704144943669_row0009_marcus_72eda85f33ff1e944ccf",
+      "box_id": "detector_9_detector_9_track_2_0_42_52ce52c007",
+      "time_seconds": 0.42,
+      "bbox": [
+        0.5375,
+        0.04310344827586207,
+        0.86015625,
+        0.9985632183908046
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:43.669Z"
+    },
+    {
+      "file": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.json",
+      "id": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746",
+      "box_id": "detector_9_detector_9_track_2_0_83_9f355b4906",
+      "time_seconds": 0.83,
+      "bbox": [
+        0.5421875,
+        0.02442528735632184,
+        0.86953125,
+        0.9956896551724138
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:08.266Z"
+    },
+    {
+      "file": "20260704144944145_row0009_marcus_67a8dac09ec00a343416.json",
+      "id": "20260704144944145_row0009_marcus_67a8dac09ec00a343416",
+      "box_id": "detector_9_detector_9_track_2_1_25_f0a30f8e1b",
+      "time_seconds": 1.25,
+      "bbox": [
+        0.5453125,
+        0.03017241379310345,
+        0.8703125,
+        0.9942528735632183
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:44.145Z"
+    },
+    {
+      "file": "20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.json",
+      "id": "20260704140208806_row0009_marcus_954c197d5f1de0ab4f22",
+      "box_id": "detector_9_detector_9_track_2_1_67_0389f2709a",
+      "time_seconds": 1.67,
+      "bbox": [
+        0.553125,
+        0.020114942528735632,
+        0.88203125,
+        0.9956896551724138
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:08.806Z"
+    },
+    {
+      "file": "20260704140209336_row0009_marcus_08b174729e3d149cf96c.json",
+      "id": "20260704140209336_row0009_marcus_08b174729e3d149cf96c",
+      "box_id": "detector_9_detector_9_track_2_3_96_f4147dea69",
+      "time_seconds": 3.96,
+      "bbox": [
+        0.74296875,
+        0.16810344827586207,
+        1.0,
+        0.9827586206896551
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:09.336Z"
+    },
+    {
+      "file": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.json",
+      "id": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4",
+      "box_id": "detector_9_detector_9_track_2_4_38_02c098fb93",
+      "time_seconds": 4.38,
+      "bbox": [
+        0.759375,
+        0.17097701149425287,
+        1.0,
+        0.9885057471264368
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:44.660Z"
+    },
+    {
+      "file": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd.json",
+      "id": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd",
+      "box_id": "detector_9_detector_9_track_2_4_8_f5d0c903a3",
+      "time_seconds": 4.8,
+      "bbox": [
+        0.759375,
+        0.1752873563218391,
+        1.0,
+        0.9841954022988506
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:09.752Z"
+    },
+    {
+      "file": "20260704144945076_row0009_marcus_0a4151b0ce1841046582.json",
+      "id": "20260704144945076_row0009_marcus_0a4151b0ce1841046582",
+      "box_id": "detector_9_detector_9_track_2_5_21_4f27663368",
+      "time_seconds": 5.21,
+      "bbox": [
+        0.721875,
+        0.27011494252873564,
+        0.9609375,
+        0.985632183908046
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:45.076Z"
+    },
+    {
+      "file": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59.json",
+      "id": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59",
+      "box_id": "detector_9_detector_9_track_2_5_63_1094d0a2d6",
+      "time_seconds": 5.63,
+      "bbox": [
+        0.73125,
+        0.21551724137931033,
+        0.99453125,
+        0.9841954022988506
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:10.176Z"
+    },
+    {
+      "file": "20260704140210617_row0009_marcus_742f87b3b263772715e4.json",
+      "id": "20260704140210617_row0009_marcus_742f87b3b263772715e4",
+      "box_id": "detector_9_detector_9_track_2_6_46_bc7e715575",
+      "time_seconds": 6.46,
+      "bbox": [
+        0.765625,
+        0.24281609195402298,
+        1.0,
+        0.992816091954023
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:10.617Z"
+    },
+    {
+      "file": "20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b.json",
+      "id": "20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b",
+      "box_id": "detector_9_detector_9_track_2_6_88_aa4bcf05ee",
+      "time_seconds": 6.88,
+      "bbox": [
+        0.76015625,
+        0.1910919540229885,
+        1.0,
+        0.992816091954023
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:45.978Z"
+    },
+    {
+      "file": "20260704140211142_row0009_marcus_5b3e09f93e8ff394007f.json",
+      "id": "20260704140211142_row0009_marcus_5b3e09f93e8ff394007f",
+      "box_id": "detector_9_detector_9_track_2_9_59_9b33dd7ad0",
+      "time_seconds": 9.59,
+      "bbox": [
+        0.7734375,
+        0.21120689655172414,
+        1.0,
+        0.9870689655172413
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:11.142Z"
+    },
+    {
+      "file": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337.json",
+      "id": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337",
+      "box_id": "detector_9_detector_9_track_2_10_43_769b507215",
+      "time_seconds": 10.43,
+      "bbox": [
+        0.7875,
+        0.21264367816091953,
+        1.0,
+        0.9885057471264368
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:11.494Z"
+    },
+    {
+      "file": "20260704144946858_row0009_marcus_db84053990e2a558dc4f.json",
+      "id": "20260704144946858_row0009_marcus_db84053990e2a558dc4f",
+      "box_id": "detector_9_detector_9_track_2_10_84_e3d9056b9f",
+      "time_seconds": 10.84,
+      "bbox": [
+        0.79921875,
+        0.20689655172413793,
+        1.0,
+        0.9827586206896551
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:46.858Z"
+    },
+    {
+      "file": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.json",
+      "id": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e",
+      "box_id": "detector_9_detector_9_track_2_11_26_c363f763b9",
+      "time_seconds": 11.26,
+      "bbox": [
+        0.8046875,
+        0.20402298850574713,
+        1.0,
+        0.9827586206896551
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:11.817Z"
+    },
+    {
+      "file": "20260704144947259_row0009_marcus_5d5beb7573a819320d88.json",
+      "id": "20260704144947259_row0009_marcus_5d5beb7573a819320d88",
+      "box_id": "detector_9_detector_9_track_2_11_68_57dfcf9deb",
+      "time_seconds": 11.68,
+      "bbox": [
+        0.8078125,
+        0.20402298850574713,
+        1.0,
+        0.9841954022988506
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:47.259Z"
+    },
+    {
+      "file": "20260704140212160_row0009_marcus_595af3df8071cefcc722.json",
+      "id": "20260704140212160_row0009_marcus_595af3df8071cefcc722",
+      "box_id": "detector_9_detector_9_track_2_12_1_69562b64d5",
+      "time_seconds": 12.1,
+      "bbox": [
+        0.80703125,
+        0.20402298850574713,
+        1.0,
+        0.9841954022988506
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:12.160Z"
+    },
+    {
+      "file": "20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.json",
+      "id": "20260704140212494_row0009_marcus_78be106fdab4cfc64bb4",
+      "box_id": "detector_9_detector_9_track_2_12_93_b717b809cf",
+      "time_seconds": 12.93,
+      "bbox": [
+        0.82578125,
+        0.21695402298850575,
+        1.0,
+        0.9841954022988506
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:12.494Z"
+    },
+    {
+      "file": "20260704140212876_row0009_marcus_c548229700e98c0beb67.json",
+      "id": "20260704140212876_row0009_marcus_c548229700e98c0beb67",
+      "box_id": "detector_9_detector_9_track_2_16_89_98be7f284c",
+      "time_seconds": 16.89,
+      "bbox": [
+        0.7421875,
+        0.0028735632183908046,
+        0.9890625,
+        0.9885057471264368
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:02:12.876Z"
+    },
+    {
+      "file": "20260704144303975_row0009_marcus_1d0f9f170be856a56744.json",
+      "id": "20260704144303975_row0009_marcus_1d0f9f170be856a56744",
+      "box_id": "detector_9_detector_9_track_2_17_52_797fce4d5d",
+      "time_seconds": 17.52,
+      "bbox": [
+        0.6921875,
+        0.05890804597701149,
+        0.9375,
+        0.9798850574712644
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:43:03.975Z"
+    },
+    {
+      "file": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce.json",
+      "id": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce",
+      "box_id": "detector_9_detector_9_track_2_18_56_ec34a5f399",
+      "time_seconds": 18.56,
+      "bbox": [
+        0.6078125,
+        0.011494252873563218,
+        0.8875,
+        0.9870689655172413
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:43:04.520Z"
+    },
+    {
+      "file": "20260704144948118_row0009_marcus_e8dd75a5144ab1564028.json",
+      "id": "20260704144948118_row0009_marcus_e8dd75a5144ab1564028",
+      "box_id": "detector_9_detector_9_track_2_18_98_95f4e27579",
+      "time_seconds": 18.98,
+      "bbox": [
+        0.69921875,
+        0.16379310344827586,
+        0.96328125,
+        0.9870689655172413
+      ],
+      "actor_name": "Tony Cox",
+      "created_at": "2026-07-04T14:49:48.118Z"
+    }
+  ],
+  "results": [
+    {
+      "sample_index": 1,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 0.625,
+      "source_anchor_a": {
+        "file": "20260704144943669_row0009_marcus_72eda85f33ff1e944ccf.json",
+        "id": "20260704144943669_row0009_marcus_72eda85f33ff1e944ccf",
+        "box_id": "detector_9_detector_9_track_2_0_42_52ce52c007",
+        "time_seconds": 0.42,
+        "bbox": [
+          0.5375,
+          0.04310344827586207,
+          0.86015625,
+          0.9985632183908046
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:43.669Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.json",
+        "id": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746",
+        "box_id": "detector_9_detector_9_track_2_0_83_9f355b4906",
+        "time_seconds": 0.83,
+        "bbox": [
+          0.5421875,
+          0.02442528735632184,
+          0.86953125,
+          0.9956896551724138
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:08.266Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.5398437500000001,
+        0.033764367816091954,
+        0.86484375,
+        0.9971264367816092
+      ],
+      "pixel_bbox_xyxy": [
+        691,
+        24,
+        1107,
+        694
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_01_0.625.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_01_0.625_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "48b40a2f26472d60d5df2ba9af86de989e3f181a9d804b330c13f1c8dd4ab70e",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 306402
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 107,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 11,
+        "top_visual_score": 0.978397,
+        "average_visual_score": 0.96367,
+        "context_score": 0.0,
+        "confidence": 0.978397,
+        "tentative": true,
+        "display_label": "Marcus? 0.98"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 11,
+          "top_visual_score": 0.978397,
+          "average_visual_score": 0.96367,
+          "context_score": 0.0,
+          "confidence": 0.978397,
+          "tentative": true,
+          "display_label": "Marcus? 0.98"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "52852571-bd8c-59ca-9b58-2114e48d8c08",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181547348_row0009_marcus_4e6cb66ab400f71e1565:216_63",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.978397,
+          "context_score": 0.0,
+          "confidence": 0.978397,
+          "bbox": [
+            0.5390625,
+            0.027298850574712645,
+            0.86640625,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.63,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "88a1a879-cb13-5266-ab1f-9c561896fe17",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_0_83_9f355b4906:216_83",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.974235,
+          "context_score": 0.0,
+          "confidence": 0.974235,
+          "bbox": [
+            0.5421875,
+            0.02442528735632184,
+            0.86953125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.83,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "c822699b-4b33-597b-a0ba-6360cff25956",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_25_f0a30f8e1b:217_25",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.974125,
+          "context_score": 0.0,
+          "confidence": 0.974125,
+          "bbox": [
+            0.5453125,
+            0.03017241379310345,
+            0.8703125,
+            0.9942528735632183
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.25,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "0b7d2f47-e75e-5ac8-8e7d-f133f69aa069",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_67_0389f2709a:217_67",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.9721,
+          "context_score": 0.0,
+          "confidence": 0.9721,
+          "bbox": [
+            0.553125,
+            0.020114942528735632,
+            0.88203125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.67,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "d180d913-8ff6-5064-9051-278b25b2bd84",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703180123677_row0009_marcus_01277f761e4d923094f5:216_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.961688,
+          "context_score": 0.0,
+          "confidence": 0.961688,
+          "bbox": [
+            0.534375,
+            0.021551724137931036,
+            0.86328125,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703180123677_row0009_marcus_01277f761e4d923094f5.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 11,
+        "skipped_stale_or_deleted": 1
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 2,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 1.04,
+      "source_anchor_a": {
+        "file": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.json",
+        "id": "20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746",
+        "box_id": "detector_9_detector_9_track_2_0_83_9f355b4906",
+        "time_seconds": 0.83,
+        "bbox": [
+          0.5421875,
+          0.02442528735632184,
+          0.86953125,
+          0.9956896551724138
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:08.266Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144944145_row0009_marcus_67a8dac09ec00a343416.json",
+        "id": "20260704144944145_row0009_marcus_67a8dac09ec00a343416",
+        "box_id": "detector_9_detector_9_track_2_1_25_f0a30f8e1b",
+        "time_seconds": 1.25,
+        "bbox": [
+          0.5453125,
+          0.03017241379310345,
+          0.8703125,
+          0.9942528735632183
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:44.145Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.5437500000000001,
+        0.027298850574712645,
+        0.8699218750000001,
+        0.994971264367816
+      ],
+      "pixel_bbox_xyxy": [
+        696,
+        19,
+        1114,
+        692
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_02_1.040.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_02_1.040_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "cc62b8eb0fb35849678ba3e9a4ee6d3ebcb599ddcc63819a9a257c1214ed9068",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 324086
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 103,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 11,
+        "top_visual_score": 0.976182,
+        "average_visual_score": 0.963686,
+        "context_score": 0.0,
+        "confidence": 0.976182,
+        "tentative": true,
+        "display_label": "Marcus? 0.98"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 11,
+          "top_visual_score": 0.976182,
+          "average_visual_score": 0.963686,
+          "context_score": 0.0,
+          "confidence": 0.976182,
+          "tentative": true,
+          "display_label": "Marcus? 0.98"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "c822699b-4b33-597b-a0ba-6360cff25956",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_25_f0a30f8e1b:217_25",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.976182,
+          "context_score": 0.0,
+          "confidence": 0.976182,
+          "bbox": [
+            0.5453125,
+            0.03017241379310345,
+            0.8703125,
+            0.9942528735632183
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.25,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "88a1a879-cb13-5266-ab1f-9c561896fe17",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_0_83_9f355b4906:216_83",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.974182,
+          "context_score": 0.0,
+          "confidence": 0.974182,
+          "bbox": [
+            0.5421875,
+            0.02442528735632184,
+            0.86953125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.83,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "52852571-bd8c-59ca-9b58-2114e48d8c08",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181547348_row0009_marcus_4e6cb66ab400f71e1565:216_63",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.973935,
+          "context_score": 0.0,
+          "confidence": 0.973935,
+          "bbox": [
+            0.5390625,
+            0.027298850574712645,
+            0.86640625,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.63,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "0b7d2f47-e75e-5ac8-8e7d-f133f69aa069",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_67_0389f2709a:217_67",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.973744,
+          "context_score": 0.0,
+          "confidence": 0.973744,
+          "bbox": [
+            0.553125,
+            0.020114942528735632,
+            0.88203125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.67,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "06c10c2e-5fe6-51b7-a3f1-8fcedcd05de0",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703182446398_row0009_marcus_01277f761e4d923094f5:216_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.961486,
+          "context_score": 0.0,
+          "confidence": 0.961486,
+          "bbox": [
+            0.534375,
+            0.021551724137931036,
+            0.86328125,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182446398_row0009_marcus_01277f761e4d923094f5.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 11,
+        "skipped_stale_or_deleted": 1
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 3,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 1.46,
+      "source_anchor_a": {
+        "file": "20260704144944145_row0009_marcus_67a8dac09ec00a343416.json",
+        "id": "20260704144944145_row0009_marcus_67a8dac09ec00a343416",
+        "box_id": "detector_9_detector_9_track_2_1_25_f0a30f8e1b",
+        "time_seconds": 1.25,
+        "bbox": [
+          0.5453125,
+          0.03017241379310345,
+          0.8703125,
+          0.9942528735632183
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:44.145Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.json",
+        "id": "20260704140208806_row0009_marcus_954c197d5f1de0ab4f22",
+        "box_id": "detector_9_detector_9_track_2_1_67_0389f2709a",
+        "time_seconds": 1.67,
+        "bbox": [
+          0.553125,
+          0.020114942528735632,
+          0.88203125,
+          0.9956896551724138
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:08.806Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.54921875,
+        0.02514367816091954,
+        0.876171875,
+        0.9949712643678161
+      ],
+      "pixel_bbox_xyxy": [
+        703,
+        18,
+        1122,
+        692
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_03_1.460.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_03_1.460_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "06b2bed028a65509649742bdd4b1c6ac92d06aaa96c4aaeaa6f426a1f6f4eed7",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 340506
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 105,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 11,
+        "top_visual_score": 0.978839,
+        "average_visual_score": 0.964069,
+        "context_score": 0.0,
+        "confidence": 0.978839,
+        "tentative": true,
+        "display_label": "Marcus? 0.98"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 11,
+          "top_visual_score": 0.978839,
+          "average_visual_score": 0.964069,
+          "context_score": 0.0,
+          "confidence": 0.978839,
+          "tentative": true,
+          "display_label": "Marcus? 0.98"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "c822699b-4b33-597b-a0ba-6360cff25956",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_25_f0a30f8e1b:217_25",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.978839,
+          "context_score": 0.0,
+          "confidence": 0.978839,
+          "bbox": [
+            0.5453125,
+            0.03017241379310345,
+            0.8703125,
+            0.9942528735632183
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944145_row0009_marcus_67a8dac09ec00a343416.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.25,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "52852571-bd8c-59ca-9b58-2114e48d8c08",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181547348_row0009_marcus_4e6cb66ab400f71e1565:216_63",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.974134,
+          "context_score": 0.0,
+          "confidence": 0.974134,
+          "bbox": [
+            0.5390625,
+            0.027298850574712645,
+            0.86640625,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181547348_row0009_marcus_4e6cb66ab400f71e1565.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.63,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "0b7d2f47-e75e-5ac8-8e7d-f133f69aa069",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_1_67_0389f2709a:217_67",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.973688,
+          "context_score": 0.0,
+          "confidence": 0.973688,
+          "bbox": [
+            0.553125,
+            0.020114942528735632,
+            0.88203125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208806_row0009_marcus_954c197d5f1de0ab4f22.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 217.67,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "88a1a879-cb13-5266-ab1f-9c561896fe17",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_0_83_9f355b4906:216_83",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.973222,
+          "context_score": 0.0,
+          "confidence": 0.973222,
+          "bbox": [
+            0.5421875,
+            0.02442528735632184,
+            0.86953125,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140208266_row0009_marcus_2fdc787fedfa3d6d7746.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216.83,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "06c10c2e-5fe6-51b7-a3f1-8fcedcd05de0",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703182446398_row0009_marcus_01277f761e4d923094f5:216_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.962314,
+          "context_score": 0.0,
+          "confidence": 0.962314,
+          "bbox": [
+            0.534375,
+            0.021551724137931036,
+            0.86328125,
+            0.9971264367816092
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182446398_row0009_marcus_01277f761e4d923094f5.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 216,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 11,
+        "skipped_stale_or_deleted": 1
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 4,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 4.17,
+      "source_anchor_a": {
+        "file": "20260704140209336_row0009_marcus_08b174729e3d149cf96c.json",
+        "id": "20260704140209336_row0009_marcus_08b174729e3d149cf96c",
+        "box_id": "detector_9_detector_9_track_2_3_96_f4147dea69",
+        "time_seconds": 3.96,
+        "bbox": [
+          0.74296875,
+          0.16810344827586207,
+          1.0,
+          0.9827586206896551
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:09.336Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.json",
+        "id": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4",
+        "box_id": "detector_9_detector_9_track_2_4_38_02c098fb93",
+        "time_seconds": 4.38,
+        "bbox": [
+          0.759375,
+          0.17097701149425287,
+          1.0,
+          0.9885057471264368
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:44.660Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.751171875,
+        0.16954022988505746,
+        1.0,
+        0.985632183908046
+      ],
+      "pixel_bbox_xyxy": [
+        962,
+        118,
+        1280,
+        686
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_04_4.170.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_04_4.170_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "7a91c4b5f7445b313c2b4de21b6104d802bda6d8569c57dd4613bb9f62af578a",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 45666
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 92,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.934361,
+        "average_visual_score": 0.906155,
+        "context_score": 0.0,
+        "confidence": 0.934361,
+        "tentative": true,
+        "display_label": "Marcus? 0.93"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.934361,
+          "average_visual_score": 0.906155,
+          "context_score": 0.0,
+          "confidence": 0.934361,
+          "tentative": true,
+          "display_label": "Marcus? 0.93"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "65193c39-bfc8-50eb-8683-77eb625d4dee",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_38_02c098fb93:220_38",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.934361,
+          "context_score": 0.0,
+          "confidence": 0.934361,
+          "bbox": [
+            0.759375,
+            0.17097701149425287,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.38,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "8e5f0217-03bf-54b8-a7cf-fb790276a92c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_10_000:226_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.928909,
+          "context_score": 0.0,
+          "confidence": 0.928909,
+          "bbox": [
+            0.778794642857143,
+            0.21113847837985775,
+            1,
+            0.9884373289545704
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "2a4c6fcb-0ce3-5d4c-9d27-7f56b1bda1dd",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_8_f5d0c903a3:220_80",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.924279,
+          "context_score": 0.0,
+          "confidence": 0.924279,
+          "bbox": [
+            0.759375,
+            0.1752873563218391,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.8,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.91523,
+          "context_score": 0.0,
+          "confidence": 0.91523,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "8bb27e4c-a053-548a-b0ee-7ebb417620e2",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_6_000:222_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.915168,
+          "context_score": 0.0,
+          "confidence": 0.915168,
+          "bbox": [
+            0.7532366071428568,
+            0.1863711001642038,
+            1,
+            0.9917898193760261
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945509_row0009_marcus_79f041795c2203515d31.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 222,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 5,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 4.59,
+      "source_anchor_a": {
+        "file": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.json",
+        "id": "20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4",
+        "box_id": "detector_9_detector_9_track_2_4_38_02c098fb93",
+        "time_seconds": 4.38,
+        "bbox": [
+          0.759375,
+          0.17097701149425287,
+          1.0,
+          0.9885057471264368
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:44.660Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd.json",
+        "id": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd",
+        "box_id": "detector_9_detector_9_track_2_4_8_f5d0c903a3",
+        "time_seconds": 4.8,
+        "bbox": [
+          0.759375,
+          0.1752873563218391,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:09.752Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.759375,
+        0.17313218390804597,
+        1.0,
+        0.9863505747126438
+      ],
+      "pixel_bbox_xyxy": [
+        972,
+        120,
+        1280,
+        686
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_05_4.590.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_05_4.590_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "6766ca1b5fac6324bc5832432a45ecc511a7a935f1bc69a266bd5932115311e9",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 51282
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 91,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.943585,
+        "average_visual_score": 0.906318,
+        "context_score": 0.0,
+        "confidence": 0.943585,
+        "tentative": true,
+        "display_label": "Marcus? 0.94"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.943585,
+          "average_visual_score": 0.906318,
+          "context_score": 0.0,
+          "confidence": 0.943585,
+          "tentative": true,
+          "display_label": "Marcus? 0.94"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "65193c39-bfc8-50eb-8683-77eb625d4dee",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_38_02c098fb93:220_38",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.943585,
+          "context_score": 0.0,
+          "confidence": 0.943585,
+          "bbox": [
+            0.759375,
+            0.17097701149425287,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.38,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "8bb27e4c-a053-548a-b0ee-7ebb417620e2",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_6_000:222_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.934603,
+          "context_score": 0.0,
+          "confidence": 0.934603,
+          "bbox": [
+            0.7532366071428568,
+            0.1863711001642038,
+            1,
+            0.9917898193760261
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945509_row0009_marcus_79f041795c2203515d31.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 222,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "2a4c6fcb-0ce3-5d4c-9d27-7f56b1bda1dd",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_8_f5d0c903a3:220_80",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.930452,
+          "context_score": 0.0,
+          "confidence": 0.930452,
+          "bbox": [
+            0.759375,
+            0.1752873563218391,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.8,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.924907,
+          "context_score": 0.0,
+          "confidence": 0.924907,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "8e5f0217-03bf-54b8-a7cf-fb790276a92c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_10_000:226_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.921334,
+          "context_score": 0.0,
+          "confidence": 0.921334,
+          "bbox": [
+            0.778794642857143,
+            0.21113847837985775,
+            1,
+            0.9884373289545704
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 6,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 5.005,
+      "source_anchor_a": {
+        "file": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd.json",
+        "id": "20260704140209752_row0009_marcus_0505be19a455c7d18bdd",
+        "box_id": "detector_9_detector_9_track_2_4_8_f5d0c903a3",
+        "time_seconds": 4.8,
+        "bbox": [
+          0.759375,
+          0.1752873563218391,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:09.752Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144945076_row0009_marcus_0a4151b0ce1841046582.json",
+        "id": "20260704144945076_row0009_marcus_0a4151b0ce1841046582",
+        "box_id": "detector_9_detector_9_track_2_5_21_4f27663368",
+        "time_seconds": 5.21,
+        "bbox": [
+          0.721875,
+          0.27011494252873564,
+          0.9609375,
+          0.985632183908046
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:45.076Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.7406250000000001,
+        0.22270114942528735,
+        0.98046875,
+        0.9849137931034483
+      ],
+      "pixel_bbox_xyxy": [
+        948,
+        155,
+        1255,
+        686
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_06_5.005.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_06_5.005_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "95516cdf487b4d3b6b11de2d88ab7f537f7a5eee6c5ee6ddda884a8fcdc6c98f",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 51058
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 89,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.929814,
+        "average_visual_score": 0.920169,
+        "context_score": 0.0,
+        "confidence": 0.929814,
+        "tentative": true,
+        "display_label": "Marcus? 0.93"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.929814,
+          "average_visual_score": 0.920169,
+          "context_score": 0.0,
+          "confidence": 0.929814,
+          "tentative": true,
+          "display_label": "Marcus? 0.93"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "247c6520-11af-570e-982b-ca3413da11bc",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_93_b717b809cf:228_93",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.929814,
+          "context_score": 0.0,
+          "confidence": 0.929814,
+          "bbox": [
+            0.82578125,
+            0.21695402298850575,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.93,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.928219,
+          "context_score": 0.0,
+          "confidence": 0.928219,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.926377,
+          "context_score": 0.0,
+          "confidence": 0.926377,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.924405,
+          "context_score": 0.0,
+          "confidence": 0.924405,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "8e5f0217-03bf-54b8-a7cf-fb790276a92c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_10_000:226_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.922635,
+          "context_score": 0.0,
+          "confidence": 0.922635,
+          "bbox": [
+            0.778794642857143,
+            0.21113847837985775,
+            1,
+            0.9884373289545704
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 7,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 5.42,
+      "source_anchor_a": {
+        "file": "20260704144945076_row0009_marcus_0a4151b0ce1841046582.json",
+        "id": "20260704144945076_row0009_marcus_0a4151b0ce1841046582",
+        "box_id": "detector_9_detector_9_track_2_5_21_4f27663368",
+        "time_seconds": 5.21,
+        "bbox": [
+          0.721875,
+          0.27011494252873564,
+          0.9609375,
+          0.985632183908046
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:45.076Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59.json",
+        "id": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59",
+        "box_id": "detector_9_detector_9_track_2_5_63_1094d0a2d6",
+        "time_seconds": 5.63,
+        "bbox": [
+          0.73125,
+          0.21551724137931033,
+          0.99453125,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:10.176Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.7265625,
+        0.24281609195402298,
+        0.977734375,
+        0.9849137931034483
+      ],
+      "pixel_bbox_xyxy": [
+        930,
+        169,
+        1252,
+        686
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_07_5.420.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_07_5.420_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "76232db51e0f11ce97d3d1230f423f533bfe89bd1175a3a6b51abfb3e1271021",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 54282
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 89,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.947782,
+        "average_visual_score": 0.913879,
+        "context_score": 0.0,
+        "confidence": 0.947782,
+        "tentative": true,
+        "display_label": "Marcus? 0.95"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.947782,
+          "average_visual_score": 0.913879,
+          "context_score": 0.0,
+          "confidence": 0.947782,
+          "tentative": true,
+          "display_label": "Marcus? 0.95"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "3a41ac0e-b3e4-575d-a698-6261a733a053",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_5_63_1094d0a2d6:221_63",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.947782,
+          "context_score": 0.0,
+          "confidence": 0.947782,
+          "bbox": [
+            0.73125,
+            0.21551724137931033,
+            0.99453125,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140210176_row0009_marcus_d66c873bdd6c98868e59.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 221.63,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "74870e55-eca0-5f56-bf81-24e198837e29",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_3_96_f4147dea69:219_96",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.934008,
+          "context_score": 0.0,
+          "confidence": 0.934008,
+          "bbox": [
+            0.74296875,
+            0.16810344827586207,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209336_row0009_marcus_08b174729e3d149cf96c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 219.96,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.922689,
+          "context_score": 0.0,
+          "confidence": 0.922689,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "f9d358c2-0393-5efe-800c-9fb1aaf0f71b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_5_21_4f27663368:221_21",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.921721,
+          "context_score": 0.0,
+          "confidence": 0.921721,
+          "bbox": [
+            0.721875,
+            0.27011494252873564,
+            0.9609375,
+            0.985632183908046
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945076_row0009_marcus_0a4151b0ce1841046582.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 221.21,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.92051,
+          "context_score": 0.0,
+          "confidence": 0.92051,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 8,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 6.045,
+      "source_anchor_a": {
+        "file": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59.json",
+        "id": "20260704140210176_row0009_marcus_d66c873bdd6c98868e59",
+        "box_id": "detector_9_detector_9_track_2_5_63_1094d0a2d6",
+        "time_seconds": 5.63,
+        "bbox": [
+          0.73125,
+          0.21551724137931033,
+          0.99453125,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:10.176Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140210617_row0009_marcus_742f87b3b263772715e4.json",
+        "id": "20260704140210617_row0009_marcus_742f87b3b263772715e4",
+        "box_id": "detector_9_detector_9_track_2_6_46_bc7e715575",
+        "time_seconds": 6.46,
+        "bbox": [
+          0.765625,
+          0.24281609195402298,
+          1.0,
+          0.992816091954023
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:10.617Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.7484375,
+        0.22916666666666666,
+        0.997265625,
+        0.9885057471264368
+      ],
+      "pixel_bbox_xyxy": [
+        958,
+        160,
+        1276,
+        688
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_08_6.045.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_08_6.045_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "d55b07875924850c057dfbeac5c1b7b7580ea01432e660149614c3814b57728b",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 68654
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 92,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.921198,
+        "average_visual_score": 0.904984,
+        "context_score": 0.0,
+        "confidence": 0.921198,
+        "tentative": true,
+        "display_label": "Marcus? 0.92"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.921198,
+          "average_visual_score": 0.904984,
+          "context_score": 0.0,
+          "confidence": 0.921198,
+          "tentative": true,
+          "display_label": "Marcus? 0.92"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.921198,
+          "context_score": 0.0,
+          "confidence": 0.921198,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.913374,
+          "context_score": 0.0,
+          "confidence": 0.913374,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.912757,
+          "context_score": 0.0,
+          "confidence": 0.912757,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "19366d19-9c2f-58d3-a97d-df3c2b8a7d14",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_6_88_aa4bcf05ee:222_88",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.9125,
+          "context_score": 0.0,
+          "confidence": 0.9125,
+          "bbox": [
+            0.76015625,
+            0.1910919540229885,
+            1,
+            0.992816091954023
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 222.88,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.911398,
+          "context_score": 0.0,
+          "confidence": 0.911398,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 9,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 6.67,
+      "source_anchor_a": {
+        "file": "20260704140210617_row0009_marcus_742f87b3b263772715e4.json",
+        "id": "20260704140210617_row0009_marcus_742f87b3b263772715e4",
+        "box_id": "detector_9_detector_9_track_2_6_46_bc7e715575",
+        "time_seconds": 6.46,
+        "bbox": [
+          0.765625,
+          0.24281609195402298,
+          1.0,
+          0.992816091954023
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:10.617Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b.json",
+        "id": "20260704144945978_row0009_marcus_f8498aa522b3aeb4df3b",
+        "box_id": "detector_9_detector_9_track_2_6_88_aa4bcf05ee",
+        "time_seconds": 6.88,
+        "bbox": [
+          0.76015625,
+          0.1910919540229885,
+          1.0,
+          0.992816091954023
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:45.978Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.762890625,
+        0.21695402298850575,
+        1.0,
+        0.992816091954023
+      ],
+      "pixel_bbox_xyxy": [
+        976,
+        151,
+        1280,
+        691
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_09_6.670.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_09_6.670_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "9a9cf7062f5645af84a2d9767cec09b8a338fda580abab66f252a0b2fd9a4497",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 100414
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 91,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.93494,
+        "average_visual_score": 0.90821,
+        "context_score": 0.0,
+        "confidence": 0.93494,
+        "tentative": true,
+        "display_label": "Marcus? 0.93"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.93494,
+          "average_visual_score": 0.90821,
+          "context_score": 0.0,
+          "confidence": 0.93494,
+          "tentative": true,
+          "display_label": "Marcus? 0.93"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "247c6520-11af-570e-982b-ca3413da11bc",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_93_b717b809cf:228_93",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.93494,
+          "context_score": 0.0,
+          "confidence": 0.93494,
+          "bbox": [
+            0.82578125,
+            0.21695402298850575,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.93,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "2540d943-2fad-5346-b53f-bf8729f31608",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_6_46_bc7e715575:222_46",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.934064,
+          "context_score": 0.0,
+          "confidence": 0.934064,
+          "bbox": [
+            0.765625,
+            0.24281609195402298,
+            1,
+            0.992816091954023
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140210617_row0009_marcus_742f87b3b263772715e4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 222.46,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "efd05be6-caac-556c-97f4-5cadc4fd0b99",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_43_769b507215:226_43",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.92127,
+          "context_score": 0.0,
+          "confidence": 0.92127,
+          "bbox": [
+            0.7875,
+            0.21264367816091953,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.43,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.918793,
+          "context_score": 0.0,
+          "confidence": 0.918793,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.918619,
+          "context_score": 0.0,
+          "confidence": 0.918619,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 10,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 10.01,
+      "source_anchor_a": {
+        "file": "20260704140211142_row0009_marcus_5b3e09f93e8ff394007f.json",
+        "id": "20260704140211142_row0009_marcus_5b3e09f93e8ff394007f",
+        "box_id": "detector_9_detector_9_track_2_9_59_9b33dd7ad0",
+        "time_seconds": 9.59,
+        "bbox": [
+          0.7734375,
+          0.21120689655172414,
+          1.0,
+          0.9870689655172413
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:11.142Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337.json",
+        "id": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337",
+        "box_id": "detector_9_detector_9_track_2_10_43_769b507215",
+        "time_seconds": 10.43,
+        "bbox": [
+          0.7875,
+          0.21264367816091953,
+          1.0,
+          0.9885057471264368
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:11.494Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.78046875,
+        0.21192528735632182,
+        1.0,
+        0.9877873563218391
+      ],
+      "pixel_bbox_xyxy": [
+        999,
+        148,
+        1280,
+        688
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_10_10.010.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_10_10.010_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "0e8f35eedcfb6ff89819106c26cfcbc5bde6139be113551e7f52a8e885b301ad",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 58862
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 89,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.967177,
+        "average_visual_score": 0.935764,
+        "context_score": 0.0,
+        "confidence": 0.967177,
+        "tentative": true,
+        "display_label": "Marcus? 0.97"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.967177,
+          "average_visual_score": 0.935764,
+          "context_score": 0.0,
+          "confidence": 0.967177,
+          "tentative": true,
+          "display_label": "Marcus? 0.97"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "8e5f0217-03bf-54b8-a7cf-fb790276a92c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_10_000:226_00",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.967177,
+          "context_score": 0.0,
+          "confidence": 0.967177,
+          "bbox": [
+            0.778794642857143,
+            0.21113847837985775,
+            1,
+            0.9884373289545704
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946522_row0009_marcus_607b8ccabc77cff4abf8.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "65193c39-bfc8-50eb-8683-77eb625d4dee",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_38_02c098fb93:220_38",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.945742,
+          "context_score": 0.0,
+          "confidence": 0.945742,
+          "bbox": [
+            0.759375,
+            0.17097701149425287,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144944660_row0009_marcus_a22d3ff29cbf8f0dfbd4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.38,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.944689,
+          "context_score": 0.0,
+          "confidence": 0.944689,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "efd05be6-caac-556c-97f4-5cadc4fd0b99",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_43_769b507215:226_43",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.94226,
+          "context_score": 0.0,
+          "confidence": 0.94226,
+          "bbox": [
+            0.7875,
+            0.21264367816091953,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.43,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "2a4c6fcb-0ce3-5d4c-9d27-7f56b1bda1dd",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_8_f5d0c903a3:220_80",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.941667,
+          "context_score": 0.0,
+          "confidence": 0.941667,
+          "bbox": [
+            0.759375,
+            0.1752873563218391,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.8,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 11,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 10.635,
+      "source_anchor_a": {
+        "file": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337.json",
+        "id": "20260704140211494_row0009_marcus_fa39567ddb5fb3944337",
+        "box_id": "detector_9_detector_9_track_2_10_43_769b507215",
+        "time_seconds": 10.43,
+        "bbox": [
+          0.7875,
+          0.21264367816091953,
+          1.0,
+          0.9885057471264368
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:11.494Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144946858_row0009_marcus_db84053990e2a558dc4f.json",
+        "id": "20260704144946858_row0009_marcus_db84053990e2a558dc4f",
+        "box_id": "detector_9_detector_9_track_2_10_84_e3d9056b9f",
+        "time_seconds": 10.84,
+        "bbox": [
+          0.79921875,
+          0.20689655172413793,
+          1.0,
+          0.9827586206896551
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:46.858Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.793359375,
+        0.20977011494252873,
+        1.0,
+        0.985632183908046
+      ],
+      "pixel_bbox_xyxy": [
+        1016,
+        146,
+        1280,
+        686
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_11_10.635.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_11_10.635_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "07c0963e41df2cdf9b0f0703bb97705eabcafc2dcd45dfb17b061da9b09d3f8c",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 56930
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 89,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.962942,
+        "average_visual_score": 0.936846,
+        "context_score": 0.0,
+        "confidence": 0.962942,
+        "tentative": true,
+        "display_label": "Marcus? 0.96"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.962942,
+          "average_visual_score": 0.936846,
+          "context_score": 0.0,
+          "confidence": 0.962942,
+          "tentative": true,
+          "display_label": "Marcus? 0.96"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.962942,
+          "context_score": 0.0,
+          "confidence": 0.962942,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "efd05be6-caac-556c-97f4-5cadc4fd0b99",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_43_769b507215:226_43",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.96038,
+          "context_score": 0.0,
+          "confidence": 0.96038,
+          "bbox": [
+            0.7875,
+            0.21264367816091953,
+            1,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211494_row0009_marcus_fa39567ddb5fb3944337.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.43,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.952034,
+          "context_score": 0.0,
+          "confidence": 0.952034,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.949332,
+          "context_score": 0.0,
+          "confidence": 0.949332,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "247c6520-11af-570e-982b-ca3413da11bc",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_93_b717b809cf:228_93",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.946301,
+          "context_score": 0.0,
+          "confidence": 0.946301,
+          "bbox": [
+            0.82578125,
+            0.21695402298850575,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.93,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 12,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 11.05,
+      "source_anchor_a": {
+        "file": "20260704144946858_row0009_marcus_db84053990e2a558dc4f.json",
+        "id": "20260704144946858_row0009_marcus_db84053990e2a558dc4f",
+        "box_id": "detector_9_detector_9_track_2_10_84_e3d9056b9f",
+        "time_seconds": 10.84,
+        "bbox": [
+          0.79921875,
+          0.20689655172413793,
+          1.0,
+          0.9827586206896551
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:46.858Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.json",
+        "id": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e",
+        "box_id": "detector_9_detector_9_track_2_11_26_c363f763b9",
+        "time_seconds": 11.26,
+        "bbox": [
+          0.8046875,
+          0.20402298850574713,
+          1.0,
+          0.9827586206896551
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:11.817Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.801953125,
+        0.2054597701149425,
+        1.0,
+        0.9827586206896551
+      ],
+      "pixel_bbox_xyxy": [
+        1026,
+        143,
+        1280,
+        684
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_12_11.050.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_12_11.050_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "edafc96643147d1fffbd9a6ef87cfbc7b83c264010e8d6e02a9fec430a8e154d",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 65030
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 88,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.964414,
+        "average_visual_score": 0.936199,
+        "context_score": 0.0,
+        "confidence": 0.964414,
+        "tentative": true,
+        "display_label": "Marcus? 0.96"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.964414,
+          "average_visual_score": 0.936199,
+          "context_score": 0.0,
+          "confidence": 0.964414,
+          "tentative": true,
+          "display_label": "Marcus? 0.96"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.964414,
+          "context_score": 0.0,
+          "confidence": 0.964414,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.963528,
+          "context_score": 0.0,
+          "confidence": 0.963528,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.960173,
+          "context_score": 0.0,
+          "confidence": 0.960173,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.942977,
+          "context_score": 0.0,
+          "confidence": 0.942977,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "247c6520-11af-570e-982b-ca3413da11bc",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_93_b717b809cf:228_93",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.942894,
+          "context_score": 0.0,
+          "confidence": 0.942894,
+          "bbox": [
+            0.82578125,
+            0.21695402298850575,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.93,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 13,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 11.47,
+      "source_anchor_a": {
+        "file": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.json",
+        "id": "20260704140211817_row0009_marcus_0e3c904dcc7cc314315e",
+        "box_id": "detector_9_detector_9_track_2_11_26_c363f763b9",
+        "time_seconds": 11.26,
+        "bbox": [
+          0.8046875,
+          0.20402298850574713,
+          1.0,
+          0.9827586206896551
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:11.817Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144947259_row0009_marcus_5d5beb7573a819320d88.json",
+        "id": "20260704144947259_row0009_marcus_5d5beb7573a819320d88",
+        "box_id": "detector_9_detector_9_track_2_11_68_57dfcf9deb",
+        "time_seconds": 11.68,
+        "bbox": [
+          0.8078125,
+          0.20402298850574713,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:47.259Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.80625,
+        0.20402298850574713,
+        1.0,
+        0.9834770114942529
+      ],
+      "pixel_bbox_xyxy": [
+        1032,
+        142,
+        1280,
+        684
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_13_11.470.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_13_11.470_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "cf3baa08b7d5f8d070bbaef920a04e6129c19633e90d0a5b3c63c5704a17ce66",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 67062
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 88,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.969485,
+        "average_visual_score": 0.932303,
+        "context_score": 0.0,
+        "confidence": 0.969485,
+        "tentative": true,
+        "display_label": "Marcus? 0.97"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.969485,
+          "average_visual_score": 0.932303,
+          "context_score": 0.0,
+          "confidence": 0.969485,
+          "tentative": true,
+          "display_label": "Marcus? 0.97"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.969485,
+          "context_score": 0.0,
+          "confidence": 0.969485,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.963167,
+          "context_score": 0.0,
+          "confidence": 0.963167,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.948925,
+          "context_score": 0.0,
+          "confidence": 0.948925,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.941638,
+          "context_score": 0.0,
+          "confidence": 0.941638,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "01a704aa-feea-55c0-94b8-8913f669c401",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_1_69562b64d5:228_10",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.927612,
+          "context_score": 0.0,
+          "confidence": 0.927612,
+          "bbox": [
+            0.80703125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.1,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 14,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 11.89,
+      "source_anchor_a": {
+        "file": "20260704144947259_row0009_marcus_5d5beb7573a819320d88.json",
+        "id": "20260704144947259_row0009_marcus_5d5beb7573a819320d88",
+        "box_id": "detector_9_detector_9_track_2_11_68_57dfcf9deb",
+        "time_seconds": 11.68,
+        "bbox": [
+          0.8078125,
+          0.20402298850574713,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:47.259Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140212160_row0009_marcus_595af3df8071cefcc722.json",
+        "id": "20260704140212160_row0009_marcus_595af3df8071cefcc722",
+        "box_id": "detector_9_detector_9_track_2_12_1_69562b64d5",
+        "time_seconds": 12.1,
+        "bbox": [
+          0.80703125,
+          0.20402298850574713,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:12.160Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.807421875,
+        0.20402298850574713,
+        1.0,
+        0.9841954022988506
+      ],
+      "pixel_bbox_xyxy": [
+        1034,
+        142,
+        1280,
+        685
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_14_11.890.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_14_11.890_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "7d653a749be1649e2c88c80219f2dd58d4c177a8e9fce41bc82b49ab993668a7",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 66978
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 86,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.963513,
+        "average_visual_score": 0.927803,
+        "context_score": 0.0,
+        "confidence": 0.963513,
+        "tentative": true,
+        "display_label": "Marcus? 0.96"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.963513,
+          "average_visual_score": 0.927803,
+          "context_score": 0.0,
+          "confidence": 0.963513,
+          "tentative": true,
+          "display_label": "Marcus? 0.96"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "01a704aa-feea-55c0-94b8-8913f669c401",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_1_69562b64d5:228_10",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.963513,
+          "context_score": 0.0,
+          "confidence": 0.963513,
+          "bbox": [
+            0.80703125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.1,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.949145,
+          "context_score": 0.0,
+          "confidence": 0.949145,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.948907,
+          "context_score": 0.0,
+          "confidence": 0.948907,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.941052,
+          "context_score": 0.0,
+          "confidence": 0.941052,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "3f8dd20b-b9f2-51ee-96c3-c94c961fd49f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_26_c363f763b9:227_26",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.927745,
+          "context_score": 0.0,
+          "confidence": 0.927745,
+          "bbox": [
+            0.8046875,
+            0.20402298850574713,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211817_row0009_marcus_0e3c904dcc7cc314315e.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.26,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 15,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 12.515,
+      "source_anchor_a": {
+        "file": "20260704140212160_row0009_marcus_595af3df8071cefcc722.json",
+        "id": "20260704140212160_row0009_marcus_595af3df8071cefcc722",
+        "box_id": "detector_9_detector_9_track_2_12_1_69562b64d5",
+        "time_seconds": 12.1,
+        "bbox": [
+          0.80703125,
+          0.20402298850574713,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:12.160Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704140212494_row0009_marcus_78be106fdab4cfc64bb4.json",
+        "id": "20260704140212494_row0009_marcus_78be106fdab4cfc64bb4",
+        "box_id": "detector_9_detector_9_track_2_12_93_b717b809cf",
+        "time_seconds": 12.93,
+        "bbox": [
+          0.82578125,
+          0.21695402298850575,
+          1.0,
+          0.9841954022988506
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:12.494Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.81640625,
+        0.21048850574712646,
+        1.0,
+        0.9841954022988506
+      ],
+      "pixel_bbox_xyxy": [
+        1045,
+        147,
+        1280,
+        685
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_15_12.515.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_15_12.515_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "cb370afcfca93b90091e285af65074491d04f9dfba270ebdc8134afb4d328a06",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 69022
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 88,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.966373,
+        "average_visual_score": 0.929559,
+        "context_score": 0.0,
+        "confidence": 0.966373,
+        "tentative": true,
+        "display_label": "Marcus? 0.97"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.966373,
+          "average_visual_score": 0.929559,
+          "context_score": 0.0,
+          "confidence": 0.966373,
+          "tentative": true,
+          "display_label": "Marcus? 0.97"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "702dab04-d324-5851-8714-f28724f22342",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector-runtime_9_track_2_12_500:228_50",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.966373,
+          "context_score": 0.0,
+          "confidence": 0.966373,
+          "bbox": [
+            0.8093005952380953,
+            0.2026546250684181,
+            1,
+            0.9828270388615216
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947632_row0009_marcus_76c7229e8d09ee2fdd9c.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.5,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "01a704aa-feea-55c0-94b8-8913f669c401",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_12_1_69562b64d5:228_10",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.953965,
+          "context_score": 0.0,
+          "confidence": 0.953965,
+          "bbox": [
+            0.80703125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212160_row0009_marcus_595af3df8071cefcc722.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 228.1,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "903d1188-f7b4-5644-a0d2-730f52452b31",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_11_68_57dfcf9deb:227_68",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.944098,
+          "context_score": 0.0,
+          "confidence": 0.944098,
+          "bbox": [
+            0.8078125,
+            0.20402298850574713,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144947259_row0009_marcus_5d5beb7573a819320d88.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 227.68,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "2a4c6fcb-0ce3-5d4c-9d27-7f56b1bda1dd",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_4_8_f5d0c903a3:220_80",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.941398,
+          "context_score": 0.0,
+          "confidence": 0.941398,
+          "bbox": [
+            0.759375,
+            0.1752873563218391,
+            1,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140209752_row0009_marcus_0505be19a455c7d18bdd.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 220.8,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "46043f0c-8e1c-56ed-8dd7-361b70f06f8b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_10_84_e3d9056b9f:226_84",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.933215,
+          "context_score": 0.0,
+          "confidence": 0.933215,
+          "bbox": [
+            0.79921875,
+            0.20689655172413793,
+            1,
+            0.9827586206896551
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144946858_row0009_marcus_db84053990e2a558dc4f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 226.84,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 16,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 17.205,
+      "source_anchor_a": {
+        "file": "20260704140212876_row0009_marcus_c548229700e98c0beb67.json",
+        "id": "20260704140212876_row0009_marcus_c548229700e98c0beb67",
+        "box_id": "detector_9_detector_9_track_2_16_89_98be7f284c",
+        "time_seconds": 16.89,
+        "bbox": [
+          0.7421875,
+          0.0028735632183908046,
+          0.9890625,
+          0.9885057471264368
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:02:12.876Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144303975_row0009_marcus_1d0f9f170be856a56744.json",
+        "id": "20260704144303975_row0009_marcus_1d0f9f170be856a56744",
+        "box_id": "detector_9_detector_9_track_2_17_52_797fce4d5d",
+        "time_seconds": 17.52,
+        "bbox": [
+          0.6921875,
+          0.05890804597701149,
+          0.9375,
+          0.9798850574712644
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:43:03.975Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.7171875000000001,
+        0.03089080459770099,
+        0.9632812500000001,
+        0.9841954022988506
+      ],
+      "pixel_bbox_xyxy": [
+        918,
+        21,
+        1233,
+        685
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_16_17.205.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_16_17.205_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "7d7f8f4611bb02993447c563791737993844bf2e8cce1c3485359b60868ef64c",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 197214
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 92,
+      "top_suggestion": {
+        "character_name": "Willie",
+        "actor_name": "Billy Bob Thornton",
+        "hit_count": 9,
+        "top_visual_score": 0.932243,
+        "average_visual_score": 0.91876,
+        "context_score": 0.0,
+        "confidence": 0.932243,
+        "tentative": true,
+        "display_label": "Willie? 0.93"
+      },
+      "pass_top1_marcus": false,
+      "suggestions": [
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "hit_count": 9,
+          "top_visual_score": 0.932243,
+          "average_visual_score": 0.91876,
+          "context_score": 0.0,
+          "confidence": 0.932243,
+          "tentative": true,
+          "display_label": "Willie? 0.93"
+        },
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 1,
+          "top_visual_score": 0.89008,
+          "average_visual_score": 0.89008,
+          "context_score": 0.0,
+          "confidence": 0.89008,
+          "tentative": true,
+          "display_label": "Marcus? 0.89"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "2e34656a-461c-5e67-aba8-78b7c2c8d642",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703200903506_row0009_willie_7faffa77a0be6d677c55:236_02",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.932243,
+          "context_score": 0.0,
+          "confidence": 0.932243,
+          "bbox": [
+            0.18828125,
+            0.09482758620689655,
+            0.4640625,
+            0.992816091954023
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703200903506_row0009_willie_7faffa77a0be6d677c55.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 236.02,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "ba1f6f77-9fe3-5944-860c-23d0d40d8f9c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181858378_row0009_willie_3672b99aa680bd0e36c4:233_31",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.927645,
+          "context_score": 0.0,
+          "confidence": 0.927645,
+          "bbox": [
+            0.74453125,
+            0.03735632183908046,
+            0.984375,
+            0.9813218390804598
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181858378_row0009_willie_3672b99aa680bd0e36c4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 233.31,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "52a5be00-86a4-53c5-a8de-f9d37980f156",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703182315023_row0009_willie_ae375bb829c2fa3a4760:234_98",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.926158,
+          "context_score": 0.0,
+          "confidence": 0.926158,
+          "bbox": [
+            0.18984375,
+            0.09913793103448276,
+            0.46171875,
+            0.9841954022988506
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703182315023_row0009_willie_ae375bb829c2fa3a4760.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 234.98,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "576da250-4ce2-508d-8d15-c568610becd7",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181920664_row0009_willie_4b6710fae35d6bda0072:236_65",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.92461,
+          "context_score": 0.0,
+          "confidence": 0.92461,
+          "bbox": [
+            0.19375,
+            0.09913793103448276,
+            0.46953125,
+            0.9899425287356322
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181920664_row0009_willie_4b6710fae35d6bda0072.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 236.65,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "1a6e304d-9718-5c36-b2b9-c2ed8d31be4b",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181912096_row0009_willie_4db378237e10a4cfce1d:235_60",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.923681,
+          "context_score": 0.0,
+          "confidence": 0.923681,
+          "bbox": [
+            0.178125,
+            0.09339080459770115,
+            0.45390625,
+            0.9956896551724138
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181912096_row0009_willie_4db378237e10a4cfce1d.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 235.6,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 10,
+        "skipped_stale_or_deleted": 2
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 17,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 18.04,
+      "source_anchor_a": {
+        "file": "20260704144303975_row0009_marcus_1d0f9f170be856a56744.json",
+        "id": "20260704144303975_row0009_marcus_1d0f9f170be856a56744",
+        "box_id": "detector_9_detector_9_track_2_17_52_797fce4d5d",
+        "time_seconds": 17.52,
+        "bbox": [
+          0.6921875,
+          0.05890804597701149,
+          0.9375,
+          0.9798850574712644
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:43:03.975Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce.json",
+        "id": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce",
+        "box_id": "detector_9_detector_9_track_2_18_56_ec34a5f399",
+        "time_seconds": 18.56,
+        "bbox": [
+          0.6078125,
+          0.011494252873563218,
+          0.8875,
+          0.9870689655172413
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:43:04.520Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.6499999999999999,
+        0.035201149425287355,
+        0.9125,
+        0.9834770114942528
+      ],
+      "pixel_bbox_xyxy": [
+        832,
+        24,
+        1168,
+        684
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_17_18.040.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_17_18.040_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "1fdcce62917440615da39d2ae6394d1cc873bc0db61d3ada6d0dcb52e6ef162e",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 210966
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 92,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 3,
+        "top_visual_score": 0.855547,
+        "average_visual_score": 0.846313,
+        "context_score": 0.0,
+        "confidence": 0.855547,
+        "tentative": true,
+        "display_label": "Marcus? 0.86"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 3,
+          "top_visual_score": 0.855547,
+          "average_visual_score": 0.846313,
+          "context_score": 0.0,
+          "confidence": 0.855547,
+          "tentative": true,
+          "display_label": "Marcus? 0.86"
+        },
+        {
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "hit_count": 2,
+          "top_visual_score": 0.845381,
+          "average_visual_score": 0.841995,
+          "context_score": 0.0,
+          "confidence": 0.845381,
+          "tentative": true,
+          "display_label": "Willie? 0.85"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "603fa3ce-6ea1-5c05-b51c-37596025854f",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2by12r-640:174_40",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.855547,
+          "context_score": 0.0,
+          "confidence": 0.855547,
+          "bbox": [
+            0.12523564876376367,
+            0.11084143226865698,
+            0.45902981209920296,
+            0.9687974239191429
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260701170849016_row0007_marcus_2cc1198459cbfa38e1b3.png",
+          "row_index": 7,
+          "keyframe_time_seconds": 174.4,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "84687d53-6836-5f0c-bd4f-15c631a8de34",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_16_89_98be7f284c:232_89",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.850997,
+          "context_score": 0.0,
+          "confidence": 0.850997,
+          "bbox": [
+            0.7421875,
+            0.0028735632183908046,
+            0.9890625,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140212876_row0009_marcus_c548229700e98c0beb67.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 232.89,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "54f7686f-28b0-5f7c-8cef-f83c090ba32a",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703203443650_row0009_willie_d7b33ee4e8a79903bbc6:239_77",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.845381,
+          "context_score": 0.0,
+          "confidence": 0.845381,
+          "bbox": [
+            0.35625,
+            0.10488505747126436,
+            0.63359375,
+            0.9885057471264368
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703203443650_row0009_willie_d7b33ee4e8a79903bbc6.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 239.77,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "ba1f6f77-9fe3-5944-860c-23d0d40d8f9c",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:20260703181858378_row0009_willie_3672b99aa680bd0e36c4:233_31",
+          "character_name": "Willie",
+          "actor_name": "Billy Bob Thornton",
+          "visual_score": 0.838609,
+          "context_score": 0.0,
+          "confidence": 0.838609,
+          "bbox": [
+            0.74453125,
+            0.03735632183908046,
+            0.984375,
+            0.9813218390804598
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703181858378_row0009_willie_3672b99aa680bd0e36c4.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 233.31,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "192161f9-e301-5627-8ad1-c22fe4bbdcbf",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_9_59_9b33dd7ad0:225_59",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.832394,
+          "context_score": 0.0,
+          "confidence": 0.832394,
+          "bbox": [
+            0.7734375,
+            0.21120689655172414,
+            1,
+            0.9870689655172413
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704140211142_row0009_marcus_5b3e09f93e8ff394007f.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 225.59,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 5,
+        "skipped_stale_or_deleted": 7
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    },
+    {
+      "sample_index": 18,
+      "sample_type": "yolo_track_interpolated_midpoint_crop",
+      "truth_character": "Marcus",
+      "yolo_track_key": "detector_9_track_2",
+      "time_seconds": 18.77,
+      "source_anchor_a": {
+        "file": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce.json",
+        "id": "20260704144304520_row0009_marcus_50c7f89affdea43c8cce",
+        "box_id": "detector_9_detector_9_track_2_18_56_ec34a5f399",
+        "time_seconds": 18.56,
+        "bbox": [
+          0.6078125,
+          0.011494252873563218,
+          0.8875,
+          0.9870689655172413
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:43:04.520Z"
+      },
+      "source_anchor_b": {
+        "file": "20260704144948118_row0009_marcus_e8dd75a5144ab1564028.json",
+        "id": "20260704144948118_row0009_marcus_e8dd75a5144ab1564028",
+        "box_id": "detector_9_detector_9_track_2_18_98_95f4e27579",
+        "time_seconds": 18.98,
+        "bbox": [
+          0.69921875,
+          0.16379310344827586,
+          0.96328125,
+          0.9870689655172413
+        ],
+        "actor_name": "Tony Cox",
+        "created_at": "2026-07-04T14:49:48.118Z"
+      },
+      "interpolated_bbox_normalized_xyxy": [
+        0.653515625,
+        0.08764367816091954,
+        0.9253906249999999,
+        0.9870689655172413
+      ],
+      "pixel_bbox_xyxy": [
+        836,
+        61,
+        1184,
+        687
+      ],
+      "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/frames/sample_18_18.770.jpg",
+      "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_18_18.770_marcus_detector_9_track_2_interpolated.png",
+      "crop_sha256": "8a6509d87c373c632461dc491322a290b1cfc89a902c74923eaaae88a4c84726",
+      "memory_request": {
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "k": 12,
+        "restrict_to_row": false,
+        "include_context": false,
+        "image_data_url_bytes": 131898
+      },
+      "memory_status_code": 200,
+      "memory_elapsed_ms": 87,
+      "top_suggestion": {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "hit_count": 12,
+        "top_visual_score": 0.923913,
+        "average_visual_score": 0.905417,
+        "context_score": 0.0,
+        "confidence": 0.923913,
+        "tentative": true,
+        "display_label": "Marcus? 0.92"
+      },
+      "pass_top1_marcus": true,
+      "suggestions": [
+        {
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "hit_count": 12,
+          "top_visual_score": 0.923913,
+          "average_visual_score": 0.905417,
+          "context_score": 0.0,
+          "confidence": 0.923913,
+          "tentative": true,
+          "display_label": "Marcus? 0.92"
+        }
+      ],
+      "items": [
+        {
+          "point_id": "ef94fd32-3221-525e-81e1-1b6cd01a30f6",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783090303454_row0009_marcus_runtime_edit:234_88",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.923913,
+          "context_score": 0.0,
+          "confidence": 0.923913,
+          "bbox": [
+            0.6939616436204272,
+            0.014481735842138577,
+            0.9971331412153102,
+            0.846522577240354
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703145144204_row0009_marcus_828b4e17cd3c9aabb761.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 234.875,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "e931732b-35a6-5882-8f07-111ab5cbaf07",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_18_98_95f4e27579:234_98",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.916373,
+          "context_score": 0.0,
+          "confidence": 0.916373,
+          "bbox": [
+            0.69921875,
+            0.16379310344827586,
+            0.96328125,
+            0.9870689655172413
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260704144948118_row0009_marcus_e8dd75a5144ab1564028.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 234.98,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "caaa9fc2-5fd4-5d2a-a121-d8e8321dfd8e",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085717186_row0009_marcus_runtime_edit:232_92",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.91447,
+          "context_score": 0.0,
+          "confidence": 0.91447,
+          "bbox": [
+            0.3311234445652298,
+            0.008763050572953308,
+            0.6672639658232874,
+            0.8197395797456518
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703133518081_row0009_marcus_6f47d0300c3948339604.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 232.917,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "0a9ae68f-b9bf-54c6-91b6-53411e0e382a",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783090276269_row0009_marcus_runtime_edit:233_08",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.911736,
+          "context_score": 0.0,
+          "confidence": 0.911736,
+          "bbox": [
+            0.2982479857923518,
+            0.011658778350219902,
+            0.6212061810825241,
+            0.8310576567220617
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703145117280_row0009_marcus_839f0d21d4b5533c43f5.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 233.083,
+          "lifecycle_status": "current",
+          "hydrated": true
+        },
+        {
+          "point_id": "1870b358-70e9-5616-b94f-c265ddf98f3e",
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085708272_row0009_marcus_runtime_edit:232_13",
+          "character_name": "Marcus",
+          "actor_name": "Tony Cox",
+          "visual_score": 0.908765,
+          "context_score": 0.0,
+          "confidence": 0.908765,
+          "bbox": [
+            0.4809174066222401,
+            0.000863958912899275,
+            0.8170579278802976,
+            0.8118404880855977
+          ],
+          "crop_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_human_character_annotations/crops/20260703133509479_row0009_marcus_df87c79cf91393bdcdc2.png",
+          "row_index": 9,
+          "keyframe_time_seconds": 232.125,
+          "lifecycle_status": "current",
+          "hydrated": true
+        }
+      ],
+      "qdrant": {
+        "collection": "watch_track_crop_embeddings_jina_v5_1024",
+        "vector_name": null,
+        "returned_hits": 12,
+        "usable_hits": 12,
+        "skipped_stale_or_deleted": 0
+      },
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      },
+      "proof_scope": {
+        "mocked": false,
+        "live": true,
+        "exercised": [
+          "image_embedding",
+          "qdrant_crop_similarity_query",
+          "arangodb_watch_keyframe_hydration"
+        ],
+        "does_not_prove": [
+          "the Watch browser click flow saved labels",
+          "the suggested identity is accepted ground truth"
+        ]
+      },
+      "error_detail": null
+    }
+  ]
+}

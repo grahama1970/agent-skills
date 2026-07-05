@@ -1,0 +1,182 @@
+{
+  "schema": "watch.live_ui_identity_suggestion_e2e.v1",
+  "created_at": "2026-07-05T00:00:00-04:00",
+  "mocked": false,
+  "live": true,
+  "url": "http://127.0.0.1:3002/api/projects/watch/detector-candidates/suggest-label",
+  "request": {
+    "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+    "row_index": 9,
+    "track_id": "track_2",
+    "bbox": [
+      0.5963089156237307,
+      0.028573788996171738,
+      0.9295825042774779,
+      0.9134809327181295
+    ],
+    "time_seconds": 0,
+    "allowed_characters": [
+      {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox"
+      },
+      {
+        "character_name": "Willie",
+        "actor_name": "Billy Bob Thornton"
+      }
+    ]
+  },
+  "http_status": 200,
+  "elapsed_ms": 573,
+  "response": {
+    "ok": true,
+    "schema": "watch.detector_label_suggestion.v1",
+    "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+    "row_index": 9,
+    "track_id": "track_2",
+    "bbox": [
+      0.5963089156237307,
+      0.028573788996171738,
+      0.9295825042774779,
+      0.9134809327181295
+    ],
+    "frame_source": "server_ffmpeg_clip_frame",
+    "crop_dimensions": {
+      "width": 427,
+      "height": 616,
+      "source_width": 1280,
+      "source_height": 696
+    },
+    "crop_quality": {
+      "ok": true,
+      "reason": null,
+      "mean": 41.5849,
+      "stddev": 32.3668,
+      "range": 255
+    },
+    "memory": {
+      "endpoint": "/watch/identity/recall-crop",
+      "called": true,
+      "found": true,
+      "confidence": 0.944925,
+      "item_count": 15,
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      }
+    },
+    "suggestion_policy": {
+      "min_confidence": 0.82,
+      "min_neighbor_count": 2,
+      "min_runner_up_margin": 0.04
+    },
+    "suggestion": {
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "confidence": 0.9449,
+      "best_score": 0.9449,
+      "neighbor_count": 15,
+      "neighbors": [
+        {
+          "point_id": "07c917eb-4c7c-5218-b423-b18c3d8e7ece",
+          "score": 0.9449,
+          "row_index": 9,
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181845071_row0009_marcus_10a6bd9fd67829562d52:231_22"
+        },
+        {
+          "point_id": "063c97de-ff7e-5569-ba39-e04768942740",
+          "score": 0.9433,
+          "row_index": 9,
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181833725_row0009_marcus_a4d269ddc627f285dd9d:230_60"
+        },
+        {
+          "point_id": "caaa9fc2-5fd4-5d2a-a121-d8e8321dfd8e",
+          "score": 0.9279,
+          "row_index": 9,
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085717186_row0009_marcus_runtime_edit:232_92"
+        },
+        {
+          "point_id": "a40e258d-ea8c-566e-8666-973ca19140ff",
+          "score": 0.9228,
+          "row_index": 9,
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703131424297_row0009_marcus_8bc724abaf6fc95a3da9:229_81"
+        },
+        {
+          "point_id": "8498959d-7911-5a5f-a892-e58b0315783e",
+          "score": 0.9226,
+          "row_index": 9,
+          "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085722374_row0009_marcus_runtime_edit:233_33"
+        }
+      ]
+    },
+    "candidates": [
+      {
+        "character_name": "Marcus",
+        "actor_name": "Tony Cox",
+        "confidence": 0.9449,
+        "best_score": 0.9449,
+        "neighbor_count": 15,
+        "neighbors": [
+          {
+            "point_id": "07c917eb-4c7c-5218-b423-b18c3d8e7ece",
+            "score": 0.9449,
+            "row_index": 9,
+            "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181845071_row0009_marcus_10a6bd9fd67829562d52:231_22"
+          },
+          {
+            "point_id": "063c97de-ff7e-5569-ba39-e04768942740",
+            "score": 0.9433,
+            "row_index": 9,
+            "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703181833725_row0009_marcus_a4d269ddc627f285dd9d:230_60"
+          },
+          {
+            "point_id": "caaa9fc2-5fd4-5d2a-a121-d8e8321dfd8e",
+            "score": 0.9279,
+            "row_index": 9,
+            "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085717186_row0009_marcus_runtime_edit:232_92"
+          },
+          {
+            "point_id": "a40e258d-ea8c-566e-8666-973ca19140ff",
+            "score": 0.9228,
+            "row_index": 9,
+            "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703131424297_row0009_marcus_8bc724abaf6fc95a3da9:229_81"
+          },
+          {
+            "point_id": "8498959d-7911-5a5f-a892-e58b0315783e",
+            "score": 0.9226,
+            "row_index": 9,
+            "annotation_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085722374_row0009_marcus_runtime_edit:233_33"
+          }
+        ]
+      }
+    ],
+    "rejection_reason": null,
+    "proof_scope": {
+      "mocked": false,
+      "live": true,
+      "proves": [
+        "watch API cropped the submitted detector box from the selected frame source",
+        "watch API measured crop quality before identity recall",
+        "watch API called Memory /watch/identity/recall-crop with the detector crop",
+        "Memory performed the configured multimodal crop recall and returned hydrated identity candidates",
+        "watch API applied confidence, neighbor-count, and ambiguity gates before returning a suggestion"
+      ],
+      "does_not_prove": [
+        "the suggested character label is correct",
+        "the suggestion has been accepted by a human",
+        "YOLO track identity is stable outside the current detector track id"
+      ]
+    }
+  },
+  "assertions": {
+    "status_200": true,
+    "schema_ok": true,
+    "memory_called": true,
+    "memory_found": true,
+    "suggestion_character_is_marcus": true,
+    "suggestion_confidence_ge_0_82": true,
+    "neighbor_count_ge_2": true,
+    "tentative_not_accepted_truth": true
+  }
+}

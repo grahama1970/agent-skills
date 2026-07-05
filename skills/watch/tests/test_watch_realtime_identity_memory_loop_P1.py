@@ -55,7 +55,7 @@ LIVE_APPROVAL_LINKED_RECEIPT = (
     / "watch_realtime_identity_memory_loop_live_approval_linked_20260628T1315Z"
     / "watch_realtime_identity_memory_loop_live_receipt.json"
 )
-LIVE_YOLO_TRACK_QDRANT_STOP_RECEIPT = (
+LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT = (
     ROOT
     / "skills"
     / "watch"
@@ -64,7 +64,7 @@ LIVE_YOLO_TRACK_QDRANT_STOP_RECEIPT = (
     / "generated"
     / "watch_identity_qdrant_marcus_eval"
     / "20260704T172759115162Z_yolo_track_2_only"
-    / "watch_qdrant_recall_identity_stop_receipt.json"
+    / "watch_identity_qdrant_yolo_track_2_interpolated_marcus_eval.json"
 )
 
 
@@ -448,7 +448,15 @@ def test_qdrant_recall_without_accepted_label_stays_tentative():
 
 
 def test_live_yolo_track_qdrant_eval_receipt_marks_handoff_frame_as_stop():
-    receipt = json.loads(LIVE_YOLO_TRACK_QDRANT_STOP_RECEIPT.read_text(encoding="utf-8"))
+    source = json.loads(LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT.read_text(encoding="utf-8"))
+
+    receipt = build_qdrant_recall_identity_stop_receipt(
+        source,
+        source_path=LIVE_YOLO_TRACK_QDRANT_EVAL_RECEIPT,
+        accepted_character="Marcus",
+        conflict_threshold=0.90,
+        suggestion_threshold=0.82,
+    )
 
     assert receipt["mocked"] is False
     assert receipt["live"] is True

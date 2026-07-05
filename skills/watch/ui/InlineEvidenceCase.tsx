@@ -19,9 +19,8 @@ import {
   ShieldAlert,
   XCircle,
 } from 'lucide-react'
-import { useRegisterAction } from '../../hooks/useRegisterAction'
 import type { EvidenceCaseData } from './types'
-import { EMBRY } from '../sparta/common/EmbryStyle'
+import { EMBRY } from './sparta/common/EmbryStyle'
 import {
   deriveArtifactStateLine,
   deriveEvidenceTierBadge,
@@ -226,13 +225,6 @@ export function InlineEvidenceCase({ data, onViewDetails, onOpenInWorkspace, onO
   const blockedActionReason = canApproveOrExport
     ? ''
     : 'Approve, reject, and export are disabled until all evidence gates pass, source-page provenance is bound, mock artifacts are replaced, and reviewer approval is complete.'
-
-  useRegisterAction('evidence-case:action:toggle', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_TOGGLE', label: 'Toggle evidence case', description: 'Expand or collapse the inline evidence case audit trail' })
-  useRegisterAction('evidence-case:action:approve', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_APPROVE', label: 'Approve case', description: 'Approve the selected evidence case after review' })
-  useRegisterAction('evidence-case:action:reject', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_REJECT', label: 'Reject case', description: 'Reject the selected evidence case' })
-  useRegisterAction('evidence-case:action:request-more', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_REQUEST_MORE', label: 'Request more evidence', description: 'Request additional evidence for the selected case' })
-  useRegisterAction('evidence-case:action:open-source', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_OPEN_SOURCE', label: 'Open source page', description: 'Open the source document or extracted page for the selected case' })
-  useRegisterAction('evidence-case:action:export', { app: 'sparta-explorer', action: 'EVIDENCE_CASE_EXPORT', label: 'Export audit packet', description: 'Export the selected evidence case as an audit packet' })
 
   const openWorkspace = onOpenInWorkspace ?? onViewDetails
 

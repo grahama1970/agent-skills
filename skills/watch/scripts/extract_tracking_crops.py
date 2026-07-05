@@ -144,6 +144,14 @@ def _extract_crop(
         "media_time_seconds": anchor_media_time,
         "clip_local_time_seconds": round(local_time_seconds, 3),
         "bbox_xyxy": [x1, y1, x2, y2],
+        "source_frame_size": {"width": width, "height": height},
+        "bbox": [
+            round(x1 / width, 6),
+            round(y1 / height, 6),
+            round(x2 / width, 6),
+            round(y2 / height, 6),
+        ],
+        "bbox_format": "normalized_xyxy",
         "crop_path": _display_path(crop_path),
         "crop_size": {"width": x2 - x1, "height": y2 - y1},
         "candidate_entity": {

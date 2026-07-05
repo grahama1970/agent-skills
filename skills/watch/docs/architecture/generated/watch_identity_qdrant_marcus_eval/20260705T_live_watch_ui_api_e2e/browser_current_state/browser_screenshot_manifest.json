@@ -1,0 +1,13 @@
+{
+  "schema": "watch.browser_screenshot_manifest.v1",
+  "mocked": false,
+  "live": true,
+  "screenshot_paths": {
+    "current_loaded": "/tmp/codex-ui-verification/agent-skills/watch-row9-yolo-identity-playwright/20260705T_current_state/01_current_loaded.png",
+    "after_click_first_yolo_label": "/tmp/codex-ui-verification/agent-skills/watch-row9-yolo-identity-playwright/20260705T_current_state/02_after_click_first_yolo_label.png",
+    "after_click_marcus_label": "/tmp/codex-ui-verification/agent-skills/watch-row9-yolo-identity-playwright/20260705T_current_state/03_after_click_marcus_label.png"
+  },
+  "visual_inspection": {
+    "after_click_marcus_label": "Visible Watch annotation island; YOLO track labels render over boxes; clicking Marcus label opens inline dropdown and Reset to YOLO track_2 control; right pane shows identity readiness Marcus 75 accepted / 75 embedded."
+  }
+}

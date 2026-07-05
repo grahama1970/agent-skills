@@ -1,0 +1,23 @@
+{
+  "schema": "watch.yolo_label_persistence_probe.v1",
+  "mocked": false,
+  "live": true,
+  "endpoint": "http://127.0.0.1:3002/api/projects/watch/yolo-labels",
+  "track_id": "codex_probe_track_1783254872",
+  "initial_status": 200,
+  "initial_label_count": 0,
+  "initial_event_count": 0,
+  "accept_status": 200,
+  "accept_has_probe": true,
+  "accept_memory_sync": "stored",
+  "post_accept_status": 200,
+  "post_accept_has_probe": true,
+  "reset_status": 200,
+  "reset_has_probe": false,
+  "reset_memory_sync": "stored",
+  "post_reset_status": 200,
+  "post_reset_has_probe": false,
+  "final_label_count": 0,
+  "final_event_count": 2,
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_yolo_track_labels/bad_santa_unrated_2003_brrip_xvidhd_720p_npw_row0009.json"
+}

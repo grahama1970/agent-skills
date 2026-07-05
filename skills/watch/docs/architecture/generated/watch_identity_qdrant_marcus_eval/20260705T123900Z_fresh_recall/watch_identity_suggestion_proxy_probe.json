@@ -1,0 +1,32 @@
+{
+  "schema": "watch.identity_suggestion_proxy_probe.v1",
+  "mocked": false,
+  "live": true,
+  "endpoint": "http://127.0.0.1:3002/api/projects/watch/identity-suggestions",
+  "status": 200,
+  "elapsed_ms": 138,
+  "suggestion": {
+    "character_name": "Marcus",
+    "actor_name": "Tony Cox",
+    "confidence": 0.978397,
+    "basis": [
+      "memory_qdrant_crop_recall"
+    ],
+    "tentative": true,
+    "display_label": "Marcus? 0.98"
+  },
+  "memory_found": true,
+  "memory_proof_scope": {
+    "mocked": false,
+    "live": true,
+    "exercised": [
+      "image_embedding",
+      "qdrant_crop_similarity_query",
+      "arangodb_watch_keyframe_hydration"
+    ],
+    "does_not_prove": [
+      "the Watch browser click flow saved labels",
+      "the suggested identity is accepted ground truth"
+    ]
+  }
+}

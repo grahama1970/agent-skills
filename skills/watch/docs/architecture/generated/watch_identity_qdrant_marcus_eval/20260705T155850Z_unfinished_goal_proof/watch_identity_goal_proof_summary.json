@@ -1,0 +1,321 @@
+{
+  "schema": "watch.unfinished_identity_goal_proof_summary.v1",
+  "created_at": "2026-07-05T16:10:05Z",
+  "mocked": false,
+  "live": true,
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 9,
+  "claims": {
+    "tentative_ui_suggestions": {
+      "status": "proven_for_track_4_at_0_63s",
+      "label_text": "Willie? 0.89",
+      "inline_select_open": true,
+      "reset_option": "YOLO track_4",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png"
+    },
+    "readiness_global_counter": {
+      "status": "proven_live_endpoint_current_state",
+      "ready_character_count": 2,
+      "strict_yolo_linked": {
+        "ready": true,
+        "ready_character_count": 2,
+        "character_count": 2,
+        "detector_linked_minimum": 2,
+        "missing": []
+      },
+      "auto_suggest_readiness": {
+        "ready": true,
+        "evaluated_count": 64,
+        "pass_count": 59,
+        "fail_count": 5,
+        "accuracy": 0.9219,
+        "detector_linked_example_count": 45,
+        "detector_linked_evaluated_count": 31
+      },
+      "characters": [
+        {
+          "character_name": "Marcus",
+          "accepted_count": 75,
+          "embedded_count": 75,
+          "detector_link_count": 43,
+          "rejected_count": 1,
+          "ready_for_suggestion": true
+        },
+        {
+          "character_name": "Willie",
+          "accepted_count": 18,
+          "embedded_count": 18,
+          "detector_link_count": 4,
+          "rejected_count": 1,
+          "ready_for_suggestion": true
+        },
+        {
+          "character_name": "Opal",
+          "accepted_count": 0,
+          "embedded_count": 0,
+          "detector_link_count": 1,
+          "rejected_count": 1,
+          "ready_for_suggestion": false
+        },
+        {
+          "character_name": "Roger",
+          "accepted_count": 0,
+          "embedded_count": 0,
+          "detector_link_count": 1,
+          "rejected_count": 1,
+          "ready_for_suggestion": false
+        },
+        {
+          "character_name": "Sue",
+          "accepted_count": 0,
+          "embedded_count": 0,
+          "detector_link_count": 2,
+          "rejected_count": 2,
+          "ready_for_suggestion": false
+        }
+      ]
+    },
+    "heldout_eval": {
+      "status": "proven_live_endpoint_current_state_with_known_failures",
+      "evaluated_count": 24,
+      "pass_count": 22,
+      "fail_count": 2,
+      "accuracy": 0.9167,
+      "ready_for_auto_suggest": true,
+      "per_character": [
+        {
+          "character_name": "Marcus",
+          "evaluated": 12,
+          "passed": 11,
+          "failed": 1,
+          "accuracy": 0.9167
+        },
+        {
+          "character_name": "Willie",
+          "evaluated": 12,
+          "passed": 11,
+          "failed": 1,
+          "accuracy": 0.9167
+        }
+      ],
+      "confusion": {
+        "marcus": {
+          "marcus": 11,
+          "willie": 1
+        },
+        "willie": {
+          "willie": 11,
+          "marcus": 1
+        }
+      },
+      "failures": [
+        {
+          "truth": "Marcus",
+          "predicted": "Willie",
+          "confidence": 0.8668,
+          "row_index": 7,
+          "time_seconds": 174.4,
+          "detector_linked": false,
+          "top_candidates": [
+            {
+              "character_name": "Willie",
+              "confidence": 0.8668,
+              "best_score": 0.9046,
+              "neighbor_count": 11
+            },
+            {
+              "character_name": "Marcus",
+              "confidence": 0.8564,
+              "best_score": 0.9224,
+              "neighbor_count": 4
+            },
+            {
+              "character_name": "codex-live-mr51n3cz Held",
+              "confidence": 0.7653,
+              "best_score": 0.9029,
+              "neighbor_count": 1
+            }
+          ]
+        },
+        {
+          "truth": "Willie",
+          "predicted": "Marcus",
+          "confidence": 0.9384,
+          "row_index": 9,
+          "time_seconds": 233.31,
+          "detector_linked": false,
+          "top_candidates": [
+            {
+              "character_name": "Marcus",
+              "confidence": 0.9384,
+              "best_score": 0.9919,
+              "neighbor_count": 8
+            },
+            {
+              "character_name": "Willie",
+              "confidence": 0.8422,
+              "best_score": 0.8746,
+              "neighbor_count": 15
+            },
+            {
+              "character_name": "Herb",
+              "confidence": 0.8405,
+              "best_score": 0.8726,
+              "neighbor_count": 5
+            }
+          ]
+        }
+      ]
+    },
+    "rejected_boxes_not_poisoning": {
+      "status": "partially_proven_live_reset_path_and_readiness_counts",
+      "browser_flow_check": {
+        "name": "reset_reject_restores_yolo_track_label_and_persists_rejection",
+        "pass": true,
+        "state": {
+          "selectedCharacter": "Willie",
+          "selectedExactText": "",
+          "status": "Cleared 2 Willie labels from track_3; showing YOLO track_3.",
+          "detectorStatus": "313 YOLO person candidates loaded.",
+          "label": {
+            "trackId": "track_3",
+            "text": "YOLO track_3",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 313.6875,
+            "bottom": 336.6875,
+            "left": 647.5625,
+            "right": 751.171875,
+            "boxBottom": null
+          },
+          "labels": [
+            {
+              "trackId": "track_1",
+              "text": "YOLO track_1",
+              "zIndex": 180,
+              "boxZIndex": 0,
+              "top": 313.6875,
+              "bottom": 336.6875,
+              "left": 475.03125,
+              "right": 575.640625,
+              "boxBottom": null
+            },
+            {
+              "trackId": "track_2",
+              "text": "Marcus",
+              "zIndex": 180,
+              "boxZIndex": 0,
+              "top": 313.6875,
+              "bottom": 336.6875,
+              "left": 888.3125,
+              "right": 953.125,
+              "boxBottom": null
+            },
+            {
+              "trackId": "track_3",
+              "text": "YOLO track_3",
+              "zIndex": 180,
+              "boxZIndex": 0,
+              "top": 313.6875,
+              "bottom": 336.6875,
+              "left": 647.5625,
+              "right": 751.171875,
+              "boxBottom": null
+            }
+          ],
+          "candidateButtons": [
+            {
+              "trackId": "track_1",
+              "assigned": "",
+              "text": ""
+            },
+            {
+              "trackId": "track_2",
+              "assigned": "Marcus",
+              "text": ""
+            },
+            {
+              "trackId": "track_3",
+              "assigned": "",
+              "text": ""
+            }
+          ],
+          "inlineSelectOpen": false,
+          "inlineOptions": [],
+          "inlineResetVisible": false,
+          "selectedPanelVisible": false,
+          "saveTargetVisible": false,
+          "resetTargetVisible": false,
+          "manualToggleVisible": true,
+          "manualTogglePressed": "false",
+          "drawSurfacePointerEvents": "none",
+          "pendingTargetVisible": false,
+          "readinessRows": [
+            "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+            "Williecandidate18 accepted · 18 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+            "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+            "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+            "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+          ],
+          "yoloPanelRows": []
+        },
+        "rejectionCount": 1
+      },
+      "final_track_ref_count": 2,
+      "note": "Readiness counts rejected labels separately; held-out eval results show suggestions can be wrong, so UI keeps suggestion labels tentative until accepted. This does not prove all future poisoning cases."
+    },
+    "identity_handoff_stops": {
+      "status": "proven_for_one_live_qdrant_conflict_not_broadly_proven",
+      "stop_receipt": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/watch_qdrant_recall_identity_stop_receipt.json",
+      "current_proof": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_handoff_stop_proof.json",
+      "evidence": {
+        "qdrant_recall_stop_receipt": {
+          "evaluated_count": 18,
+          "supported_count": 17,
+          "conflict_count": 1,
+          "training_eligible_count": 17,
+          "stop_control_required_count": 1,
+          "conflict": {
+            "time_seconds": 17.205,
+            "accepted_character": "Marcus",
+            "top_character": "Willie",
+            "top_confidence": 0.932243,
+            "status": "IDENTITY_CONFLICT_STOP_REQUIRED",
+            "eligible_for_training": false,
+            "stop_control_required": true,
+            "label_to_render": "Willie? 0.93"
+          }
+        },
+        "current_heldout_eval_failures": [
+          {
+            "truth": "Marcus",
+            "predicted": "Willie",
+            "confidence": 0.8668,
+            "row_index": 7,
+            "time_seconds": 174.4,
+            "detector_linked": false
+          },
+          {
+            "truth": "Willie",
+            "predicted": "Marcus",
+            "confidence": 0.9384,
+            "row_index": 9,
+            "time_seconds": 233.31,
+            "detector_linked": false
+          }
+        ]
+      },
+      "remaining_gap": "A broad handoff-stop eval across all labeled YOLO tracks is still pending."
+    }
+  },
+  "artifacts": {
+    "readiness_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_readiness_include_eval.json",
+    "heldout_eval_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_heldout_eval_24.json",
+    "detector_candidates_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/detector_candidates_row9.json",
+    "browser_flow_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_yolo_label_live_check.json",
+    "browser_flow_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_yolo_label_live_check.png",
+    "tentative_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.json",
+    "tentative_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png",
+    "handoff_stop_proof_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_handoff_stop_proof.json"
+  }
+}

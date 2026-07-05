@@ -1,0 +1,1149 @@
+{
+  "schema": "watch.yolo_label_live_check.v1",
+  "mocked": false,
+  "live": true,
+  "url": "http://localhost:3002/watch#watch?clipRow=9",
+  "rowIndex": 9,
+  "targetTrackId": "track_3",
+  "targetCharacter": "Willie",
+  "outJson": "/tmp/watch-row9-yolo-label-live-check-20260705Tcurrent.json",
+  "outScreenshot": "/tmp/watch-row9-yolo-label-live-check-20260705Tcurrent.png",
+  "checks": [
+    {
+      "name": "initial_yolo_ui_state",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Willie",
+        "selectedExactText": "",
+        "status": "Live row annotations loaded.",
+        "detectorStatus": "313 YOLO person candidates loaded.",
+        "label": {
+          "trackId": "track_3",
+          "text": "YOLO track_3",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 322.375,
+          "bottom": 345.375,
+          "left": 647.5625,
+          "right": 751.171875,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "YOLO track_2",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 888.3125,
+            "right": 991.921875,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "YOLO track_3",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 647.5625,
+            "right": 751.171875,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": false,
+        "inlineOptions": [],
+        "inlineResetVisible": false,
+        "selectedPanelVisible": false,
+        "saveTargetVisible": false,
+        "resetTargetVisible": false,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "marcuscollecting0 accepted · 0 embedded · 0 rows · 0 tracks · 1 rejectedProgress 0%.",
+          "opalcollecting0 accepted · 0 embedded · 0 rows · 0 tracks · 1 rejectedProgress 0%.",
+          "rogercollecting0 accepted · 0 embedded · 0 rows · 0 tracks · 1 rejectedProgress 0%.",
+          "suecollecting0 accepted · 0 embedded · 0 rows · 0 tracks · 2 rejectedProgress 0%.",
+          "williecollecting0 accepted · 0 embedded · 0 rows · 0 tracks · 1 rejectedProgress 0%."
+        ],
+        "yoloPanelRows": []
+      }
+    },
+    {
+      "name": "label_click_opens_inline_character_chooser",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Unassigned",
+        "selectedExactText": "",
+        "status": "track_3 is unlabeled. Pick a character from the label menu.",
+        "detectorStatus": "313 YOLO person candidates loaded.",
+        "label": {
+          "trackId": "track_3",
+          "text": "YOLO track_3",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 273.6875,
+          "bottom": 296.6875,
+          "left": 647.5625,
+          "right": 751.171875,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 276.21875,
+            "bottom": 299.21875,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "Marcus",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 273.6875,
+            "bottom": 296.6875,
+            "left": 888.3125,
+            "right": 953.125,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "YOLO track_3",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 273.6875,
+            "bottom": 296.6875,
+            "left": 647.5625,
+            "right": 751.171875,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "Marcus",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": true,
+        "inlineOptions": [
+          {
+            "value": "Unassigned",
+            "text": "YOLO track_3"
+          },
+          {
+            "value": "Willie",
+            "text": "Willie"
+          },
+          {
+            "value": "Marcus",
+            "text": "Marcus"
+          },
+          {
+            "value": "Sue",
+            "text": "Sue"
+          },
+          {
+            "value": "Gin",
+            "text": "Gin"
+          },
+          {
+            "value": "Lois",
+            "text": "Lois"
+          },
+          {
+            "value": "Grandma",
+            "text": "Grandma"
+          },
+          {
+            "value": "Roger",
+            "text": "Roger"
+          },
+          {
+            "value": "Santa",
+            "text": "Santa"
+          },
+          {
+            "value": "Opal",
+            "text": "Opal"
+          },
+          {
+            "value": "Herb",
+            "text": "Herb"
+          }
+        ],
+        "inlineResetVisible": true,
+        "selectedPanelVisible": true,
+        "saveTargetVisible": true,
+        "resetTargetVisible": false,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Williecandidate18 accepted · 18 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+        ],
+        "yoloPanelRows": []
+      }
+    },
+    {
+      "name": "inline_label_save_persists_and_updates_label",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Willie",
+        "selectedExactText": "",
+        "status": "Writing live API mutation... Stopped track_3 materialization at 5.42s: Qdrant suggests Marcus? 0.86, not Willie.",
+        "detectorStatus": "YOLO candidates loaded; Qdrant did not auto-label track_3: Willie? 0.97 (insufficient_neighbor_support).",
+        "label": {
+          "trackId": "track_3",
+          "text": "Willie",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 236.3125,
+          "bottom": 259.3125,
+          "left": 647.5625,
+          "right": 702.375,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 241.53125,
+            "bottom": 264.53125,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "Marcus",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 236.3125,
+            "bottom": 259.3125,
+            "left": 888.3125,
+            "right": 953.125,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "Willie",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 236.3125,
+            "bottom": 259.3125,
+            "left": 647.5625,
+            "right": 702.375,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "Marcus",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "Willie",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": false,
+        "inlineOptions": [],
+        "inlineResetVisible": false,
+        "selectedPanelVisible": true,
+        "saveTargetVisible": true,
+        "resetTargetVisible": true,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Williecandidate18 accepted · 18 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+        ],
+        "yoloPanelRows": []
+      },
+      "persistedCount": 1
+    },
+    {
+      "name": "saved_label_survives_reload",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Willie",
+        "selectedExactText": "",
+        "status": "Live row annotations loaded.",
+        "detectorStatus": "313 YOLO person candidates loaded.",
+        "label": {
+          "trackId": "track_3",
+          "text": "Willie",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 322.375,
+          "bottom": 345.375,
+          "left": 647.5625,
+          "right": 702.375,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "Marcus",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 888.3125,
+            "right": 953.125,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "Willie",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 647.5625,
+            "right": 702.375,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "Marcus",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "Willie",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": false,
+        "inlineOptions": [],
+        "inlineResetVisible": false,
+        "selectedPanelVisible": false,
+        "saveTargetVisible": false,
+        "resetTargetVisible": false,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Williecandidate19 accepted · 19 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+        ],
+        "yoloPanelRows": []
+      }
+    },
+    {
+      "name": "reset_reject_restores_yolo_track_label_and_persists_rejection",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Willie",
+        "selectedExactText": "",
+        "status": "Cleared 2 Willie labels from track_3; showing YOLO track_3.",
+        "detectorStatus": "313 YOLO person candidates loaded.",
+        "label": {
+          "trackId": "track_3",
+          "text": "YOLO track_3",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 313.6875,
+          "bottom": 336.6875,
+          "left": 647.5625,
+          "right": 751.171875,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 313.6875,
+            "bottom": 336.6875,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "Marcus",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 313.6875,
+            "bottom": 336.6875,
+            "left": 888.3125,
+            "right": 953.125,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "YOLO track_3",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 313.6875,
+            "bottom": 336.6875,
+            "left": 647.5625,
+            "right": 751.171875,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "Marcus",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": false,
+        "inlineOptions": [],
+        "inlineResetVisible": false,
+        "selectedPanelVisible": false,
+        "saveTargetVisible": false,
+        "resetTargetVisible": false,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Williecandidate18 accepted · 18 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+        ],
+        "yoloPanelRows": []
+      },
+      "rejectionCount": 1
+    },
+    {
+      "name": "reset_state_survives_reload_and_manual_draw_remains_disabled",
+      "pass": true,
+      "state": {
+        "selectedCharacter": "Willie",
+        "selectedExactText": "",
+        "status": "Live row annotations loaded.",
+        "detectorStatus": "313 YOLO person candidates loaded.",
+        "label": {
+          "trackId": "track_3",
+          "text": "YOLO track_3",
+          "zIndex": 180,
+          "boxZIndex": 0,
+          "top": 322.375,
+          "bottom": 345.375,
+          "left": 647.5625,
+          "right": 751.171875,
+          "boxBottom": null
+        },
+        "labels": [
+          {
+            "trackId": "track_1",
+            "text": "YOLO track_1",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 475.03125,
+            "right": 575.640625,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_2",
+            "text": "Marcus",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 888.3125,
+            "right": 953.125,
+            "boxBottom": null
+          },
+          {
+            "trackId": "track_3",
+            "text": "YOLO track_3",
+            "zIndex": 180,
+            "boxZIndex": 0,
+            "top": 322.375,
+            "bottom": 345.375,
+            "left": 647.5625,
+            "right": 751.171875,
+            "boxBottom": null
+          }
+        ],
+        "candidateButtons": [
+          {
+            "trackId": "track_1",
+            "assigned": "",
+            "text": ""
+          },
+          {
+            "trackId": "track_2",
+            "assigned": "Marcus",
+            "text": ""
+          },
+          {
+            "trackId": "track_3",
+            "assigned": "",
+            "text": ""
+          }
+        ],
+        "inlineSelectOpen": false,
+        "inlineOptions": [],
+        "inlineResetVisible": false,
+        "selectedPanelVisible": false,
+        "saveTargetVisible": false,
+        "resetTargetVisible": false,
+        "manualToggleVisible": true,
+        "manualTogglePressed": "false",
+        "drawSurfacePointerEvents": "none",
+        "pendingTargetVisible": false,
+        "readinessRows": [
+          "Marcuscandidate75 accepted · 75 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Williecandidate18 accepted · 18 embedded · 3 rows · 8 tracks · 2 rejectedEnough accepted evidence for detector-box suggestions.",
+          "Opalcollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Rogercollecting0 accepted · 0 embedded · 1 row · 2 tracks · 2 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row.",
+          "Suecollecting0 accepted · 0 embedded · 1 row · 4 tracks · 4 rejectedNeed 8 accepted labels, 5 embedded crops, 1 row."
+        ],
+        "yoloPanelRows": []
+      }
+    },
+    {
+      "name": "memory_qdrant_suggestion_endpoint_exercised",
+      "pass": true,
+      "suggestion": {
+        "ok": true,
+        "schema": "watch.detector_label_suggestion.v1",
+        "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "row_index": 9,
+        "track_id": "track_3",
+        "bbox": [
+          0.2421875,
+          0.014367816091954023,
+          0.45546875,
+          0.985632183908046
+        ],
+        "frame_source": "server_ffmpeg_clip_frame",
+        "crop_dimensions": {
+          "width": 273,
+          "height": 676,
+          "source_width": 1280,
+          "source_height": 696
+        },
+        "crop_quality": {
+          "ok": true,
+          "reason": null,
+          "mean": 39.4807,
+          "stddev": 24.8435,
+          "range": 214
+        },
+        "memory": {
+          "endpoint": "/watch/identity/recall-crop",
+          "called": true,
+          "found": false,
+          "confidence": 0,
+          "item_count": 0,
+          "embedding": {
+            "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+            "model_version": "v5-omni-small",
+            "role": "query"
+          }
+        },
+        "suggestion_policy": {
+          "min_confidence": 0.82,
+          "min_neighbor_count": 2,
+          "min_runner_up_margin": 0.04
+        },
+        "suggestion": null,
+        "candidates": [],
+        "rejection_reason": "no_identity_candidates",
+        "proof_scope": {
+          "mocked": false,
+          "live": true,
+          "proves": [
+            "watch API cropped the submitted detector box from the selected frame source",
+            "watch API measured crop quality before identity recall",
+            "watch API called Memory /watch/identity/recall-crop with the detector crop",
+            "Memory performed the configured multimodal crop recall and returned hydrated identity candidates",
+            "watch API applied confidence, neighbor-count, and ambiguity gates before returning a suggestion"
+          ],
+          "does_not_prove": [
+            "the suggested character label is correct",
+            "the suggestion has been accepted by a human",
+            "YOLO track identity is stable outside the current detector track id"
+          ]
+        }
+      }
+    }
+  ],
+  "initialDetectorCandidateCount": 313,
+  "initialTrackRefs": [
+    {
+      "_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "_id": "watch_keyframe_annotations/watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "_rev": "_lxAo-ZC---",
+      "kind": "watch_keyframe_annotation",
+      "schema": "watch_keyframe_annotation.v1",
+      "status": "human_rejected_yolo_label",
+      "lifecycle_status": "current",
+      "scope": "watch",
+      "provenance_source": "ux-lab.watch",
+      "receipt_path": null,
+      "receipt_id": "rejected:track_3:sue:0_000",
+      "annotation_uid": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "annotation_track_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3",
+      "character_instance_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3",
+      "box_id": "rejected:track_3:sue:0_000",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "character_name": "Sue",
+      "actor_name": "Lauren Graham",
+      "bbox": [
+        0.2421875,
+        0.014367816091954023,
+        0.45546875,
+        0.985632183908046
+      ],
+      "bbox_format": "normalized_xyxy",
+      "bbox_dimensions": {
+        "left": 0.242188,
+        "top": 0.014368,
+        "width": 0.213281,
+        "height": 0.971264
+      },
+      "keyframe_time_seconds": 0,
+      "keyframe_time_basis": "segment_seconds",
+      "detector_observation_ref": {
+        "source": "watch_annotation_island_yolo_candidate",
+        "link_quality": "human_selected_yolo_track",
+        "track_id": "track_3",
+        "detector_candidate_id": "detector:9:track_3:0:7acc97a29d",
+        "detected_class": "person",
+        "bbox": [
+          0.2421875,
+          0.014367816091954023,
+          0.45546875,
+          0.985632183908046
+        ],
+        "time_seconds": 0,
+        "media_time_seconds": 216,
+        "confidence": null,
+        "runtime_policy": "exact",
+        "source_detector_candidate_ids": [
+          "detector:9:track_3:0:7acc97a29d"
+        ],
+        "source_time_seconds": [
+          0
+        ],
+        "human_character_name": "Sue",
+        "human_actor_name": "Lauren Graham",
+        "rejected_character_name": "Sue",
+        "rejected_actor_name": "Lauren Graham"
+      },
+      "detector_observation_link_status": "human_rejected_yolo_track_label",
+      "intended_use": "negative_label_for_identity_readiness_and_suggestion_filtering",
+      "training_role": {
+        "label_type": "negative",
+        "target_entity_id": "character:sue",
+        "target_entity_kind": "character",
+        "identity_scope": "asset_character",
+        "usable_for_agent_matching": false,
+        "review_state": "human_rejected",
+        "example_weight": -1,
+        "reason": "clear_yolo_track_label:track_3:sue"
+      },
+      "qdrant_refs": {
+        "crop_points": []
+      },
+      "qdrant_embedding_status": "not_applicable_negative_label",
+      "retrieval_text": "Watch character YOLO label rejection\nAsset: bad_santa_unrated_2003_brrip_xvidhd_720p_npw\nRow: 9\nTrack: track_3\nRejected character: Sue\nRejected actor: Lauren Graham\nSegment seconds: 0\nReason: clear_yolo_track_label:track_3:sue",
+      "problem": "Avoid labeling YOLO track_3 as Sue when the human rejected that assignment.",
+      "solution": "Human rejected Sue (Lauren Graham) for YOLO track_3 on Watch row 9.",
+      "tags": [
+        "watch",
+        "watch_keyframe_annotation",
+        "human_rejected_yolo_label",
+        "negative_identity_label",
+        "asset:bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "character:sue",
+        "detector_track:track_3"
+      ],
+      "created_at": "2026-07-05T05:04:35.463Z",
+      "updated_at": "2026-07-05T05:04:35.463Z"
+    },
+    {
+      "_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "_id": "watch_keyframe_annotations/watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "_rev": "_lxIb-um---",
+      "kind": "watch_keyframe_annotation",
+      "schema": "watch_keyframe_annotation.v1",
+      "status": "human_rejected_yolo_label",
+      "lifecycle_status": "current",
+      "scope": "watch",
+      "provenance_source": "ux-lab.watch",
+      "receipt_path": null,
+      "receipt_id": "rejected:track_3:willie:0_000",
+      "annotation_uid": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "annotation_track_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3",
+      "character_instance_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3",
+      "box_id": "rejected:track_3:willie:0_000",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "bbox": [
+        0.2421875,
+        0.014367816091954023,
+        0.45546875,
+        0.985632183908046
+      ],
+      "bbox_format": "normalized_xyxy",
+      "bbox_dimensions": {
+        "height": 0.971264,
+        "left": 0.242188,
+        "top": 0.014368,
+        "width": 0.213281
+      },
+      "keyframe_time_seconds": 0,
+      "keyframe_time_basis": "segment_seconds",
+      "detector_observation_ref": {
+        "bbox": [
+          0.2421875,
+          0.014367816091954023,
+          0.45546875,
+          0.985632183908046
+        ],
+        "confidence": null,
+        "detected_class": "person",
+        "detector_candidate_id": "detector:9:track_3:0:7acc97a29d",
+        "human_actor_name": "Billy Bob Thornton",
+        "human_character_name": "Willie",
+        "link_quality": "human_selected_yolo_track",
+        "media_time_seconds": 216,
+        "rejected_actor_name": "Billy Bob Thornton",
+        "rejected_character_name": "Willie",
+        "runtime_policy": "exact",
+        "source": "watch_annotation_island_yolo_candidate",
+        "source_detector_candidate_ids": [
+          "detector:9:track_3:0:7acc97a29d"
+        ],
+        "source_time_seconds": [
+          0
+        ],
+        "time_seconds": 0,
+        "track_id": "track_3"
+      },
+      "detector_observation_link_status": "human_rejected_yolo_track_label",
+      "intended_use": "negative_label_for_identity_readiness_and_suggestion_filtering",
+      "training_role": {
+        "example_weight": -1,
+        "identity_scope": "asset_character",
+        "label_type": "negative",
+        "reason": "clear_yolo_track_label:track_3:willie",
+        "review_state": "human_rejected",
+        "target_entity_id": "character:willie",
+        "target_entity_kind": "character",
+        "usable_for_agent_matching": false
+      },
+      "qdrant_refs": {
+        "crop_points": []
+      },
+      "qdrant_embedding_status": "not_applicable_negative_label",
+      "retrieval_text": "Watch character YOLO label rejection\nAsset: bad_santa_unrated_2003_brrip_xvidhd_720p_npw\nRow: 9\nTrack: track_3\nRejected character: Willie\nRejected actor: Billy Bob Thornton\nSegment seconds: 0\nReason: clear_yolo_track_label:track_3:willie",
+      "problem": "Avoid labeling YOLO track_3 as Willie when the human rejected that assignment.",
+      "solution": "Human rejected Willie (Billy Bob Thornton) for YOLO track_3 on Watch row 9.",
+      "tags": [
+        "watch",
+        "watch_keyframe_annotation",
+        "human_rejected_yolo_label",
+        "negative_identity_label",
+        "asset:bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "character:willie",
+        "detector_track:track_3"
+      ],
+      "created_at": "2026-07-05T14:09:38.391Z",
+      "updated_at": "2026-07-05T14:09:38.391Z",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "delete_reason": "clear_yolo_track_label:track_3:willie",
+      "embedding_version": "v5-omni-small",
+      "qdrant_point_id": "aa2649f2-a48e-5d70-8eaf-4c3227cea794",
+      "semantic_sync_state": "synced",
+      "deleted_at": "2026-07-05T14:09:38.391Z",
+      "text_hash": "0fbdf56dcbf48d2c5fa0c42d7c6eb3bf7b1eaaa6",
+      "delete_scope": "keyframe",
+      "deleted_by": "watch-ui",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+  ],
+  "memorySuggestion": {
+    "ok": true,
+    "schema": "watch.detector_label_suggestion.v1",
+    "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+    "row_index": 9,
+    "track_id": "track_3",
+    "bbox": [
+      0.2421875,
+      0.014367816091954023,
+      0.45546875,
+      0.985632183908046
+    ],
+    "frame_source": "server_ffmpeg_clip_frame",
+    "crop_dimensions": {
+      "width": 273,
+      "height": 676,
+      "source_width": 1280,
+      "source_height": 696
+    },
+    "crop_quality": {
+      "ok": true,
+      "reason": null,
+      "mean": 39.4807,
+      "stddev": 24.8435,
+      "range": 214
+    },
+    "memory": {
+      "endpoint": "/watch/identity/recall-crop",
+      "called": true,
+      "found": false,
+      "confidence": 0,
+      "item_count": 0,
+      "embedding": {
+        "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+        "model_version": "v5-omni-small",
+        "role": "query"
+      }
+    },
+    "suggestion_policy": {
+      "min_confidence": 0.82,
+      "min_neighbor_count": 2,
+      "min_runner_up_margin": 0.04
+    },
+    "suggestion": null,
+    "candidates": [],
+    "rejection_reason": "no_identity_candidates",
+    "proof_scope": {
+      "mocked": false,
+      "live": true,
+      "proves": [
+        "watch API cropped the submitted detector box from the selected frame source",
+        "watch API measured crop quality before identity recall",
+        "watch API called Memory /watch/identity/recall-crop with the detector crop",
+        "Memory performed the configured multimodal crop recall and returned hydrated identity candidates",
+        "watch API applied confidence, neighbor-count, and ambiguity gates before returning a suggestion"
+      ],
+      "does_not_prove": [
+        "the suggested character label is correct",
+        "the suggestion has been accepted by a human",
+        "YOLO track identity is stable outside the current detector track id"
+      ]
+    }
+  },
+  "screenshot": "/tmp/watch-row9-yolo-label-live-check-20260705Tcurrent.png",
+  "finalTrackRefs": [
+    {
+      "_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "_id": "watch_keyframe_annotations/watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "_rev": "_lxAo-ZC---",
+      "kind": "watch_keyframe_annotation",
+      "schema": "watch_keyframe_annotation.v1",
+      "status": "human_rejected_yolo_label",
+      "lifecycle_status": "current",
+      "scope": "watch",
+      "provenance_source": "ux-lab.watch",
+      "receipt_path": null,
+      "receipt_id": "rejected:track_3:sue:0_000",
+      "annotation_uid": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3:sue:0_000:0_00",
+      "annotation_track_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3",
+      "character_instance_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:sue:rejected:track_3",
+      "box_id": "rejected:track_3:sue:0_000",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "character_name": "Sue",
+      "actor_name": "Lauren Graham",
+      "bbox": [
+        0.2421875,
+        0.014367816091954023,
+        0.45546875,
+        0.985632183908046
+      ],
+      "bbox_format": "normalized_xyxy",
+      "bbox_dimensions": {
+        "left": 0.242188,
+        "top": 0.014368,
+        "width": 0.213281,
+        "height": 0.971264
+      },
+      "keyframe_time_seconds": 0,
+      "keyframe_time_basis": "segment_seconds",
+      "detector_observation_ref": {
+        "source": "watch_annotation_island_yolo_candidate",
+        "link_quality": "human_selected_yolo_track",
+        "track_id": "track_3",
+        "detector_candidate_id": "detector:9:track_3:0:7acc97a29d",
+        "detected_class": "person",
+        "bbox": [
+          0.2421875,
+          0.014367816091954023,
+          0.45546875,
+          0.985632183908046
+        ],
+        "time_seconds": 0,
+        "media_time_seconds": 216,
+        "confidence": null,
+        "runtime_policy": "exact",
+        "source_detector_candidate_ids": [
+          "detector:9:track_3:0:7acc97a29d"
+        ],
+        "source_time_seconds": [
+          0
+        ],
+        "human_character_name": "Sue",
+        "human_actor_name": "Lauren Graham",
+        "rejected_character_name": "Sue",
+        "rejected_actor_name": "Lauren Graham"
+      },
+      "detector_observation_link_status": "human_rejected_yolo_track_label",
+      "intended_use": "negative_label_for_identity_readiness_and_suggestion_filtering",
+      "training_role": {
+        "label_type": "negative",
+        "target_entity_id": "character:sue",
+        "target_entity_kind": "character",
+        "identity_scope": "asset_character",
+        "usable_for_agent_matching": false,
+        "review_state": "human_rejected",
+        "example_weight": -1,
+        "reason": "clear_yolo_track_label:track_3:sue"
+      },
+      "qdrant_refs": {
+        "crop_points": []
+      },
+      "qdrant_embedding_status": "not_applicable_negative_label",
+      "retrieval_text": "Watch character YOLO label rejection\nAsset: bad_santa_unrated_2003_brrip_xvidhd_720p_npw\nRow: 9\nTrack: track_3\nRejected character: Sue\nRejected actor: Lauren Graham\nSegment seconds: 0\nReason: clear_yolo_track_label:track_3:sue",
+      "problem": "Avoid labeling YOLO track_3 as Sue when the human rejected that assignment.",
+      "solution": "Human rejected Sue (Lauren Graham) for YOLO track_3 on Watch row 9.",
+      "tags": [
+        "watch",
+        "watch_keyframe_annotation",
+        "human_rejected_yolo_label",
+        "negative_identity_label",
+        "asset:bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "character:sue",
+        "detector_track:track_3"
+      ],
+      "created_at": "2026-07-05T05:04:35.463Z",
+      "updated_at": "2026-07-05T05:04:35.463Z"
+    },
+    {
+      "_key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "_id": "watch_keyframe_annotations/watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "_rev": "_lxJcpQ----",
+      "kind": "watch_keyframe_annotation",
+      "schema": "watch_keyframe_annotation.v1",
+      "status": "human_rejected_yolo_label",
+      "lifecycle_status": "current",
+      "scope": "watch",
+      "provenance_source": "ux-lab.watch",
+      "receipt_path": null,
+      "receipt_id": "rejected:track_3:willie:0_000",
+      "annotation_uid": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3:willie:0_000:0_00",
+      "annotation_track_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3",
+      "character_instance_id": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:willie:rejected:track_3",
+      "box_id": "rejected:track_3:willie:0_000",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "bbox": [
+        0.2421875,
+        0.014367816091954023,
+        0.45546875,
+        0.985632183908046
+      ],
+      "bbox_format": "normalized_xyxy",
+      "bbox_dimensions": {
+        "height": 0.971264,
+        "left": 0.242188,
+        "top": 0.014368,
+        "width": 0.213281
+      },
+      "keyframe_time_seconds": 0,
+      "keyframe_time_basis": "segment_seconds",
+      "detector_observation_ref": {
+        "bbox": [
+          0.2421875,
+          0.014367816091954023,
+          0.45546875,
+          0.985632183908046
+        ],
+        "confidence": null,
+        "detected_class": "person",
+        "detector_candidate_id": "detector:9:track_3:0:7acc97a29d",
+        "human_actor_name": "Billy Bob Thornton",
+        "human_character_name": "Willie",
+        "link_quality": "human_selected_yolo_track",
+        "media_time_seconds": 216,
+        "rejected_actor_name": "Billy Bob Thornton",
+        "rejected_character_name": "Willie",
+        "runtime_policy": "exact",
+        "source": "watch_annotation_island_yolo_candidate",
+        "source_detector_candidate_ids": [
+          "detector:9:track_3:0:7acc97a29d"
+        ],
+        "source_time_seconds": [
+          0
+        ],
+        "time_seconds": 0,
+        "track_id": "track_3"
+      },
+      "detector_observation_link_status": "human_rejected_yolo_track_label",
+      "intended_use": "negative_label_for_identity_readiness_and_suggestion_filtering",
+      "training_role": {
+        "example_weight": -1,
+        "identity_scope": "asset_character",
+        "label_type": "negative",
+        "reason": "clear_yolo_track_label:track_3:willie",
+        "review_state": "human_rejected",
+        "target_entity_id": "character:willie",
+        "target_entity_kind": "character",
+        "usable_for_agent_matching": false
+      },
+      "qdrant_refs": {
+        "crop_points": []
+      },
+      "qdrant_embedding_status": "not_applicable_negative_label",
+      "retrieval_text": "Watch character YOLO label rejection\nAsset: bad_santa_unrated_2003_brrip_xvidhd_720p_npw\nRow: 9\nTrack: track_3\nRejected character: Willie\nRejected actor: Billy Bob Thornton\nSegment seconds: 0\nReason: clear_yolo_track_label:track_3:willie",
+      "problem": "Avoid labeling YOLO track_3 as Willie when the human rejected that assignment.",
+      "solution": "Human rejected Willie (Billy Bob Thornton) for YOLO track_3 on Watch row 9.",
+      "tags": [
+        "watch",
+        "watch_keyframe_annotation",
+        "human_rejected_yolo_label",
+        "negative_identity_label",
+        "asset:bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+        "character:willie",
+        "detector_track:track_3"
+      ],
+      "created_at": "2026-07-05T15:21:21.793Z",
+      "updated_at": "2026-07-05T15:21:21.793Z",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "delete_reason": "clear_yolo_track_label:track_3:willie",
+      "embedding_version": "v5-omni-small",
+      "qdrant_point_id": "aa2649f2-a48e-5d70-8eaf-4c3227cea794",
+      "semantic_sync_state": "synced",
+      "deleted_at": "2026-07-05T15:21:21.793Z",
+      "text_hash": "20b6abdf9a1d93ce3d2b9ae60cc166a3c7f13fe0",
+      "delete_scope": "keyframe",
+      "deleted_by": "watch-ui",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval"
+    }
+  ],
+  "pass": true
+}
