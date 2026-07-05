@@ -1,6 +1,6 @@
 {
   "schema": "persona_dream.storyboard_packet.v1",
-  "status": "BLOCKED_REFERENCE_GAPS",
+  "status": "REFERENCE_GAPS_ATTACHED",
   "run_id": "phase_07_storyboard_live_tau",
   "source_phase": "06_script",
   "duration_seconds": 10,
@@ -409,33 +409,7 @@
       }
     }
   ],
-  "missing_reference_blockers": [
-    {
-      "entity": "Embry surfboard",
-      "source_seed_id": "seed-2",
-      "reason": "Required visible prop reference/contact sheet is missing."
-    },
-    {
-      "entity": "Kai surfboard",
-      "source_seed_id": "seed-3",
-      "reason": "Required visible prop reference/contact sheet is missing."
-    },
-    {
-      "entity": "June Swell",
-      "source_seed_id": "seed-4",
-      "reason": "Required environment reference/contact sheet is missing."
-    },
-    {
-      "entity": "Lava Reef",
-      "source_seed_id": "seed-5",
-      "reason": "Required environment reference/contact sheet is missing."
-    },
-    {
-      "entity": "Kona Coast",
-      "source_seed_id": "seed-6",
-      "reason": "Required location reference/contact sheet is missing."
-    }
-  ],
+  "missing_reference_blockers": [],
   "generated_candidate_panels": [
     {
       "panel_id": "candidate_panel_001",
@@ -450,5 +424,95 @@
     "Every visible named character must cite identity references.",
     "Every visible prop or environment element required by the interaction matrix must cite a contact sheet or explain the blocker.",
     "A single generated PNG is never sufficient evidence for Phase 07 storyboard readiness."
-  ]
+  ],
+  "references": [
+    {
+      "id": "contact_sheet_embry_surfboard",
+      "source_seed_id": "seed-2",
+      "entity": "Embry surfboard",
+      "title": "Embry Surfboard Contact Sheet",
+      "type": "contact_sheet",
+      "role": "required_prop_reference",
+      "entity_type": "object",
+      "collection": "persona_dream_visual_assets",
+      "memory_id": "persona_dream_visual_assets/4c4787d389f39cf33d65f19ca4ad7520",
+      "match_source": "persona_dream_visual_assets_exact",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
+      "description": "Embry Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "source_phase": "04_contact_sheets",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
+    },
+    {
+      "id": "contact_sheet_kai_surfboard",
+      "source_seed_id": "seed-3",
+      "entity": "Kai surfboard",
+      "title": "Kai Surfboard Contact Sheet",
+      "type": "contact_sheet",
+      "role": "required_prop_reference",
+      "entity_type": "object",
+      "collection": "persona_dream_visual_assets",
+      "memory_id": "persona_dream_visual_assets/519e557c4a9fdaab3a95e8c0fbc0db83",
+      "match_source": "persona_dream_visual_assets_exact",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
+      "description": "Kai Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "source_phase": "04_contact_sheets",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
+    },
+    {
+      "id": "contact_sheet_june_swell",
+      "source_seed_id": "seed-4",
+      "entity": "June Swell",
+      "title": "June Swell Contact Sheet",
+      "type": "contact_sheet",
+      "role": "required_environment_reference",
+      "entity_type": "environment",
+      "collection": "persona_dream_visual_assets",
+      "memory_id": "persona_dream_visual_assets/bf846ae444d588d6365abe5f8eaa9b1c",
+      "match_source": "persona_dream_visual_assets_exact",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
+      "description": "June Swell Contact for persona-dream provider prompts and continuity references.",
+      "source_phase": "04_contact_sheets",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
+    },
+    {
+      "id": "contact_sheet_lava_reef",
+      "source_seed_id": "seed-5",
+      "entity": "Lava Reef",
+      "title": "Lava Reef Contact Sheet",
+      "type": "contact_sheet",
+      "role": "required_environment_reference",
+      "entity_type": "environment",
+      "collection": "persona_dream_visual_assets",
+      "memory_id": "persona_dream_visual_assets/f1455b584d104628ec7e8dc3f34f253e",
+      "match_source": "persona_dream_visual_assets_exact",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
+      "description": "Lava Reef Contact for persona-dream provider prompts and continuity references.",
+      "source_phase": "04_contact_sheets",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
+    },
+    {
+      "id": "contact_sheet_kona_coast",
+      "source_seed_id": "seed-6",
+      "entity": "Kona Coast",
+      "title": "Kona Coast Contact Sheet",
+      "type": "contact_sheet",
+      "role": "required_location_reference",
+      "entity_type": "environment",
+      "collection": "persona_dream_visual_assets",
+      "memory_id": "persona_dream_visual_assets/31b6117a2bd1e739e35b7da50ca7f3c9",
+      "match_source": "persona_dream_visual_assets_exact",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
+      "description": "Kona Coast Contact for persona-dream provider prompts and continuity references.",
+      "source_phase": "04_contact_sheets",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
+    }
+  ],
+  "reference_resolution": {
+    "status": "PASS",
+    "source_artifact": "skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_memory_recall_evidence.json",
+    "receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json",
+    "attached_reference_count": 5,
+    "cleared_blocker_count": 5,
+    "note": "Phase 07 attached exact-match Phase 04 contact-sheet assets already present on disk; no regeneration performed."
+  }
 }

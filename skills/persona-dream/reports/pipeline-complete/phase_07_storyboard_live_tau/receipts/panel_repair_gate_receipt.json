@@ -39,7 +39,7 @@
     "https://raw.githubusercontent.com/grahama1970/agent-skills/a873a8999/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png"
   ],
   "provider_mode": "std",
-  "provider_packet_status": "BLOCKED_STORYBOARD_REFERENCE_GAPS",
+  "provider_packet_status": "BLOCKED_STORYBOARD_PANEL_ASSETS",
   "provider_resolution": "720p",
   "provider_voice_ids": {},
   "public_upload_performed": false,
@@ -47,8 +47,7 @@
   "reference_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/reference_receipt.json",
   "remaining_blockers": [
     "Phase 07 requires a storyboard packet with text panels, references, coverage, and reviewer acceptance.",
-    "The current generated PNG is a candidate reference only, not a complete storyboard.",
-    "Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast references/contact sheets are missing."
+    "The current generated PNG is a candidate reference only, not a complete storyboard."
   ],
   "requirement_matrix": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/requirement_matrix.json",
   "run_id": "phase_07_storyboard_live_tau",
@@ -62,11 +61,12 @@
     "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-provider/command-loop/command-artifacts/command-loop-step-002/panel_reviewer_receipt.json",
     "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json"
   ],
-  "status": "BLOCKED_STORYBOARD_REFERENCE_GAPS",
-  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "status": "BLOCKED_STORYBOARD_PANEL_ASSETS",
+  "storyboard_packet": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
   "storyboard_packet_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_packet_receipt.json",
   "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
   "visual_review_status": "PASS",
   "visual_style_status": "PASS_PHOTOREAL_CINEMATIC",
-  "voice_id_status": "SILENT_SCENE"
+  "voice_id_status": "SILENT_SCENE",
+  "reference_rehydration_receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json"
 }

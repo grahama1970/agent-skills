@@ -593,18 +593,18 @@ function isStagePassed(stage: DreamStage): boolean {
 function stageMissingMessage(stage: DreamStage): string {
   if (isStagePassed(stage)) return 'Accepted evidence is present for this phase.'
   if (stage.id === '07') {
-    return 'Storyboard packet is blocked: missing prop/environment references and the single generated PNG is only a rejected candidate, not a complete storyboard.'
+    if (/PANEL_ASSETS/i.test(stage.status)) {
+      return stage.failureOrGap || 'Storyboard references are attached. Remaining blocker: accepted storyboard panel images/start-end frames are not present yet.'
+    }
+    if (/REFERENCE_GAPS/i.test(stage.status)) {
+      return 'Storyboard packet is blocked: missing prop/environment references required by Phase 04 contact-sheet evidence.'
+    }
+    return stage.failureOrGap || 'Storyboard packet needs accepted storyboard panels and reviewer evidence before provider handoff.'
   }
   return stage.failureOrGap || 'Required preflight evidence was not found for this phase.'
 }
 
 function effectiveStageStatus(stage: DreamStage): string {
-  if (stage.id === '07') {
-    const hasStoryboardPacket = stage.artifacts.some((artifact) => /storyboard_packet|panel_repair_gate_receipt|panel_source_receipt/i.test(`${artifact.path} ${artifact.label}`))
-    if (hasStoryboardPacket && !/PASS_STORYBOARD_PACKET|PASS_STORYBOARD/i.test(stage.status)) {
-      return 'BLOCKED_STORYBOARD_REFERENCE_GAPS'
-    }
-  }
   return stage.status
 }
 
