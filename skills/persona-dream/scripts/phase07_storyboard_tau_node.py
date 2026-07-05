@@ -54,6 +54,20 @@ REQUIRED_REFERENCE_ENTITIES = {
     "Kona Coast",
 }
 
+REJECTED_REFERENCE_ROLES = {
+    "identity_reference",
+    "required_prop_reference",
+    "required_environment_reference",
+    "required_location_reference",
+}
+
+ACCEPTED_FRAME_STATUSES = {
+    "PASS_PANEL_REVIEWED",
+    "ACCEPTED_STORYBOARD_FRAME",
+    "ACCEPTED_START_FRAME",
+    "ACCEPTED_END_FRAME",
+}
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -188,15 +202,15 @@ def _run_reviewer(
         "claims": {
             "proves": [
                 "Tau dispatched the Phase 07 panel-reviewer node.",
-                "The storyboard packet has four 10-second storyboard panels with time ranges.",
-                "Each panel includes script action, start/end frames, camera, lighting, acting beats, production notes, references, and coverage seeds.",
-                "Phase 04 object/location/environment references are attached at packet level.",
+                "The storyboard packet includes accepted storyboard frame evidence for each panel.",
+                "Each accepted panel has script action, start/end frame evidence, camera, lighting, acting beats, production notes, references, and coverage seeds.",
+                "Phase 04 object/location/environment references are attached as references only, not accepted panel frames.",
             ]
             if status == "PASS_PANEL_REVIEWED"
             else ["Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."],
             "does_not_prove": [
                 "No live provider image generation or Kling submission occurred.",
-                "No photoreal final storyboard frames were generated in this DAG.",
+                "No downstream video provider submission occurred.",
             ],
         },
     }
@@ -257,6 +271,16 @@ def _validate_storyboard_packet(
     if packet.get("panel_count") != len(panels):
         blockers.append(f"panel_count_mismatch:{packet.get('panel_count')}!={len(panels)}")
 
+    candidates = packet.get("generated_candidate_panels")
+    if reviewer and isinstance(candidates, list):
+        rejected = [
+            str(item.get("panel_id"))
+            for item in candidates
+            if isinstance(item, Mapping) and str(item.get("status")) != "PASS_PANEL_REVIEWED"
+        ]
+        if rejected:
+            blockers.append("generated_candidate_panels_not_accepted:" + ",".join(rejected))
+
     top_level_refs = packet.get("references") if isinstance(packet.get("references"), list) else []
     ref_entities = {
         str(item.get("entity"))
@@ -278,7 +302,7 @@ def _validate_storyboard_packet(
     seed_ids: set[str] = set()
     entity_names: set[str] = set()
     for index, panel in enumerate(panels):
-        panel_blockers = _validate_panel(panel, index=index)
+        panel_blockers = _validate_panel(panel, index=index, reviewer=reviewer)
         if isinstance(panel, Mapping):
             seed_ids.update(str(item) for item in panel.get("coverage_seed_ids", []) if isinstance(item, str))
             entity_names.update(str(item) for item in panel.get("required_entities", []) if isinstance(item, str))
@@ -322,7 +346,7 @@ def _validate_storyboard_packet(
     }
 
 
-def _validate_panel(panel: Any, *, index: int) -> list[str]:
+def _validate_panel(panel: Any, *, index: int, reviewer: bool) -> list[str]:
     blockers: list[str] = []
     label = f"panel[{index}]"
     if not isinstance(panel, Mapping):
@@ -362,7 +386,62 @@ def _validate_panel(panel: Any, *, index: int) -> list[str]:
             pass
         if not str(prompt.get("negative_prompt") or "").strip():
             blockers.append(f"{label}:missing_negative_prompt")
+    if reviewer:
+        blockers.extend(_validate_accepted_storyboard_frame_evidence(panel, label=label))
     return blockers
+
+
+def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, label: str) -> list[str]:
+    blockers: list[str] = []
+    frame_refs = _frame_references(panel)
+    if not frame_refs:
+        blockers.append(
+            f"{label}:missing_accepted_storyboard_frame_evidence:"
+            "requires per-panel storyboard image/start-frame/end-frame artifacts"
+        )
+        return blockers
+
+    accepted_count = 0
+    for frame_ref in frame_refs:
+        status = str(frame_ref.get("status") or "")
+        role = str(frame_ref.get("role") or frame_ref.get("type") or "")
+        path_value = frame_ref.get("path") or frame_ref.get("image_path")
+        if role in REJECTED_REFERENCE_ROLES or "contact_sheet" in role:
+            blockers.append(f"{label}:reference_used_as_storyboard_frame:{role}")
+            continue
+        if status not in ACCEPTED_FRAME_STATUSES:
+            blockers.append(f"{label}:storyboard_frame_not_accepted:{status or 'missing_status'}")
+            continue
+        if not isinstance(path_value, str) or not path_value.strip():
+            blockers.append(f"{label}:accepted_storyboard_frame_missing_path")
+            continue
+        if not Path(path_value).expanduser().exists():
+            blockers.append(f"{label}:accepted_storyboard_frame_path_missing:{path_value}")
+            continue
+        accepted_count += 1
+    if accepted_count == 0:
+        blockers.append(f"{label}:no_usable_accepted_storyboard_frame_artifact")
+    return blockers
+
+
+def _frame_references(panel: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    refs: list[Mapping[str, Any]] = []
+    for key in ("storyboard_frame", "panel_image", "accepted_frame"):
+        value = panel.get(key)
+        if isinstance(value, Mapping):
+            refs.append(value)
+    for key in ("start_frame", "end_frame"):
+        value = panel.get(key)
+        if not isinstance(value, Mapping):
+            continue
+        for nested_key in ("image", "image_reference", "accepted_frame"):
+            nested = value.get(nested_key)
+            if isinstance(nested, Mapping):
+                refs.append(nested)
+    value = panel.get("storyboard_frames")
+    if isinstance(value, list):
+        refs.extend(item for item in value if isinstance(item, Mapping))
+    return refs
 
 
 def _panel_manifest(packet: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:
