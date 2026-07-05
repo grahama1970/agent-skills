@@ -18,11 +18,15 @@ the human/operator guide.
 
 | Need | Start here |
 |---|---|
+| Check wrapper and Tau runtime readiness | `skills/tau/run.sh doctor` |
 | Inspect current Tau status | `skills/tau/run.sh status` |
 | Run bounded local checks | `skills/tau/run.sh sanity` |
-| Inspect recent live-proof evidence | `skills/tau/run.sh e2e` |
+| Inspect recent proof/status evidence | `skills/tau/run.sh proof-status` |
 | Check watchdog receipts | `skills/tau/run.sh watchdog-status` |
 | Summarize latest proof artifacts | `skills/tau/run.sh latest-proofs` |
+
+`skills/tau/run.sh e2e` remains a compatibility alias for `proof-status`; it is
+not a production end-to-end proof claim.
 
 ## What Makes Tau Different
 
