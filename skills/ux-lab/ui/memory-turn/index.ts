@@ -1,4 +1,5 @@
 export * from './MemoryTurnAdapter'
+export type { EmbryTurnAuthority, EmbryVoiceAudioAuthority } from './EmbryVoiceAuthority'
 
 export {
   SpartaComplianceAdapter,
@@ -19,8 +20,6 @@ export type {
 
 export { EmbryVoiceChatAdapter } from './EmbryVoiceChatAdapter'
 export type {
-  EmbryTurnAuthority,
-  EmbryVoiceAudioAuthority,
   EmbryVoiceChatAdapterOptions,
   EmbryVoiceFetchLike,
 } from './EmbryVoiceChatAdapter'
