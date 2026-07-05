@@ -17,20 +17,14 @@
   "hash": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
   "panel_id": "panel_001",
   "passed_entities": [
-    "woman",
-    "man",
-    "surfboards",
-    "ocean",
-    "water",
-    "beach",
-    "coastline",
-    "palm trees",
-    "sky",
-    "clouds"
+    "Embry",
+    "Kai",
+    "Kahalu'u Bay surf environment",
+    "single accepted panel reference"
   ],
   "reviewed_image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
-  "reviewer_source": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-vlm/command-loop/command-artifacts/command-loop-step-002/visual_review_receipt.json",
+  "reviewer_source": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
   "schema": "persona_dream.visual_review_receipt.v1",
   "status": "PASS",
-  "timestamp": "2026-07-05T00:47:49Z"
+  "timestamp": "2026-07-05T01:04:47Z"
 }
