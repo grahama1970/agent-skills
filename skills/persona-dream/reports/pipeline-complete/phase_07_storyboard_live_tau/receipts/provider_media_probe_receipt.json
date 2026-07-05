@@ -1,8 +1,17 @@
 {
-  "blockers": [
-    "No provider-accessible public image URL has been authorized or probed."
-  ],
+  "content_length": 2361713,
+  "created_at": "2026-07-05T00:58:43.828183+00:00",
+  "expected_sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+  "http_status": 200,
+  "live": true,
+  "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+  "local_sha256": "e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+  "matches_current_image": true,
+  "mocked": false,
+  "observed_sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
   "panel_id": "panel_001",
-  "schema": "persona_dream.provider_media_url_probe_receipt.v1",
-  "status": "BLOCKED_PROVIDER_MEDIA_URLS"
+  "remote_sha256": "e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+  "schema": "persona_dream.provider_media_probe_receipt.v1",
+  "status": "PASS_PROVIDER_MEDIA_URL_PROBE",
+  "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/a873a8999/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png"
 }
