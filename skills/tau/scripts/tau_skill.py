@@ -95,6 +95,15 @@ def doctor_payload() -> dict[str, Any]:
     gh_path = command_path("gh")
     herdr_path = command_path("herdr")
     tau_help = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "--help"), timeout_s=60)
+    tau_doctor = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "doctor"), timeout_s=60)
+    tau_doctor_payload: dict[str, Any] | None = None
+    if tau_doctor["exit_code"] == 0:
+        try:
+            parsed_doctor = json.loads(tau_doctor["stdout"] or "{}")
+            if isinstance(parsed_doctor, dict):
+                tau_doctor_payload = parsed_doctor
+        except json.JSONDecodeError:
+            tau_doctor_payload = None
     git_status = run(["git", "status", "--short"], timeout_s=30) if TAU_ROOT.exists() else {
         "command": ["git", "status", "--short"],
         "cwd": str(TAU_ROOT),
@@ -135,6 +144,7 @@ def doctor_payload() -> dict[str, Any]:
         "chat_contract_exists": CHAT_CONTRACT.exists(),
         "chat_contract": str(CHAT_CONTRACT),
         "can_call_tau_cli": tau_help["exit_code"] == 0,
+        "can_call_tau_doctor": tau_doctor["exit_code"] == 0,
         "can_run_local_sanity": tau_help["exit_code"] == 0,
         "can_run_herdr_lane": can_run_herdr_lane,
         "can_run_provider_live_lane": can_run_provider_live_lane,
@@ -143,14 +153,17 @@ def doctor_payload() -> dict[str, Any]:
         "can_run_browser_cdp_lane": False,
         "commands": {
             "tau_help": tau_help,
+            "tau_doctor": tau_doctor,
             "git_status": git_status,
         },
+        "tau_runtime_doctor": tau_doctor_payload,
         "errors": errors,
         "proof_boundary": {
             "proves": [
                 "Tau skill wrapper resolved the Tau root path",
                 "Tau skill wrapper resolved uv or reported it missing",
                 "Tau CLI help was invoked through the wrapper when available",
+                "Tau runtime doctor was invoked through the wrapper when available",
             ],
             "does_not_prove": [
                 "Herdr provider DAG execution",
@@ -359,8 +372,8 @@ def proof_status_payload(*, command_name: str = "proof-status") -> dict[str, Any
                 "Herdr provider DAG execution",
                 "browser/CDP UI proof",
                 "GitHub live mutation",
-                "P1 schema enforcement",
-                "issue #50 DAG context propagation fix",
+                "fresh live provider execution for this skill invocation",
+                "full Tau roadmap completion",
             ],
         },
         "required_next_for_ui_claims": [

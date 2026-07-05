@@ -71,6 +71,7 @@ it is not a claim of full browser/provider/GitHub production E2E coverage.
 Tau runtime lanes that may exist in the Tau repo, depending on checkout/version:
 
 ```bash
+uv run tau doctor
 uv run tau dag-run
 uv run tau herdr-cleanup
 uv run tau dag-expansion-validate
@@ -80,15 +81,15 @@ uv run tau dag-route-memory-candidates
 uv run tau dag-route-memory-sync
 uv run tau dag-branch-locks-validate
 uv run tau dag-motif-validate
+uv run tau research-source-receipt
+uv run tau github-redact-projection
+uv run tau github-apply-policy-check
 ```
 
 Planned or recommended next runtime lanes. Do not claim these from this skill
 unless `doctor`, `status`, or a local receipt proves they are present:
 
 ```bash
-uv run tau doctor
-uv run tau research-source-receipt
-uv run tau github-redact-projection
 uv run tau proof-index build
 ```
 
