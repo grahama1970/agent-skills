@@ -1,0 +1,79 @@
+{
+  "schema": "watch.tentative_suggestion_live_check.v1",
+  "mocked": false,
+  "live": true,
+  "url": "http://localhost:3002/watch#watch?clipRow=9",
+  "targetTrackId": "track_4",
+  "targetTimeSeconds": 0.63,
+  "outJson": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.json",
+  "outScreenshot": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png",
+  "checks": [
+    {
+      "name": "tentative_suggestion_renders_as_question_label_without_accepting",
+      "pass": true,
+      "state": {
+        "labelText": "Willie? 0.89",
+        "assignedCharacter": "Willie",
+        "status": "Live row annotations loaded.",
+        "visibleRows": [],
+        "inlineSelectOpen": true,
+        "inlineOptions": [
+          {
+            "value": "Unassigned",
+            "text": "YOLO track_4"
+          },
+          {
+            "value": "Willie",
+            "text": "Willie"
+          },
+          {
+            "value": "Marcus",
+            "text": "Marcus"
+          },
+          {
+            "value": "Sue",
+            "text": "Sue"
+          },
+          {
+            "value": "Gin",
+            "text": "Gin"
+          },
+          {
+            "value": "Lois",
+            "text": "Lois"
+          },
+          {
+            "value": "Grandma",
+            "text": "Grandma"
+          },
+          {
+            "value": "Roger",
+            "text": "Roger"
+          },
+          {
+            "value": "Santa",
+            "text": "Santa"
+          },
+          {
+            "value": "Opal",
+            "text": "Opal"
+          },
+          {
+            "value": "Herb",
+            "text": "Herb"
+          }
+        ],
+        "labelZIndex": 180,
+        "boxZIndex": 58,
+        "labelRect": {
+          "top": 436.171875,
+          "bottom": 459.171875,
+          "left": 454.4375,
+          "right": 544.046875
+        }
+      }
+    }
+  ],
+  "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png",
+  "pass": true
+}
