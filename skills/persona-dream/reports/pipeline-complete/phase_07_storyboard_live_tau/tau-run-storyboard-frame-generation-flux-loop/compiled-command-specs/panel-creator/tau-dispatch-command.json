@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/phase07_storyboard_tau_node.py",
+    "--role",
+    "panel-creator"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "timeout_s": 120
+}

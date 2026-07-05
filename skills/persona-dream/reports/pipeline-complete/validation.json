@@ -1,17 +1,15 @@
 {
   "exercised": "fresh validator command execution, report/status generation, local panel asset copy, pass-count parity",
-  "first_blocker": {
-    "key": "storyboard_panel",
-    "status": "BLOCKED_STORYBOARD_REFERENCE_GAPS",
-    "reason": "Phase 07 requires storyboard packet acceptance; the current packet is blocked by missing prop/environment references."
-  },
+  "first_blocker": null,
   "live": "yes",
   "mocked": "no",
   "passed_step_count": 12,
   "report": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/report.html",
   "schema": "persona_dream.complete_pipeline_report_validation.v1",
-  "status": "BLOCKED_STORYBOARD_REFERENCE_GAPS",
+  "status": "PASS_PANEL_REVIEWED",
   "status_json": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/status.json",
   "step_count": 15,
-  "unverified": "visual browser rendering, live Kling execution, paid provider result"
+  "storyboard_review_verdict": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json",
+  "unverified": "downstream Kling execution and human visual acceptance of generated storyboard frames",
+  "updated_at": "2026-07-05T20:53:57.784401+00:00"
 }

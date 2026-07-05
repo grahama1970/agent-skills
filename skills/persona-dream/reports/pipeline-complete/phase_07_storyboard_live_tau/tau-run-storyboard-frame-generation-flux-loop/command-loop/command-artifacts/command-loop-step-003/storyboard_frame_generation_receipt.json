@@ -1,0 +1,14 @@
+{
+  "backend": "flux",
+  "blockers": [],
+  "created_at": "2026-07-05T20:30:14.785295+00:00",
+  "live": true,
+  "mocked": false,
+  "model": "gemini-2.5-flash-image",
+  "provider_calls": [],
+  "schema": "persona_dream.storyboard_frame_generation_receipt.v1",
+  "status": "PASS",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_updated": true,
+  "storyboard_panel_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json"
+}

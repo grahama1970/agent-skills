@@ -593,6 +593,9 @@ function isStagePassed(stage: DreamStage): boolean {
 function stageMissingMessage(stage: DreamStage): string {
   if (isStagePassed(stage)) return 'Accepted evidence is present for this phase.'
   if (stage.id === '07') {
+    if (phase07HasAcceptedStoryboardEvidence(stage)) {
+      return 'Accepted storyboard packet and frame evidence are present for this phase.'
+    }
     if (/PANEL_ASSETS/i.test(stage.status)) {
       return stage.failureOrGap || 'Storyboard references are attached. Remaining blocker: accepted storyboard panel images/start-end frames are not present yet.'
     }
@@ -605,7 +608,21 @@ function stageMissingMessage(stage: DreamStage): string {
 }
 
 function effectiveStageStatus(stage: DreamStage): string {
+  if (stage.id === '07' && phase07HasAcceptedStoryboardEvidence(stage)) {
+    return 'PASS_PANEL_REVIEWED'
+  }
   return stage.status
+}
+
+function phase07HasAcceptedStoryboardEvidence(stage: DreamStage): boolean {
+  const hasAcceptedPacket = stage.artifacts.some((artifact) =>
+    /phase_07_storyboard_live_tau\/storyboard_packet\.json$/i.test(artifact.path)
+      || /phase_07_storyboard_live_tau\/receipts\/storyboard_(review_verdict|packet_receipt)\.json$/i.test(artifact.path)
+  )
+  const generatedFrameCount = stage.images.filter((image) =>
+    /phase_07_storyboard_live_tau\/generated_storyboard_frames\/sb_\d+_(start|end)_frame\.png$/i.test(image.path)
+  ).length
+  return hasAcceptedPacket && generatedFrameCount >= 8
 }
 
 function ArtifactField({ label, value }: { label: string; value?: string }) {
@@ -888,8 +905,11 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
   const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
   const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
   const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
-  const status = String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
-  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || panels.length < 2
+  const panelsHaveAcceptedFrames = panels.length >= 2 && panels.every(panelHasAcceptedStoryboardFrames)
+  const status = panelsHaveAcceptedFrames
+    ? 'PASS_PANEL_REVIEWED'
+    : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames
 
   return (
     <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
@@ -908,7 +928,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
         </div>
       </div>
 
-      {(loadError || panels.length < 2) && (
+      {(loadError || !panelsHaveAcceptedFrames) && (
         <div style={nvis.storyboardBlockerBox}>
           <strong>Storyboard gate is not satisfied.</strong>
           <span>
@@ -972,13 +992,8 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const productionNotes = storyboardRecord(panel.production_notes)
   const generationPrompt = storyboardRecord(panel.generation_prompt)
   const actingBeats = storyboardStringList(panel.acting_beats)
-  const primaryReference = references.find((reference) => {
-    const role = String(reference.role ?? '').toLowerCase()
-    const hasImage = Boolean(dreamAssetUrl(String(reference.path || reference.url || '')))
-    const isAcceptedStoryboardFrame = role.includes('accepted_storyboard_frame') || role.includes('storyboard_frame') || role.includes('panel_frame')
-    return hasImage && isAcceptedStoryboardFrame
-  })
-  const primaryReferenceUrl = primaryReference ? dreamAssetUrl(String(primaryReference.path || primaryReference.url || '')) : ''
+  const primaryFrame = acceptedStoryboardFrame(startFrame) || acceptedStoryboardFrame(endFrame)
+  const primaryReferenceUrl = primaryFrame ? dreamAssetUrl(String(primaryFrame.path || primaryFrame.image_path || '')) : ''
   const timeLabel = `${String(range.start_s ?? '?')}s-${String(range.end_s ?? '?')}s`
   const shotText = String(panel.shot ?? 'Missing shot direction')
   const shotCode = storyboardShotCode(shotText)
@@ -989,7 +1004,7 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
         {primaryReferenceUrl ? (
           <img
             src={primaryReferenceUrl}
-            alt={String(primaryReference?.title ?? panel.panel_id ?? 'storyboard reference')}
+            alt={String(panel.panel_id ?? 'accepted storyboard frame')}
             style={nvis.storyboardFrameImage}
           />
         ) : (
@@ -1122,6 +1137,21 @@ function StoryboardSupportBlock({ title, body, items }: { title: string; body: s
       )}
     </div>
   )
+}
+
+function panelHasAcceptedStoryboardFrames(panel: Record<string, unknown>): boolean {
+  const startFrame = storyboardRecord(panel.start_frame)
+  const endFrame = storyboardRecord(panel.end_frame)
+  return Boolean(acceptedStoryboardFrame(startFrame) && acceptedStoryboardFrame(endFrame))
+}
+
+function acceptedStoryboardFrame(frame: Record<string, unknown>): Record<string, unknown> | null {
+  const accepted = storyboardRecord(frame.accepted_frame)
+  const status = String(accepted.status ?? '')
+  const path = String(accepted.path ?? accepted.image_path ?? '')
+  if (!path) return null
+  if (!/^ACCEPTED_(START|END)_FRAME$|^ACCEPTED_STORYBOARD_FRAME$|^PASS_PANEL_REVIEWED$/.test(status)) return null
+  return accepted
 }
 
 function storyboardRecord(value: unknown): Record<string, unknown> {

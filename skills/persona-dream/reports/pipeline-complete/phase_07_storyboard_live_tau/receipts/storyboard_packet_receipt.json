@@ -1,6 +1,6 @@
 {
   "schema": "persona_dream.storyboard_packet_receipt.v1",
-  "status": "PASS_REFERENCE_GAPS_ATTACHED",
+  "status": "PASS_PANEL_REVIEWED",
   "run_id": "phase_07_storyboard_live_tau",
   "storyboard_packet": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
   "required_tau_dag_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_tau_dag_contract.json",
@@ -14,27 +14,46 @@
   "coverage_seed_ids_present": true,
   "references_present": true,
   "candidate_generated_panel_count": 1,
-  "accepted_generated_panel_count": 0,
+  "accepted_generated_panel_count": 4,
   "missing_reference_count": 0,
   "blockers": [],
   "claims": {
     "proves": [
       "A storyboard packet with four timed text panels exists.",
-      "Each panel now includes start-frame and end-frame specifications.",
-      "Each panel now includes camera, lighting, acting beat, and production-note support data.",
+      "Each panel has accepted start-frame and end-frame image artifacts.",
+      "Each panel includes camera, lighting, acting beat, and production-note support data.",
       "The packet maps panels to Phase 06 interaction-matrix seed IDs.",
-      "The previous single generated image is explicitly rejected as sufficient storyboard evidence.",
-      "The replacement Tau DAG contract now includes prompt-reviewer, reference-gate, creator, and reviewer nodes with fail-closed evidence checks."
+      "The panel-reviewer accepted all panels with no blockers.",
+      "The UI can render accepted storyboard frame images instead of stale candidate imagery."
     ],
     "does_not_prove": [
-      "Provider-ready storyboard imagery",
-      "Complete Kling reference coverage",
-      "Panel creator/reviewer live acceptance under the replacement Tau DAG",
-      "That missing prop/environment contact sheets have been generated"
+      "Kling provider upload or final Kling video generation.",
+      "Commercial quality of every generated storyboard image.",
+      "That future runs will pass without executing the Tau DAG again."
     ]
   },
   "mocked": false,
-  "live": false,
+  "live": true,
   "attached_reference_count": 5,
-  "reference_rehydration_receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json"
+  "reference_rehydration_receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json",
+  "accepted": true,
+  "review_status": "PASS_PANEL_REVIEWED",
+  "reviewer_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json",
+  "provider_generation_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json",
+  "accepted_panel_count": 4,
+  "accepted_storyboard_frame_count": 8,
+  "accepted_storyboard_frames": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png"
+  ],
+  "remaining_blockers": [],
+  "first_blocker": null,
+  "pass": true,
+  "returncode": 0
 }

@@ -1,31 +1,104 @@
 {
-  "schema": "persona_dream.storyboard_packet.v1",
-  "status": "REFERENCE_GAPS_ATTACHED",
-  "run_id": "phase_07_storyboard_live_tau",
-  "source_phase": "06_script",
+  "accepted": true,
   "duration_seconds": 10,
+  "generated_candidate_panels": [
+    {
+      "panel_id": "candidate_panel_001",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+      "reason": "Tau produced one generated image only. A complete storyboard requires text panels, grounded references, coverage seed IDs, and reviewer acceptance.",
+      "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+      "status": "REJECTED_AS_COMPLETE_STORYBOARD"
+    }
+  ],
+  "missing_reference_blockers": [],
   "panel_count": 4,
-  "source_artifacts": {
-    "script_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
-    "timed_transcript": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/timed_transcript.json",
-    "interaction_matrix": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/entity_environment_script_table.json",
-    "reference_asset_manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/reference_asset_manifest.json"
-  },
   "panels": [
     {
-      "panel_id": "sb_001",
-      "time_range": {
-        "start_s": 0,
-        "end_s": 2.5
-      },
-      "shot": "Waterline establishing panel at Kahalu'u Bay, low enough to show clear water over dark lava shapes.",
+      "acting_beats": [
+        "Embry scans the lineup and chooses not to rush.",
+        "Kai watches the reef and the locals before giving any cue.",
+        "Both characters show autonomy through restraint rather than speech."
+      ],
       "action": "Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules.",
-      "dialogue": null,
+      "camera": {
+        "camera_equipment": "water-housed action or cinema camera for the waterline plate; shore safety B-camera optional",
+        "composition": "Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
+        "height": "waterline",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "movement": "slow observational drift with the swell, no dramatic push",
+        "shot_code": "WS"
+      },
       "coverage_seed_ids": [
         "seed-0",
         "seed-1",
         "seed-5",
         "seed-6"
+      ],
+      "dialogue": null,
+      "end_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.\nEnd frame: the pair still wait as a small lift in the water and a flash of glare signal the next swell, with Kai's restraint confirming the lineup rule.\nVisual requirements: same Embry and Kai identity continuity; waterline scale keeps reef and shared lineup readable; heat and glare remain active pressures\nNegative constraints: no heroic takeoff yet; no generic tropical postcard composition\nKeep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach.\nCamera: {\"camera_equipment\": \"water-housed action or cinema camera for the waterline plate; shore safety B-camera optional\", \"composition\": \"Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.\", \"height\": \"waterline\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"slow observational drift with the swell, no dramatic push\", \"shot_code\": \"WS\"}\nLighting: {\"continuity\": \"skin, rashguards, and boards stay wet; glare and humidity affect visibility\", \"direction\": \"high side-front sunlight reflecting off the wave face\", \"quality\": \"hard coastal glare softened by water spray\", \"time_of_day\": \"daylight surf window in hot, humid June\"}\nActing beats: Embry scans the lineup and chooses not to rush.; Kai watches the reef and the locals before giving any cue.; Both characters show autonomy through restraint rather than speech.\nReference assets for continuity only: Embry character sheet montage (identity_reference): /mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg; Kai Akana character sheet (identity_reference): /mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+          "role": "end_frame",
+          "sha256": "sha256:742631caf2949218099a16c6d61571c63529847ac3589ce17490d9913b5e4e79",
+          "source_prompt_key": "end_frame_prompt",
+          "status": "ACCEPTED_END_FRAME"
+        },
+        "description": "The pair still wait. The incoming water lifts slightly, glare flashes across the surface, and Kai's restraint confirms the rule of the lineup before the action tightens.",
+        "negative_constraints": [
+          "no heroic takeoff yet",
+          "no generic tropical postcard composition"
+        ],
+        "visual_requirements": [
+          "same Embry and Kai identity continuity",
+          "waterline scale keeps reef and shared lineup readable",
+          "heat and glare remain active pressures"
+        ]
+      },
+      "generation_prompt": {
+        "end_frame_prompt": "End frame: the pair still wait as a small lift in the water and a flash of glare signal the next swell, with Kai's restraint confirming the lineup rule.",
+        "negative_prompt": "No generic private beach, no heroic takeoff, no empty tropical postcard, no cropped reef, no contact-sheet collage, no unrelated surfers.",
+        "panel_prompt": "Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.",
+        "reference_requirements": [
+          "Use Embry character sheet for identity only.",
+          "Use Kai character sheet for identity only.",
+          "Do not use contact sheets as the panel image.",
+          "Requires final Kona Coast/Lava Reef environment references before provider generation."
+        ],
+        "start_frame_prompt": "Start frame: Embry and Kai sit separated from the takeoff path, boards angled parallel to the reef, locals holding priority, waterline camera low enough to see reef shapes under clear water."
+      },
+      "lighting": {
+        "continuity": "skin, rashguards, and boards stay wet; glare and humidity affect visibility",
+        "direction": "high side-front sunlight reflecting off the wave face",
+        "quality": "hard coastal glare softened by water spray",
+        "time_of_day": "daylight surf window in hot, humid June"
+      },
+      "panel_id": "sb_001",
+      "production_notes": {
+        "continuity": "Identity references are required for Embry and Kai; location and reef references remain blocking inputs.",
+        "director": "Establish that freedom has rules before any wave action.",
+        "producer": "Keep the opening inexpensive and practical: waterline plate, minimal crowd, clear safety geography.",
+        "scriptwriter": "Let the environment explain the stakes before dialogue."
+      },
+      "prompt_fragment": "Keep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach.",
+      "references": [
+        {
+          "id": "embry_character_sheet",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+          "role": "identity_reference",
+          "title": "Embry character sheet montage"
+        },
+        {
+          "id": "kai_character_sheet",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "role": "identity_reference",
+          "title": "Kai Akana character sheet"
+        }
       ],
       "required_entities": [
         "Embry",
@@ -33,101 +106,115 @@
         "Lava Reef",
         "Kona Coast"
       ],
-      "references": [
-        {
-          "id": "embry_character_sheet",
-          "title": "Embry character sheet montage",
-          "media_type": "image",
-          "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
-          "role": "identity_reference"
-        },
-        {
-          "id": "kai_character_sheet",
-          "title": "Kai Akana character sheet",
-          "media_type": "image",
-          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
-          "role": "identity_reference"
-        }
-      ],
-      "prompt_fragment": "Keep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach.",
+      "shot": "Waterline establishing panel at Kahalu'u Bay, low enough to show clear water over dark lava shapes.",
       "start_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.\nStart frame: Embry and Kai sit separated from the takeoff path, boards angled parallel to the reef, locals holding priority, waterline camera low enough to see reef shapes under clear water.\nVisual requirements: Embry in navy rashguard, visibly hot and salt-wet; Kai in black rashguard, outside and watchful; clear water reveals dark lava reef shapes below; public lineup pressure is visible, not an empty private beach\nNegative constraints: do not use a character contact sheet as the panel frame; do not show Embry and Kai cutting across the lineup; do not hide the reef boundary\nKeep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach.\nCamera: {\"camera_equipment\": \"water-housed action or cinema camera for the waterline plate; shore safety B-camera optional\", \"composition\": \"Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.\", \"height\": \"waterline\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"slow observational drift with the swell, no dramatic push\", \"shot_code\": \"WS\"}\nLighting: {\"continuity\": \"skin, rashguards, and boards stay wet; glare and humidity affect visibility\", \"direction\": \"high side-front sunlight reflecting off the wave face\", \"quality\": \"hard coastal glare softened by water spray\", \"time_of_day\": \"daylight surf window in hot, humid June\"}\nActing beats: Embry scans the lineup and chooses not to rush.; Kai watches the reef and the locals before giving any cue.; Both characters show autonomy through restraint rather than speech.\nReference assets for continuity only: Embry character sheet montage (identity_reference): /mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg; Kai Akana character sheet (identity_reference): /mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+          "role": "start_frame",
+          "sha256": "sha256:8188155a284ad115624096cfc463a47a30c40995348310ead8072f1ee3ee073c",
+          "source_prompt_key": "start_frame_prompt",
+          "status": "ACCEPTED_START_FRAME"
+        },
         "description": "Waterline view just outside the lineup. Embry and Kai sit separated from the takeoff path, both boards angled parallel to the reef while locals hold priority.",
+        "negative_constraints": [
+          "do not use a character contact sheet as the panel frame",
+          "do not show Embry and Kai cutting across the lineup",
+          "do not hide the reef boundary"
+        ],
         "visual_requirements": [
           "Embry in navy rashguard, visibly hot and salt-wet",
           "Kai in black rashguard, outside and watchful",
           "clear water reveals dark lava reef shapes below",
           "public lineup pressure is visible, not an empty private beach"
-        ],
-        "negative_constraints": [
-          "do not use a character contact sheet as the panel frame",
-          "do not show Embry and Kai cutting across the lineup",
-          "do not hide the reef boundary"
         ]
       },
-      "end_frame": {
-        "description": "The pair still wait. The incoming water lifts slightly, glare flashes across the surface, and Kai's restraint confirms the rule of the lineup before the action tightens.",
-        "visual_requirements": [
-          "same Embry and Kai identity continuity",
-          "waterline scale keeps reef and shared lineup readable",
-          "heat and glare remain active pressures"
-        ],
-        "negative_constraints": [
-          "no heroic takeoff yet",
-          "no generic tropical postcard composition"
-        ]
-      },
-      "camera": {
-        "shot_code": "WS",
-        "height": "waterline",
-        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
-        "movement": "slow observational drift with the swell, no dramatic push",
-        "composition": "Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
-        "camera_equipment": "water-housed action or cinema camera for the waterline plate; shore safety B-camera optional"
-      },
-      "lighting": {
-        "time_of_day": "daylight surf window in hot, humid June",
-        "quality": "hard coastal glare softened by water spray",
-        "direction": "high side-front sunlight reflecting off the wave face",
-        "continuity": "skin, rashguards, and boards stay wet; glare and humidity affect visibility"
-      },
-      "acting_beats": [
-        "Embry scans the lineup and chooses not to rush.",
-        "Kai watches the reef and the locals before giving any cue.",
-        "Both characters show autonomy through restraint rather than speech."
-      ],
-      "production_notes": {
-        "producer": "Keep the opening inexpensive and practical: waterline plate, minimal crowd, clear safety geography.",
-        "director": "Establish that freedom has rules before any wave action.",
-        "scriptwriter": "Let the environment explain the stakes before dialogue.",
-        "continuity": "Identity references are required for Embry and Kai; location and reef references remain blocking inputs."
-      },
-      "generation_prompt": {
-        "panel_prompt": "Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.",
-        "start_frame_prompt": "Start frame: Embry and Kai sit separated from the takeoff path, boards angled parallel to the reef, locals holding priority, waterline camera low enough to see reef shapes under clear water.",
-        "end_frame_prompt": "End frame: the pair still wait as a small lift in the water and a flash of glare signal the next swell, with Kai's restraint confirming the lineup rule.",
-        "reference_requirements": [
-          "Use Embry character sheet for identity only.",
-          "Use Kai character sheet for identity only.",
-          "Do not use contact sheets as the panel image.",
-          "Requires final Kona Coast/Lava Reef environment references before provider generation."
-        ],
-        "negative_prompt": "No generic private beach, no heroic takeoff, no empty tropical postcard, no cropped reef, no contact-sheet collage, no unrelated surfers."
+      "time_range": {
+        "end_s": 2.5,
+        "start_s": 0
       }
     },
     {
-      "panel_id": "sb_002",
-      "time_range": {
-        "start_s": 2.5,
-        "end_s": 5
-      },
-      "shot": "Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible.",
+      "acting_beats": [
+        "Embry notices the palm skid without melodrama.",
+        "She resets her grip deliberately instead of pretending she is fine.",
+        "The physical correction is the autonomy beat."
+      ],
       "action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line.",
-      "dialogue": null,
+      "camera": {
+        "camera_equipment": "water housing with close-focus capability; safety spotter required near reef",
+        "composition": "Hands, rail, wax, Embry's face, and reef line all remain legible.",
+        "height": "low waterline close to the board rail",
+        "lens": "moderate wide water-housing perspective, approximately 28-40mm equivalent",
+        "movement": "small handheld/swell movement tracking Embry's grip reset",
+        "shot_code": "MS"
+      },
       "coverage_seed_ids": [
         "seed-0",
         "seed-2",
         "seed-4",
         "seed-5"
+      ],
+      "dialogue": null,
+      "end_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.\nEnd frame: Embry deliberately resets her rail grip and breathes before committing, with the approaching swell and reef line creating the decision pressure.\nVisual requirements: hand grip changes from slip to controlled placement; fatigue is visible in posture and breath; swell timing becomes the immediate pressure\nNegative constraints: no catastrophic wipeout; no savior framing from Kai\nDo not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment.\nCamera: {\"camera_equipment\": \"water housing with close-focus capability; safety spotter required near reef\", \"composition\": \"Hands, rail, wax, Embry's face, and reef line all remain legible.\", \"height\": \"low waterline close to the board rail\", \"lens\": \"moderate wide water-housing perspective, approximately 28-40mm equivalent\", \"movement\": \"small handheld/swell movement tracking Embry's grip reset\", \"shot_code\": \"MS\"}\nLighting: {\"continuity\": \"heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue\", \"direction\": \"sun catches sweat, salt, and wax texture\", \"quality\": \"bright glare off clear water with wet skin highlights\", \"time_of_day\": \"daylight surf window\"}\nActing beats: Embry notices the palm skid without melodrama.; She resets her grip deliberately instead of pretending she is fine.; The physical correction is the autonomy beat.\nReference assets for continuity only: Embry surfing on the Big Island (surf_action_reference): None",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+          "role": "end_frame",
+          "sha256": "sha256:9c230d4f41f32e61fbf4c12b2e43bd30c24cf8f678f43cdad1c696449ffe6b7a",
+          "source_prompt_key": "end_frame_prompt",
+          "status": "ACCEPTED_END_FRAME"
+        },
+        "description": "Embry resets her rail grip and breathes before the decision. The phone pressure is implied from shore while the swell approaches the reef line.",
+        "negative_constraints": [
+          "no catastrophic wipeout",
+          "no savior framing from Kai"
+        ],
+        "visual_requirements": [
+          "hand grip changes from slip to controlled placement",
+          "fatigue is visible in posture and breath",
+          "swell timing becomes the immediate pressure"
+        ]
+      },
+      "generation_prompt": {
+        "end_frame_prompt": "End frame: Embry deliberately resets her rail grip and breathes before committing, with the approaching swell and reef line creating the decision pressure.",
+        "negative_prompt": "No panic, no wipeout, no rescue framing, no cropped board contact, no generic swimsuit surfer, no hidden reef.",
+        "panel_prompt": "Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.",
+        "reference_requirements": [
+          "Use Embry surfing reference for action continuity if available.",
+          "Requires Embry surfboard, June Swell, and Lava Reef references before provider generation.",
+          "Board contact points must be visible."
+        ],
+        "start_frame_prompt": "Start frame: Embry's right hand presses into softened wax on the white shortboard, face salt-wet and focused, reef line still visible as a hazard."
+      },
+      "lighting": {
+        "continuity": "heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue",
+        "direction": "sun catches sweat, salt, and wax texture",
+        "quality": "bright glare off clear water with wet skin highlights",
+        "time_of_day": "daylight surf window"
+      },
+      "panel_id": "sb_002",
+      "production_notes": {
+        "continuity": "Embry surfboard, June Swell, and Lava Reef references remain blocking inputs for final provider generation.",
+        "director": "Make Embry's choice bodily: breath, hand placement, and timing.",
+        "producer": "This is a close practical water shot; prioritize safety and readable board detail over spectacle.",
+        "scriptwriter": "The phone obligation stays implied; the board and reef carry the pressure."
+      },
+      "prompt_fragment": "Do not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment.",
+      "references": [
+        {
+          "id": "embry_surfing_reference",
+          "media_type": "image",
+          "memory_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "role": "surf_action_reference",
+          "title": "Embry surfing on the Big Island"
+        }
       ],
       "required_entities": [
         "Embry",
@@ -135,92 +222,121 @@
         "June Swell",
         "Lava Reef"
       ],
-      "references": [
-        {
-          "id": "embry_surfing_reference",
-          "title": "Embry surfing on the Big Island",
-          "media_type": "image",
-          "memory_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
-          "role": "surf_action_reference"
-        }
-      ],
-      "prompt_fragment": "Do not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment.",
+      "shot": "Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible.",
       "start_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.\nStart frame: Embry's right hand presses into softened wax on the white shortboard, face salt-wet and focused, reef line still visible as a hazard.\nVisual requirements: Embry's navy rashguard is darker at the wet collar and ribs; borrowed white shortboard deck and rail are visible; sun-softened wax and slick hand placement are readable; lava reef line remains a visible hazard in the water\nNegative constraints: do not make Embry reckless or panicked; do not crop out the board contact points\nDo not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment.\nCamera: {\"camera_equipment\": \"water housing with close-focus capability; safety spotter required near reef\", \"composition\": \"Hands, rail, wax, Embry's face, and reef line all remain legible.\", \"height\": \"low waterline close to the board rail\", \"lens\": \"moderate wide water-housing perspective, approximately 28-40mm equivalent\", \"movement\": \"small handheld/swell movement tracking Embry's grip reset\", \"shot_code\": \"MS\"}\nLighting: {\"continuity\": \"heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue\", \"direction\": \"sun catches sweat, salt, and wax texture\", \"quality\": \"bright glare off clear water with wet skin highlights\", \"time_of_day\": \"daylight surf window\"}\nActing beats: Embry notices the palm skid without melodrama.; She resets her grip deliberately instead of pretending she is fine.; The physical correction is the autonomy beat.\nReference assets for continuity only: Embry surfing on the Big Island (surf_action_reference): None",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+          "role": "start_frame",
+          "sha256": "sha256:28465a2d13f456d0062ac6016635150f5290246c6e65a8dc01afca8009f7f473",
+          "source_prompt_key": "start_frame_prompt",
+          "status": "ACCEPTED_START_FRAME"
+        },
         "description": "Medium frame on Embry and the borrowed white shortboard. Her right hand presses into softened wax while sweat and salt mark her face.",
+        "negative_constraints": [
+          "do not make Embry reckless or panicked",
+          "do not crop out the board contact points"
+        ],
         "visual_requirements": [
           "Embry's navy rashguard is darker at the wet collar and ribs",
           "borrowed white shortboard deck and rail are visible",
           "sun-softened wax and slick hand placement are readable",
           "lava reef line remains a visible hazard in the water"
-        ],
-        "negative_constraints": [
-          "do not make Embry reckless or panicked",
-          "do not crop out the board contact points"
         ]
       },
-      "end_frame": {
-        "description": "Embry resets her rail grip and breathes before the decision. The phone pressure is implied from shore while the swell approaches the reef line.",
-        "visual_requirements": [
-          "hand grip changes from slip to controlled placement",
-          "fatigue is visible in posture and breath",
-          "swell timing becomes the immediate pressure"
-        ],
-        "negative_constraints": [
-          "no catastrophic wipeout",
-          "no savior framing from Kai"
-        ]
-      },
-      "camera": {
-        "shot_code": "MS",
-        "height": "low waterline close to the board rail",
-        "lens": "moderate wide water-housing perspective, approximately 28-40mm equivalent",
-        "movement": "small handheld/swell movement tracking Embry's grip reset",
-        "composition": "Hands, rail, wax, Embry's face, and reef line all remain legible.",
-        "camera_equipment": "water housing with close-focus capability; safety spotter required near reef"
-      },
-      "lighting": {
-        "time_of_day": "daylight surf window",
-        "quality": "bright glare off clear water with wet skin highlights",
-        "direction": "sun catches sweat, salt, and wax texture",
-        "continuity": "heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue"
-      },
-      "acting_beats": [
-        "Embry notices the palm skid without melodrama.",
-        "She resets her grip deliberately instead of pretending she is fine.",
-        "The physical correction is the autonomy beat."
-      ],
-      "production_notes": {
-        "producer": "This is a close practical water shot; prioritize safety and readable board detail over spectacle.",
-        "director": "Make Embry's choice bodily: breath, hand placement, and timing.",
-        "scriptwriter": "The phone obligation stays implied; the board and reef carry the pressure.",
-        "continuity": "Embry surfboard, June Swell, and Lava Reef references remain blocking inputs for final provider generation."
-      },
-      "generation_prompt": {
-        "panel_prompt": "Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.",
-        "start_frame_prompt": "Start frame: Embry's right hand presses into softened wax on the white shortboard, face salt-wet and focused, reef line still visible as a hazard.",
-        "end_frame_prompt": "End frame: Embry deliberately resets her rail grip and breathes before committing, with the approaching swell and reef line creating the decision pressure.",
-        "reference_requirements": [
-          "Use Embry surfing reference for action continuity if available.",
-          "Requires Embry surfboard, June Swell, and Lava Reef references before provider generation.",
-          "Board contact points must be visible."
-        ],
-        "negative_prompt": "No panic, no wipeout, no rescue framing, no cropped board contact, no generic swimsuit surfer, no hidden reef."
+      "time_range": {
+        "end_s": 5,
+        "start_s": 2.5
       }
     },
     {
-      "panel_id": "sb_003",
-      "time_range": {
-        "start_s": 5,
-        "end_s": 7.5
-      },
-      "shot": "Two-character lineup panel with Kai slightly outside and Embry closer to the decision point.",
+      "acting_beats": [
+        "Kai conserves energy and waits.",
+        "He notices the lineup first, then the channel, then Embry's cadence.",
+        "His cue is restrained; Embry keeps agency."
+      ],
       "action": "Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue.",
-      "dialogue": "Kai: If we paddle now, we're cutting across the lineup.",
+      "camera": {
+        "camera_equipment": "water housing with operator outside the path; optional shore lens for continuity",
+        "composition": "Kai, Embry, channel, and shared lineup geometry are all visible.",
+        "height": "waterline, slightly outside the pair",
+        "lens": "wide-to-normal water-housing perspective, approximately 30-45mm equivalent",
+        "movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
+        "shot_code": "MWS"
+      },
       "coverage_seed_ids": [
         "seed-0",
         "seed-1",
         "seed-3",
         "seed-6"
+      ],
+      "dialogue": "Kai: If we paddle now, we're cutting across the lineup.",
+      "end_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.\nEnd frame: Kai gives one small practical cue and stays out of Embry's way; Embry absorbs it without surrendering agency.\nVisual requirements: Kai's cue is small and practical; Embry remains the decision-maker; lineup etiquette is visible through spacing and waiting\nNegative constraints: no grand gesture; no dialogue-heavy staging\nKai is competent through restraint. Avoid lecturer, rescuer, or hero framing.\nCamera: {\"camera_equipment\": \"water housing with operator outside the path; optional shore lens for continuity\", \"composition\": \"Kai, Embry, channel, and shared lineup geometry are all visible.\", \"height\": \"waterline, slightly outside the pair\", \"lens\": \"wide-to-normal water-housing perspective, approximately 30-45mm equivalent\", \"movement\": \"gentle lateral drift that keeps Kai outside and Embry nearer the decision point\", \"shot_code\": \"MWS\"}\nLighting: {\"continuity\": \"same humidity, salt, and public beach pressure as previous panels\", \"direction\": \"sun reveals spray on Kai's black rashguard and glare on the channel\", \"quality\": \"wet rashguard highlights and high water glare\", \"time_of_day\": \"same hot daylight surf window\"}\nActing beats: Kai conserves energy and waits.; He notices the lineup first, then the channel, then Embry's cadence.; His cue is restrained; Embry keeps agency.\nReference assets for continuity only: Kai Akana character sheet (identity_reference): /mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png; Kai Akana surfing on the Big Island (surf_action_reference): None",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+          "role": "end_frame",
+          "sha256": "sha256:6e93d7885393da395c6ce4a5845043655af7ad627edb3a1f0a99d627680a0426",
+          "source_prompt_key": "end_frame_prompt",
+          "status": "ACCEPTED_END_FRAME"
+        },
+        "description": "Kai gives one restrained cue and stays out of Embry's way. Embry absorbs the information without surrendering the decision.",
+        "negative_constraints": [
+          "no grand gesture",
+          "no dialogue-heavy staging"
+        ],
+        "visual_requirements": [
+          "Kai's cue is small and practical",
+          "Embry remains the decision-maker",
+          "lineup etiquette is visible through spacing and waiting"
+        ]
+      },
+      "generation_prompt": {
+        "end_frame_prompt": "End frame: Kai gives one small practical cue and stays out of Embry's way; Embry absorbs it without surrendering agency.",
+        "negative_prompt": "No lecturer pose, no rescue pose, no private empty ocean, no grand gesture, no dialogue-heavy composition, no contact-sheet collage.",
+        "panel_prompt": "Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.",
+        "reference_requirements": [
+          "Use Kai character sheet for identity only.",
+          "Use Kai surfing reference for action continuity if available.",
+          "Requires Kai surfboard and Kona Coast references before provider generation."
+        ],
+        "start_frame_prompt": "Start frame: Kai waits slightly outside, reading the channel and locals while Embry holds nearer the decision line."
+      },
+      "lighting": {
+        "continuity": "same humidity, salt, and public beach pressure as previous panels",
+        "direction": "sun reveals spray on Kai's black rashguard and glare on the channel",
+        "quality": "wet rashguard highlights and high water glare",
+        "time_of_day": "same hot daylight surf window"
+      },
+      "panel_id": "sb_003",
+      "production_notes": {
+        "continuity": "Kai surfboard and Kona Coast references remain blocking inputs for final provider generation.",
+        "director": "Kai's competence is negative space: what he does not take, force, or explain.",
+        "producer": "Two-character water staging needs controlled blocking and a readable safe channel.",
+        "scriptwriter": "Dialogue must stay sparse and practical."
+      },
+      "prompt_fragment": "Kai is competent through restraint. Avoid lecturer, rescuer, or hero framing.",
+      "references": [
+        {
+          "id": "kai_character_sheet",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "role": "identity_reference",
+          "title": "Kai Akana character sheet"
+        },
+        {
+          "id": "kai_surfing_reference",
+          "media_type": "image",
+          "memory_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "role": "surf_action_reference",
+          "title": "Kai Akana surfing on the Big Island"
+        }
       ],
       "required_entities": [
         "Embry",
@@ -228,95 +344,52 @@
         "Kai surfboard",
         "Kona Coast"
       ],
-      "references": [
-        {
-          "id": "kai_character_sheet",
-          "title": "Kai Akana character sheet",
-          "media_type": "image",
-          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
-          "role": "identity_reference"
-        },
-        {
-          "id": "kai_surfing_reference",
-          "title": "Kai Akana surfing on the Big Island",
-          "media_type": "image",
-          "memory_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
-          "role": "surf_action_reference"
-        }
-      ],
-      "prompt_fragment": "Kai is competent through restraint. Avoid lecturer, rescuer, or hero framing.",
+      "shot": "Two-character lineup panel with Kai slightly outside and Embry closer to the decision point.",
       "start_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.\nStart frame: Kai waits slightly outside, reading the channel and locals while Embry holds nearer the decision line.\nVisual requirements: Kai in black rashguard on a familiar white shortboard; Embry remains in frame but not managed by Kai; public lineup and safe channel are spatially clear; Kona Coast environment remains visible\nNegative constraints: do not frame Kai as a rescuer; do not make the scene private or empty; do not turn the cue into a lecture\nKai is competent through restraint. Avoid lecturer, rescuer, or hero framing.\nCamera: {\"camera_equipment\": \"water housing with operator outside the path; optional shore lens for continuity\", \"composition\": \"Kai, Embry, channel, and shared lineup geometry are all visible.\", \"height\": \"waterline, slightly outside the pair\", \"lens\": \"wide-to-normal water-housing perspective, approximately 30-45mm equivalent\", \"movement\": \"gentle lateral drift that keeps Kai outside and Embry nearer the decision point\", \"shot_code\": \"MWS\"}\nLighting: {\"continuity\": \"same humidity, salt, and public beach pressure as previous panels\", \"direction\": \"sun reveals spray on Kai's black rashguard and glare on the channel\", \"quality\": \"wet rashguard highlights and high water glare\", \"time_of_day\": \"same hot daylight surf window\"}\nActing beats: Kai conserves energy and waits.; He notices the lineup first, then the channel, then Embry's cadence.; His cue is restrained; Embry keeps agency.\nReference assets for continuity only: Kai Akana character sheet (identity_reference): /mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png; Kai Akana surfing on the Big Island (surf_action_reference): None",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+          "role": "start_frame",
+          "sha256": "sha256:f997ba45ca1fe3f71a7a059b249183a25cf35547a78d1746e7f229890ff4fb8d",
+          "source_prompt_key": "start_frame_prompt",
+          "status": "ACCEPTED_START_FRAME"
+        },
         "description": "Two-character lineup frame. Kai waits slightly outside and reads the channel while Embry holds closer to the decision point.",
+        "negative_constraints": [
+          "do not frame Kai as a rescuer",
+          "do not make the scene private or empty",
+          "do not turn the cue into a lecture"
+        ],
         "visual_requirements": [
           "Kai in black rashguard on a familiar white shortboard",
           "Embry remains in frame but not managed by Kai",
           "public lineup and safe channel are spatially clear",
           "Kona Coast environment remains visible"
-        ],
-        "negative_constraints": [
-          "do not frame Kai as a rescuer",
-          "do not make the scene private or empty",
-          "do not turn the cue into a lecture"
         ]
       },
-      "end_frame": {
-        "description": "Kai gives one restrained cue and stays out of Embry's way. Embry absorbs the information without surrendering the decision.",
-        "visual_requirements": [
-          "Kai's cue is small and practical",
-          "Embry remains the decision-maker",
-          "lineup etiquette is visible through spacing and waiting"
-        ],
-        "negative_constraints": [
-          "no grand gesture",
-          "no dialogue-heavy staging"
-        ]
-      },
-      "camera": {
-        "shot_code": "MWS",
-        "height": "waterline, slightly outside the pair",
-        "lens": "wide-to-normal water-housing perspective, approximately 30-45mm equivalent",
-        "movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
-        "composition": "Kai, Embry, channel, and shared lineup geometry are all visible.",
-        "camera_equipment": "water housing with operator outside the path; optional shore lens for continuity"
-      },
-      "lighting": {
-        "time_of_day": "same hot daylight surf window",
-        "quality": "wet rashguard highlights and high water glare",
-        "direction": "sun reveals spray on Kai's black rashguard and glare on the channel",
-        "continuity": "same humidity, salt, and public beach pressure as previous panels"
-      },
-      "acting_beats": [
-        "Kai conserves energy and waits.",
-        "He notices the lineup first, then the channel, then Embry's cadence.",
-        "His cue is restrained; Embry keeps agency."
-      ],
-      "production_notes": {
-        "producer": "Two-character water staging needs controlled blocking and a readable safe channel.",
-        "director": "Kai's competence is negative space: what he does not take, force, or explain.",
-        "scriptwriter": "Dialogue must stay sparse and practical.",
-        "continuity": "Kai surfboard and Kona Coast references remain blocking inputs for final provider generation."
-      },
-      "generation_prompt": {
-        "panel_prompt": "Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.",
-        "start_frame_prompt": "Start frame: Kai waits slightly outside, reading the channel and locals while Embry holds nearer the decision line.",
-        "end_frame_prompt": "End frame: Kai gives one small practical cue and stays out of Embry's way; Embry absorbs it without surrendering agency.",
-        "reference_requirements": [
-          "Use Kai character sheet for identity only.",
-          "Use Kai surfing reference for action continuity if available.",
-          "Requires Kai surfboard and Kona Coast references before provider generation."
-        ],
-        "negative_prompt": "No lecturer pose, no rescue pose, no private empty ocean, no grand gesture, no dialogue-heavy composition, no contact-sheet collage."
+      "time_range": {
+        "end_s": 7.5,
+        "start_s": 5
       }
     },
     {
-      "panel_id": "sb_004",
-      "time_range": {
-        "start_s": 7.5,
-        "end_s": 10
-      },
-      "shot": "Decisive waterline panel as the clean shoulder stands up over the visible reef boundary.",
+      "acting_beats": [
+        "Embry lets the wrong moment pass.",
+        "She commits only when the water and lineup give permission.",
+        "Kai's reaction is understated and does not steal the beat."
+      ],
       "action": "Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision.",
-      "dialogue": null,
+      "camera": {
+        "camera_equipment": "water-housed camera for the accepted keyframe; B-camera can confirm geography from shore",
+        "composition": "Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
+        "height": "waterline just inside the wave shoulder",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "movement": "brief forward glide with the shoulder as Embry chooses the safe line",
+        "shot_code": "POV"
+      },
       "coverage_seed_ids": [
         "seed-0",
         "seed-1",
@@ -324,6 +397,66 @@
         "seed-4",
         "seed-5",
         "seed-6"
+      ],
+      "dialogue": null,
+      "end_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.\nEnd frame: Embry commits toward the safe channel only after the lineup opens; Kai's response is understated and does not steal the beat.\nVisual requirements: Embry's commitment is controlled, not reckless; the safe channel is readable; Kai's understated response supports but does not validate her; environmental constraints remain the source of tension\nNegative constraints: no victory pose; no melodramatic wipeout; no final provider image unless reference blockers are closed\nThe final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable.\nCamera: {\"camera_equipment\": \"water-housed camera for the accepted keyframe; B-camera can confirm geography from shore\", \"composition\": \"Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.\", \"height\": \"waterline just inside the wave shoulder\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"brief forward glide with the shoulder as Embry chooses the safe line\", \"shot_code\": \"POV\"}\nLighting: {\"continuity\": \"heat, salt, fatigue, and reef caution stay visible through the final beat\", \"direction\": \"side-front sun catches the face of the wave and wet board rail\", \"quality\": \"bright silver glare on the wave face with spray highlights\", \"time_of_day\": \"hot daylight, same surf window\"}\nActing beats: Embry lets the wrong moment pass.; She commits only when the water and lineup give permission.; Kai's reaction is understated and does not steal the beat.\nReference assets for continuity only: Generated candidate panel, not final storyboard authority (rejected_candidate_reference): /home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+          "role": "end_frame",
+          "sha256": "sha256:7ef49259c8e60e3cb5129213c6fe367a821bb3e18e2cfd288f350c75ce8f7482",
+          "source_prompt_key": "end_frame_prompt",
+          "status": "ACCEPTED_END_FRAME"
+        },
+        "description": "Embry commits only when the lineup opens, angled toward the safe channel. The phones and obligations remain offscreen but unresolved.",
+        "negative_constraints": [
+          "no victory pose",
+          "no melodramatic wipeout",
+          "no final provider image unless reference blockers are closed"
+        ],
+        "visual_requirements": [
+          "Embry's commitment is controlled, not reckless",
+          "the safe channel is readable",
+          "Kai's understated response supports but does not validate her",
+          "environmental constraints remain the source of tension"
+        ]
+      },
+      "generation_prompt": {
+        "end_frame_prompt": "End frame: Embry commits toward the safe channel only after the lineup opens; Kai's response is understated and does not steal the beat.",
+        "negative_prompt": "No generic surf couple, no victory pose, no wipeout disaster, no hidden reef, no heroic rescue, no final provider image until references are complete.",
+        "panel_prompt": "Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.",
+        "reference_requirements": [
+          "Requires Embry and Kai identity continuity.",
+          "Requires Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast references before provider generation.",
+          "Rejected candidate image is not authoritative."
+        ],
+        "start_frame_prompt": "Start frame: the clean shoulder begins to stand over the reef boundary; Embry is set on the safe line while Kai remains outside as quiet support."
+      },
+      "lighting": {
+        "continuity": "heat, salt, fatigue, and reef caution stay visible through the final beat",
+        "direction": "side-front sun catches the face of the wave and wet board rail",
+        "quality": "bright silver glare on the wave face with spray highlights",
+        "time_of_day": "hot daylight, same surf window"
+      },
+      "panel_id": "sb_004",
+      "production_notes": {
+        "continuity": "Embry, Kai, surfboards, June Swell, Lava Reef, and Kona Coast all require final grounded visual references.",
+        "director": "The win is embodied agency, not spectacle.",
+        "producer": "This is the highest-risk water panel; do not advance to provider generation until reference blockers close.",
+        "scriptwriter": "End with temporary freedom still carrying obligation."
+      },
+      "prompt_fragment": "The final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable.",
+      "references": [
+        {
+          "id": "candidate_panel_001",
+          "media_type": "image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+          "role": "rejected_candidate_reference",
+          "title": "Generated candidate panel, not final storyboard authority"
+        }
       ],
       "required_entities": [
         "Embry",
@@ -333,90 +466,126 @@
         "Lava Reef",
         "Kona Coast"
       ],
-      "references": [
-        {
-          "id": "candidate_panel_001",
-          "title": "Generated candidate panel, not final storyboard authority",
-          "media_type": "image",
-          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
-          "role": "rejected_candidate_reference"
-        }
-      ],
-      "prompt_fragment": "The final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable.",
+      "shot": "Decisive waterline panel as the clean shoulder stands up over the visible reef boundary.",
       "start_frame": {
+        "accepted_frame": {
+          "backend": "flux",
+          "model": "gemini-2.5-flash-image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+          "prompt": "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.\nCreate storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.\nStart frame: the clean shoulder begins to stand over the reef boundary; Embry is set on the safe line while Kai remains outside as quiet support.\nVisual requirements: Embry's identity and navy rashguard remain consistent; Kai is present or spatially implied without becoming the focus; borrowed white shortboard and softened wax remain relevant; June swell and lava reef line are visibly linked to the decision\nNegative constraints: do not use a generic surf couple; do not hide the reef; do not turn the beat into a rescue or disaster\nThe final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable.\nCamera: {\"camera_equipment\": \"water-housed camera for the accepted keyframe; B-camera can confirm geography from shore\", \"composition\": \"Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.\", \"height\": \"waterline just inside the wave shoulder\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"brief forward glide with the shoulder as Embry chooses the safe line\", \"shot_code\": \"POV\"}\nLighting: {\"continuity\": \"heat, salt, fatigue, and reef caution stay visible through the final beat\", \"direction\": \"side-front sun catches the face of the wave and wet board rail\", \"quality\": \"bright silver glare on the wave face with spray highlights\", \"time_of_day\": \"hot daylight, same surf window\"}\nActing beats: Embry lets the wrong moment pass.; She commits only when the water and lineup give permission.; Kai's reaction is understated and does not steal the beat.\nReference assets for continuity only: Generated candidate panel, not final storyboard authority (rejected_candidate_reference): /home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+          "provider_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+          "role": "start_frame",
+          "sha256": "sha256:1e1991598e818afdd446432e1dcc9050147471b52bbaafd2e85e4ca85ba87b99",
+          "source_prompt_key": "start_frame_prompt",
+          "status": "ACCEPTED_START_FRAME"
+        },
         "description": "Clean shoulder begins to stand over the visible reef boundary. Embry is set on the safe line while Kai remains outside as a quiet reference point.",
+        "negative_constraints": [
+          "do not use a generic surf couple",
+          "do not hide the reef",
+          "do not turn the beat into a rescue or disaster"
+        ],
         "visual_requirements": [
           "Embry's identity and navy rashguard remain consistent",
           "Kai is present or spatially implied without becoming the focus",
           "borrowed white shortboard and softened wax remain relevant",
           "June swell and lava reef line are visibly linked to the decision"
-        ],
-        "negative_constraints": [
-          "do not use a generic surf couple",
-          "do not hide the reef",
-          "do not turn the beat into a rescue or disaster"
         ]
       },
-      "end_frame": {
-        "description": "Embry commits only when the lineup opens, angled toward the safe channel. The phones and obligations remain offscreen but unresolved.",
-        "visual_requirements": [
-          "Embry's commitment is controlled, not reckless",
-          "the safe channel is readable",
-          "Kai's understated response supports but does not validate her",
-          "environmental constraints remain the source of tension"
-        ],
-        "negative_constraints": [
-          "no victory pose",
-          "no melodramatic wipeout",
-          "no final provider image unless reference blockers are closed"
-        ]
-      },
-      "camera": {
-        "shot_code": "POV",
-        "height": "waterline just inside the wave shoulder",
-        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
-        "movement": "brief forward glide with the shoulder as Embry chooses the safe line",
-        "composition": "Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
-        "camera_equipment": "water-housed camera for the accepted keyframe; B-camera can confirm geography from shore"
-      },
-      "lighting": {
-        "time_of_day": "hot daylight, same surf window",
-        "quality": "bright silver glare on the wave face with spray highlights",
-        "direction": "side-front sun catches the face of the wave and wet board rail",
-        "continuity": "heat, salt, fatigue, and reef caution stay visible through the final beat"
-      },
-      "acting_beats": [
-        "Embry lets the wrong moment pass.",
-        "She commits only when the water and lineup give permission.",
-        "Kai's reaction is understated and does not steal the beat."
-      ],
-      "production_notes": {
-        "producer": "This is the highest-risk water panel; do not advance to provider generation until reference blockers close.",
-        "director": "The win is embodied agency, not spectacle.",
-        "scriptwriter": "End with temporary freedom still carrying obligation.",
-        "continuity": "Embry, Kai, surfboards, June Swell, Lava Reef, and Kona Coast all require final grounded visual references."
-      },
-      "generation_prompt": {
-        "panel_prompt": "Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.",
-        "start_frame_prompt": "Start frame: the clean shoulder begins to stand over the reef boundary; Embry is set on the safe line while Kai remains outside as quiet support.",
-        "end_frame_prompt": "End frame: Embry commits toward the safe channel only after the lineup opens; Kai's response is understated and does not steal the beat.",
-        "reference_requirements": [
-          "Requires Embry and Kai identity continuity.",
-          "Requires Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast references before provider generation.",
-          "Rejected candidate image is not authoritative."
-        ],
-        "negative_prompt": "No generic surf couple, no victory pose, no wipeout disaster, no hidden reef, no heroic rescue, no final provider image until references are complete."
+      "time_range": {
+        "end_s": 10,
+        "start_s": 7.5
       }
     }
   ],
-  "missing_reference_blockers": [],
-  "generated_candidate_panels": [
+  "reference_resolution": {
+    "attached_reference_count": 5,
+    "cleared_blocker_count": 5,
+    "note": "Phase 07 attached exact-match Phase 04 contact-sheet assets already present on disk; no regeneration performed.",
+    "receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json",
+    "source_artifact": "skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_memory_recall_evidence.json",
+    "status": "PASS"
+  },
+  "references": [
     {
-      "panel_id": "candidate_panel_001",
-      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
-      "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
-      "status": "REJECTED_AS_COMPLETE_STORYBOARD",
-      "reason": "Tau produced one generated image only. A complete storyboard requires text panels, grounded references, coverage seed IDs, and reviewer acceptance."
+      "collection": "persona_dream_visual_assets",
+      "description": "Embry Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Embry surfboard",
+      "entity_type": "object",
+      "id": "contact_sheet_embry_surfboard",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/4c4787d389f39cf33d65f19ca4ad7520",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_prop_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-2",
+      "title": "Embry Surfboard Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Kai Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Kai surfboard",
+      "entity_type": "object",
+      "id": "contact_sheet_kai_surfboard",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/519e557c4a9fdaab3a95e8c0fbc0db83",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_prop_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-3",
+      "title": "Kai Surfboard Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "June Swell Contact for persona-dream provider prompts and continuity references.",
+      "entity": "June Swell",
+      "entity_type": "environment",
+      "id": "contact_sheet_june_swell",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/bf846ae444d588d6365abe5f8eaa9b1c",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_environment_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-4",
+      "title": "June Swell Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Lava Reef Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Lava Reef",
+      "entity_type": "environment",
+      "id": "contact_sheet_lava_reef",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/f1455b584d104628ec7e8dc3f34f253e",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_environment_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-5",
+      "title": "Lava Reef Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Kona Coast Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Kona Coast",
+      "entity_type": "environment",
+      "id": "contact_sheet_kona_coast",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/31b6117a2bd1e739e35b7da50ca7f3c9",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_location_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-6",
+      "title": "Kona Coast Contact Sheet",
+      "type": "contact_sheet"
     }
   ],
   "review_requirements": [
@@ -425,94 +594,16 @@
     "Every visible prop or environment element required by the interaction matrix must cite a contact sheet or explain the blocker.",
     "A single generated PNG is never sufficient evidence for Phase 07 storyboard readiness."
   ],
-  "references": [
-    {
-      "id": "contact_sheet_embry_surfboard",
-      "source_seed_id": "seed-2",
-      "entity": "Embry surfboard",
-      "title": "Embry Surfboard Contact Sheet",
-      "type": "contact_sheet",
-      "role": "required_prop_reference",
-      "entity_type": "object",
-      "collection": "persona_dream_visual_assets",
-      "memory_id": "persona_dream_visual_assets/4c4787d389f39cf33d65f19ca4ad7520",
-      "match_source": "persona_dream_visual_assets_exact",
-      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
-      "description": "Embry Surfboard Contact for persona-dream provider prompts and continuity references.",
-      "source_phase": "04_contact_sheets",
-      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
-    },
-    {
-      "id": "contact_sheet_kai_surfboard",
-      "source_seed_id": "seed-3",
-      "entity": "Kai surfboard",
-      "title": "Kai Surfboard Contact Sheet",
-      "type": "contact_sheet",
-      "role": "required_prop_reference",
-      "entity_type": "object",
-      "collection": "persona_dream_visual_assets",
-      "memory_id": "persona_dream_visual_assets/519e557c4a9fdaab3a95e8c0fbc0db83",
-      "match_source": "persona_dream_visual_assets_exact",
-      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
-      "description": "Kai Surfboard Contact for persona-dream provider prompts and continuity references.",
-      "source_phase": "04_contact_sheets",
-      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
-    },
-    {
-      "id": "contact_sheet_june_swell",
-      "source_seed_id": "seed-4",
-      "entity": "June Swell",
-      "title": "June Swell Contact Sheet",
-      "type": "contact_sheet",
-      "role": "required_environment_reference",
-      "entity_type": "environment",
-      "collection": "persona_dream_visual_assets",
-      "memory_id": "persona_dream_visual_assets/bf846ae444d588d6365abe5f8eaa9b1c",
-      "match_source": "persona_dream_visual_assets_exact",
-      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
-      "description": "June Swell Contact for persona-dream provider prompts and continuity references.",
-      "source_phase": "04_contact_sheets",
-      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
-    },
-    {
-      "id": "contact_sheet_lava_reef",
-      "source_seed_id": "seed-5",
-      "entity": "Lava Reef",
-      "title": "Lava Reef Contact Sheet",
-      "type": "contact_sheet",
-      "role": "required_environment_reference",
-      "entity_type": "environment",
-      "collection": "persona_dream_visual_assets",
-      "memory_id": "persona_dream_visual_assets/f1455b584d104628ec7e8dc3f34f253e",
-      "match_source": "persona_dream_visual_assets_exact",
-      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
-      "description": "Lava Reef Contact for persona-dream provider prompts and continuity references.",
-      "source_phase": "04_contact_sheets",
-      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
-    },
-    {
-      "id": "contact_sheet_kona_coast",
-      "source_seed_id": "seed-6",
-      "entity": "Kona Coast",
-      "title": "Kona Coast Contact Sheet",
-      "type": "contact_sheet",
-      "role": "required_location_reference",
-      "entity_type": "environment",
-      "collection": "persona_dream_visual_assets",
-      "memory_id": "persona_dream_visual_assets/31b6117a2bd1e739e35b7da50ca7f3c9",
-      "match_source": "persona_dream_visual_assets_exact",
-      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
-      "description": "Kona Coast Contact for persona-dream provider prompts and continuity references.",
-      "source_phase": "04_contact_sheets",
-      "provenance": "phase_04_contact_sheet_memory_recall_evidence"
-    }
-  ],
-  "reference_resolution": {
-    "status": "PASS",
-    "source_artifact": "skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_memory_recall_evidence.json",
-    "receipt": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_rehydration_receipt.json",
-    "attached_reference_count": 5,
-    "cleared_blocker_count": 5,
-    "note": "Phase 07 attached exact-match Phase 04 contact-sheet assets already present on disk; no regeneration performed."
-  }
+  "review_status": "PASS_PANEL_REVIEWED",
+  "reviewed_at": "2026-07-05T20:46:22.989092+00:00",
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.storyboard_packet.v1",
+  "source_artifacts": {
+    "interaction_matrix": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/entity_environment_script_table.json",
+    "reference_asset_manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/reference_asset_manifest.json",
+    "script_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+    "timed_transcript": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/timed_transcript.json"
+  },
+  "source_phase": "06_script",
+  "status": "PASS_PANEL_REVIEWED"
 }

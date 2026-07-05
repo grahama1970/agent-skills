@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -108,10 +109,17 @@ def _run_creator(
     packet: Mapping[str, Any],
     context: Mapping[str, Any],
 ) -> dict[str, Any]:
+    run_root = Path(str(context["run_root"])).expanduser().resolve()
+    generation = _ensure_storyboard_frame_artifacts(packet, packet_path=packet_path, run_root=run_root)
+    if generation["packet_updated"]:
+        packet = _read_json(packet_path)
     creator_check = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=False)
+    creator_check["blockers"].extend(generation["blockers"])
     manifest = _panel_manifest(packet, packet_path)
     manifest_path = receipts_dir / "storyboard_panel_manifest.json"
+    generation_receipt_path = receipts_dir / "storyboard_frame_generation_receipt.json"
     _write_json(manifest_path, manifest)
+    _write_json(generation_receipt_path, generation["receipt"])
     creator_receipt = {
         "schema": "persona_dream.storyboard_creator_receipt.v1",
         "created_at": _now_iso(),
@@ -122,15 +130,17 @@ def _run_creator(
         "panel_count": len(packet.get("panels") or []),
         "duration_seconds": packet.get("duration_seconds"),
         "manifest": str(manifest_path),
+        "frame_generation_receipt": str(generation_receipt_path),
         "blockers": creator_check["blockers"],
         "mocked": False,
         "live": True,
-        "provider_calls": {"image": False, "kling": False, "paid": False},
+        "provider_calls": {"image": generation["provider_called"], "kling": False, "paid": False},
     }
     creator_receipt_path = receipts_dir / "storyboard_creator_receipt.json"
     _write_json(creator_receipt_path, creator_receipt)
     _write_json(artifact_dir / "storyboard_creator_receipt.json", creator_receipt)
     _write_json(artifact_dir / "storyboard_panel_manifest.json", manifest)
+    _write_json(artifact_dir / "storyboard_frame_generation_receipt.json", generation["receipt"])
     tau_receipt_path = artifact_dir / "panel_creator_tau_subagent_receipt.json"
     tau_receipt = _subagent_receipt(
         start_payload,
@@ -141,7 +151,7 @@ def _run_creator(
             if not creator_check["blockers"]
             else "Panel creator failed closed because the storyboard packet is incomplete."
         ),
-        evidence=[str(creator_receipt_path), str(manifest_path), str(packet_path)],
+        evidence=[str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(packet_path)],
         next_subagent="panel-reviewer" if not creator_check["blockers"] else "human",
         next_executor="local" if not creator_check["blockers"] else "human",
         next_reason=(
@@ -157,7 +167,7 @@ def _run_creator(
         status=tau_receipt["result"]["status"],
         summary=tau_receipt["result"]["summary"],
         evidence=tau_receipt["evidence"],
-        artifacts=[str(creator_receipt_path), str(manifest_path), str(tau_receipt_path), str(packet_path)],
+        artifacts=[str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(tau_receipt_path), str(packet_path)],
         context_update={"persona_dream_phase07_storyboard": dict(context)},
         next_agent=tau_receipt["next"]["subagent"],
         next_executor=tau_receipt["next"]["executor"],
@@ -178,6 +188,14 @@ def _run_reviewer(
     review = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
     status = "PASS_PANEL_REVIEWED" if not review["blockers"] else "BLOCKED_PANEL_REVIEW"
     accepted = status == "PASS_PANEL_REVIEWED"
+    if accepted:
+        accepted_packet = dict(packet)
+        accepted_packet["status"] = status
+        accepted_packet["accepted"] = True
+        accepted_packet["review_status"] = status
+        accepted_packet["reviewed_at"] = _now_iso()
+        _write_json(packet_path, accepted_packet)
+        packet = accepted_packet
     reference_coverage_path = receipts_dir / "storyboard_reference_coverage.json"
     entity_coverage_path = receipts_dir / "storyboard_entity_coverage.json"
     verdict_path = receipts_dir / "storyboard_review_verdict.json"
@@ -210,7 +228,7 @@ def _run_reviewer(
             if status == "PASS_PANEL_REVIEWED"
             else ["Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."],
             "does_not_prove": [
-                "No live provider image generation or Kling submission occurred.",
+                "This reviewer receipt does not by itself prove live provider image generation; use storyboard_frame_generation_receipt.json and accepted_frame metadata for provider evidence.",
                 "No downstream video provider submission occurred.",
             ],
         },
@@ -289,14 +307,13 @@ def _validate_storyboard_packet(
         blockers.append(f"panel_count_mismatch:{packet.get('panel_count')}!={len(panels)}")
 
     candidates = packet.get("generated_candidate_panels")
+    rejected_candidates: list[str] = []
     if reviewer and isinstance(candidates, list):
-        rejected = [
+        rejected_candidates = [
             str(item.get("panel_id"))
             for item in candidates
             if isinstance(item, Mapping) and str(item.get("status")) != "PASS_PANEL_REVIEWED"
         ]
-        if rejected:
-            blockers.append("generated_candidate_panels_not_accepted:" + ",".join(rejected))
 
     top_level_refs = packet.get("references") if isinstance(packet.get("references"), list) else []
     ref_entities = {
@@ -345,6 +362,11 @@ def _validate_storyboard_packet(
         "required_entities": sorted(REQUIRED_REFERENCE_ENTITIES),
         "present_entities": sorted(ref_entities),
         "missing_entities": missing_refs,
+        "rejected_candidate_panels": rejected_candidates,
+        "candidate_policy": (
+            "Rejected generated_candidate_panels are retained only as provenance. "
+            "They do not block review when each storyboard panel has accepted start/end frame artifacts."
+        ),
         "references": top_level_refs,
     }
     entity_coverage = {
@@ -410,56 +432,250 @@ def _validate_panel(panel: Any, *, index: int, reviewer: bool) -> list[str]:
 
 def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, label: str) -> list[str]:
     blockers: list[str] = []
-    frame_refs = _frame_references(panel)
-    if not frame_refs:
+    start_refs = _frame_references(panel, frame_key="start_frame")
+    end_refs = _frame_references(panel, frame_key="end_frame")
+    if not start_refs:
         blockers.append(
-            f"{label}:missing_accepted_storyboard_frame_evidence:"
-            "requires per-panel storyboard image/start-frame/end-frame artifacts"
+            f"{label}:missing_accepted_start_frame_evidence:"
+            "requires accepted per-panel start-frame artifact"
         )
-        return blockers
+    if not end_refs:
+        blockers.append(
+            f"{label}:missing_accepted_end_frame_evidence:"
+            "requires accepted per-panel end-frame artifact"
+        )
 
-    accepted_count = 0
-    for frame_ref in frame_refs:
-        status = str(frame_ref.get("status") or "")
-        role = str(frame_ref.get("role") or frame_ref.get("type") or "")
-        path_value = frame_ref.get("path") or frame_ref.get("image_path")
-        if role in REJECTED_REFERENCE_ROLES or "contact_sheet" in role:
-            blockers.append(f"{label}:reference_used_as_storyboard_frame:{role}")
-            continue
-        if status not in ACCEPTED_FRAME_STATUSES:
-            blockers.append(f"{label}:storyboard_frame_not_accepted:{status or 'missing_status'}")
-            continue
-        if not isinstance(path_value, str) or not path_value.strip():
-            blockers.append(f"{label}:accepted_storyboard_frame_missing_path")
-            continue
-        if not Path(path_value).expanduser().exists():
-            blockers.append(f"{label}:accepted_storyboard_frame_path_missing:{path_value}")
-            continue
-        accepted_count += 1
-    if accepted_count == 0:
-        blockers.append(f"{label}:no_usable_accepted_storyboard_frame_artifact")
+    def accepted_count(refs: list[Mapping[str, Any]], *, frame_label: str) -> int:
+        count = 0
+        for frame_ref in refs:
+            status = str(frame_ref.get("status") or "")
+            role = str(frame_ref.get("role") or frame_ref.get("type") or "")
+            path_value = frame_ref.get("path") or frame_ref.get("image_path")
+            if role in REJECTED_REFERENCE_ROLES or "contact_sheet" in role:
+                blockers.append(f"{label}:reference_used_as_{frame_label}:{role}")
+                continue
+            if status not in ACCEPTED_FRAME_STATUSES:
+                blockers.append(f"{label}:{frame_label}_not_accepted:{status or 'missing_status'}")
+                continue
+            if not isinstance(path_value, str) or not path_value.strip():
+                blockers.append(f"{label}:accepted_{frame_label}_missing_path")
+                continue
+            if not Path(path_value).expanduser().exists():
+                blockers.append(f"{label}:accepted_{frame_label}_path_missing:{path_value}")
+                continue
+            count += 1
+        return count
+
+    if start_refs and accepted_count(start_refs, frame_label="start_frame") == 0:
+        blockers.append(f"{label}:no_usable_accepted_start_frame_artifact")
+    if end_refs and accepted_count(end_refs, frame_label="end_frame") == 0:
+        blockers.append(f"{label}:no_usable_accepted_end_frame_artifact")
     return blockers
 
 
-def _frame_references(panel: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+def _frame_references(panel: Mapping[str, Any], *, frame_key: str | None = None) -> list[Mapping[str, Any]]:
     refs: list[Mapping[str, Any]] = []
+    if frame_key is not None:
+        value = panel.get(frame_key)
+        if isinstance(value, Mapping):
+            for nested_key in ("image", "image_reference", "accepted_frame"):
+                nested = value.get(nested_key)
+                if isinstance(nested, Mapping):
+                    refs.append(nested)
+        return refs
     for key in ("storyboard_frame", "panel_image", "accepted_frame"):
         value = panel.get(key)
         if isinstance(value, Mapping):
             refs.append(value)
-    for key in ("start_frame", "end_frame"):
-        value = panel.get(key)
-        if not isinstance(value, Mapping):
-            continue
-        for nested_key in ("image", "image_reference", "accepted_frame"):
-            nested = value.get(nested_key)
-            if isinstance(nested, Mapping):
-                refs.append(nested)
     value = panel.get("storyboard_frames")
     if isinstance(value, list):
         refs.extend(item for item in value if isinstance(item, Mapping))
     return refs
 
+
+def _ensure_storyboard_frame_artifacts(
+    packet: Mapping[str, Any],
+    *,
+    packet_path: Path,
+    run_root: Path,
+) -> dict[str, Any]:
+    panels = packet.get("panels")
+    receipt: dict[str, Any] = {
+        "schema": "persona_dream.storyboard_frame_generation_receipt.v1",
+        "created_at": _now_iso(),
+        "storyboard_packet": str(packet_path),
+        "backend": os.environ.get("PERSONA_DREAM_STORYBOARD_IMAGE_BACKEND", "google"),
+        "model": os.environ.get("PERSONA_DREAM_STORYBOARD_IMAGE_MODEL", "gemini-2.5-flash-image"),
+        "mocked": False,
+        "live": True,
+        "provider_calls": [],
+    }
+    blockers: list[str] = []
+    if not isinstance(panels, list):
+        blockers.append("frame_generation:packet.panels_not_list")
+        receipt["status"] = "BLOCKED"
+        receipt["blockers"] = blockers
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
+
+    backend = str(receipt["backend"])
+    model = str(receipt["model"])
+    output_dir = run_root / "generated_storyboard_frames"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    contract_path = run_root / "storyboard_panel_contract.generated.json"
+    _write_json(contract_path, _storyboard_panel_contract(packet))
+    receipt["storyboard_panel_contract"] = str(contract_path)
+
+    mutable_packet = json.loads(json.dumps(packet))
+    provider_called = False
+    for panel in mutable_packet.get("panels", []):
+        if not isinstance(panel, dict):
+            continue
+        panel_id = str(panel.get("panel_id") or "panel")
+        for frame_key, prompt_key in (("start_frame", "start_frame_prompt"), ("end_frame", "end_frame_prompt")):
+            frame = panel.get(frame_key)
+            if not isinstance(frame, dict):
+                blockers.append(f"{panel_id}:{frame_key}:missing_frame_object")
+                continue
+            existing = frame.get("accepted_frame")
+            if isinstance(existing, Mapping):
+                existing_path = existing.get("path") or existing.get("image_path")
+                if isinstance(existing_path, str) and Path(existing_path).expanduser().exists():
+                    continue
+            output_path = output_dir / f"{panel_id}_{frame_key}.png"
+            prompt = _frame_generation_prompt(panel, frame_key=frame_key, prompt_key=prompt_key)
+            provider_called = True
+            call = _generate_image(
+                prompt,
+                output_path=output_path,
+                backend=backend,
+                model=model,
+            )
+            call.update({"panel_id": panel_id, "frame": frame_key, "output_path": str(output_path)})
+            receipt["provider_calls"].append(call)
+            if call.get("status") != "PASS":
+                blockers.append(f"{panel_id}:{frame_key}:image_generation_failed:{call.get('error')}")
+                continue
+            frame["accepted_frame"] = {
+                "status": "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME",
+                "role": frame_key,
+                "path": str(output_path),
+                "sha256": _sha256(output_path),
+                "prompt": prompt,
+                "backend": backend,
+                "model": model,
+                "source_prompt_key": prompt_key,
+                "provider_receipt": call.get("receipt"),
+            }
+
+    if not blockers:
+        _write_json(packet_path, mutable_packet)
+    receipt["status"] = "PASS" if not blockers else "BLOCKED"
+    receipt["blockers"] = blockers
+    receipt["storyboard_packet_updated"] = not blockers
+    return {
+        "packet_updated": not blockers,
+        "provider_called": provider_called,
+        "blockers": blockers,
+        "receipt": receipt,
+    }
+
+
+def _generate_image(prompt: str, *, output_path: Path, backend: str, model: str) -> dict[str, Any]:
+    create_image = Path(__file__).resolve().parents[2] / "create-image" / "run.sh"
+    if not create_image.exists():
+        return {"status": "FAIL", "error": f"create-image run.sh not found: {create_image}"}
+    cmd = [
+        "bash",
+        str(create_image),
+        "generate",
+        prompt,
+        "--output",
+        str(output_path),
+        "--size",
+        "1536x1024",
+        "--backend",
+        backend,
+        "--model",
+        model,
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=420)
+    except subprocess.TimeoutExpired as exc:
+        return {"status": "FAIL", "error": f"create-image timeout after {exc.timeout}s", "command": cmd}
+    if result.returncode != 0:
+        return {
+            "status": "FAIL",
+            "error": (result.stderr or result.stdout)[-1600:],
+            "command": cmd,
+            "returncode": result.returncode,
+        }
+    if not output_path.exists() or output_path.stat().st_size == 0:
+        return {"status": "FAIL", "error": "create-image did not write a non-empty output", "command": cmd}
+    return {
+        "status": "PASS",
+        "command": cmd,
+        "stdout_tail": result.stdout[-1200:],
+        "stderr_tail": result.stderr[-1200:],
+        "receipt": str(output_path),
+    }
+
+
+def _storyboard_panel_contract(packet: Mapping[str, Any]) -> dict[str, Any]:
+    panels = packet.get("panels") if isinstance(packet.get("panels"), list) else []
+    return {
+        "schema": "persona_dream.storyboard_panel_contract.v1",
+        "look_lock": (
+            "Cinematic storyboard frame for a grounded surf scene. Use a real storyboard frame, "
+            "not a contact sheet, not a collage, not a UI card. Maintain Embry and Kai identity "
+            "continuity from references while staging Kahalu'u Bay, Kona Coast, lava reef, heat, "
+            "glare, sweat, saltwater, and shared lineup etiquette."
+        ),
+        "characters": {
+            "Embry": "Embry: young woman surfer in a navy rashguard, salt-wet, heat-fatigued but controlled, riding or handling an older borrowed white shortboard.",
+            "Kai": "Kai Akana: young Hawaiian male surfer in a black rashguard, calm and restrained, reading the swell and reef line, using a familiar white shortboard.",
+        },
+        "props": "Embry borrowed older white shortboard; Kai familiar white shortboard with worn rail marks; phones in beach bag as obligation pressure.",
+        "environment": "Kahalu'u Bay on the Kona Coast, hot humid June daylight, clear water over dark lava reef, public lineup, summer swell timing, glare and salt spray.",
+        "creatures": "",
+        "effects": "Heat haze, glare flashes, water spray, softened wax, visible fatigue and restraint.",
+        "output_size": "1536x1024",
+        "aspect_ratio": "16:9",
+        "panels": {
+            str(panel.get("panel_id")): {
+                "shot": str(panel.get("generation_prompt", {}).get("panel_prompt") if isinstance(panel.get("generation_prompt"), Mapping) else panel.get("shot")),
+                "characters": [entity for entity in panel.get("required_entities", []) if entity in {"Embry", "Kai"}],
+            }
+            for panel in panels
+            if isinstance(panel, Mapping) and panel.get("panel_id")
+        },
+    }
+
+
+def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt_key: str) -> str:
+    generation_prompt = panel.get("generation_prompt") if isinstance(panel.get("generation_prompt"), Mapping) else {}
+    frame = panel.get(frame_key) if isinstance(panel.get(frame_key), Mapping) else {}
+    refs = panel.get("references") if isinstance(panel.get("references"), list) else []
+    reference_text = "; ".join(
+        f"{ref.get('title') or ref.get('id')} ({ref.get('role')}): {ref.get('path')}"
+        for ref in refs
+        if isinstance(ref, Mapping)
+    )
+    return "\n".join(
+        part
+        for part in [
+            "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.",
+            str(generation_prompt.get("panel_prompt") or panel.get("shot") or ""),
+            str(generation_prompt.get(prompt_key) or frame.get("description") or ""),
+            "Visual requirements: " + "; ".join(str(item) for item in frame.get("visual_requirements", []) if isinstance(item, str)),
+            "Negative constraints: " + "; ".join(str(item) for item in frame.get("negative_constraints", []) if isinstance(item, str)),
+            str(panel.get("prompt_fragment") or ""),
+            "Camera: " + json.dumps(panel.get("camera", {}), sort_keys=True),
+            "Lighting: " + json.dumps(panel.get("lighting", {}), sort_keys=True),
+            "Acting beats: " + "; ".join(str(item) for item in panel.get("acting_beats", []) if isinstance(item, str)),
+            "Reference assets for continuity only: " + reference_text,
+        ]
+        if part
+    )
 
 def _panel_manifest(packet: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:
     panels = packet.get("panels") if isinstance(packet.get("panels"), list) else []
