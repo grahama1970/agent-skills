@@ -1,0 +1,252 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-phase-07-storyboard-packet-v1",
+  "goal": {
+    "goal_id": "persona-dream-phase-07-storyboard-packet",
+    "goal_version": 1,
+    "goal_hash": "sha256:db0ba8985f5f1fd356df87a9979ba6295a22b658747671b16990d5a144355fad",
+    "summary": "Create a complete Phase 07 storyboard packet from the accepted idea, story, interaction matrix, script, contact sheets, voices, and linked media. A single generated image is not sufficient evidence."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau",
+    "allowed_paths": [
+      "skills/persona-dream/reports/pipeline-complete/phase_02_story/**",
+      "skills/persona-dream/reports/pipeline-complete/phase_03_producer_writer_director/**",
+      "skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/**",
+      "skills/persona-dream/reports/pipeline-complete/phase_05_voices/**",
+      "skills/persona-dream/reports/pipeline-complete/phase_06_script/**",
+      "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/**"
+    ]
+  },
+  "entry_node": "storyboard-prompt-reviewer",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 600,
+    "max_total_attempts": 6
+  },
+  "nodes": [
+    {
+      "id": "storyboard-prompt-reviewer",
+      "agent": "prompt-reviewer",
+      "executor": "local",
+      "work_type": "prompt-review",
+      "max_attempts": 1,
+      "required_skills": [
+        "best-practices-prompt",
+        "best-practices-kling-scene",
+        "create-storyboard"
+      ],
+      "skill_gates": {
+        "best-practices-prompt": {
+          "required_checks": [
+            "rationale-header",
+            "task-before-context",
+            "exact-output-schema",
+            "complete-input-output-example",
+            "source-field-paths",
+            "rejection-criteria",
+            "deterministic-check"
+          ]
+        }
+      },
+      "required_evidence": [
+        "storyboard_prompt_review.json",
+        "storyboard_prompt_contract.json",
+        "storyboard_expected_response_fixture.json"
+      ],
+      "reject_if_missing": [
+        "minimum_panel_count",
+        "duration_seconds",
+        "per_panel_time_range",
+        "per_panel_script_text",
+        "per_panel_reference_assets",
+        "per_panel_coverage_seed_ids",
+        "identity_continuity_rules",
+        "missing_reference_fail_closed_rules",
+        "output_schema"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1",
+        "tau.subagent_receipt.v1"
+      ]
+    },
+    {
+      "id": "storyboard-reference-gate",
+      "agent": "contact-sheet-reviewer",
+      "executor": "local",
+      "work_type": "reference-evidence-gate",
+      "max_attempts": 1,
+      "required_skills": [
+        "best-practices-kling-contact-sheet",
+        "best-practices-kling-scene"
+      ],
+      "required_evidence": [
+        "reference_asset_manifest.json",
+        "storyboard_reference_coverage.json"
+      ],
+      "reject_if_missing": [
+        "Embry surfboard",
+        "Kai surfboard",
+        "June Swell",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1",
+        "tau.subagent_receipt.v1"
+      ]
+    },
+    {
+      "id": "panel-creator",
+      "agent": "panel-creator",
+      "executor": "local",
+      "work_type": "storyboard-packet-creator",
+      "max_attempts": 2,
+      "required_skills": [
+        "create-storyboard",
+        "best-practices-kling-scene"
+      ],
+      "required_inputs": [
+        "phase_02_story/story_contract.json",
+        "phase_03_producer_writer_director/crew_contract.json",
+        "phase_04_contact_sheets/reference_asset_manifest.json",
+        "phase_06_script/script_contract.json",
+        "storyboard_prompt_contract.json"
+      ],
+      "required_evidence": [
+        "storyboard_packet.json",
+        "storyboard_panel_manifest.json",
+        "storyboard_creator_receipt.json"
+      ],
+      "output_contract": {
+        "schema": "persona_dream.storyboard_packet.v1",
+        "minimum_panel_count": 4,
+        "duration_seconds": 10,
+        "required_panel_fields": [
+          "panel_id",
+          "time_range.start_s",
+          "time_range.end_s",
+          "shot",
+          "action",
+          "coverage_seed_ids",
+          "required_entities",
+          "references",
+          "prompt_fragment"
+        ],
+        "required_reference_policy": "Each panel must name source references or fail closed with missing_reference_blockers.",
+        "single_image_policy": "A generated PNG may be a candidate panel reference only. It must not satisfy the storyboard packet by itself."
+      },
+      "emits": [
+        "tau.agent_handoff.v1",
+        "tau.subagent_receipt.v1"
+      ]
+    },
+    {
+      "id": "panel-reviewer",
+      "agent": "panel-reviewer",
+      "executor": "local",
+      "work_type": "storyboard-packet-reviewer",
+      "max_attempts": 2,
+      "required_skills": [
+        "create-storyboard",
+        "best-practices-kling-scene"
+      ],
+      "required_evidence": [
+        "storyboard_review_verdict.json",
+        "storyboard_reference_coverage.json",
+        "storyboard_entity_coverage.json"
+      ],
+      "must_verify": [
+        "storyboard_packet.panel_count >= 4",
+        "storyboard_packet.duration_seconds == 10",
+        "every_panel_has_time_range",
+        "every_panel_has_script_text",
+        "every_panel_has_coverage_seed_ids",
+        "every_panel_has_reference_assets_or_blocker",
+        "Embry_identity_reference_present_when_Embry_appears",
+        "Kai_identity_reference_present_when_Kai_appears",
+        "surfboard_references_present_when_boards_appear",
+        "environment_references_present_when_location_or_reef_or_swell_appears",
+        "candidate_images_are_not_treated_as_final_storyboard_without_review_acceptance"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1",
+        "tau.subagent_receipt.v1"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "storyboard-prompt-reviewer",
+      "to": "storyboard-reference-gate",
+      "condition": "prompt_contract_pass"
+    },
+    {
+      "from": "storyboard-reference-gate",
+      "to": "panel-creator",
+      "condition": "references_complete"
+    },
+    {
+      "from": "storyboard-reference-gate",
+      "to": "human",
+      "condition": "references_missing"
+    },
+    {
+      "from": "panel-creator",
+      "to": "panel-reviewer",
+      "condition": "storyboard_packet_emitted"
+    },
+    {
+      "from": "panel-reviewer",
+      "to": "panel-creator",
+      "condition": "reviewer_status_blocked_and_attempts_remaining"
+    },
+    {
+      "from": "panel-reviewer",
+      "to": "human",
+      "condition": "reviewer_status_pass_or_attempts_exhausted"
+    }
+  ],
+  "required_evidence": [
+    "storyboard_prompt_review.json",
+    "reference_asset_manifest.json",
+    "storyboard_packet.json",
+    "storyboard_panel_manifest.json",
+    "storyboard_review_verdict.json",
+    "storyboard_packet_receipt.json"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_skill_gate",
+    "missing_required_evidence",
+    "prompt_contract_invalid",
+    "missing_expected_response_fixture",
+    "missing_reference_assets",
+    "panel_count_below_minimum",
+    "single_image_treated_as_storyboard",
+    "missing_per_panel_time_range",
+    "missing_per_panel_script_text",
+    "missing_per_panel_coverage_seed_ids",
+    "missing_identity_reference_for_character",
+    "missing_environment_reference",
+    "reviewer_attempts_exhausted",
+    "malformed_handoff"
+  ],
+  "diagnosis": {
+    "prior_failure": "The previous Phase 07 Tau run accepted one generated PNG as provider-ready evidence.",
+    "why_tau_did_not_reject": "The previous DAG/prompt did not encode minimum storyboard packet evidence, prompt-reviewer checks, missing-reference blockers, or single-image rejection in required_evidence and fail_closed_on.",
+    "repair": "Add prompt-reviewer before panel-creator, add reference gate before image generation, and require panel-reviewer to validate storyboard packet coverage before provider eligibility."
+  }
+}

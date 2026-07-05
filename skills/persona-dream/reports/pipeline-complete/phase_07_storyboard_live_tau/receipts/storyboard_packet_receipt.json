@@ -1,0 +1,38 @@
+{
+  "schema": "persona_dream.storyboard_packet_receipt.v1",
+  "status": "BLOCKED_REFERENCE_GAPS",
+  "run_id": "phase_07_storyboard_live_tau",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "required_tau_dag_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_tau_dag_contract.json",
+  "panel_count": 4,
+  "duration_seconds": 10,
+  "text_panels_present": true,
+  "coverage_seed_ids_present": true,
+  "references_present": true,
+  "candidate_generated_panel_count": 1,
+  "accepted_generated_panel_count": 0,
+  "missing_reference_count": 5,
+  "blockers": [
+    "Embry surfboard reference/contact sheet missing",
+    "Kai surfboard reference/contact sheet missing",
+    "June Swell environment reference/contact sheet missing",
+    "Lava Reef environment reference/contact sheet missing",
+    "Kona Coast location reference/contact sheet missing"
+  ],
+  "claims": {
+    "proves": [
+      "A storyboard packet with four timed text panels exists.",
+      "The packet maps panels to Phase 06 interaction-matrix seed IDs.",
+      "The previous single generated image is explicitly rejected as sufficient storyboard evidence.",
+      "The replacement Tau DAG contract now includes prompt-reviewer, reference-gate, creator, and reviewer nodes with fail-closed evidence checks."
+    ],
+    "does_not_prove": [
+      "Provider-ready storyboard imagery",
+      "Complete Kling reference coverage",
+      "Panel creator/reviewer live acceptance under the replacement Tau DAG",
+      "That missing prop/environment contact sheets have been generated"
+    ]
+  },
+  "mocked": false,
+  "live": false
+}

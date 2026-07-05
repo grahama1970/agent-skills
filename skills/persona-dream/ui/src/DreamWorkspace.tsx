@@ -539,6 +539,22 @@ function statusTone(status: string): StatusTone {
   return 'unknown'
 }
 
+function statusLabel(status: string): string {
+  const normalized = status.toUpperCase()
+  if (
+    normalized.includes('PASS')
+    || normalized.includes('EVIDENCE_FOUND')
+    || normalized.includes('READY')
+    || normalized.includes('CALLED')
+    || normalized.includes('AUTHORIZED')
+  ) return 'Pass'
+  if (normalized.includes('MISSING')) return 'Missing evidence'
+  if (normalized.includes('BLOCK')) return 'Blocked'
+  if (normalized.includes('FAIL')) return 'Fail'
+  if (normalized.includes('DRY_RUN')) return 'Dry run'
+  return status.replace(/_/g, ' ')
+}
+
 const toneStyles: Record<StatusTone, CSSProperties> = {
   pass: { borderColor: 'rgba(52, 211, 153, 0.38)', background: 'rgba(52, 211, 153, 0.1)', color: '#a7f3d0' },
   dry: { borderColor: 'rgba(56, 189, 248, 0.38)', background: 'rgba(56, 189, 248, 0.1)', color: '#bae6fd' },
@@ -549,10 +565,11 @@ const toneStyles: Record<StatusTone, CSSProperties> = {
 function StatusBadge({ status }: { status: string }) {
   const tone = statusTone(status)
   const Icon = tone === 'pass' ? CheckCircle2 : tone === 'blocked' ? ShieldAlert : AlertTriangle
+  const label = statusLabel(status)
   return (
-    <span style={{ ...styles.badge, ...toneStyles[tone] }}>
+    <span title={label} aria-label={`Status: ${label}`} style={{ ...styles.badge, ...toneStyles[tone] }}>
       <Icon size={12} />
-      {status}
+      {label}
     </span>
   )
 }
@@ -561,7 +578,7 @@ function GateMiniBadge({ status, label }: { status: string; label: string }) {
   const tone = statusTone(status)
   const Icon = tone === 'pass' ? CheckCircle2 : tone === 'blocked' ? ShieldAlert : AlertTriangle
   return (
-    <span title={status} aria-label={`${label}: ${status}`} style={{ ...styles.gateMiniBadge, ...toneStyles[tone] }}>
+    <span title={statusLabel(status)} aria-label={`${label}: ${statusLabel(status)}`} style={{ ...styles.gateMiniBadge, ...toneStyles[tone] }}>
       <Icon size={12} />
       <span>{label}</span>
     </span>
@@ -569,12 +586,25 @@ function GateMiniBadge({ status, label }: { status: string; label: string }) {
 }
 
 function isStagePassed(stage: DreamStage): boolean {
-  return statusTone(stage.status) === 'pass'
+  return statusTone(effectiveStageStatus(stage)) === 'pass'
 }
 
 function stageMissingMessage(stage: DreamStage): string {
   if (isStagePassed(stage)) return 'Accepted evidence is present for this phase.'
+  if (stage.id === '07') {
+    return 'Storyboard packet is blocked: missing prop/environment references and the single generated PNG is only a rejected candidate, not a complete storyboard.'
+  }
   return stage.failureOrGap || 'Required preflight evidence was not found for this phase.'
+}
+
+function effectiveStageStatus(stage: DreamStage): string {
+  if (stage.id === '07') {
+    const hasStoryboardPacket = stage.artifacts.some((artifact) => /storyboard_packet|panel_repair_gate_receipt|panel_source_receipt/i.test(`${artifact.path} ${artifact.label}`))
+    if (hasStoryboardPacket && !/PASS_STORYBOARD_PACKET|PASS_STORYBOARD/i.test(stage.status)) {
+      return 'BLOCKED_STORYBOARD_REFERENCE_GAPS'
+    }
+  }
+  return stage.status
 }
 
 function ArtifactField({ label, value }: { label: string; value?: string }) {
@@ -721,7 +751,10 @@ function StageCard({
               .map(linkedStoryAssetFromMemoryResult)}
           />
         )}
-        {!['01', '02', '03', '04', '05', '06'].includes(stage.id) && (
+        {stage.id === '07' && (
+          <StoryboardConsole stage={stage} />
+        )}
+        {!['01', '02', '03', '04', '05', '06', '07'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
             {stage.failureOrGap && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
@@ -737,46 +770,53 @@ function StageCard({
 
 function StageCardHeader({ stage }: { stage: DreamStage }) {
   return (
-    <div style={styles.stageCardHeader}>
-      <div style={styles.stageIdentity}>
-        <span style={styles.stageIcon}>
-          <PhaseIcon phaseId={stage.id} />
-        </span>
-        <div style={styles.phaseHeaderText}>
-          <div style={styles.stageId}>{stage.id.replace(/_/g, ' ')}</div>
-          <h2 style={styles.stageTitle}>{phaseShortLabels[stage.id] ?? stage.title}</h2>
-          <div style={styles.stageTitleRule} />
+    <div style={styles.stageHeaderStack}>
+      <div style={styles.stageCardHeader}>
+        <div style={styles.stageIdentity}>
+          <span style={styles.stageIcon}>
+            <PhaseIcon phaseId={stage.id} />
+          </span>
+          <div style={styles.phaseHeaderText}>
+            <div style={styles.stageId}>{stage.id.replace(/_/g, ' ')}</div>
+            <h2 style={styles.stageTitle}>{phaseShortLabels[stage.id] ?? stage.title}</h2>
+            <div style={styles.stageTitleRule} />
+          </div>
+        </div>
+        <div style={styles.stageHeaderActions}>
+          {stage.id === '02' && (
+            <button
+              type="button"
+              data-qid="dream:story:header-copy-payload"
+              title="Copy full Phase 02 story prompt payload"
+              aria-label="Copy full Phase 02 story prompt payload"
+              onClick={() => window.dispatchEvent(new Event('dream:copy-story-payload'))}
+              style={styles.stageHeaderCopyBtn}
+            >
+              <Copy size={14} />
+              <span style={styles.stageHeaderCopyLabel}>Prompt Payload</span>
+            </button>
+          )}
+          {stage.id === '03' && (
+            <button
+              type="button"
+              data-qid="dream:crew:header-copy-payload"
+              title="Copy full Phase 03 crew prompt payload"
+              aria-label="Copy full Phase 03 crew prompt payload"
+              onClick={() => window.dispatchEvent(new Event('dream:copy-crew-payload'))}
+              style={styles.stageHeaderCopyBtn}
+            >
+              <Copy size={14} />
+              <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
+            </button>
+          )}
+          <StatusBadge status={effectiveStageStatus(stage)} />
         </div>
       </div>
-      <div style={styles.stageHeaderActions}>
-        {stage.id === '02' && (
-          <button
-            type="button"
-            data-qid="dream:story:header-copy-payload"
-            title="Copy full Phase 02 story prompt payload"
-            aria-label="Copy full Phase 02 story prompt payload"
-            onClick={() => window.dispatchEvent(new Event('dream:copy-story-payload'))}
-            style={styles.stageHeaderCopyBtn}
-          >
-            <Copy size={14} />
-            <span style={styles.stageHeaderCopyLabel}>Prompt Payload</span>
-          </button>
-        )}
-        {stage.id === '03' && (
-          <button
-            type="button"
-            data-qid="dream:crew:header-copy-payload"
-            title="Copy full Phase 03 crew prompt payload"
-            aria-label="Copy full Phase 03 crew prompt payload"
-            onClick={() => window.dispatchEvent(new Event('dream:copy-crew-payload'))}
-            style={styles.stageHeaderCopyBtn}
-          >
-            <Copy size={14} />
-            <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
-          </button>
-        )}
-        <StatusBadge status={stage.status} />
-      </div>
+      {!isStagePassed(stage) && (
+        <div style={styles.stageStatusHelp}>
+          {stageMissingMessage(stage)}
+        </div>
+      )}
     </div>
   )
 }
@@ -813,6 +853,155 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
         </div>
       )}
     </>
+  )
+}
+
+const phase07StoryboardPacketPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json'
+
+function StoryboardConsole({ stage }: { stage: DreamStage }) {
+  const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
+  const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPacket() {
+      try {
+        setLoadError(null)
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const payload = await response.json()
+        if (!cancelled) setPacket(payload)
+      } catch (error) {
+        if (!cancelled) {
+          setPacket(null)
+          setLoadError(error instanceof Error ? error.message : String(error))
+        }
+      }
+    }
+    void loadPacket()
+    return () => { cancelled = true }
+  }, [packetPath])
+
+  const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
+  const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
+  const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
+  const status = String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || panels.length < 2
+
+  return (
+    <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
+      <div style={nvis.storyboardHeader}>
+        <div>
+          <div style={nvis.storyboardEyebrow}>Storyboard Packet</div>
+          <h3 style={nvis.storyboardTitle}>Timed panels, source references, and coverage</h3>
+        </div>
+        <div style={nvis.storyboardMetaRow}>
+          <span style={isBlocked ? nvis.storyboardStatusBlocked : nvis.storyboardStatusPass}>
+            {isBlocked ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+            {status.replace(/_/g, ' ')}
+          </span>
+          <span style={nvis.storyboardMetaPill}>{panels.length || '0'} panels</span>
+          <span style={nvis.storyboardMetaPill}>{String(packet?.duration_seconds ?? '10')}s</span>
+        </div>
+      </div>
+
+      {(loadError || panels.length < 2) && (
+        <div style={nvis.storyboardBlockerBox}>
+          <strong>Storyboard gate is not satisfied.</strong>
+          <span>
+            {loadError
+              ? `Storyboard packet could not be loaded: ${loadError}.`
+              : 'A single generated image is not a storyboard. Phase 07 requires multiple timed panels with text, references, coverage seed IDs, and reviewer acceptance.'}
+          </span>
+        </div>
+      )}
+
+      {blockers.length > 0 && (
+        <div style={nvis.storyboardBlockerList}>
+          <div style={nvis.storyboardBlockerTitle}>Missing reference inputs</div>
+          {blockers.map((blocker, index) => (
+            <div key={`${String(blocker.entity)}-${index}`} style={nvis.storyboardBlockerItem}>
+              <span>{String(blocker.entity ?? 'Unknown entity')}</span>
+              <small>{String(blocker.reason ?? 'Reference is missing')}</small>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {panels.length > 0 && (
+        <div style={nvis.storyboardPanelGrid}>
+          {panels.map((panel) => (
+            <StoryboardPanel key={String(panel.panel_id ?? panel.shot)} panel={panel} />
+          ))}
+        </div>
+      )}
+
+      {candidates.length > 0 && (
+        <div style={nvis.storyboardCandidateStrip}>
+          <div style={nvis.storyboardBlockerTitle}>Rejected generated candidate</div>
+          {candidates.map((candidate) => {
+            const url = dreamAssetUrl(String(candidate.path ?? ''))
+            return (
+              <div key={String(candidate.panel_id ?? candidate.path)} style={nvis.storyboardCandidateRow}>
+                {url && <img src={url} alt={String(candidate.panel_id ?? 'candidate panel')} style={nvis.storyboardCandidateThumb} />}
+                <div>
+                  <div style={nvis.storyboardCandidateStatus}>{String(candidate.status ?? 'REJECTED')}</div>
+                  <div style={nvis.storyboardCandidateReason}>{String(candidate.reason ?? '')}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
+  const range = panel.time_range && typeof panel.time_range === 'object' ? panel.time_range as Record<string, unknown> : {}
+  const references = Array.isArray(panel.references) ? panel.references as Array<Record<string, unknown>> : []
+  const seeds = Array.isArray(panel.coverage_seed_ids) ? panel.coverage_seed_ids.map(String) : []
+  const entities = Array.isArray(panel.required_entities) ? panel.required_entities.map(String) : []
+
+  return (
+    <article data-qid="dream:storyboard:panel" style={nvis.storyboardPanelCard}>
+      <div style={nvis.storyboardPanelTopline}>
+        <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')}</span>
+        <span style={nvis.storyboardPanelTime}>{String(range.start_s ?? '?')}s-{String(range.end_s ?? '?')}s</span>
+      </div>
+      <div style={nvis.storyboardShot}>{String(panel.shot ?? 'Missing shot direction')}</div>
+      <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
+      {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
+      <div style={nvis.storyboardSeedRow}>
+        {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
+      </div>
+      <div style={nvis.storyboardEntityRow}>
+        {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
+      </div>
+      {references.length > 0 && (
+        <div style={nvis.storyboardReferenceGrid}>
+          {references.map((reference) => {
+            const raw = String(reference.path || reference.url || '')
+            const url = dreamAssetUrl(raw)
+            return (
+              <div key={String(reference.id ?? reference.title ?? raw)} style={nvis.storyboardReferenceCard}>
+                {url ? (
+                  <img src={url} alt={String(reference.title ?? reference.id ?? 'reference')} style={nvis.storyboardReferenceThumb} />
+                ) : (
+                  <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
+                )}
+                <div style={nvis.storyboardReferenceText}>
+                  <span>{String(reference.title ?? reference.id ?? 'Reference')}</span>
+                  <small>{String(reference.role ?? reference.memory_key ?? 'reference')}</small>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </article>
   )
 }
 
@@ -3274,6 +3463,30 @@ function coverageNoteForScriptRow(index: number, rows: Array<Record<string, unkn
   return [entity ? `${entity}:` : '', interaction || 'Coverage row is present but has no script evidence note.', missingText].join(' ').replace(/\s+/g, ' ').trim()
 }
 
+type ScriptCoverageStatus = 'verified' | 'failed' | 'pending'
+
+function scriptCoverageStatusForRow(index: number, rows: Array<Record<string, unknown>>): ScriptCoverageStatus {
+  if (rows.length === 0) return 'pending'
+  const row = rows[index % rows.length]
+  const missing = Array.isArray(row.missing_script_details) ? row.missing_script_details : []
+  const hasEvidence = Boolean(
+    String(row.environment_interaction ?? row.script_evidence ?? row.script_function ?? row.dynamics ?? '').trim(),
+  )
+  if (row.described_in_script === false || row.covered_in_script === false || missing.length > 0) return 'failed'
+  if (row.described_in_script === true || row.covered === true || row.covered_in_script === true || hasEvidence) return 'verified'
+  return 'pending'
+}
+
+function scriptCoverageStatusTitle(status: ScriptCoverageStatus, index: number, rows: Array<Record<string, unknown>>): string {
+  if (rows.length === 0) return 'Pending: no persisted interaction-matrix coverage is loaded.'
+  const row = rows[index % rows.length]
+  const entity = String(row.entity ?? row.name ?? row.source_seed_id ?? 'matrix row').trim()
+  const missing = Array.isArray(row.missing_script_details) ? row.missing_script_details.map((item) => String(item)).join(', ') : ''
+  if (status === 'failed') return missing ? `Failed: ${entity} missing ${missing}` : `Failed: ${entity} needs script coverage`
+  if (status === 'verified') return `Verified: ${entity} is described in the script coverage`
+  return `Pending: ${entity} has not been reviewed yet`
+}
+
 function ScriptCoverageTable({ rows }: { rows: Array<Record<string, unknown>> }) {
   if (!rows.length) return null
   return (
@@ -3330,18 +3543,72 @@ function ScriptTable({
 
   return (
     <div data-qid="dream:script:structured-table" style={nvis.scriptTableShell}>
-      {rows.map((row, index) => (
-        <div key={`${row.element}-${index}`} style={nvis.scriptTableRow}>
-          <div style={nvis.scriptBeatHeader}>
-            <span style={nvis.scriptElementTag}>{row.element}</span>
-            <span style={nvis.scriptDurationTag}>{durationLabel(index)}</span>
+      {rows.map((row, index) => {
+        const status = scriptCoverageStatusForRow(index, coverageRows)
+        const statusStyle = status === 'verified'
+          ? nvis.scriptStatusNodeVerified
+          : status === 'failed'
+            ? nvis.scriptStatusNodeFailed
+            : nvis.scriptStatusNodePending
+        return (
+          <div
+            key={`${row.element}-${index}`}
+            style={{
+              ...nvis.scriptTableRow,
+              ...(status === 'failed' ? nvis.scriptTableRowFailed : null),
+            }}
+          >
+            <span
+              data-qid={`dream:script:status-node:${index}`}
+              data-status={status}
+              title={scriptCoverageStatusTitle(status, index, coverageRows)}
+              style={{ ...nvis.scriptStatusNodeBase, ...statusStyle }}
+            />
+            <div style={nvis.scriptBeatHeader}>
+              <span style={nvis.scriptElementTag}>{row.element}</span>
+              <span style={nvis.scriptDurationTag}>{durationLabel(index)}</span>
+            </div>
+            <div style={nvis.scriptContentBlock}>{highlightWithGlossary(row.content, glossary)}</div>
+            <div style={nvis.scriptNotesCell}>{coverageNoteForScriptRow(index, coverageRows)}</div>
           </div>
-          <div style={nvis.scriptContentBlock}>{highlightWithGlossary(row.content, glossary)}</div>
-          <div style={nvis.scriptNotesCell}>{coverageNoteForScriptRow(index, coverageRows)}</div>
-        </div>
-      ))}
+        )
+      })}
       <ScriptCoverageTable rows={coverageRows} />
     </div>
+  )
+}
+
+function ScriptAssetTile({ asset }: { asset: LinkedStoryAsset }) {
+  const [broken, setBroken] = useState(false)
+  const mediaType = dreamInferMediaType(asset.url, asset.mediaType)
+  const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif'].includes(mediaType)
+  const isVideo = ['mp4', 'mov', 'webm', 'avi'].includes(mediaType)
+  const isAudio = ['wav', 'mp3', 'ogg'].includes(mediaType)
+  const Icon = isAudio ? Volume2 : isVideo ? Film : isImage ? Image : FileText
+  const label = asset.title || asset.id
+  return (
+    <button
+      type="button"
+      data-qid={`dream:script:asset:${asset.id}`}
+      title={`${label}${asset.description ? ` — ${asset.description}` : ''}`}
+      onClick={() => asset.url && window.open(asset.url, '_blank', 'noopener,noreferrer')}
+      style={nvis.scriptAssetTile}
+    >
+      {isImage && asset.url && !broken ? (
+        <img
+          src={asset.url}
+          alt={label}
+          style={nvis.scriptAssetThumb}
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <span style={nvis.scriptAssetFallback}>
+          <Icon size={18} />
+        </span>
+      )}
+      <span style={nvis.scriptAssetTitle}>{compactCrewText(label, 58)}</span>
+      <span style={nvis.scriptAssetMeta}>{isAudio ? 'audio' : isVideo ? 'video' : isImage ? 'image' : 'text'}</span>
+    </button>
   )
 }
 
@@ -3871,8 +4138,9 @@ function ScriptConsole({
     <section data-qid="dream:script:console" style={nvis.crewConsole}>
       <div style={nvis.crewTopBar}>
         <div style={nvis.crewTopMeta}>
-          <div style={nvis.sectionLabel}><FileText size={13} /> Phase 06 Script</div>
-          <p style={nvis.crewIntro}>Generate screenplay JSON from the accepted idea, Phase 02 story, interaction matrix, crew choices, contact sheets, voices, and linked assets.</p>
+          <p data-qid="dream:script:phase-description" style={nvis.scriptPhaseDescription}>
+            Generate screenplay JSON from the accepted idea, Phase 02 story, interaction matrix, crew choices, contact sheets, voices, and linked assets.
+          </p>
         </div>
         <div style={nvis.crewActions}>
           <label style={nvis.directorSliderGroup}>
@@ -3952,7 +4220,7 @@ function ScriptConsole({
           <span style={nvis.crewRoleLabel}><Images size={13} /> Assets</span>
           <div style={nvis.scriptAssetGrid}>
             {linkedAssets.slice(0, 6).map((asset) => (
-              <img key={asset.id} src={asset.url} alt={asset.title} title={asset.description || asset.title} style={nvis.scriptAssetThumb} />
+              <ScriptAssetTile key={asset.id} asset={asset} />
             ))}
             {linkedAssets.length === 0 && <span style={nvis.crewContextText}>No linked assets loaded.</span>}
           </div>
@@ -3967,7 +4235,11 @@ function ScriptConsole({
       )}
 
       <div style={nvis.scriptStoryAreaWrap}>
-        <span style={nvis.directorLabel}><FileText size={12} /> Script Area</span>
+        <div style={nvis.scriptSectionHeader}>
+          <span style={nvis.scriptSectionRule} />
+          <span style={nvis.scriptSectionTitle}><FileText size={13} /> Script Area</span>
+          <span style={nvis.scriptSectionRuleWide} />
+        </div>
         <div style={nvis.directorStoryContent}>
           <div data-qid="dream:script:canvas" style={nvis.directorStoryCanvas}>
             <ScriptTable draft={draft} storyContract={storyContract} durationSeconds={durationSeconds} />
@@ -5724,7 +5996,8 @@ function AgentPane({
   onSubmitAction: (action: StageAction, noteOverride?: string) => void
 }) {
   const disabled = !selectedRun || !selectedStage
-  const selectedStageMissing = selectedStage?.status.toUpperCase().includes('MISSING') ?? false
+  const selectedStageStatus = selectedStage ? effectiveStageStatus(selectedStage) : ''
+  const selectedStageMissing = /MISSING|BLOCKED|FAIL/i.test(selectedStageStatus)
   const selectedStagePassed = selectedStage != null && isStagePassed(selectedStage)
   const agentGuidance = (() => {
     if (!selectedStage) return 'Select a Dream run and phase before creating work orders.'
@@ -5754,7 +6027,7 @@ function AgentPane({
         <div style={styles.agentContext}>
           <ArtifactField label="Run" value={selectedRun?.title} />
           <ArtifactField label="Active phase" value={selectedStage ? `${phaseNumber(selectedStage.id)} ${phaseShortLabels[selectedStage.id] ?? selectedStage.title}` : undefined} />
-          <ArtifactField label="Gate state" value={selectedStage?.status} />
+          <ArtifactField label="Gate state" value={selectedStage ? statusLabel(selectedStageStatus) : undefined} />
           {selectedRun && (
             <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedRun.runRoot.split('/').pop()}
@@ -5887,7 +6160,7 @@ function PipelineNav({
               data-qid={`timeline-${p.id}`}
               data-qs-action="DREAM_STAGE_NAVIGATE"
               title={`Phase ${p.id}: ${p.label} · ${stage?.status ?? 'MISSING'}`}
-              aria-label={`Navigate to phase ${p.id}: ${p.label}. Status ${stage?.status ?? 'MISSING'}`}
+              aria-label={`Navigate to phase ${p.id}: ${p.label}. Status ${statusLabel(stage?.status ?? 'MISSING')}`}
               aria-current={active ? 'step' : undefined}
               onClick={() => onPhaseChange(p.id)}
               style={{
@@ -6961,6 +7234,13 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.55,
     maxWidth: 980,
   },
+  scriptPhaseDescription: {
+    margin: 0,
+    color: '#9ca3af',
+    fontSize: 13,
+    lineHeight: 1.5,
+    maxWidth: '75ch',
+  },
   crewActions: {
     display: 'flex',
     alignItems: 'center',
@@ -7570,9 +7850,37 @@ const nvis: Record<string, CSSProperties> = {
   scriptStoryAreaWrap: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 18,
     padding: '0 16px',
     minWidth: 0,
+  },
+  scriptSectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    marginTop: 18,
+    marginBottom: 2,
+  },
+  scriptSectionRule: {
+    flex: '0 0 56px',
+    height: 1,
+    background: 'rgba(255,255,255,0.10)',
+  },
+  scriptSectionRuleWide: {
+    flex: 1,
+    height: 1,
+    background: 'rgba(255,255,255,0.10)',
+  },
+  scriptSectionTitle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    color: '#f3f4f6',
+    fontSize: 12,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    whiteSpace: 'nowrap' as const,
   },
   directorStoryContent: {
     display: 'flex',
@@ -7586,7 +7894,7 @@ const nvis: Record<string, CSSProperties> = {
     borderRadius: 12,
     border: 'none',
     background: 'transparent',
-    color: '#e2e8f0',
+    color: '#d1d5db',
     fontSize: 16,
     lineHeight: 1.7,
     fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
@@ -7602,16 +7910,24 @@ const nvis: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    marginTop: 16,
+    marginTop: 2,
+    paddingLeft: 22,
+    position: 'relative',
     background: 'transparent',
     overflow: 'hidden',
   },
+  scriptTableShellBefore: {},
   scriptTableRow: {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
-    padding: '18px 0',
+    position: 'relative',
+    padding: '20px 0 20px 22px',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
+    borderLeft: '1px solid rgba(74,158,255,0.18)',
+  },
+  scriptTableRowFailed: {
+    borderLeft: '1px solid rgba(239,68,68,0.55)',
   },
   scriptTableHeader: {
     background: 'rgba(255,255,255,0.035)',
@@ -7632,17 +7948,18 @@ const nvis: Record<string, CSSProperties> = {
   },
   scriptContentBlock: {
     minWidth: 0,
-    padding: '16px 24px',
-    marginLeft: 8,
-    borderLeft: '2px solid rgba(255,255,255,0.10)',
-    color: '#d4d4d4',
+    padding: '8px 0 0',
+    marginLeft: 0,
+    borderLeft: 'none',
+    color: '#d1d5db',
     fontSize: 15,
-    lineHeight: 1.7,
+    lineHeight: 1.72,
+    fontFamily: '"Courier Prime", "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     whiteSpace: 'pre-wrap' as const,
     overflowWrap: 'break-word' as const,
   },
   scriptNotesCell: {
-    paddingTop: 10,
+    paddingTop: 12,
     borderTop: '1px solid rgba(255,255,255,0.06)',
     color: '#94a3b8',
     fontSize: 12,
@@ -7654,7 +7971,31 @@ const nvis: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
+    position: 'relative',
   },
+  scriptStatusNodeBase: {
+    position: 'absolute',
+    left: -5,
+    top: 30,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    display: 'inline-block',
+    zIndex: 2,
+  },
+  scriptStatusNodeVerified: {
+    background: '#10B981',
+    boxShadow: '0 0 8px rgba(16,185,129,0.4)',
+  },
+  scriptStatusNodeFailed: {
+    background: '#EF4444',
+    boxShadow: '0 0 8px rgba(239,68,68,0.5)',
+  },
+  scriptStatusNodePending: {
+    background: 'transparent',
+    border: '1px solid #6B7280',
+  },
+  scriptBeatHeaderDot: {},
   scriptElementTag: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -7766,13 +8107,50 @@ const nvis: Record<string, CSSProperties> = {
     border: '1px dashed rgba(255,255,255,0.12)',
     background: 'rgba(255,255,255,0.02)',
   },
-  scriptAssetThumb: {
-    width: 120,
-    height: 80,
-    objectFit: 'cover' as const,
-    borderRadius: 8,
+  scriptAssetTile: {
+    width: 128,
+    minHeight: 104,
+    padding: 0,
+    overflow: 'hidden',
+    borderRadius: 10,
     border: '1px solid rgba(255,255,255,0.10)',
-    background: '#050505',
+    background: 'rgba(10,12,16,0.74)',
+    color: '#d1d5db',
+    display: 'grid',
+    gridTemplateRows: '72px auto auto',
+    textAlign: 'left' as const,
+    cursor: 'pointer',
+  },
+  scriptAssetThumb: {
+    width: '100%',
+    height: 72,
+    objectFit: 'cover' as const,
+    background: '#111827',
+    display: 'block',
+  },
+  scriptAssetFallback: {
+    height: 72,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#93c5fd',
+    background: 'linear-gradient(135deg, rgba(74,158,255,0.14), rgba(255,255,255,0.025))',
+  },
+  scriptAssetTitle: {
+    padding: '8px 9px 2px',
+    color: '#d1d5db',
+    fontSize: 11,
+    lineHeight: 1.25,
+    fontWeight: 700,
+  },
+  scriptAssetMeta: {
+    padding: '0 9px 8px',
+    color: '#64748b',
+    fontSize: 9,
+    lineHeight: 1.2,
+    fontWeight: 800,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
   },
   scriptActionBar: {
     position: 'sticky' as const,
@@ -8240,6 +8618,266 @@ const nvis: Record<string, CSSProperties> = {
     fontSize: 11,
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  storyboardConsole: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+  },
+  storyboardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 18,
+    alignItems: 'flex-start',
+    paddingBottom: 16,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+  },
+  storyboardEyebrow: {
+    color: '#7f9bbd',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+  },
+  storyboardTitle: {
+    margin: '8px 0 0',
+    color: '#e2e8f0',
+    fontSize: 20,
+    fontWeight: 650,
+    lineHeight: 1.25,
+  },
+  storyboardMetaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  storyboardStatusBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    border: '1px solid rgba(245,158,11,0.45)',
+    color: '#facc15',
+    background: 'rgba(245,158,11,0.08)',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardStatusPass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    border: '1px solid rgba(16,185,129,0.45)',
+    color: '#34d399',
+    background: 'rgba(16,185,129,0.08)',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardMetaPill: {
+    border: '1px solid rgba(148,163,184,0.28)',
+    color: '#a8b6ca',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardBlockerBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    border: '1px solid rgba(245,158,11,0.32)',
+    borderRadius: 10,
+    background: 'rgba(245,158,11,0.06)',
+    color: '#f8d78a',
+    padding: '14px 16px',
+    fontSize: 13,
+    lineHeight: 1.45,
+  },
+  storyboardBlockerList: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+    gap: 10,
+  },
+  storyboardBlockerTitle: {
+    gridColumn: '1 / -1',
+    color: '#7f9bbd',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  storyboardBlockerItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 5,
+    borderTop: '1px solid rgba(245,158,11,0.32)',
+    paddingTop: 10,
+    color: '#facc15',
+    fontSize: 12,
+    fontWeight: 750,
+  },
+  storyboardPanelGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 16,
+  },
+  storyboardPanelCard: {
+    borderTop: '1px solid rgba(255,255,255,0.11)',
+    paddingTop: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    minWidth: 0,
+  },
+  storyboardPanelTopline: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  storyboardPanelId: {
+    color: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: 850,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  storyboardPanelTime: {
+    color: '#4a9eff',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  storyboardShot: {
+    color: '#cbd5e1',
+    fontSize: 14,
+    lineHeight: 1.35,
+    fontWeight: 700,
+  },
+  storyboardAction: {
+    margin: 0,
+    color: '#a8b6ca',
+    fontSize: 13,
+    lineHeight: 1.55,
+  },
+  storyboardDialogue: {
+    margin: 0,
+    color: '#e2e8f0',
+    fontSize: 13,
+    lineHeight: 1.45,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  storyboardSeedRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardSeed: {
+    color: '#9ed0ff',
+    background: 'rgba(74,158,255,0.08)',
+    border: '1px solid rgba(74,158,255,0.18)',
+    borderRadius: 999,
+    padding: '3px 7px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  storyboardEntityRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardEntity: {
+    color: '#f472b6',
+    borderBottom: '1px dashed rgba(244,114,182,0.55)',
+    fontSize: 12,
+    fontWeight: 750,
+  },
+  storyboardReferenceGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 8,
+  },
+  storyboardReferenceCard: {
+    display: 'grid',
+    gridTemplateColumns: '44px 1fr',
+    gap: 9,
+    alignItems: 'center',
+    minWidth: 0,
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 8,
+    background: 'rgba(255,255,255,0.025)',
+    padding: 7,
+  },
+  storyboardReferenceThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    objectFit: 'cover' as const,
+    display: 'block',
+  },
+  storyboardReferenceFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#7f9bbd',
+    background: 'rgba(148,163,184,0.08)',
+  },
+  storyboardReferenceText: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    minWidth: 0,
+    color: '#dbeafe',
+    fontSize: 11,
+    lineHeight: 1.25,
+  },
+  storyboardCandidateStrip: {
+    borderTop: '1px solid rgba(255,255,255,0.09)',
+    paddingTop: 14,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  storyboardCandidateRow: {
+    display: 'grid',
+    gridTemplateColumns: '88px 1fr',
+    gap: 12,
+    alignItems: 'center',
+    color: '#a8b6ca',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  storyboardCandidateThumb: {
+    width: 88,
+    height: 58,
+    objectFit: 'cover' as const,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.09)',
+    filter: 'saturate(0.75)',
+  },
+  storyboardCandidateStatus: {
+    color: '#facc15',
+    fontSize: 11,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardCandidateReason: {
+    color: '#94a3b8',
+    marginTop: 3,
   },
   contactSheetGrid: {
     display: 'grid',
@@ -9802,6 +10440,10 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     gap: 14,
   },
+  stageHeaderStack: {
+    display: 'grid',
+    gap: 10,
+  },
   stageIdentity: {
     display: 'flex',
     alignItems: 'flex-start',
@@ -9837,6 +10479,17 @@ const styles: Record<string, CSSProperties> = {
   },
   stageHeaderCopyLabel: {
     display: 'inline-block',
+  },
+  stageStatusHelp: {
+    justifySelf: 'end',
+    maxWidth: 760,
+    borderRadius: 12,
+    border: '1px solid rgba(251, 191, 36, 0.28)',
+    background: 'rgba(251, 191, 36, 0.08)',
+    padding: '10px 12px',
+    color: '#fde68a',
+    fontSize: 12,
+    lineHeight: 1.45,
   },
   phaseHeaderText: {
     minWidth: 0,

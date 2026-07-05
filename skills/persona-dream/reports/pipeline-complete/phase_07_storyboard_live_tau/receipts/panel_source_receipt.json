@@ -1,10 +1,14 @@
 {
-  "blockers": [],
-  "final_panel_eligible": true,
+  "blockers": [
+    "Phase 07 produced one generated image only; this is not a complete storyboard.",
+    "Storyboard packet exists but remains blocked by missing prop/environment references.",
+    "Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast references/contact sheets are missing."
+  ],
+  "final_panel_eligible": false,
   "image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
   "nano_banana_fallback_used": false,
   "panel_id": "panel_001",
-  "photoreal_status": "PASS_PHOTOREAL_CINEMATIC",
+  "photoreal_status": "REJECTED_AS_COMPLETE_STORYBOARD",
   "producer": {
     "kind": "subagent",
     "name": "persona-dream-panel-repair-gate",
@@ -13,5 +17,7 @@
   "run_id": "phase_07_storyboard_live_tau",
   "schema": "persona_dream.panel_source_receipt.v1",
   "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
-  "status": "PASS_PANEL_SOURCE"
+  "status": "BLOCKED_STORYBOARD_REFERENCE_GAPS",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_panel_count": 4
 }

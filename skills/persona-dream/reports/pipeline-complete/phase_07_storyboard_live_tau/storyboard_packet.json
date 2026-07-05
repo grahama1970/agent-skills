@@ -1,0 +1,204 @@
+{
+  "schema": "persona_dream.storyboard_packet.v1",
+  "status": "BLOCKED_REFERENCE_GAPS",
+  "run_id": "phase_07_storyboard_live_tau",
+  "source_phase": "06_script",
+  "duration_seconds": 10,
+  "panel_count": 4,
+  "source_artifacts": {
+    "script_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+    "timed_transcript": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/timed_transcript.json",
+    "interaction_matrix": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/entity_environment_script_table.json",
+    "reference_asset_manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/reference_asset_manifest.json"
+  },
+  "panels": [
+    {
+      "panel_id": "sb_001",
+      "time_range": {
+        "start_s": 0,
+        "end_s": 2.5
+      },
+      "shot": "Waterline establishing panel at Kahalu'u Bay, low enough to show clear water over dark lava shapes.",
+      "action": "Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules.",
+      "dialogue": null,
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-5",
+        "seed-6"
+      ],
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "references": [
+        {
+          "id": "embry_character_sheet",
+          "title": "Embry character sheet montage",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+          "role": "identity_reference"
+        },
+        {
+          "id": "kai_character_sheet",
+          "title": "Kai Akana character sheet",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "role": "identity_reference"
+        }
+      ],
+      "prompt_fragment": "Keep Embry in a navy rashguard and Kai in a black rashguard. Show Kahalu'u Bay as a shared public reef break, not an empty private beach."
+    },
+    {
+      "panel_id": "sb_002",
+      "time_range": {
+        "start_s": 2.5,
+        "end_s": 5
+      },
+      "shot": "Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible.",
+      "action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line.",
+      "dialogue": null,
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-2",
+        "seed-4",
+        "seed-5"
+      ],
+      "required_entities": [
+        "Embry",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef"
+      ],
+      "references": [
+        {
+          "id": "embry_surfing_reference",
+          "title": "Embry surfing on the Big Island",
+          "media_type": "image",
+          "memory_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "role": "surf_action_reference"
+        }
+      ],
+      "prompt_fragment": "Do not make Embry reckless. Show autonomy through grip, timing, breath, and a physically careful commitment."
+    },
+    {
+      "panel_id": "sb_003",
+      "time_range": {
+        "start_s": 5,
+        "end_s": 7.5
+      },
+      "shot": "Two-character lineup panel with Kai slightly outside and Embry closer to the decision point.",
+      "action": "Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue.",
+      "dialogue": "Kai: If we paddle now, we're cutting across the lineup.",
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-3",
+        "seed-6"
+      ],
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Kai surfboard",
+        "Kona Coast"
+      ],
+      "references": [
+        {
+          "id": "kai_character_sheet",
+          "title": "Kai Akana character sheet",
+          "media_type": "image",
+          "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "role": "identity_reference"
+        },
+        {
+          "id": "kai_surfing_reference",
+          "title": "Kai Akana surfing on the Big Island",
+          "media_type": "image",
+          "memory_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "role": "surf_action_reference"
+        }
+      ],
+      "prompt_fragment": "Kai is competent through restraint. Avoid lecturer, rescuer, or hero framing."
+    },
+    {
+      "panel_id": "sb_004",
+      "time_range": {
+        "start_s": 7.5,
+        "end_s": 10
+      },
+      "shot": "Decisive waterline panel as the clean shoulder stands up over the visible reef boundary.",
+      "action": "Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision.",
+      "dialogue": null,
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-2",
+        "seed-4",
+        "seed-5",
+        "seed-6"
+      ],
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "references": [
+        {
+          "id": "candidate_panel_001",
+          "title": "Generated candidate panel, not final storyboard authority",
+          "media_type": "image",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+          "role": "rejected_candidate_reference"
+        }
+      ],
+      "prompt_fragment": "The final panel must preserve Embry/Kai identity references and contact-sheet continuity. A generic surf couple is not acceptable."
+    }
+  ],
+  "missing_reference_blockers": [
+    {
+      "entity": "Embry surfboard",
+      "source_seed_id": "seed-2",
+      "reason": "Required visible prop reference/contact sheet is missing."
+    },
+    {
+      "entity": "Kai surfboard",
+      "source_seed_id": "seed-3",
+      "reason": "Required visible prop reference/contact sheet is missing."
+    },
+    {
+      "entity": "June Swell",
+      "source_seed_id": "seed-4",
+      "reason": "Required environment reference/contact sheet is missing."
+    },
+    {
+      "entity": "Lava Reef",
+      "source_seed_id": "seed-5",
+      "reason": "Required environment reference/contact sheet is missing."
+    },
+    {
+      "entity": "Kona Coast",
+      "source_seed_id": "seed-6",
+      "reason": "Required location reference/contact sheet is missing."
+    }
+  ],
+  "generated_candidate_panels": [
+    {
+      "panel_id": "candidate_panel_001",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+      "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+      "status": "REJECTED_AS_COMPLETE_STORYBOARD",
+      "reason": "Tau produced one generated image only. A complete storyboard requires text panels, grounded references, coverage seed IDs, and reviewer acceptance."
+    }
+  ],
+  "review_requirements": [
+    "Every storyboard panel must include action text, time range, shot direction, and coverage seed IDs.",
+    "Every visible named character must cite identity references.",
+    "Every visible prop or environment element required by the interaction matrix must cite a contact sheet or explain the blocker.",
+    "A single generated PNG is never sufficient evidence for Phase 07 storyboard readiness."
+  ]
+}
