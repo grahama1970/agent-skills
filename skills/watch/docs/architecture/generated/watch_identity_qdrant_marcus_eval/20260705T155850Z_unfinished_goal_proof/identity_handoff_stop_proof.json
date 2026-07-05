@@ -1,0 +1,81 @@
+{
+  "schema": "watch.identity_handoff_stop_proof.v1",
+  "created_at": "2026-07-05T16:25:00Z",
+  "mocked": false,
+  "live": true,
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "purpose": "Tie Qdrant identity recall conflicts to Watch propagation stop requirements.",
+  "source_receipts": {
+    "qdrant_recall_identity_stop_receipt": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/watch_qdrant_recall_identity_stop_receipt.json",
+    "current_heldout_eval": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_heldout_eval_24.json"
+  },
+  "qdrant_recall_stop_receipt": {
+    "schema": "watch.qdrant_recall_identity_stop_receipt.v1",
+    "status": "IDENTITY_RECALL_CONFLICTS_FOUND",
+    "evaluated_count": 18,
+    "supported_count": 17,
+    "conflict_count": 1,
+    "training_eligible_count": 17,
+    "stop_control_required_count": 1,
+    "conflicts": [
+      {
+        "time_seconds": 17.205,
+        "accepted_character": "Marcus",
+        "top_character": "Willie",
+        "top_confidence": 0.932243,
+        "status": "IDENTITY_CONFLICT_STOP_REQUIRED",
+        "eligible_for_training": false,
+        "stop_control_required": true,
+        "label_to_render": "Willie? 0.93"
+      }
+    ],
+    "claim_boundary": {
+      "proves": [
+        "live Memory/Qdrant crop recall was evaluated against the accepted track label",
+        "high-confidence recall for another character creates an identity stop requirement",
+        "only supported accepted-label samples are eligible for training/readiness counting"
+      ],
+      "does_not_prove": [
+        "browser UI applied the stop point",
+        "future frames are correctly labeled without re-running recall",
+        "all possible identity handoffs are detected"
+      ]
+    }
+  },
+  "current_heldout_eval": {
+    "schema": "watch.identity_heldout_eval.v1",
+    "evaluated_count": 24,
+    "pass_count": 22,
+    "fail_count": 2,
+    "accuracy": 0.9167,
+    "ready_for_auto_suggest": true,
+    "known_failures": [
+      {
+        "row_index": 7,
+        "time_seconds": 174.4,
+        "detector_linked": false,
+        "truth": "Marcus",
+        "predicted": "Willie",
+        "confidence": 0.8668,
+        "best_score": 0.9046,
+        "interpretation": "Do not auto-accept; render as tentative and require human confirmation or reject/reset."
+      },
+      {
+        "row_index": 9,
+        "time_seconds": 233.31,
+        "detector_linked": false,
+        "truth": "Willie",
+        "predicted": "Marcus",
+        "confidence": 0.9384,
+        "best_score": 0.9919,
+        "interpretation": "Do not auto-accept; render as tentative and require human confirmation or reject/reset."
+      }
+    ]
+  },
+  "conclusion": {
+    "identity_handoff_stop_status": "proven_for_one_live_qdrant_conflict_not_broadly_proven",
+    "supported_samples_are_training_eligible": true,
+    "conflict_samples_are_training_eligible": false,
+    "broad_handoff_stop_eval_required": true
+  }
+}

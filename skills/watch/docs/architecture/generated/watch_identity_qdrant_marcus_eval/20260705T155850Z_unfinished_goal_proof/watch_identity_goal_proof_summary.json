@@ -265,8 +265,47 @@
       "note": "Readiness counts rejected labels separately; held-out eval results show suggestions can be wrong, so UI keeps suggestion labels tentative until accepted. This does not prove all future poisoning cases."
     },
     "identity_handoff_stops": {
-      "status": "not_broadly_proven_in_this_run",
-      "evidence": "Held-out failures/confusion prove identity flips exist and need stop/control handling; broad propagation-stop proof remains pending."
+      "status": "proven_for_one_live_qdrant_conflict_not_broadly_proven",
+      "stop_receipt": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/watch_qdrant_recall_identity_stop_receipt.json",
+      "current_proof": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_handoff_stop_proof.json",
+      "evidence": {
+        "qdrant_recall_stop_receipt": {
+          "evaluated_count": 18,
+          "supported_count": 17,
+          "conflict_count": 1,
+          "training_eligible_count": 17,
+          "stop_control_required_count": 1,
+          "conflict": {
+            "time_seconds": 17.205,
+            "accepted_character": "Marcus",
+            "top_character": "Willie",
+            "top_confidence": 0.932243,
+            "status": "IDENTITY_CONFLICT_STOP_REQUIRED",
+            "eligible_for_training": false,
+            "stop_control_required": true,
+            "label_to_render": "Willie? 0.93"
+          }
+        },
+        "current_heldout_eval_failures": [
+          {
+            "truth": "Marcus",
+            "predicted": "Willie",
+            "confidence": 0.8668,
+            "row_index": 7,
+            "time_seconds": 174.4,
+            "detector_linked": false
+          },
+          {
+            "truth": "Willie",
+            "predicted": "Marcus",
+            "confidence": 0.9384,
+            "row_index": 9,
+            "time_seconds": 233.31,
+            "detector_linked": false
+          }
+        ]
+      },
+      "remaining_gap": "A broad handoff-stop eval across all labeled YOLO tracks is still pending."
     }
   },
   "artifacts": {
@@ -276,6 +315,7 @@
     "browser_flow_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_yolo_label_live_check.json",
     "browser_flow_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_yolo_label_live_check.png",
     "tentative_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.json",
-    "tentative_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png"
+    "tentative_screenshot": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png",
+    "handoff_stop_proof_json": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_handoff_stop_proof.json"
   }
 }
