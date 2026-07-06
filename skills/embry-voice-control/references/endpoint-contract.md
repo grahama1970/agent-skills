@@ -61,6 +61,8 @@ Required response fields:
 - `chatterbox_tags`
 - `cue_policy`
 - `intent_policy_source`
+- `pause_strategy`
+- `interrupt_policy`
 - `speaker_resolution`
 - `memory_intent`
 - `memory_answer` or `memory_clarify` or `memory_deflect`
@@ -81,7 +83,8 @@ Misuse cases that must fail closed:
 - missing `turn_id`
 - missing `tts_render_text`
 - missing selected tone
-- missing `emotion_tags`, `chatterbox_tags`, `cue_policy`, or `intent_policy_source`
+- missing `emotion_tags`, `chatterbox_tags`, `cue_policy`, `pause_strategy`,
+  `interrupt_policy`, or `intent_policy_source`
 - untrusted user-supplied Chatterbox tags
 - request asks Chatterbox to answer facts without memory/Tau approval
 - stale turn has already been cancelled

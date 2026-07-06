@@ -127,6 +127,7 @@ Required request fields:
 - `tone`
 - `delivery_stage`
 - `pause_strategy`
+- `interrupt_policy`
 - `interruptible`
 - `play_local`, when speaker playback is requested
 
@@ -141,6 +142,8 @@ Required response fields:
 - `chatterbox_tags`
 - `cue_policy`
 - `intent_policy_source`
+- `pause_strategy`
+- `interrupt_policy`
 - `audio_artifact_id`
 - `audio_url` or `audio_path`
 - `audio_authority`
@@ -185,6 +188,9 @@ sequence with timing offsets.
   `cue_policy`; omission is a failed receipt. Receipts must also record
   `intent_policy_source`, normally `memory.intent`; direct local sanity speech
   may use `direct_sanity_explicit_policy`.
+- Every Embry speech item must include the default pause and interrupt strategy.
+  `pause_strategy` and `interrupt_policy` are required receipt fields, not UI
+  hints. Missing pause or interrupt policy is a failed voice receipt.
 - Unknown or ambiguous speakers fail closed to identity clarification.
 - Multiple non-Embry speakers overlapping map to a one-at-a-time boundary.
 - Barge-in cancels old speech and stale chunks before the new turn wins.
