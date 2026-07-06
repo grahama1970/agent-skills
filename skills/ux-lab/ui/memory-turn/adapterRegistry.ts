@@ -84,6 +84,11 @@ export const SHARED_CHAT_BRANCH_TABLE: Record<
     allowedBranches: ['watch'],
     renderer: 'ComplianceChatWell',
   },
+  'embry-voice': {
+    defaultBranch: 'embry-voice',
+    allowedBranches: ['embry-voice'],
+    renderer: 'ComplianceChatWell',
+  },
   'final-site': {
     defaultBranch: 'compliance',
     allowedBranches: ['compliance', 'personaplex', 'evidence-case', 'utility', 'aql'],

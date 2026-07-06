@@ -15,12 +15,14 @@ export type TurnBranch =
   | 'aql'
   | 'watch'
   | 'personaplex'
+  | 'embry-voice'
 
 export type TurnSurface =
   | 'sparta-explorer'
   | 'watch'
   | 'final-site'
   | 'shared-chat'
+  | 'embry-voice'
 
 export type DisclosureVariant = 'thinking' | 'evidence-case' | 'none'
 
@@ -30,6 +32,7 @@ export type StreamingStepStatus =
   | 'completed'
   | 'failed'
   | 'skipped'
+  | 'done'
 
 export type StreamingStepKind = 'step' | 'token' | 'message' | 'final' | 'error'
 
@@ -51,6 +54,7 @@ export type StreamingStepId =
   | 'connecting-personaplex'
   | 'persona-recall'
   | 'persona-answer'
+  | 'embry-chatterbox-render'
   | 'utility-answer'
   | 'aql-query'
   | (string & {})
@@ -200,6 +204,13 @@ export const MEMORY_TURN_BRANCH_TABLE: Record<TurnBranch, BranchDefinition> = {
     liveStatusLabel: 'Show thinking',
     stepIds: ['connecting-personaplex', 'persona-recall', 'persona-answer'],
   },
+  'embry-voice': {
+    branch: 'embry-voice',
+    label: 'Embry voice answer',
+    disclosureVariant: 'thinking',
+    liveStatusLabel: 'Listening and rendering voice…',
+    stepIds: ['finalizing-intent', 'extracting-entities', 'looking-in-memory', 'answering', 'embry-chatterbox-render'],
+  },
 }
 
 export const STREAMING_STEP_LABELS: Record<string, string> = {
@@ -215,6 +226,7 @@ export const STREAMING_STEP_LABELS: Record<string, string> = {
   'connecting-personaplex': 'Connecting to PersonaPlex',
   'persona-recall': 'Loading persona memory',
   'persona-answer': 'Composing persona response',
+  'embry-chatterbox-render': 'Rendering Chatterbox voice',
   'utility-answer': 'Answering directly',
   'aql-query': 'Running AQL recall',
 }

@@ -1,5 +1,5 @@
 import React, { FormEvent, useMemo, useState } from 'react'
-import { ArrowUp, Shield, Sparkles } from 'lucide-react'
+import { ArrowUp, Mic, MicOff, Shield, Sparkles } from 'lucide-react'
 import type { ChatMessage, StreamingStep, TurnBranch } from './memory-turn'
 import { liveStatusLabelFromSteps, streamingStepsToThinkingTrace } from './memory-turn'
 import MessageFooter from './MessageFooter'
@@ -35,6 +35,10 @@ export interface ComplianceChatWellProps {
   surface?: string
   className?: string
   activeBranch?: TurnBranch
+  voiceEnabled?: boolean
+  voiceStatus?: 'off' | 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
+  voiceLabel?: string
+  onVoiceToggle?: (enabled: boolean) => void
 }
 
 export function ComplianceChatWell({
@@ -54,6 +58,10 @@ export function ComplianceChatWell({
   surface = 'shared-chat',
   className,
   activeBranch,
+  voiceEnabled,
+  voiceStatus,
+  voiceLabel = 'Voice input',
+  onVoiceToggle,
 }: ComplianceChatWellProps): JSX.Element {
   const [draft, setDraft] = useState('')
   const liveBranch = activeBranch ?? branchFromSteps(streamingSteps) ?? branchFromMessage(liveAssistantMessage) ?? 'compliance'
@@ -138,15 +146,40 @@ export function ComplianceChatWell({
           onSubmit={(event) => { void submit(event) }}
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto',
+            gridTemplateColumns: onVoiceToggle ? 'auto 1fr auto' : '1fr auto',
             gap: 10,
             padding: 14,
             borderTop: '1px solid rgba(255,255,255,0.08)',
             background: 'rgba(0,0,0,0.22)',
           }}
         >
+          {onVoiceToggle && (
+            <button
+              type="button"
+              data-qid={`${qid}:voice-toggle`}
+              data-qs-action="SHARED_CHAT_TOGGLE_VOICE"
+              title={`${voiceLabel}: ${voiceEnabled ? 'enabled' : 'disabled'}${voiceStatus ? ` (${voiceStatus})` : ''}`}
+              aria-label={`${voiceLabel}: ${voiceEnabled ? 'enabled' : 'disabled'}`}
+              onClick={() => onVoiceToggle(!voiceEnabled)}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 16,
+                border: voiceEnabled ? '1px solid rgba(0,255,136,0.35)' : '1px solid rgba(255,255,255,0.1)',
+                background: voiceEnabled ? 'rgba(0,255,136,0.12)' : 'rgba(255,255,255,0.045)',
+                color: voiceEnabled ? '#9fffc8' : '#9aa6b6',
+                display: 'grid',
+                placeItems: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              {voiceEnabled ? <Mic size={18} strokeWidth={2} aria-hidden="true" /> : <MicOff size={18} strokeWidth={2} aria-hidden="true" />}
+            </button>
+          )}
           <textarea
             data-qid={`${qid}:input`}
+            data-qs-action="SHARED_CHAT_EDIT_MESSAGE"
+            title="Type chat message"
             value={draft}
             onChange={(event) => setDraft(event.currentTarget.value)}
             onKeyDown={(event) => {
@@ -174,6 +207,7 @@ export function ComplianceChatWell({
           <button
             type="submit"
             data-qid={`${qid}:send`}
+            data-qs-action="SHARED_CHAT_SEND_MESSAGE"
             disabled={disabled || composerDisabled || isStreaming || !draft.trim()}
             title="Send"
             style={{
@@ -221,8 +255,11 @@ function EmptyState({
               key={chip.label}
               type="button"
               data-qid={chip.dataQid ?? 'shared-chat:starter-chip'}
+              data-qs-action="SHARED_CHAT_STARTER_CHIP"
+              title={chip.prompt}
               onClick={() => onChip(chip.prompt)}
               style={{
+                minHeight: 44,
                 borderRadius: 999,
                 border: '1px solid rgba(255,255,255,0.12)',
                 background: 'rgba(255,255,255,0.05)',

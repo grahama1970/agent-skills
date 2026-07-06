@@ -11,6 +11,7 @@ import {
   type PersonaPlexAdapterOptions,
   type SpartaComplianceAdapterOptions,
   type StreamingStep,
+  type TurnBranch,
   type TurnInput,
   type TurnSurface,
   type WatchChatAdapterOptions,
@@ -32,7 +33,10 @@ export type SharedChatShellProps = Omit<
   messages?: ChatMessage[]
   initialMessages?: ChatMessage[]
   onMessagesChange?: (messages: ChatMessage[]) => void
-  onSend?: (text: string) => void | Promise<void>
+  onSend?: (text: string, inputMode?: string) => void | Promise<void>
+  streamingSteps?: StreamingStep[]
+  isStreaming?: boolean
+  activeBranch?: TurnBranch
   showModeToggle?: boolean
   defaultMode?: PersonaPlexChatMode
   onModeChange?: (mode: PersonaPlexChatMode) => void
@@ -44,6 +48,10 @@ export type SharedChatShellProps = Omit<
   context?: TurnInput['context']
   matrixContext?: TurnInput['matrixContext']
   starterChips?: StarterChip[]
+  voiceEnabled?: boolean
+  voiceStatus?: 'off' | 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
+  voiceLabel?: string
+  onVoiceToggle?: (enabled: boolean) => void
 }
 
 export function SharedChatShell({
@@ -52,6 +60,9 @@ export function SharedChatShell({
   initialMessages = [],
   onMessagesChange,
   onSend,
+  streamingSteps: externalStreamingSteps,
+  isStreaming: externalIsStreaming,
+  activeBranch: externalActiveBranch,
   showModeToggle = true,
   defaultMode = 'compliance',
   onModeChange,
@@ -63,6 +74,10 @@ export function SharedChatShell({
   context,
   matrixContext,
   starterChips,
+  voiceEnabled,
+  voiceStatus,
+  voiceLabel,
+  onVoiceToggle,
   placeholder,
   disabled,
   composerDisabled,
@@ -78,7 +93,10 @@ export function SharedChatShell({
   const [isStreaming, setIsStreaming] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const controlled = messages !== undefined
+  const externalTurnControl = onSend !== undefined
   const displayMessages = messages ?? internalMessages
+  const displayStreamingSteps = externalTurnControl ? (externalStreamingSteps ?? []) : streamingSteps
+  const displayIsStreaming = externalTurnControl ? (externalIsStreaming ?? false) : isStreaming
 
   const registry = useMemo(
     () =>
@@ -105,7 +123,7 @@ export function SharedChatShell({
 
   async function handleSend(text: string): Promise<void> {
     const trimmed = text.trim()
-    if (!trimmed || isStreaming) return
+    if (!trimmed || displayIsStreaming) return
 
     if (onSend) {
       await onSend(trimmed)
@@ -185,7 +203,7 @@ export function SharedChatShell({
     }
   }
 
-  const activeBranch = surface === 'watch' ? 'watch' : mode === 'personaplex' ? 'personaplex' : undefined
+  const activeBranch = externalActiveBranch ?? (surface === 'watch' ? 'watch' : surface === 'embry-voice' ? 'embry-voice' : mode === 'personaplex' ? 'personaplex' : undefined)
   const shellId = shellQid ?? (surface === 'watch' ? 'watch:chat:shell' : surface === 'sparta-explorer' ? 'sparta:chat:shell:slideover' : 'shared-chat:shell')
 
   return (
@@ -223,8 +241,8 @@ export function SharedChatShell({
 
       <ComplianceChatWell
         messages={displayMessages}
-        streamingSteps={streamingSteps}
-        isStreaming={isStreaming}
+        streamingSteps={displayStreamingSteps}
+        isStreaming={displayIsStreaming}
         onSend={(value) => void handleSend(value)}
         placeholder={placeholder ?? (mode === 'personaplex' ? 'Ask Embry…' : 'Ask SPARTA…')}
         disabled={disabled}
@@ -236,6 +254,10 @@ export function SharedChatShell({
         qid={qid ?? `${shellId}:well`}
         surface={surface}
         activeBranch={activeBranch}
+        voiceEnabled={voiceEnabled}
+        voiceStatus={voiceStatus}
+        voiceLabel={voiceLabel}
+        onVoiceToggle={onVoiceToggle}
       />
     </section>
   )

@@ -59,6 +59,7 @@ export function leadingIconForBranch(
 ): ThinkingTraceLeadingIcon {
   if (disclosureVariant === 'evidence-case' || branch === 'evidence-case') return 'shield'
   if (branch === 'personaplex') return 'mic'
+  if (branch === 'embry-voice') return 'mic'
   if (branch === 'watch') return 'sparkle'
   if (branch === 'compliance' || branch === 'aql') return 'shield'
   return 'sparkle'
@@ -87,6 +88,16 @@ export function thinkingTraceDisclosureParts(source: ThinkingTraceSource = {}): 
       leadingIcon: 'mic',
       disclosureVariant: 'thinking',
       liveStatusLabel: liveStatusLabelFromSteps(source.streamingSteps ?? [], 'Show thinking'),
+    }
+  }
+
+  if (branch === 'embry-voice') {
+    return {
+      label: 'Show thinking',
+      title: 'Embry voice thinking',
+      leadingIcon: 'mic',
+      disclosureVariant: 'thinking',
+      liveStatusLabel: liveStatusLabelFromSteps(source.streamingSteps ?? [], 'Listening and rendering voice…'),
     }
   }
 
@@ -121,6 +132,7 @@ export function footerBranchLabel(branch?: TurnBranch): string | undefined {
   if (!branch) return undefined
   if (branch === 'evidence-case') return 'Evidence case'
   if (branch === 'personaplex') return 'PersonaPlex'
+  if (branch === 'embry-voice') return 'Embry Voice'
   if (branch === 'watch') return 'Watch'
   if (branch === 'aql') return 'AQL'
   if (branch === 'utility') return 'Utility'
