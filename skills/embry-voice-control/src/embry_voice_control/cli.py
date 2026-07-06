@@ -12,12 +12,17 @@ from datetime import datetime, timezone
 import html
 import json
 from pathlib import Path
+import struct
+import time
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
+import wave
 
 import httpx
 from loguru import logger
 import typer
+from websockets.sync.client import connect as websocket_connect
 
 
 app = typer.Typer(help="Embry voice control live sanity harness.")
@@ -25,6 +30,8 @@ app = typer.Typer(help="Embry voice control live sanity harness.")
 DEFAULT_OUTPUT_ROOT = Path("/mnt/storage12tb/skills/embry-voice-control/outputs/e2e")
 DEFAULT_BASE_URL = "http://127.0.0.1:3001/api/projects/embry-voice"
 DEFAULT_CHAT_URL = "http://127.0.0.1:3002/#embry-voice"
+DEFAULT_REALTIMESTT_URL = "http://127.0.0.1:8010"
+DEFAULT_LISTENER_AUDIO = Path("/tmp/chatterbox-fork-agent-out/browser-webrtc-horus-loud-20260703T133629Z.wav")
 DEFAULT_INTERRUPT_POLICY = {
     "interruptible": True,
     "barge_in_action": "cancel_old_turn",
@@ -34,6 +41,13 @@ DEFAULT_INTERRUPT_POLICY = {
     "acknowledgement_tone": "interrupted",
     "acknowledgement_text": "Okay, stopping that.",
 }
+
+
+def http_to_ws_url(base_url: str, suffix: str) -> str:
+    """Return a websocket URL from an HTTP base URL and suffix."""
+    parsed = urlparse(base_url.rstrip("/"))
+    scheme = "wss" if parsed.scheme == "https" else "ws"
+    return urlunparse((scheme, parsed.netloc, suffix, "", "", ""))
 
 
 def utc_now() -> str:
@@ -80,6 +94,214 @@ def write_html(path: Path, report: dict[str, Any]) -> None:
 </html>
 """
     path.write_text(page, encoding="utf-8")
+
+
+def read_pcm16_wav(path: Path) -> tuple[int, int, bytes]:
+    """Read a PCM16 WAV file and return sample rate, channels, and audio bytes."""
+    with wave.open(str(path), "rb") as wav:
+        channels = wav.getnchannels()
+        sample_width = wav.getsampwidth()
+        sample_rate = wav.getframerate()
+        frames = wav.getnframes()
+        if sample_width != 2:
+            raise ValueError(f"{path} must be 16-bit PCM; got sample width {sample_width}")
+        return sample_rate, channels, wav.readframes(frames)
+
+
+def encode_realtimestt_packet(metadata: dict[str, Any], audio: bytes) -> bytes:
+    """Encode a RealtimeSTT browser audio packet."""
+    metadata_bytes = json.dumps(metadata, separators=(",", ":")).encode("utf-8")
+    return struct.pack("<I", len(metadata_bytes)) + metadata_bytes + audio
+
+
+def drain_ws_events(ws: Any, events: list[dict[str, Any]], *, timeout: float = 0.001) -> None:
+    """Drain currently available JSON websocket events into a list."""
+    while True:
+        try:
+            raw = ws.recv(timeout=timeout)
+        except TimeoutError:
+            return
+        except Exception as exc:
+            if exc.__class__.__name__ in {"ConnectionClosed", "ConnectionClosedOK"}:
+                return
+            raise
+        try:
+            event = json.loads(raw)
+        except json.JSONDecodeError:
+            event = {"type": "unparsed", "raw": str(raw)[:500]}
+        if isinstance(event, dict):
+            events.append(event)
+
+
+def listener_case_result(
+    *,
+    case_id: str,
+    listener_url: str,
+    data: dict[str, Any],
+    exercised: str,
+    required_fields: list[str],
+    error: str | None = None,
+) -> dict[str, Any]:
+    """Build a standard result for a direct RealtimeSTT listener proof."""
+    missing = missing_fields(data, required_fields)
+    if "final_transcript" in required_fields and not str(data.get("final_transcript", "")).strip():
+        missing.append("final_transcript_nonempty")
+    assertion_pass = not error and not missing
+    return {
+        "id": case_id,
+        "method": "WS",
+        "url": listener_url,
+        "status_code": 101 if data.get("websocket_connected") else None,
+        "mocked": data.get("mocked"),
+        "live": data.get("live"),
+        "execution_status": "pass" if data.get("websocket_connected") else "error",
+        "assertion_status": "pass" if assertion_pass else "fail",
+        "readiness": "usable" if assertion_pass else "not_established",
+        "required_fields": required_fields,
+        "missing_fields": sorted(set(missing)),
+        "error": error,
+        "exercised": exercised,
+        "request_excerpt": compact_value(data.get("request", {})),
+        "response_excerpt": compact_value(data),
+    }
+
+
+def run_realtimestt_listener_case(
+    *,
+    listener_url: str,
+    audio_path: Path,
+    output_dir: Path,
+    run_id: str,
+    timeout: float,
+) -> dict[str, Any]:
+    """Stream a browser-shaped WAV packet sequence into RealtimeSTT and capture transcript events."""
+    receipt_path = output_dir / "listener-webrtc-realtimestt.json"
+    ws_url = http_to_ws_url(listener_url, "/ws/transcribe")
+    started_at = utc_now()
+    events: list[dict[str, Any]] = []
+    data: dict[str, Any] = {
+        "schema": "embry_voice_control.listener_webrtc_realtimestt.v1",
+        "mocked": False,
+        "live": True,
+        "capture_source": "browser_webrtc_pcm16_wav_loopback",
+        "audio_path": str(audio_path),
+        "listener_url": listener_url,
+        "websocket_url": ws_url,
+        "websocket_connected": False,
+        "listener_state": "not_started",
+        "asr_engine": "RealtimeSTT",
+        "vad_enabled": True,
+        "diarization_enabled": False,
+        "receipt_path": str(receipt_path),
+        "request": {"run_id": run_id, "audio_path": str(audio_path)},
+        "events": events,
+        "started_at": started_at,
+    }
+    try:
+        sample_rate, channels, pcm = read_pcm16_wav(audio_path)
+        bytes_per_frame = channels * 2
+        frames_total = len(pcm) // bytes_per_frame
+        chunk_frames = max(1, sample_rate // 50)
+        chunk_bytes = chunk_frames * bytes_per_frame
+        data["audio"] = {
+            "sample_rate": sample_rate,
+            "channels": channels,
+            "frames": frames_total,
+            "duration_seconds": frames_total / float(sample_rate),
+            "bytes": len(pcm),
+        }
+        with websocket_connect(ws_url, open_timeout=min(5.0, timeout)) as ws:
+            data["websocket_connected"] = True
+            deadline = time.monotonic() + timeout
+            drain_ws_events(ws, events, timeout=1.0)
+            ws.send(json.dumps({"type": "start"}))
+            data["listener_state"] = "streaming"
+            drain_ws_events(ws, events, timeout=0.1)
+            offset = 0
+            while offset < len(pcm):
+                chunk = pcm[offset: offset + chunk_bytes]
+                offset += len(chunk)
+                frames = len(chunk) // bytes_per_frame
+                packet = encode_realtimestt_packet(
+                    {
+                        "sampleRate": sample_rate,
+                        "channels": channels,
+                        "format": "pcm_s16le",
+                        "frames": frames,
+                    },
+                    chunk,
+                )
+                ws.send(packet)
+                drain_ws_events(ws, events)
+                time.sleep(frames / float(sample_rate))
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Timed out while streaming listener audio")
+            silence_chunk = bytes(chunk_bytes)
+            for _ in range(70):
+                packet = encode_realtimestt_packet(
+                    {
+                        "sampleRate": sample_rate,
+                        "channels": channels,
+                        "format": "pcm_s16le",
+                        "frames": chunk_frames,
+                    },
+                    silence_chunk,
+                )
+                ws.send(packet)
+                drain_ws_events(ws, events)
+                time.sleep(chunk_frames / float(sample_rate))
+            final_deadline = time.monotonic() + max(8.0, min(timeout, 45.0))
+            while time.monotonic() < final_deadline:
+                drain_ws_events(ws, events, timeout=0.25)
+                if any(event.get("type") == "final" and event.get("text") for event in events):
+                    break
+            ws.send(json.dumps({"type": "stop"}))
+            drain_ws_events(ws, events, timeout=0.5)
+        final_texts = [
+            str(event.get("text", "")).strip()
+            for event in events
+            if event.get("type") == "final" and str(event.get("text", "")).strip()
+        ]
+        realtime_texts = [
+            str(event.get("text", "")).strip()
+            for event in events
+            if event.get("type") == "realtime" and str(event.get("text", "")).strip()
+        ]
+        transcript = " ".join(final_texts).strip()
+        data.update({
+            "listener_state": "completed" if transcript else "no_final_transcript",
+            "final_transcript": transcript,
+            "partial_transcripts": realtime_texts[-5:],
+            "event_count": len(events),
+            "events_by_type": {
+                event_type: sum(1 for event in events if event.get("type") == event_type)
+                for event_type in sorted({str(event.get("type")) for event in events})
+            },
+            "completed_at": utc_now(),
+        })
+    except Exception as exc:
+        data.update({
+            "listener_state": "error",
+            "error": str(exc),
+            "completed_at": utc_now(),
+        })
+        write_json(receipt_path, data)
+        return listener_case_result(
+            case_id="listener-webrtc",
+            listener_url=ws_url,
+            data=data,
+            exercised="browser/WebRTC-shaped PCM into RealtimeSTT listener",
+            required_fields=["mocked", "live", "websocket_connected", "capture_source", "final_transcript", "receipt_path"],
+            error=str(exc),
+        )
+    write_json(receipt_path, data)
+    return listener_case_result(
+        case_id="listener-webrtc",
+        listener_url=ws_url,
+        data=data,
+        exercised="browser/WebRTC-shaped PCM into RealtimeSTT listener",
+        required_fields=["mocked", "live", "websocket_connected", "capture_source", "final_transcript", "receipt_path"],
+    )
 
 
 def response_json(response: httpx.Response) -> dict[str, Any]:
@@ -372,6 +594,8 @@ def verify(
     profile: str = typer.Option("controlled-live", help="controlled-live, listener-live, or release"),
     base_url: str = typer.Option(DEFAULT_BASE_URL, help="Embry voice control or current adapter base URL"),
     chat_url: str = typer.Option(DEFAULT_CHAT_URL, help="Shared Chat UX URL for reporting"),
+    listener_url: str = typer.Option(DEFAULT_REALTIMESTT_URL, help="RealtimeSTT FastAPI base URL for listener-live profile"),
+    listener_audio: Path = typer.Option(DEFAULT_LISTENER_AUDIO, help="PCM16 WAV file streamed as browser/WebRTC listener input"),
     output_root: Path = typer.Option(DEFAULT_OUTPUT_ROOT, help="12TB output root for receipts"),
     timeout: float = typer.Option(90.0, help="HTTP timeout in seconds"),
 ) -> None:
@@ -430,17 +654,59 @@ def verify(
             )
         )
         if profile in {"listener-live", "release"}:
-            cases.append(
-                call_endpoint(
-                    client,
-                    case_id="listen-start",
-                    method="POST",
-                    url=normalize_url(base_url, "listen/start"),
-                    payload={"session_id": f"embry-voice-control-{run_id}"},
-                    required_fields=["listener_state", "capture_source", "receipt_path"],
-                    exercised="RealtimeSTT/listener capture start",
-                )
+            listener_case = run_realtimestt_listener_case(
+                listener_url=listener_url,
+                audio_path=listener_audio,
+                output_dir=output_dir,
+                run_id=run_id,
+                timeout=timeout,
             )
+            cases.append(listener_case)
+            transcript = nested_value(listener_case, "response_excerpt.final_transcript")
+            if isinstance(transcript, str) and transcript.strip():
+                listener_payload = adapted_live_turn_payload(run_id, transcript.strip())
+                listener_payload.update({
+                    "inputMode": "voice",
+                    "captureSource": "browser_webrtc_pcm16_wav_loopback",
+                    "speakerEvidence": {
+                        "source": "RealtimeSTT",
+                        "transcript": transcript.strip(),
+                        "diarization_enabled": False,
+                        "identity_resolution_required": True,
+                    },
+                    "listenerReceiptPath": nested_value(listener_case, "response_excerpt.receipt_path"),
+                })
+                cases.append(
+                    call_endpoint(
+                        client,
+                        case_id="listener-to-turn",
+                        method="POST",
+                        url=normalize_url(base_url, "live-turn"),
+                        payload=listener_payload,
+                        required_fields=["mocked", "live", "turnId|turnAuthority.turnId", "turnAuthority", "audioAuthority"],
+                        exercised="RealtimeSTT final transcript through memory/Tau/Chatterbox adapter authority",
+                        require_speech_policy=True,
+                        require_memory_intent_policy=True,
+                    )
+                )
+            else:
+                cases.append(
+                    case_result(
+                        case_id="listener-to-turn",
+                        url=normalize_url(base_url, "live-turn"),
+                        method="POST",
+                        status_code=None,
+                        data={
+                            "mocked": False,
+                            "live": True,
+                            "listener_case": listener_case["id"],
+                            "reason": "listener did not produce a final transcript",
+                        },
+                        required_fields=["final_transcript"],
+                        exercised="RealtimeSTT final transcript through memory/Tau/Chatterbox adapter authority",
+                        error="listener did not produce a final transcript",
+                    )
+                )
         if profile == "release":
             cases.append(
                 call_endpoint(
