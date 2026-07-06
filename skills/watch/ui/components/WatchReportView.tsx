@@ -276,6 +276,8 @@ interface WatchYoloLabelEvent {
 interface WatchYoloSequenceRow {
   key: string
   timeLabel: string
+  sortValue: number
+  source: 'yolo' | 'watch'
   trackId: string
   stateLabel: string
   detailLabel: string
@@ -842,6 +844,16 @@ function yoloLabelEventSortValue(event: WatchYoloLabelEvent, index: number): num
   return (time ?? Number.MAX_SAFE_INTEGER) * 100000 + index
 }
 
+function isYoloIdentityStopEvent(event: WatchYoloLabelEvent): boolean {
+  return event.action === 'reject_box'
+    || event.action === 'reset_box'
+    || event.action === 'reset'
+    || event.action === 'reject'
+    || event.status === 'rejected_box'
+    || event.status === 'reset'
+    || event.status === 'reject'
+}
+
 function upsertYoloLabelEvent(events: WatchYoloLabelEvent[], event: WatchYoloLabelEvent): WatchYoloLabelEvent[] {
   return [
     ...events.filter((existing) => !(
@@ -866,16 +878,6 @@ function latestYoloLabelEventForTrack(
   return candidates.length > 0 ? candidates[candidates.length - 1].event : null
 }
 
-function isYoloIdentityStopEvent(event: WatchYoloLabelEvent): boolean {
-  return event.action === 'reject_box'
-    || event.action === 'reset_box'
-    || event.action === 'reset'
-    || event.action === 'reject'
-    || event.status === 'rejected_box'
-    || event.status === 'reset'
-    || event.status === 'reject'
-}
-
 function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | null {
   if (isYoloIdentityStopEvent(event)) return null
   if (!event.character_name || event.character_name === 'Unassigned') return null
@@ -891,21 +893,56 @@ function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | n
 }
 
 function yoloSequenceRowFromEvent(event: WatchYoloLabelEvent, index: number): WatchYoloSequenceRow {
-  const trackId = event.track_id
   const time = yoloLabelEventTime(event)
   const label = yoloLabelFromEvent(event)
   const isStop = isYoloIdentityStopEvent(event)
   const isReset = event.action === 'reset' || event.action === 'reset_box' || event.status === 'reset'
   return {
-    key: `${trackId}:${event.box_key || 'track'}:${event.action || event.status || 'event'}:${event.created_at || index}`,
+    key: `${event.track_id}:${event.box_key || 'track'}:${event.action}:${event.created_at || index}`,
     timeLabel: time == null ? '--' : `${time.toFixed(2)}s`,
-    trackId,
+    sortValue: (time ?? Number.MAX_SAFE_INTEGER) * 100000 + index,
+    source: 'yolo',
+    trackId: event.track_id,
     stateLabel: label?.characterName || 'Unassigned',
     detailLabel: isStop
       ? 'holds until next assignment'
       : label?.actorName || actorForCharacter(label?.characterName || '') || 'accepted',
     tone: isStop ? (isReset ? 'reset' : 'stop') : 'accept',
   }
+}
+
+function watchSequenceRowsFromAnnotationSession(state: AnnotationSessionState): WatchYoloSequenceRow[] {
+  const rows: WatchYoloSequenceRow[] = []
+  let index = 0
+  for (const characterId of state.trackOrder) {
+    const track = state.tracksByCharacterId[characterId]
+    if (!track) continue
+    for (const keyframe of Object.values(track.keyframesById)) {
+      rows.push({
+        key: `watch:${keyframe.localId}:keyframe`,
+        timeLabel: `${Math.max(0, keyframe.timeSeconds - state.row.segmentStartSeconds).toFixed(2)}s`,
+        sortValue: keyframe.timeSeconds * 100000 + index++,
+        source: 'watch',
+        trackId: track.characterName,
+        stateLabel: keyframe.characterName,
+        detailLabel: keyframe.actorName || 'keyframe starts/updates held sequence',
+        tone: 'accept',
+      })
+    }
+    for (const marker of Object.values(track.offscreenById)) {
+      rows.push({
+        key: `watch:${marker.localId}:offscreen`,
+        timeLabel: `${Math.max(0, marker.timeSeconds - state.row.segmentStartSeconds).toFixed(2)}s`,
+        sortValue: marker.timeSeconds * 100000 + index++,
+        source: 'watch',
+        trackId: track.characterName,
+        stateLabel: 'Unassigned',
+        detailLabel: `${track.characterName} stops until reassigned`,
+        tone: 'stop',
+      })
+    }
+  }
+  return rows.sort((a, b) => a.sortValue - b.sortValue)
 }
 
 function yoloLabelForOverlay(
@@ -3604,6 +3641,13 @@ export function WatchReportView({
     .filter((event) => !clipModalSelectedYoloTrackId || event.track_id === clipModalSelectedYoloTrackId)
     .map((event, index) => yoloSequenceRowFromEvent(event, index))
     .slice(-8)
+  const clipModalWatchSequenceRows = expandedClipRow
+    ? watchSequenceRowsFromAnnotationSession(annotationSession)
+    : []
+  const clipModalIdentitySequenceRows = [
+    ...clipModalYoloSequenceRows,
+    ...clipModalWatchSequenceRows,
+  ].sort((a, b) => a.sortValue - b.sortValue).slice(-12)
   const clipModalYoloSequenceSummary = clipModalYoloSequenceEvents
     .slice(-5)
     .map((event) => {
@@ -4842,10 +4886,10 @@ export function WatchReportView({
                   {clipModalYoloSequenceSummary ? <span title={clipModalYoloSequenceSummary} style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#67e8f9' }}>Seq: {clipModalYoloSequenceSummary}</span> : null}
                 </div>
               </div>
-              {clipModalYoloSequenceRows.length > 0 ? (
+              {clipModalIdentitySequenceRows.length > 0 ? (
                 <section
                   data-qid="watch:clip-modal:yolo-identity-sequence"
-                  aria-label="YOLO identity sequence"
+                  aria-label="Watch identity sequence"
                   onClick={(event) => event.stopPropagation()}
                   style={{
                     position: 'absolute',
@@ -4866,9 +4910,9 @@ export function WatchReportView({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ color: '#67e8f9', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>YOLO identity sequence</div>
+                    <div style={{ color: '#67e8f9', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Identity sequence ledger</div>
                     <div style={{ color: '#9fb4ca', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', fontSize: 10, fontWeight: 850 }}>
-                      {clipModalSelectedYoloTrackId || 'all tracks'}
+                      {clipModalSelectedYoloTrackId || 'watch + yolo'}
                     </div>
                   </div>
                   {clipModalSelectedYoloTrackId ? (
@@ -4899,12 +4943,13 @@ export function WatchReportView({
                     </div>
                   ) : null}
                   <div style={{ display: 'grid', gap: 5, maxHeight: 168, overflow: 'auto' }}>
-                    {clipModalYoloSequenceRows.map((row) => (
+                    {clipModalIdentitySequenceRows.map((row) => (
                       <div
                         key={row.key}
                         data-qid="watch:clip-modal:yolo-identity-sequence-row"
                         data-track-id={row.trackId}
                         data-sequence-state={row.tone}
+                        data-sequence-source={row.source}
                         style={{
                           display: 'grid',
                           gridTemplateColumns: '54px minmax(0, 1fr)',
@@ -4919,7 +4964,7 @@ export function WatchReportView({
                         <span style={{ color: '#dbeafe', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', fontSize: 10, fontWeight: 900 }}>{row.timeLabel}</span>
                         <span style={{ minWidth: 0 }}>
                           <span style={{ display: 'block', color: '#f8fafc', fontSize: 11, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.trackId} · {row.stateLabel}</span>
-                          <span style={{ display: 'block', color: '#94a3b8', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.detailLabel}</span>
+                          <span style={{ display: 'block', color: '#94a3b8', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.source.toUpperCase()} · {row.detailLabel}</span>
                         </span>
                       </div>
                     ))}
