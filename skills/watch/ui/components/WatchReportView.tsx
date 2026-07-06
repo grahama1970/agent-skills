@@ -251,6 +251,15 @@ interface WatchYoloTrackLabel {
   updatedAt: string
 }
 
+interface WatchYoloBoxRejection {
+  boxKey: string
+  trackId: string
+  timeSeconds: number
+  status: 'rejected'
+  source: 'human'
+  updatedAt: string
+}
+
 interface WatchIdentitySuggestionResponse {
   schema?: string
   status?: string
@@ -788,11 +797,18 @@ function yoloTrackDisplayName(trackId: string): string {
   return `YOLO ${trackId.replace(/\s+/g, '_').toUpperCase()}`
 }
 
+function yoloBoxInstanceKey(trackId: string, timeSeconds: number): string {
+  return `${trackId}@${Math.round(Math.max(0, timeSeconds) * 100)}`
+}
+
 function yoloLabelForOverlay(
   overlay: WatchOverlayPayloadOverlay,
   labels: Record<string, WatchYoloTrackLabel>,
   suggestions: Record<string, WatchYoloTrackLabel>,
+  rejections: Record<string, WatchYoloBoxRejection> = {},
+  timeSeconds = 0,
 ): WatchYoloTrackLabel | null {
+  if (rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]) return null
   return labels[overlay.track_id] ?? suggestions[overlay.track_id] ?? null
 }
 
@@ -1998,6 +2014,7 @@ export function WatchReportView({
   const [clipModalYoloLabelRevision, setClipModalYoloLabelRevision] = useState(0)
   const [clipModalSelectedYoloTrackId, setClipModalSelectedYoloTrackId] = useState<string | null>(null)
   const [clipModalYoloLabels, setClipModalYoloLabels] = useState<Record<string, WatchYoloTrackLabel>>({})
+  const [clipModalYoloBoxRejections, setClipModalYoloBoxRejections] = useState<Record<string, WatchYoloBoxRejection>>({})
   const [clipModalMemorySuggestions, setClipModalMemorySuggestions] = useState<Record<string, WatchYoloTrackLabel>>({})
   const [clipModalYoloStatus, setClipModalYoloStatus] = useState('')
   const [clipModalCharacterName, setClipModalCharacterName] = useState('')
@@ -2507,6 +2524,11 @@ export function WatchReportView({
     return { key, labels: clipModalYoloLabels, row: expandedClipRow }
   }
 
+  function selectedYoloBoxKey(timeSeconds = clipModalPlaybackSeconds): string | null {
+    if (!clipModalSelectedYoloTrackId) return null
+    return yoloBoxInstanceKey(clipModalSelectedYoloTrackId, timeSeconds)
+  }
+
   function annotationBoxIdFromOverlayId(overlayId: string, row: SceneElement): string | null {
     const prefix = `annotation-${row.index}-`
     return overlayId.startsWith(prefix) ? overlayId.slice(prefix.length) : null
@@ -2654,12 +2676,20 @@ export function WatchReportView({
     setClipModalSelectedYoloTrackId(overlay.track_id)
 
     const storage = clipModalYoloLabelStorage()
-    const label = storage?.labels[overlay.track_id] ?? clipModalMemorySuggestions[overlay.track_id]
+    const isRejectedFrame = Boolean(clipModalYoloBoxRejections[yoloBoxInstanceKey(overlay.track_id, clipModalPlaybackSeconds)])
+    const label = isRejectedFrame
+      ? null
+      : storage?.labels[overlay.track_id] ?? clipModalMemorySuggestions[overlay.track_id]
     if (label) {
       setClipModalCharacterName(label.characterName)
       setClipModalActorName(label.actorName || actorForCharacter(label.characterName) || '')
+    } else if (isRejectedFrame) {
+      setClipModalCharacterName('Unassigned')
+      setClipModalActorName('')
     }
-    setClipModalYoloStatus(`YOLO person box ${overlay.track_id} selected. Choose the character, then save, or reset to ${yoloTrackDisplayName(overlay.track_id)}.`)
+    setClipModalYoloStatus(isRejectedFrame
+      ? `YOLO person box ${overlay.track_id} is unassigned at ${clipModalPlaybackSeconds.toFixed(2)}s. Choose a character and save to relabel this frame.`
+      : `YOLO person box ${overlay.track_id} selected. Choose the character, then save, unassign this frame, or reset the whole track.`)
     void requestClipModalMemorySuggestion(overlay)
   }
 
@@ -2668,10 +2698,11 @@ export function WatchReportView({
     if (!storage || !clipModalSelectedYoloTrackId || !expandedClipRow || !reportWithDiff) return
     const characterName = clipModalCharacterName.trim()
     if (!characterName || characterName === 'Unassigned') {
-      await resetClipModalYoloTrackLabel()
+      await unassignClipModalYoloBoxFrame()
       return
     }
     const actorName = clipModalActorName.trim() || actorForCharacter(characterName) || ''
+    const boxKey = selectedYoloBoxKey()
     const labels = {
       ...storage.labels,
       [clipModalSelectedYoloTrackId]: {
@@ -2686,6 +2717,14 @@ export function WatchReportView({
     }
     writeYoloTrackLabels(storage.key, labels)
     setClipModalYoloLabels(labels)
+    if (boxKey) {
+      setClipModalYoloBoxRejections((current) => {
+        if (!current[boxKey]) return current
+        const next = { ...current }
+        delete next[boxKey]
+        return next
+      })
+    }
     setClipModalYoloLabelRevision((current) => current + 1)
     setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} accepted as ${characterName}; persisting Watch label...`)
     try {
@@ -2699,6 +2738,7 @@ export function WatchReportView({
           timecode: expandedClipRow.timecode,
           movie_segment: expandedClipRow.movie_segment,
           time_seconds: clipModalPlaybackSeconds,
+          box_key: boxKey,
           track_id: clipModalSelectedYoloTrackId,
           character_name: characterName,
           actor_name: actorName,
@@ -2710,13 +2750,66 @@ export function WatchReportView({
       const serverLabels = data?.labels && typeof data.labels === 'object'
         ? data.labels as Record<string, WatchYoloTrackLabel>
         : labels
+      const serverRejections = data?.box_rejections && typeof data.box_rejections === 'object'
+        ? data.box_rejections as Record<string, WatchYoloBoxRejection>
+        : undefined
       setClipModalYoloLabels(serverLabels)
+      if (serverRejections) setClipModalYoloBoxRejections(serverRejections)
       writeYoloTrackLabels(storage.key, serverLabels)
       setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} accepted as ${characterName}; persisted to Watch${data?.memory_sync === 'stored' ? ' and Memory' : ''}.`)
     } catch (err) {
       setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} accepted as ${characterName} locally, but server persistence failed: ${String(err)}`)
     }
     logClipModalAuditEvent('YOLO_TRACK_LABEL_ACCEPTED', { trackId: clipModalSelectedYoloTrackId, characterName, actorName })
+  }
+
+  async function unassignClipModalYoloBoxFrame(): Promise<void> {
+    if (!clipModalSelectedYoloTrackId || !expandedClipRow || !reportWithDiff) return
+    const timeSeconds = clipModalVideoRef.current?.currentTime ?? clipModalPlaybackSeconds
+    const roundedTimeSeconds = Math.round(timeSeconds * 100) / 100
+    const boxKey = selectedYoloBoxKey(roundedTimeSeconds) ?? yoloBoxInstanceKey(clipModalSelectedYoloTrackId, roundedTimeSeconds)
+    const rejection: WatchYoloBoxRejection = {
+      boxKey,
+      trackId: clipModalSelectedYoloTrackId,
+      timeSeconds: roundedTimeSeconds,
+      status: 'rejected',
+      source: 'human',
+      updatedAt: new Date().toISOString(),
+    }
+    setClipModalYoloBoxRejections((current) => ({ ...current, [boxKey]: rejection }))
+    setClipModalMemorySuggestions((current) => {
+      const next = { ...current }
+      delete next[clipModalSelectedYoloTrackId]
+      return next
+    })
+    setClipModalYoloLabelRevision((current) => current + 1)
+    setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} unassigned at ${rejection.timeSeconds.toFixed(2)}s; other frames keep their track label.`)
+    try {
+      const response = await fetch('/api/projects/watch/yolo-labels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject_box',
+          asset_uid: watchAssetUid(reportWithDiff.watch_report.title),
+          row_index: expandedClipRow.index,
+          timecode: expandedClipRow.timecode,
+          movie_segment: expandedClipRow.movie_segment,
+          time_seconds: roundedTimeSeconds,
+          box_key: boxKey,
+          track_id: clipModalSelectedYoloTrackId,
+        }),
+      })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const data = await response.json()
+      const serverRejections = data?.box_rejections && typeof data.box_rejections === 'object'
+        ? data.box_rejections as Record<string, WatchYoloBoxRejection>
+        : { [boxKey]: rejection }
+      setClipModalYoloBoxRejections(serverRejections)
+      setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} unassigned at ${rejection.timeSeconds.toFixed(2)}s and persisted.`)
+    } catch (err) {
+      setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} unassigned at this frame locally, but server persistence failed: ${String(err)}`)
+    }
+    logClipModalAuditEvent('YOLO_BOX_FRAME_UNASSIGNED', { trackId: clipModalSelectedYoloTrackId, boxId: boxKey, timestamp: rejection.timeSeconds })
   }
 
   async function resetClipModalYoloTrackLabel(): Promise<void> {
@@ -2752,7 +2845,11 @@ export function WatchReportView({
       const serverLabels = data?.labels && typeof data.labels === 'object'
         ? data.labels as Record<string, WatchYoloTrackLabel>
         : labels
+      const serverRejections = data?.box_rejections && typeof data.box_rejections === 'object'
+        ? data.box_rejections as Record<string, WatchYoloBoxRejection>
+        : undefined
       setClipModalYoloLabels(serverLabels)
+      if (serverRejections) setClipModalYoloBoxRejections(serverRejections)
       writeYoloTrackLabels(storage.key, serverLabels)
       setClipModalYoloStatus(`${clipModalSelectedYoloTrackId} reset to ${yoloTrackDisplayName(clipModalSelectedYoloTrackId)} and persisted.`)
     } catch (err) {
@@ -3201,6 +3298,7 @@ export function WatchReportView({
     setClipModalYoloStatus('')
     setClipModalMemorySuggestions({})
     setClipModalYoloLabels(readYoloTrackLabels(yoloKey))
+    setClipModalYoloBoxRejections({})
     if (annotationSessionRow) {
       annotationDispatch(annotationSessionActions.hydrateFromMemory(
         annotationSessionRow,
@@ -3227,7 +3325,11 @@ export function WatchReportView({
           ? data.labels as Record<string, WatchYoloTrackLabel>
           : {}
         const merged = { ...readYoloTrackLabels(localKey), ...serverLabels }
+        const serverRejections = data?.box_rejections && typeof data.box_rejections === 'object'
+          ? data.box_rejections as Record<string, WatchYoloBoxRejection>
+          : {}
         setClipModalYoloLabels(merged)
+        setClipModalYoloBoxRejections(serverRejections)
         writeYoloTrackLabels(localKey, merged)
       })
       .catch((err) => {
@@ -3321,7 +3423,10 @@ export function WatchReportView({
   void clipModalYoloLabelRevision
   void clipModalYoloLabelKey
   const labeledEventModalOverlays = eventModalOverlays.map((overlay) => (
-    yoloOverlayWithLabel(overlay, yoloLabelForOverlay(overlay, clipModalYoloLabels, clipModalMemorySuggestions))
+    yoloOverlayWithLabel(
+      overlay,
+      yoloLabelForOverlay(overlay, clipModalYoloLabels, clipModalMemorySuggestions, clipModalYoloBoxRejections, clipModalPlaybackSeconds),
+    )
   ))
   const sessionVisibleOverlays = expandedClipRow
     ? selectVisibleOverlays(annotationSession, clipModalPlaybackSeconds)
@@ -4513,6 +4618,19 @@ export function WatchReportView({
                   </button>
                   <button
                     type="button"
+                    data-qid="watch:clip-modal:unassign-yolo-frame"
+                    disabled={!clipModalSelectedYoloTrackId}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      void unassignClipModalYoloBoxFrame()
+                    }}
+                    title="Unassign only the selected YOLO box at the current frame"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid rgba(250,204,21,0.42)', borderRadius: 6, background: clipModalSelectedYoloTrackId ? 'rgba(113,63,18,0.32)' : 'rgba(15,23,42,0.32)', color: clipModalSelectedYoloTrackId ? '#fde68a' : '#64748b', padding: '5px 8px', fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: clipModalSelectedYoloTrackId ? 'pointer' : 'default', whiteSpace: 'nowrap' }}
+                  >
+                    Unassign frame
+                  </button>
+                  <button
+                    type="button"
                     data-qid="watch:clip-modal:clear-keyframes"
                     disabled={clipModalSessionKeyframeCount === 0}
                     onClick={(event) => {
@@ -4709,6 +4827,10 @@ export function WatchReportView({
                               void resetClipModalYoloTrackLabel()
                               return
                             }
+                            if (nextName === '__unassign_frame__') {
+                              void unassignClipModalYoloBoxFrame()
+                              return
+                            }
                             setClipModalCharacterName(nextName)
                             setClipModalActorName(actorForCharacter(nextName) || '')
                           }}
@@ -4727,6 +4849,7 @@ export function WatchReportView({
                           }}
                         >
                           <option value="">Choose character</option>
+                          <option value="__unassign_frame__">Unassign this frame</option>
                           <option value="__reset__">Reset to {yoloTrackDisplayName(overlay.track_id)}</option>
                           {CHARACTER_OPTIONS.map((name) => (
                             <option key={name} value={name}>{name}</option>

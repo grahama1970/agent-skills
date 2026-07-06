@@ -41,6 +41,11 @@ function yoloLabelFilePath(assetUid: unknown, rowIndex: unknown): string {
   return path.join(WATCH_YOLO_LABEL_DIR, `${asset}_row${row}.json`)
 }
 
+function yoloBoxInstanceKey(trackId: string, timeSeconds: unknown): string {
+  const seconds = Number.isFinite(Number(timeSeconds)) ? Math.max(0, Number(timeSeconds)) : 0
+  return `${trackId}@${Math.round(seconds * 100)}`
+}
+
 function readYoloLabelReceipt(assetUid: unknown, rowIndex: unknown): any {
   const receiptPath = yoloLabelFilePath(assetUid, rowIndex)
   if (!existsSync(receiptPath)) {
@@ -49,6 +54,7 @@ function readYoloLabelReceipt(assetUid: unknown, rowIndex: unknown): any {
       asset_uid: assetUid || null,
       row_index: rowIndex ?? null,
       labels: {},
+      box_rejections: {},
       events: [],
       receipt_path: receiptPath,
       updated_at: null,
@@ -570,7 +576,10 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
   const now = new Date().toISOString()
   const receipt = readYoloLabelReceipt(assetUid, rowIndex)
   const labels = receipt.labels && typeof receipt.labels === 'object' ? { ...receipt.labels } : {}
+  const boxRejections = receipt.box_rejections && typeof receipt.box_rejections === 'object' ? { ...receipt.box_rejections } : {}
   const events = Array.isArray(receipt.events) ? receipt.events : []
+  const bodyBoxKey = typeof req.body?.box_key === 'string' && req.body.box_key.trim() ? req.body.box_key.trim() : ''
+  const boxKey = bodyBoxKey || yoloBoxInstanceKey(trackId, req.body?.time_seconds)
   const event: Record<string, unknown> = {
     id: `yolo_label_${Date.now()}_${safeFilePart(trackId, 'track')}`,
     action,
@@ -580,10 +589,23 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     movie_segment: req.body?.movie_segment || null,
     time_seconds: req.body?.time_seconds ?? null,
     track_id: trackId,
+    box_key: boxKey,
     created_at: now,
   }
 
-  if (action === 'reset' || action === 'reject') {
+  if (action === 'reject_box' || action === 'reset_box') {
+    boxRejections[boxKey] = {
+      boxKey,
+      trackId,
+      timeSeconds: Number.isFinite(Number(req.body?.time_seconds))
+        ? Math.round(Number(req.body.time_seconds) * 100) / 100
+        : 0,
+      status: 'rejected',
+      source: 'human',
+      updatedAt: now,
+    }
+    event.status = 'rejected_box'
+  } else if (action === 'reset' || action === 'reject') {
     delete labels[trackId]
     event.status = action
   } else {
@@ -602,6 +624,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
       updatedAt: now,
     }
     labels[trackId] = label
+    if (boxKey) delete boxRejections[boxKey]
     event.status = 'accepted'
     event.character_name = label.characterName
     event.actor_name = label.actorName
@@ -615,6 +638,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     timecode: req.body?.timecode || receipt.timecode || null,
     movie_segment: req.body?.movie_segment || receipt.movie_segment || null,
     labels,
+    box_rejections: boxRejections,
     events: [...events, event],
     receipt_path: receiptPath,
     updated_at: now,
@@ -622,23 +646,35 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
 
   mkdirSync(path.dirname(receiptPath), { recursive: true })
   writeFileSync(receiptPath, JSON.stringify(nextReceipt, null, 2))
+  const eventMemoryKey = [
+    safeFilePart(assetUid, 'watch_asset'),
+    `row${String(rowIndex).padStart(4, '0')}`,
+    safeFilePart(trackId, 'track'),
+    safeFilePart(action, 'event'),
+    safeFilePart(boxKey || 'track', 'box'),
+  ].join('_')
   const memorySync = await storeYoloLabelInMemory({
-    _key: `${safeFilePart(assetUid, 'watch_asset')}_row${String(rowIndex).padStart(4, '0')}_${safeFilePart(trackId, 'track')}`,
-    kind: 'watch_yolo_track_label',
-    schema: 'watch_yolo_track_label.v1',
+    _key: eventMemoryKey,
+    kind: 'watch_yolo_track_label_event',
+    schema: 'watch_yolo_track_label_event.v1',
     asset_uid: assetUid,
     row_index: rowIndex,
     track_id: trackId,
     action,
+    event,
     label: labels[trackId] || null,
+    box_rejection: boxRejections[boxKey] || null,
     receipt_path: receiptPath,
-    retrieval_text: labels[trackId]
+    retrieval_text: boxRejections[boxKey]
+      ? `Watch YOLO person box ${trackId} for ${assetUid} row ${rowIndex} rejected at ${boxRejections[boxKey].timeSeconds}s; do not use this frame as character evidence.`
+      : labels[trackId]
       ? `Watch YOLO person box ${trackId} for ${assetUid} row ${rowIndex} accepted as ${(labels[trackId] as any).characterName}.`
       : `Watch YOLO person box ${trackId} for ${assetUid} row ${rowIndex} reset to unlabeled YOLO track state.`,
     updated_at: now,
   })
   res.json({
     ...nextReceipt,
+    memory_key: eventMemoryKey,
     memory_sync: memorySync.ok ? 'stored' : 'failed',
     memory_sync_error: memorySync.error,
   })
