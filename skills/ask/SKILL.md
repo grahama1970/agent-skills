@@ -29,6 +29,7 @@ composes:
   - scillm
   - surf
   - subagent-runner
+  - browser-oracle
   - create-report
 taxonomy:
   - orchestration
@@ -95,6 +96,10 @@ ask artifacts.
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
   reviewers are not deterministic proof by themselves.
+- WebGPT/ChatGPT routing is deprecated in `/ask`: `$ask webgpt`, `$ask chatgpt`,
+  `--oracle-backend webgpt`, `--webgpt-*`, and `webgpt-project` must fail
+  closed. Use `$surf webgpt.submit` or the project-level `$webgpt` workflow
+  directly instead.
 - Close only from local deterministic proof appropriate to the task: tests,
   schema checks, endpoint responses, screenshots, database/query evidence, or
   generated artifact validation.
@@ -112,7 +117,7 @@ Use the narrowest mode that matches the user request.
 | --- | --- | --- |
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
-| Browser review | `./run.sh ask "<question>" --oracle --oracle-backend webgemini|webkimi|webperplexity|cursor-browser --json` or documented browser mode | Use supported browser backend flags; attach local target content when browser cannot read paths. |
+| Supported browser review | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use bound tab/config where required; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
 | Parallel review | `./run.sh ask "<question>" --parallel-review ... --json` | State reviewer count/focus and preserve per-reviewer outputs. |
 | Roundtable/argue | `./run.sh ask "<question>" --roundtable ... --json` or argue mode | Name personas and rounds; do not invent missing personas silently. |
@@ -150,6 +155,8 @@ Load only the reference needed for the selected mode:
 - CAE gap review: `docs/ASK_CAE_GAP_REVIEW_CONTRACT.md`
 - SPARTA preflight: `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`
 - Human chat examples: `docs/HUMAN_CHAT_EXAMPLES.md`
+- Legacy WebGPT reliability notes: `docs/WEBGPT_EXECUTION_RELIABILITY.md`
+  (deprecated; do not use for `/ask` routing)
 - Project knowledge: `docs/PROJECT_KNOWLEDGE.md`
 - Review chains: `docs/chains/`
 - Reviewer definitions: `docs/reviewers/`

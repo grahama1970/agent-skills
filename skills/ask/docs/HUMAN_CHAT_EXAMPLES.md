@@ -85,8 +85,8 @@ catalog-style model IDs when scillm supports them.
 These routes use your **signed-in Chrome session** via `$surf`. They are for
 high-value review or research, not bulk loops. Browser tabs cannot read bare
 filesystem paths — provide a **concatenated** `.md`/`.txt` review bundle or a
-single readable prompt. WebGPT/ChatGPT browser workflows belong to `$webgpt`,
-not `$ask`.
+single readable prompt or served artifact URL when needed. WebGPT/ChatGPT
+browser workflows belong to `$webgpt`, not `$ask`.
 
 ```text
 $ask webgemini review /tmp/review-bundle.md
@@ -98,7 +98,17 @@ Wrong: $ask webgpt review /tmp/review-bundle.md
 Right: $webgpt review /tmp/review-bundle.md
 ```
 
-Expected route (concatenated bundle, all browser backends except zip):
+Deprecated WebGPT/ChatGPT routes are intentionally rejected by `/ask`:
+
+```text
+$ask webgpt review /tmp/review-bundle.md
+$ask chatgpt review /tmp/review-bundle.md
+```
+
+Use `$surf webgpt.submit` or the project-level `$webgpt` workflow directly for
+ChatGPT browser work. Do not route it through `/ask`.
+
+Expected route (concatenated bundle):
 
 ```bash
 cat /tmp/evidence/REVIEW_REQUEST.md /tmp/evidence/gate_output.json > /tmp/review-bundle.md
@@ -112,7 +122,7 @@ Wrong (path-only manifest — returns `needs_attention`, exit code 2):
 
 ```text
 Wrong: $ask webgemini review /tmp/bundle/REVIEW_REQUEST.md; see also /tmp/bundle/gate_output.json
-Right: concatenate into one file, then reference that single path.
+Right: concatenate into one file or serve a review artifact URL, then reference that single target.
 ```
 
 ## Persona Oracle

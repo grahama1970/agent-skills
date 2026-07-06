@@ -2,8 +2,8 @@
 
 ![T'au card](../../docs/assets/project-cards/tau.webp)
 
-Tau is the memory-first subagent harness behind my goal-locked agent work. It
-wraps bounded loops, handoff contracts, watchdog receipts, GitHub issue
+Tau is the Memory-First Zero-Trust Agent Harness behind my goal-locked agent
+work. It wraps bounded loops, handoff contracts, watchdog receipts, GitHub issue
 orchestration, TUI inspection, and chat-facing proof so an agent turn has a
 goal, context, result, rationale, next step, evidence, and stop condition.
 
@@ -18,12 +18,17 @@ the human/operator guide.
 
 | Need | Start here |
 |---|---|
+| Check wrapper and Tau runtime readiness | `skills/tau/run.sh doctor` |
 | Inspect current Tau status | `skills/tau/run.sh status` |
 | Run bounded local checks | `skills/tau/run.sh sanity` |
+| Inspect recent proof/status evidence | `skills/tau/run.sh proof-status` |
 | Inspect recent live-proof evidence | `skills/tau/run.sh e2e` |
 | Inspect a Tau DAG as a graph | `http://localhost:3002/#tau/dag` |
 | Check watchdog receipts | `skills/tau/run.sh watchdog-status` |
 | Summarize latest proof artifacts | `skills/tau/run.sh latest-proofs` |
+
+`skills/tau/run.sh e2e` remains a compatibility alias for `proof-status`; it is
+not a production end-to-end proof claim.
 
 ## What Makes Tau Different
 

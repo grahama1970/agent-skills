@@ -25,7 +25,8 @@ Bounded worker identity for the local T'au project.
 
 - One T'au loop, harness, watchdog, TUI, or chat repair/check lane at a time.
 - Reading the sibling Tau project context (`../tau` from this repository).
-- Running `skills/tau/run.sh status`, `sanity`, or `e2e` as proof commands.
+- Running `skills/tau/run.sh doctor`, `status`, `sanity`, or `proof-status`
+  as proof/status commands.
 - Emitting `tau.agent_handoff.v1` for subagent handoffs.
 - Reporting mocked/live boundaries for all evidence.
 

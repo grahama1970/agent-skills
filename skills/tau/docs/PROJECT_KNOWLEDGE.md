@@ -5,6 +5,16 @@ It does not implement Tau behavior itself.
 
 ## Current Evidence Boundaries
 
+- 2026-07-05 wrapper catch-up: `skills/tau/scripts/tau_skill.py` now expands
+  Tau paths via `Path.home()` / `TAU_ROOT`, exposes `doctor`, exposes
+  `proof-status`, and keeps `e2e` only as an alias reporting
+  `alias_for: proof-status`.
+- 2026-07-05 wrapper proof: `skills/tau/run.sh doctor` emitted
+  `agent_skills.tau.doctor.v1` with `ok:true` and nested Tau runtime
+  `tau.doctor.v1` with `status:"PASS"`. `skills/tau/run.sh proof-status`
+  emitted `agent_skills.tau.proof_status_receipt.v1` with `ok:true`,
+  `sanity_ok:true`, and `status_ok:true`. `skills/tau/run.sh e2e` emitted
+  `agent_skills.tau.e2e_receipt.v1` with `alias_for:"proof-status"`.
 - 2026-07-06 UX Lab now has a read-only Tau DAG React Flow inspection route at
   `http://localhost:3002/#tau/dag`. Commit `711b9c051` in `pi-mono` added a
   Tau-specific adapter from `tau.dag_contract.v1` plus `tau.dag_receipt.v1`

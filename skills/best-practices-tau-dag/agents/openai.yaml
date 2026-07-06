@@ -1,0 +1,7 @@
+interface:
+  display_name: "Best Practices: Tau DAG"
+  short_description: "Strict Tau DAG authoring gates"
+  default_prompt: "Use $best-practices-tau-dag to design or review a Tau DAG contract with immutable-goal, evidence, subagent routing, and skill-gate requirements."
+
+policy:
+  allow_implicit_invocation: true

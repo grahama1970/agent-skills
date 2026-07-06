@@ -1,0 +1,118 @@
+[
+  {
+    "category": "character",
+    "described_in_script": true,
+    "entity": "Embry",
+    "environment_interaction": "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+    "missing_script_details": [],
+    "objects_used": [
+      "navy rashguard",
+      "phone",
+      "family obligations",
+      "borrowed/older shortboard"
+    ],
+    "script_evidence": "Navy rashguard dark at collar and ribs; sweat on upper lip; salt at temples; palm slips on softened wax; she wipes sweat and complains about the heat.",
+    "script_function": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+    "source_seed_id": "seed-0",
+    "visible_or_audible": true
+  },
+  {
+    "category": "character",
+    "described_in_script": true,
+    "entity": "Kai",
+    "environment_interaction": "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+    "missing_script_details": [],
+    "objects_used": [
+      "black rashguard",
+      "phone call",
+      "surf ritual",
+      "familiar shortboard"
+    ],
+    "script_evidence": "Black rashguard shines with spray; he reads locals, channel, reef, and Embry's paddle cadence; he waits instead of taking the easy wave.",
+    "script_function": "Kai demonstrates competence by yielding to a local, conserving energy, and giving one practical channel cue rather than taking over Embry\u2019s choice.",
+    "source_seed_id": "seed-1",
+    "visible_or_audible": true
+  },
+  {
+    "category": "character_object",
+    "described_in_script": true,
+    "entity": "Embry surfboard",
+    "environment_interaction": "Sun and humidity soften the wax on the older white performance shortboard, so Embry\u2019s palm slips and her rail pressure must be reset before the wave reaches the reef.",
+    "missing_script_details": [],
+    "objects_used": [
+      "White shortboard",
+      "performance shape",
+      "visibly waxed deck",
+      "likely older/borrowed",
+      "rail pressure matters over shallow reef."
+    ],
+    "script_evidence": "Borrowed white shortboard has softened wax; Embry's right palm skids and she resets rail grip before committing.",
+    "script_function": "The board converts heat and reef caution into visible mechanics: grip, balance, and commitment are not abstract feelings.",
+    "source_seed_id": "seed-2",
+    "visible_or_audible": true
+  },
+  {
+    "category": "character_object",
+    "described_in_script": true,
+    "entity": "Kai surfboard",
+    "environment_interaction": "The well-used waxed board lets Kai trim efficiently under glare and chop, making small corrections while he waits outside the danger line.",
+    "missing_script_details": [],
+    "objects_used": [
+      "White shortboard with darker underside/rail marks",
+      "well-used and waxed",
+      "familiar enough for quick reef-line decisions."
+    ],
+    "script_evidence": "Kai waits on a familiar white board and uses it for position, restraint, and lineup etiquette rather than showing off.",
+    "script_function": "Kai\u2019s familiar board makes his restraint legible as skill: he can move quickly, but chooses patience and positioning.",
+    "source_seed_id": "seed-3",
+    "visible_or_audible": true
+  },
+  {
+    "category": "environmental_force",
+    "described_in_script": true,
+    "entity": "June Swell",
+    "environment_interaction": "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+    "missing_script_details": [],
+    "objects_used": [
+      "sets",
+      "tide window",
+      "wave face"
+    ],
+    "script_evidence": "A silver lump gathers, first peak passes to a local, and the next clean shoulder creates the decisive commitment.",
+    "script_function": "The swell supplies the ten-second clock and turns hesitation, etiquette, and trust into immediate action.",
+    "source_seed_id": "seed-4",
+    "visible_or_audible": true
+  },
+  {
+    "category": "environmental_force",
+    "described_in_script": true,
+    "entity": "Lava Reef",
+    "environment_interaction": "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it.",
+    "missing_script_details": [],
+    "objects_used": [
+      "sharp rock",
+      "shallow line",
+      "safe channel"
+    ],
+    "script_evidence": "Dark lava shapes show through clear water and force Embry to time her line around the safe channel.",
+    "script_function": "The reef prevents generic surf action by making every movement accountable to a visible physical consequence.",
+    "source_seed_id": "seed-5",
+    "visible_or_audible": true
+  },
+  {
+    "category": "location_social_system",
+    "described_in_script": true,
+    "entity": "Kona Coast",
+    "environment_interaction": "The public bay and reef break require waiting turns and reading locals; heat and crowded patience make Kai\u2019s yield and Embry\u2019s timing socially as well as physically necessary.",
+    "missing_script_details": [],
+    "objects_used": [
+      "bay",
+      "local etiquette",
+      "reef break"
+    ],
+    "script_evidence": "Kahalu'u Bay, Kona Coast, Big Island, daylight surf window, local lineup, beach bag, channel, and public etiquette all frame the stolen day.",
+    "script_function": "The location makes their private sick-day escape depend on shared-water rules, preventing reckless or isolated decision-making.",
+    "source_seed_id": "seed-6",
+    "visible_or_audible": true
+  }
+]

@@ -7,9 +7,9 @@ import ThinkingTrace from './ThinkingTrace'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { InlineEvidenceCase } from './InlineEvidenceCase'
 import { ToolAction } from './ToolAction'
-import { RecallCard } from '../sparta/query/RecallCard'
-import { GateChain } from '../sparta/query/GateChain'
-import { ThreatMatrixCard } from '../sparta/query/ThreatMatrixCard'
+import { RecallCard } from './sparta/query/RecallCard'
+import { GateChain } from './sparta/query/GateChain'
+import { ThreatMatrixCard } from './sparta/query/ThreatMatrixCard'
 import { SpartaShieldIcon } from './SpartaShieldIcon'
 import {
   branchFromMessage,

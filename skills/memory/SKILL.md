@@ -71,9 +71,12 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 | `./run.sh recall --q "..." --brief`               | **DEFAULT.** Slim output + proven skill chain. Use this.               |
 | `./run.sh recall --q "..."`                       | Full output with taxonomy, raw scores, _key (when you need metadata)   |
 | `./run.sh intent --q "..."` / `httpx POST /intent {q, scope?, fast?, app?}` | First-class intent product: classify route, QuerySpec, `recall_profile`, slots, and query plan |
+| `httpx POST /speaker/resolve {candidates, threshold?, persona_id?}` | Voice identity front door: resolve listener evidence into known/unknown/ambiguous speaker context before `/intent` or personal recall |
 | `httpx POST /answer {q, scope?, k?, collections?}` | First-class grounded answer product: answer only from deterministic general answers or recall evidence |
 | `./run.sh clarify --q "..."` / `httpx POST /clarify {q, scope?, context?, k?}` | First-class ambiguity product: ask targeted follow-up questions when the request is underspecified |
 | `./run.sh deflect --q "..."` / `httpx POST /deflect {q, persona_id?, intent_action?}` | First-class deflection product: route off-topic, unsafe, or no-match turns away from memory/evidence work |
+| `httpx POST /execution-runs {...duration fields...}` | Record actual route/tool/subagent execution duration for ETA learning and recall |
+| `httpx POST /execution-stats {route_key? ...}` | Return p50/p75/p90/p95 duration estimates from stored `execution_runs` |
 | `httpx POST /store {document, collection}`         | **THE write endpoint.** Write to ANY collection. Auto-upserts by `_key`. |
 | `httpx POST /store {document}` (no collection)     | Writes to `lessons` with Qdrant semantic sync + dedup (same as old `/learn`)     |
 | `httpx POST /upsert {collection, documents}`       | Batch write (multiple docs). Same rules as `/store`.                   |
@@ -165,6 +168,10 @@ threshold for answerability, ambiguity, or off-topic rejection.
 Use the routing set this way:
 
 ```text
+/speaker/resolve for voice turns
+  -> /intent   with speaker_resolution when speaker is known
+  -> /clarify  when speaker is unknown or ambiguous
+
 /intent
   -> /answer   when the request is grounded enough to answer
   -> /clarify  when entities, scope, evidence, or relationships are ambiguous
@@ -175,6 +182,7 @@ These endpoints are routing or final-response products, not raw retrieval:
 
 | Product | When to use | Schema | Surface |
 | --- | --- | --- | --- |
+| `/speaker/resolve` | Resolve listener/diarization/speaker-verification evidence into known, unknown, or ambiguous speaker context before using personal memory. It does not compute embeddings or inspect raw audio. | `memory.speaker_resolution.v1` | HTTP |
 | `/intent` | Classify the user turn into a route, QuerySpec, recall profile, extracted entities, tag families, confidence/ranked candidates, slots, required artifacts, and query plan before retrieval or final-response work. | intent response fields | `./run.sh intent` and HTTP |
 | `/answer` | Return a grounded final answer from deterministic general answers or memory recall evidence. It must not invent unsupported facts. | `memory.answer.v1` | HTTP only for now |
 | `/clarify` | Ask targeted follow-up questions when the query is too vague, has weak recall, unsupported entities, taxonomy gaps, or ambiguous scope. | `memory.clarify.v1` | `./run.sh clarify` and HTTP |
@@ -186,6 +194,61 @@ verdict yet; `DEFLECT` means the request should not enter the evidence pipeline.
 SciLLM may write the human-facing `final_response`, but deterministic memory
 logic owns the route state and source packet. Every SciLLM final-response call
 from memory must include `X-Caller-Skill: memory` and source metadata.
+
+#### POST /speaker/resolve -- Voice Speaker Identity Product
+
+Use `/speaker/resolve` before `/intent` for voice turns where the listener has
+speaker verification or diarization evidence. This endpoint consumes upstream
+speaker candidates and returns a memory-safe identity decision:
+
+| Status | Caller behavior |
+| --- | --- |
+| `known` | Pass `speaker_resolution` to `/intent`, then use `/recall` with returned tags such as `speaker:horus_lupercal`, `user:horus_lupercal`, `persona:horus_lupercal`, and `persona:embry`. |
+| `unknown` | Do not run personal memory/QRA recall. Ask the returned identity prompt, for example "Who am I speaking with?" |
+| `ambiguous` | Do not choose between profiles. Ask the returned identity prompt or a disambiguating follow-up. |
+
+`/speaker/resolve` is not an audio model. It does not compute embeddings,
+transcribe speech, or inspect raw audio. RealtimeSTT, ECAPA, pyannote, or the
+listener service owns audio evidence. Memory owns the identity/profile decision
+surface and the safe tags that downstream recall may use.
+
+Known voice turns should use the `speaker_conversation_memory` recall profile
+when `/speaker/resolve` returns it. This profile is intentionally separate from
+generic `persona_memory_recall`; it is for listener-resolved speaker-scoped
+conversation facts and expects `speaker_identity` plus `speaker_scoped_memory`
+artifacts in receipts.
+
+Example:
+
+```python
+resp = client.post("/speaker/resolve", json={
+    "session_id": "embry-session",
+    "turn_id": "turn-123",
+    "persona_id": "embry",
+    "threshold": 0.82,
+    "candidates": [
+        {
+            "speaker_id": "horus_lupercal",
+            "display_name": "Horus Lupercal",
+            "confidence": 0.94,
+            "source": "ecapa",
+            "tags": ["persona:horus_lupercal"]
+        }
+    ],
+})
+speaker = resp.json()
+
+intent = client.post("/intent", json={
+    "q": "Where did I grow up?",
+    "scope": "persona_memory",
+    "speaker_resolution": speaker,
+    "fast": True,
+}).json()
+```
+
+Unknown or ambiguous speakers must fail closed to identity clarification. Do not
+use another user's memory, QRA preferences, emotional profile, or relationship
+context until `/speaker/resolve` returns `status="known"`.
 
 #### POST /intent -- Route and QuerySpec Product
 
@@ -1005,6 +1068,114 @@ Multi-hop graph traversal works automatically — no extra params needed.
 ```python
 httpx.post(SCILLM_URL, headers={"x-caller-skill": "dogpile", ...}, json={...})
 ```
+
+## Route/Tool/Subagent Execution Telemetry (`execution_runs`)
+
+Memory owns ETA learning for routes, tools, and subagents through the
+`execution_runs` collection. Do not create per-skill timing files, raw AQL timing
+queries, or a separate subagent-only timing store. Store one record per completed
+execution through `/execution-runs`, then query estimates through
+`/execution-stats` or normal `$memory recall`.
+
+Use `llm_call_log` for low-level provider latency. Use `execution_runs` for the
+human-visible workflow duration that wait control needs: `/intent` route,
+planned tool path, skill call, subagent task, or external tool run.
+
+```python
+import httpx
+
+client = httpx.Client(base_url="http://127.0.0.1:8601", timeout=10.0)
+
+client.post("/execution-runs", json={
+    "request_id": "turn-123",
+    "session_id": "embry-session",
+    "executor_type": "memory_endpoint",
+    "executor_name": "intent",
+    "intent_action": "QUERY",
+    "question_kind": "persona_current_fact_blend",
+    "recall_profile": "persona_memory_recall",
+    "response_mode": "research_grounded_persona_response",
+    "tool_name": "brave-search",
+    "duration_ms": 9000,
+    "status": "ok",
+    "scope": "persona_memory",
+    "tags": ["persona:embry", "wait-control"],
+})
+
+stats = client.post("/execution-stats", json={
+    "executor_type": "memory_endpoint",
+    "executor_name": "intent",
+    "intent_action": "QUERY",
+    "question_kind": "persona_current_fact_blend",
+    "recall_profile": "persona_memory_recall",
+    "response_mode": "research_grounded_persona_response",
+    "tool_name": "brave-search",
+    "days": 14,
+}).json()
+# stats includes sample_count, percentiles.{p50,p75,p90,p95}, and recommended_timeout_ms.
+```
+
+`route_key` is deterministic:
+
+```text
+executor_type|executor_name|intent_action|question_kind|recall_profile|response_mode|tool_name
+```
+
+Subagents write to the same collection with `executor_type="subagent"` and
+`executor_name` set to the agent id. Skills write with `executor_type="skill"`
+and `executor_name` set to the skill name. This lets ETA logic compare every
+request path without caring whether work ran inline, through a skill, or through
+a subagent.
+
+`execution_runs` is included in normal recall as a supplemental source:
+
+```python
+resp = client.post("/recall", json={
+    "q": "how long do Embry persona current fact intent routes with brave-search take?",
+    "collections": ["execution_runs"],
+    "k": 10,
+})
+for item in resp.json()["items"]:
+    print(item["route_key"], item["duration_ms"], item["status"])
+```
+
+Healthy execution telemetry has:
+
+- `duration_ms` from a real completed execution, not a mocked provider response.
+- `route_key` or enough route fields for memory to derive it.
+- `executor_type` and `executor_name` that identify the runtime surface.
+- `status`, `started_at`, `ended_at`, and `observed_at` timestamps.
+- `retrieval_text` so `$memory recall` can find timing examples by natural language.
+
+`/intent` wait-control estimates should prefer `execution_runs` percentiles for
+the matching route bucket, then fall back to `llm_call_log` latency, then to a
+deterministic route baseline only when no actual timing samples exist.
+
+Standard memory endpoints must record their own wall-clock execution time after
+the response is complete. This is not optional for first-class routing products:
+
+```text
+/recall
+/answer
+/clarify
+/deflect
+/intent
+```
+
+The standard endpoint timing row must include:
+
+- `executor_type="memory_endpoint"` and `executor_name` set to the endpoint name.
+- `duration_ms` measured from request receipt until after the final response body
+  is available.
+- `caller_skill` from `X-Caller-Skill` when provided.
+- request scope/query metadata when available.
+- returned `tool_calls`, `recommended_skills`, `skill_chain`, and `query_plan`
+  under `metadata` when the endpoint returns them.
+- `tool_name`/`route_key` derived from the tool/skill calls so ETA can estimate
+  both endpoint routes and tool-bearing routes.
+
+Do not log `/execution-runs` and `/execution-stats` through this automatic path;
+those endpoints are the telemetry write/read surface itself.
 
 ## Timeout Estimation (`/latency-stats`)
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Chatterbox Agent"
+  short_description: "Chatterbox voice-agent guidance"
+  default_prompt: "Use best-practices-chatterbox-agent to design or review an interruptible Chatterbox voice-agent loop with memory, long-running skills, JSON event streaming, progress speech, emotion controls, pause handling, and receipts."
