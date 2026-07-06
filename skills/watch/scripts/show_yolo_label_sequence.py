@@ -43,6 +43,77 @@ def matches(receipt: dict[str, Any], asset_uid: str | None, row_index: int | Non
     return True
 
 
+def event_time(event: dict[str, Any]) -> float | None:
+    try:
+        return float(event.get("time_seconds"))
+    except (TypeError, ValueError):
+        return None
+
+
+def event_state(event: dict[str, Any]) -> dict[str, Any]:
+    action = event.get("action")
+    status = event.get("status")
+    if action in {"reject_box", "reset_box", "reset", "reject"} or status in {"rejected_box", "reset", "reject"}:
+        return {
+            "state": "unassigned",
+            "character_name": None,
+            "reason": "sequence_stop",
+        }
+    character_name = event.get("character_name")
+    if character_name:
+        return {
+            "state": "assigned",
+            "character_name": character_name,
+            "actor_name": event.get("actor_name"),
+            "confidence": event.get("confidence"),
+        }
+    return {
+        "state": "unknown",
+        "character_name": None,
+        "reason": "event_has_no_character",
+    }
+
+
+def sequence_states(events: list[dict[str, Any]], state_times: list[float]) -> list[dict[str, Any]]:
+    states: list[dict[str, Any]] = []
+    track_ids = sorted({str(event.get("track_id")) for event in events if event.get("track_id")})
+    for track_id in track_ids:
+        track_events = [
+            event for event in events
+            if event.get("track_id") == track_id and event_time(event) is not None
+        ]
+        track_events.sort(key=lambda event: (event_time(event) or 0, str(event.get("created_at") or "")))
+        for state_time in state_times:
+            prior = [event for event in track_events if (event_time(event) or 0) <= state_time + 0.011]
+            if not prior:
+                states.append(
+                    {
+                        "track_id": track_id,
+                        "time_seconds": state_time,
+                        "state": "unknown",
+                        "character_name": None,
+                        "source_event": None,
+                    }
+                )
+                continue
+            latest = prior[-1]
+            states.append(
+                {
+                    "track_id": track_id,
+                    "time_seconds": state_time,
+                    **event_state(latest),
+                    "source_event": {
+                        "action": latest.get("action"),
+                        "status": latest.get("status"),
+                        "box_key": latest.get("box_key"),
+                        "time_seconds": latest.get("time_seconds"),
+                        "created_at": latest.get("created_at"),
+                    },
+                }
+            )
+    return states
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label-dir", type=Path, default=DEFAULT_LABEL_DIR)
@@ -50,6 +121,7 @@ def main() -> int:
     parser.add_argument("--row-index", type=int)
     parser.add_argument("--track-id")
     parser.add_argument("--action")
+    parser.add_argument("--state-at", type=float, action="append", default=[], help="Report interpolated identity state at this segment second. May be repeated.")
     args = parser.parse_args()
 
     rows: list[dict[str, Any]] = []
@@ -71,6 +143,8 @@ def main() -> int:
                     "action": event.get("action"),
                     "status": event.get("status"),
                     "character_name": event.get("character_name"),
+                    "actor_name": event.get("actor_name"),
+                    "confidence": event.get("confidence"),
                     "time_seconds": event.get("time_seconds"),
                     "created_at": event.get("created_at"),
                 }
@@ -89,6 +163,8 @@ def main() -> int:
         "event_count": len(rows),
         "events": rows,
     }
+    if args.state_at:
+        report["states"] = sequence_states(rows, args.state_at)
     print(json.dumps(report, indent=2))
     return 0
 

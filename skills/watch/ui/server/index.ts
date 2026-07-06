@@ -631,6 +631,17 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     event.confidence = label.confidence
   }
 
+  const nextEvents = events.filter((existing: unknown) => {
+    if (!existing || typeof existing !== 'object') return true
+    const existingRecord = existing as Record<string, unknown>
+    return !(
+      existingRecord.action === action &&
+      existingRecord.track_id === trackId &&
+      existingRecord.box_key === boxKey
+    )
+  })
+  nextEvents.push(event)
+
   const nextReceipt = {
     schema: 'watch.yolo_track_labels.v1',
     asset_uid: assetUid,
@@ -639,7 +650,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     movie_segment: req.body?.movie_segment || receipt.movie_segment || null,
     labels,
     box_rejections: boxRejections,
-    events: [...events, event],
+    events: nextEvents,
     receipt_path: receiptPath,
     updated_at: now,
   }
