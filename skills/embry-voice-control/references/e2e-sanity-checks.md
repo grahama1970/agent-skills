@@ -17,7 +17,7 @@ responses or fake receipts.
 | `health` | Control plane is reachable. | Real HTTP response from configured service. |
 | `readiness` | Service states what is and is not established. | Machine-readable readiness with gaps. |
 | `direct-speak` | Chatterbox can speak approved text. | Live audio artifact, `mocked=false`, `live=true`, turn authority. |
-| `text-turn` | Text turn reaches memory/Tau/Chatterbox authority. | Shared `turn_id`, memory/Tau evidence, audio authority. |
+| `text-turn` | Text turn reaches memory/Tau/Chatterbox authority. | Shared `turn_id`, memory/Tau evidence, audio authority, tone and emotion/tag policy derived from `$memory /intent`. |
 | `speaker-unknown` | Unknown speaker fails closed. | `$memory /speaker/resolve` unknown/ambiguous and clarification path. |
 | `overlap-boundary` | Two non-Embry speakers trigger one-at-a-time response. | Diarization/overlap evidence, intent boundary, Chatterbox output. |
 | `barge-in` | User interruption cancels old speech. | Old turn cancel, stale chunks skipped, zero old bytes after cancel. |
@@ -37,5 +37,8 @@ Every report must include:
 - response status codes
 - required fields found/missing
 - artifact paths
+- selected tone and emotion/tag policy for every Embry speech item
+- `intent_policy_source` for every Embry speech item; normal turns require
+  `memory.intent`, while direct sanity speech may use
+  `direct_sanity_explicit_policy`
 - what remains unverified
-
