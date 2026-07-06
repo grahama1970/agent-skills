@@ -1,0 +1,35 @@
+{
+  "schema": "watch.yolo_track_labels.v1",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 10,
+  "timecode": "04:00",
+  "movie_segment": "04:00-04:24",
+  "labels": {},
+  "box_rejections": {
+    "track_15@179": {
+      "boxKey": "track_15@179",
+      "trackId": "track_15",
+      "timeSeconds": 1.79,
+      "status": "rejected",
+      "source": "human",
+      "updatedAt": "2026-07-06T13:07:47.809Z"
+    }
+  },
+  "events": [
+    {
+      "id": "yolo_label_1783343267809_track_15",
+      "action": "reject_box",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 10,
+      "timecode": "04:00",
+      "movie_segment": "04:00-04:24",
+      "time_seconds": 1.792,
+      "track_id": "track_15",
+      "box_key": "track_15@179",
+      "created_at": "2026-07-06T13:07:47.809Z",
+      "status": "rejected_box"
+    }
+  ],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_yolo_track_labels/bad_santa_unrated_2003_brrip_xvidhd_720p_npw_row0010.json",
+  "updated_at": "2026-07-06T13:07:47.809Z"
+}

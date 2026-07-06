@@ -2599,9 +2599,9 @@ export function WatchReportView({
     return { key, labels: clipModalYoloLabels, row: expandedClipRow }
   }
 
-  function selectedYoloBoxKey(): string | null {
+  function selectedYoloBoxKey(timeSeconds = clipModalPlaybackSeconds): string | null {
     if (!clipModalSelectedYoloTrackId) return null
-    return yoloBoxInstanceKey(clipModalSelectedYoloTrackId, clipModalPlaybackSeconds)
+    return yoloBoxInstanceKey(clipModalSelectedYoloTrackId, timeSeconds)
   }
 
   function annotationBoxIdFromOverlayId(overlayId: string, row: SceneElement): string | null {
@@ -2865,12 +2865,14 @@ export function WatchReportView({
 
   async function unassignClipModalYoloBoxFrame(): Promise<void> {
     if (!clipModalSelectedYoloTrackId || !expandedClipRow || !reportWithDiff) return
-    const boxKey = selectedYoloBoxKey()
+    const timeSeconds = clipModalVideoRef.current?.currentTime ?? clipModalPlaybackSeconds
+    const roundedTimeSeconds = Math.round(timeSeconds * 100) / 100
+    const boxKey = selectedYoloBoxKey(roundedTimeSeconds)
     if (!boxKey) return
     const rejection: WatchYoloBoxRejection = {
       boxKey,
       trackId: clipModalSelectedYoloTrackId,
-      timeSeconds: Math.round(clipModalPlaybackSeconds * 100) / 100,
+      timeSeconds: roundedTimeSeconds,
       status: 'rejected',
       source: 'human',
       updatedAt: new Date().toISOString(),
@@ -2888,7 +2890,7 @@ export function WatchReportView({
       status: 'rejected_box',
       track_id: clipModalSelectedYoloTrackId,
       box_key: boxKey,
-      time_seconds: clipModalPlaybackSeconds,
+      time_seconds: roundedTimeSeconds,
       created_at: rejection.updatedAt,
     }
     setClipModalYoloLabelEvents((current) => [...current, localEvent])
@@ -2903,7 +2905,7 @@ export function WatchReportView({
           row_index: expandedClipRow.index,
           timecode: expandedClipRow.timecode,
           movie_segment: expandedClipRow.movie_segment,
-          time_seconds: clipModalPlaybackSeconds,
+          time_seconds: roundedTimeSeconds,
           box_key: boxKey,
           track_id: clipModalSelectedYoloTrackId,
         }),

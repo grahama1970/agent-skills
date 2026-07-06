@@ -646,14 +646,22 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
 
   mkdirSync(path.dirname(receiptPath), { recursive: true })
   writeFileSync(receiptPath, JSON.stringify(nextReceipt, null, 2))
+  const eventMemoryKey = [
+    safeFilePart(assetUid, 'watch_asset'),
+    `row${String(rowIndex).padStart(4, '0')}`,
+    safeFilePart(trackId, 'track'),
+    safeFilePart(action, 'event'),
+    safeFilePart(boxKey || 'track', 'box'),
+  ].join('_')
   const memorySync = await storeYoloLabelInMemory({
-    _key: `${safeFilePart(assetUid, 'watch_asset')}_row${String(rowIndex).padStart(4, '0')}_${safeFilePart(trackId, 'track')}`,
-    kind: 'watch_yolo_track_label',
-    schema: 'watch_yolo_track_label.v1',
+    _key: eventMemoryKey,
+    kind: 'watch_yolo_track_label_event',
+    schema: 'watch_yolo_track_label_event.v1',
     asset_uid: assetUid,
     row_index: rowIndex,
     track_id: trackId,
     action,
+    event,
     label: labels[trackId] || null,
     box_rejection: boxRejections[boxKey] || null,
     receipt_path: receiptPath,
@@ -666,6 +674,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
   })
   res.json({
     ...nextReceipt,
+    memory_key: eventMemoryKey,
     memory_sync: memorySync.ok ? 'stored' : 'failed',
     memory_sync_error: memorySync.error,
   })
