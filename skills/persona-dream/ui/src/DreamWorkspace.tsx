@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Clock,
   CheckCircle2,
   Copy,
   ClipboardCheck,
@@ -586,12 +587,42 @@ function GateMiniBadge({ status, label }: { status: string; label: string }) {
 }
 
 function isStagePassed(stage: DreamStage): boolean {
-  return statusTone(stage.status) === 'pass'
+  return statusTone(effectiveStageStatus(stage)) === 'pass'
 }
 
 function stageMissingMessage(stage: DreamStage): string {
   if (isStagePassed(stage)) return 'Accepted evidence is present for this phase.'
+  if (stage.id === '07') {
+    if (phase07HasAcceptedStoryboardEvidence(stage)) {
+      return 'Accepted storyboard packet and frame evidence are present for this phase.'
+    }
+    if (/PANEL_ASSETS/i.test(stage.status)) {
+      return stage.failureOrGap || 'Storyboard references are attached. Remaining blocker: accepted storyboard panel images/start-end frames are not present yet.'
+    }
+    if (/REFERENCE_GAPS/i.test(stage.status)) {
+      return 'Storyboard packet is blocked: missing prop/environment references required by Phase 04 contact-sheet evidence.'
+    }
+    return stage.failureOrGap || 'Storyboard packet needs accepted storyboard panels and reviewer evidence before provider handoff.'
+  }
   return stage.failureOrGap || 'Required preflight evidence was not found for this phase.'
+}
+
+function effectiveStageStatus(stage: DreamStage): string {
+  if (stage.id === '07' && phase07HasAcceptedStoryboardEvidence(stage)) {
+    return 'PASS_PANEL_REVIEWED'
+  }
+  return stage.status
+}
+
+function phase07HasAcceptedStoryboardEvidence(stage: DreamStage): boolean {
+  const hasAcceptedPacket = stage.artifacts.some((artifact) =>
+    /phase_07_storyboard_live_tau\/storyboard_packet\.json$/i.test(artifact.path)
+      || /phase_07_storyboard_live_tau\/receipts\/storyboard_(review_verdict|packet_receipt)\.json$/i.test(artifact.path)
+  )
+  const generatedFrameCount = stage.images.filter((image) =>
+    /phase_07_storyboard_live_tau\/generated_storyboard_frames\/sb_\d+_(start|end)_frame\.png$/i.test(image.path)
+  ).length
+  return hasAcceptedPacket && generatedFrameCount >= 8
 }
 
 function ArtifactField({ label, value }: { label: string; value?: string }) {
@@ -738,7 +769,10 @@ function StageCard({
               .map(linkedStoryAssetFromMemoryResult)}
           />
         )}
-        {!['01', '02', '03', '04', '05', '06'].includes(stage.id) && (
+        {stage.id === '07' && (
+          <StoryboardConsole stage={stage} />
+        )}
+        {!['01', '02', '03', '04', '05', '06', '07'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
             {stage.failureOrGap && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
@@ -793,7 +827,7 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
               <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
             </button>
           )}
-          <StatusBadge status={stage.status} />
+          <StatusBadge status={effectiveStageStatus(stage)} />
         </div>
       </div>
       {!isStagePassed(stage) && (
@@ -838,6 +872,305 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
       )}
     </>
   )
+}
+
+const phase07StoryboardPacketPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json'
+
+function StoryboardConsole({ stage }: { stage: DreamStage }) {
+  const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
+  const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPacket() {
+      try {
+        setLoadError(null)
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const payload = await response.json()
+        if (!cancelled) setPacket(payload)
+      } catch (error) {
+        if (!cancelled) {
+          setPacket(null)
+          setLoadError(error instanceof Error ? error.message : String(error))
+        }
+      }
+    }
+    void loadPacket()
+    return () => { cancelled = true }
+  }, [packetPath])
+
+  const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
+  const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
+  const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
+  const panelsHaveAcceptedFrames = panels.length >= 2 && panels.every(panelHasAcceptedStoryboardFrames)
+  const status = panelsHaveAcceptedFrames
+    ? 'PASS_PANEL_REVIEWED'
+    : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames
+
+  return (
+    <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
+      <div style={nvis.storyboardHeader}>
+        <div>
+          <div style={nvis.storyboardEyebrow}>Animatic Storyboard</div>
+          <h3 style={nvis.storyboardTitle}>Four timed panels for a 10-second Kling scene</h3>
+        </div>
+        <div style={nvis.storyboardMetaRow}>
+          <span style={isBlocked ? nvis.storyboardStatusBlocked : nvis.storyboardStatusPass}>
+            {isBlocked ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+            {status.replace(/_/g, ' ')}
+          </span>
+          <span style={nvis.storyboardMetaPill}>{panels.length || '0'} panels</span>
+          <span style={nvis.storyboardMetaPill}>{String(packet?.duration_seconds ?? '10')}s</span>
+        </div>
+      </div>
+
+      {(loadError || !panelsHaveAcceptedFrames) && (
+        <div style={nvis.storyboardBlockerBox}>
+          <strong>Storyboard gate is not satisfied.</strong>
+          <span>
+            {loadError
+              ? `Storyboard packet could not be loaded: ${loadError}.`
+              : 'A single generated image is not a storyboard. Phase 07 requires multiple timed panels with text, references, coverage seed IDs, and reviewer acceptance.'}
+          </span>
+        </div>
+      )}
+
+      {blockers.length > 0 && (
+        <div style={nvis.storyboardBlockerList}>
+          <div style={nvis.storyboardBlockerTitle}>Reference blockers before image generation</div>
+          {blockers.map((blocker, index) => (
+            <div key={`${String(blocker.entity)}-${index}`} style={nvis.storyboardBlockerItem}>
+              <span>{String(blocker.entity ?? 'Unknown entity')}</span>
+              <small>{String(blocker.reason ?? 'Reference is missing')}</small>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {panels.length > 0 && (
+        <div style={nvis.storyboardPanelGrid}>
+          {panels.map((panel) => (
+            <StoryboardPanel key={String(panel.panel_id ?? panel.shot)} panel={panel} />
+          ))}
+        </div>
+      )}
+
+      {candidates.length > 0 && (
+        <div style={nvis.storyboardCandidateStrip}>
+          <div style={nvis.storyboardBlockerTitle}>Rejected generated candidate</div>
+          {candidates.map((candidate) => {
+            const url = dreamAssetUrl(String(candidate.path ?? ''))
+            return (
+              <div key={String(candidate.panel_id ?? candidate.path)} style={nvis.storyboardCandidateRow}>
+                {url && <img src={url} alt={String(candidate.panel_id ?? 'candidate panel')} style={nvis.storyboardCandidateThumb} />}
+                <div>
+                  <div style={nvis.storyboardCandidateStatus}>{String(candidate.status ?? 'REJECTED')}</div>
+                  <div style={nvis.storyboardCandidateReason}>{String(candidate.reason ?? '')}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
+  const range = panel.time_range && typeof panel.time_range === 'object' ? panel.time_range as Record<string, unknown> : {}
+  const references = Array.isArray(panel.references) ? panel.references as Array<Record<string, unknown>> : []
+  const seeds = Array.isArray(panel.coverage_seed_ids) ? panel.coverage_seed_ids.map(String) : []
+  const entities = Array.isArray(panel.required_entities) ? panel.required_entities.map(String) : []
+  const startFrame = storyboardRecord(panel.start_frame)
+  const endFrame = storyboardRecord(panel.end_frame)
+  const cameraPlan = storyboardRecord(panel.camera)
+  const lightingPlan = storyboardRecord(panel.lighting)
+  const productionNotes = storyboardRecord(panel.production_notes)
+  const generationPrompt = storyboardRecord(panel.generation_prompt)
+  const actingBeats = storyboardStringList(panel.acting_beats)
+  const primaryFrame = acceptedStoryboardFrame(startFrame) || acceptedStoryboardFrame(endFrame)
+  const primaryReferenceUrl = primaryFrame ? dreamAssetUrl(String(primaryFrame.path || primaryFrame.image_path || '')) : ''
+  const timeLabel = `${String(range.start_s ?? '?')}s-${String(range.end_s ?? '?')}s`
+  const shotText = String(panel.shot ?? 'Missing shot direction')
+  const shotCode = storyboardShotCode(shotText)
+
+  return (
+    <article data-qid="dream:storyboard:panel" style={nvis.storyboardPanelCard}>
+      <div style={nvis.storyboardFrame}>
+        {primaryReferenceUrl ? (
+          <img
+            src={primaryReferenceUrl}
+            alt={String(panel.panel_id ?? 'accepted storyboard frame')}
+            style={nvis.storyboardFrameImage}
+          />
+        ) : (
+          <div style={nvis.storyboardFrameMissing}>
+            <span style={nvis.storyboardFrameGuideLabel}>{String(panel.panel_id ?? 'panel')} · {shotCode}</span>
+            <span style={nvis.storyboardFrameGuideLine}>Storyboard frame pending</span>
+            <small>Start and end frame specs below</small>
+          </div>
+        )}
+        <div style={nvis.storyboardFrameShade} />
+        <div style={nvis.storyboardFrameTop}>
+          <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')}</span>
+          <span style={nvis.storyboardPanelTime}><Clock size={12} /> {timeLabel}</span>
+        </div>
+        <div style={nvis.storyboardFrameBottom}>
+          <span style={nvis.storyboardShotCode}><Camera size={12} /> {shotCode}</span>
+          <span style={nvis.storyboardFrameCaption}>{shotText}</span>
+        </div>
+      </div>
+
+      <div style={nvis.storyboardPanelBody}>
+        <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
+        {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
+        <StoryboardPromptBlock prompt={generationPrompt} />
+        <div style={nvis.storyboardSupportGrid}>
+          <StoryboardSupportBlock
+            title="Start Frame"
+            body={String(startFrame.description ?? 'Missing start-frame description')}
+            items={storyboardStringList(startFrame.visual_requirements)}
+          />
+          <StoryboardSupportBlock
+            title="End Frame"
+            body={String(endFrame.description ?? 'Missing end-frame description')}
+            items={storyboardStringList(endFrame.visual_requirements)}
+          />
+          <StoryboardSupportBlock
+            title="Camera / Lighting"
+            body={`${String(cameraPlan.movement ?? 'Missing camera movement')} ${String(cameraPlan.composition ?? '')}`.trim()}
+            items={[
+              String(cameraPlan.camera_equipment ?? 'camera equipment missing'),
+              String(lightingPlan.time_of_day ?? 'time of day missing'),
+              String(lightingPlan.quality ?? 'lighting quality missing'),
+            ]}
+          />
+          <StoryboardSupportBlock
+            title="Acting Beats"
+            body={actingBeats.length ? actingBeats.join(' ') : 'Missing acting beats'}
+            items={[
+              `Producer: ${String(productionNotes.producer ?? 'missing')}`,
+              `Director: ${String(productionNotes.director ?? 'missing')}`,
+              `Scriptwriter: ${String(productionNotes.scriptwriter ?? 'missing')}`,
+            ]}
+          />
+        </div>
+        <div style={nvis.storyboardTrackRow}>
+          <div style={nvis.storyboardSeedRow}>
+            {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
+          </div>
+          <div style={nvis.storyboardEntityRow}>
+            {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
+          </div>
+        </div>
+        {references.length > 0 && (
+          <div style={nvis.storyboardReferenceRail}>
+            {references.map((reference) => {
+              const raw = String(reference.path || reference.url || '')
+              const url = dreamAssetUrl(raw)
+              return (
+                <div key={String(reference.id ?? reference.title ?? raw)} style={nvis.storyboardReferenceCard}>
+                  {url ? (
+                    <img src={url} alt={String(reference.title ?? reference.id ?? 'reference')} style={nvis.storyboardReferenceThumb} />
+                  ) : (
+                    <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
+                  )}
+                  <div style={nvis.storyboardReferenceText}>
+                    <span>{String(reference.title ?? reference.id ?? 'Reference')}</span>
+                    <small>{String(reference.role ?? reference.memory_key ?? 'reference')}</small>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </article>
+  )
+}
+
+function StoryboardPromptBlock({ prompt }: { prompt: Record<string, unknown> }) {
+  const panelPrompt = String(prompt.panel_prompt ?? 'Missing storyboard panel generation prompt')
+  const startPrompt = String(prompt.start_frame_prompt ?? 'Missing start-frame prompt')
+  const endPrompt = String(prompt.end_frame_prompt ?? 'Missing end-frame prompt')
+  const requirements = storyboardStringList(prompt.reference_requirements)
+  const negativePrompt = String(prompt.negative_prompt ?? 'Missing negative prompt')
+  return (
+    <div style={nvis.storyboardPromptBlock}>
+      <div style={nvis.storyboardPromptHeader}>Panel Generation Prompt</div>
+      <p style={nvis.storyboardPromptText}>{panelPrompt}</p>
+      <div style={nvis.storyboardPromptPair}>
+        <div>
+          <span style={nvis.storyboardPromptLabel}>Start</span>
+          <p>{startPrompt}</p>
+        </div>
+        <div>
+          <span style={nvis.storyboardPromptLabel}>End</span>
+          <p>{endPrompt}</p>
+        </div>
+      </div>
+      {requirements.length > 0 && (
+        <div style={nvis.storyboardPromptRequirements}>
+          {requirements.map((item) => <span key={item}>{item}</span>)}
+        </div>
+      )}
+      <div style={nvis.storyboardNegativePrompt}>Must not: {negativePrompt}</div>
+    </div>
+  )
+}
+
+function StoryboardSupportBlock({ title, body, items }: { title: string; body: string; items: string[] }) {
+  return (
+    <div style={nvis.storyboardSupportBlock}>
+      <div style={nvis.storyboardSupportTitle}>{title}</div>
+      <p style={nvis.storyboardSupportBody}>{body}</p>
+      {items.length > 0 && (
+        <ul style={nvis.storyboardSupportList}>
+          {items.slice(0, 4).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function panelHasAcceptedStoryboardFrames(panel: Record<string, unknown>): boolean {
+  const startFrame = storyboardRecord(panel.start_frame)
+  const endFrame = storyboardRecord(panel.end_frame)
+  return Boolean(acceptedStoryboardFrame(startFrame) && acceptedStoryboardFrame(endFrame))
+}
+
+function acceptedStoryboardFrame(frame: Record<string, unknown>): Record<string, unknown> | null {
+  const accepted = storyboardRecord(frame.accepted_frame)
+  const status = String(accepted.status ?? '')
+  const path = String(accepted.path ?? accepted.image_path ?? '')
+  if (!path) return null
+  if (!/^ACCEPTED_(START|END)_FRAME$|^ACCEPTED_STORYBOARD_FRAME$|^PASS_PANEL_REVIEWED$/.test(status)) return null
+  return accepted
+}
+
+function storyboardRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function storyboardStringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String).filter(Boolean) : []
+}
+
+function storyboardShotCode(shot: string): string {
+  const value = shot.toLowerCase()
+  if (value.includes('extreme wide')) return 'EWS'
+  if (value.includes('wide') || value.includes('establish')) return 'WS'
+  if (value.includes('medium')) return 'MS'
+  if (value.includes('close')) return 'CU'
+  if (value.includes('waterline')) return 'POV'
+  if (value.includes('two-character') || value.includes('two character')) return 'MWS'
+  return 'SHOT'
 }
 
 function EvidenceCard({ title, status, children }: { title: string; status: string; children: React.ReactNode }) {
@@ -5831,7 +6164,8 @@ function AgentPane({
   onSubmitAction: (action: StageAction, noteOverride?: string) => void
 }) {
   const disabled = !selectedRun || !selectedStage
-  const selectedStageMissing = selectedStage?.status.toUpperCase().includes('MISSING') ?? false
+  const selectedStageStatus = selectedStage ? effectiveStageStatus(selectedStage) : ''
+  const selectedStageMissing = /MISSING|BLOCKED|FAIL/i.test(selectedStageStatus)
   const selectedStagePassed = selectedStage != null && isStagePassed(selectedStage)
   const agentGuidance = (() => {
     if (!selectedStage) return 'Select a Dream run and phase before creating work orders.'
@@ -5861,7 +6195,7 @@ function AgentPane({
         <div style={styles.agentContext}>
           <ArtifactField label="Run" value={selectedRun?.title} />
           <ArtifactField label="Active phase" value={selectedStage ? `${phaseNumber(selectedStage.id)} ${phaseShortLabels[selectedStage.id] ?? selectedStage.title}` : undefined} />
-          <ArtifactField label="Gate state" value={selectedStage ? statusLabel(selectedStage.status) : undefined} />
+          <ArtifactField label="Gate state" value={selectedStage ? statusLabel(selectedStageStatus) : undefined} />
           {selectedRun && (
             <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedRun.runRoot.split('/').pop()}
@@ -8452,6 +8786,470 @@ const nvis: Record<string, CSSProperties> = {
     fontSize: 11,
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  storyboardConsole: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+  },
+  storyboardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 18,
+    alignItems: 'flex-start',
+    paddingBottom: 16,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+  },
+  storyboardEyebrow: {
+    color: '#7f9bbd',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+  },
+  storyboardTitle: {
+    margin: '8px 0 0',
+    color: '#e2e8f0',
+    fontSize: 20,
+    fontWeight: 650,
+    lineHeight: 1.25,
+  },
+  storyboardMetaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  storyboardStatusBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    border: '1px solid rgba(245,158,11,0.45)',
+    color: '#facc15',
+    background: 'rgba(245,158,11,0.08)',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardStatusPass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    border: '1px solid rgba(16,185,129,0.45)',
+    color: '#34d399',
+    background: 'rgba(16,185,129,0.08)',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardMetaPill: {
+    border: '1px solid rgba(148,163,184,0.28)',
+    color: '#a8b6ca',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardBlockerBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    border: '1px solid rgba(245,158,11,0.32)',
+    borderRadius: 10,
+    background: 'rgba(245,158,11,0.06)',
+    color: '#f8d78a',
+    padding: '14px 16px',
+    fontSize: 13,
+    lineHeight: 1.45,
+  },
+  storyboardBlockerList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'stretch',
+    padding: '10px 0 4px',
+  },
+  storyboardBlockerTitle: {
+    flex: '1 0 100%',
+    color: '#7f9bbd',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  storyboardBlockerItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 5,
+    minWidth: 142,
+    maxWidth: 190,
+    border: '1px solid rgba(245,158,11,0.28)',
+    borderRadius: 10,
+    background: 'rgba(245,158,11,0.055)',
+    padding: '9px 10px',
+    color: '#facc15',
+    fontSize: 11,
+    fontWeight: 750,
+  },
+  storyboardPanelGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 18,
+  },
+  storyboardPanelCard: {
+    border: '1px solid rgba(148,163,184,0.18)',
+    borderRadius: 14,
+    overflow: 'hidden',
+    background: 'rgba(7,10,16,0.72)',
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
+  storyboardFrame: {
+    position: 'relative',
+    aspectRatio: '16 / 9',
+    background: 'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(2,6,23,0.95))',
+    overflow: 'hidden',
+  },
+  storyboardFrameImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+    display: 'block',
+    filter: 'saturate(0.88) contrast(0.95)',
+  },
+  storyboardFrameMissing: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameGuideLabel: {
+    color: '#f59e0b',
+    fontSize: 18,
+    fontWeight: 850,
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameGuideLine: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardFrameShade: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(2,6,23,0.58) 0%, rgba(2,6,23,0.06) 36%, rgba(2,6,23,0.76) 100%)',
+    pointerEvents: 'none',
+  },
+  storyboardFrameTop: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  storyboardFrameBottom: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    bottom: 10,
+    display: 'grid',
+    gap: 7,
+  },
+  storyboardShotCode: {
+    justifySelf: 'start',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    border: '1px solid rgba(74,158,255,0.32)',
+    background: 'rgba(2,6,23,0.70)',
+    color: '#bfdbfe',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.12em',
+  },
+  storyboardFrameCaption: {
+    color: '#f8fafc',
+    fontSize: 13,
+    lineHeight: 1.3,
+    fontWeight: 750,
+    textShadow: '0 1px 12px rgba(0,0,0,0.75)',
+  },
+  storyboardPanelTopline: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  storyboardPanelId: {
+    color: '#dbeafe',
+    background: 'rgba(2,6,23,0.66)',
+    border: '1px solid rgba(219,234,254,0.18)',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 11,
+    fontWeight: 850,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  storyboardPanelTime: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    color: '#7dd3fc',
+    background: 'rgba(2,6,23,0.66)',
+    border: '1px solid rgba(125,211,252,0.20)',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 11,
+    fontWeight: 800,
+  },
+  storyboardShot: {
+    color: '#cbd5e1',
+    fontSize: 14,
+    lineHeight: 1.35,
+    fontWeight: 700,
+  },
+  storyboardAction: {
+    margin: 0,
+    color: '#cbd5e1',
+    fontSize: 13,
+    lineHeight: 1.55,
+  },
+  storyboardDialogue: {
+    margin: 0,
+    color: '#e2e8f0',
+    fontSize: 13,
+    lineHeight: 1.45,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  storyboardSupportGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+    paddingTop: 2,
+  },
+  storyboardSupportBlock: {
+    minWidth: 0,
+    border: '1px solid rgba(148,163,184,0.13)',
+    borderRadius: 10,
+    background: 'rgba(15,23,42,0.36)',
+    padding: '10px 11px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 7,
+  },
+  storyboardSupportTitle: {
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardSupportBody: {
+    margin: 0,
+    color: '#dbeafe',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  storyboardSupportList: {
+    margin: 0,
+    paddingLeft: 15,
+    color: '#93a4bb',
+    fontSize: 11,
+    lineHeight: 1.35,
+  },
+  storyboardPromptBlock: {
+    border: '1px solid rgba(245,158,11,0.18)',
+    borderRadius: 12,
+    background: 'rgba(245,158,11,0.045)',
+    padding: '11px 12px',
+    display: 'grid',
+    gap: 9,
+  },
+  storyboardPromptHeader: {
+    color: '#fbbf24',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardPromptText: {
+    margin: 0,
+    color: '#e2e8f0',
+    fontSize: 12,
+    lineHeight: 1.48,
+  },
+  storyboardPromptPair: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 9,
+    color: '#b6c4d6',
+    fontSize: 11,
+    lineHeight: 1.38,
+  },
+  storyboardPromptLabel: {
+    display: 'block',
+    marginBottom: 3,
+    color: '#f59e0b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+  },
+  storyboardPromptRequirements: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardNegativePrompt: {
+    color: '#fca5a5',
+    fontSize: 11,
+    lineHeight: 1.38,
+  },
+  storyboardSeedRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardPanelBody: {
+    display: 'grid',
+    gap: 12,
+    padding: 14,
+  },
+  storyboardTrackRow: {
+    display: 'grid',
+    gap: 8,
+  },
+  storyboardSeed: {
+    color: '#9ed0ff',
+    background: 'rgba(74,158,255,0.08)',
+    border: '1px solid rgba(74,158,255,0.18)',
+    borderRadius: 999,
+    padding: '3px 7px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  storyboardEntityRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  storyboardEntity: {
+    color: '#f472b6',
+    borderBottom: '1px dashed rgba(244,114,182,0.55)',
+    fontSize: 12,
+    fontWeight: 750,
+  },
+  storyboardReferenceRail: {
+    display: 'flex',
+    gap: 8,
+    overflowX: 'auto' as const,
+    paddingTop: 2,
+  },
+  storyboardReferenceGrid: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  storyboardReferenceCard: {
+    display: 'grid',
+    gridTemplateColumns: '44px 1fr',
+    gap: 9,
+    alignItems: 'center',
+    flex: '0 0 186px',
+    minWidth: 0,
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 8,
+    background: 'rgba(255,255,255,0.025)',
+    padding: 7,
+  },
+  storyboardReferenceThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    objectFit: 'cover' as const,
+    display: 'block',
+  },
+  storyboardReferenceFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#7f9bbd',
+    background: 'rgba(148,163,184,0.08)',
+  },
+  storyboardReferenceText: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    minWidth: 0,
+    color: '#dbeafe',
+    fontSize: 11,
+    lineHeight: 1.25,
+  },
+  storyboardCandidateStrip: {
+    borderTop: '1px solid rgba(255,255,255,0.09)',
+    paddingTop: 14,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  storyboardCandidateRow: {
+    display: 'grid',
+    gridTemplateColumns: '88px 1fr',
+    gap: 12,
+    alignItems: 'center',
+    color: '#a8b6ca',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  storyboardCandidateThumb: {
+    width: 88,
+    height: 58,
+    objectFit: 'cover' as const,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.09)',
+    filter: 'saturate(0.75)',
+  },
+  storyboardCandidateStatus: {
+    color: '#facc15',
+    fontSize: 11,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  storyboardCandidateReason: {
+    color: '#94a3b8',
+    marginTop: 3,
   },
   contactSheetGrid: {
     display: 'grid',

@@ -1,0 +1,78 @@
+{
+  "active_goal_hash": "sha256:phase07-storyboard-panels-accepted-20260705",
+  "alerts": [],
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/start-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-loop-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/compiled-command-specs/panel-creator/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/compiled-command-specs/panel-reviewer/tau-dispatch-command.json"
+  ],
+  "command_loop_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-loop-receipt.json",
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json",
+  "contract_sha256": "sha256:da5a274d25943b21b8e4834f3b4a5654c2c818f1618e381534a60789ef17a562",
+  "dag_id": "persona-dream-phase-07-storyboard-packet-panel-review",
+  "edge_count": 3,
+  "entry_node": "panel-creator",
+  "errors": [],
+  "evidence_validation_receipt": null,
+  "execution": "project_agent_dag_via_handoff_command_loop",
+  "live": true,
+  "max_steps": 4,
+  "mocked": false,
+  "node_attempts": {
+    "panel-creator": 1,
+    "panel-reviewer": 1
+  },
+  "node_count": 3,
+  "observed_edges": [
+    {
+      "from_agent": "panel-creator",
+      "from_node": "panel-creator",
+      "to_agent": "panel-reviewer",
+      "to_node": "panel-reviewer"
+    },
+    {
+      "from_agent": "panel-reviewer",
+      "from_node": "panel-reviewer",
+      "to_agent": "human",
+      "to_node": "human"
+    }
+  ],
+  "ok": true,
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "Parallel DAG scheduling.",
+      "GitHub mutation or ticket closure.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Entry node was compiled into a tau.agent_handoff.v1 start handoff.",
+      "Node routing was executed by the real local command-loop subprocess runner.",
+      "Observed edges and retry counts were checked against the DAG contract.",
+      "Reviewer verdict evidence was checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [
+    "panel-creator",
+    "panel-reviewer"
+  ],
+  "status": "PASS",
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-05T20:46:23Z",
+  "verdict": "PASS"
+}

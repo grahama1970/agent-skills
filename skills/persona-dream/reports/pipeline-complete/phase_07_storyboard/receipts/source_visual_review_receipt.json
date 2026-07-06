@@ -1,0 +1,38 @@
+{
+  "schema": "persona_dream.visual_review_receipt.v1",
+  "timestamp": "2026-07-04T00:00:00Z",
+  "status": "PASS",
+  "panel_id": "panel_001",
+  "reviewer_source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json",
+  "reviewed_image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+  "hash": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+  "mocked": false,
+  "live": false,
+  "live_call_performed": false,
+  "normalization_note": "Local normalized receipt derived from the existing validated Phase 07 source visual review whose validator status was PASS_VISUAL_REVIEW and whose reviewed image hash matches this run's panel_01_scillm_panel.png.",
+  "blocking_findings": [],
+  "passed_entities": [
+    "Embry",
+    "Kai",
+    "Kahalu'u Bay surf environment",
+    "single accepted panel reference"
+  ],
+  "checks": {
+    "characters": "PASS",
+    "props": "PASS",
+    "environment": "PASS",
+    "script_dialogue": "PASS",
+    "motion_cues": "PASS"
+  },
+  "claims": {
+    "proves": [
+      "A local source visual-review receipt exists for the selected storyboard panel reference.",
+      "The selected panel image hash matches the prior validated visual-review artifact."
+    ],
+    "does_not_prove": [
+      "No new live VLM review was performed in this Phase 07 run.",
+      "No new live image generation was performed in this Phase 07 run.",
+      "No provider-ready or Kling-ready claim is made by this receipt."
+    ]
+  }
+}

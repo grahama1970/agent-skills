@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import SharedChatShell from './SharedChatShell'
 import type { ChatMessage, MemoryTurnAdapter, UnknownRecord } from './memory-turn'
-import { EmbryVoiceChatAdapter, type EmbryVoiceChatAdapterOptions } from './memory-turn'
+import { EmbryVoiceChatAdapter, type EmbryTurnAuthority, type EmbryVoiceAudioAuthority, type EmbryVoiceChatAdapterOptions } from './memory-turn'
 
 export interface EmbryVoiceAudioArtifact {
   id?: string
@@ -37,6 +37,8 @@ export interface EmbryVoiceTurnEvidence {
   qraCacheHit?: boolean
   interruptionOldBytesAfterCancel?: number
   receiptPath?: string
+  audioAuthority?: EmbryVoiceAudioAuthority
+  turnAuthority?: EmbryTurnAuthority
   audioArtifacts?: EmbryVoiceAudioArtifact[]
   latencyMs?: Record<string, number>
   mocked?: boolean
@@ -324,27 +326,229 @@ function AudioArtifactList({ artifacts, compact = false }: { artifacts: EmbryVoi
   if (!artifacts.length) return null
   return (
     <div style={{ display: 'grid', gap: compact ? 6 : 8, marginTop: compact ? 8 : 10 }}>
-      {artifacts.map((artifact, index) => {
-        const src = artifact.url ?? artifact.path
-        return (
-          <div key={artifact.id ?? artifact.path ?? artifact.url ?? index} style={{ display: 'grid', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#c9d7e8', fontSize: 12 }}>
-              <PlayCircle size={14} strokeWidth={1.7} aria-hidden="true" />
-              <span>{artifact.label ?? artifact.id ?? `audio ${index + 1}`}</span>
-              {artifact.tone && <span style={{ color: '#8ea0b6' }}>{artifact.tone}</span>}
-              {typeof artifact.durationSeconds === 'number' && <span style={{ color: '#8ea0b6' }}>{artifact.durationSeconds.toFixed(2)}s</span>}
-            </div>
-            {src ? (
-              <audio controls preload="metadata" src={src} style={{ width: '100%', height: 34 }} />
-            ) : (
-              <div style={{ color: '#ffcf91', fontSize: 12 }}>Audio artifact has no browser-playable path or URL.</div>
-            )}
-            {artifact.sha256 && <div style={{ color: '#738397', fontSize: 11, overflowWrap: 'anywhere' }}>sha256 {artifact.sha256}</div>}
-          </div>
-        )
-      })}
+      {artifacts.map((artifact, index) => (
+        <AudioArtifactCard key={artifact.id ?? artifact.path ?? artifact.url ?? index} artifact={artifact} index={index} compact={compact} />
+      ))}
     </div>
   )
+}
+
+function AudioArtifactCard({ artifact, index, compact }: { artifact: EmbryVoiceAudioArtifact; index: number; compact: boolean }): JSX.Element {
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
+  const setAudioRef = useCallback((node: HTMLAudioElement | null) => setAudioElement(node), [])
+  const src = artifact.url ?? artifact.path
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#c9d7e8', fontSize: 12 }}>
+        <PlayCircle size={14} strokeWidth={1.7} aria-hidden="true" />
+        <span>{artifact.label ?? artifact.id ?? `audio ${index + 1}`}</span>
+        {artifact.tone && <span style={{ color: '#8ea0b6' }}>{artifact.tone}</span>}
+        {typeof artifact.durationSeconds === 'number' && <span style={{ color: '#8ea0b6' }}>{artifact.durationSeconds.toFixed(2)}s</span>}
+      </div>
+      {src ? (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: compact ? '1fr' : '96px minmax(0, 1fr)',
+            alignItems: 'center',
+            gap: compact ? 6 : 10,
+          }}
+        >
+          {!compact && <AnswerParticleAnimation audioElement={audioElement} artifact={artifact} />}
+          <audio ref={setAudioRef} controls preload="metadata" src={src} style={{ width: '100%', height: 34 }} />
+        </div>
+      ) : (
+        <div style={{ color: '#ffcf91', fontSize: 12 }}>Audio artifact has no browser-playable path or URL.</div>
+      )}
+      {artifact.sha256 && <div style={{ color: '#738397', fontSize: 11, overflowWrap: 'anywhere' }}>sha256 {artifact.sha256}</div>}
+    </div>
+  )
+}
+
+function AnswerParticleAnimation({ audioElement, artifact }: { audioElement: HTMLAudioElement | null; artifact: EmbryVoiceAudioArtifact }): JSX.Element {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const energyRef = useRef(0.08)
+  const lastVoiceAtRef = useRef(0)
+  const toneProfile = useMemo(() => particleToneProfile(artifact), [artifact])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const context = canvas.getContext('2d')
+    if (!context) return
+    let frameId = 0
+    let analyserBundle: AudioAnalyserBundle | null = null
+    let analyserFailed = false
+    const frequencyData = new Uint8Array(512)
+    const timeData = new Uint8Array(512)
+
+    const draw = (time: number) => {
+      const width = 96
+      const height = 64
+      const dpr = window.devicePixelRatio || 1
+      if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+        canvas.width = Math.round(width * dpr)
+        canvas.height = Math.round(height * dpr)
+        canvas.style.width = `${width}px`
+        canvas.style.height = `${height}px`
+      }
+      context.setTransform(dpr, 0, 0, dpr, 0, 0)
+      context.clearRect(0, 0, width, height)
+
+      const playing = Boolean(audioElement && !audioElement.paused && !audioElement.ended)
+      if (audioElement && playing && !analyserFailed) {
+        try {
+          analyserBundle = analyserBundle ?? getAudioAnalyserBundle(audioElement)
+          if (analyserBundle.context.state === 'suspended') void analyserBundle.context.resume()
+          analyserBundle.analyser.getByteFrequencyData(analyserBundle.frequencyData)
+          analyserBundle.analyser.getByteTimeDomainData(analyserBundle.timeData)
+          frequencyData.set(analyserBundle.frequencyData.subarray(0, frequencyData.length))
+          timeData.set(analyserBundle.timeData.subarray(0, timeData.length))
+        } catch {
+          analyserFailed = true
+        }
+      }
+
+      const audioEnergy = playing && !analyserFailed ? calculateAudioEnergy(frequencyData, timeData) : null
+      if (playing && (!audioEnergy || audioEnergy.amplitude > 0.015)) lastVoiceAtRef.current = time
+      const recentlyVoiced = time - lastVoiceAtRef.current < 4200
+      const fallbackSpeakingEnergy = playing ? 0.13 + toneProfile.activity : recentlyVoiced ? 0.11 : 0.045
+      const targetEnergy = audioEnergy
+        ? Math.max(audioEnergy.amplitude, audioEnergy.low * 0.42 + audioEnergy.mid * 0.32 + audioEnergy.high * 0.22, toneProfile.activity)
+        : fallbackSpeakingEnergy
+      const decay = audioEnergy ? 0.72 : recentlyVoiced ? 0.985 : 0.965
+      energyRef.current = Math.max(targetEnergy, energyRef.current * decay)
+
+      const low = audioEnergy?.low ?? toneProfile.warmth * 0.12
+      const mid = audioEnergy?.mid ?? toneProfile.activity * 0.12
+      const high = audioEnergy?.high ?? toneProfile.jitter * 0.1
+      drawParticles(context, width, height, time, energyRef.current, low, mid, high, toneProfile)
+      frameId = window.requestAnimationFrame(draw)
+    }
+
+    frameId = window.requestAnimationFrame(draw)
+    return () => window.cancelAnimationFrame(frameId)
+  }, [audioElement, toneProfile])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-label="Embry answer voice particles"
+      role="img"
+      style={{
+        display: 'block',
+        width: 96,
+        height: 64,
+        borderRadius: 10,
+        border: '1px solid rgba(124,228,255,0.18)',
+        background: 'radial-gradient(circle at 50% 50%, rgba(124,228,255,0.12), rgba(0,0,0,0.16) 62%, rgba(0,0,0,0.26))',
+      }}
+    />
+  )
+}
+
+type AudioAnalyserBundle = {
+  context: AudioContext
+  analyser: AnalyserNode
+  frequencyData: Uint8Array
+  timeData: Uint8Array
+}
+
+const audioAnalyserBundles = new WeakMap<HTMLAudioElement, AudioAnalyserBundle>()
+
+function getAudioAnalyserBundle(audioElement: HTMLAudioElement): AudioAnalyserBundle {
+  const cached = audioAnalyserBundles.get(audioElement)
+  if (cached) return cached
+  const context = new AudioContext()
+  const source = context.createMediaElementSource(audioElement)
+  const analyser = context.createAnalyser()
+  analyser.fftSize = 1024
+  analyser.smoothingTimeConstant = 0.78
+  source.connect(analyser)
+  analyser.connect(context.destination)
+  const bundle = {
+    context,
+    analyser,
+    frequencyData: new Uint8Array(analyser.frequencyBinCount),
+    timeData: new Uint8Array(analyser.fftSize),
+  }
+  audioAnalyserBundles.set(audioElement, bundle)
+  return bundle
+}
+
+function calculateAudioEnergy(frequencyData: Uint8Array, timeData: Uint8Array): { amplitude: number; low: number; mid: number; high: number } {
+  let sumSquares = 0
+  for (const sample of timeData) {
+    const centered = (sample - 128) / 128
+    sumSquares += centered * centered
+  }
+  const amplitude = Math.min(1, Math.sqrt(sumSquares / Math.max(1, timeData.length)) * 2.4)
+  const low = averageBand(frequencyData, 0.02, 0.16)
+  const mid = averageBand(frequencyData, 0.16, 0.48)
+  const high = averageBand(frequencyData, 0.48, 0.92)
+  return { amplitude, low, mid, high }
+}
+
+function averageBand(data: Uint8Array, startRatio: number, endRatio: number): number {
+  const start = Math.max(0, Math.floor(data.length * startRatio))
+  const end = Math.max(start + 1, Math.min(data.length, Math.floor(data.length * endRatio)))
+  let total = 0
+  for (let index = start; index < end; index += 1) total += data[index] ?? 0
+  return Math.min(1, total / (end - start) / 255)
+}
+
+function particleToneProfile(artifact: EmbryVoiceAudioArtifact): { activity: number; warmth: number; jitter: number; laugh: number } {
+  const text = `${artifact.tone ?? ''} ${artifact.transcript ?? ''}`.toLowerCase()
+  const laugh = /\b(laugh|laughs|laughing|chuckle|chuckles|giggle|giggles|amused)\b/.test(text) ? 1 : 0
+  const urgent = /\b(urgent|angry|sharp|fast|excited|alarm|interrupt)\b/.test(text) ? 1 : 0
+  const warm = /\b(warm|soft|gentle|calm|kind|relieved|playful)\b/.test(text) ? 1 : 0
+  return {
+    activity: 0.035 + urgent * 0.09 + laugh * 0.08,
+    warmth: 0.18 + warm * 0.22 + laugh * 0.12,
+    jitter: 0.12 + urgent * 0.28 + laugh * 0.22,
+    laugh,
+  }
+}
+
+function drawParticles(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  time: number,
+  energy: number,
+  low: number,
+  mid: number,
+  high: number,
+  toneProfile: { activity: number; warmth: number; jitter: number; laugh: number },
+): void {
+  const centerX = width / 2
+  const centerY = height / 2
+  const baseRadius = 15 + low * 12 + energy * 12
+  const orbit = time * (0.00035 + mid * 0.0014 + toneProfile.activity * 0.001)
+  const count = 46
+  context.save()
+  context.globalCompositeOperation = 'lighter'
+  for (let index = 0; index < count; index += 1) {
+    const fraction = index / count
+    const angle = fraction * Math.PI * 2 + orbit * (index % 3 === 0 ? 1.35 : -0.72)
+    const phraseWave = Math.sin(time * 0.0032 + index * 0.77)
+    const laughHop = toneProfile.laugh ? Math.sin(time * 0.014 + index) * high * 4 : 0
+    const radius = baseRadius + phraseWave * (2 + energy * 7) + ((index % 5) - 2) * high * 2
+    const x = centerX + Math.cos(angle) * radius + Math.sin(time * 0.002 + index * 1.9) * toneProfile.jitter * 4
+    const y = centerY + Math.sin(angle) * (radius * 0.64) + laughHop
+    const size = 1.15 + energy * 2.9 + high * (index % 4 === 0 ? 2.1 : 0.7)
+    const hue = 184 + toneProfile.warmth * 28 + high * 34 + (index % 7) * 2
+    context.beginPath()
+    context.fillStyle = `hsla(${hue}, 92%, ${62 + Math.min(18, energy * 18)}%, ${0.28 + Math.min(0.62, energy * 0.95)})`
+    context.arc(x, y, size, 0, Math.PI * 2)
+    context.fill()
+  }
+  context.strokeStyle = `rgba(124, 228, 255, ${0.1 + Math.min(0.32, energy * 0.42)})`
+  context.lineWidth = 1
+  context.beginPath()
+  context.ellipse(centerX, centerY, baseRadius + 4, (baseRadius + 4) * 0.64, orbit * 0.08, 0, Math.PI * 2)
+  context.stroke()
+  context.restore()
 }
 
 function Claims({ run }: { run: EmbryVoiceSanityRun }): JSX.Element | null {
@@ -448,6 +652,8 @@ function turnsToMessages(turns: EmbryVoiceTurnEvidence[]): ChatMessage[] {
         speakerId: turn.speakerId,
         tone: turn.tone,
         receiptPath: turn.receiptPath,
+        audioAuthority: turn.audioAuthority ?? turn.turnAuthority?.audioAuthority,
+        turnAuthority: turn.turnAuthority ?? turnAuthorityFromEvidence(turn),
         audioArtifacts: turn.audioArtifacts,
         simultaneousTextVoice: true,
         memoryFirst: true,
@@ -465,18 +671,22 @@ function mergeTurnsFromMessages(turns: EmbryVoiceTurnEvidence[], messages: ChatM
     const message = messages[index]
     if (message.role !== 'assistant') continue
     const metadata = (message.metadata ?? {}) as UnknownRecord
-    const audioArtifacts = normalizeAudioArtifacts(metadata.audioArtifacts ?? metadata.audio_artifacts)
+    const turnAuthority = normalizeTurnAuthority(metadata.turnAuthority ?? metadata.turn_authority)
+    const audioAuthority = normalizeAudioAuthority(metadata.audioAuthority ?? metadata.audio_authority ?? turnAuthority?.audioAuthority)
+    const audioArtifacts = normalizeAudioArtifacts(metadata.audioArtifacts ?? metadata.audio_artifacts, audioAuthority)
     if (!audioArtifacts.length) continue
     const previous = previousUserMessage(messages, index)
-    const id = stringValue(metadata.turnId ?? metadata.turn_id) ?? message.id
+    const id = stringValue(metadata.turnId ?? metadata.turn_id ?? turnAuthority?.turnId) ?? message.id
     if (merged.some((turn) => turn.id === id)) continue
     merged.push({
       id,
-      userText: previous?.content ?? '',
-      assistantText: message.content,
-      speakerId: stringValue(metadata.speakerId ?? metadata.speaker_id),
+      userText: turnAuthority?.userText ?? previous?.content ?? '',
+      assistantText: turnAuthority?.assistantText ?? message.content,
+      speakerId: stringValue(metadata.speakerId ?? metadata.speaker_id ?? turnAuthority?.speakerId),
       tone: stringValue(metadata.tone),
-      receiptPath: stringValue(metadata.receiptPath ?? metadata.receipt_path),
+      receiptPath: stringValue(metadata.receiptPath ?? metadata.receipt_path ?? turnAuthority?.receiptPath),
+      audioAuthority,
+      turnAuthority,
       audioArtifacts,
       live: true,
       mocked: false,
@@ -518,9 +728,10 @@ function turnToThinkingSteps(turn: EmbryVoiceTurnEvidence): ChatMessage['reasoni
   ]
 }
 
-function normalizeAudioArtifacts(value: unknown): EmbryVoiceAudioArtifact[] {
-  if (!Array.isArray(value)) return []
-  return value.filter(isRecord).map((item, index) => ({
+function normalizeAudioArtifacts(value: unknown, audioAuthority?: EmbryVoiceAudioAuthority): EmbryVoiceAudioArtifact[] {
+  const records = Array.isArray(value) ? value.filter(isRecord) : []
+  if (!records.length && audioAuthority && (audioAuthority.url || audioAuthority.path)) records.push(audioAuthority as UnknownRecord)
+  return records.map((item, index) => ({
     id: stringValue(item.id) ?? `audio-${index + 1}`,
     label: stringValue(item.label),
     path: stringValue(item.path),
@@ -531,6 +742,64 @@ function normalizeAudioArtifacts(value: unknown): EmbryVoiceAudioArtifact[] {
     transcript: stringValue(item.transcript),
     tone: stringValue(item.tone),
   }))
+}
+
+function turnAuthorityFromEvidence(turn: EmbryVoiceTurnEvidence): EmbryTurnAuthority {
+  return {
+    turnId: turn.id,
+    userText: turn.userText,
+    assistantText: turn.assistantText,
+    personaId: 'embry',
+    speakerId: turn.speakerId,
+    createdAt: new Date().toISOString(),
+    memoryFirst: true,
+    simultaneousTextVoice: true,
+    receiptPath: turn.receiptPath,
+    audioAuthority: turn.audioAuthority,
+    audioArtifacts: (turn.audioArtifacts ?? []) as UnknownRecord[],
+    live: turn.live,
+    mocked: turn.mocked,
+  }
+}
+
+function normalizeTurnAuthority(value: unknown): EmbryTurnAuthority | undefined {
+  if (!isRecord(value)) return undefined
+  const turnId = stringValue(value.turnId ?? value.turn_id)
+  const userText = stringValue(value.userText ?? value.user_text)
+  const assistantText = stringValue(value.assistantText ?? value.assistant_text)
+  if (!turnId || !userText || !assistantText) return undefined
+  return {
+    turnId,
+    userText,
+    assistantText,
+    personaId: stringValue(value.personaId ?? value.persona_id) ?? 'embry',
+    speakerId: stringValue(value.speakerId ?? value.speaker_id),
+    sessionId: stringValue(value.sessionId ?? value.session_id),
+    createdAt: stringValue(value.createdAt ?? value.created_at) ?? new Date().toISOString(),
+    memoryFirst: true,
+    simultaneousTextVoice: true,
+    receiptPath: stringValue(value.receiptPath ?? value.receipt_path),
+    audioAuthority: normalizeAudioAuthority(value.audioAuthority ?? value.audio_authority),
+    audioArtifacts: Array.isArray(value.audioArtifacts) ? value.audioArtifacts.filter(isRecord) : [],
+    memoryTrace: value.memoryTrace ?? value.memory_trace,
+    tauTrace: value.tauTrace ?? value.tau_trace,
+    live: value.live === true,
+    mocked: value.mocked === true,
+  }
+}
+
+function normalizeAudioAuthority(value: unknown): EmbryVoiceAudioAuthority | undefined {
+  if (!isRecord(value)) return undefined
+  return {
+    authority: stringValue(value.authority),
+    artifactId: stringValue(value.artifactId ?? value.artifact_id),
+    url: stringValue(value.url),
+    path: stringValue(value.path),
+    sha256: stringValue(value.sha256),
+    durationMs: numberValue(value.durationMs ?? value.duration_ms),
+    localPlayback: isRecord(value.localPlayback) ? value.localPlayback : isRecord(value.local_playback) ? value.local_playback : null,
+    envelope: isRecord(value.envelope) ? value.envelope : undefined,
+  }
 }
 
 function isRecord(value: unknown): value is UnknownRecord {

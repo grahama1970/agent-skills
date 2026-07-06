@@ -12,6 +12,7 @@ import {
   normalizeTurnText,
   streamingStepsToThinkingTrace,
 } from './MemoryTurnAdapter'
+import type { EmbryTurnAuthority, EmbryVoiceAudioAuthority } from './EmbryVoiceAuthority'
 
 export type EmbryVoiceFetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
@@ -111,6 +112,13 @@ export class EmbryVoiceChatAdapter implements MemoryTurnAdapter {
         extractContentFromUnknown(packet) ||
         extractContentFromUnknown(packet.final_response) ||
         'Embry returned a voice turn without display text.'
+      const turnAuthority = extractTurnAuthority(packet, {
+        question,
+        content,
+        personaId: this.personaId,
+        speakerId: this.speakerId,
+        sessionId: this.sessionId,
+      })
 
       const message = makeFinalMessage({
         branch: 'personaplex',
@@ -124,8 +132,11 @@ export class EmbryVoiceChatAdapter implements MemoryTurnAdapter {
           speakerId: this.speakerId,
           sessionId: this.sessionId,
           simultaneousTextVoice: true,
+          turnId: turnAuthority.turnId,
+          turnAuthority,
           answerPacket: packet,
-          audioArtifacts: extractAudioArtifacts(packet),
+          audioAuthority: turnAuthority.audioAuthority,
+          audioArtifacts: turnAuthority.audioArtifacts,
           receiptPath: stringValue(packet.receipt_path ?? packet.receiptPath),
           memoryFirst: true,
         },
@@ -222,11 +233,73 @@ function dataForStep(packet: UnknownRecord, stepId: string): unknown {
   if (stepId === 'memory-intent') return packet.intent ?? packet.memory_intent ?? packet.memoryIntent
   if (stepId === 'memory-recall') return packet.recall ?? packet.memory_recall ?? packet.memoryRecall
   if (stepId === 'tau-render-request') return packet.tau ?? packet.tau_voice_render ?? packet.tauVoiceRender
-  if (stepId === 'chatterbox-audio') return { audioArtifacts: extractAudioArtifacts(packet) }
+  if (stepId === 'chatterbox-audio') return {
+    audioAuthority: extractAudioAuthority(packet),
+    audioArtifacts: extractAudioArtifacts(packet),
+  }
   return packet
 }
 
-function extractAudioArtifacts(packet: UnknownRecord): UnknownRecord[] {
+function extractTurnAuthority(
+  packet: UnknownRecord,
+  args: {
+    question: string
+    content: string
+    personaId: string
+    speakerId?: string
+    sessionId?: string
+  },
+): EmbryTurnAuthority {
+  const packetTurnAuthority = firstRecord(packet.turnAuthority, packet.turn_authority)
+  const audioAuthority = extractAudioAuthority(packet)
+  const turnId =
+    stringValue(packetTurnAuthority?.turnId ?? packetTurnAuthority?.turn_id) ??
+    stringValue(packet.turnId ?? packet.turn_id ?? packet.id) ??
+    stringValue(audioAuthority?.artifactId) ??
+    `embry-voice-${Date.now()}`
+  const receiptPath = stringValue(packet.receipt_path ?? packet.receiptPath ?? packetTurnAuthority?.receiptPath ?? packetTurnAuthority?.receipt_path)
+  return {
+    turnId,
+    userText: args.question,
+    assistantText: args.content,
+    personaId: args.personaId,
+    speakerId: stringValue(packetTurnAuthority?.speakerId ?? packetTurnAuthority?.speaker_id) ?? args.speakerId,
+    sessionId: stringValue(packetTurnAuthority?.sessionId ?? packetTurnAuthority?.session_id) ?? args.sessionId,
+    createdAt: stringValue(packetTurnAuthority?.createdAt ?? packetTurnAuthority?.created_at ?? packet.createdAt ?? packet.created_at) ?? new Date().toISOString(),
+    memoryFirst: true,
+    simultaneousTextVoice: true,
+    receiptPath,
+    audioAuthority,
+    audioArtifacts: extractAudioArtifacts(packet, audioAuthority),
+    memoryTrace: packet.memory_trace ?? packet.memoryTrace ?? packet.recall ?? packet.memory_recall,
+    tauTrace: packet.tau_trace ?? packet.tauTrace ?? packet.tau ?? packet.tau_voice_render,
+    live: packet.live === true,
+    mocked: packet.mocked === true,
+  }
+}
+
+function extractAudioAuthority(packet: UnknownRecord): EmbryVoiceAudioAuthority | undefined {
+  const authority = firstRecord(
+    packet.audioAuthority,
+    packet.audio_authority,
+    nested(packet, 'chatterbox', 'audio_authority'),
+    nested(packet, 'voice', 'audio_authority'),
+    nested(packet, 'tau', 'audio_authority'),
+  )
+  if (!authority) return undefined
+  return {
+    authority: stringValue(authority.authority),
+    artifactId: stringValue(authority.artifactId ?? authority.artifact_id),
+    url: stringValue(authority.url),
+    path: stringValue(authority.path),
+    sha256: stringValue(authority.sha256),
+    durationMs: numberValue(authority.durationMs ?? authority.duration_ms),
+    localPlayback: firstRecord(authority.localPlayback, authority.local_playback) ?? null,
+    envelope: firstRecord(authority.envelope, authority.voiceEnvelope, authority.voice_envelope),
+  }
+}
+
+function extractAudioArtifacts(packet: UnknownRecord, audioAuthority = extractAudioAuthority(packet)): UnknownRecord[] {
   const candidates = [
     packet.audioArtifacts,
     packet.audio_artifacts,
@@ -240,7 +313,12 @@ function extractAudioArtifacts(packet: UnknownRecord): UnknownRecord[] {
     if (Array.isArray(candidate)) return candidate.filter(isRecord)
     if (isRecord(candidate)) return [candidate]
   }
+  if (audioAuthority?.url || audioAuthority?.path) return [audioAuthority as UnknownRecord]
   return []
+}
+
+function firstRecord(...values: unknown[]): UnknownRecord | undefined {
+  return values.find(isRecord)
 }
 
 function nested(record: UnknownRecord, first: string, second: string): unknown {

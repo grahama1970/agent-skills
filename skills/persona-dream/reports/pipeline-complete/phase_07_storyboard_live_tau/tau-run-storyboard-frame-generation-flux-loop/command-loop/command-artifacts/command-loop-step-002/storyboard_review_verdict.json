@@ -1,0 +1,54 @@
+{
+  "accepted": false,
+  "blockers": [
+    "generated_candidate_panels_not_accepted:candidate_panel_001"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "No live provider image generation or Kling submission occurred.",
+      "No downstream video provider submission occurred."
+    ],
+    "proves": [
+      "Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."
+    ]
+  },
+  "created_at": "2026-07-05T20:30:14.706809+00:00",
+  "duration_seconds": 10,
+  "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
+  "live": true,
+  "mocked": false,
+  "panel_count": 4,
+  "per_panel": [
+    {
+      "blockers": [],
+      "panel_id": "sb_001",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_002",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_003",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_004",
+      "status": "PASS"
+    }
+  ],
+  "provider_calls": {
+    "image": false,
+    "kling": false,
+    "paid": false
+  },
+  "reference_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_coverage.json",
+  "role": "panel-reviewer",
+  "schema": "persona_dream.storyboard_review_verdict.v1",
+  "status": "BLOCKED_PANEL_REVIEW",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:f79dbc931a1c2aaff417e3d6395c868346cc973153343c66d42b5595119e2312"
+}

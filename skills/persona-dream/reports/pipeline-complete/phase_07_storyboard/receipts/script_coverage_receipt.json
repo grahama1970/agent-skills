@@ -1,0 +1,15 @@
+{
+  "blockers": [],
+  "checked": [
+    "source_panel_work_order",
+    "action_or_beat",
+    "required_entities_or_props",
+    "motion_or_environment_cues"
+  ],
+  "coverage_summary": "Phase 06 script_contract.json covers seed-0 through seed-6: Embry, Kai, Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast.",
+  "panel_id": "panel_001",
+  "schema": "persona_dream.script_coverage_receipt.v1",
+  "source_panel": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+  "source_summary": "One 10-second scene at Kahalu'u Bay: Embry ignores a buzzing phone long enough to make a careful, competent surf decision while Kai reads the lineup and reef without taking over.",
+  "status": "PASS"
+}

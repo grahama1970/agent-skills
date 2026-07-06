@@ -1,0 +1,80 @@
+{
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/panel_creator_tau_subagent_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/storyboard_creator_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/storyboard_frame_generation_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/storyboard_panel_manifest.json"
+  ],
+  "command_results": [
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/phase07_storyboard_tau_node.py",
+        "--role",
+        "panel-creator"
+      ],
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/compiled-command-specs/panel-creator/tau-dispatch-command.json",
+      "command_spec_sha256": "sha256:30e58f579fe77ca87cabe09208eb4be6b6f483c9baeb925471a8ac671da54694",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_creator_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_panel_manifest.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/panel_creator_tau_subagent_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    ],\n    \"persona_dream_phase07_storyboard\": {\n      \"run_id\": \"phase_07_storyboard_live_tau\",\n      \"run_root\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\",\n      \"storyboard_packet\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    },\n    \"summary\": \"Panel creator emitted a complete storyboard packet manifest for reviewer.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:phase07-storyboard-panels-accepted-20260705\",\n    \"goal_id\": \"persona-dream-phase-07-storyboard-panels-accepted\",\n    \"goal_version\": 1,\n    \"summary\": \"Run the Phase 07 creator/reviewer Tau DAG until panel-reviewer accepts the storyboard panels or emits concrete blockers.\"\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"panel-reviewer\",\n    \"reason\": \"Panel reviewer must independently validate per-panel storyboard coverage.\"\n  },\n  \"previous_subagent\": \"panel-creator\",\n  \"rationale\": \"The Phase 07 Tau DAG is the authority for storyboard panel acceptance.\",\n  \"required_evidence\": [\n    \"storyboard_review_verdict.json with status PASS_PANEL_REVIEWED.\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_creator_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_panel_manifest.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    ],\n    \"status\": \"COMPLETED\",\n    \"summary\": \"Panel creator emitted a complete storyboard packet manifest for reviewer.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Panel-reviewer accepts storyboard panels or emits exact blockers.\"\n}\n",
+      "timed_out": false,
+      "timeout_s": 120.0
+    }
+  ],
+  "errors": [],
+  "live": true,
+  "loop_step": 1,
+  "mocked": false,
+  "ok": true,
+  "receipt_dir": null,
+  "response_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `COMPLETED`\n- Summary: Panel creator emitted a complete storyboard packet manifest for reviewer.\n- Next agent: `panel-reviewer`\n- Executor: `local`\n- Stop condition: Panel-reviewer accepts storyboard panels or emits exact blockers.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_creator_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_panel_manifest.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-pass-v3/command-loop/command-artifacts/command-loop-step-001/panel_creator_tau_subagent_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    ],\n    \"persona_dream_phase07_storyboard\": {\n      \"run_id\": \"phase_07_storyboard_live_tau\",\n      \"run_root\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\",\n      \"storyboard_packet\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    },\n    \"summary\": \"Panel creator emitted a complete storyboard packet manifest for reviewer.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:phase07-storyboard-panels-accepted-20260705\",\n    \"goal_id\": \"persona-dream-phase-07-storyboard-panels-accepted\",\n    \"goal_version\": 1,\n    \"summary\": \"Run the Phase 07 creator/reviewer Tau DAG until panel-reviewer accepts the storyboard panels or emits concrete blockers.\"\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"panel-reviewer\",\n    \"reason\": \"Panel reviewer must independently validate per-panel storyboard coverage.\"\n  },\n  \"previous_subagent\": \"panel-creator\",\n  \"rationale\": \"The Phase 07 Tau DAG is the authority for storyboard panel acceptance.\",\n  \"required_evidence\": [\n    \"storyboard_review_verdict.json with status PASS_PANEL_REVIEWED.\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_creator_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_panel_manifest.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    ],\n    \"status\": \"COMPLETED\",\n    \"summary\": \"Panel creator emitted a complete storyboard packet manifest for reviewer.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Panel-reviewer accepts storyboard panels or emits exact blockers.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:panel-reviewer",
+        "executor:local"
+      ],
+      "remove": []
+    },
+    "next_agent": "panel-reviewer",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+    }
+  },
+  "runner": "command",
+  "schema": "tau.agent_handoff_dispatch_receipt.v1",
+  "selected_agent": "panel-creator",
+  "start_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `DAG_DISPATCH_REQUESTED`\n- Summary: Tau is dispatching entry node panel-creator.\n- Next agent: `panel-creator`\n- Executor: `local`\n- Stop condition: Stop at a terminal DAG node or any fail-closed invariant violation.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json\"\n    ],\n    \"persona_dream_phase07_storyboard\": {\n      \"run_id\": \"phase_07_storyboard_live_tau\",\n      \"run_root\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\",\n      \"storyboard_packet\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json\"\n    },\n    \"summary\": \"Dispatch DAG contract persona-dream-phase-07-storyboard-packet-panel-review.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:phase07-storyboard-panels-accepted-20260705\",\n    \"goal_id\": \"persona-dream-phase-07-storyboard-panels-accepted\",\n    \"goal_version\": 1,\n    \"summary\": \"Run the Phase 07 creator/reviewer Tau DAG until panel-reviewer accepts the storyboard panels or emits concrete blockers.\"\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"panel-creator\",\n    \"reason\": \"Entry node for DAG persona-dream-phase-07-storyboard-packet-panel-review using role panel-creator.\"\n  },\n  \"previous_subagent\": \"human\",\n  \"rationale\": \"The DAG contract is the authoritative workflow and immutable goal boundary.\",\n  \"required_evidence\": [\n    \"dag-receipt.json\",\n    \"storyboard_packet.json\",\n    \"storyboard_panel_manifest.json\",\n    \"storyboard_creator_receipt.json\",\n    \"storyboard_review_verdict.json\",\n    \"storyboard_reference_coverage.json\",\n    \"storyboard_entity_coverage.json\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"kind\": \"dag_contract\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json\",\n        \"schema\": \"tau.dag_contract.v1\",\n        \"sha256\": \"sha256:da5a274d25943b21b8e4834f3b4a5654c2c818f1618e381534a60789ef17a562\"\n      }\n    ],\n    \"status\": \"DAG_DISPATCH_REQUESTED\",\n    \"summary\": \"Tau is dispatching entry node panel-creator.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Stop at a terminal DAG node or any fail-closed invariant violation.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:panel-creator",
+        "executor:local"
+      ],
+      "remove": []
+    },
+    "next_agent": "panel-creator",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+    }
+  },
+  "status": "COMPLETED",
+  "stop_reason": "response_consumed"
+}

@@ -1,0 +1,9 @@
+{
+  "blockers": [
+    "Tau proof does not include post-generation script repair coverage.",
+    "real panel-creator generation receipt is missing"
+  ],
+  "panel_id": "panel_001",
+  "schema": "persona_dream.post_generation_script_coverage_receipt.v1",
+  "status": "FAIL"
+}

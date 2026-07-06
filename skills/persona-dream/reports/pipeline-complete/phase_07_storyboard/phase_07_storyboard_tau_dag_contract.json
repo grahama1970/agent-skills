@@ -1,0 +1,98 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-phase-07-storyboard-panel-loop",
+  "goal": {
+    "goal_id": "persona-dream-phase-07-storyboard",
+    "goal_version": 1,
+    "goal_hash": "sha256:persona-dream-phase-07-storyboard-pipeline-complete"
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "persona-dream#phase-07-storyboard"
+  },
+  "context": {
+    "persona_dream_panel": {
+      "panel_id": "panel_001",
+      "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard",
+      "image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/assets/panel_01_scillm_panel.png",
+      "panel_prompt": "Storyboard panel for the accepted 10-second Kahalu'u Bay script: Embry in a navy rashguard commits to a careful surf decision in heat, glare, saltwater, softened wax, summer swell timing, lava rock reef constraints, and local lineup etiquette while Kai in a black rashguard waits outside and gives restrained practical guidance.",
+      "source_panel": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+      "source_panel_summary": "One 10-second scene at Kahalu'u Bay: Embry ignores a buzzing phone long enough to make a careful, competent surf decision while Kai reads the lineup and reef without taking over.",
+      "source_script_coverage": "Phase 06 script_contract.json covers seed-0 through seed-6: Embry, Kai, Embry surfboard, Kai surfboard, June Swell, Lava Reef, and Kona Coast.",
+      "post_generation_script_coverage": "Phase 07 must preserve the accepted Phase 06 script coverage and not introduce text overlays, unrelated characters, or continuity drift.",
+      "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard/receipts/source_visual_review_receipt.json",
+      "write_receipts_to_panel_run_root": "true"
+    }
+  },
+  "entry_node": "panel-creator",
+  "terminal_nodes": [
+    "human"
+  ],
+  "nodes": [
+    {
+      "id": "panel-creator",
+      "agent": "panel-creator",
+      "executor": "local",
+      "command_spec": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/panel-creator/tau-dispatch-command.json",
+      "max_attempts": 1,
+      "required_evidence": [
+        "panel_creator_receipt.json"
+      ]
+    },
+    {
+      "id": "panel-reviewer",
+      "agent": "panel-reviewer",
+      "executor": "local",
+      "command_spec": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/panel-reviewer/tau-dispatch-command.json",
+      "max_attempts": 1,
+      "required_evidence": [
+        "panel_reviewer_receipt.json"
+      ]
+    },
+    {
+      "id": "persona-dream-panel-repair-gate",
+      "agent": "persona-dream-panel-repair-gate",
+      "executor": "local",
+      "command_spec": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/persona-dream-panel-repair-gate/tau-dispatch-command.json",
+      "max_attempts": 1,
+      "required_evidence": [
+        "panel_repair_gate_receipt.json",
+        "panel_source_receipt.json"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "panel-creator",
+      "to": "panel-reviewer"
+    },
+    {
+      "from": "panel-reviewer",
+      "to": "persona-dream-panel-repair-gate"
+    },
+    {
+      "from": "persona-dream-panel-repair-gate",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "panel_creator_receipt.json",
+    "panel_reviewer_receipt.json",
+    "panel_repair_gate_receipt.json",
+    "panel_source_receipt.json"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ],
+  "limits": {
+    "max_total_attempts": 4,
+    "default_timeout_seconds": 900,
+    "resume": true
+  }
+}

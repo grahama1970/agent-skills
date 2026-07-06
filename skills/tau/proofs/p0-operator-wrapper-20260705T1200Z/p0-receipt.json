@@ -1,0 +1,120 @@
+{
+  "artifacts": [
+    {
+      "live": true,
+      "mocked": false,
+      "ok": true,
+      "path": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/doctor.json",
+      "provider_live": false,
+      "schema": "agent_skills.tau.doctor.v1",
+      "sha256": "sha256:39c5fba966fbe7ec0008db7eb17fd139f78de27d1026cb8e37e3a6286b5a24dc"
+    },
+    {
+      "live": "mixed",
+      "mocked": "mixed",
+      "ok": true,
+      "path": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/e2e.json",
+      "provider_live": false,
+      "schema": "agent_skills.tau.proof_status_receipt.v1",
+      "sha256": "sha256:06e09cd838b595554b8fa8e75119959ca68a0b2feb836e0db8f404e4f5392cb7"
+    },
+    {
+      "live": "mixed",
+      "mocked": "mixed",
+      "ok": true,
+      "path": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/proof-status.json",
+      "provider_live": false,
+      "schema": "agent_skills.tau.proof_status_receipt.v1",
+      "sha256": "sha256:4a85519e9f9bc60e2c9737cd2da6fbcfdfcfd02c8b259bed81a66c11d69d57c3"
+    },
+    {
+      "live": "mixed",
+      "mocked": "mixed",
+      "ok": true,
+      "path": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json",
+      "provider_live": null,
+      "schema": "agent_skills.tau.sanity_receipt.v1",
+      "sha256": "sha256:1037a7913c8a9b57ac1b34a8c45300710945029a32006281bb628472d09dca36"
+    },
+    {
+      "live": true,
+      "mocked": false,
+      "ok": true,
+      "path": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/status.json",
+      "provider_live": null,
+      "schema": "agent_skills.tau.status.v1",
+      "sha256": "sha256:3d017209d053ef40c2133f16b88ca9488954a1b248a4a7f36f79146c35c4ec09"
+    }
+  ],
+  "changed_scope": "agent-skills skills/tau only",
+  "checked_at": "2026-07-05T12:01:10Z",
+  "command_results": [
+    {
+      "artifact": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/doctor.json",
+      "command": "skills/tau/run.sh doctor",
+      "exit_code": 0
+    },
+    {
+      "artifact": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/status.json",
+      "command": "skills/tau/run.sh status",
+      "exit_code": 0
+    },
+    {
+      "artifact": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json",
+      "command": "skills/tau/run.sh sanity",
+      "exit_code": 0
+    },
+    {
+      "artifact": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/proof-status.json",
+      "command": "skills/tau/run.sh proof-status",
+      "exit_code": 0
+    },
+    {
+      "artifact": "skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/e2e.json",
+      "command": "skills/tau/run.sh e2e",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 -m py_compile skills/tau/scripts/tau_skill.py",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run pytest tests/test_herdr_cleanup.py tests/test_dag_expansion.py tests/test_dag_route_memory.py tests/test_project_dag.py -q",
+      "exit_code": 0,
+      "summary": "55 passed in 2.17s"
+    }
+  ],
+  "commands_run": [
+    "skills/tau/run.sh doctor",
+    "skills/tau/run.sh status",
+    "skills/tau/run.sh sanity",
+    "skills/tau/run.sh proof-status",
+    "skills/tau/run.sh e2e",
+    "python3 -m py_compile skills/tau/scripts/tau_skill.py",
+    "uv run pytest tests/test_herdr_cleanup.py tests/test_dag_expansion.py tests/test_dag_route_memory.py tests/test_project_dag.py -q"
+  ],
+  "does_not_prove": [
+    "Herdr provider DAG execution.",
+    "browser/CDP UI proof.",
+    "GitHub live mutation.",
+    "P1 schema enforcement.",
+    "issue #50 DAG context propagation fix."
+  ],
+  "known_blockers_out_of_scope": [
+    "issue #50 / DAG context propagation remains out of scope for this P0 pass.",
+    "Tau runtime uv run tau doctor was not implemented in this P0 slice."
+  ],
+  "live": "mixed",
+  "mocked": "mixed",
+  "ok": true,
+  "proves": [
+    "Tau skill wrapper resolves and invokes the local Tau checkout.",
+    "skills/tau/run.sh doctor emits agent_skills.tau.doctor.v1.",
+    "skills/tau/run.sh proof-status is the canonical proof/status command.",
+    "skills/tau/run.sh e2e remains a compatibility alias with non-claims.",
+    "Focused Tau DAG/Herdr/adaptive tests pass in the current checkout."
+  ],
+  "provider_live": false,
+  "schema": "agent_skills.tau.p0_operator_wrapper_receipt.v1",
+  "status": "PASS"
+}

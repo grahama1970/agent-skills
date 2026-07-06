@@ -1,0 +1,780 @@
+{
+  "commands": {
+    "dream_packet": {
+      "command": "./run.sh validate-dream-packet /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "contact_sheet": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/contact_sheet.png",
+        "exercised": "local dream packet shape, residue list, prompt list, contact sheet path and PNG signature",
+        "first_blocker": null,
+        "frame_prompt_count": 3,
+        "live": "no",
+        "mocked": "no",
+        "packet": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json",
+        "persona_id": "embry",
+        "run_id": "issue-41-persona-dream-dream-packet-loop-20260629T204320Z",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.dream_packet_validation.v1",
+        "status": "PASS_DREAM_PACKET",
+        "unverified": "live memory recall, residue semantic grounding, story acceptance, panel generation, provider/Kling execution"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"contact_sheet\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/contact_sheet.png\",\n  \"exercised\": \"local dream packet shape, residue list, prompt list, contact sheet path and PNG signature\",\n  \"first_blocker\": null,\n  \"frame_prompt_count\": 3,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"packet\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json\",\n  \"persona_id\": \"embry\",\n  \"run_id\": \"issue-41-persona-dream-dream-packet-loop-20260629T204320Z\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.dream_packet_validation.v1\",\n  \"status\": \"PASS_DREAM_PACKET\",\n  \"unverified\": \"live memory recall, residue semantic grounding, story acceptance, panel generation, provider/Kling execution\"\n}"
+    },
+    "local_media_lock": {
+      "command": "./run.sh validate-local-media-lock /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "blockers": [],
+        "exercised": "local file hash",
+        "live": "no",
+        "live_provider_call_made": false,
+        "media": [
+          {
+            "http_hash_ok": null,
+            "id": "panel_01",
+            "local_hash_ok": true,
+            "local_path": "artifacts/panel_01_scillm_panel.png",
+            "role": "panel_reference_local_only",
+            "served_url": null,
+            "url_path": "/artifacts/panel_01_scillm_panel.png"
+          }
+        ],
+        "mocked": "no",
+        "provider_accessible": false,
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_lock_receipt.json",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.local_media_lock_validation.v1",
+        "status": "PASS_LOCAL_MEDIA_LOCK",
+        "unverified": "public provider accessibility, Kling fetch behavior, paid call submission"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"blockers\": [],\n  \"exercised\": \"local file hash\",\n  \"live\": \"no\",\n  \"live_provider_call_made\": false,\n  \"media\": [\n    {\n      \"http_hash_ok\": null,\n      \"id\": \"panel_01\",\n      \"local_hash_ok\": true,\n      \"local_path\": \"artifacts/panel_01_scillm_panel.png\",\n      \"role\": \"panel_reference_local_only\",\n      \"served_url\": null,\n      \"url_path\": \"/artifacts/panel_01_scillm_panel.png\"\n    }\n  ],\n  \"mocked\": \"no\",\n  \"provider_accessible\": false,\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_lock_receipt.json\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.local_media_lock_validation.v1\",\n  \"status\": \"PASS_LOCAL_MEDIA_LOCK\",\n  \"unverified\": \"public provider accessibility, Kling fetch behavior, paid call submission\"\n}"
+    },
+    "panel_repair_gate": {
+      "command": "./run.sh validate-panel-repair-gate /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_gate_receipt.json --require-provider-eligible",
+      "parsed": {
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_gate_receipt.json",
+        "status": "PASS"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"status\": \"PASS\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_gate_receipt.json\"\n}"
+    },
+    "panel_repair_work_order": {
+      "command": "./run.sh validate-panel-repair-work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_work_order.json --json",
+      "parsed": {
+        "exercised": "local work-order shape, owner/delegation contract, final-gate error capture, source path existence, forbidden action policy",
+        "final_gate_status": "FAIL",
+        "first_blocker": null,
+        "live": "no",
+        "mocked": "no",
+        "owner_subagent": "persona-dream-panel-repair-gate",
+        "panel_id": "panel_01",
+        "schema": "persona_dream.panel_repair_work_order_validation.v1",
+        "status": "PASS_PANEL_REPAIR_WORK_ORDER",
+        "unverified": "subagent execution, image generation, independent visual rereview, provider media hosting, Kling submission",
+        "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_work_order.json"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"exercised\": \"local work-order shape, owner/delegation contract, final-gate error capture, source path existence, forbidden action policy\",\n  \"final_gate_status\": \"FAIL\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"owner_subagent\": \"persona-dream-panel-repair-gate\",\n  \"panel_id\": \"panel_01\",\n  \"schema\": \"persona_dream.panel_repair_work_order_validation.v1\",\n  \"status\": \"PASS_PANEL_REPAIR_WORK_ORDER\",\n  \"unverified\": \"subagent execution, image generation, independent visual rereview, provider media hosting, Kling submission\",\n  \"work_order\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_work_order.json\"\n}"
+    },
+    "panel_source": {
+      "command": "./run.sh validate-panel-source /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_source_receipt.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "exercised": "local receipt schema, image existence, image hash, subagent producer receipt presence, Nano Banana exclusion fields",
+        "first_blocker": null,
+        "image_path": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_01_scillm_panel.png",
+        "live": "no",
+        "mocked": "no",
+        "producer_name": "persona-dream-panel-repair-gate",
+        "producer_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_gate_receipt.json",
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_source_receipt.json",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.panel_source_validation.v1",
+        "sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "status": "PASS_PANEL_SOURCE",
+        "unverified": "visual semantics, live image generation, panel-reviewer VLM verdict, provider media hosting, Kling submission"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"exercised\": \"local receipt schema, image existence, image hash, subagent producer receipt presence, Nano Banana exclusion fields\",\n  \"first_blocker\": null,\n  \"image_path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_01_scillm_panel.png\",\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"producer_name\": \"persona-dream-panel-repair-gate\",\n  \"producer_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_gate_receipt.json\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_source_receipt.json\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.panel_source_validation.v1\",\n  \"sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"PASS_PANEL_SOURCE\",\n  \"unverified\": \"visual semantics, live image generation, panel-reviewer VLM verdict, provider media hosting, Kling submission\"\n}"
+    },
+    "provider_local_staging": {
+      "command": "./run.sh validate-provider-media-local-staging /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --json",
+      "parsed": {
+        "exercised": "local staging receipt schema, staged asset existence, sha256 comparison, explicit non-authorization policy",
+        "first_blocker": null,
+        "live": "no",
+        "mocked": "no",
+        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+        "schema": "persona_dream.provider_media_local_staging_validation.v1",
+        "staged_asset_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "staged_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+        "unverified": "public URL fetch, GitHub raw availability, Kling provider fetch behavior, paid-call authorization, Kling submission"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"exercised\": \"local staging receipt schema, staged asset existence, sha256 comparison, explicit non-authorization policy\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json\",\n  \"schema\": \"persona_dream.provider_media_local_staging_validation.v1\",\n  \"staged_asset_path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"staged_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"PASS_PROVIDER_MEDIA_LOCAL_STAGING\",\n  \"unverified\": \"public URL fetch, GitHub raw availability, Kling provider fetch behavior, paid-call authorization, Kling submission\"\n}"
+    },
+    "provider_public_handoff": {
+      "command": "./run.sh validate-provider-media-public-handoff --work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --local-staging-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --public-probe-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_probe_receipt.json --json",
+      "parsed": {
+        "does_not_authorize": [
+          "git_push",
+          "public_upload",
+          "provider_readiness_without_passed_probe",
+          "direct_kling_submit",
+          "paid_provider_call"
+        ],
+        "exercised": "publication work-order validation, local staging validation, URL/hash agreement, public probe receipt status",
+        "first_blocker": null,
+        "live": "yes",
+        "local_staging_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+        "local_staging_validation_status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+        "locked_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "mocked": "no",
+        "next_action": "Apply the passing provider media probe to the panel repair gate, then rerun validate-panel-repair-gate --require-provider-eligible.",
+        "probe_blockers": [],
+        "probe_http_status": 200,
+        "probe_status": "PASS_PROVIDER_MEDIA_URL_PROBE",
+        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "public_probe_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_probe_receipt.json",
+        "schema": "persona_dream.provider_media_public_handoff_validation.v1",
+        "staged_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "status": "PASS_PROVIDER_MEDIA_PUBLIC_HANDOFF_READY",
+        "target_repo_path": "skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "unverified": "public upload authorization, Kling provider fetch behavior, paid-call approval, Kling submission",
+        "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+        "work_order_validation_status": "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"does_not_authorize\": [\n    \"git_push\",\n    \"public_upload\",\n    \"provider_readiness_without_passed_probe\",\n    \"direct_kling_submit\",\n    \"paid_provider_call\"\n  ],\n  \"exercised\": \"publication work-order validation, local staging validation, URL/hash agreement, public probe receipt status\",\n  \"first_blocker\": null,\n  \"live\": \"yes\",\n  \"local_staging_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json\",\n  \"local_staging_validation_status\": \"PASS_PROVIDER_MEDIA_LOCAL_STAGING\",\n  \"locked_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"mocked\": \"no\",\n  \"next_action\": \"Apply the passing provider media probe to the panel repair gate, then rerun validate-panel-repair-gate --require-provider-eligible.\",\n  \"probe_blockers\": [],\n  \"probe_http_status\": 200,\n  \"probe_status\": \"PASS_PROVIDER_MEDIA_URL_PROBE\",\n  \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"public_probe_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_probe_receipt.json\",\n  \"schema\": \"persona_dream.provider_media_public_handoff_validation.v1\",\n  \"staged_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"PASS_PROVIDER_MEDIA_PUBLIC_HANDOFF_READY\",\n  \"target_repo_path\": \"skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"unverified\": \"public upload authorization, Kling provider fetch behavior, paid-call approval, Kling submission\",\n  \"work_order\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json\",\n  \"work_order_validation_status\": \"PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER\"\n}"
+    },
+    "provider_publication_authorization": {
+      "command": "./run.sh validate-provider-media-publication-authorization --preflight-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_preflight.json --authorization-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_authorization.json --json",
+      "parsed": {
+        "approval_request": {
+          "agent_default_after_approval": [
+            "Publish the exact staged asset /home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png to skills/persona-dream/provider_media/dream-run/panel_01.png.",
+            "Do not alter image bytes, provider packet status, or panel review status during publication.",
+            "Run next_required_probe_command and require PASS_PROVIDER_MEDIA_URL_PROBE before patching provider media receipts.",
+            "If the URL probe fails, keep provider readiness blocked and record the failed probe receipt."
+          ],
+          "authorization_receipt_template": {
+            "approved_action": "publish_exact_locked_provider_media",
+            "approved_at": "<ISO-8601 timestamp>",
+            "approved_by": "<human-or-authority>",
+            "authorized_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+            "authorized_target_repo_path": "skills/persona-dream/provider_media/dream-run/panel_01.png",
+            "authorized_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+            "notes": "No Kling call or provider readiness approval is implied.",
+            "schema": "persona_dream.provider_media_publication_authorization.v1",
+            "status": "AUTHORIZED_PUBLICATION"
+          },
+          "human_role": "Approve, reject, or provide an equivalent stable public media URL for the exact locked asset.",
+          "target_record": {
+            "locked_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+            "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+            "staged_asset_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png",
+            "target_repo_path": "skills/persona-dream/provider_media/dream-run/panel_01.png"
+          }
+        },
+        "authorization_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_authorization.json",
+        "authorized_at": "2026-06-29T22:16:06Z",
+        "authorized_by": "grahama1970 conversation authorization: \"you have 100% authorized permission\"",
+        "does_not_authorize": [
+          "git_push_without_authorization_receipt",
+          "public_upload_without_authorization_receipt",
+          "provider_readiness",
+          "direct_kling_submit",
+          "paid_provider_call"
+        ],
+        "exercised": "preflight receipt parse, authorization boundary, locked URL/hash comparison when an authorization receipt is supplied",
+        "first_blocker": null,
+        "live": "no",
+        "locked_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "mocked": "no",
+        "next_action": "Publish the exact locked staged asset to the authorized URL, then run next_required_probe_command and require PASS_PROVIDER_MEDIA_URL_PROBE.",
+        "next_required_probe_command": "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png --expected-sha256 sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914 --json",
+        "preflight_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_preflight.json",
+        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "schema": "persona_dream.provider_media_publication_authorization_validation.v1",
+        "status": "PASS_PROVIDER_MEDIA_PUBLICATION_AUTHORIZATION",
+        "target_repo_path": "skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "unverified": "public upload execution, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"approval_request\": {\n    \"agent_default_after_approval\": [\n      \"Publish the exact staged asset /home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png to skills/persona-dream/provider_media/dream-run/panel_01.png.\",\n      \"Do not alter image bytes, provider packet status, or panel review status during publication.\",\n      \"Run next_required_probe_command and require PASS_PROVIDER_MEDIA_URL_PROBE before patching provider media receipts.\",\n      \"If the URL probe fails, keep provider readiness blocked and record the failed probe receipt.\"\n    ],\n    \"authorization_receipt_template\": {\n      \"approved_action\": \"publish_exact_locked_provider_media\",\n      \"approved_at\": \"<ISO-8601 timestamp>\",\n      \"approved_by\": \"<human-or-authority>\",\n      \"authorized_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n      \"authorized_target_repo_path\": \"skills/persona-dream/provider_media/dream-run/panel_01.png\",\n      \"authorized_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n      \"notes\": \"No Kling call or provider readiness approval is implied.\",\n      \"schema\": \"persona_dream.provider_media_publication_authorization.v1\",\n      \"status\": \"AUTHORIZED_PUBLICATION\"\n    },\n    \"human_role\": \"Approve, reject, or provide an equivalent stable public media URL for the exact locked asset.\",\n    \"target_record\": {\n      \"locked_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n      \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n      \"staged_asset_path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n      \"target_repo_path\": \"skills/persona-dream/provider_media/dream-run/panel_01.png\"\n    }\n  },\n  \"authorization_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_authorization.json\",\n  \"authorized_at\": \"2026-06-29T22:16:06Z\",\n  \"authorized_by\": \"grahama1970 conversation authorization: \\\"you have 100% authorized permission\\\"\",\n  \"does_not_authorize\": [\n    \"git_push_without_authorization_receipt\",\n    \"public_upload_without_authorization_receipt\",\n    \"provider_readiness\",\n    \"direct_kling_submit\",\n    \"paid_provider_call\"\n  ],\n  \"exercised\": \"preflight receipt parse, authorization boundary, locked URL/hash comparison when an authorization receipt is supplied\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"locked_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"mocked\": \"no\",\n  \"next_action\": \"Publish the exact locked staged asset to the authorized URL, then run next_required_probe_command and require PASS_PROVIDER_MEDIA_URL_PROBE.\",\n  \"next_required_probe_command\": \"./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png --expected-sha256 sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914 --json\",\n  \"preflight_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_preflight.json\",\n  \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"schema\": \"persona_dream.provider_media_publication_authorization_validation.v1\",\n  \"status\": \"PASS_PROVIDER_MEDIA_PUBLICATION_AUTHORIZATION\",\n  \"target_repo_path\": \"skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"unverified\": \"public upload execution, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission\"\n}"
+    },
+    "provider_publication_preflight": {
+      "command": "./run.sh validate-provider-media-publication-preflight --work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --local-staging-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --json",
+      "parsed": {
+        "authorization_required": [
+          "public_upload_of_panel_image",
+          "git_commit_and_push_or_equivalent_public_asset_publish"
+        ],
+        "does_not_authorize": [
+          "git_push",
+          "public_upload",
+          "provider_readiness",
+          "direct_kling_submit",
+          "paid_provider_call"
+        ],
+        "exercised": "publication work-order validation, local staging byte/hash validation, proposed URL/hash parity, authorization boundary",
+        "first_blocker": {
+          "phase": "provider_media_publication_authorization",
+          "reason": "public_upload_or_git_push_authorization_required"
+        },
+        "live": "no",
+        "local_staging_receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+        "local_staging_validation_status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+        "locked_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "mocked": "no",
+        "next_action": "After explicit authorization, publish the staged asset at target_repo_path, then run next_required_probe_command and validate-provider-media-public-handoff.",
+        "next_required_probe_command": "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png --expected-sha256 sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914 --json",
+        "preflight_ready": true,
+        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "schema": "persona_dream.provider_media_publication_preflight_validation.v1",
+        "staged_asset_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "staged_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+        "target_repo_path": "skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "unverified": "public upload authorization, git push/public asset publication, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission",
+        "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+        "work_order_validation_status": "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"authorization_required\": [\n    \"public_upload_of_panel_image\",\n    \"git_commit_and_push_or_equivalent_public_asset_publish\"\n  ],\n  \"does_not_authorize\": [\n    \"git_push\",\n    \"public_upload\",\n    \"provider_readiness\",\n    \"direct_kling_submit\",\n    \"paid_provider_call\"\n  ],\n  \"exercised\": \"publication work-order validation, local staging byte/hash validation, proposed URL/hash parity, authorization boundary\",\n  \"first_blocker\": {\n    \"phase\": \"provider_media_publication_authorization\",\n    \"reason\": \"public_upload_or_git_push_authorization_required\"\n  },\n  \"live\": \"no\",\n  \"local_staging_receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json\",\n  \"local_staging_validation_status\": \"PASS_PROVIDER_MEDIA_LOCAL_STAGING\",\n  \"locked_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"mocked\": \"no\",\n  \"next_action\": \"After explicit authorization, publish the staged asset at target_repo_path, then run next_required_probe_command and validate-provider-media-public-handoff.\",\n  \"next_required_probe_command\": \"./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png --expected-sha256 sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914 --json\",\n  \"preflight_ready\": true,\n  \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"schema\": \"persona_dream.provider_media_publication_preflight_validation.v1\",\n  \"staged_asset_path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"staged_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION\",\n  \"target_repo_path\": \"skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"unverified\": \"public upload authorization, git push/public asset publication, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission\",\n  \"work_order\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json\",\n  \"work_order_validation_status\": \"PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER\"\n}"
+    },
+    "provider_publication_work_order": {
+      "command": "./run.sh validate-provider-media-publication-work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --json",
+      "parsed": {
+        "current_probe_status": "BLOCKED_PROVIDER_MEDIA_URLS",
+        "current_provider_media_status": "FAIL",
+        "exercised": "local work-order schema, authorization gate, source paths, URL/hash verification plan, forbidden action policy",
+        "first_blocker": null,
+        "live": "no",
+        "locked_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "mocked": "no",
+        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png",
+        "schema": "persona_dream.provider_media_publication_work_order_validation.v1",
+        "status": "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER",
+        "unverified": "public upload authorization, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission",
+        "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"current_probe_status\": \"BLOCKED_PROVIDER_MEDIA_URLS\",\n  \"current_provider_media_status\": \"FAIL\",\n  \"exercised\": \"local work-order schema, authorization gate, source paths, URL/hash verification plan, forbidden action policy\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"locked_sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"mocked\": \"no\",\n  \"proposed_url\": \"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png\",\n  \"schema\": \"persona_dream.provider_media_publication_work_order_validation.v1\",\n  \"status\": \"PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER\",\n  \"unverified\": \"public upload authorization, public URL fetch, Kling provider fetch behavior, paid-call approval, Kling submission\",\n  \"work_order\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json\"\n}"
+    },
+    "run_root_backward": {
+      "command": "./run.sh pipeline-loop-status /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --direction backward --json",
+      "parsed": {
+        "active_loop": null,
+        "direction": "backward",
+        "exercised": "local run-root validation, first-blocker to serial-loop mapping, fail-closed repair action selection",
+        "generated_at": "2026-06-30T01:26:11Z",
+        "live": "no",
+        "loop_backlog": [],
+        "loop_model": {
+          "rule": "validate phase, repair first blocker, write receipt, rebuild report, repeat; convert to DAG only after serial loops are proven.",
+          "shape": "serial_pipeline_of_fail_closed_while_loops"
+        },
+        "mocked": "no",
+        "policy": {
+          "kling_call_allowed": false,
+          "nano_banana_final_panel_allowed": false,
+          "public_upload_allowed_without_explicit_authorization": false
+        },
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.pipeline_loop_status.v1",
+        "status": "ALL_SERIAL_LOOPS_ACCEPTED",
+        "stop_condition": "All local serial loop validators accepted for this validation direction; provider execution still requires separate approval.",
+        "unverified": "actual repair execution, public media hosting if blocked there, live panel subagent generation/review, paid Kling submission",
+        "validation": {
+          "direction": "backward",
+          "exercised": "local run-root files, JSON parse, Kling scene packet schema, dream packet gate, story contract gate, storyboard panel gate, panel repair provider-eligibility gate, panel source provenance gate, provider media publication work-order gate, provider media local staging gate, provider media publication authorization gate, visual review gate, provider URL/hash gate",
+          "first_blocker": null,
+          "live": "no",
+          "mocked": "no",
+          "phases": [
+            {
+              "blocker": null,
+              "path": "receipts/kling_scene_packet.json",
+              "phase": "kling_scene_packet",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/provider_media_lock_receipt.json",
+              "phase": "local_provider_media_lock",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+              "phase": "provider_media_publication_work_order",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+              "phase": "provider_media_local_staging",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/provider_media_publication_authorization.json",
+              "phase": "provider_media_publication_authorization",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/provider_media_probe_receipt.json",
+              "phase": "provider_media_public_probe",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/panel_source_receipt.json",
+              "phase": "panel_source_receipt",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/panel_repair_gate_receipt.json",
+              "phase": "panel_repair_gate",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/visual_review_receipt.json",
+              "phase": "visual_review_receipt",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/storyboard_panel_receipt.json",
+              "phase": "storyboard_panel",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "story_contract.json",
+              "phase": "story_contract",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "dream_packet.json",
+              "phase": "dream_packet",
+              "status": "PASS"
+            }
+          ],
+          "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+          "schema": "persona_dream.run_root_pipeline_validation.v1",
+          "status": "DRY_RUN_REVIEW_PACKET_READY",
+          "unverified": "live memory, Look Lock/Script DNA execution, live panel image generation/review, provider media hosting reachability, paid approval, Kling task submission"
+        }
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"active_loop\": null,\n  \"direction\": \"backward\",\n  \"exercised\": \"local run-root validation, first-blocker to serial-loop mapping, fail-closed repair action selection\",\n  \"generated_at\": \"2026-06-30T01:26:11Z\",\n  \"live\": \"no\",\n  \"loop_backlog\": [],\n  \"loop_model\": {\n    \"rule\": \"validate phase, repair first blocker, write receipt, rebuild report, repeat; convert to DAG only after serial loops are proven.\",\n    \"shape\": \"serial_pipeline_of_fail_closed_while_loops\"\n  },\n  \"mocked\": \"no\",\n  \"policy\": {\n    \"kling_call_allowed\": false,\n    \"nano_banana_final_panel_allowed\": false,\n    \"public_upload_allowed_without_explicit_authorization\": false\n  },\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.pipeline_loop_status.v1\",\n  \"status\": \"ALL_SERIAL_LOOPS_ACCEPTED\",\n  \"stop_condition\": \"All local serial loop validators accepted for this validation direction; provider execution still requires separate approval.\",\n  \"unverified\": \"actual repair execution, public media hosting if blocked there, live panel subagent generation/review, paid Kling submission\",\n  \"validation\": {\n    \"direction\": \"backward\",\n    \"exercised\": \"local run-root files, JSON parse, Kling scene packet schema, dream packet gate, story contract gate, storyboard panel gate, panel repair provider-eligibility gate, panel source provenance gate, provider media publication work-order gate, provider media local staging gate, provider media publication authorization gate, visual review gate, provider URL/hash gate\",\n    \"first_blocker\": null,\n    \"live\": \"no\",\n    \"mocked\": \"no\",\n    \"phases\": [\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/kling_scene_packet.json\",\n        \"phase\": \"kling_scene_packet\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/provider_media_lock_receipt.json\",\n        \"phase\": \"local_provider_media_lock\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json\",\n        \"phase\": \"provider_media_publication_work_order\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json\",\n        \"phase\": \"provider_media_local_staging\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/provider_media_publication_authorization.json\",\n        \"phase\": \"provider_media_publication_authorization\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/provider_media_probe_receipt.json\",\n        \"phase\": \"provider_media_public_probe\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/panel_source_receipt.json\",\n        \"phase\": \"panel_source_receipt\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/panel_repair_gate_receipt.json\",\n        \"phase\": \"panel_repair_gate\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/visual_review_receipt.json\",\n        \"phase\": \"visual_review_receipt\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/storyboard_panel_receipt.json\",\n        \"phase\": \"storyboard_panel\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"story_contract.json\",\n        \"phase\": \"story_contract\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"dream_packet.json\",\n        \"phase\": \"dream_packet\",\n        \"status\": \"PASS\"\n      }\n    ],\n    \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n    \"schema\": \"persona_dream.run_root_pipeline_validation.v1\",\n    \"status\": \"DRY_RUN_REVIEW_PACKET_READY\",\n    \"unverified\": \"live memory, Look Lock/Script DNA execution, live panel image generation/review, provider media hosting reachability, paid approval, Kling task submission\"\n  }\n}"
+    },
+    "run_root_forward": {
+      "command": "./run.sh pipeline-loop-status /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --direction forward --json",
+      "parsed": {
+        "active_loop": null,
+        "direction": "forward",
+        "exercised": "local run-root validation, first-blocker to serial-loop mapping, fail-closed repair action selection",
+        "generated_at": "2026-06-30T01:26:11Z",
+        "live": "no",
+        "loop_backlog": [],
+        "loop_model": {
+          "rule": "validate phase, repair first blocker, write receipt, rebuild report, repeat; convert to DAG only after serial loops are proven.",
+          "shape": "serial_pipeline_of_fail_closed_while_loops"
+        },
+        "mocked": "no",
+        "policy": {
+          "kling_call_allowed": false,
+          "nano_banana_final_panel_allowed": false,
+          "public_upload_allowed_without_explicit_authorization": false
+        },
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.pipeline_loop_status.v1",
+        "status": "ALL_SERIAL_LOOPS_ACCEPTED",
+        "stop_condition": "All local serial loop validators accepted for this validation direction; provider execution still requires separate approval.",
+        "unverified": "actual repair execution, public media hosting if blocked there, live panel subagent generation/review, paid Kling submission",
+        "validation": {
+          "direction": "forward",
+          "exercised": "local run-root files, JSON parse, Kling scene packet schema, dream packet gate, story contract gate, storyboard panel gate, panel repair provider-eligibility gate, panel source provenance gate, provider media publication work-order gate, provider media local staging gate, provider media publication authorization gate, visual review gate, provider URL/hash gate",
+          "first_blocker": null,
+          "live": "no",
+          "mocked": "no",
+          "phases": [
+            {
+              "blocker": null,
+              "path": "dream_packet.json",
+              "phase": "dream_packet",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "story_contract.json",
+              "phase": "story_contract",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/storyboard_panel_receipt.json",
+              "phase": "storyboard_panel",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/panel_repair_gate_receipt.json",
+              "phase": "panel_repair_gate",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/panel_source_receipt.json",
+              "phase": "panel_source_receipt",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/visual_review_receipt.json",
+              "phase": "visual_review_receipt",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/kling_scene_packet.json",
+              "phase": "provider_media_lock",
+              "status": "PASS"
+            },
+            {
+              "blocker": null,
+              "path": "receipts/kling_scene_packet.json",
+              "phase": "kling_scene_packet",
+              "status": "PASS"
+            }
+          ],
+          "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+          "schema": "persona_dream.run_root_pipeline_validation.v1",
+          "status": "DRY_RUN_REVIEW_PACKET_READY",
+          "unverified": "live memory, Look Lock/Script DNA execution, live panel image generation/review, provider media hosting reachability, paid approval, Kling task submission"
+        }
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"active_loop\": null,\n  \"direction\": \"forward\",\n  \"exercised\": \"local run-root validation, first-blocker to serial-loop mapping, fail-closed repair action selection\",\n  \"generated_at\": \"2026-06-30T01:26:11Z\",\n  \"live\": \"no\",\n  \"loop_backlog\": [],\n  \"loop_model\": {\n    \"rule\": \"validate phase, repair first blocker, write receipt, rebuild report, repeat; convert to DAG only after serial loops are proven.\",\n    \"shape\": \"serial_pipeline_of_fail_closed_while_loops\"\n  },\n  \"mocked\": \"no\",\n  \"policy\": {\n    \"kling_call_allowed\": false,\n    \"nano_banana_final_panel_allowed\": false,\n    \"public_upload_allowed_without_explicit_authorization\": false\n  },\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.pipeline_loop_status.v1\",\n  \"status\": \"ALL_SERIAL_LOOPS_ACCEPTED\",\n  \"stop_condition\": \"All local serial loop validators accepted for this validation direction; provider execution still requires separate approval.\",\n  \"unverified\": \"actual repair execution, public media hosting if blocked there, live panel subagent generation/review, paid Kling submission\",\n  \"validation\": {\n    \"direction\": \"forward\",\n    \"exercised\": \"local run-root files, JSON parse, Kling scene packet schema, dream packet gate, story contract gate, storyboard panel gate, panel repair provider-eligibility gate, panel source provenance gate, provider media publication work-order gate, provider media local staging gate, provider media publication authorization gate, visual review gate, provider URL/hash gate\",\n    \"first_blocker\": null,\n    \"live\": \"no\",\n    \"mocked\": \"no\",\n    \"phases\": [\n      {\n        \"blocker\": null,\n        \"path\": \"dream_packet.json\",\n        \"phase\": \"dream_packet\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"story_contract.json\",\n        \"phase\": \"story_contract\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/storyboard_panel_receipt.json\",\n        \"phase\": \"storyboard_panel\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/panel_repair_gate_receipt.json\",\n        \"phase\": \"panel_repair_gate\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/panel_source_receipt.json\",\n        \"phase\": \"panel_source_receipt\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/visual_review_receipt.json\",\n        \"phase\": \"visual_review_receipt\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/kling_scene_packet.json\",\n        \"phase\": \"provider_media_lock\",\n        \"status\": \"PASS\"\n      },\n      {\n        \"blocker\": null,\n        \"path\": \"receipts/kling_scene_packet.json\",\n        \"phase\": \"kling_scene_packet\",\n        \"status\": \"PASS\"\n      }\n    ],\n    \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n    \"schema\": \"persona_dream.run_root_pipeline_validation.v1\",\n    \"status\": \"DRY_RUN_REVIEW_PACKET_READY\",\n    \"unverified\": \"live memory, Look Lock/Script DNA execution, live panel image generation/review, provider media hosting reachability, paid approval, Kling task submission\"\n  }\n}"
+    },
+    "story_contract": {
+      "command": "./run.sh validate-story-contract /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "artifact_id": "dream-run_story_contract",
+        "contract": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json",
+        "exercised": "local story contract schema, accepted status, positive duration, nonempty story, nonempty speaking characters",
+        "first_blocker": null,
+        "live": "no",
+        "mocked": "no",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.story_contract_validation.v1",
+        "speaking_characters": [
+          "Embry"
+        ],
+        "status": "PASS_STORY_CONTRACT",
+        "target_duration_s": 15.0,
+        "unverified": "live memory grounding, Look Lock/Script DNA execution, storyboard generation, panel visual review, provider/Kling execution"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"artifact_id\": \"dream-run_story_contract\",\n  \"contract\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json\",\n  \"exercised\": \"local story contract schema, accepted status, positive duration, nonempty story, nonempty speaking characters\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.story_contract_validation.v1\",\n  \"speaking_characters\": [\n    \"Embry\"\n  ],\n  \"status\": \"PASS_STORY_CONTRACT\",\n  \"target_duration_s\": 15.0,\n  \"unverified\": \"live memory grounding, Look Lock/Script DNA execution, storyboard generation, panel visual review, provider/Kling execution\"\n}"
+    },
+    "storyboard_panel": {
+      "command": "./run.sh validate-storyboard-panel /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/storyboard_panel_receipt.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "exercised": "local storyboard panel schema, image existence/hash, timing bounds, continuity ledger path, work order path",
+        "first_blocker": null,
+        "image_path": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_001_storyboard_contract.svg",
+        "live": "no",
+        "mocked": "no",
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/storyboard_panel_receipt.json",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.storyboard_panel_validation.v1",
+        "sha256": "sha256:66b05599543e876a742fed0f4bffd86234a4ea075b754d5379d3e252e3788355",
+        "status": "PASS_STORYBOARD_PANEL",
+        "unverified": "live panel generation, visual review semantics, panel source eligibility, provider/Kling execution"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"exercised\": \"local storyboard panel schema, image existence/hash, timing bounds, continuity ledger path, work order path\",\n  \"first_blocker\": null,\n  \"image_path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_001_storyboard_contract.svg\",\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/storyboard_panel_receipt.json\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.storyboard_panel_validation.v1\",\n  \"sha256\": \"sha256:66b05599543e876a742fed0f4bffd86234a4ea075b754d5379d3e252e3788355\",\n  \"status\": \"PASS_STORYBOARD_PANEL\",\n  \"unverified\": \"live panel generation, visual review semantics, panel source eligibility, provider/Kling execution\"\n}"
+    },
+    "visual_review": {
+      "command": "./run.sh validate-visual-review /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "parsed": {
+        "exercised": "local visual review receipt fields, reviewed image hash parity, reviewer source, eight-check coverage, blocker list discipline",
+        "first_blocker": null,
+        "live": "no",
+        "mocked": "no",
+        "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json",
+        "reviewed_image_path": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_01_scillm_panel.png",
+        "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+        "schema": "persona_dream.visual_review_validation.v1",
+        "sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+        "status": "PASS_VISUAL_REVIEW",
+        "unverified": "new live VLM/WebGPT review, actual image semantics, provider readiness, Kling submission"
+      },
+      "returncode": 0,
+      "stderr": "warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/.tmp_venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead",
+      "stdout": "{\n  \"exercised\": \"local visual review receipt fields, reviewed image hash parity, reviewer source, eight-check coverage, blocker list discipline\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json\",\n  \"reviewed_image_path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_01_scillm_panel.png\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.visual_review_validation.v1\",\n  \"sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"PASS_VISUAL_REVIEW\",\n  \"unverified\": \"new live VLM/WebGPT review, actual image semantics, provider readiness, Kling submission\"\n}"
+    }
+  },
+  "first_blocker": null,
+  "generated_at": "2026-06-30T01:26:11Z",
+  "passed_step_count": 12,
+  "policy": {
+    "kling_call_performed": false,
+    "kling_live_call_block_reason": "Blocked one-scene review packet only: Panel 01 has provider-accessible media, but paid_call_authorized is false and no live Kling call is authorized.",
+    "kling_packet_status": "BLOCKED",
+    "paid_call_authorized": false,
+    "paid_call_performed": false
+  },
+  "provider_media": {
+    "content_length": 1777579,
+    "expected_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+    "http_status": 200,
+    "observed_sha256": "sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914",
+    "panel_gate_provider_eligibility": true,
+    "panel_gate_provider_packet_status": "PROVIDER_READY",
+    "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/dream-run/panel_01.png"
+  },
+  "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+  "schema": "persona_dream.complete_pipeline_report_status.v1",
+  "status": "PASS_PANEL_REVIEWED",
+  "step_count": 15,
+  "steps": [
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-dream-packet /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "expected": "Memory residue/contact-sheet dream packet validates.",
+      "first_blocker": null,
+      "key": "dream_packet",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_DREAM_PACKET",
+      "title": "Dream Packet"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-story-contract /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "expected": "Accepted story contract validates.",
+      "first_blocker": null,
+      "key": "story_contract",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_STORY_CONTRACT",
+      "title": "Story Contract"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_packet_receipt.json",
+      "artifact_exists": true,
+      "command": "tau dag-run phase_07_storyboard_packet_tau_dag_contract.json --no-resume --receipt-dir tau-run-storyboard-frame-generation-pass-v3",
+      "expected": "Storyboard packet contains four timed panels, accepted start/end frame images, grounded references, coverage seed IDs, and reviewer acceptance.",
+      "first_blocker": null,
+      "key": "storyboard_panel",
+      "live": "yes",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PANEL_REVIEWED",
+      "title": "Storyboard Packet"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_work_order.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-panel-repair-work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/panel_repair_work_order.json --json",
+      "expected": "Tau work order for creator/reviewer/gate loop validates.",
+      "first_blocker": null,
+      "key": "panel_repair_work_order",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PANEL_REPAIR_WORK_ORDER",
+      "title": "Panel Repair Work Order"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-visual-review /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json --run-root /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "expected": "Eight-category visual-review receipt validates against image hash.",
+      "first_blocker": null,
+      "key": "visual_review",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_VISUAL_REVIEW",
+      "title": "Visual Review"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json",
+      "artifact_exists": true,
+      "command": "tau dag-run phase_07_storyboard_packet_tau_dag_contract.json --no-resume --receipt-dir tau-run-storyboard-frame-generation-pass-v3",
+      "expected": "Provider-eligible storyboard gate validates after accepted panel-reviewer output.",
+      "first_blocker": null,
+      "key": "panel_repair_gate",
+      "live": "yes",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PANEL_REVIEWED",
+      "title": "Panel Repair Gate"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-provider-media-publication-work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --json",
+      "expected": "Exact public-media publication plan validates.",
+      "first_blocker": null,
+      "key": "provider_publication_work_order",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER",
+      "title": "Provider Publication Work Order"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-provider-media-local-staging /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --json",
+      "expected": "Staged bytes/path/hash validate.",
+      "first_blocker": null,
+      "key": "provider_local_staging",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+      "title": "Provider Local Staging"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_preflight.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-provider-media-publication-preflight --work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --local-staging-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --json",
+      "expected": "Local readiness and authorization boundary validate.",
+      "first_blocker": {
+        "phase": "provider_media_publication_authorization",
+        "reason": "public_upload_or_git_push_authorization_required"
+      },
+      "key": "provider_publication_preflight",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+      "title": "Publication Preflight"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_authorization.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-provider-media-publication-authorization --preflight-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_preflight.json --authorization-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_publication_authorization.json --json",
+      "expected": "Authorization receipt matches preflight lock.",
+      "first_blocker": null,
+      "key": "provider_publication_authorization",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PROVIDER_MEDIA_PUBLICATION_AUTHORIZATION",
+      "title": "Publication Authorization"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_probe_receipt.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-provider-media-public-handoff --work-order /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json --local-staging-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json --public-probe-receipt /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_probe_receipt.json --json",
+      "expected": "Work order, staged bytes, and public URL probe agree.",
+      "first_blocker": null,
+      "key": "provider_public_handoff",
+      "live": "yes",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PROVIDER_MEDIA_PUBLIC_HANDOFF_READY",
+      "title": "Provider Public Handoff"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/panel_source_receipt.json",
+      "artifact_exists": true,
+      "command": "tau dag-run phase_07_storyboard_packet_tau_dag_contract.json --no-resume --receipt-dir tau-run-storyboard-frame-generation-pass-v3",
+      "expected": "Final storyboard panel source provenance/hash validates from accepted packet.",
+      "first_blocker": null,
+      "key": "panel_source",
+      "live": "yes",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_PANEL_REVIEWED",
+      "title": "Panel Source"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/provider_media_lock_receipt.json",
+      "artifact_exists": true,
+      "command": "./run.sh validate-local-media-lock /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --json",
+      "expected": "Local media lock validates; no provider call made.",
+      "first_blocker": null,
+      "key": "local_media_lock",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "PASS_LOCAL_MEDIA_LOCK",
+      "title": "Local Media Lock"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/kling_scene_packet.json",
+      "artifact_exists": true,
+      "command": "./run.sh pipeline-loop-status /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --direction forward --json",
+      "expected": "Forward loop status accepts all local serial gates.",
+      "first_blocker": null,
+      "key": "run_root_forward",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "ALL_SERIAL_LOOPS_ACCEPTED",
+      "title": "Forward Serial Loop"
+    },
+    {
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/kling_scene_packet.json",
+      "artifact_exists": true,
+      "command": "./run.sh pipeline-loop-status /home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run --direction backward --json",
+      "expected": "Backward loop status accepts all local serial gates.",
+      "first_blocker": null,
+      "key": "run_root_backward",
+      "live": "no",
+      "mocked": "no",
+      "pass": true,
+      "returncode": 0,
+      "status": "ALL_SERIAL_LOOPS_ACCEPTED",
+      "title": "Backward Serial Loop"
+    }
+  ],
+  "updated_at": "2026-07-05T20:53:57.784401+00:00"
+}

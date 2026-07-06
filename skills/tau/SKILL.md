@@ -3,9 +3,8 @@ name: tau
 description: >
   Operate and verify the local T'au project at ${HOME}/workspace/experiments/tau.
   Use for Tau loop, harness, watchdog cron, GitHub issue orchestration, TUI,
-  Memory-first zero-trust agent harness, and proof/status tasks. This skill is
-  a light wrapper around the Tau repo and must report mocked/live proof
-  boundaries explicitly.
+  Memory-first chat, and E2E proof/status tasks. This skill is a light wrapper
+  around the Tau repo and must report mocked/live proof boundaries explicitly.
 triggers:
   - tau
   - t'au
@@ -39,10 +38,6 @@ taxonomy:
 
 # Tau
 
-T'au is the Memory-First Zero-Trust Agent Harness for untrusted agent work.
-Agents can produce claims; Tau decides what counts by checking memory, policy,
-data boundaries, DAG contracts, receipts, evidence, and explicit non-claims.
-
 Use this skill as the operator entrypoint for the local T'au project:
 
 ```text
@@ -54,42 +49,29 @@ locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
 ## Commands
 
-Currently implemented skill-wrapper commands:
+Currently implemented in this skill wrapper:
 
 ```bash
 skills/tau/run.sh doctor
 skills/tau/run.sh status
 skills/tau/run.sh sanity
 skills/tau/run.sh proof-status
+skills/tau/run.sh e2e
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
 ```
 
-Compatibility alias:
+`doctor` checks whether this operator wrapper can resolve and invoke the local
+Tau checkout. `status` reports current repo, GitHub issue, watchdog cron, and
+latest receipt state. `sanity` runs bounded checks that do not mutate GitHub.
+`proof-status` runs the same bounded sanity check plus repo/proof inspection and
+states explicit non-claims. `e2e` is a compatibility alias for `proof-status`;
+it is not a claim of full browser/provider/GitHub production E2E coverage.
 
-```bash
-skills/tau/run.sh e2e
-```
-
-`doctor` checks that the wrapper can resolve the Tau repo, `uv`, Git, optional
-operator tools, and the Tau runtime `doctor` command. `status` reports current
-repo, GitHub issue, watchdog cron, and latest receipt state. `sanity` runs
-bounded checks that do not mutate GitHub. `proof-status` runs the same checks
-plus recent proof/status inspection; it does not create or close new GitHub
-issues. `e2e` is retained only as a compatibility alias for `proof-status` and
-must report `alias_for: proof-status`.
-
-Tau runtime lanes may be available even when the skill wrapper only exposes
-read-only operator commands. Use `doctor` to inspect lanes such as Herdr,
-provider-live, GitHub dry-run/apply, browser/CDP proof, and local sanity before
-claiming any of them.
-
-Current Tau runtime lanes that may exist in the Tau repo, depending on
-checkout/version:
+Tau runtime lanes that may exist in the Tau repo, depending on checkout/version:
 
 ```bash
 uv run tau doctor
-uv run tau zero-trust-doctor
 uv run tau dag-run
 uv run tau herdr-cleanup
 uv run tau dag-expansion-validate
@@ -104,36 +86,91 @@ uv run tau github-redact-projection
 uv run tau github-apply-policy-check
 ```
 
-Planned or Tau-runtime commands that are not listed above are not skill-wrapper
-commands until `skills/tau/run.sh <command>` supports them.
-
-### Zero-Trust Policy/Data-Boundary Lane
-
-Use Tau's zero-trust preflight when a DAG opts into a policy profile or a
-high-stakes data boundary. This lane is a gate, not compliance certification.
-It blocks missing or incompatible policy/profile metadata before DAG dispatch
-and emits `tau.zero_trust_preflight_receipt.v1`.
-
-Minimum runtime command shape:
+Planned or recommended next runtime lanes. Do not claim these from this skill
+unless `doctor`, `status`, or a local receipt proves they are present:
 
 ```bash
-uv run tau zero-trust-doctor \
-  --policy-profile experiments/goal-locked-subagents/fixtures/zero-trust-policy.json \
-  --data-boundary experiments/goal-locked-subagents/fixtures/itar-data-boundary.json
+uv run tau proof-index build
 ```
 
-This proves only that Tau inspected policy and data-boundary inputs for that
-run. It does not prove ITAR compliance, export-control legal sufficiency,
-sandbox isolation, signed provenance, human identity verification,
-provider/model semantic safety, or compliance package completeness.
+## Tau Runtime Lanes
+
+### Local DAG Lane
+
+Use local `tau.dag_contract.v1` DAGs for deterministic creator/reviewer loops,
+repair loops, goal-guardian gates, reviewer joins, and non-provider stress
+checks. Proof comes from DAG receipts, command-loop receipts, and focused test
+commands, not from prose.
+
+### Herdr-Visible Provider DAG Lane
+
+Use Herdr-visible provider DAGs when the work must run in visible panes or
+provider-specific surfaces. Herdr workspace, pane, and visible log output are
+observability evidence. The canonical gate remains Tau work orders, work-order
+hashes, provider readiness receipts, node receipts, cleanup receipts, and DAG
+receipts.
+
+When Tau launches Herdr agents for DAG-backed work, Herdr agent names must carry
+the DAG address, not only the provider or run id. Prefer names composed from:
+
+```text
+{dag_id}-{node_id}-{agent}-{provider_id}
+```
+
+Append attempt metadata when the pane is attempt-specific. If a launch path is
+not DAG-backed, keep a stable run/provider fallback. Work orders, runtime
+manifests, and pane records should preserve the selected Herdr `agent_name` and
+the DAG naming fields so project agents can map visible Herdr panes back to DAG
+nodes without knowing provider internals.
+
+### Adaptive DAG Lane
+
+Adaptive DAG changes must follow:
+
+```text
+signal -> candidate -> validation -> policy -> apply-new-artifact -> rerun
+```
+
+Do not mutate a running DAG in prose. Do not silently add nodes. Expansion,
+branch-lock, route-memory, and rerun claims require explicit receipts.
+
+### Route-Memory Lane
+
+Route-memory candidates are advisory until a quality-gated sync receipt and
+readback artifact exist. Model confidence is not route proof. Positive route
+signals should come from validators, reviewer receipts, and deterministic proof
+artifacts.
+
+### Branch-Lock Lane
+
+Provider or mutating concurrent branches require explicit branch-lock metadata
+and approval/provenance before they can become schedulable. Without branch-lock
+proof, keep concurrent ready-node scheduling local-only and non-mutating.
+
+### External Research / Paper Evidence Lane
+
+Research is design input, not closure proof. ArXiv, Dogpile, WebGPT, Brave,
+video, paper, or manual research must become a source-bearing receipt, route
+through research-auditor/reviewer validation, and then be reconciled into local
+artifacts and deterministic tests.
+
+### GitHub Apply-Gate Lane
+
+GitHub transport is dry-run by default. Live mutation requires explicit apply
+authorization, target preflight, policy checks, redaction when public comments
+are involved, and a transport receipt with exact commands and results.
+
+### Proof Bundle / Run-Status Lane
+
+Use `proof-status`, Tau run-status, and committed proof receipts to state what
+was exercised and what remains unverified. A status page, latest-proof list, or
+unit test is not an end-to-end claim unless the required live lane receipts are
+present.
 
 ## Proof Rules
 
 - State `mocked` and `live` boundaries for every result.
 - Unit tests are not E2E proof.
-- `proof-status` is a proof index/status command, not closure proof.
-- `e2e` is a compatibility alias and must not be used to overclaim end-to-end
-  production behavior.
 - Loop and harness claims require fresh command-loop/watchdog receipts.
 - TUI claims require targeted Textual/TUI checks.
 - Chat UI claims require browser/CDP screenshot verification from the host app.
@@ -145,18 +182,6 @@ provider/model semantic safety, or compliance package completeness.
 - Subagent handoffs must use `tau.agent_handoff.v1`.
 - Human goal changes must use `tau.human_goal_change.v1`; non-human agents may
   propose but not apply immutable goal changes.
-
-## Research References
-
-Tau's adaptive-DAG research references live in the Tau repo, especially
-`${HOME}/workspace/experiments/tau/docs/adaptive-dag-research-references.md`
-and `${HOME}/workspace/experiments/tau/docs/tau-research-evidence-lane-critique.md`.
-
-Treat ArXiv, paper, web, and video sources as design input unless a
-`tau.research_source_receipt.v1` and deterministic local proof say otherwise.
-The known YouTube reference is still pending formal citation unless the Tau
-repo contains a verified title, URL, retrieval date, and transcript/source
-receipt. A video ID alone is not closure proof.
 
 ## Default Project-Agent Interface: DAG Contracts
 
@@ -172,6 +197,22 @@ or ad hoc prompt instructions when a DAG can express the work. The DAG contract
 is the durable instruction; Tau owns dispatch, receipt validation, route
 continuity, resume behavior, timeout/max-attempt handling, immutable-goal
 enforcement, and fail-closed drift detection.
+
+Tau must monitor observable subagent behavior for blocked-agent drift. If a
+subagent is failing and devolves into test-only churn without task evidence,
+Tau should stop normal retry, emit a course-correction artifact, and route to a
+reviewer or goal-guardian instead of allowing more pointless unit tests. Unit
+tests are useful evidence only when they are tied to the active task and paired
+with the required implementation or artifact evidence. The course-correction
+artifact must require a blocked report that states the blocker, what was
+attempted, why further test churn is not progress, and the next non-test action.
+
+When a Tau-managed subagent has failed two attempts and still has retry budget,
+Tau must require `$brave-search` before another attempt. The requirement must be
+durable: record the failed node, attempt count, blocker, search query, and the
+Brave Search command or receipt path. Do not silently continue to a third local
+retry from the same stale context, and do not accept a third attempt until the
+blocker report and Brave Search receipt are present.
 
 Default flow:
 
