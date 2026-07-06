@@ -40,7 +40,7 @@ taxonomy:
   - endpoints
   - memory
   - validation
-runtime_self_improvement: none
+runtime_self_improvement: basic
 ---
 
 # Embry Voice Control
@@ -49,10 +49,16 @@ Use this skill when an agent needs to operate Embry voice as a controllable
 system. This is the endpoint/control-plane contract. It is not the conversation
 style guide and it is not the Chatterbox renderer itself.
 
+Think of `embry-voice-control` as the voice front-end to Tau: it receives voice
+or text turns, gathers listener and memory evidence, asks Tau to shape the
+agentic response when needed, and then sends approved render text to Chatterbox.
+It must not become a second reasoner beside Tau.
+
 ## Boundary
 
 - `$memory` owns speaker identity, intent, recall, answer, clarify, and deflect.
-- Tau owns agentic reasoning and project/tool coordination.
+- Tau owns agentic reasoning and project/tool coordination; this skill fronts
+  Tau with voice/chat control.
 - Chatterbox owns speech rendering from approved `tts_render_text`.
 - RealtimeSTT/listener owns VAD, ASR, diarization, and speaker evidence.
 - Shared Chat UX owns visible transcript, reasoning trace, audio controls, orb
@@ -180,7 +186,22 @@ Loguru, Typer, httpx, uv/pyproject, module docstrings, thin `__init__.py`,
 complete dependencies, functions first, files under 800 lines, and non-mocked
 sanity tests.
 
+## Live Sanity
+
+Run the opt-in live harness before claiming the voice front-end works:
+
+```bash
+./run.sh verify --profile controlled-live
+```
+
+The harness calls real configured endpoints and writes receipts under
+`/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/<run-id>/`. Missing
+services, missing fields, stale turn authority, absent Tau evidence, or absent
+audio/orb authority must produce `NOT_ESTABLISHED` or `NOT_READY`, not a mocked
+pass.
+
 ## References
 
 - `references/endpoint-contract.md`: request/response shapes and misuse cases.
+- `references/e2e-sanity-checks.md`: live non-mocked sanity matrix.
 
