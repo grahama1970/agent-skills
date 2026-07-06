@@ -13,7 +13,7 @@
       "Phase 04 object/location/environment references are attached as references only, not accepted panel frames."
     ]
   },
-  "created_at": "2026-07-05T20:46:22.990732+00:00",
+  "created_at": "2026-07-06T13:43:52.461370+00:00",
   "duration_seconds": 10,
   "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
   "live": true,
@@ -44,12 +44,14 @@
   "provider_calls": {
     "image": false,
     "kling": false,
-    "paid": false
+    "paid": false,
+    "route": true
   },
+  "provider_route_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/panel-reviewer_provider_route_receipt.json",
   "reference_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_coverage.json",
   "role": "panel-reviewer",
   "schema": "persona_dream.storyboard_review_verdict.v1",
   "status": "PASS_PANEL_REVIEWED",
   "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
-  "storyboard_packet_sha256": "sha256:ac8231b619aea35e0bcfaf39781b41fd36d714da1bada86ce8051422d450eaad"
+  "storyboard_packet_sha256": "sha256:b4244d8b68e910181c2dc840050d5f6db744769caabbdd53ff2a7b453d2b6c11"
 }

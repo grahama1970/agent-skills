@@ -595,7 +595,7 @@
     "A single generated PNG is never sufficient evidence for Phase 07 storyboard readiness."
   ],
   "review_status": "PASS_PANEL_REVIEWED",
-  "reviewed_at": "2026-07-05T20:46:22.989092+00:00",
+  "reviewed_at": "2026-07-06T13:43:52.459872+00:00",
   "run_id": "phase_07_storyboard_live_tau",
   "schema": "persona_dream.storyboard_packet.v1",
   "source_artifacts": {

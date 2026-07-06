@@ -1,7 +1,7 @@
 {
-  "backend": "flux",
+  "backend": "google",
   "blockers": [],
-  "created_at": "2026-07-05T20:46:22.907420+00:00",
+  "created_at": "2026-07-06T13:43:52.377517+00:00",
   "live": true,
   "mocked": false,
   "model": "gemini-2.5-flash-image",

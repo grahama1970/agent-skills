@@ -115,6 +115,13 @@ def _run_creator(
         packet = _read_json(packet_path)
     creator_check = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=False)
     creator_check["blockers"].extend(generation["blockers"])
+    provider_route = _provider_route_receipt(
+        start_payload,
+        role="panel-creator",
+        artifact_dir=artifact_dir,
+        receipts_dir=receipts_dir,
+    )
+    creator_check["blockers"].extend(provider_route["blockers"])
     manifest = _panel_manifest(packet, packet_path)
     manifest_path = receipts_dir / "storyboard_panel_manifest.json"
     generation_receipt_path = receipts_dir / "storyboard_frame_generation_receipt.json"
@@ -131,10 +138,16 @@ def _run_creator(
         "duration_seconds": packet.get("duration_seconds"),
         "manifest": str(manifest_path),
         "frame_generation_receipt": str(generation_receipt_path),
+        "provider_route_receipt": str(provider_route["receipt_path"]),
         "blockers": creator_check["blockers"],
         "mocked": False,
         "live": True,
-        "provider_calls": {"image": generation["provider_called"], "kling": False, "paid": False},
+        "provider_calls": {
+            "route": provider_route["status"] == "PASS",
+            "image": generation["provider_called"],
+            "kling": False,
+            "paid": False,
+        },
     }
     creator_receipt_path = receipts_dir / "storyboard_creator_receipt.json"
     _write_json(creator_receipt_path, creator_receipt)
@@ -142,6 +155,7 @@ def _run_creator(
     _write_json(artifact_dir / "storyboard_panel_manifest.json", manifest)
     _write_json(artifact_dir / "storyboard_frame_generation_receipt.json", generation["receipt"])
     tau_receipt_path = artifact_dir / "panel_creator_tau_subagent_receipt.json"
+    evidence = [str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(provider_route["receipt_path"]), str(packet_path)]
     tau_receipt = _subagent_receipt(
         start_payload,
         subagent="panel-creator",
@@ -151,7 +165,7 @@ def _run_creator(
             if not creator_check["blockers"]
             else "Panel creator failed closed because the storyboard packet is incomplete."
         ),
-        evidence=[str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(packet_path)],
+        evidence=evidence,
         next_subagent="panel-reviewer" if not creator_check["blockers"] else "human",
         next_executor="local" if not creator_check["blockers"] else "human",
         next_reason=(
@@ -167,7 +181,7 @@ def _run_creator(
         status=tau_receipt["result"]["status"],
         summary=tau_receipt["result"]["summary"],
         evidence=tau_receipt["evidence"],
-        artifacts=[str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(tau_receipt_path), str(packet_path)],
+        artifacts=[str(creator_receipt_path), str(manifest_path), str(generation_receipt_path), str(provider_route["receipt_path"]), str(tau_receipt_path), str(packet_path)],
         context_update={"persona_dream_phase07_storyboard": dict(context)},
         next_agent=tau_receipt["next"]["subagent"],
         next_executor=tau_receipt["next"]["executor"],
@@ -186,6 +200,13 @@ def _run_reviewer(
     context: Mapping[str, Any],
 ) -> dict[str, Any]:
     review = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
+    provider_route = _provider_route_receipt(
+        start_payload,
+        role="panel-reviewer",
+        artifact_dir=artifact_dir,
+        receipts_dir=receipts_dir,
+    )
+    review["blockers"].extend(provider_route["blockers"])
     status = "PASS_PANEL_REVIEWED" if not review["blockers"] else "BLOCKED_PANEL_REVIEW"
     accepted = status == "PASS_PANEL_REVIEWED"
     if accepted:
@@ -215,9 +236,15 @@ def _run_reviewer(
         "per_panel": review["per_panel"],
         "reference_coverage": str(reference_coverage_path),
         "entity_coverage": str(entity_coverage_path),
+        "provider_route_receipt": str(provider_route["receipt_path"]),
         "mocked": False,
         "live": True,
-        "provider_calls": {"image": False, "kling": False, "paid": False},
+        "provider_calls": {
+            "route": provider_route["status"] == "PASS",
+            "image": False,
+            "kling": False,
+            "paid": False,
+        },
         "claims": {
             "proves": [
                 "Tau dispatched the Phase 07 panel-reviewer node.",
@@ -238,6 +265,7 @@ def _run_reviewer(
     _write_json(artifact_dir / "storyboard_reference_coverage.json", review["reference_coverage"])
     _write_json(artifact_dir / "storyboard_entity_coverage.json", review["entity_coverage"])
     tau_receipt_path = artifact_dir / "panel_reviewer_tau_subagent_receipt.json"
+    evidence = [str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(provider_route["receipt_path"]), str(packet_path)]
     tau_receipt = _subagent_receipt(
         start_payload,
         subagent="panel-reviewer",
@@ -247,7 +275,7 @@ def _run_reviewer(
             if status == "PASS_PANEL_REVIEWED"
             else "Panel-reviewer rejected the storyboard packet with exact blockers."
         ),
-        evidence=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(packet_path)],
+        evidence=evidence,
         next_subagent="human" if accepted else "panel-creator",
         next_executor="human" if accepted else "local",
         next_reason=(
@@ -263,7 +291,7 @@ def _run_reviewer(
         status=tau_receipt["result"]["status"],
         summary=tau_receipt["result"]["summary"],
         evidence=tau_receipt["evidence"],
-        artifacts=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(tau_receipt_path), str(packet_path)],
+        artifacts=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(provider_route["receipt_path"]), str(tau_receipt_path), str(packet_path)],
         context_update={"persona_dream_phase07_storyboard": dict(context)},
         next_agent="human" if accepted else "panel-creator",
         next_executor="human" if accepted else "local",
@@ -721,6 +749,96 @@ def _context(start_payload: Mapping[str, Any]) -> Mapping[str, Any]:
     }
 
 
+def _provider_route_receipt(
+    start_payload: Mapping[str, Any],
+    *,
+    role: str,
+    artifact_dir: Path,
+    receipts_dir: Path,
+) -> dict[str, Any]:
+    context = start_payload.get("context")
+    if not isinstance(context, Mapping):
+        context = {}
+    tau_dag_node = context.get("tau_dag_node")
+    if not isinstance(tau_dag_node, Mapping):
+        tau_dag_node = {}
+    model_policy = tau_dag_node.get("model_policy")
+    if not isinstance(model_policy, Mapping):
+        model_policy = context.get("model_policy") if isinstance(context.get("model_policy"), Mapping) else {}
+    prompt_contract = tau_dag_node.get("prompt_contract")
+    if not isinstance(prompt_contract, Mapping):
+        prompt_contract = context.get("prompt_contract") if isinstance(context.get("prompt_contract"), Mapping) else {}
+
+    blockers: list[str] = []
+    if not tau_dag_node:
+        blockers.append("tau_dag_node_missing")
+    agent = tau_dag_node.get("agent")
+    if agent and str(agent) != role:
+        blockers.append(f"tau_dag_node_agent_mismatch:{agent}")
+    if not model_policy:
+        blockers.append("model_policy_missing")
+    else:
+        expected_policy = {
+            "provider": "codex",
+            "auth": "codex-oauth",
+            "model": "gpt-2",
+        }
+        for key, expected in expected_policy.items():
+            actual = model_policy.get(key)
+            if actual != expected:
+                blockers.append(f"model_policy_{key}_mismatch:{actual}")
+    if not prompt_contract:
+        blockers.append("prompt_contract_missing")
+    elif prompt_contract.get("schema") != "tau.prompt_contract.v1":
+        blockers.append(f"prompt_contract_schema_mismatch:{prompt_contract.get('schema')}")
+
+    status = "PASS" if not blockers else "BLOCKED_PROVIDER_ROUTE"
+    receipt = {
+        "schema": "persona_dream.provider_route_receipt.v1",
+        "created_at": _now_iso(),
+        "role": role,
+        "status": status,
+        "provider_route_metadata_delivered": status == "PASS",
+        "provider_call_executed": False,
+        "mocked": False,
+        "live": True,
+        "model_policy": json.loads(json.dumps(model_policy, sort_keys=True)),
+        "prompt_contract": json.loads(json.dumps(prompt_contract, sort_keys=True)),
+        "tau_dag_node": {
+            "dag_id": tau_dag_node.get("dag_id"),
+            "node_id": tau_dag_node.get("node_id"),
+            "agent": tau_dag_node.get("agent"),
+            "target": tau_dag_node.get("target"),
+            "goal": tau_dag_node.get("goal"),
+            "required_evidence": tau_dag_node.get("required_evidence"),
+            "fail_closed_on": tau_dag_node.get("fail_closed_on"),
+        },
+        "blockers": blockers,
+        "claims": {
+            "proves": [
+                "Tau injected provider dispatch metadata into the Persona Dream command-backed node stdin.",
+                "Persona Dream recorded the route policy required for the node before producing storyboard evidence.",
+            ]
+            if status == "PASS"
+            else ["Persona Dream failed closed because required Tau provider route metadata was missing or mismatched."],
+            "does_not_prove": [
+                "No image, Kling, or paid provider call was executed by this route receipt.",
+                "This receipt proves provider route metadata delivery only, not final storyboard image quality.",
+            ],
+        },
+    }
+    receipt_path = receipts_dir / f"{role}_provider_route_receipt.json"
+    artifact_path = artifact_dir / f"{role}_provider_route_receipt.json"
+    _write_json(receipt_path, receipt)
+    _write_json(artifact_path, receipt)
+    return {
+        "status": status,
+        "blockers": blockers,
+        "receipt_path": str(receipt_path),
+        "artifact_path": str(artifact_path),
+    }
+
+
 def _handoff(
     start_payload: Mapping[str, Any],
     *,
@@ -743,6 +861,9 @@ def _handoff(
         "summary": summary,
         "artifacts": [str(item) for item in context.get("artifacts", []) if isinstance(context.get("artifacts"), list)] + artifacts,
     }
+    for key in ("tau_dag_node", "model_policy", "prompt_contract"):
+        if key in context:
+            next_context[key] = context[key]
     next_context.update(context_update)
     return {
         "schema": "tau.agent_handoff.v1",
