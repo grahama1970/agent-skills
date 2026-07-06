@@ -150,6 +150,20 @@ memory.intent
 Do not generate factual voice answers directly from Chatterbox, PersonaPlex, or a
 TTS prompt. Chatterbox speaks the approved answer text; it does not own facts.
 
+`$memory /intent` is also the authority for Embry's conversational tone and
+injected emotion/tag policy. The voice coordinator must call `/intent` before
+choosing `tone`, `delivery_stage`, `emotion_tags`, `chatterbox_tags`, or
+`cue_policy` for generated answers, memory responses, clarification prompts,
+deflections, one-at-a-time boundaries, and wait-presence utterances.
+
+Tau or the voice coordinator may adapt wording and delivery only inside the
+policy returned by `$memory /intent`. If `/intent` does not return an explicit
+voice delivery policy, fail closed to a safe default such as
+`memory_uncertain`, `clarify`, `emotion_tags=["careful"]`,
+`chatterbox_tags=[]`, and `cue_policy="intent_missing_voice_delivery_policy"`,
+then record that gap in the receipt. Do not silently guess an emotional arc from
+local UI state, Chatterbox defaults, or prompt wording.
+
 ## Speech Policy
 
 Speak in short, cancellable chunks. During long-running work, speak progress only
@@ -363,6 +377,52 @@ documents support them:
 [whispering]
 [laugh]
 ```
+
+## Required Speech Delivery Envelope
+
+Every time Embry speaks, the coordinator must choose and record a delivery
+envelope. This applies to final answers, holding utterances, wait presence,
+interruption acknowledgements, identity clarification, one-at-a-time boundaries,
+completion cues, blessed QRA playback, replay, and direct sanity speech.
+
+For normal generated turns, this envelope must be derived from `$memory /intent`.
+The receipt must identify the intent policy source, for example
+`intent_policy_source="memory.intent"` and the relevant `intent_id`,
+`route_key`, or `recall_profile` when available. Direct local sanity speech may
+use an explicit `direct_sanity_explicit_policy`, but it must say so and must not
+be treated as proof that memory-driven emotional steering works.
+
+Required fields for every spoken item:
+
+```text
+conversation_tone or tone
+delivery_stage
+pace
+pause_strategy
+emotion_tags
+chatterbox_tags
+cue_policy
+intent_policy_source
+answer_text
+tts_render_text
+answer_text_hash
+tts_render_text_hash
+cue_reason
+```
+
+`emotion_tags` are semantic conversation labels such as `warm`, `careful`,
+`playful`, `relieved`, `concerned`, `firm`, or `wait_presence`. `chatterbox_tags`
+are literal model-supported render tags such as `[chuckle]`, `[sigh]`, or
+`[laugh]`. They are related but not interchangeable.
+
+If no literal Chatterbox tag is appropriate, record `chatterbox_tags=[]` and a
+`cue_policy` such as `no_literal_tag_context_serious`. Do not silently omit the
+field. Absence of this envelope is a failed voice receipt.
+
+Keep `answer_text` separate from `tts_render_text`. The canonical answer must
+not contain injected non-factual tags; the rendered text may include sparse
+approved tags when the context supports them. Never pass user-supplied bracket
+tags through to Chatterbox without sanitizing or normalizing them first.
 
 For exact speaker-scoped QRA hits, the memory pipeline may request cached Embry
 audio instead of live rendering. Only do this when `$memory` returns a near-exact

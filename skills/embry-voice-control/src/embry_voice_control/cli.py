@@ -104,6 +104,47 @@ def missing_fields(data: dict[str, Any], fields: list[str]) -> list[str]:
     return [field for field in fields if not has_required_field(data, field)]
 
 
+def has_any_field(*objects: dict[str, Any], field_expr: str) -> bool:
+    """Return whether any object has a required field or alias expression."""
+    return any(has_required_field(obj, field_expr) for obj in objects if obj)
+
+
+def speech_policy_missing(
+    *,
+    data: dict[str, Any],
+    payload: dict[str, Any] | None,
+    require_memory_intent: bool,
+) -> list[str]:
+    """Return missing voice delivery policy fields for Embry speech receipts."""
+    payload = payload or {}
+    required = {
+        "voice_policy_tone": "conversation_tone|tone|voice_envelope.tone|voiceEnvelope.tone",
+        "voice_policy_delivery_stage": "delivery_stage|deliveryStage|voice_envelope.delivery_stage|voiceEnvelope.deliveryStage",
+        "voice_policy_emotion_tags": "emotion_tags|emotionTags|voice_envelope.emotion_tags|voiceEnvelope.emotionTags",
+        "voice_policy_chatterbox_tags": "chatterbox_tags|chatterboxTags|voice_envelope.chatterbox_tags|voiceEnvelope.chatterboxTags",
+        "voice_policy_cue_policy": "cue_policy|cuePolicy|voice_envelope.cue_policy|voiceEnvelope.cuePolicy",
+        "voice_policy_source": "intent_policy_source|intentPolicySource|voice_envelope.intent_policy_source|voiceEnvelope.intentPolicySource",
+    }
+    missing = [
+        label
+        for label, expr in required.items()
+        if not has_any_field(data, payload, field_expr=expr)
+    ]
+    source = (
+        nested_value(data, "intent_policy_source")
+        or nested_value(data, "intentPolicySource")
+        or nested_value(data, "voice_envelope.intent_policy_source")
+        or nested_value(data, "voiceEnvelope.intentPolicySource")
+        or nested_value(payload, "intent_policy_source")
+        or nested_value(payload, "intentPolicySource")
+    )
+    if require_memory_intent and source != "memory.intent":
+        missing.append("intent_policy_source_memory_intent")
+    if require_memory_intent and not has_required_field(data, "memory_intent|memoryIntent|memory.intent|memory.intentResult"):
+        missing.append("memory_intent")
+    return missing
+
+
 def compact_value(value: Any, depth: int = 0) -> Any:
     """Return a compact JSON-safe excerpt for receipts."""
     if depth > 4:
@@ -132,10 +173,21 @@ def case_result(
     data: dict[str, Any],
     required_fields: list[str],
     exercised: str,
+    payload: dict[str, Any] | None = None,
+    require_speech_policy: bool = False,
+    require_memory_intent_policy: bool = False,
     error: str | None = None,
 ) -> dict[str, Any]:
     """Build a standard case result from one live endpoint call."""
     missing = missing_fields(data, required_fields)
+    if require_speech_policy:
+        missing.extend(
+            speech_policy_missing(
+                data=data,
+                payload=payload,
+                require_memory_intent=require_memory_intent_policy,
+            )
+        )
     mocked = data.get("mocked")
     live = data.get("live")
     assertion_pass = not error and status_code is not None and 200 <= status_code < 300 and not missing
@@ -160,6 +212,7 @@ def case_result(
         "missing_fields": sorted(set(missing)),
         "error": error,
         "exercised": exercised,
+        "request_excerpt": compact_value(payload or {}),
         "response_excerpt": compact_value(data),
     }
 
@@ -173,6 +226,8 @@ def call_endpoint(
     payload: dict[str, Any] | None,
     required_fields: list[str],
     exercised: str,
+    require_speech_policy: bool = False,
+    require_memory_intent_policy: bool = False,
 ) -> dict[str, Any]:
     """Call one real endpoint and convert the result to a case receipt."""
     try:
@@ -189,6 +244,9 @@ def call_endpoint(
             data=data,
             required_fields=required_fields,
             exercised=exercised,
+            payload=payload,
+            require_speech_policy=require_speech_policy,
+            require_memory_intent_policy=require_memory_intent_policy,
         )
     except httpx.HTTPError as exc:
         logger.error("endpoint call failed for {} {}: {}", method, url, exc)
@@ -200,6 +258,9 @@ def call_endpoint(
             data={},
             required_fields=required_fields,
             exercised=exercised,
+            payload=payload,
+            require_speech_policy=require_speech_policy,
+            require_memory_intent_policy=require_memory_intent_policy,
             error=str(exc),
         )
 
@@ -214,20 +275,27 @@ def adapted_live_turn_payload(run_id: str, text: str) -> dict[str, Any]:
         "voiceEnabled": True,
         "chatEnabled": True,
         "replayEnabled": True,
+        "requireMemoryIntentVoicePolicy": True,
     }
 
 
 def adapted_speak_payload(run_id: str) -> dict[str, Any]:
     """Return approved direct speech payload for current Embry UX adapters."""
-    text = "Embry voice control live sanity. I am checking the Tau voice front end."
+    answer_text = "Embry voice control live sanity. I am checking the Tau voice front end."
+    tts_render_text = "[chuckle] Embry voice control live sanity. I am checking the Tau voice front end."
     return {
         "sessionId": f"embry-voice-control-{run_id}",
         "turnId": f"embry-voice-control-speak-{run_id}",
-        "text": text,
-        "tts_render_text": text,
-        "answer_text": text,
-        "tone": "calm_precise",
-        "delivery_stage": "neutral",
+        "text": tts_render_text,
+        "tts_render_text": tts_render_text,
+        "answer_text": answer_text,
+        "tone": "playful_light",
+        "conversation_tone": "playful_light",
+        "delivery_stage": "positive",
+        "emotion_tags": ["playful", "confident", "sanity_check"],
+        "chatterbox_tags": ["[chuckle]"],
+        "cue_policy": "direct_sanity_explicit_policy",
+        "intent_policy_source": "direct_sanity_explicit_policy",
         "pause_strategy": "short_answer_no_filler",
         "interruptible": True,
         "playLocal": False,
@@ -332,6 +400,7 @@ def verify(
                 payload=adapted_speak_payload(run_id),
                 required_fields=["mocked", "live", "audioAuthority.artifactId", "audioUrl|audioAuthority.url"],
                 exercised="approved text to Chatterbox audio authority",
+                require_speech_policy=True,
             )
         )
         cases.append(
@@ -343,6 +412,8 @@ def verify(
                 payload=adapted_live_turn_payload(run_id, text),
                 required_fields=["mocked", "live", "turnId|turnAuthority.turnId", "turnAuthority", "audioAuthority"],
                 exercised="text turn through memory/Tau/Chatterbox adapter authority",
+                require_speech_policy=True,
+                require_memory_intent_policy=True,
             )
         )
         if profile in {"listener-live", "release"}:

@@ -101,7 +101,7 @@ voice/text turn
   -> /turn
   -> listener evidence when voice is enabled
   -> $memory /speaker/resolve when speaker evidence exists
-  -> $memory /intent
+  -> $memory /intent, including voice delivery policy
   -> $memory /recall and /answer | /clarify | /deflect as routed
   -> Tau response shaping when needed
   -> Chatterbox /tau/voice-render or /synthesize-batch-stream
@@ -135,6 +135,12 @@ Required response fields:
 - `mocked`
 - `live`
 - `turn_id`
+- `conversation_tone` or `tone`
+- `delivery_stage`
+- `emotion_tags`
+- `chatterbox_tags`
+- `cue_policy`
+- `intent_policy_source`
 - `audio_artifact_id`
 - `audio_url` or `audio_path`
 - `audio_authority`
@@ -170,6 +176,15 @@ sequence with timing offsets.
 ## Required Behavior
 
 - Voice input is as first-class as text input.
+- `$memory /intent` is the authority for Embry's conversational tone and
+  injected emotion/tag policy on normal generated turns. The voice control layer
+  must not guess tone or Chatterbox tags locally when memory intent is available.
+- Every Embry speech item must include a selected conversational tone and an
+  injected-emotion/tag policy. If no literal Chatterbox tag is appropriate, the
+  receipt must explicitly record `chatterbox_tags=[]` and explain the
+  `cue_policy`; omission is a failed receipt. Receipts must also record
+  `intent_policy_source`, normally `memory.intent`; direct local sanity speech
+  may use `direct_sanity_explicit_policy`.
 - Unknown or ambiguous speakers fail closed to identity clarification.
 - Multiple non-Embry speakers overlapping map to a one-at-a-time boundary.
 - Barge-in cancels old speech and stale chunks before the new turn wins.
@@ -204,4 +219,3 @@ pass.
 
 - `references/endpoint-contract.md`: request/response shapes and misuse cases.
 - `references/e2e-sanity-checks.md`: live non-mocked sanity matrix.
-
