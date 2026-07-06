@@ -28,9 +28,11 @@ role: >
   interruption state, and optional ASR verification.
 
 primary_skills:
+  - embry-voice-control
   - memory
   - brave-search
   - best-practices-chatterbox-agent
+  - best-practices-converse
   - best-practices-subagent
   - best-practices-python
 
@@ -235,6 +237,16 @@ dag_spec:
 
 tool_policy:
   allowed:
+    - embry_voice_control.health
+    - embry_voice_control.state
+    - embry_voice_control.readiness
+    - embry_voice_control.turn
+    - embry_voice_control.speak
+    - embry_voice_control.listen_start
+    - embry_voice_control.listen_stop
+    - embry_voice_control.cancel
+    - embry_voice_control.replay
+    - embry_voice_control.inspect_receipt
     - memory.intent
     - memory.recall
     - memory.answer
@@ -316,6 +328,18 @@ tool_policy:
   skill_calls:
     mode: dispatcher_only
     allowed_skills:
+      embry-voice-control:
+        endpoints:
+          - health
+          - state
+          - readiness
+          - turn
+          - speak
+          - listen-start
+          - listen-stop
+          - cancel
+          - replay
+          - inspect-receipt
       memory:
         endpoints:
           - intent
@@ -338,6 +362,10 @@ tool_policy:
           - read_async_voice_coordinator
           - read_emotion_pause_interruption_policy
           - read_validation_checklist
+      best-practices-converse:
+        endpoints:
+          - read_contract
+          - read_conversation_delivery_policy
     denied_skills:
       - memory.store
       - memory.upsert
