@@ -167,6 +167,29 @@ was exercised and what remains unverified. A status page, latest-proof list, or
 unit test is not an end-to-end claim unless the required live lane receipts are
 present.
 
+### DAG Visualization / Browser Inspection Lane
+
+Use the UX Lab Tau DAG route when a human or project agent needs to inspect a
+Tau DAG contract, receipt, node statuses, and proof boundaries as a graph. The
+current browser inspection route is:
+
+```text
+http://localhost:3002/#tau/dag
+```
+
+That route is an integration viewer, not the Tau runtime authority. It should
+render `tau.dag_contract.v1` and `tau.dag_receipt.v1` artifacts through the
+existing React Flow transport DAG workspace. Visible nodes, edges, statuses,
+alerts, and non-claims must be backed by fixture or receipt artifacts. The UI
+must not show fake running state, fake provider progress, mutation controls, or
+dashboard metrics when the source artifacts do not prove them.
+
+Browser DAG claims require the UX Lab CDP verification marker and screenshot
+for the `#tau/dag` route. A static fixture can prove renderability of the
+artifact contract; it does not prove live Tau DAG execution, Herdr provider
+execution, GitHub mutation, provider/model semantic quality, or human
+acceptance.
+
 ## Proof Rules
 
 - State `mocked` and `live` boundaries for every result.
@@ -174,6 +197,8 @@ present.
 - Loop and harness claims require fresh command-loop/watchdog receipts.
 - TUI claims require targeted Textual/TUI checks.
 - Chat UI claims require browser/CDP screenshot verification from the host app.
+- DAG visualization claims require browser/CDP screenshot verification from the
+  host app and must quote the source DAG/receipt artifacts being rendered.
 - Chat UI interaction manifests must follow `test-interactions`: live DOM
   `[data-qid]` selectors only, deterministic assertions, and no fake fixtures
   for production claims.
@@ -539,6 +564,7 @@ ${HOME}/.local/state/project-watchdog/logs/project-watchdog.log
 ${HOME}/.local/state/project-watchdog/receipts/
 ${HOME}/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/
 ${HOME}/workspace/experiments/tau/ui/tau-chat-contract.json
+http://localhost:3002/#tau/dag
 ```
 
 Use `agents/tau` for Tau-specific bounded worker turns when a global watchdog or
