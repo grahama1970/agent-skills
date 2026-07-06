@@ -273,6 +273,15 @@ interface WatchYoloLabelEvent {
   created_at?: string
 }
 
+interface WatchYoloSequenceRow {
+  key: string
+  timeLabel: string
+  trackId: string
+  stateLabel: string
+  detailLabel: string
+  tone: 'accept' | 'stop' | 'reset'
+}
+
 interface WatchIdentitySuggestionResponse {
   schema?: string
   status?: string
@@ -857,13 +866,18 @@ function latestYoloLabelEventForTrack(
   return candidates.length > 0 ? candidates[candidates.length - 1].event : null
 }
 
+function isYoloIdentityStopEvent(event: WatchYoloLabelEvent): boolean {
+  return event.action === 'reject_box'
+    || event.action === 'reset_box'
+    || event.action === 'reset'
+    || event.action === 'reject'
+    || event.status === 'rejected_box'
+    || event.status === 'reset'
+    || event.status === 'reject'
+}
+
 function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | null {
-  if (event.action === 'reject_box' || event.action === 'reset_box' || event.action === 'reset' || event.action === 'reject') {
-    return null
-  }
-  if (event.status === 'rejected_box' || event.status === 'reset' || event.status === 'reject') {
-    return null
-  }
+  if (isYoloIdentityStopEvent(event)) return null
   if (!event.character_name || event.character_name === 'Unassigned') return null
   return {
     trackId: event.track_id,
@@ -873,6 +887,24 @@ function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | n
     source: 'human',
     confidence: typeof event.confidence === 'number' ? event.confidence : 1,
     updatedAt: event.created_at || new Date().toISOString(),
+  }
+}
+
+function yoloSequenceRowFromEvent(event: WatchYoloLabelEvent, index: number): WatchYoloSequenceRow {
+  const trackId = event.track_id
+  const time = yoloLabelEventTime(event)
+  const label = yoloLabelFromEvent(event)
+  const isStop = isYoloIdentityStopEvent(event)
+  const isReset = event.action === 'reset' || event.action === 'reset_box' || event.status === 'reset'
+  return {
+    key: `${trackId}:${event.box_key || 'track'}:${event.action || event.status || 'event'}:${event.created_at || index}`,
+    timeLabel: time == null ? '--' : `${time.toFixed(2)}s`,
+    trackId,
+    stateLabel: label?.characterName || 'Unassigned',
+    detailLabel: isStop
+      ? 'holds until next assignment'
+      : label?.actorName || actorForCharacter(label?.characterName || '') || 'accepted',
+    tone: isStop ? (isReset ? 'reset' : 'stop') : 'accept',
   }
 }
 
@@ -3562,6 +3594,16 @@ export function WatchReportView({
     : null
   const clipModalYoloSequenceEvents = [...clipModalYoloLabelEvents]
     .sort((a, b) => yoloLabelEventSortValue(a, 0) - yoloLabelEventSortValue(b, 0))
+  const clipModalSelectedYoloStateEvent = clipModalSelectedYoloTrackId
+    ? latestYoloLabelEventForTrack(clipModalYoloLabelEvents, clipModalSelectedYoloTrackId, clipModalPlaybackSeconds)
+    : null
+  const clipModalSelectedYoloStateLabel = clipModalSelectedYoloStateEvent
+    ? yoloLabelFromEvent(clipModalSelectedYoloStateEvent)
+    : null
+  const clipModalYoloSequenceRows = clipModalYoloSequenceEvents
+    .filter((event) => !clipModalSelectedYoloTrackId || event.track_id === clipModalSelectedYoloTrackId)
+    .map((event, index) => yoloSequenceRowFromEvent(event, index))
+    .slice(-8)
   const clipModalYoloSequenceSummary = clipModalYoloSequenceEvents
     .slice(-5)
     .map((event) => {
@@ -4800,6 +4842,90 @@ export function WatchReportView({
                   {clipModalYoloSequenceSummary ? <span title={clipModalYoloSequenceSummary} style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#67e8f9' }}>Seq: {clipModalYoloSequenceSummary}</span> : null}
                 </div>
               </div>
+              {clipModalYoloSequenceRows.length > 0 ? (
+                <section
+                  data-qid="watch:clip-modal:yolo-identity-sequence"
+                  aria-label="YOLO identity sequence"
+                  onClick={(event) => event.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    left: 14,
+                    top: 58,
+                    zIndex: 9,
+                    width: 300,
+                    maxWidth: 'calc(100% - 28px)',
+                    border: '1px solid rgba(34,211,238,0.28)',
+                    borderRadius: 8,
+                    background: 'rgba(2,6,12,0.82)',
+                    boxShadow: '0 16px 36px rgba(0,0,0,0.42)',
+                    backdropFilter: 'blur(10px)',
+                    padding: 10,
+                    display: 'grid',
+                    gap: 8,
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ color: '#67e8f9', fontSize: 10, fontWeight: 950, letterSpacing: '0.14em', textTransform: 'uppercase' }}>YOLO identity sequence</div>
+                    <div style={{ color: '#9fb4ca', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', fontSize: 10, fontWeight: 850 }}>
+                      {clipModalSelectedYoloTrackId || 'all tracks'}
+                    </div>
+                  </div>
+                  {clipModalSelectedYoloTrackId ? (
+                    <div
+                      data-qid="watch:clip-modal:yolo-identity-current-state"
+                      style={{
+                        border: '1px solid rgba(148,163,184,0.18)',
+                        borderRadius: 6,
+                        background: 'rgba(15,23,42,0.64)',
+                        padding: '7px 8px',
+                        display: 'grid',
+                        gap: 3,
+                      }}
+                    >
+                      <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>State at {clipModalPlaybackSeconds.toFixed(2)}s</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span style={{ color: clipModalSelectedYoloStateLabel ? '#f8fafc' : '#fde68a', fontSize: 13, fontWeight: 900 }}>
+                          {clipModalSelectedYoloStateLabel?.characterName || (clipModalSelectedYoloStateEvent ? 'Unassigned' : 'Unknown')}
+                        </span>
+                        <span style={{ color: '#9fb4ca', fontSize: 10, fontWeight: 850 }}>
+                          {clipModalSelectedYoloStateEvent
+                            ? isYoloIdentityStopEvent(clipModalSelectedYoloStateEvent)
+                              ? 'sequence stop'
+                              : 'accepted'
+                            : 'no prior event'}
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div style={{ display: 'grid', gap: 5, maxHeight: 168, overflow: 'auto' }}>
+                    {clipModalYoloSequenceRows.map((row) => (
+                      <div
+                        key={row.key}
+                        data-qid="watch:clip-modal:yolo-identity-sequence-row"
+                        data-track-id={row.trackId}
+                        data-sequence-state={row.tone}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '54px minmax(0, 1fr)',
+                          gap: 7,
+                          alignItems: 'start',
+                          borderLeft: `3px solid ${row.tone === 'accept' ? '#a78bfa' : row.tone === 'reset' ? '#fca5a5' : '#facc15'}`,
+                          background: row.tone === 'accept' ? 'rgba(167,139,250,0.10)' : row.tone === 'reset' ? 'rgba(248,113,113,0.10)' : 'rgba(250,204,21,0.10)',
+                          borderRadius: 5,
+                          padding: '5px 7px',
+                        }}
+                      >
+                        <span style={{ color: '#dbeafe', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', fontSize: 10, fontWeight: 900 }}>{row.timeLabel}</span>
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ display: 'block', color: '#f8fafc', fontSize: 11, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.trackId} · {row.stateLabel}</span>
+                          <span style={{ display: 'block', color: '#94a3b8', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.detailLabel}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
               <div
 	                data-qid="watch:clip-modal:draw-surface"
 	                onPointerDown={onClipModalPointerDown}
