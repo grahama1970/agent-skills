@@ -41,4 +41,7 @@ Every report must include:
 - `intent_policy_source` for every Embry speech item; normal turns require
   `memory.intent`, while direct sanity speech may use
   `direct_sanity_explicit_policy`
+- `pause_strategy` and `interrupt_policy` for every Embry speech item,
+  including barge-in action, stale chunk behavior, ducking behavior, and whether
+  the new turn wins
 - what remains unverified

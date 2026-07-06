@@ -399,6 +399,7 @@ conversation_tone or tone
 delivery_stage
 pace
 pause_strategy
+interrupt_policy
 emotion_tags
 chatterbox_tags
 cue_policy
@@ -409,6 +410,26 @@ answer_text_hash
 tts_render_text_hash
 cue_reason
 ```
+
+Default `interrupt_policy` for Embry speech:
+
+```json
+{
+  "interruptible": true,
+  "barge_in_action": "cancel_old_turn",
+  "duck_on_user_speech": true,
+  "skip_stale_chunks": true,
+  "new_turn_wins": true,
+  "acknowledgement_tone": "interrupted",
+  "acknowledgement_text": "Okay, stopping that."
+}
+```
+
+For identity clarification, firm boundaries, and one-at-a-time overlap handling,
+use `pause_strategy="boundary_stop_then_prompt"` and keep the same cancellation
+defaults. For two non-Embry speakers overlapping, the preferred acknowledgement
+is `"Hey, one at a time?"` with `tone="one_at_a_time_interrupt"` or
+`tone="firm_boundary"`.
 
 `emotion_tags` are semantic conversation labels such as `warm`, `careful`,
 `playful`, `relieved`, `concerned`, `firm`, or `wait_presence`. `chatterbox_tags`

@@ -25,6 +25,15 @@ app = typer.Typer(help="Embry voice control live sanity harness.")
 DEFAULT_OUTPUT_ROOT = Path("/mnt/storage12tb/skills/embry-voice-control/outputs/e2e")
 DEFAULT_BASE_URL = "http://127.0.0.1:3001/api/projects/embry-voice"
 DEFAULT_CHAT_URL = "http://127.0.0.1:3002/#embry-voice"
+DEFAULT_INTERRUPT_POLICY = {
+    "interruptible": True,
+    "barge_in_action": "cancel_old_turn",
+    "duck_on_user_speech": True,
+    "skip_stale_chunks": True,
+    "new_turn_wins": True,
+    "acknowledgement_tone": "interrupted",
+    "acknowledgement_text": "Okay, stopping that.",
+}
 
 
 def utc_now() -> str:
@@ -124,6 +133,8 @@ def speech_policy_missing(
         "voice_policy_chatterbox_tags": "chatterbox_tags|chatterboxTags|voice_envelope.chatterbox_tags|voiceEnvelope.chatterboxTags",
         "voice_policy_cue_policy": "cue_policy|cuePolicy|voice_envelope.cue_policy|voiceEnvelope.cuePolicy",
         "voice_policy_source": "intent_policy_source|intentPolicySource|voice_envelope.intent_policy_source|voiceEnvelope.intentPolicySource",
+        "voice_policy_pause_strategy": "pause_strategy|pauseStrategy|voice_envelope.pause_strategy|voiceEnvelope.pauseStrategy",
+        "voice_policy_interrupt_policy": "interrupt_policy|interruptPolicy|voice_envelope.interrupt_policy|voiceEnvelope.interruptPolicy",
     }
     missing = [
         label
@@ -276,6 +287,7 @@ def adapted_live_turn_payload(run_id: str, text: str) -> dict[str, Any]:
         "chatEnabled": True,
         "replayEnabled": True,
         "requireMemoryIntentVoicePolicy": True,
+        "requireInterruptPolicy": True,
     }
 
 
@@ -297,6 +309,7 @@ def adapted_speak_payload(run_id: str) -> dict[str, Any]:
         "cue_policy": "direct_sanity_explicit_policy",
         "intent_policy_source": "direct_sanity_explicit_policy",
         "pause_strategy": "short_answer_no_filler",
+        "interrupt_policy": DEFAULT_INTERRUPT_POLICY,
         "interruptible": True,
         "playLocal": False,
     }
