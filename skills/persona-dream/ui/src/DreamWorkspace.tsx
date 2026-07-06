@@ -1065,6 +1065,7 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const shotText = String(panel.shot ?? 'Missing shot direction')
   const shotCode = storyboardShotCode(shotText)
   const copyPanelPayload = async () => {
+    setCopyStatus('Building')
     const payload = {
       schema: 'persona_dream.storyboard_panel_prompt_payload.v1',
       panel_id: panel.panel_id ?? null,
@@ -1084,9 +1085,90 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
       generation_prompt: generationPrompt,
       accepted_frame: primaryFrame || null,
     }
-    await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
-    setCopyStatus('Copied')
-    window.setTimeout(() => setCopyStatus(''), 1400)
+    const panelId = sanitizeZipName(String(panel.panel_id ?? 'storyboard-panel'))
+    const jsonPayload = JSON.stringify(payload, null, 2)
+    const textPayload = storyboardPanelPromptText(payload)
+    const checklistPayload = JSON.stringify(storyboardReviewerChecklist, null, 2)
+    const manifestPayload = JSON.stringify({
+      schema: 'persona_dream.storyboard_panel_clipboard_bundle.v1',
+      panel_id: panel.panel_id ?? null,
+      created_at: new Date().toISOString(),
+      includes: [
+        'panel_prompt_payload.json',
+        'panel_prompt_payload.txt',
+        'panel_reviewer_checklist.json',
+        'accepted_frame/* when available',
+        'references/* when available',
+      ],
+    }, null, 2)
+    const filename = `${panelId}-prompt-payload.zip`
+    const serverEntries: Array<Record<string, string>> = [
+      { name: 'panel_prompt_payload.json', text: jsonPayload },
+      { name: 'panel_prompt_payload.txt', text: textPayload },
+      { name: 'panel_reviewer_checklist.json', text: checklistPayload },
+      { name: 'manifest.json', text: manifestPayload },
+    ]
+    if (primaryFrame) {
+      const raw = String(primaryFrame.path || primaryFrame.image_path || '')
+      const extension = assetExtension(raw)
+      serverEntries.push({ name: `accepted_frame/${panelId}-accepted-frame.${extension}`, path: raw })
+    }
+    references.forEach((reference, index) => {
+      const raw = String(reference.path || reference.url || '')
+      if (!raw || raw.startsWith('http')) return
+      const label = sanitizeZipName(String(reference.id ?? reference.title ?? `reference-${index + 1}`))
+      const extension = assetExtension(raw)
+      serverEntries.push({ name: `references/${String(index + 1).padStart(2, '0')}-${label}.${extension}`, path: raw })
+    })
+
+    try {
+      const serverCopied = await copyPanelBundleToDesktopClipboard(filename, serverEntries)
+      if (serverCopied) {
+        setCopyStatus('Copied zip')
+        window.setTimeout(() => setCopyStatus(''), 1600)
+        return
+      }
+    } catch {
+      // Fall through to browser-only zip/download fallback when the local API is unavailable.
+    }
+
+    const entries: ZipFileEntry[] = [
+      {
+        name: 'panel_prompt_payload.json',
+        data: textEncoder.encode(jsonPayload),
+      },
+      {
+        name: 'panel_prompt_payload.txt',
+        data: textEncoder.encode(textPayload),
+      },
+      {
+        name: 'panel_reviewer_checklist.json',
+        data: textEncoder.encode(checklistPayload),
+      },
+      {
+        name: 'manifest.json',
+        data: textEncoder.encode(manifestPayload),
+      },
+    ]
+
+    const imageEntries = await Promise.all([
+      primaryFrame ? fetchZipAsset(
+        String(primaryFrame.path || primaryFrame.image_path || ''),
+        `accepted_frame/${panelId}-accepted-frame`,
+      ) : Promise.resolve(null),
+      ...references.map((reference, index) => {
+        const raw = String(reference.path || reference.url || '')
+        const label = sanitizeZipName(String(reference.id ?? reference.title ?? `reference-${index + 1}`))
+        return fetchZipAsset(raw, `references/${String(index + 1).padStart(2, '0')}-${label}`)
+      }),
+    ])
+    entries.push(...imageEntries.filter(Boolean) as ZipFileEntry[])
+
+    const zip = createStoredZip(entries)
+    const copied = await copyZipBlobToClipboard(zip)
+    if (!copied) downloadBlob(zip, filename)
+    setCopyStatus(copied ? 'Copied zip' : 'Downloaded')
+    window.setTimeout(() => setCopyStatus(''), 1600)
   }
 
   return (
@@ -4860,6 +4942,236 @@ function graphNodeFromEndpoint(endpoint: string, rootEndpoint: string, doc?: Rec
     tom_tags: Array.isArray(doc?.tom_tags) ? doc.tom_tags.map(String) : undefined,
     source_ref: typeof sourceRef === 'string' ? sourceRef.replace(/\s+/g, ' ').trim() : endpoint,
   }
+}
+
+type ZipFileEntry = {
+  name: string
+  data: Uint8Array
+}
+
+const textEncoder = new TextEncoder()
+
+const storyboardReviewerChecklist = {
+  schema: 'persona_dream.storyboard_panel_reviewer_checklist.v1',
+  hard_acceptance_rule: 'accepted=true only when every required identity is visible, reference-matched, and scene-appropriate; composition-only success cannot pass.',
+  identity_checks: {
+    required_per_identity_fields: [
+      'required',
+      'visible',
+      'matches_reference',
+      'confidence',
+      'failure_code',
+      'visible_evidence',
+    ],
+    blocking_failure_codes: [
+      'embry_not_visible',
+      'kai_not_visible',
+      'embry_identity_mismatch',
+      'kai_identity_mismatch',
+      'generic_surfer_substitution',
+      'wrong_gender_or_age_presentation',
+      'identity_too_distant_or_occluded',
+    ],
+  },
+  composition_checks: [
+    'is_storyboard_frame',
+    'not_contact_sheet',
+    'not_collage',
+    'not_reference_board',
+    'setting_matches',
+    'aspect_ratio_matches',
+  ],
+  rule_priority: [
+    'identity failures outrank aspect/layout success',
+    'contact sheets are reference inputs only, never valid storyboard frame outputs',
+    'failed panels must return exact blocker codes and cannot be accepted as provider-ready',
+  ],
+}
+
+function storyboardPanelPromptText(payload: Record<string, unknown>): string {
+  const prompt = storyboardRecord(payload.generation_prompt)
+  const startFrame = storyboardRecord(payload.start_frame)
+  const endFrame = storyboardRecord(payload.end_frame)
+  const lines = [
+    `Panel: ${String(payload.panel_id ?? 'unknown')}`,
+    `Time range: ${JSON.stringify(payload.time_range ?? {})}`,
+    '',
+    'SHOT',
+    String(payload.shot ?? ''),
+    '',
+    'ACTION',
+    String(payload.action ?? ''),
+    '',
+    payload.dialogue ? `DIALOGUE\n${String(payload.dialogue)}\n` : '',
+    'PANEL GENERATION PROMPT',
+    String(prompt.panel_prompt ?? ''),
+    '',
+    'START FRAME PROMPT',
+    String(prompt.start_frame_prompt ?? startFrame.description ?? ''),
+    '',
+    'END FRAME PROMPT',
+    String(prompt.end_frame_prompt ?? endFrame.description ?? ''),
+    '',
+    'NEGATIVE PROMPT',
+    String(prompt.negative_prompt ?? ''),
+    '',
+    'REQUIRED ENTITIES',
+    storyboardStringList(payload.required_entities).join(', '),
+    '',
+    'COVERAGE SEED IDS',
+    storyboardStringList(payload.coverage_seed_ids).join(', '),
+    '',
+    'REVIEWER HARD GATE',
+    'Reject when Embry or Kai are required but missing, generic, wrong, occluded, too distant, or not reference-matched.',
+  ]
+  return lines.filter((line) => line !== '').join('\n')
+}
+
+function sanitizeZipName(value: string): string {
+  return value
+    .replace(/[^a-z0-9._-]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120) || 'asset'
+}
+
+function assetExtension(path: string, contentType?: string | null): string {
+  const fromPath = path.match(/\.(png|jpe?g|webp|gif|mp4|mov|wav|mp3)(?:[?#].*)?$/i)?.[1]
+  if (fromPath) return fromPath.toLowerCase().replace('jpeg', 'jpg')
+  if (contentType?.includes('png')) return 'png'
+  if (contentType?.includes('jpeg')) return 'jpg'
+  if (contentType?.includes('webp')) return 'webp'
+  if (contentType?.includes('gif')) return 'gif'
+  if (contentType?.includes('mp4')) return 'mp4'
+  if (contentType?.includes('mpeg')) return 'mp3'
+  if (contentType?.includes('wav')) return 'wav'
+  return 'bin'
+}
+
+function crc32(data: Uint8Array): number {
+  let crc = 0xffffffff
+  for (let index = 0; index < data.length; index += 1) {
+    crc ^= data[index]
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1))
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0
+}
+
+function writeUint16(output: number[], value: number): void {
+  output.push(value & 0xff, (value >>> 8) & 0xff)
+}
+
+function writeUint32(output: number[], value: number): void {
+  output.push(value & 0xff, (value >>> 8) & 0xff, (value >>> 16) & 0xff, (value >>> 24) & 0xff)
+}
+
+function createStoredZip(entries: ZipFileEntry[]): Blob {
+  const local: number[] = []
+  const central: number[] = []
+  const now = new Date()
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2)
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()
+  let offset = 0
+
+  for (const entry of entries) {
+    const name = textEncoder.encode(entry.name)
+    const checksum = crc32(entry.data)
+    const size = entry.data.length
+    const localOffset = offset
+
+    writeUint32(local, 0x04034b50)
+    writeUint16(local, 20)
+    writeUint16(local, 0)
+    writeUint16(local, 0)
+    writeUint16(local, dosTime)
+    writeUint16(local, dosDate)
+    writeUint32(local, checksum)
+    writeUint32(local, size)
+    writeUint32(local, size)
+    writeUint16(local, name.length)
+    writeUint16(local, 0)
+    local.push(...name, ...entry.data)
+    offset += 30 + name.length + size
+
+    writeUint32(central, 0x02014b50)
+    writeUint16(central, 20)
+    writeUint16(central, 20)
+    writeUint16(central, 0)
+    writeUint16(central, 0)
+    writeUint16(central, dosTime)
+    writeUint16(central, dosDate)
+    writeUint32(central, checksum)
+    writeUint32(central, size)
+    writeUint32(central, size)
+    writeUint16(central, name.length)
+    writeUint16(central, 0)
+    writeUint16(central, 0)
+    writeUint16(central, 0)
+    writeUint16(central, 0)
+    writeUint32(central, 0)
+    writeUint32(central, localOffset)
+    central.push(...name)
+  }
+
+  const centralOffset = local.length
+  writeUint32(central, 0x06054b50)
+  writeUint16(central, 0)
+  writeUint16(central, 0)
+  writeUint16(central, entries.length)
+  writeUint16(central, entries.length)
+  writeUint32(central, central.length)
+  writeUint32(central, centralOffset)
+  writeUint16(central, 0)
+
+  return new Blob([new Uint8Array(local), new Uint8Array(central)], { type: 'application/zip' })
+}
+
+async function fetchZipAsset(rawPath: string, zipPath: string): Promise<ZipFileEntry | null> {
+  const url = dreamAssetUrl(rawPath)
+  if (!url) return null
+  const response = await fetch(url)
+  if (!response.ok) return null
+  const blob = await response.blob()
+  const data = new Uint8Array(await blob.arrayBuffer())
+  const extension = assetExtension(rawPath, blob.type)
+  const normalized = zipPath.includes('.') ? zipPath : `${zipPath}.${extension}`
+  return { name: normalized, data }
+}
+
+async function copyPanelBundleToDesktopClipboard(filename: string, entries: Array<Record<string, string>>): Promise<boolean> {
+  const response = await fetch('/api/projects/dream/panel-prompt-bundle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename, entries }),
+  })
+  if (!response.ok) return false
+  const result = await response.json()
+  return result?.status === 'ok' && result?.copiedToClipboard === true
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+async function copyZipBlobToClipboard(blob: Blob): Promise<boolean> {
+  const clipboard = navigator.clipboard as Clipboard & {
+    write?: (items: ClipboardItem[]) => Promise<void>
+  }
+  if (!clipboard?.write || typeof ClipboardItem === 'undefined') return false
+  await clipboard.write([
+    new ClipboardItem({
+      'application/zip': blob,
+    }),
+  ])
+  return true
 }
 
 function relationshipColor(relationship: string): string {
