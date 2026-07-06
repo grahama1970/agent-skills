@@ -631,16 +631,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     event.confidence = label.confidence
   }
 
-  const nextEvents = events.filter((existing: unknown) => {
-    if (!existing || typeof existing !== 'object') return true
-    const existingRecord = existing as Record<string, unknown>
-    return !(
-      existingRecord.action === action &&
-      existingRecord.track_id === trackId &&
-      existingRecord.box_key === boxKey
-    )
-  })
-  nextEvents.push(event)
+  const nextEvents = [...events, event]
 
   const nextReceipt = {
     schema: 'watch.yolo_track_labels.v1',
@@ -663,6 +654,7 @@ app.post('/api/projects/watch/yolo-labels', async (req, res) => {
     safeFilePart(trackId, 'track'),
     safeFilePart(action, 'event'),
     safeFilePart(boxKey || 'track', 'box'),
+    safeFilePart(String(event.id || Date.now()), 'id'),
   ].join('_')
   const memorySync = await storeYoloLabelInMemory({
     _key: eventMemoryKey,
