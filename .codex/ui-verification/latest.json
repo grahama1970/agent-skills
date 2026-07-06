@@ -1,10 +1,10 @@
 {
-  "verified_at": "2026-07-05T21:16:02.095178+00:00",
+  "verified_at": "2026-07-06T16:18:58.707809+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
   "url": "http://localhost:3002/dream#storyboard",
-  "name": "dream-storyboard-pass-effective-status",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/dream-storyboard-pass-effective-status/20260705T211527Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/dream-storyboard-pass-effective-status/20260705T211527Z.read.json"
+  "name": "persona-dream-storyboard-blocked-status-readable-v2",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/persona-dream-storyboard-blocked-status-readable-v2/20260706T161823Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/persona-dream-storyboard-blocked-status-readable-v2/20260706T161823Z.read.json"
 }

@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
-  Clock,
   CheckCircle2,
   Copy,
   ClipboardCheck,
@@ -593,9 +592,6 @@ function isStagePassed(stage: DreamStage): boolean {
 function stageMissingMessage(stage: DreamStage): string {
   if (isStagePassed(stage)) return 'Accepted evidence is present for this phase.'
   if (stage.id === '07') {
-    if (phase07HasAcceptedStoryboardEvidence(stage)) {
-      return 'Accepted storyboard packet and frame evidence are present for this phase.'
-    }
     if (/PANEL_ASSETS/i.test(stage.status)) {
       return stage.failureOrGap || 'Storyboard references are attached. Remaining blocker: accepted storyboard panel images/start-end frames are not present yet.'
     }
@@ -608,21 +604,7 @@ function stageMissingMessage(stage: DreamStage): string {
 }
 
 function effectiveStageStatus(stage: DreamStage): string {
-  if (stage.id === '07' && phase07HasAcceptedStoryboardEvidence(stage)) {
-    return 'PASS_PANEL_REVIEWED'
-  }
   return stage.status
-}
-
-function phase07HasAcceptedStoryboardEvidence(stage: DreamStage): boolean {
-  const hasAcceptedPacket = stage.artifacts.some((artifact) =>
-    /phase_07_storyboard_live_tau\/storyboard_packet\.json$/i.test(artifact.path)
-      || /phase_07_storyboard_live_tau\/receipts\/storyboard_(review_verdict|packet_receipt)\.json$/i.test(artifact.path)
-  )
-  const generatedFrameCount = stage.images.filter((image) =>
-    /phase_07_storyboard_live_tau\/generated_storyboard_frames\/sb_\d+_(start|end)_frame\.png$/i.test(image.path)
-  ).length
-  return hasAcceptedPacket && generatedFrameCount >= 8
 }
 
 function ArtifactField({ label, value }: { label: string; value?: string }) {
@@ -787,6 +769,34 @@ function StageCard({
 }
 
 function StageCardHeader({ stage }: { stage: DreamStage }) {
+  const [phase07ReviewerStatus, setPhase07ReviewerStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPhase07ReviewerStatus() {
+      if (stage.id !== '07') {
+        setPhase07ReviewerStatus(null)
+        return
+      }
+      const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
+      const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
+      try {
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`)
+        if (!response.ok) throw new Error(`storyboard review HTTP ${response.status}`)
+        const payload = await response.json()
+        const status = String(payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
+        if (!cancelled) setPhase07ReviewerStatus(status)
+      } catch {
+        if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
+      }
+    }
+    void loadPhase07ReviewerStatus()
+    return () => { cancelled = true }
+  }, [stage.id, stage.artifacts])
+
+  const headerStatus = stage.id === '07' && phase07ReviewerStatus ? phase07ReviewerStatus : effectiveStageStatus(stage)
+  const headerPassed = statusTone(headerStatus) === 'pass'
+
   return (
     <div style={styles.stageHeaderStack}>
       <div style={styles.stageCardHeader}>
@@ -827,12 +837,14 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
               <span style={styles.stageHeaderCopyLabel}>Crew Payload</span>
             </button>
           )}
-          <StatusBadge status={effectiveStageStatus(stage)} />
+          <StatusBadge status={headerStatus} />
         </div>
       </div>
-      {!isStagePassed(stage) && (
+      {!headerPassed && (
         <div style={styles.stageStatusHelp}>
-          {stageMissingMessage(stage)}
+          {stage.id === '07' && /MISSING|BLOCKED|FAIL/i.test(headerStatus)
+            ? 'Storyboard reviewer rejected the current panels. The accepted frames must use the required storyboard aspect ratio and prove Embry/Kai visual identity against the reference/contact sheets before this phase can pass.'
+            : stageMissingMessage(stage)}
         </div>
       )}
     </div>
@@ -875,44 +887,76 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
 }
 
 const phase07StoryboardPacketPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json'
+const phase07StoryboardVerdictPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json'
 
 function StoryboardConsole({ stage }: { stage: DreamStage }) {
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
+  const [verdict, setVerdict] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
+  const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
   const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
+  const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
 
   useEffect(() => {
     let cancelled = false
     async function loadPacket() {
       try {
         setLoadError(null)
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const payload = await response.json()
-        if (!cancelled) setPacket(payload)
+        const [packetResponse, verdictResponse] = await Promise.all([
+          fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`),
+          fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`),
+        ])
+        if (!packetResponse.ok) throw new Error(`storyboard packet HTTP ${packetResponse.status}`)
+        const payload = await packetResponse.json()
+        const verdictPayload = verdictResponse.ok ? await verdictResponse.json() : null
+        if (!cancelled) {
+          setPacket(payload)
+          setVerdict(verdictPayload)
+        }
       } catch (error) {
         if (!cancelled) {
           setPacket(null)
+          setVerdict(null)
           setLoadError(error instanceof Error ? error.message : String(error))
         }
       }
     }
     void loadPacket()
     return () => { cancelled = true }
-  }, [packetPath])
+  }, [packetPath, verdictPath])
 
   const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
   const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
+  const reviewBlockers = Array.isArray(verdict?.blockers) ? verdict.blockers.map(String).filter(Boolean) : []
   const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
   const panelsHaveAcceptedFrames = panels.length >= 2 && panels.every(panelHasAcceptedStoryboardFrames)
-  const status = panelsHaveAcceptedFrames
-    ? 'PASS_PANEL_REVIEWED'
+  const reviewAccepted = Boolean(verdict?.accepted) && String(verdict?.status ?? '').includes('PASS')
+  const status = verdict
+    ? String(verdict.status ?? (reviewAccepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
+    : panelsHaveAcceptedFrames
+      ? 'REVIEW_VERDICT_MISSING'
     : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
-  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames
+  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames || !reviewAccepted
 
   return (
     <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
+      <style>{`
+        details[data-storyboard-accordion] > summary::-webkit-details-marker {
+          display: none;
+        }
+        details[data-storyboard-accordion] > summary::marker {
+          content: "";
+          font-size: 0;
+        }
+        summary[data-storyboard-accordion-header]:hover {
+          background: rgba(255, 255, 255, 0.08) !important;
+          color: #e5e7eb !important;
+        }
+        details[data-storyboard-accordion][open] [data-storyboard-accordion-chevron] {
+          transform: rotate(180deg);
+        }
+      `}</style>
       <div style={nvis.storyboardHeader}>
         <div>
           <div style={nvis.storyboardEyebrow}>Animatic Storyboard</div>
@@ -928,14 +972,36 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
         </div>
       </div>
 
-      {(loadError || !panelsHaveAcceptedFrames) && (
+      {(loadError || isBlocked) && (
         <div style={nvis.storyboardBlockerBox}>
           <strong>Storyboard gate is not satisfied.</strong>
           <span>
             {loadError
               ? `Storyboard packet could not be loaded: ${loadError}.`
+              : reviewBlockers.length
+                ? `Panel reviewer rejected this storyboard: ${reviewBlockers[0]}`
               : 'A single generated image is not a storyboard. Phase 07 requires multiple timed panels with text, references, coverage seed IDs, and reviewer acceptance.'}
           </span>
+        </div>
+      )}
+
+      {reviewBlockers.length > 0 && (
+        <div style={nvis.storyboardBlockerList}>
+          <div style={nvis.storyboardBlockerTitle}>Panel reviewer blockers</div>
+          {reviewBlockers.slice(0, 8).map((blocker, index) => (
+            <div key={`${blocker}-${index}`} style={nvis.storyboardBlockerItem}>
+              <div style={nvis.storyboardBlockerErrorText}>{blocker}</div>
+              <div style={nvis.storyboardBlockerVerdict}>
+                <span style={nvis.storyboardBlockerVerdictLabel}>Reviewer verdict</span>
+                <span style={nvis.storyboardBlockerVerdictStatus}>{String(verdict?.status ?? 'BLOCKED')}</span>
+              </div>
+            </div>
+          ))}
+          {reviewBlockers.length > 8 && (
+            <div style={nvis.storyboardBlockerMore}>
+              +{reviewBlockers.length - 8} additional reviewer blocker{reviewBlockers.length - 8 === 1 ? '' : 's'} in storyboard_review_verdict.json
+            </div>
+          )}
         </div>
       )}
 
@@ -981,6 +1047,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
 }
 
 function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
+  const [copyStatus, setCopyStatus] = useState('')
   const range = panel.time_range && typeof panel.time_range === 'object' ? panel.time_range as Record<string, unknown> : {}
   const references = Array.isArray(panel.references) ? panel.references as Array<Record<string, unknown>> : []
   const seeds = Array.isArray(panel.coverage_seed_ids) ? panel.coverage_seed_ids.map(String) : []
@@ -994,9 +1061,33 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const actingBeats = storyboardStringList(panel.acting_beats)
   const primaryFrame = acceptedStoryboardFrame(startFrame) || acceptedStoryboardFrame(endFrame)
   const primaryReferenceUrl = primaryFrame ? dreamAssetUrl(String(primaryFrame.path || primaryFrame.image_path || '')) : ''
-  const timeLabel = `${String(range.start_s ?? '?')}s-${String(range.end_s ?? '?')}s`
+  const timeLabel = `${String(range.start_s ?? '?')}-${String(range.end_s ?? '?')}`
   const shotText = String(panel.shot ?? 'Missing shot direction')
   const shotCode = storyboardShotCode(shotText)
+  const copyPanelPayload = async () => {
+    const payload = {
+      schema: 'persona_dream.storyboard_panel_prompt_payload.v1',
+      panel_id: panel.panel_id ?? null,
+      time_range: range,
+      shot: panel.shot ?? null,
+      action: panel.action ?? null,
+      dialogue: panel.dialogue ?? null,
+      required_entities: entities,
+      coverage_seed_ids: seeds,
+      references,
+      start_frame: startFrame,
+      end_frame: endFrame,
+      camera: cameraPlan,
+      lighting: lightingPlan,
+      acting_beats: actingBeats,
+      production_notes: productionNotes,
+      generation_prompt: generationPrompt,
+      accepted_frame: primaryFrame || null,
+    }
+    await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+    setCopyStatus('Copied')
+    window.setTimeout(() => setCopyStatus(''), 1400)
+  }
 
   return (
     <article data-qid="dream:storyboard:panel" style={nvis.storyboardPanelCard}>
@@ -1016,8 +1107,19 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
         )}
         <div style={nvis.storyboardFrameShade} />
         <div style={nvis.storyboardFrameTop}>
-          <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')}</span>
-          <span style={nvis.storyboardPanelTime}><Clock size={12} /> {timeLabel}</span>
+          <span style={nvis.storyboardPanelId}>{String(panel.panel_id ?? 'panel')} · {timeLabel}</span>
+          <div style={nvis.storyboardPanelFrameActions}>
+            <button
+              type="button"
+              data-qid={`dream:storyboard:copy-panel:${String(panel.panel_id ?? 'panel')}`}
+              title="Copy full panel prompt payload"
+              aria-label="Copy full panel prompt payload"
+              onClick={() => { void copyPanelPayload() }}
+              style={nvis.storyboardCopyButton}
+            >
+              {copyStatus ? <ClipboardCheck size={13} /> : <Copy size={13} />}
+            </button>
+          </div>
         </div>
         <div style={nvis.storyboardFrameBottom}>
           <span style={nvis.storyboardShotCode}><Camera size={12} /> {shotCode}</span>
@@ -1028,44 +1130,62 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
       <div style={nvis.storyboardPanelBody}>
         <p style={nvis.storyboardAction}>{String(panel.action ?? 'Missing action text')}</p>
         {panel.dialogue && <p style={nvis.storyboardDialogue}>{String(panel.dialogue)}</p>}
-        <StoryboardPromptBlock prompt={generationPrompt} />
-        <div style={nvis.storyboardSupportGrid}>
-          <StoryboardSupportBlock
-            title="Start Frame"
-            body={String(startFrame.description ?? 'Missing start-frame description')}
-            items={storyboardStringList(startFrame.visual_requirements)}
-          />
-          <StoryboardSupportBlock
-            title="End Frame"
-            body={String(endFrame.description ?? 'Missing end-frame description')}
-            items={storyboardStringList(endFrame.visual_requirements)}
-          />
-          <StoryboardSupportBlock
-            title="Camera / Lighting"
-            body={`${String(cameraPlan.movement ?? 'Missing camera movement')} ${String(cameraPlan.composition ?? '')}`.trim()}
-            items={[
-              String(cameraPlan.camera_equipment ?? 'camera equipment missing'),
-              String(lightingPlan.time_of_day ?? 'time of day missing'),
-              String(lightingPlan.quality ?? 'lighting quality missing'),
-            ]}
-          />
-          <StoryboardSupportBlock
-            title="Acting Beats"
-            body={actingBeats.length ? actingBeats.join(' ') : 'Missing acting beats'}
-            items={[
-              `Producer: ${String(productionNotes.producer ?? 'missing')}`,
-              `Director: ${String(productionNotes.director ?? 'missing')}`,
-              `Scriptwriter: ${String(productionNotes.scriptwriter ?? 'missing')}`,
-            ]}
-          />
-        </div>
+        <details data-storyboard-accordion style={nvis.storyboardAccordion}>
+          <summary data-storyboard-accordion-header style={nvis.storyboardAccordionHeader}>
+            <span>View Generation Specs</span>
+            <ChevronDown data-storyboard-accordion-chevron size={14} style={nvis.storyboardAccordionChevron} />
+          </summary>
+          <div style={nvis.storyboardAccordionContent}>
+            <StoryboardPromptBlock prompt={generationPrompt} />
+            <div style={nvis.storyboardSupportGrid}>
+              <StoryboardSupportBlock
+                title="Start Frame"
+                body={String(startFrame.description ?? 'Missing start-frame description')}
+                items={storyboardStringList(startFrame.visual_requirements)}
+              />
+              <StoryboardSupportBlock
+                title="End Frame"
+                body={String(endFrame.description ?? 'Missing end-frame description')}
+                items={storyboardStringList(endFrame.visual_requirements)}
+              />
+              <StoryboardSupportBlock
+                title="Camera / Lighting"
+                body={`${String(cameraPlan.movement ?? 'Missing camera movement')} ${String(cameraPlan.composition ?? '')}`.trim()}
+                items={[
+                  String(cameraPlan.camera_equipment ?? 'camera equipment missing'),
+                  String(lightingPlan.time_of_day ?? 'time of day missing'),
+                  String(lightingPlan.quality ?? 'lighting quality missing'),
+                ]}
+              />
+              <StoryboardSupportBlock
+                title="Acting Beats"
+                body={actingBeats.length ? actingBeats.join(' ') : 'Missing acting beats'}
+                items={[
+                  `Producer: ${String(productionNotes.producer ?? 'missing')}`,
+                  `Director: ${String(productionNotes.director ?? 'missing')}`,
+                  `Scriptwriter: ${String(productionNotes.scriptwriter ?? 'missing')}`,
+                ]}
+              />
+            </div>
+          </div>
+        </details>
         <div style={nvis.storyboardTrackRow}>
-          <div style={nvis.storyboardSeedRow}>
-            {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
-          </div>
-          <div style={nvis.storyboardEntityRow}>
-            {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
-          </div>
+          {seeds.length > 0 && (
+            <div style={nvis.storyboardTagGroup}>
+              <span style={nvis.storyboardTagLabel}>Seeds</span>
+              <div style={nvis.storyboardSeedRow}>
+                {seeds.map((seed) => <span key={seed} style={nvis.storyboardSeed}>{seed}</span>)}
+              </div>
+            </div>
+          )}
+          {entities.length > 0 && (
+            <div style={nvis.storyboardTagGroup}>
+              <span style={nvis.storyboardTagLabel}>Entities</span>
+              <div style={nvis.storyboardEntityRow}>
+                {entities.map((entity) => <span key={entity} style={nvis.storyboardEntity}>{entity}</span>)}
+              </div>
+            </div>
+          )}
         </div>
         {references.length > 0 && (
           <div style={nvis.storyboardReferenceRail}>
@@ -6164,9 +6284,38 @@ function AgentPane({
   onSubmitAction: (action: StageAction, noteOverride?: string) => void
 }) {
   const disabled = !selectedRun || !selectedStage
-  const selectedStageStatus = selectedStage ? effectiveStageStatus(selectedStage) : ''
+  const [phase07ReviewerStatus, setPhase07ReviewerStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPhase07ReviewerStatus() {
+      if (selectedStage?.id !== '07') {
+        setPhase07ReviewerStatus(null)
+        return
+      }
+      const verdictArtifact = selectedStage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
+      const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
+      try {
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`)
+        if (!response.ok) throw new Error(`storyboard review HTTP ${response.status}`)
+        const payload = await response.json()
+        const status = String(payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
+        if (!cancelled) setPhase07ReviewerStatus(status)
+      } catch {
+        if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
+      }
+    }
+    void loadPhase07ReviewerStatus()
+    return () => { cancelled = true }
+  }, [selectedStage?.id, selectedStage?.artifacts])
+
+  const selectedStageStatus = selectedStage
+    ? selectedStage.id === '07' && phase07ReviewerStatus
+      ? phase07ReviewerStatus
+      : effectiveStageStatus(selectedStage)
+    : ''
   const selectedStageMissing = /MISSING|BLOCKED|FAIL/i.test(selectedStageStatus)
-  const selectedStagePassed = selectedStage != null && isStagePassed(selectedStage)
+  const selectedStagePassed = selectedStage != null && statusTone(selectedStageStatus) === 'pass'
   const agentGuidance = (() => {
     if (!selectedStage) return 'Select a Dream run and phase before creating work orders.'
     if (selectedStage.id === '01') return 'The Idea Core appears insufficient. Define the character\'s core motivation or the environment\'s physical constraints.'
@@ -6179,6 +6328,9 @@ function AgentPane({
       return selectedStageMissing
         ? 'Crew choices exist in the UI, but Phase 03 still needs a saved crew contract JSON artifact in the run folder.'
         : ''
+    }
+    if (selectedStage.id === '07' && selectedStageMissing) {
+      return 'Storyboard reviewer rejected the current panels. The accepted frames must use the required storyboard aspect ratio and prove Embry/Kai visual identity against the reference/contact sheets before this phase can pass.'
     }
     return stageMissingMessage(selectedStage)
   })()
@@ -8871,14 +9023,12 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.45,
   },
   storyboardBlockerList: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 8,
-    alignItems: 'stretch',
-    padding: '10px 0 4px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: 12,
+    padding: '10px 0 18px',
   },
   storyboardBlockerTitle: {
-    flex: '1 0 100%',
     color: '#7f9bbd',
     fontSize: 11,
     fontWeight: 800,
@@ -8888,30 +9038,64 @@ const nvis: Record<string, CSSProperties> = {
   storyboardBlockerItem: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 5,
-    minWidth: 142,
-    maxWidth: 190,
-    border: '1px solid rgba(245,158,11,0.28)',
+    gap: 10,
+    minWidth: 0,
+    border: '1px solid rgba(180,83,9,0.72)',
     borderRadius: 10,
-    background: 'rgba(245,158,11,0.055)',
-    padding: '9px 10px',
+    background: 'rgba(217,119,6,0.1)',
+    padding: 14,
+  },
+  storyboardBlockerErrorText: {
     color: '#facc15',
+    fontSize: 12,
+    fontWeight: 800,
+    lineHeight: 1.5,
+    wordBreak: 'break-all',
+    overflowWrap: 'anywhere',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  storyboardBlockerVerdict: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    borderTop: '1px solid rgba(180,83,9,0.42)',
+    paddingTop: 10,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  storyboardBlockerVerdictLabel: {
+    color: '#9ca3af',
+    fontWeight: 700,
+  },
+  storyboardBlockerVerdictStatus: {
+    color: '#f87171',
+    fontWeight: 900,
+    textAlign: 'right',
+    overflowWrap: 'anywhere',
+  },
+  storyboardBlockerMore: {
+    color: '#a8b7ca',
     fontSize: 11,
-    fontWeight: 750,
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    padding: '4px 2px',
   },
   storyboardPanelGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))',
     gap: 18,
   },
   storyboardPanelCard: {
-    border: '1px solid rgba(148,163,184,0.18)',
-    borderRadius: 14,
+    border: '1px solid rgba(148,163,184,0.24)',
+    borderRadius: 12,
     overflow: 'hidden',
-    background: 'rgba(7,10,16,0.72)',
+    background: '#0d1117',
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
+    boxShadow: '0 4px 14px rgba(0,0,0,0.26)',
   },
   storyboardFrame: {
     position: 'relative',
@@ -8970,6 +9154,31 @@ const nvis: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     gap: 8,
   },
+  storyboardPanelFrameActions: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+    minWidth: 0,
+  },
+  storyboardCopyButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    border: '1px solid rgba(125,211,252,0.22)',
+    background: 'rgba(2,6,23,0.70)',
+    color: '#c7e8ff',
+    borderRadius: 999,
+    width: 28,
+    height: 28,
+    padding: 0,
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+  },
   storyboardFrameBottom: {
     position: 'absolute',
     left: 10,
@@ -9019,14 +9228,14 @@ const nvis: Record<string, CSSProperties> = {
   storyboardPanelTime: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     color: '#7dd3fc',
     background: 'rgba(2,6,23,0.66)',
     border: '1px solid rgba(125,211,252,0.20)',
     borderRadius: 999,
-    padding: '4px 8px',
+    padding: '4px 6px',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 800,
   },
   storyboardShot: {
@@ -9054,11 +9263,48 @@ const nvis: Record<string, CSSProperties> = {
     gap: 10,
     paddingTop: 2,
   },
+  storyboardAccordion: {
+    background: '#0d1117',
+    border: '1px solid #374151',
+    borderRadius: 6,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  storyboardAccordionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    padding: '12px 18px',
+    fontSize: 12,
+    fontWeight: 800,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+    color: '#9ca3af',
+    background: 'rgba(255,255,255,0.03)',
+    cursor: 'pointer',
+    userSelect: 'none' as const,
+    listStyle: 'none',
+  },
+  storyboardAccordionChevron: {
+    flex: '0 0 auto',
+    color: '#6b7280',
+    transition: 'transform 0.22s ease, color 0.2s ease',
+  },
+  storyboardAccordionContent: {
+    padding: 20,
+    borderTop: '1px solid #374151',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+    background: '#0a0e14',
+  },
   storyboardSupportBlock: {
     minWidth: 0,
-    border: '1px solid rgba(148,163,184,0.13)',
-    borderRadius: 10,
-    background: 'rgba(15,23,42,0.36)',
+    border: 'none',
+    borderLeft: '3px solid rgba(59,130,246,0.74)',
+    borderRadius: '0 6px 6px 0',
+    background: 'rgba(59,130,246,0.055)',
     padding: '10px 11px',
     display: 'flex',
     flexDirection: 'column',
@@ -9085,10 +9331,11 @@ const nvis: Record<string, CSSProperties> = {
     lineHeight: 1.35,
   },
   storyboardPromptBlock: {
-    border: '1px solid rgba(245,158,11,0.18)',
-    borderRadius: 12,
-    background: 'rgba(245,158,11,0.045)',
-    padding: '11px 12px',
+    border: 'none',
+    borderLeft: '3px solid #eab308',
+    borderRadius: '0 6px 6px 0',
+    background: 'rgba(234,179,8,0.055)',
+    padding: '12px 14px',
     display: 'grid',
     gap: 9,
   },
@@ -9139,12 +9386,25 @@ const nvis: Record<string, CSSProperties> = {
   },
   storyboardPanelBody: {
     display: 'grid',
-    gap: 12,
-    padding: 14,
+    gap: 18,
+    padding: 20,
+    borderTop: '1px solid rgba(148,163,184,0.18)',
   },
   storyboardTrackRow: {
     display: 'grid',
-    gap: 8,
+    gap: 10,
+    paddingTop: 2,
+  },
+  storyboardTagGroup: {
+    display: 'grid',
+    gap: 6,
+  },
+  storyboardTagLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase' as const,
   },
   storyboardSeed: {
     color: '#9ed0ff',
@@ -9162,16 +9422,20 @@ const nvis: Record<string, CSSProperties> = {
     gap: 6,
   },
   storyboardEntity: {
-    color: '#f472b6',
-    borderBottom: '1px dashed rgba(244,114,182,0.55)',
-    fontSize: 12,
-    fontWeight: 750,
+    color: '#f9a8d4',
+    background: 'rgba(244,114,182,0.075)',
+    border: '1px solid rgba(244,114,182,0.20)',
+    borderRadius: 999,
+    padding: '3px 8px',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.03em',
   },
   storyboardReferenceRail: {
     display: 'flex',
     gap: 8,
     overflowX: 'auto' as const,
-    paddingTop: 2,
+    paddingTop: 4,
   },
   storyboardReferenceGrid: {
     display: 'flex',
@@ -9180,10 +9444,10 @@ const nvis: Record<string, CSSProperties> = {
   },
   storyboardReferenceCard: {
     display: 'grid',
-    gridTemplateColumns: '44px 1fr',
+    gridTemplateColumns: '64px 1fr',
     gap: 9,
     alignItems: 'center',
-    flex: '0 0 186px',
+    flex: '0 0 220px',
     minWidth: 0,
     border: '1px solid rgba(255,255,255,0.07)',
     borderRadius: 8,
@@ -9191,14 +9455,15 @@ const nvis: Record<string, CSSProperties> = {
     padding: 7,
   },
   storyboardReferenceThumb: {
-    width: 44,
+    width: 64,
     height: 44,
     borderRadius: 6,
     objectFit: 'cover' as const,
     display: 'block',
+    background: 'rgba(15,23,42,0.78)',
   },
   storyboardReferenceFallback: {
-    width: 44,
+    width: 64,
     height: 44,
     borderRadius: 6,
     display: 'flex',

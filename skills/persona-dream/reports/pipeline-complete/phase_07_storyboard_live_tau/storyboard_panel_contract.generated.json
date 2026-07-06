@@ -8,7 +8,7 @@
   "effects": "Heat haze, glare flashes, water spray, softened wax, visible fatigue and restraint.",
   "environment": "Kahalu'u Bay on the Kona Coast, hot humid June daylight, clear water over dark lava reef, public lineup, summer swell timing, glare and salt spray.",
   "look_lock": "Cinematic storyboard frame for a grounded surf scene. Use a real storyboard frame, not a contact sheet, not a collage, not a UI card. Maintain Embry and Kai identity continuity from references while staging Kahalu'u Bay, Kona Coast, lava reef, heat, glare, sweat, saltwater, and shared lineup etiquette.",
-  "output_size": "1536x1024",
+  "output_size": "1536x864",
   "panels": {
     "sb_001": {
       "characters": [

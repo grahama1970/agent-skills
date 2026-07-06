@@ -69,6 +69,10 @@ ACCEPTED_FRAME_STATUSES = {
     "ACCEPTED_END_FRAME",
 }
 
+STORYBOARD_FRAME_SIZE = (1536, 864)
+STORYBOARD_FRAME_ASPECT = STORYBOARD_FRAME_SIZE[0] / STORYBOARD_FRAME_SIZE[1]
+STORYBOARD_FRAME_ASPECT_TOLERANCE = 0.02
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -460,6 +464,12 @@ def _validate_panel(panel: Any, *, index: int, reviewer: bool) -> list[str]:
 
 def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, label: str) -> list[str]:
     blockers: list[str] = []
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    }
+    requires_identity_review = bool(required_entities & {"Embry", "Kai"})
     start_refs = _frame_references(panel, frame_key="start_frame")
     end_refs = _frame_references(panel, frame_key="end_frame")
     if not start_refs:
@@ -491,6 +501,16 @@ def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, la
             if not Path(path_value).expanduser().exists():
                 blockers.append(f"{label}:accepted_{frame_label}_path_missing:{path_value}")
                 continue
+            blockers.extend(_validate_accepted_frame_file(path_value, label=label, frame_label=frame_label))
+            blockers.extend(
+                _validate_identity_continuity_review(
+                    frame_ref,
+                    label=label,
+                    frame_label=frame_label,
+                    required_entities=required_entities,
+                    required=requires_identity_review,
+                )
+            )
             count += 1
         return count
 
@@ -499,6 +519,61 @@ def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, la
     if end_refs and accepted_count(end_refs, frame_label="end_frame") == 0:
         blockers.append(f"{label}:no_usable_accepted_end_frame_artifact")
     return blockers
+
+
+def _validate_accepted_frame_file(path_value: str, *, label: str, frame_label: str) -> list[str]:
+    path = Path(path_value).expanduser()
+    blockers: list[str] = []
+    try:
+        width, height = _read_png_size(path)
+    except Exception as exc:
+        return [f"{label}:accepted_{frame_label}_image_unreadable:{path_value}:{exc}"]
+    aspect = width / height if height else 0
+    if abs(aspect - STORYBOARD_FRAME_ASPECT) > STORYBOARD_FRAME_ASPECT_TOLERANCE:
+        blockers.append(
+            f"{label}:accepted_{frame_label}_aspect_mismatch:{width}x{height}:"
+            f"expected_{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}"
+        )
+    return blockers
+
+
+def _read_png_size(path: Path) -> tuple[int, int]:
+    with path.open("rb") as handle:
+        header = handle.read(24)
+    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("expected_png_header")
+    width = int.from_bytes(header[16:20], "big")
+    height = int.from_bytes(header[20:24], "big")
+    if width <= 0 or height <= 0:
+        raise ValueError(f"invalid_png_dimensions:{width}x{height}")
+    return width, height
+
+
+def _validate_identity_continuity_review(
+    frame_ref: Mapping[str, Any],
+    *,
+    label: str,
+    frame_label: str,
+    required_entities: set[str],
+    required: bool,
+) -> list[str]:
+    if not required:
+        return []
+    review = frame_ref.get("identity_continuity_review")
+    if not isinstance(review, Mapping):
+        return [f"{label}:accepted_{frame_label}_missing_identity_continuity_review"]
+    status = str(review.get("status") or "")
+    if status != "PASS":
+        return [f"{label}:accepted_{frame_label}_identity_continuity_not_pass:{status or 'missing_status'}"]
+    visible_entities = {
+        str(entity)
+        for entity in review.get("visible_entities", [])
+        if isinstance(entity, str)
+    }
+    missing = sorted((required_entities & {"Embry", "Kai"}) - visible_entities)
+    if missing:
+        return [f"{label}:accepted_{frame_label}_identity_entities_missing:{','.join(missing)}"]
+    return []
 
 
 def _frame_references(panel: Mapping[str, Any], *, frame_key: str | None = None) -> list[Mapping[str, Any]]:
@@ -620,7 +695,7 @@ def _generate_image(prompt: str, *, output_path: Path, backend: str, model: str)
         "--output",
         str(output_path),
         "--size",
-        "1536x1024",
+        f"{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}",
         "--backend",
         backend,
         "--model",
@@ -666,7 +741,7 @@ def _storyboard_panel_contract(packet: Mapping[str, Any]) -> dict[str, Any]:
         "environment": "Kahalu'u Bay on the Kona Coast, hot humid June daylight, clear water over dark lava reef, public lineup, summer swell timing, glare and salt spray.",
         "creatures": "",
         "effects": "Heat haze, glare flashes, water spray, softened wax, visible fatigue and restraint.",
-        "output_size": "1536x1024",
+        "output_size": f"{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}",
         "aspect_ratio": "16:9",
         "panels": {
             str(panel.get("panel_id")): {
