@@ -21,6 +21,7 @@ the human/operator guide.
 | Inspect current Tau status | `skills/tau/run.sh status` |
 | Run bounded local checks | `skills/tau/run.sh sanity` |
 | Inspect recent live-proof evidence | `skills/tau/run.sh e2e` |
+| Inspect a Tau DAG as a graph | `http://localhost:3002/#tau/dag` |
 | Check watchdog receipts | `skills/tau/run.sh watchdog-status` |
 | Summarize latest proof artifacts | `skills/tau/run.sh latest-proofs` |
 
@@ -34,6 +35,7 @@ agent work:
 - goal-locked handoffs with immutable human goal changes
 - watchdog and issue-repair receipts
 - TUI and chat surfaces for inspecting state
+- React Flow DAG inspection for artifact-backed Tau DAG contracts and receipts
 - explicit mocked/live proof boundaries
 
 The special long-running behavior is infrastructure repetition, not an immortal
@@ -47,6 +49,7 @@ subagent. Each subagent turn still needs a bounded receipt and a stop condition.
 | Harness | Goal-locked handoffs, subagent routing, and issue orchestration |
 | TUI | Terminal-facing state and proof inspection |
 | Chat | Memory-first chat renderer that can converge with other agent UIs |
+| DAG viewer | UX Lab `#tau/dag` React Flow route for read-only DAG contract/receipt inspection |
 
 ## Proof Discipline
 
@@ -54,6 +57,9 @@ subagent. Each subagent turn still needs a bounded receipt and a stop condition.
 - Unit tests are not end-to-end proof.
 - Loop and harness claims require fresh command-loop or watchdog receipts.
 - Chat UI claims require browser/CDP screenshot verification.
+- DAG visualization claims require browser/CDP screenshot verification and must
+  name the source DAG contract and receipt. Static fixtures prove renderability
+  only; they do not prove live DAG execution.
 - Subagent handoffs must use the documented Tau schema.
 
 ## References
