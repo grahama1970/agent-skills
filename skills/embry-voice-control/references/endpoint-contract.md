@@ -3,6 +3,10 @@
 This reference defines the minimum endpoint behavior for an Embry voice control
 service.
 
+Embry voice control is the voice front-end to Tau. The endpoint layer should
+collect voice/chat evidence, call memory and Tau, and render Tau-approved speech
+through Chatterbox. It should not invent a parallel reasoning path.
+
 ## Health And Readiness
 
 `GET /health` returns process liveness.

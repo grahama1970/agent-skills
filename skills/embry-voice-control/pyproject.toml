@@ -1,0 +1,18 @@
+[project]
+name = "embry-voice-control"
+version = "0.1.0"
+description = "Live sanity harness for the Embry voice control-plane contract."
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.24.0",
+  "loguru>=0.7.0",
+  "typer>=0.9.0",
+]
+
+[project.scripts]
+embry-voice-control = "embry_voice_control.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
