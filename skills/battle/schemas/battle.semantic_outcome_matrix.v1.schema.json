@@ -43,7 +43,11 @@
         "not_spawned_blue_block_scores_above_kill",
         "pre_spawn_block_scores_above_post_spawn_containment",
         "spawn_pressure_reduces_blue_credit",
+        "preemptive_spawn_scores_red_adaptation_above_spawn_pressure",
         "confirmed_kill_requires_kill_receipt",
+        "suspected_pressure_does_not_count_as_blue_kill",
+        "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill",
+        "pressure_signals_are_observations_not_authority",
         "sprite_choice_is_cosmetic",
         "backend_must_not_emit"
       ],
@@ -57,7 +61,19 @@
         "spawn_pressure_reduces_blue_credit": {
           "const": true
         },
+        "preemptive_spawn_scores_red_adaptation_above_spawn_pressure": {
+          "const": true
+        },
         "confirmed_kill_requires_kill_receipt": {
+          "const": true
+        },
+        "suspected_pressure_does_not_count_as_blue_kill": {
+          "const": true
+        },
+        "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": {
+          "const": true
+        },
+        "pressure_signals_are_observations_not_authority": {
           "const": true
         },
         "sprite_choice_is_cosmetic": {
@@ -206,6 +222,16 @@
         "score_delta": {
           "$ref": "#/$defs/score_delta"
         },
+        "threat_assessment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/threat_assessment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "proof_mode": {
           "const": "receipt_backed_fixture"
         }
@@ -253,6 +279,84 @@
         },
         "cosmetic_identity_only": {
           "const": true
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "threat_signal": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind",
+        "summary"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "stderr_drift",
+            "stdout_drift",
+            "response_body_drift",
+            "status_code_drift",
+            "timing_shift",
+            "blue_patch_receipt",
+            "blue_scan_receipt",
+            "judge_block_receipt",
+            "probe_failure",
+            "other"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "threat_assessment": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "assessment_type",
+        "suspected_imminent_kill",
+        "confirmed_kill",
+        "confirmed_blue_scan",
+        "signals",
+        "confidence",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.exploit_threat_assessment.v1"
+        },
+        "assessment_type": {
+          "enum": [
+            "suspected_blue_pressure",
+            "post_block_handoff",
+            "confirmed_kill",
+            "no_pressure_evidence"
+          ]
+        },
+        "suspected_imminent_kill": {
+          "type": "boolean"
+        },
+        "confirmed_kill": {
+          "type": "boolean"
+        },
+        "confirmed_blue_scan": {
+          "type": "boolean"
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/threat_signal"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         },
         "proof_mode": {
           "const": "receipt_backed_fixture"

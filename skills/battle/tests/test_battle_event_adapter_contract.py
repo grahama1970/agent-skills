@@ -273,6 +273,8 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
     assert preemptive_spawn["outcome_tier"] == "PREEMPTIVE_SPAWN_ADAPTATION"
     assert preemptive_spawn["outcome_class"] == "preemptive_spawn_adaptation"
     assert preemptive_spawn["spawn_state"] == "spawned_child"
+    assert preemptive_spawn["rules"]["suspected_pressure_does_not_count_as_blue_kill"] is True
+    assert preemptive_spawn["rules"]["preemptive_spawn_requires_suspected_pressure_not_confirmed_kill"] is True
     assert child_contained["outcome_tier"] == "POST_SPAWN_CONTAINMENT"
     assert child_contained["outcome_class"] == "post_spawn_child_contained"
     assert child_contained["spawn_state"] == "post_spawn"
@@ -296,6 +298,19 @@ def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
     assert DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH == SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH
     assert schema["properties"]["schema"]["const"] == EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA
     assert schema["properties"]["rules"]["properties"]["not_spawned_blue_block_scores_above_kill"]["const"] is True
+    assert schema["properties"]["rules"]["properties"]["suspected_pressure_does_not_count_as_blue_kill"]["const"] is True
+    assert schema["$defs"]["threat_signal"]["properties"]["kind"]["enum"] == [
+        "stderr_drift",
+        "stdout_drift",
+        "response_body_drift",
+        "status_code_drift",
+        "timing_shift",
+        "blue_patch_receipt",
+        "blue_scan_receipt",
+        "judge_block_receipt",
+        "probe_failure",
+        "other",
+    ]
 
     matrix = battle_event_adapter.semantic_outcome_matrix()
     validate_semantic_outcome_matrix_schema(matrix)
@@ -323,6 +338,9 @@ def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
     assert cases["spawn_pressure_conceded"]["score_delta"]["blue"] > cases["preemptive_spawn_adaptation"]["score_delta"]["blue"]
     assert cases["preemptive_spawn_adaptation"]["score_delta"]["red"] > cases["spawn_pressure_conceded"]["score_delta"]["red"]
     assert cases["red_breakthrough"]["score_delta"]["red"] > cases["unresolved_pressure"]["score_delta"]["red"]
+    assert cases["preemptive_spawn_adaptation"]["threat_assessment"]["suspected_imminent_kill"] is True
+    assert cases["preemptive_spawn_adaptation"]["threat_assessment"]["confirmed_kill"] is False
+    assert {signal["kind"] for signal in cases["preemptive_spawn_adaptation"]["threat_assessment"]["signals"]} == {"stderr_drift"}
 
     profile_cases = {case["case_id"]: case for case in matrix["profile_cases"]}
     assert profile_cases["heavy_durable"]["profile"]["tier"] == "heavy_durable"
@@ -339,6 +357,20 @@ def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_out
     assert schema["properties"]["schema"]["const"] == EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA
     assert schema["properties"]["replay_contract"]["properties"]["presentation_owner"]["const"] == "ux"
     assert schema["properties"]["tau_contract"]["properties"]["preemptive_spawn_before_confirmed_kill_allowed"]["const"] is True
+    assert schema["$defs"]["node"]["properties"]["threat_assessment"]["$ref"] == "#/$defs/threat_assessment"
+    assert schema["$defs"]["node"]["properties"]["spawn"]["$ref"] == "#/$defs/spawn"
+    assert schema["$defs"]["threat_signal"]["properties"]["kind"]["enum"] == [
+        "stderr_drift",
+        "stdout_drift",
+        "response_body_drift",
+        "status_code_drift",
+        "timing_shift",
+        "blue_patch_receipt",
+        "blue_scan_receipt",
+        "judge_block_receipt",
+        "probe_failure",
+        "other",
+    ]
 
     dag = battle_event_adapter.exploit_lifecycle_dag()
     validate_exploit_lifecycle_dag_schema(dag)
@@ -371,8 +403,11 @@ def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_out
     pressure = nodes["observe:defender-pressure"]["threat_assessment"]
     assert pressure["suspected_imminent_kill"] is True
     assert pressure["confirmed_kill"] is False
+    assert pressure["confirmed_blue_scan"] is False
     assert {signal["kind"] for signal in pressure["signals"]} >= {"stderr_drift", "response_body_drift"}
     assert nodes["spawn:preemptive-child"]["spawn"]["spawn_type"] == "strategic_pre_kill"
+    assert nodes["spawn:preemptive-child"]["spawn"]["threat_assessment"]["confirmed_kill"] is False
+    assert nodes["spawn:preemptive-child"]["spawn"]["threat_assessment"]["suspected_imminent_kill"] is True
     assert nodes["spawn:preemptive-child"]["score_semantics"]["outcome_class"] == "preemptive_spawn_adaptation"
     assert nodes["spawn:preemptive-child"]["actor_visual"]["variant_id"] == "plague_nurgling"
     assert nodes["pivot:ssrf"]["spawn"]["spawn_type"] == "parallel_pivot"

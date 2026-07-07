@@ -245,6 +245,9 @@ def semantic_outcome_matrix() -> dict[str, Any]:
             "spawn_pressure_reduces_blue_credit": True,
             "preemptive_spawn_scores_red_adaptation_above_spawn_pressure": True,
             "confirmed_kill_requires_kill_receipt": True,
+            "suspected_pressure_does_not_count_as_blue_kill": True,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": True,
+            "pressure_signals_are_observations_not_authority": True,
             "sprite_choice_is_cosmetic": True,
             "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
         },
@@ -342,6 +345,25 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
             profile=_profile_for_contract_lane("dag-zip-slip-child", strength=0.82, complexity=0.88, durability=0.80, lineage_pressure=0.68, tier="adaptive_lineage"),
             outcome_class="preemptive_spawn_adaptation",
             variant_id="plague_nurgling",
+            threat_assessment={
+                "schema": "battle.exploit_threat_assessment.v1",
+                "assessment_type": "suspected_blue_pressure",
+                "suspected_imminent_kill": True,
+                "confirmed_kill": False,
+                "confirmed_blue_scan": False,
+                "signals": [
+                    {
+                        "kind": "stderr_drift",
+                        "summary": "Parent stderr drift suggested defender pressure before confirmed kill.",
+                    },
+                    {
+                        "kind": "response_body_drift",
+                        "summary": "Parent response shape drift suggested Blue inspection before a kill receipt.",
+                    },
+                ],
+                "confidence": 0.78,
+                "proof_mode": PROOF_MODE,
+            },
             spawn={
                 "schema": "battle.exploit_spawn.v1",
                 "spawn_type": "strategic_pre_kill",
@@ -1353,6 +1375,8 @@ def _lane_score_semantics(*, lane: dict[str, Any], spawn_count: int) -> dict[str
             "unblocked_spawned_exploit_scores_red_breakthrough": True,
             "functionality_preservation_required_for_full_blue_credit": True,
             "sprite_choice_does_not_create_score_truth": True,
+            "suspected_pressure_does_not_count_as_blue_kill": True,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": True,
         },
         "proof_mode": PROOF_MODE,
     }
@@ -1490,7 +1514,7 @@ def _semantic_outcome_case_lanes() -> list[tuple[str, dict[str, Any]]]:
                     "suspected_imminent_kill": True,
                     "confirmed_kill": False,
                     "confirmed_blue_scan": False,
-                    "signals": [{"kind": "stderr_shift", "summary": "stderr response shape changed before Blue block receipt"}],
+                    "signals": [{"kind": "stderr_drift", "summary": "stderr response shape changed before Blue block receipt"}],
                     "confidence": 0.78,
                     "proof_mode": PROOF_MODE,
                 },
@@ -1544,6 +1568,7 @@ def _semantic_outcome_case(case_id: str, lane: dict[str, Any]) -> dict[str, Any]
         "score_weight": score["score_weight"],
         "multipliers": score["multipliers"],
         "score_delta": score["score_delta"],
+        "threat_assessment": deepcopy(lane["threat_assessment"]) if isinstance(lane.get("threat_assessment"), dict) else None,
         "proof_mode": PROOF_MODE,
     }
 

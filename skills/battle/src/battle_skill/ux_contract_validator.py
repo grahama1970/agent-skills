@@ -72,6 +72,18 @@ EXPECTED_UX_DATA_CONTRACT_INDEX_COMMAND = (
 EXPECTED_PARENT_SPAWN_PROOF_COMMAND = (
     "cd skills/battle && ./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2"
 )
+THREAT_SIGNAL_KINDS = {
+    "stderr_drift",
+    "stdout_drift",
+    "response_body_drift",
+    "status_code_drift",
+    "timing_shift",
+    "blue_patch_receipt",
+    "blue_scan_receipt",
+    "judge_block_receipt",
+    "probe_failure",
+    "other",
+}
 REQUIRED_GOAL_SOURCE_PHRASES = {
     "Current Battle-agent responsibility:",
     "generate Arena/Tau/Judge proof receipts for canonical BATTLE-004;",
@@ -321,6 +333,14 @@ def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
     errors: list[str] = []
     _check(matrix.get("schema") == EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA, "semantic outcome matrix schema is invalid", errors)
     _check(matrix.get("score_owner") == "scorekeeper", "semantic outcome matrix score_owner must be scorekeeper", errors)
+    rules = matrix.get("rules") if isinstance(matrix.get("rules"), dict) else {}
+    _check(rules.get("suspected_pressure_does_not_count_as_blue_kill") is True, "semantic matrix must keep suspected pressure separate from Blue kill", errors)
+    _check(
+        rules.get("preemptive_spawn_requires_suspected_pressure_not_confirmed_kill") is True,
+        "semantic matrix must require suspected pressure and no confirmed kill for preemptive spawn",
+        errors,
+    )
+    _check(rules.get("pressure_signals_are_observations_not_authority") is True, "semantic matrix must mark pressure signals as observations, not authority", errors)
     invariants = matrix.get("score_invariants") if isinstance(matrix.get("score_invariants"), dict) else {}
     for key, value in invariants.items():
         _check(value is True, f"semantic outcome invariant must hold: {key}", errors)
@@ -367,6 +387,14 @@ def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
             > by_class["preemptive_spawn_adaptation"]["score_delta"]["blue"],
             "receipt-backed post-block handoff must score more Blue pressure credit than suspected-pressure preemptive spawn",
             errors,
+        )
+        preemptive_threat = by_class["preemptive_spawn_adaptation"].get("threat_assessment")
+        _validate_threat_assessment(
+            preemptive_threat,
+            context="semantic outcome matrix preemptive_spawn_adaptation",
+            errors=errors,
+            require_suspected=True,
+            require_unconfirmed_kill=True,
         )
     profile_cases = matrix.get("profile_cases") if isinstance(matrix.get("profile_cases"), list) else []
     by_profile_case = {str(case.get("case_id")): case for case in profile_cases if isinstance(case, dict)}
@@ -470,6 +498,28 @@ def validate_exploit_lifecycle_dag(dag: dict[str, Any]) -> None:
         _check(actor_visual.get("schema") == "battle.actor_visual.v1", f"node {node.get('id')} actor_visual schema invalid", errors)
         _check(bool(actor_visual.get("variant_id")), f"node {node.get('id')} actor_visual.variant_id is required", errors)
         _check(actor_visual.get("cosmetic_identity_only") is True, f"node {node.get('id')} actor_visual must be cosmetic only", errors)
+        if "threat_assessment" in node:
+            _validate_threat_assessment(
+                node.get("threat_assessment"),
+                context=f"node {node.get('id')} threat_assessment",
+                errors=errors,
+                require_unconfirmed_kill=True,
+            )
+        if "spawn" in node:
+            spawn = node.get("spawn") if isinstance(node.get("spawn"), dict) else {}
+            _check(spawn.get("schema") == "battle.exploit_spawn.v1", f"node {node.get('id')} spawn schema invalid", errors)
+            spawn_confidence = spawn.get("spawn_confidence")
+            _check(
+                isinstance(spawn_confidence, (int, float)) and 0 <= float(spawn_confidence) <= 1,
+                f"node {node.get('id')} spawn_confidence must be 0..1",
+                errors,
+            )
+            _validate_threat_assessment(
+                spawn.get("threat_assessment"),
+                context=f"node {node.get('id')} spawn threat_assessment",
+                errors=errors,
+                require_unconfirmed_kill=True,
+            )
 
     pressure = node_by_id.get("observe:defender-pressure", {})
     pressure_assessment = pressure.get("threat_assessment") if isinstance(pressure.get("threat_assessment"), dict) else {}
@@ -480,6 +530,7 @@ def validate_exploit_lifecycle_dag(dag: dict[str, Any]) -> None:
     }
     _check(pressure_assessment.get("suspected_imminent_kill") is True, "pressure node must suspect imminent kill", errors)
     _check(pressure_assessment.get("confirmed_kill") is False, "pressure node must not claim confirmed kill", errors)
+    _check(pressure_assessment.get("confirmed_blue_scan") is False, "pressure node must not claim confirmed Blue scan without receipt", errors)
     _check({"stderr_drift", "response_body_drift"} <= signal_kinds, "pressure node must include stderr and response-body drift signals", errors)
 
     preemptive_spawn = node_by_id.get("spawn:preemptive-child", {}).get("spawn", {})
@@ -499,6 +550,34 @@ def validate_exploit_lifecycle_dag(dag: dict[str, Any]) -> None:
     _check(_dag_is_acyclic(edges=edges), "exploit lifecycle DAG must be acyclic", errors)
     if errors:
         raise ContractError("\n".join(errors))
+
+
+def _validate_threat_assessment(
+    threat: Any,
+    *,
+    context: str,
+    errors: list[str],
+    require_suspected: bool = False,
+    require_unconfirmed_kill: bool = False,
+) -> None:
+    if not isinstance(threat, dict):
+        errors.append(f"{context} must be an object")
+        return
+    _check(threat.get("schema") == "battle.exploit_threat_assessment.v1", f"{context} schema must be battle.exploit_threat_assessment.v1", errors)
+    _check(isinstance(threat.get("confidence"), (int, float)) and 0 <= float(threat.get("confidence")) <= 1, f"{context} confidence must be 0..1", errors)
+    if require_suspected:
+        _check(threat.get("suspected_imminent_kill") is True, f"{context} must mark suspected_imminent_kill true", errors)
+    if require_unconfirmed_kill:
+        _check(threat.get("confirmed_kill") is False, f"{context} must not claim confirmed_kill", errors)
+    signals = threat.get("signals") if isinstance(threat.get("signals"), list) else []
+    _check(bool(signals), f"{context} must include at least one signal", errors)
+    for signal in signals:
+        if not isinstance(signal, dict):
+            errors.append(f"{context} signal must be an object")
+            continue
+        kind = str(signal.get("kind") or "")
+        _check(kind in THREAT_SIGNAL_KINDS, f"{context} signal kind is not allowed: {kind}", errors)
+        _check(bool(signal.get("summary")), f"{context} signal summary is required", errors)
 
 
 def _dag_path_exists(*, edges: list[Any], source: str, target: str) -> bool:
