@@ -5,6 +5,5 @@
     "--role",
     "panel-reviewer"
   ],
-  "cwd": "/home/graham/workspace/experiments/agent-skills",
-  "timeout_s": 120
+  "cwd": "/home/graham/workspace/experiments/agent-skills"
 }

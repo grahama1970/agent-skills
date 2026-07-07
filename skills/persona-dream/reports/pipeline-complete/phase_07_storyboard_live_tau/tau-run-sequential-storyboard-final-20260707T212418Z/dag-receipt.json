@@ -1,0 +1,74 @@
+{
+  "active_goal_hash": "sha256:persona-dream-phase-07-full-storyboard-review-20260707T204134Z",
+  "alerts": [],
+  "artifacts": [
+    "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1/start-handoff.json",
+    "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1/command-loop/command-loop-receipt.json",
+    "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1/compiled-command-specs/panel-reviewer/tau-dispatch-command.json"
+  ],
+  "command_loop_receipt": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1/command-loop/command-loop-receipt.json",
+  "containment_gate_receipts": {},
+  "contract_path": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/phase07_full_storyboard_review_dag.json",
+  "contract_sha256": "sha256:3df5e1b59dbb627ff447c866fedec77ea04e182166127c011813e07273b7b12b",
+  "dag_id": "persona-dream-phase-07-full-storyboard-review-20260707T204134Z",
+  "edge_count": 1,
+  "entry_node": "panel-reviewer",
+  "errors": [],
+  "evidence_case_gate_receipt": null,
+  "evidence_validation_receipt": null,
+  "execution": "project_agent_dag_via_handoff_command_loop",
+  "live": true,
+  "max_steps": 1,
+  "memory_intent_gate_receipt": null,
+  "mocked": false,
+  "node_attempts": {
+    "panel-reviewer": 1
+  },
+  "node_count": 2,
+  "observed_edges": [
+    {
+      "from_agent": "panel-reviewer",
+      "from_node": "panel-reviewer",
+      "to_agent": "human",
+      "to_node": "human"
+    }
+  ],
+  "ok": true,
+  "progress_path": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1/dag-progress.json",
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "Parallel DAG scheduling.",
+      "GitHub mutation or ticket closure.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Entry node was compiled into a tau.agent_handoff.v1 start handoff.",
+      "Node routing was executed by the real local command-loop subprocess runner.",
+      "Observed edges and retry counts were checked against the DAG contract.",
+      "Reviewer verdict evidence was checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/run-full-review-attempt1",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [
+    "panel-reviewer"
+  ],
+  "status": "PASS",
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-07T21:24:18Z",
+  "verdict": "PASS",
+  "zero_trust_preflight_receipt": null
+}

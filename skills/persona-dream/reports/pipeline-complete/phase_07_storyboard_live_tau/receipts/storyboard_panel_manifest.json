@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-06T13:43:52.380621+00:00",
+  "created_at": "2026-07-07T21:23:15.813843+00:00",
   "duration_seconds": 10,
   "panel_count": 4,
   "panels": [
@@ -32,12 +32,13 @@
         "seed-5"
       ],
       "panel_id": "sb_002",
-      "reference_count": 1,
+      "reference_count": 3,
       "required_entities": [
         "Embry",
         "Embry surfboard",
         "June Swell",
-        "Lava Reef"
+        "Lava Reef",
+        "Kai"
       ],
       "shot": "Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible.",
       "time_range": {
@@ -53,7 +54,7 @@
         "seed-6"
       ],
       "panel_id": "sb_003",
-      "reference_count": 2,
+      "reference_count": 3,
       "required_entities": [
         "Embry",
         "Kai",
@@ -76,7 +77,7 @@
         "seed-6"
       ],
       "panel_id": "sb_004",
-      "reference_count": 1,
+      "reference_count": 3,
       "required_entities": [
         "Embry",
         "Kai",
@@ -94,5 +95,5 @@
   ],
   "schema": "persona_dream.storyboard_panel_manifest.v1",
   "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
-  "storyboard_packet_sha256": "sha256:0f38d46470c2e9838ab942af4040189d698bdeb1680bd30603b9948550d0f1c8"
+  "storyboard_packet_sha256": "sha256:740df0dca2ffa076f1aeb560b188299ba1f332649edbaadd59bde497b567c9bb"
 }

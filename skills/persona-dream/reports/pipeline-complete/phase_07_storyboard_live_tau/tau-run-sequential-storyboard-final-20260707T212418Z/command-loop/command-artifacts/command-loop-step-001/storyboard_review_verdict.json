@@ -16,7 +16,7 @@
   },
   "created_at": "2026-07-07T21:24:18.634672+00:00",
   "duration_seconds": 10,
-  "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
+  "entity_coverage": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/storyboard_entity_coverage.json",
   "live": true,
   "mocked": false,
   "panel_count": 4,
@@ -48,11 +48,11 @@
     "paid": false,
     "route": true
   },
-  "provider_route_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/panel-reviewer_provider_route_receipt.json",
-  "reference_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_coverage.json",
+  "provider_route_receipt": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/panel-reviewer_provider_route_receipt.json",
+  "reference_coverage": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/storyboard_reference_coverage.json",
   "role": "panel-reviewer",
   "schema": "persona_dream.storyboard_review_verdict.v1",
   "status": "PASS_PANEL_REVIEWED",
-  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/storyboard_packet.json",
   "storyboard_packet_sha256": "sha256:3a9f8a45c1556703a64e9cc08aa80db605691918d728534d48b67d8110962a44"
 }

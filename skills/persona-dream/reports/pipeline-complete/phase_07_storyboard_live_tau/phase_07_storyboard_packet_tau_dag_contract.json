@@ -12,6 +12,13 @@
     "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
   },
   "context": {
+    "identity_review_model_policy": {
+      "provider": "codex",
+      "auth": "codex-oauth",
+      "model": "gpt-5.5",
+      "output_schema": "persona_dream.identity_continuity_review.v1",
+      "on_non_json": "retry_then_block"
+    },
     "persona_dream_phase07_storyboard": {
       "run_id": "phase_07_storyboard_live_tau",
       "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau",
@@ -39,7 +46,6 @@
         "provider": "codex",
         "auth": "codex-oauth",
         "model": "gpt-2",
-        "timeout_seconds": 600,
         "max_retries": 2,
         "output_schema": "tau.agent_handoff.v1",
         "on_non_json": "retry_then_block"
@@ -66,7 +72,6 @@
         "provider": "codex",
         "auth": "codex-oauth",
         "model": "gpt-2",
-        "timeout_seconds": 600,
         "max_retries": 2,
         "output_schema": "tau.agent_handoff.v1",
         "on_non_json": "retry_then_block"
@@ -108,6 +113,9 @@
     "storyboard_reference_coverage.json",
     "storyboard_entity_coverage.json",
     "provider_route_receipt",
+    "identity_review_model_policy.provider=codex",
+    "identity_review_model_policy.auth=codex-oauth",
+    "identity_review_model_policy.model=gpt-5.5",
     "model_policy.provider=codex",
     "model_policy.auth=codex-oauth",
     "model_policy.model=gpt-2",
@@ -129,7 +137,6 @@
   ],
   "limits": {
     "resume": false,
-    "default_timeout_seconds": 120,
     "max_total_attempts": 4
   },
   "provider_sensitive": true
