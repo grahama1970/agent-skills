@@ -1,12 +1,12 @@
 # Battle Backend Handoff
 
-Timestamp: 2026-07-07T16:08:46-04:00
+Timestamp: 2026-07-07T19:24:00-04:00
 Authoring agent: Codex
 Scope: BATTLE backend/schema/fixture contract only. UX layout and Pixi rendering implementation are owned by the UX project agent.
 
 ## Current Objective
 
-Provide a backend-generated BATTLE-004 Arena fixture that the Pixi spectator UX can replay without inventing client-side battle truth.
+Provide backend-generated Battle Arena fixtures that the Pixi spectator UX can replay without inventing client-side battle truth.
 
 The canonical Phase 1 replay fixture is:
 
@@ -29,6 +29,14 @@ http://localhost:3002/battle-fixtures/battle-004-parent-spawn-pixi-replay/stream
 ```
 
 Phase 1 authority is still the normalized fixture JSON, not the stream.
+
+Fresh Arena fixture coverage now also includes:
+
+```text
+http://localhost:3002/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json
+http://localhost:3002/battle-fixtures/battle-006-pickle-deserialization-pixi-replay/battle.normalized_ux_fixture.json
+http://localhost:3002/battle-fixtures/battle-007-file-upload-pixi-replay/battle.normalized_ux_fixture.json
+```
 
 ## Backend Contract State
 
@@ -66,6 +74,14 @@ Verified lane assignments in the public fixture:
 payload-857-receipt -> crimson_hornbreaker
 payload-857-red-1   -> plague_nurgling
 ```
+
+The spectator resolver currently prefers:
+
+```text
+lane.actor_visual.variant_id -> fixture.sprite_theme.variants[variant_id].sprite_id
+```
+
+Hardcoded lane overrides remain only as design-fixture fallback for lanes that do not carry backend actor visuals.
 
 Actor visual state is semantic, not Pixi-specific. The backend chooses `variant_id` and state names. The UX resolves those through `sprite_theme`; the backend must not emit Pixi frame indices, x/y pixels, easing, camera movement, or animation timing curves.
 
@@ -151,7 +167,37 @@ first_active_segment_elapsed_seconds:
 
 Do not hide the child until `first_active_segment_elapsed_seconds`. That field is not the spawn visibility gate.
 
-Known caveat: direct lane parent fields are not yet redundant enough. The child lane currently has `parent_id = null` in the public fixture query, while `lineage.spawns[]` and `lineage.groups[]` correctly define the parent-child relationship. UX should use `lineage.spawns[]` and `lineage.groups[]` as the authoritative relation for Phase 1.
+Direct lane parent fields are now redundant with the lineage receipt in the current parent-spawn fixture:
+
+```text
+payload-857-red-1.parentId = payload-857-receipt
+payload-857-red-1.parent_id = payload-857-receipt
+```
+
+UX should still treat `lineage.spawns[]` and `lineage.groups[]` as the authoritative relation and use lane parent fields as redundant render hints only.
+
+## Exploit Lifecycle And Pressure Scoring Contract
+
+The backend now exports deterministic contract artifacts for exploit scoring and lifecycle DAG behavior:
+
+```bash
+./run.sh export-semantic-outcome-matrix --out /tmp/battle-semantic-outcome-matrix.json
+./run.sh validate-semantic-outcome-matrix /tmp/battle-semantic-outcome-matrix.json
+./run.sh export-exploit-lifecycle-dag --out /tmp/battle-exploit-lifecycle-dag.json
+./run.sh validate-exploit-lifecycle-dag /tmp/battle-exploit-lifecycle-dag.json
+```
+
+Key policies:
+
+```text
+not_spawned_blue_block_scores_above_kill = true
+confirmed_kill_requires_kill_receipt = true
+suspected_pressure_does_not_count_as_blue_kill = true
+preemptive_spawn_requires_suspected_pressure_not_confirmed_kill = true
+pressure_signals_are_observations_not_authority = true
+```
+
+Subagents may suspect Blue pressure from observation signals such as stderr/stdout drift, response-body drift, timing shifts, probe failures, or explicit Blue/Judge receipts. Suspicion may justify a `strategic_pre_kill` spawn, but it must not become a confirmed Blue scan, kill, or block without corroborating Blue/Judge receipt evidence.
 
 ## Playhead Authority
 
@@ -248,6 +294,12 @@ cd spectator
 npm run typecheck
 npm test
 node scripts/prove-battle-sparse-negative.mjs
+BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator
+uv run pytest tests/test_battle_event_adapter_contract.py -q
+uv run python -m battle_skill.cli export-semantic-outcome-matrix --out /tmp/battle-semantic-outcome-matrix-pressure.json
+uv run python -m battle_skill.cli validate-semantic-outcome-matrix /tmp/battle-semantic-outcome-matrix-pressure.json
+uv run python -m battle_skill.cli export-exploit-lifecycle-dag --out /tmp/battle-exploit-lifecycle-dag-pressure.json
+uv run python -m battle_skill.cli validate-exploit-lifecycle-dag /tmp/battle-exploit-lifecycle-dag-pressure.json
 ```
 
 Observed results from the prior run:
@@ -257,29 +309,33 @@ Parent fixture validation: PASS
 Sparse fixture validation: PASS
 Renderer values/index validation: PASS
 Spectator typecheck: PASS
-Vitest: 20/20 tests
+Vitest: 43/43 tests in the full spectator gate
 Sparse negative proof: PASS
+BATTLE_PROVE_SPECTATOR_PASS
+Battle event adapter contract tests: 97/97 tests
+Semantic outcome matrix export/validate: PASS
+Exploit lifecycle DAG export/validate: PASS
 ```
 
 Evidence classification:
 
 ```text
-mocked: no for generated BATTLE fixture artifacts marked mocked=false
+mocked: no for generated Battle fixture artifacts marked mocked=false
 live: yes for local file/public route proof checks that exercised the spectator package
-not yet verified: UX consumption of actor_visual.variant_id replacing hardcoded lane overrides
+deterministic_contract: yes for semantic outcome matrix and exploit lifecycle DAG export/validate
 ```
 
-Do not treat the above as proof that the Pixi renderer has already consumed `actor_visual`. It proves the backend generated and validated the contract fields.
+Do not treat actor visual consumption as outcome proof. It proves sprite identity resolution only; Judge/receipt events still own block, kill, spawn, and score truth.
 
 ## Known Gaps / Do Not Infer
 
-1. The UX may still use a hardcoded lane-to-sprite map such as:
+1. Hardcoded lane-to-sprite overrides remain only as fallback:
 
 ```text
 skills/battle/spectator/src/engine/battle-lane-variant-map.ts
 ```
 
-The next UX step is to replace hardcoded lane overrides with:
+The expected primary resolver is:
 
 ```text
 lane.actor_visual.variant_id -> fixture.sprite_theme.variants[variant_id]
@@ -291,29 +347,14 @@ lane.actor_visual.variant_id -> fixture.sprite_theme.variants[variant_id]
 
 4. Do not show terminal effects from sprite states alone. Terminal effects require Judge/receipt-backed fixture events.
 
-5. No new Arena run was created for this handoff. The current parent-spawn fixture is generated from the existing receipt-backed BATTLE-004 parent spawn artifact set.
+5. Fresh Arena runs exist for BATTLE-005, BATTLE-006, and BATTLE-007. The BATTLE-004 parent-spawn fixture remains generated from its existing receipt-backed parent-spawn artifact set.
 
 ## Next Backend Actions
 
-1. Add redundant lane parent fields so `lanes[]` also agrees with `lineage.spawns[]`:
-
-```text
-payload-857-red-1.parent_id = payload-857-receipt
-```
-
-2. Keep `lineage.spawns[]` as the fail-closed source even after redundant lane fields are added.
-
-3. Regenerate fixture artifacts after the lane parent field fix:
-
-```bash
-cd skills/battle
-./run.sh generate-ux-fixture --input /tmp/battle-004-parent-spawn-20260706T134722Z --battle-id battle-004 --out local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json --ts-out spectator/src/lib/battle-data.generated.ts
-./run.sh validate-ux-contract local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json
-```
-
-4. Re-export renderer/index artifacts and update public fixture copies.
-
-5. After UX switches to actor visual resolution, run the receipt replay proof against `http://localhost:3002/#battle/receipt?engine=pixi`.
+1. Keep `lineage.spawns[]` as the fail-closed source even though lane parent fields are now redundant.
+2. Continue broadening exploit classes when new scenario kinds are added; update `battle.semantic_outcome_matrix.v1` and `battle.exploit_lifecycle_dag.v1` together.
+3. Do not make stream sidecars Phase 1 authority. Phase 2 stream consumption should validate `battle.transport_manifest.v1`, `battle.live_event.v1`, and `battle.snapshot.v1` against the normalized fixture first.
+4. If UX adds stream playback, rerun `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` and inspect screenshots for BATTLE-004/005/006/007.
 
 ## Next UX Agent Contract
 
