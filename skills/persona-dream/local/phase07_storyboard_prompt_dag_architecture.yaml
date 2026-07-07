@@ -1,0 +1,78 @@
+name: "Persona Dream Phase 07 Sequential Storyboard Prompt DAG Repair"
+components:
+  - id: story_contract
+    label: Script And Panel Contract
+    tech: "source script, 4 timed panels, entity requirements"
+    latency: "input"
+    color: blue
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json
+
+  - id: prompt_compiler
+    label: Panel Prompt Compiler
+    tech: "currently underspecified creator prompt adapter"
+    latency: "defect source"
+    color: red
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation/sb_004_start_frame.prompt.md
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation/sb_004_end_frame.prompt.md
+
+  - id: continuity_state
+    label: Sequential Continuity State
+    tech: "previous panel accepted end frame feeds next panel"
+    latency: "must be deterministic"
+    color: green
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json
+
+  - id: live_generator
+    label: Live Image Generation
+    tech: "scillm image route"
+    latency: "target <=5m per panel common case"
+    color: amber
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json
+
+  - id: tau_reviewer
+    label: Tau Panel Reviewer
+    tech: "identity, continuity, entity, evidence gate"
+    latency: "~30s review"
+    color: green
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-sequential-storyboard-final-20260707T212418Z/dag-receipt.json
+
+  - id: repair_loop
+    label: Repair Loop
+    tech: "reviewer rejection routes back to creator"
+    latency: "sb004 total ~13m"
+    color: red
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-sequential-storyboard-final-20260707T212418Z/command-loop/command-loop-receipt.json
+
+  - id: acceptance
+    label: Accepted Four-Panel Storyboard
+    tech: "PASS_PANEL_REVIEWED, live true, mocked false"
+    latency: "artifact complete"
+    color: green
+    files:
+      - skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-sequential-storyboard-final-20260707T212418Z/dag-receipt.json
+      - .codex/ui-verification/persona-dream-phase07-full-storyboard.latest.json
+
+connections:
+  - from: story_contract
+    to: prompt_compiler
+  - from: continuity_state
+    to: prompt_compiler
+  - from: prompt_compiler
+    to: live_generator
+  - from: live_generator
+    to: tau_reviewer
+  - from: tau_reviewer
+    to: repair_loop
+  - from: repair_loop
+    to: prompt_compiler
+  - from: tau_reviewer
+    to: acceptance
