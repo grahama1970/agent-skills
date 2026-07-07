@@ -13,6 +13,16 @@ export function isBattleReceiptReplayView(): boolean {
 	return path === "#battle/receipt" || path.startsWith("#battle/receipt/");
 }
 
+/** PM: derived lane timing must agree with lineage spawn receipt; surfaced for diagnostics. */
+export function spawnTimingFieldsConsistent(fixture: BattleNormalizedUxFixture, childLaneId: string): boolean {
+	const spawn = fixture.lineage?.spawns?.find((item) => item.child_lane_id === childLaneId);
+	const spawnElapsed = spawn?.spawn_elapsed_seconds;
+	if (typeof spawnElapsed !== "number") return false;
+	const lane = fixture.lanes?.find((item) => item.id === childLaneId);
+	const derived = [spawn?.child_start_elapsed_seconds, lane?.start_elapsed_seconds];
+	return derived.every((value) => value == null || Math.abs(value - spawnElapsed) <= 0.001);
+}
+
 export function childSpawnElapsedSeconds(fixture: BattleNormalizedUxFixture, childLaneId: string): number | null {
 	const spawn = fixture.lineage?.spawns?.find((item) => item.child_lane_id === childLaneId);
 	if (typeof spawn?.spawn_elapsed_seconds === "number") return spawn.spawn_elapsed_seconds;
