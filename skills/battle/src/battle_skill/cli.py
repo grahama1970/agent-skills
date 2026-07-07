@@ -492,6 +492,58 @@ def validate_ux_transport(
     console.print_json(data=report)
 
 
+@app.command("export-semantic-outcome-matrix")
+def export_semantic_outcome_matrix(
+    out: Path = typer.Option(..., "--out", help="Output Battle semantic outcome matrix JSON path."),
+):
+    """Export deterministic Battle outcome scoring and sprite-profile calibration."""
+    import json as _json
+
+    from .battle_event_adapter import write_semantic_outcome_matrix
+    from .ux_contract_validator import ContractError, validate_semantic_outcome_matrix, validate_semantic_outcome_matrix_schema
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    matrix = write_semantic_outcome_matrix(out=out)
+    try:
+        validate_semantic_outcome_matrix_schema(matrix)
+        validate_semantic_outcome_matrix(matrix)
+    except ContractError as exc:
+        console.print(f"[red]Battle semantic outcome matrix invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(
+        data={
+            "status": "PASS",
+            "out": str(out),
+            "schema": matrix.get("schema"),
+            "outcome_case_count": len(matrix.get("outcome_cases", [])),
+            "profile_case_count": len(matrix.get("profile_cases", [])),
+            "proof_mode": matrix.get("proof_mode"),
+        }
+    )
+
+
+@app.command("validate-semantic-outcome-matrix")
+def validate_semantic_outcome_matrix_command(
+    matrix: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Battle semantic outcome matrix JSON.",
+    ),
+):
+    """Validate deterministic Battle outcome scoring and sprite-profile calibration."""
+    from .ux_contract_validator import ContractError, validate_semantic_outcome_matrix_path
+
+    try:
+        report = validate_semantic_outcome_matrix_path(matrix)
+    except ContractError as exc:
+        console.print(f"[red]Battle semantic outcome matrix invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

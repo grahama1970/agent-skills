@@ -1,0 +1,334 @@
+{
+  "does_not_prove": [
+    "Fresh Arena execution.",
+    "Real exploit success for additional vulnerability classes.",
+    "UX stream playback consumption."
+  ],
+  "outcome_cases": [
+    {
+      "case_id": "pre_spawn_blue_block",
+      "event_kinds": [
+        "blocked"
+      ],
+      "has_children": false,
+      "has_parent": false,
+      "lane_id": "matrix-pre-spawn-block",
+      "multipliers": {
+        "blue": 12.0,
+        "red": 2.0
+      },
+      "outcome_class": "pre_spawn_blue_block",
+      "outcome_tier": "PRE_SPAWN_BLOCK",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 9.6,
+        "red": 1.6
+      },
+      "score_weight": 0.8,
+      "spawn_state": "not_spawned",
+      "terminal": "blocked"
+    },
+    {
+      "case_id": "confirmed_blue_kill_no_child",
+      "event_kinds": [
+        "kill_confirmed"
+      ],
+      "has_children": false,
+      "has_parent": false,
+      "lane_id": "matrix-kill-no-child",
+      "multipliers": {
+        "blue": 10.0,
+        "red": 1.0
+      },
+      "outcome_class": "confirmed_blue_kill_no_child",
+      "outcome_tier": "KILLED_CONFIRMED",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 8.0,
+        "red": 0.8
+      },
+      "score_weight": 0.8,
+      "spawn_state": "not_spawned",
+      "terminal": "killed"
+    },
+    {
+      "case_id": "confirmed_blue_kill_with_child",
+      "event_kinds": [
+        "kill_confirmed"
+      ],
+      "has_children": true,
+      "has_parent": false,
+      "lane_id": "matrix-kill-with-child",
+      "multipliers": {
+        "blue": 5.5,
+        "red": 1.0
+      },
+      "outcome_class": "confirmed_blue_kill_with_child",
+      "outcome_tier": "KILLED_CONFIRMED",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 4.4,
+        "red": 0.8
+      },
+      "score_weight": 0.8,
+      "spawn_state": "post_spawn",
+      "terminal": "killed"
+    },
+    {
+      "case_id": "post_spawn_child_contained",
+      "event_kinds": [
+        "blocked"
+      ],
+      "has_children": false,
+      "has_parent": true,
+      "lane_id": "matrix-child-contained",
+      "multipliers": {
+        "blue": 7.0,
+        "red": 3.5
+      },
+      "outcome_class": "post_spawn_child_contained",
+      "outcome_tier": "POST_SPAWN_CONTAINMENT",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 5.6,
+        "red": 2.8
+      },
+      "score_weight": 0.8,
+      "spawn_state": "post_spawn",
+      "terminal": "blocked"
+    },
+    {
+      "case_id": "spawn_pressure_conceded",
+      "event_kinds": [
+        "handoff"
+      ],
+      "has_children": true,
+      "has_parent": false,
+      "lane_id": "matrix-spawn-pressure",
+      "multipliers": {
+        "blue": 4.0,
+        "red": 4.5
+      },
+      "outcome_class": "spawn_pressure_conceded",
+      "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 3.2,
+        "red": 3.6
+      },
+      "score_weight": 0.8,
+      "spawn_state": "spawned_child",
+      "terminal": "blocked_handoff"
+    },
+    {
+      "case_id": "red_breakthrough",
+      "event_kinds": [
+        "payload"
+      ],
+      "has_children": false,
+      "has_parent": true,
+      "lane_id": "matrix-red-breakthrough",
+      "multipliers": {
+        "blue": 0.0,
+        "red": 9.0
+      },
+      "outcome_class": "red_breakthrough",
+      "outcome_tier": "RED_BREAKTHROUGH",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 0.0,
+        "red": 7.2
+      },
+      "score_weight": 0.8,
+      "spawn_state": "post_spawn",
+      "terminal": "none"
+    },
+    {
+      "case_id": "unresolved_pressure",
+      "event_kinds": [
+        "research"
+      ],
+      "has_children": false,
+      "has_parent": false,
+      "lane_id": "matrix-unresolved",
+      "multipliers": {
+        "blue": 0.0,
+        "red": 4.0
+      },
+      "outcome_class": "unresolved_pressure",
+      "outcome_tier": "UNRESOLVED",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 0.0,
+        "red": 3.2
+      },
+      "score_weight": 0.8,
+      "spawn_state": "not_spawned",
+      "terminal": "none"
+    }
+  ],
+  "profile_cases": [
+    {
+      "case_id": "fragile_probe",
+      "cosmetic_identity_only": true,
+      "lane_id": "matrix-fragile-probe",
+      "profile": {
+        "complexity": 0.68,
+        "durability": 0.62,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "matrix-fragile-probe",
+        "lineage_pressure": 0.0,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.4,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.508,
+        "stealth": 0.42,
+        "strength": 0.35,
+        "tier": "fragile_probe"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "variant_id": "green_horn",
+      "variant_source": "exploit_profile_tier"
+    },
+    {
+      "case_id": "standard_exploit",
+      "cosmetic_identity_only": true,
+      "lane_id": "matrix-standard-exploit",
+      "profile": {
+        "complexity": 0.68,
+        "durability": 0.62,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "matrix-standard-exploit",
+        "lineage_pressure": 0.0,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.84,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.738,
+        "stealth": 0.42,
+        "strength": 0.82,
+        "tier": "standard_exploit"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "variant_id": "crimson_hornbreaker",
+      "variant_source": "exploit_profile_tier"
+    },
+    {
+      "case_id": "heavy_durable",
+      "cosmetic_identity_only": true,
+      "lane_id": "matrix-heavy-durable",
+      "profile": {
+        "complexity": 0.725,
+        "durability": 0.72,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "matrix-heavy-durable",
+        "lineage_pressure": 0.45,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.84,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.774,
+        "stealth": 0.42,
+        "strength": 0.82,
+        "tier": "heavy_durable"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "variant_id": "crimson_hornbreaker",
+      "variant_source": "exploit_profile_tier"
+    },
+    {
+      "case_id": "adaptive_lineage",
+      "cosmetic_identity_only": true,
+      "lane_id": "matrix-adaptive-lineage",
+      "profile": {
+        "complexity": 0.865,
+        "durability": 0.78,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "matrix-adaptive-lineage",
+        "lineage_pressure": 0.65,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.84,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.824,
+        "stealth": 0.52,
+        "strength": 0.82,
+        "tier": "adaptive_lineage"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "variant_id": "plague_nurgling",
+      "variant_source": "exploit_profile_tier"
+    },
+    {
+      "case_id": "high_complexity_pivot",
+      "cosmetic_identity_only": true,
+      "lane_id": "matrix-high-complexity-pivot",
+      "profile": {
+        "complexity": 0.86,
+        "durability": 0.58,
+        "lane_id": "matrix-high-complexity-pivot",
+        "lineage_pressure": 0.2,
+        "reproducibility": 0.72,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.68,
+        "stealth": 0.55,
+        "strength": 0.62,
+        "tier": "standard_exploit"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "variant_id": "purple_horn_imp",
+      "variant_source": "exploit_profile_tier"
+    }
+  ],
+  "profile_owner": "backend",
+  "proof_mode": "receipt_backed_fixture",
+  "rules": {
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "confirmed_kill_requires_kill_receipt": true,
+    "not_spawned_blue_block_scores_above_kill": true,
+    "pre_spawn_block_scores_above_post_spawn_containment": true,
+    "spawn_pressure_reduces_blue_credit": true,
+    "sprite_choice_is_cosmetic": true
+  },
+  "schema": "battle.semantic_outcome_matrix.v1",
+  "score_invariants": {
+    "confirmed_blue_kill_no_child_gt_post_spawn_child_contained": true,
+    "confirmed_blue_kill_with_child_gt_spawn_pressure_conceded": true,
+    "post_spawn_child_contained_gt_confirmed_blue_kill_with_child": true,
+    "pre_spawn_blue_block_gt_confirmed_blue_kill_no_child": true,
+    "red_breakthrough_gt_unresolved_pressure": true
+  },
+  "score_owner": "scorekeeper",
+  "sprite_identity_owner": "backend_variant_id_ux_theme_resolution",
+  "status": "PASS"
+}

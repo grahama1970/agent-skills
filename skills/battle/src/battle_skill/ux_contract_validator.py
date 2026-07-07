@@ -27,6 +27,9 @@ DEFAULT_UX_DATA_CONTRACT_INDEX_SCHEMA_PATH = Path(__file__).resolve().parents[2]
 DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.transport_manifest.v1.schema.json"
 DEFAULT_LIVE_EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.live_event.v1.schema.json"
 DEFAULT_SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.snapshot.v1.schema.json"
+DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH = (
+    Path(__file__).resolve().parents[2] / "schemas" / "battle.semantic_outcome_matrix.v1.schema.json"
+)
 BATTLE_SKILL_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_SCHEMA = "battle.normalized_ux_fixture.v1"
 EXPECTED_UX_CONTRACT_SCHEMA = "battle.ux_contract.v1"
@@ -39,6 +42,7 @@ EXPECTED_UX_DATA_CONTRACT_INDEX_SCHEMA = "battle.ux_data_contract_index.v1"
 EXPECTED_TRANSPORT_MANIFEST_SCHEMA = "battle.transport_manifest.v1"
 EXPECTED_LIVE_EVENT_SCHEMA = "battle.live_event.v1"
 EXPECTED_SNAPSHOT_SCHEMA = "battle.snapshot.v1"
+EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA = "battle.semantic_outcome_matrix.v1"
 EXPECTED_CANONICAL_SCENARIO = {
     "battle_id": "battle-004",
     "public_entrypoint": "/api/import-zip",
@@ -280,6 +284,88 @@ def validate_snapshot_schema(
     schema_path: Path = DEFAULT_SNAPSHOT_SCHEMA_PATH,
 ) -> None:
     _validate_json_schema_payload(payload=snapshot, schema_path=schema_path)
+
+
+def validate_semantic_outcome_matrix_schema(
+    matrix: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=matrix, schema_path=schema_path)
+
+
+def validate_semantic_outcome_matrix_path(
+    matrix_path: Path,
+    *,
+    schema_path: Path = DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH,
+) -> dict[str, Any]:
+    matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
+    validate_semantic_outcome_matrix_schema(matrix, schema_path=schema_path)
+    validate_semantic_outcome_matrix(matrix)
+    return {
+        "status": "PASS",
+        "schema": EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA,
+        "matrix": str(matrix_path),
+        "outcome_case_count": len(matrix.get("outcome_cases", [])) if isinstance(matrix.get("outcome_cases"), list) else 0,
+        "profile_case_count": len(matrix.get("profile_cases", [])) if isinstance(matrix.get("profile_cases"), list) else 0,
+        "mocked": False,
+        "proof_mode": matrix.get("proof_mode"),
+    }
+
+
+def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
+    errors: list[str] = []
+    _check(matrix.get("schema") == EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA, "semantic outcome matrix schema is invalid", errors)
+    _check(matrix.get("score_owner") == "scorekeeper", "semantic outcome matrix score_owner must be scorekeeper", errors)
+    invariants = matrix.get("score_invariants") if isinstance(matrix.get("score_invariants"), dict) else {}
+    for key, value in invariants.items():
+        _check(value is True, f"semantic outcome invariant must hold: {key}", errors)
+    outcome_cases = matrix.get("outcome_cases") if isinstance(matrix.get("outcome_cases"), list) else []
+    by_class = {str(case.get("outcome_class")): case for case in outcome_cases if isinstance(case, dict)}
+    required_classes = {
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+        "unresolved_pressure",
+    }
+    _check(set(by_class) >= required_classes, "semantic outcome matrix must cover every outcome class", errors)
+    if required_classes <= set(by_class):
+        _check(
+            by_class["pre_spawn_blue_block"]["score_delta"]["blue"]
+            > by_class["confirmed_blue_kill_no_child"]["score_delta"]["blue"],
+            "not spawning/pre-spawn block must score more Blue points than killing",
+            errors,
+        )
+        _check(
+            by_class["post_spawn_child_contained"]["score_delta"]["blue"]
+            > by_class["confirmed_blue_kill_with_child"]["score_delta"]["blue"],
+            "post-spawn containment must outrank killing a parent after valid child spawn",
+            errors,
+        )
+        _check(
+            by_class["confirmed_blue_kill_with_child"]["score_delta"]["blue"]
+            > by_class["spawn_pressure_conceded"]["score_delta"]["blue"],
+            "kill with child must still outrank mere spawn pressure conceded",
+            errors,
+        )
+    profile_cases = matrix.get("profile_cases") if isinstance(matrix.get("profile_cases"), list) else []
+    by_profile_case = {str(case.get("case_id")): case for case in profile_cases if isinstance(case, dict)}
+    expected_variants = {
+        "heavy_durable": "crimson_hornbreaker",
+        "adaptive_lineage": "plague_nurgling",
+        "high_complexity_pivot": "purple_horn_imp",
+    }
+    for case_id, variant_id in expected_variants.items():
+        case = by_profile_case.get(case_id)
+        _check(isinstance(case, dict), f"profile calibration case missing: {case_id}", errors)
+        if isinstance(case, dict):
+            _check(case.get("variant_id") == variant_id, f"profile calibration {case_id} must map to {variant_id}", errors)
+            _check(case.get("cosmetic_identity_only") is True, f"profile calibration {case_id} must remain cosmetic only", errors)
+    if errors:
+        raise ContractError("\n".join(errors))
 
 
 def validate_transport_stream_path(

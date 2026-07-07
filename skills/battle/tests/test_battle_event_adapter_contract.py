@@ -24,6 +24,7 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     DEFAULT_RENDERER_VALUES_SCHEMA_PATH,
     DEFAULT_RENDERER_FIXTURE_RESOLUTION_SCHEMA_PATH,
     DEFAULT_SNAPSHOT_SCHEMA_PATH,
+    DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH,
     DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH,
     DEFAULT_UX_DATA_CONTRACT_INDEX_SCHEMA_PATH,
     EXPECTED_LIVE_EVENT_SCHEMA,
@@ -31,6 +32,7 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     EXPECTED_RENDERER_BUNDLE_SCHEMA,
     EXPECTED_RENDERER_VALUES_SCHEMA,
     EXPECTED_SNAPSHOT_SCHEMA,
+    EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA,
     EXPECTED_TRANSPORT_MANIFEST_SCHEMA,
     EXPECTED_UX_DATA_CONTRACT_INDEX_SCHEMA,
     EXPECTED_RENDERER_FIXTURE_RESOLUTION_COMMAND,
@@ -64,6 +66,9 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     validate_handoff_summary_schema,
     validate_handoff_summary_path,
     validate_live_event_schema,
+    validate_semantic_outcome_matrix,
+    validate_semantic_outcome_matrix_path,
+    validate_semantic_outcome_matrix_schema,
     validate_snapshot_schema,
     validate_transport_manifest_schema,
     validate_transport_stream_path,
@@ -82,6 +87,7 @@ INDEX_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.ux
 TRANSPORT_MANIFEST_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.transport_manifest.v1.schema.json"
 LIVE_EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.live_event.v1.schema.json"
 SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.snapshot.v1.schema.json"
+SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.semantic_outcome_matrix.v1.schema.json"
 
 
 def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
@@ -216,6 +222,10 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
         lane=lane(terminal="killed", events=[{"kind": "kill_confirmed"}]),
         spawn_count=0,
     )
+    killed_with_child = battle_event_adapter._lane_score_semantics(
+        lane=lane(terminal="killed", children=["child"], events=[{"kind": "kill_confirmed"}]),
+        spawn_count=1,
+    )
     parent_spawned = battle_event_adapter._lane_score_semantics(
         lane=lane(terminal="blocked_handoff", children=["child"]),
         spawn_count=1,
@@ -235,6 +245,8 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
     assert pre_spawn["spawn_state"] == "not_spawned"
     assert killed["outcome_tier"] == "KILLED_CONFIRMED"
     assert killed["outcome_class"] == "confirmed_blue_kill_no_child"
+    assert killed_with_child["outcome_tier"] == "KILLED_CONFIRMED"
+    assert killed_with_child["outcome_class"] == "confirmed_blue_kill_with_child"
     assert parent_spawned["outcome_tier"] == "SPAWN_PRESSURE_CONCEDED"
     assert parent_spawned["outcome_class"] == "spawn_pressure_conceded"
     assert parent_spawned["spawn_state"] == "spawned_child"
@@ -249,8 +261,48 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
 
     assert pre_spawn["score_delta"]["blue"] > killed["score_delta"]["blue"]
     assert killed["score_delta"]["blue"] > child_contained["score_delta"]["blue"]
-    assert child_contained["score_delta"]["blue"] > parent_spawned["score_delta"]["blue"]
+    assert child_contained["score_delta"]["blue"] > killed_with_child["score_delta"]["blue"]
+    assert killed_with_child["score_delta"]["blue"] > parent_spawned["score_delta"]["blue"]
     assert breakthrough["score_delta"]["red"] > unrelated_unresolved["score_delta"]["red"]
+
+
+def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
+    schema = json.loads(SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH.read_text(encoding="utf-8"))
+    assert DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH == SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH
+    assert schema["properties"]["schema"]["const"] == EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA
+    assert schema["properties"]["rules"]["properties"]["not_spawned_blue_block_scores_above_kill"]["const"] is True
+
+    matrix = battle_event_adapter.semantic_outcome_matrix()
+    validate_semantic_outcome_matrix_schema(matrix)
+    validate_semantic_outcome_matrix(matrix)
+    out = tmp_path / "battle-semantic-outcome-matrix.json"
+    battle_event_adapter.write_semantic_outcome_matrix(out=out)
+    report = validate_semantic_outcome_matrix_path(out)
+    assert report["status"] == "PASS"
+    assert report["schema"] == EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA
+
+    cases = {case["outcome_class"]: case for case in matrix["outcome_cases"]}
+    assert set(cases) == {
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+        "unresolved_pressure",
+    }
+    assert cases["pre_spawn_blue_block"]["score_delta"]["blue"] > cases["confirmed_blue_kill_no_child"]["score_delta"]["blue"]
+    assert cases["post_spawn_child_contained"]["score_delta"]["blue"] > cases["confirmed_blue_kill_with_child"]["score_delta"]["blue"]
+    assert cases["confirmed_blue_kill_with_child"]["score_delta"]["blue"] > cases["spawn_pressure_conceded"]["score_delta"]["blue"]
+    assert cases["red_breakthrough"]["score_delta"]["red"] > cases["unresolved_pressure"]["score_delta"]["red"]
+
+    profile_cases = {case["case_id"]: case for case in matrix["profile_cases"]}
+    assert profile_cases["heavy_durable"]["profile"]["tier"] == "heavy_durable"
+    assert profile_cases["adaptive_lineage"]["profile"]["tier"] == "adaptive_lineage"
+    assert profile_cases["heavy_durable"]["variant_id"] == "crimson_hornbreaker"
+    assert profile_cases["adaptive_lineage"]["variant_id"] == "plague_nurgling"
+    assert profile_cases["high_complexity_pivot"]["variant_id"] == "purple_horn_imp"
+    assert all(case["cosmetic_identity_only"] is True for case in profile_cases.values())
 
 
 def test_ux_renderer_value_schemas_require_elapsed_binding_contract_paths() -> None:

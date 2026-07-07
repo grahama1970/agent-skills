@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.semantic_outcome_matrix.v1.schema.json",
+  "title": "Battle Semantic Outcome Matrix",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "status",
+    "score_owner",
+    "profile_owner",
+    "sprite_identity_owner",
+    "proof_mode",
+    "rules",
+    "score_invariants",
+    "outcome_cases",
+    "profile_cases",
+    "does_not_prove"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.semantic_outcome_matrix.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "score_owner": {
+      "const": "scorekeeper"
+    },
+    "profile_owner": {
+      "const": "backend"
+    },
+    "sprite_identity_owner": {
+      "const": "backend_variant_id_ux_theme_resolution"
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "not_spawned_blue_block_scores_above_kill",
+        "pre_spawn_block_scores_above_post_spawn_containment",
+        "spawn_pressure_reduces_blue_credit",
+        "confirmed_kill_requires_kill_receipt",
+        "sprite_choice_is_cosmetic",
+        "backend_must_not_emit"
+      ],
+      "properties": {
+        "not_spawned_blue_block_scores_above_kill": {
+          "const": true
+        },
+        "pre_spawn_block_scores_above_post_spawn_containment": {
+          "const": true
+        },
+        "spawn_pressure_reduces_blue_credit": {
+          "const": true
+        },
+        "confirmed_kill_requires_kill_receipt": {
+          "const": true
+        },
+        "sprite_choice_is_cosmetic": {
+          "const": true
+        },
+        "backend_must_not_emit": {
+          "type": "array",
+          "contains": {
+            "const": "cinematic_speed"
+          }
+        }
+      }
+    },
+    "score_invariants": {
+      "type": "object",
+      "additionalProperties": {
+        "const": true
+      }
+    },
+    "outcome_cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "$ref": "#/$defs/outcome_case"
+      }
+    },
+    "profile_cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "$ref": "#/$defs/profile_case"
+      }
+    },
+    "does_not_prove": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "score_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "red",
+        "blue"
+      ],
+      "properties": {
+        "red": {
+          "type": "number"
+        },
+        "blue": {
+          "type": "number"
+        }
+      }
+    },
+    "outcome_case": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "case_id",
+        "lane_id",
+        "terminal",
+        "has_parent",
+        "has_children",
+        "event_kinds",
+        "outcome_tier",
+        "outcome_class",
+        "spawn_state",
+        "score_weight",
+        "multipliers",
+        "score_delta",
+        "proof_mode"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "terminal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "has_parent": {
+          "type": "boolean"
+        },
+        "has_children": {
+          "type": "boolean"
+        },
+        "event_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outcome_tier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome_class": {
+          "enum": [
+            "unresolved_pressure",
+            "pre_spawn_blue_block",
+            "confirmed_blue_kill_no_child",
+            "confirmed_blue_kill_with_child",
+            "post_spawn_child_contained",
+            "spawn_pressure_conceded",
+            "red_breakthrough"
+          ]
+        },
+        "spawn_state": {
+          "enum": [
+            "not_spawned",
+            "spawned_child",
+            "post_spawn"
+          ]
+        },
+        "score_weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "multipliers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "red",
+            "blue"
+          ],
+          "properties": {
+            "red": {
+              "type": "number"
+            },
+            "blue": {
+              "type": "number"
+            }
+          }
+        },
+        "score_delta": {
+          "$ref": "#/$defs/score_delta"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "profile_case": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "case_id",
+        "lane_id",
+        "profile",
+        "variant_id",
+        "variant_source",
+        "cosmetic_identity_only",
+        "proof_mode"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "strength",
+            "complexity",
+            "durability",
+            "lineage_pressure",
+            "score_weight",
+            "tier"
+          ]
+        },
+        "variant_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variant_source": {
+          "const": "exploit_profile_tier"
+        },
+        "cosmetic_identity_only": {
+          "const": true
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    }
+  }
+}

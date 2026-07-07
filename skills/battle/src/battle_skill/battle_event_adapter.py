@@ -45,9 +45,11 @@ DEFAULT_BLUE_ACTION_ID = "blue-receipt-backed-patch"
 SEMANTIC_SCORE_VERSION = "battle.semantic_scoring.v1"
 EXPLOIT_PROFILE_VERSION = "battle.exploit_profile.v1"
 REPLAY_SEMANTICS_VERSION = "battle.replay_semantics.v1"
+SEMANTIC_OUTCOME_MATRIX_VERSION = "battle.semantic_outcome_matrix.v1"
 SEMANTIC_SCORE_MULTIPLIERS = {
     "pre_spawn_block_blue": 12.0,
     "explicit_kill_blue": 10.0,
+    "explicit_kill_with_child_blue": 5.5,
     "post_spawn_containment_blue": 7.0,
     "spawn_pressure_parent_blue": 4.0,
     "unresolved_red_pressure": 4.0,
@@ -215,6 +217,54 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
         "event_count": len(envelopes),
         "last_seq": len(envelopes),
     }
+
+
+def semantic_outcome_matrix() -> dict[str, Any]:
+    """Return the deterministic scoring/profile calibration matrix.
+
+    This is an inspectable contract artifact for backend scoring semantics. It
+    is not a substitute for fresh Arena receipts; it pins the scorekeeper policy
+    used when receipts classify a lane into an outcome class.
+    """
+    cases = [_semantic_outcome_case(case_id, lane) for case_id, lane in _semantic_outcome_case_lanes()]
+    profile_cases = [_profile_calibration_case(case_id, lane, spawn_count) for case_id, lane, spawn_count in _profile_calibration_lanes()]
+    score_by_class = {case["outcome_class"]: case["score_delta"] for case in cases}
+    return {
+        "schema": SEMANTIC_OUTCOME_MATRIX_VERSION,
+        "status": "PASS",
+        "score_owner": "scorekeeper",
+        "profile_owner": "backend",
+        "sprite_identity_owner": "backend_variant_id_ux_theme_resolution",
+        "proof_mode": PROOF_MODE,
+        "rules": {
+            "not_spawned_blue_block_scores_above_kill": True,
+            "pre_spawn_block_scores_above_post_spawn_containment": True,
+            "spawn_pressure_reduces_blue_credit": True,
+            "confirmed_kill_requires_kill_receipt": True,
+            "sprite_choice_is_cosmetic": True,
+            "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+        },
+        "score_invariants": {
+            "pre_spawn_blue_block_gt_confirmed_blue_kill_no_child": score_by_class["pre_spawn_blue_block"]["blue"] > score_by_class["confirmed_blue_kill_no_child"]["blue"],
+            "confirmed_blue_kill_no_child_gt_post_spawn_child_contained": score_by_class["confirmed_blue_kill_no_child"]["blue"] > score_by_class["post_spawn_child_contained"]["blue"],
+            "post_spawn_child_contained_gt_confirmed_blue_kill_with_child": score_by_class["post_spawn_child_contained"]["blue"] > score_by_class["confirmed_blue_kill_with_child"]["blue"],
+            "confirmed_blue_kill_with_child_gt_spawn_pressure_conceded": score_by_class["confirmed_blue_kill_with_child"]["blue"] > score_by_class["spawn_pressure_conceded"]["blue"],
+            "red_breakthrough_gt_unresolved_pressure": score_by_class["red_breakthrough"]["red"] > score_by_class["unresolved_pressure"]["red"],
+        },
+        "outcome_cases": cases,
+        "profile_cases": profile_cases,
+        "does_not_prove": [
+            "Fresh Arena execution.",
+            "Real exploit success for additional vulnerability classes.",
+            "UX stream playback consumption.",
+        ],
+    }
+
+
+def write_semantic_outcome_matrix(*, out: Path) -> dict[str, Any]:
+    matrix = semantic_outcome_matrix()
+    _write_json(out, matrix)
+    return matrix
 
 
 def adapt_proof_dir(*, proof_dir: Path, battle_id: str) -> dict[str, Any]:
@@ -900,7 +950,7 @@ def _exploit_profile_for_lane(*, lane: dict[str, Any], spawn_count: int) -> dict
 def _exploit_tier(*, score_weight: float, lineage_pressure: float) -> str:
     if lineage_pressure >= 0.6:
         return "adaptive_lineage"
-    if score_weight >= 0.78:
+    if score_weight >= 0.75:
         return "heavy_durable"
     if score_weight >= 0.62:
         return "standard_exploit"
@@ -968,7 +1018,7 @@ def _lane_score_outcome(*, lane: dict[str, Any], spawn_count: int) -> dict[str, 
             "spawn_state": "post_spawn" if spawned else "not_spawned",
             "terminal_state": "killed",
             "red_multiplier": 1.0,
-            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_with_child_blue"] if spawned else SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
         }
     if is_blocked and not spawned:
         return {
@@ -1014,6 +1064,199 @@ def _lane_score_outcome(*, lane: dict[str, Any], spawn_count: int) -> dict[str, 
         "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["unresolved_red_pressure"],
         "blue_multiplier": 0.0,
     }
+
+
+def _semantic_outcome_case_lanes() -> list[tuple[str, dict[str, Any]]]:
+    return [
+        (
+            "pre_spawn_blue_block",
+            _matrix_lane(
+                lane_id="matrix-pre-spawn-block",
+                terminal="blocked",
+                score_weight=0.8,
+                events=[{"kind": "blocked", "id": "pre-spawn-block:judge", "receipt_id": "judge-pre-spawn-block"}],
+            ),
+        ),
+        (
+            "confirmed_blue_kill_no_child",
+            _matrix_lane(
+                lane_id="matrix-kill-no-child",
+                terminal="killed",
+                score_weight=0.8,
+                events=[{"kind": "kill_confirmed", "id": "kill-no-child:judge", "receipt_id": "judge-kill-no-child"}],
+            ),
+        ),
+        (
+            "confirmed_blue_kill_with_child",
+            _matrix_lane(
+                lane_id="matrix-kill-with-child",
+                terminal="killed",
+                score_weight=0.8,
+                children=["matrix-kill-child"],
+                events=[{"kind": "kill_confirmed", "id": "kill-with-child:judge", "receipt_id": "judge-kill-with-child"}],
+            ),
+        ),
+        (
+            "post_spawn_child_contained",
+            _matrix_lane(
+                lane_id="matrix-child-contained",
+                terminal="blocked",
+                score_weight=0.8,
+                parent_id="matrix-parent",
+                events=[{"kind": "blocked", "id": "child-contained:judge", "receipt_id": "judge-child-contained"}],
+            ),
+        ),
+        (
+            "spawn_pressure_conceded",
+            _matrix_lane(
+                lane_id="matrix-spawn-pressure",
+                terminal="blocked_handoff",
+                score_weight=0.8,
+                children=["matrix-child"],
+                events=[{"kind": "handoff", "id": "spawn-pressure:handoff", "receipt_id": "lineage-spawn-matrix"}],
+            ),
+        ),
+        (
+            "red_breakthrough",
+            _matrix_lane(
+                lane_id="matrix-red-breakthrough",
+                terminal="none",
+                score_weight=0.8,
+                parent_id="matrix-parent",
+                events=[{"kind": "payload", "id": "red-breakthrough:payload", "receipt_id": "judge-red-breakthrough"}],
+            ),
+        ),
+        (
+            "unresolved_pressure",
+            _matrix_lane(
+                lane_id="matrix-unresolved",
+                terminal="none",
+                score_weight=0.8,
+                events=[{"kind": "research", "id": "unresolved:research", "receipt_id": "tau-unresolved"}],
+            ),
+        ),
+    ]
+
+
+def _semantic_outcome_case(case_id: str, lane: dict[str, Any]) -> dict[str, Any]:
+    score = _lane_score_semantics(lane=lane, spawn_count=1)
+    return {
+        "case_id": case_id,
+        "lane_id": lane["id"],
+        "terminal": lane.get("terminal"),
+        "has_parent": bool(lane.get("parentId")),
+        "has_children": bool(lane.get("children")),
+        "event_kinds": [str(event.get("kind") or "") for event in lane.get("events", []) if isinstance(event, dict)],
+        "outcome_tier": score["outcome_tier"],
+        "outcome_class": score["outcome_class"],
+        "spawn_state": score["spawn_state"],
+        "score_weight": score["score_weight"],
+        "multipliers": score["multipliers"],
+        "score_delta": score["score_delta"],
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _profile_calibration_lanes() -> list[tuple[str, dict[str, Any], int]]:
+    return [
+        (
+            "fragile_probe",
+            {
+                "id": "matrix-fragile-probe",
+                "terminal": "none",
+                "events": [{"kind": "research", "id": "fragile:research"}],
+            },
+            0,
+        ),
+        (
+            "standard_exploit",
+            {
+                "id": "matrix-standard-exploit",
+                "terminal": "none",
+                "events": [{"kind": "payload", "id": "standard:payload"}],
+            },
+            0,
+        ),
+        (
+            "heavy_durable",
+            {
+                "id": "matrix-heavy-durable",
+                "terminal": "blocked",
+                "children": ["matrix-heavy-child"],
+                "events": [{"kind": "payload", "id": "heavy:payload"}, {"kind": "useful", "id": "heavy:useful"}],
+            },
+            1,
+        ),
+        (
+            "adaptive_lineage",
+            {
+                "id": "matrix-adaptive-lineage",
+                "terminal": "blocked",
+                "parentId": "matrix-parent",
+                "parent_id": "matrix-parent",
+                "events": [{"kind": "payload", "id": "adaptive:payload"}, {"kind": "handoff", "id": "adaptive:handoff"}],
+            },
+            1,
+        ),
+        (
+            "high_complexity_pivot",
+            {
+                "id": "matrix-high-complexity-pivot",
+                "terminal": "none",
+                "events": [{"kind": "payload", "id": "pivot:payload"}],
+                "exploit_profile": {
+                    "schema": EXPLOIT_PROFILE_VERSION,
+                    "lane_id": "matrix-high-complexity-pivot",
+                    "strength": 0.62,
+                    "complexity": 0.86,
+                    "durability": 0.58,
+                    "stealth": 0.55,
+                    "reproducibility": 0.72,
+                    "lineage_pressure": 0.2,
+                    "score_weight": 0.68,
+                    "tier": "standard_exploit",
+                },
+            },
+            0,
+        ),
+    ]
+
+
+def _profile_calibration_case(case_id: str, lane: dict[str, Any], spawn_count: int) -> dict[str, Any]:
+    profile = deepcopy(lane.get("exploit_profile")) if isinstance(lane.get("exploit_profile"), dict) else _exploit_profile_for_lane(lane=lane, spawn_count=spawn_count)
+    variant_id = _variant_id_for_lane(lane_id=str(lane.get("id") or ""), exploit_profile=profile)
+    return {
+        "case_id": case_id,
+        "lane_id": str(lane.get("id") or ""),
+        "profile": profile,
+        "variant_id": variant_id,
+        "variant_source": "exploit_profile_tier",
+        "cosmetic_identity_only": True,
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _matrix_lane(
+    *,
+    lane_id: str,
+    terminal: str,
+    score_weight: float,
+    events: list[dict[str, Any]],
+    parent_id: str | None = None,
+    children: list[str] | None = None,
+) -> dict[str, Any]:
+    lane: dict[str, Any] = {
+        "id": lane_id,
+        "terminal": terminal,
+        "events": events,
+        "exploit_profile": {"score_weight": score_weight},
+    }
+    if parent_id:
+        lane["parentId"] = parent_id
+        lane["parent_id"] = parent_id
+    if children:
+        lane["children"] = children
+    return lane
 
 
 def _lane_has_event_kind(lane: dict[str, Any], kinds: set[str]) -> bool:
@@ -1838,6 +2081,7 @@ def _semantic_scoring_payload(lanes: list[dict[str, Any]]) -> dict[str, Any]:
         "rules": {
             "pre_spawn_block_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["pre_spawn_block_blue"],
             "explicit_kill_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
+            "explicit_kill_with_child_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_with_child_blue"],
             "post_spawn_containment_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_containment_blue"],
             "spawn_pressure_parent_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["spawn_pressure_parent_blue"],
             "red_breakthrough_multiplier": SEMANTIC_SCORE_MULTIPLIERS["red_breakthrough"],
