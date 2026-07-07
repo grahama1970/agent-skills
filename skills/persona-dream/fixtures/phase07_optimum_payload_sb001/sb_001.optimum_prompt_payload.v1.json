@@ -1,0 +1,150 @@
+{
+  "schema": "persona_dream.phase07.optimum_prompt_payload.v1",
+  "panel_id": "sb_001",
+  "required_entities": [
+    "Embry",
+    "Kai",
+    "Lava Reef",
+    "Kona Coast"
+  ],
+  "required_identities": [
+    "Embry",
+    "Kai"
+  ],
+  "identity_reference_assets": {
+    "Embry": [
+      {
+        "id": "embry_character_sheet",
+        "bundle_path": "references/01-embry_character_sheet.jpg",
+        "source_path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+        "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+        "role": "identity_reference",
+        "pane_visible_required": true,
+        "generator_attachment_required": true,
+        "reviewer_attachment_required": true,
+        "reference_only_not_output": true
+      }
+    ],
+    "Kai": [
+      {
+        "id": "kai_character_sheet",
+        "bundle_path": "references/02-kai_character_sheet.png",
+        "source_path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+        "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+        "role": "identity_reference",
+        "pane_visible_required": true,
+        "generator_attachment_required": true,
+        "reviewer_attachment_required": true,
+        "reference_only_not_output": true
+      }
+    ]
+  },
+  "model_policy": {
+    "image_generation": {
+      "provider_route": "codex_oauth",
+      "provider": "codex",
+      "auth": "codex-oauth",
+      "model": "gpt-2",
+      "fallbacks": [],
+      "disallowed_fallbacks": [
+        "flux",
+        "google-api-key",
+        "mock",
+        "fixture"
+      ]
+    },
+    "identity_review": {
+      "provider_route": "codex_oauth",
+      "provider": "codex",
+      "auth": "codex-oauth",
+      "model": "gpt-2",
+      "fallbacks": []
+    }
+  },
+  "generation_scope": {
+    "mode": "failed_unlocked_only",
+    "target_frames": [
+      "start_frame",
+      "end_frame"
+    ],
+    "max_attempts": 4,
+    "reject_known_failed_candidates": true
+  },
+  "known_rejected_candidate_sha256": [
+    "sha256:9fe8a7581a2452bb5d4b264c0ce36faa1fe88bff14501640b666a26e030a45e3"
+  ],
+  "state_truth_rule": {
+    "creator_writes": [
+      "candidate_frame",
+      "creator_receipt"
+    ],
+    "creator_must_not_write": [
+      "accepted_frame",
+      "panel_review.accepted",
+      "review_status"
+    ],
+    "reviewer_writes": [
+      "panel_review",
+      "identity_review",
+      "accepted_frame_if_passed"
+    ],
+    "accepted_frame_writer": "panel-reviewer",
+    "accepted_frame_requires": [
+      "identity_review.status == PASS",
+      "panel_review.accepted == true",
+      "Embry.visible == true",
+      "Embry.matches_reference == true",
+      "Kai.visible == true",
+      "Kai.matches_reference == true"
+    ],
+    "illegal_states": [
+      "accepted_frame.status starts with ACCEPTED and identity_review.status == FAIL",
+      "accepted_frame.status starts with ACCEPTED and identity_continuity_review.status == FAIL",
+      "creator writes accepted_frame"
+    ]
+  },
+  "composition_contract": {
+    "shot_type": "identity-readable medium-wide waterline two-shot",
+    "forbidden_shot_types": [
+      "wide establishing shot",
+      "crowd lineup shot",
+      "distant silhouettes",
+      "back-facing two-shot"
+    ],
+    "composition_priority": [
+      "1_identity_readability",
+      "2_correct_character_roles",
+      "3_story_action_waiting_outside_takeoff_path",
+      "4_public_reef_break_context",
+      "5_lava_reef_and_glare"
+    ],
+    "identity_slot_map": {
+      "Embry": {
+        "slot": "A",
+        "screen_position": "foreground_left_or_midforeground_left",
+        "dominance": "one_of_two_largest_people",
+        "face_visibility": "front_or_three_quarter_visible"
+      },
+      "Kai": {
+        "slot": "B",
+        "screen_position": "foreground_right_or_midforeground_right",
+        "dominance": "one_of_two_largest_people",
+        "face_visibility": "front_or_three_quarter_visible"
+      }
+    }
+  },
+  "candidate_frame": null,
+  "panel_review": {
+    "status": "PENDING",
+    "accepted": false,
+    "identity_review": {
+      "status": "PENDING"
+    }
+  },
+  "accepted_frame": null,
+  "prompts": {
+    "start_frame_prompt_path": "sb_001.start_frame.optimum_creator_prompt.md",
+    "end_frame_prompt_path": "sb_001.end_frame.optimum_creator_prompt.md",
+    "reviewer_prompt_path": "sb_001.optimum_reviewer_prompt.md"
+  }
+}
