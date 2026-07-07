@@ -168,6 +168,40 @@ records do not prove what a person, object, or scene looked like. If no visual
 record exists, report that the detail is not present in extracted visual evidence
 and regenerate visual descriptions instead of guessing.
 
+## YOLO Person Boxes For Watch Rows
+
+The Watch annotation UI expects first-stage person boxes from YOLO/ByteTrack
+before character identity work starts. Materialize detector boxes for every row
+in the current report, not only the row currently open in the browser:
+
+```bash
+cd skills/watch
+python3 scripts/materialize_yolo_bytetrack_for_report.py --report /tmp/watch-wex5uxs_/report.json
+```
+
+The materializer reads `report.json`, runs the existing
+`track_yolo_bytetrack.py` adapter for each `scene_elements` clip, and writes
+row-specific tracker logs under:
+
+```text
+skills/watch/docs/architecture/generated/watch_yolo_bytetrack_rows/
+```
+
+Rows with no detector events are written as explicit `NO_DETECTIONS` artifacts
+so a missing box set is distinguishable from a row that was never processed.
+Use a focused rerun while debugging one row:
+
+```bash
+python3 scripts/materialize_yolo_bytetrack_for_report.py --report /tmp/watch-wex5uxs_/report.json --rows 4 --force
+```
+
+After materialization, verify the UX server can see a row's detector candidates:
+
+```bash
+curl -sS "http://127.0.0.1:3002/api/projects/watch/detector-candidates/rows/4?asset_uid=bad_santa_unrated_2003_brrip_xvidhd_720p_npw&source_width=1280&source_height=696" \
+  | jq '{row_index,total,source_log_count}'
+```
+
 ## Setup
 
 System dependencies:
