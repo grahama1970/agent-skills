@@ -25,6 +25,17 @@
   mockup parity, visual design, or CDP screenshot acceptance.
 
 
+## Open backend fixture defect (Phase 1)
+
+The parent-spawn replay fixture currently disagrees on child timing:
+
+- `lineage.spawns[].spawn_elapsed_seconds` = 116.97 (authoritative for child visibility)
+- `child_start_elapsed_seconds` / child `lane.start_elapsed_seconds` = 146.68
+
+UX correctly gates child lane visibility on `spawn_elapsed_seconds` only. Backend must
+regenerate or patch the fixture so derived lane timing aligns with spawn semantics, or
+split visibility (`visible_from_elapsed_seconds`) from first active segment start.
+
 ## Pixi Phase 1 spike (spectator package)
 
 Optional Pixi race renderer behind `#battle?engine=pixi` and `#battle/receipt?engine=pixi`. Default remains DOM/SVG. Implementation lives in `skills/battle/spectator/`.

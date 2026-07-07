@@ -13,7 +13,12 @@ export function isBattleReceiptReplayView(): boolean {
 	return path === "#battle/receipt" || path.startsWith("#battle/receipt/");
 }
 
-/** PM: derived lane timing must agree with lineage spawn receipt; surfaced for diagnostics. */
+/**
+ * Backend fixture diagnostic only — not a frontend gate.
+ * Child visibility uses lineage.spawns[].spawn_elapsed_seconds.
+ * If child_start_elapsed_seconds or lane.start_elapsed_seconds disagree with spawn time,
+ * that is a backend fixture/schema defect to fix upstream.
+ */
 export function spawnTimingFieldsConsistent(fixture: BattleNormalizedUxFixture, childLaneId: string): boolean {
 	const spawn = fixture.lineage?.spawns?.find((item) => item.child_lane_id === childLaneId);
 	const spawnElapsed = spawn?.spawn_elapsed_seconds;
