@@ -75,6 +75,13 @@ def run_arena_battle_proof(
             run_id=f"{run_id}-arena",
             docker_image=docker_image,
         )
+    elif scenario_kind == "file-upload-extension-probe":
+        arena_override_oracle_path = _write_file_upload_probe_scenario(
+            arena_out=arena_out,
+            battle_id=battle_id,
+            run_id=f"{run_id}-arena",
+            docker_image=docker_image,
+        )
     elif scenario_kind != "zip-slip":
         raise ValueError(f"unknown scenario_kind: {scenario_kind}")
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
@@ -234,6 +241,10 @@ def _run_red_phase(
         red_submission = work_dir / "red_exploit_submission.py"
         red_submission.write_text(_pickle_deserialization_exploit_source(), encoding="utf-8")
         args = ["python", red_submission.name, "--expect-vulnerable"]
+    elif scenario.get("scenario_kind") == "file-upload-extension-probe":
+        red_submission = work_dir / "red_exploit_submission.py"
+        red_submission.write_text(_file_upload_probe_exploit_source(), encoding="utf-8")
+        args = ["python", red_submission.name, "--expect-vulnerable"]
     command = _python_docker_command(
         docker_image=docker_image,
         work_dir=work_dir,
@@ -347,6 +358,12 @@ def _run_judge_phase(
     elif scenario.get("scenario_kind") == "pickle-deserialization-gadget":
         (work_dir / "red_exploit_submission.py").write_text(
             _pickle_deserialization_exploit_source(),
+            encoding="utf-8",
+        )
+        args = ["python", "red_exploit_submission.py"]
+    elif scenario.get("scenario_kind") == "file-upload-extension-probe":
+        (work_dir / "red_exploit_submission.py").write_text(
+            _file_upload_probe_exploit_source(),
             encoding="utf-8",
         )
         args = ["python", "red_exploit_submission.py"]
@@ -602,6 +619,8 @@ def _smoke_import(
         if scenario.get("scenario_kind") == "ssrf-metadata-probe"
         else "from app import load_profile; print(load_profile('{\"user\":\"alice\",\"role\":\"user\"}') == {'user':'alice','role':'user'})"
         if scenario.get("scenario_kind") == "pickle-deserialization-gadget"
+        else "from app import upload_file; print(upload_file('avatar.png', b'PNG') == {'stored_as':'avatar.png','size':3})"
+        if scenario.get("scenario_kind") == "file-upload-extension-probe"
         else "from app import import_zip; print(callable(import_zip))"
     )
     command = _python_docker_command(
@@ -620,6 +639,8 @@ def _safe_app_source(scenario: dict[str, Any]) -> str:
         return _safe_ssrf_metadata_app_source()
     if scenario.get("scenario_kind") == "pickle-deserialization-gadget":
         return _safe_pickle_deserialization_app_source()
+    if scenario.get("scenario_kind") == "file-upload-extension-probe":
+        return _safe_file_upload_probe_app_source()
     return textwrap.dedent(
         """
         from pathlib import Path
@@ -1403,6 +1424,260 @@ def _pickle_deserialization_exploit_source() -> str:
                 print("PICKLE_GADGET_NOT_CONFIRMED")
                 return 1
             return 1 if exploited else 0
+
+
+        if __name__ == "__main__":
+            raise SystemExit(main())
+        """
+    ).strip() + "\n"
+
+
+def _write_file_upload_probe_scenario(
+    *,
+    arena_out: Path,
+    battle_id: str,
+    run_id: str,
+    docker_image: str,
+) -> Path:
+    target_dir = arena_out / "target"
+    public_dir = arena_out / "team-public"
+    public_target_dir = public_dir / "target"
+    private_dir = arena_out / "private"
+    private_oracle_dir = private_dir / "oracle"
+    scenario = {
+        "schema": "battle.arena_scenario.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": "arena-file-upload-extension-probe-001",
+        "scenario_kind": "file-upload-extension-probe",
+        "title": "File upload extension allowlist bypass",
+        "public_entrypoint": "/api/files/upload",
+        "entry_point_type": "file-upload-api",
+        "public_contract": {
+            "method": "POST",
+            "input": "Filename and uploaded bytes.",
+            "visible_behavior": "Store allowed media uploads and reject unsafe file types.",
+        },
+        "difficulty": "medium",
+        "target_language": "python",
+        "hidden_vulnerability_family": "Case-sensitive extension allowlist bypass",
+        "cwe": "CWE-434",
+        "red_success_marker": "UPLOAD_EXTENSION_BYPASS_CONFIRMED",
+        "finding_id": "arena-hidden-upload-extension-001",
+        "red_blue_visible": {
+            "entrypoint": "/api/files/upload",
+            "files": ["app.py"],
+            "hint": "The service stores uploaded files after extension checks.",
+        },
+        "stop_condition": "Red confirms executable upload bypass, Blue normalizes and blocks dangerous extensions, Judge verifies normal image upload remains.",
+    }
+    hidden = {
+        "schema": "battle.hidden_ground_truth.v1",
+        "battle_id": battle_id,
+        "scenario_id": scenario["scenario_id"],
+        "not_visible_to": ["red", "blue"],
+        "hidden_vulnerabilities": [
+            {
+                "id": "hidden-upload-extension-001",
+                "name": "Uppercase extension upload bypass",
+                "cwe": "CWE-434",
+                "entry_point": scenario["public_entrypoint"],
+                "oracle": "The upload helper rejects lowercase .php but stores uppercase .PHP.",
+            }
+        ],
+    }
+    public_brief = {
+        "schema": "battle.team_public_scenario_brief.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "title": "File upload helper",
+        "public_entrypoint": scenario["public_entrypoint"],
+        "entry_point_type": scenario["entry_point_type"],
+        "public_contract": scenario["public_contract"],
+        "target_language": scenario["target_language"],
+        "allowed_files": ["app.py"],
+        "normal_behavior_examples": [
+            "upload_file('avatar.png', b'PNG') should store the image.",
+            "unsafe executable upload extensions should be rejected.",
+        ],
+        "not_visible": [
+            "hidden bug class",
+            "CWE",
+            "finding id",
+            "bypass filename",
+            "safe patch template",
+            "judge private assertions",
+        ],
+    }
+    visibility = {
+        "schema": "battle.visibility_contract.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "arena_creator_private": [
+            "arena/private/hidden-ground-truth.json",
+            "arena/private/oracle/app.py",
+            "arena/private/oracle/exploit_check.py",
+        ],
+        "team_public": [
+            "arena/team-public/scenario-brief.json",
+            "arena/team-public/target/app.py",
+        ],
+        "red_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "blue_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "judge_private": [
+            "red exploit submission",
+            "arena oracle",
+            "regression checks",
+        ],
+    }
+    _write_json(arena_out / "scenario.json", scenario)
+    stale_root_hidden = arena_out / "hidden-ground-truth.json"
+    if stale_root_hidden.exists():
+        stale_root_hidden.unlink()
+    _write_json(private_dir / "hidden-ground-truth.json", hidden)
+    _write_json(public_dir / "scenario-brief.json", public_brief)
+    _write_json(arena_out / "visibility-contract.json", visibility)
+    public_target_dir.mkdir(parents=True, exist_ok=True)
+    private_oracle_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "app.py").write_text(_vulnerable_file_upload_probe_app_source(), encoding="utf-8")
+    for leaked_oracle in [target_dir / "exploit_check.py"]:
+        if leaked_oracle.exists():
+            leaked_oracle.unlink()
+    (public_target_dir / "app.py").write_text(_vulnerable_file_upload_probe_app_source(), encoding="utf-8")
+    (private_oracle_dir / "app.py").write_text(_vulnerable_file_upload_probe_app_source(), encoding="utf-8")
+    (private_oracle_dir / "exploit_check.py").write_text(_file_upload_probe_exploit_source(), encoding="utf-8")
+    oracle_result = _run_command(
+        _python_docker_command(
+            docker_image=docker_image,
+            work_dir=private_oracle_dir,
+            args=["python", "exploit_check.py", "--expect-vulnerable"],
+        ),
+        out_dir=arena_out,
+        name="file-upload-hidden-oracle",
+    )
+    oracle_passed = (
+        oracle_result["exit_code"] == 0
+        and _stdout_contains(oracle_result, scenario["red_success_marker"])
+    )
+    return _write_json(
+        arena_out / "file-upload-hidden-oracle-receipt.json",
+        {
+            "schema": "battle.arena_hidden_oracle_receipt.v1",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "scenario_id": scenario["scenario_id"],
+            "scenario_kind": scenario["scenario_kind"],
+            "status": "PASS" if oracle_passed else "FAIL",
+            "mocked": False,
+            "live": "docker_hidden_oracle",
+            "entry_point": scenario["public_entrypoint"],
+            "finding_id": scenario["finding_id"],
+            "hidden_vulnerability_family": scenario["hidden_vulnerability_family"],
+            "success_marker": scenario["red_success_marker"],
+            "exploit_confirmed": oracle_passed,
+            "commands_run": [oracle_result],
+            "created_at": _now(),
+        },
+    )
+
+
+def _vulnerable_file_upload_probe_app_source() -> str:
+    return textwrap.dedent(
+        """
+        from pathlib import Path
+
+
+        UPLOAD_DIR = Path("uploads")
+        BLOCKED_EXTENSIONS = {".php", ".phtml", ".jsp"}
+
+
+        def upload_file(filename: str, content: bytes) -> dict[str, object]:
+            suffix = Path(filename).suffix
+            if suffix in BLOCKED_EXTENSIONS:
+                raise ValueError("blocked extension")
+            UPLOAD_DIR.mkdir(exist_ok=True)
+            target = UPLOAD_DIR / Path(filename).name
+            target.write_bytes(content)
+            return {"stored_as": target.name, "size": len(content)}
+        """
+    ).strip() + "\n"
+
+
+def _safe_file_upload_probe_app_source() -> str:
+    return textwrap.dedent(
+        """
+        from pathlib import Path
+
+
+        UPLOAD_DIR = Path("uploads")
+        ALLOWED_EXTENSIONS = {".gif", ".jpg", ".jpeg", ".png", ".txt"}
+
+
+        def upload_file(filename: str, content: bytes) -> dict[str, object]:
+            clean_name = Path(filename).name
+            suffix = Path(clean_name).suffix.lower()
+            if suffix not in ALLOWED_EXTENSIONS:
+                raise ValueError("unsupported extension")
+            UPLOAD_DIR.mkdir(exist_ok=True)
+            target = UPLOAD_DIR / clean_name
+            target.write_bytes(content)
+            return {"stored_as": target.name, "size": len(content)}
+        """
+    ).strip() + "\n"
+
+
+def _file_upload_probe_exploit_source() -> str:
+    return textwrap.dedent(
+        """
+        import argparse
+
+        from app import upload_file
+
+
+        def main() -> int:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--expect-vulnerable", action="store_true")
+            args = parser.parse_args()
+
+            try:
+                normal = upload_file("avatar.png", b"PNG")
+            except ValueError:
+                print("NORMAL_UPLOAD_BROKEN")
+                return 2
+            if normal != {"stored_as": "avatar.png", "size": 3}:
+                print("NORMAL_UPLOAD_UNEXPECTED")
+                return 2
+
+            bypassed = False
+            try:
+                result = upload_file("shell.PHP", b"<?php echo 1; ?>")
+                bypassed = result.get("stored_as") == "shell.PHP"
+            except ValueError:
+                bypassed = False
+
+            if args.expect_vulnerable and bypassed:
+                print("UPLOAD_EXTENSION_BYPASS_CONFIRMED")
+                return 0
+            if args.expect_vulnerable:
+                print("UPLOAD_EXTENSION_BYPASS_NOT_CONFIRMED")
+                return 1
+            return 1 if bypassed else 0
 
 
         if __name__ == "__main__":

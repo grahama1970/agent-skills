@@ -195,3 +195,75 @@ def test_pickle_deserialization_arena_battle_contract(tmp_path: Path, monkeypatc
     assert red["finding_id"] == "arena-hidden-pickle-gadget-001"
     assert red["exploit_confirmed"] is True
     assert judge["verdict"] == "BLUE_SUCCESS"
+
+
+def test_file_upload_extension_probe_arena_battle_contract(tmp_path: Path, monkeypatch) -> None:
+    def fake_arena(*, out_dir: Path, battle_id: str, run_id: str, prior_scoreboard: Path | None, query: str, docker_image: str) -> dict[str, Any]:
+        (out_dir / "target").mkdir(parents=True, exist_ok=True)
+        (out_dir / "team-public" / "target").mkdir(parents=True, exist_ok=True)
+        (out_dir / "private" / "oracle").mkdir(parents=True, exist_ok=True)
+        (out_dir / "target" / "app.py").write_text("def placeholder(): return True\n", encoding="utf-8")
+        (out_dir / "arena-receipt.json").write_text(json.dumps({"status": "PASS"}) + "\n", encoding="utf-8")
+        (out_dir / "run-receipt.json").write_text(json.dumps({"status": "PASS"}) + "\n", encoding="utf-8")
+        (out_dir / "scenario.json").write_text(
+            json.dumps(
+                {
+                    "schema": "battle.arena_scenario.v1",
+                    "battle_id": battle_id,
+                    "run_id": run_id,
+                    "scenario_id": "placeholder",
+                    "scenario_kind": "zip-slip",
+                    "public_entrypoint": "/api/import-zip",
+                    "target_language": "python",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return {"status": "PASS", "battle_id": battle_id, "run_id": run_id, "mocked": False}
+
+    def fake_run_command(command: list[str], *, out_dir: Path, name: str) -> dict[str, Any]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stdout_path = out_dir / f"{name}.stdout.txt"
+        stderr_path = out_dir / f"{name}.stderr.txt"
+        stdout = ""
+        if name in {"file-upload-hidden-oracle", "red-exploit"}:
+            stdout = "UPLOAD_EXTENSION_BYPASS_CONFIRMED\n"
+        elif name == "judge-functionality":
+            stdout = "True\n"
+        stdout_path.write_text(stdout, encoding="utf-8")
+        stderr_path.write_text("", encoding="utf-8")
+        return {
+            "command": command,
+            "exit_code": 0,
+            "stdout_path": str(stdout_path),
+            "stderr_path": str(stderr_path),
+        }
+
+    monkeypatch.setattr(proof, "run_arena_subagent_proof", fake_arena)
+    monkeypatch.setattr(proof, "_docker_image_id", lambda image: f"sha256:test-{image}")
+    monkeypatch.setattr(proof, "_run_command", fake_run_command)
+
+    receipt = proof.run_arena_battle_proof(
+        out_dir=tmp_path / "proof",
+        battle_id="battle-007",
+        run_id="run-upload",
+        scenario_kind="file-upload-extension-probe",
+    )
+
+    scenario = json.loads((tmp_path / "proof" / "arena" / "scenario.json").read_text(encoding="utf-8"))
+    override = json.loads((tmp_path / "proof" / "arena" / "file-upload-hidden-oracle-receipt.json").read_text(encoding="utf-8"))
+    red = json.loads((tmp_path / "proof" / "red-receipt.json").read_text(encoding="utf-8"))
+    judge = json.loads((tmp_path / "proof" / "judge" / "judge-receipt.json").read_text(encoding="utf-8"))
+
+    assert receipt["status"] == "PASS"
+    assert receipt["artifacts"]["arena_override_oracle_receipt"] == "arena/file-upload-hidden-oracle-receipt.json"
+    assert scenario["scenario_id"] == "arena-file-upload-extension-probe-001"
+    assert scenario["scenario_kind"] == "file-upload-extension-probe"
+    assert scenario["cwe"] == "CWE-434"
+    assert override["status"] == "PASS"
+    assert override["mocked"] is False
+    assert override["exploit_confirmed"] is True
+    assert red["finding_id"] == "arena-hidden-upload-extension-001"
+    assert red["exploit_confirmed"] is True
+    assert judge["verdict"] == "BLUE_SUCCESS"
