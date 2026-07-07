@@ -24,4 +24,9 @@ if [[ "${1:-}" == "prove-spectator" ]]; then
   exec "$SCRIPT_DIR/scripts/prove-spectator-local.sh" "$@"
 fi
 
+if [[ "${1:-}" == "prove-backend-goal" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/prove-backend-goal-local.sh" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"
