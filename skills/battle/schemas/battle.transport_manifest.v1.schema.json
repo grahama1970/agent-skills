@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.transport_manifest.v1.schema.json",
+  "title": "Battle Transport Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "battle_id",
+    "run_id",
+    "mode",
+    "mocked",
+    "live_source",
+    "event_count",
+    "last_seq",
+    "events_jsonl",
+    "latest_snapshot",
+    "normalized_fixture_schema",
+    "proof_mode",
+    "stream_contract",
+    "replay_compression_policy",
+    "renderer_boundary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.transport_manifest.v1"
+    },
+    "battle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "const": "file_backed_replay_stream"
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "events_jsonl": {
+      "const": "events.jsonl"
+    },
+    "latest_snapshot": {
+      "const": "latest-snapshot.json"
+    },
+    "normalized_fixture_schema": {
+      "const": "battle.normalized_ux_fixture.v1"
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "stream_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "authority",
+        "event_schema",
+        "snapshot_schema",
+        "lifecycle_schema",
+        "transport",
+        "phase",
+        "fail_closed_unknown_terminal_states"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.stream_contract.v1"
+        },
+        "authority": {
+          "const": "normalized_fixture_and_receipt_events"
+        },
+        "event_schema": {
+          "const": "battle.live_event.v1"
+        },
+        "snapshot_schema": {
+          "const": "battle.snapshot.v1"
+        },
+        "lifecycle_schema": {
+          "const": "battle.lifecycle_event.v1"
+        },
+        "transport": {
+          "const": "append_only_jsonl"
+        },
+        "phase": {
+          "const": "phase_2_contract"
+        },
+        "fail_closed_unknown_terminal_states": {
+          "const": true
+        }
+      }
+    },
+    "replay_compression_policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "owner",
+        "source_time_authority",
+        "long_gap_handling",
+        "backend_emits_cinematic_speed",
+        "backend_must_not_emit"
+      ],
+      "properties": {
+        "owner": {
+          "const": "ux"
+        },
+        "source_time_authority": {
+          "const": "receipt_elapsed_seconds"
+        },
+        "long_gap_handling": {
+          "const": "ux_may_compress_presentation_time"
+        },
+        "backend_emits_cinematic_speed": {
+          "const": false
+        },
+        "backend_must_not_emit": {
+          "type": "array",
+          "contains": {
+            "const": "cinematic_speed"
+          }
+        }
+      }
+    },
+    "renderer_boundary": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

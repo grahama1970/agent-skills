@@ -24,6 +24,9 @@ DEFAULT_RENDERER_FIXTURE_RESOLUTION_SCHEMA_PATH = (
 DEFAULT_RENDERER_BUNDLE_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.ux_renderer_bundle.v1.schema.json"
 DEFAULT_RENDERER_VALUES_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.ux_renderer_values.v1.schema.json"
 DEFAULT_UX_DATA_CONTRACT_INDEX_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.ux_data_contract_index.v1.schema.json"
+DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.transport_manifest.v1.schema.json"
+DEFAULT_LIVE_EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.live_event.v1.schema.json"
+DEFAULT_SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.snapshot.v1.schema.json"
 BATTLE_SKILL_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_SCHEMA = "battle.normalized_ux_fixture.v1"
 EXPECTED_UX_CONTRACT_SCHEMA = "battle.ux_contract.v1"
@@ -33,6 +36,9 @@ EXPECTED_RENDERER_FIXTURE_RESOLUTION_SCHEMA = "battle.ux_renderer_fixture_resolu
 EXPECTED_RENDERER_BUNDLE_SCHEMA = "battle.ux_renderer_bundle.v1"
 EXPECTED_RENDERER_VALUES_SCHEMA = "battle.ux_renderer_values.v1"
 EXPECTED_UX_DATA_CONTRACT_INDEX_SCHEMA = "battle.ux_data_contract_index.v1"
+EXPECTED_TRANSPORT_MANIFEST_SCHEMA = "battle.transport_manifest.v1"
+EXPECTED_LIVE_EVENT_SCHEMA = "battle.live_event.v1"
+EXPECTED_SNAPSHOT_SCHEMA = "battle.snapshot.v1"
 EXPECTED_CANONICAL_SCENARIO = {
     "battle_id": "battle-004",
     "public_entrypoint": "/api/import-zip",
@@ -250,6 +256,132 @@ def validate_handoff_summary_schema(
     schema_path: Path = DEFAULT_HANDOFF_SUMMARY_SCHEMA_PATH,
 ) -> None:
     _validate_json_schema_payload(payload=summary, schema_path=schema_path)
+
+
+def validate_transport_manifest_schema(
+    manifest: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=manifest, schema_path=schema_path)
+
+
+def validate_live_event_schema(
+    event: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_LIVE_EVENT_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=event, schema_path=schema_path)
+
+
+def validate_snapshot_schema(
+    snapshot: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_SNAPSHOT_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=snapshot, schema_path=schema_path)
+
+
+def validate_transport_stream_path(
+    stream_dir: Path,
+    *,
+    manifest_schema_path: Path = DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH,
+    live_event_schema_path: Path = DEFAULT_LIVE_EVENT_SCHEMA_PATH,
+    snapshot_schema_path: Path = DEFAULT_SNAPSHOT_SCHEMA_PATH,
+) -> dict[str, Any]:
+    stream_root = stream_dir.expanduser().resolve()
+    manifest_path = stream_root / "manifest.json"
+    if not manifest_path.exists():
+        raise ContractError(f"transport manifest not found: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    validate_transport_manifest_schema(manifest, schema_path=manifest_schema_path)
+
+    events_name = str(manifest.get("events_jsonl") or "")
+    snapshot_name = str(manifest.get("latest_snapshot") or "")
+    events_path = stream_root / events_name
+    snapshot_path = stream_root / snapshot_name
+    if not events_path.exists():
+        raise ContractError(f"transport events JSONL not found: {events_path}")
+    if not snapshot_path.exists():
+        raise ContractError(f"transport latest snapshot not found: {snapshot_path}")
+
+    events: list[dict[str, Any]] = []
+    for line_number, line in enumerate(events_path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ContractError(f"events.jsonl line {line_number} is not valid JSON: {exc}") from exc
+        validate_live_event_schema(event, schema_path=live_event_schema_path)
+        events.append(event)
+
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    validate_snapshot_schema(snapshot, schema_path=snapshot_schema_path)
+    _validate_transport_stream_semantics(manifest=manifest, events=events, snapshot=snapshot)
+    return {
+        "status": "PASS",
+        "schema": EXPECTED_TRANSPORT_MANIFEST_SCHEMA,
+        "stream_dir": str(stream_root),
+        "manifest": str(manifest_path),
+        "events_jsonl": str(events_path),
+        "latest_snapshot": str(snapshot_path),
+        "event_count": len(events),
+        "last_seq": events[-1]["seq"] if events else 0,
+        "mocked": manifest.get("mocked"),
+        "live_source": manifest.get("live_source"),
+        "phase": manifest.get("stream_contract", {}).get("phase") if isinstance(manifest.get("stream_contract"), dict) else None,
+    }
+
+
+def _validate_transport_stream_semantics(*, manifest: dict[str, Any], events: list[dict[str, Any]], snapshot: dict[str, Any]) -> None:
+    errors: list[str] = []
+    _check(manifest.get("event_count") == len(events), "manifest.event_count must match events.jsonl line count", errors)
+    _check(manifest.get("last_seq") == (events[-1]["seq"] if events else 0), "manifest.last_seq must match final event seq", errors)
+    expected_seq = list(range(1, len(events) + 1))
+    _check([event.get("seq") for event in events] == expected_seq, "events seq values must be append-only contiguous integers", errors)
+    _check(snapshot.get("last_seq") == manifest.get("last_seq"), "snapshot.last_seq must match manifest.last_seq", errors)
+    _check(snapshot.get("battle_id") == manifest.get("battle_id"), "snapshot.battle_id must match manifest.battle_id", errors)
+    _check(snapshot.get("run_id") == manifest.get("run_id"), "snapshot.run_id must match manifest.run_id", errors)
+
+    policy = manifest.get("replay_compression_policy") if isinstance(manifest.get("replay_compression_policy"), dict) else {}
+    _check(policy.get("owner") == "ux", "transport replay compression owner must be ux", errors)
+    _check(policy.get("backend_emits_cinematic_speed") is False, "backend must not emit cinematic speed", errors)
+    _check("cinematic_speed" in {str(item) for item in policy.get("backend_must_not_emit", [])}, "transport policy must forbid cinematic_speed", errors)
+
+    semantic_replay = snapshot.get("semantic_replay") if isinstance(snapshot.get("semantic_replay"), dict) else {}
+    _check(semantic_replay.get("presentation_owner") == "ux", "snapshot semantic_replay.presentation_owner must be ux", errors)
+    _check(semantic_replay.get("time_authority") == "receipt_elapsed_seconds", "snapshot semantic_replay.time_authority must be receipt_elapsed_seconds", errors)
+    _check("cinematic_speed" in {str(item) for item in semantic_replay.get("backend_must_not_emit", [])}, "snapshot semantic replay must forbid cinematic_speed", errors)
+
+    lanes = snapshot.get("lanes") if isinstance(snapshot.get("lanes"), list) else []
+    lane_scores = {
+        str(lane.get("id")): lane.get("score_semantics")
+        for lane in lanes
+        if isinstance(lane, dict) and isinstance(lane.get("score_semantics"), dict) and lane.get("id")
+    }
+    spawn_receipts = {
+        str(spawn.get("receipt_id")): spawn
+        for spawn in (snapshot.get("lineage", {}) or {}).get("spawns", [])
+        if isinstance(spawn, dict) and spawn.get("receipt_id")
+    }
+    lifecycle_events = [event.get("lifecycle") for event in events if isinstance(event.get("lifecycle"), dict)]
+    _check(len(lifecycle_events) == len(events), "every stream event must include lifecycle semantics", errors)
+    terminal_outcomes = {"pre_spawn_blue_block", "confirmed_blue_kill_no_child", "confirmed_blue_kill_with_child", "post_spawn_child_contained", "spawn_pressure_conceded", "red_breakthrough", "unresolved_pressure"}
+    for event in events:
+        lifecycle = event.get("lifecycle") if isinstance(event.get("lifecycle"), dict) else {}
+        lane_id = str(lifecycle.get("lane_id") or "")
+        score = lane_scores.get(lane_id)
+        if score:
+            _check(lifecycle.get("outcome_class") == score.get("outcome_class"), f"event {event.get('seq')} lifecycle outcome_class must match lane score semantics", errors)
+            _check(lifecycle.get("score_delta") == score.get("score_delta"), f"event {event.get('seq')} lifecycle score_delta must match lane score semantics", errors)
+        _check(lifecycle.get("outcome_class") in terminal_outcomes, f"event {event.get('seq')} lifecycle outcome_class is not fail-closed", errors)
+        receipt_id = str(lifecycle.get("receipt_id") or "")
+        if receipt_id in spawn_receipts:
+            _check(lifecycle.get("spawn_type") == spawn_receipts[receipt_id].get("spawn_type"), f"event {event.get('seq')} spawn_type must match lineage receipt", errors)
+
+    if errors:
+        raise ContractError("\n".join(errors))
 
 
 def _validate_json_schema_payload(*, payload: dict[str, Any], schema_path: Path) -> None:

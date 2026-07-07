@@ -470,6 +470,28 @@ def generate_ux_transport(
     print(_json.dumps(result, indent=2, sort_keys=True))
 
 
+@app.command("validate-ux-transport")
+def validate_ux_transport(
+    stream_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Battle stream directory containing manifest.json, events.jsonl, and latest-snapshot.json.",
+    ),
+):
+    """Validate file-backed Battle UX transport artifacts for Phase 2 stream replay."""
+    from .ux_contract_validator import ContractError, validate_transport_stream_path
+
+    try:
+        report = validate_transport_stream_path(stream_dir)
+    except ContractError as exc:
+        console.print(f"[red]Battle UX transport invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

@@ -19,9 +19,11 @@
     "segments",
     "lanes",
     "lineage",
+    "semantic_replay",
     "scoreboard",
     "claims",
-    "validation"
+    "validation",
+    "replay_compression_policy"
   ],
   "properties": {
     "schema": {
@@ -107,6 +109,13 @@
       ],
       "additionalProperties": true
     },
+    "semantic_replay": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
     "scoreboard": {
       "type": [
         "object",
@@ -127,6 +136,30 @@
         "null"
       ],
       "additionalProperties": true
+    },
+    "replay_compression_policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "owner",
+        "source_time_authority",
+        "long_gap_handling",
+        "backend_emits_cinematic_speed"
+      ],
+      "properties": {
+        "owner": {
+          "const": "ux"
+        },
+        "source_time_authority": {
+          "const": "receipt_elapsed_seconds"
+        },
+        "long_gap_handling": {
+          "const": "ux_may_compress_presentation_time"
+        },
+        "backend_emits_cinematic_speed": {
+          "const": false
+        }
+      }
     }
   }
 }

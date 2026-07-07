@@ -16,16 +16,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import battle_skill.battle_event_adapter as battle_event_adapter  # noqa: E402
 import battle_skill.cli as battle_cli  # noqa: E402
 import battle_skill.ux_contract_validator as ux_contract_validator  # noqa: E402
-from battle_skill.battle_event_adapter import adapt_proof_dir, generate_fixture_files  # noqa: E402
+from battle_skill.battle_event_adapter import adapt_proof_dir, generate_fixture_files, generate_transport_files  # noqa: E402
 from battle_skill.ux_contract_validator import (  # noqa: E402
+    DEFAULT_LIVE_EVENT_SCHEMA_PATH,
     DEFAULT_HANDOFF_SUMMARY_SCHEMA_PATH,
     DEFAULT_RENDERER_BUNDLE_SCHEMA_PATH,
     DEFAULT_RENDERER_VALUES_SCHEMA_PATH,
     DEFAULT_RENDERER_FIXTURE_RESOLUTION_SCHEMA_PATH,
+    DEFAULT_SNAPSHOT_SCHEMA_PATH,
+    DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH,
     DEFAULT_UX_DATA_CONTRACT_INDEX_SCHEMA_PATH,
+    EXPECTED_LIVE_EVENT_SCHEMA,
     EXPECTED_RENDERER_FIXTURE_RESOLUTION_SCHEMA,
     EXPECTED_RENDERER_BUNDLE_SCHEMA,
     EXPECTED_RENDERER_VALUES_SCHEMA,
+    EXPECTED_SNAPSHOT_SCHEMA,
+    EXPECTED_TRANSPORT_MANIFEST_SCHEMA,
     EXPECTED_UX_DATA_CONTRACT_INDEX_SCHEMA,
     EXPECTED_RENDERER_FIXTURE_RESOLUTION_COMMAND,
     EXPECTED_RENDERER_FIXTURE_RESOLUTION_PATH,
@@ -57,6 +63,10 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     validate_handoff_summary,
     validate_handoff_summary_schema,
     validate_handoff_summary_path,
+    validate_live_event_schema,
+    validate_snapshot_schema,
+    validate_transport_manifest_schema,
+    validate_transport_stream_path,
 )
 
 
@@ -69,6 +79,9 @@ RESOLUTION_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "batt
 BUNDLE_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.ux_renderer_bundle.v1.schema.json"
 VALUES_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.ux_renderer_values.v1.schema.json"
 INDEX_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.ux_data_contract_index.v1.schema.json"
+TRANSPORT_MANIFEST_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.transport_manifest.v1.schema.json"
+LIVE_EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.live_event.v1.schema.json"
+SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.snapshot.v1.schema.json"
 
 
 def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
@@ -165,6 +178,26 @@ def test_exploit_lifecycle_schemas_track_spawn_contract() -> None:
     assert lineage_spawn["properties"]["schema"]["const"] == "battle.exploit_spawn.v1"
     assert "spawn_type" in lineage_spawn["required"]
     assert "threat_assessment" in lineage_spawn["required"]
+
+
+def test_phase2_transport_schemas_track_lifecycle_replay_contract() -> None:
+    manifest_schema = json.loads(TRANSPORT_MANIFEST_SCHEMA_PATH.read_text(encoding="utf-8"))
+    event_schema = json.loads(LIVE_EVENT_SCHEMA_PATH.read_text(encoding="utf-8"))
+    snapshot_schema = json.loads(SNAPSHOT_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+    assert DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH == TRANSPORT_MANIFEST_SCHEMA_PATH
+    assert DEFAULT_LIVE_EVENT_SCHEMA_PATH == LIVE_EVENT_SCHEMA_PATH
+    assert DEFAULT_SNAPSHOT_SCHEMA_PATH == SNAPSHOT_SCHEMA_PATH
+    assert manifest_schema["properties"]["schema"]["const"] == EXPECTED_TRANSPORT_MANIFEST_SCHEMA
+    assert event_schema["properties"]["schema"]["const"] == EXPECTED_LIVE_EVENT_SCHEMA
+    assert snapshot_schema["properties"]["schema"]["const"] == EXPECTED_SNAPSHOT_SCHEMA
+    assert manifest_schema["properties"]["stream_contract"]["properties"]["phase"]["const"] == "phase_2_contract"
+    assert manifest_schema["properties"]["replay_compression_policy"]["properties"]["owner"]["const"] == "ux"
+    assert manifest_schema["properties"]["replay_compression_policy"]["properties"]["backend_emits_cinematic_speed"]["const"] is False
+    assert event_schema["properties"]["lifecycle"]["$ref"] == "#/$defs/lifecycle_event"
+    assert event_schema["$defs"]["lifecycle_event"]["properties"]["presentation_owner"]["const"] == "ux"
+    assert "post_spawn_child_contained" in event_schema["$defs"]["lifecycle_event"]["properties"]["outcome_class"]["enum"]
+    assert snapshot_schema["properties"]["replay_compression_policy"]["properties"]["long_gap_handling"]["const"] == "ux_may_compress_presentation_time"
 
 
 def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> None:
@@ -1737,6 +1770,34 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert "ZIP_SLIP_CONFIRMED" in spawn["inherited_state"]["known_failure_modes"]
     assert spawn["mutation_goal"] == "Continue Red exploit from retained parent signal."
     assert spawn["source_receipts"] == ["blue-tau-subagent-receipt", "judge-receipt", "red-0-tau-subagent-receipt"]
+
+    transport = generate_transport_files(fixture=fixture, out_dir=tmp_path / "stream")
+    assert transport["schema"] == "battle.transport_generation.v1"
+    transport_report = validate_transport_stream_path(tmp_path / "stream")
+    assert transport_report["status"] == "PASS"
+    assert transport_report["schema"] == EXPECTED_TRANSPORT_MANIFEST_SCHEMA
+    manifest = json.loads((tmp_path / "stream" / "manifest.json").read_text(encoding="utf-8"))
+    snapshot = json.loads((tmp_path / "stream" / "latest-snapshot.json").read_text(encoding="utf-8"))
+    event_lines = [
+        json.loads(line)
+        for line in (tmp_path / "stream" / "events.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    validate_transport_manifest_schema(manifest)
+    validate_snapshot_schema(snapshot)
+    validate_live_event_schema(event_lines[0])
+    assert manifest["stream_contract"]["lifecycle_schema"] == "battle.lifecycle_event.v1"
+    assert manifest["replay_compression_policy"]["owner"] == "ux"
+    assert manifest["replay_compression_policy"]["backend_emits_cinematic_speed"] is False
+    assert snapshot["semantic_replay"]["event_count"] == fixture["semantic_replay"]["event_count"]
+    spawn_event = next(event for event in event_lines if event["event_id"] == "payload-857-receipt-spawned-payload-857-red-1")
+    assert spawn_event["lifecycle"]["schema"] == "battle.lifecycle_event.v1"
+    assert spawn_event["lifecycle"]["spawn_type"] == "post_block_handoff"
+    assert spawn_event["lifecycle"]["outcome_class"] == parent["score_semantics"]["outcome_class"]
+    assert spawn_event["lifecycle"]["score_delta"] == parent["score_semantics"]["score_delta"]
+    child_block_event = next(event for event in event_lines if event["event_id"] == "red-1__blue-0-blue-success")
+    assert child_block_event["lifecycle"]["outcome_class"] == child["score_semantics"]["outcome_class"]
+    assert child_block_event["lifecycle"]["score_delta"] == child["score_semantics"]["score_delta"]
 
     assert "tau.spawned_child" in event_types
     assert "blue.kill_confirmed" not in event_types

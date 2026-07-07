@@ -166,6 +166,23 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
         "latest_snapshot": "latest-snapshot.json",
         "normalized_fixture_schema": fixture.get("schema"),
         "proof_mode": fixture.get("proof_mode"),
+        "stream_contract": {
+            "schema": "battle.stream_contract.v1",
+            "authority": "normalized_fixture_and_receipt_events",
+            "event_schema": "battle.live_event.v1",
+            "snapshot_schema": "battle.snapshot.v1",
+            "lifecycle_schema": "battle.lifecycle_event.v1",
+            "transport": "append_only_jsonl",
+            "phase": "phase_2_contract",
+            "fail_closed_unknown_terminal_states": True,
+        },
+        "replay_compression_policy": {
+            "owner": "ux",
+            "source_time_authority": "receipt_elapsed_seconds",
+            "long_gap_handling": "ux_may_compress_presentation_time",
+            "backend_emits_cinematic_speed": False,
+            "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+        },
         "renderer_boundary": {
             "backend_emits": [
                 "clock",
@@ -175,6 +192,7 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
                 "lineage",
                 "receipts",
                 "actor_visual_identity_when_present",
+                "lifecycle_events",
             ],
             "backend_must_not_emit": [
                 "pixi_object_ids",
@@ -3194,6 +3212,16 @@ def _elapsed_fields(source: dict[str, Any], *keys: str) -> dict[str, float]:
 def _live_event_envelopes(fixture: dict[str, Any]) -> list[dict[str, Any]]:
     observed_at = _first_str(fixture.get("generated_at"), "1970-01-01T00:00:00Z")
     run_id = _fixture_run_id(fixture)
+    lane_by_id = {
+        str(lane.get("id")): lane
+        for lane in fixture.get("lanes", [])
+        if isinstance(lane, dict) and lane.get("id")
+    }
+    spawn_by_receipt = {
+        str(spawn.get("receipt_id")): spawn
+        for spawn in (fixture.get("lineage", {}) or {}).get("spawns", [])
+        if isinstance(spawn, dict) and spawn.get("receipt_id")
+    }
     envelopes: list[dict[str, Any]] = []
 
     for event in fixture.get("events", []):
@@ -3213,6 +3241,12 @@ def _live_event_envelopes(fixture: dict[str, Any]) -> list[dict[str, Any]]:
                 "observed_at": _first_str(event.get("ts"), observed_at),
                 "event_type": _first_str(event.get("event_type"), "battle.event"),
                 "payload": _live_event_payload(event),
+                "lifecycle": _lifecycle_event_for_source_event(
+                    event=event,
+                    at_seconds=at_seconds,
+                    lane_by_id=lane_by_id,
+                    spawn_by_receipt=spawn_by_receipt,
+                ),
             }
         )
 
@@ -3244,6 +3278,7 @@ def _live_event_envelopes(fixture: dict[str, Any]) -> list[dict[str, Any]]:
                     "proof_mode": segment.get("proof_mode", PROOF_MODE),
                     "renderer_boundary": "Pixi may interpolate runner motion only inside this declared segment.",
                 },
+                "lifecycle": _lifecycle_event_for_segment(segment=segment, lane_by_id=lane_by_id),
             }
         )
 
@@ -3266,15 +3301,70 @@ def _snapshot_envelope(*, fixture: dict[str, Any], last_seq: int) -> dict[str, A
         "segments": _renderer_safe_copy(fixture.get("segments", [])),
         "lanes": _renderer_safe_copy(fixture.get("lanes", [])),
         "lineage": _renderer_safe_copy(fixture.get("lineage")),
+        "semantic_replay": _renderer_safe_copy(fixture.get("semantic_replay")),
         "scoreboard": _renderer_safe_copy(fixture.get("scoreboard")),
         "claims": _renderer_safe_copy(fixture.get("claims")),
         "validation": _renderer_safe_copy(fixture.get("validation")),
         "normalized_fixture_schema": fixture.get("schema"),
         "normalized_fixture_path": "battle.normalized_ux_fixture.json",
+        "replay_compression_policy": {
+            "owner": "ux",
+            "source_time_authority": "receipt_elapsed_seconds",
+            "long_gap_handling": "ux_may_compress_presentation_time",
+            "backend_emits_cinematic_speed": False,
+        },
         "renderer_boundary": {
             "backend_authority": "clock/events/segments/lanes/lineage/receipts",
             "pixi_authority": "pixels/camera/scroll/easing/sprite frame playback/effects",
         },
+    }
+
+
+def _lifecycle_event_for_source_event(
+    *,
+    event: dict[str, Any],
+    at_seconds: float,
+    lane_by_id: dict[str, dict[str, Any]],
+    spawn_by_receipt: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    lane_id = _first_str(event.get("red_lane_id"), event.get("actor_id"), "")
+    lane = lane_by_id.get(lane_id, {})
+    score = lane.get("score_semantics") if isinstance(lane.get("score_semantics"), dict) else {}
+    receipt_id = _receipt_id_from_event(event)
+    spawn = spawn_by_receipt.get(receipt_id, {})
+    return {
+        "schema": "battle.lifecycle_event.v1",
+        "source_time_seconds": at_seconds,
+        "phase": _first_str(event.get("turn", {}).get("phase") if isinstance(event.get("turn"), dict) else None, event.get("event_type"), "battle.event"),
+        "importance": _first_str(event.get("ui", {}).get("importance") if isinstance(event.get("ui"), dict) else None, "visible"),
+        "lane_id": lane_id,
+        "exploit_id": _first_str(lane.get("id"), lane_id),
+        "spawn_type": _first_str(spawn.get("spawn_type"), ""),
+        "outcome_class": _first_str(score.get("outcome_class"), "unresolved_pressure"),
+        "score_delta": deepcopy(score.get("score_delta")) if isinstance(score.get("score_delta"), dict) else {"red": 0.0, "blue": 0.0},
+        "receipt_id": receipt_id,
+        "presentation_owner": "ux",
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _lifecycle_event_for_segment(*, segment: dict[str, Any], lane_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    lane_id = _first_str(segment.get("lane_id"), "")
+    lane = lane_by_id.get(lane_id, {})
+    score = lane.get("score_semantics") if isinstance(lane.get("score_semantics"), dict) else {}
+    return {
+        "schema": "battle.lifecycle_event.v1",
+        "source_time_seconds": _number_or_none(segment.get("start_seconds")) or 0.0,
+        "phase": _first_str(segment.get("kind"), "segment"),
+        "importance": "context",
+        "lane_id": lane_id,
+        "exploit_id": lane_id,
+        "spawn_type": "",
+        "outcome_class": _first_str(score.get("outcome_class") if isinstance(score, dict) else None, "unresolved_pressure"),
+        "score_delta": deepcopy(score.get("score_delta")) if isinstance(score, dict) and isinstance(score.get("score_delta"), dict) else {"red": 0.0, "blue": 0.0},
+        "receipt_id": _first_str(segment.get("source_event_id"), ""),
+        "presentation_owner": "ux",
+        "proof_mode": PROOF_MODE,
     }
 
 

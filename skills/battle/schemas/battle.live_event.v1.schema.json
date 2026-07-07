@@ -13,7 +13,8 @@
     "at_seconds",
     "observed_at",
     "event_type",
-    "payload"
+    "payload",
+    "lifecycle"
   ],
   "properties": {
     "schema": {
@@ -49,37 +50,87 @@
     },
     "payload": {
       "type": "object",
+      "additionalProperties": true
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/lifecycle_event"
+    }
+  },
+  "$defs": {
+    "lifecycle_event": {
+      "type": "object",
       "additionalProperties": true,
       "required": [
+        "schema",
+        "source_time_seconds",
+        "phase",
+        "importance",
+        "lane_id",
+        "exploit_id",
+        "spawn_type",
+        "outcome_class",
+        "score_delta",
+        "receipt_id",
+        "presentation_owner",
         "proof_mode"
       ],
       "properties": {
+        "schema": {
+          "const": "battle.lifecycle_event.v1"
+        },
+        "source_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "importance": {
+          "type": "string",
+          "minLength": 1
+        },
         "lane_id": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "actor_id": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "team": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "status_after": {
           "type": "string"
         },
-        "receipt_id": {
-          "type": [
-            "string",
-            "null"
+        "exploit_id": {
+          "type": "string"
+        },
+        "spawn_type": {
+          "type": "string"
+        },
+        "outcome_class": {
+          "enum": [
+            "unresolved_pressure",
+            "pre_spawn_blue_block",
+            "confirmed_blue_kill_no_child",
+            "confirmed_blue_kill_with_child",
+            "post_spawn_child_contained",
+            "spawn_pressure_conceded",
+            "red_breakthrough"
           ]
+        },
+        "score_delta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "red",
+            "blue"
+          ],
+          "properties": {
+            "red": {
+              "type": "number"
+            },
+            "blue": {
+              "type": "number"
+            }
+          }
+        },
+        "receipt_id": {
+          "type": "string"
+        },
+        "presentation_owner": {
+          "const": "ux"
         },
         "proof_mode": {
           "const": "receipt_backed_fixture"

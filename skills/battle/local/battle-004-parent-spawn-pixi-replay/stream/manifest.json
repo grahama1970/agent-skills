@@ -17,7 +17,8 @@
       "lanes",
       "lineage",
       "receipts",
-      "actor_visual_identity_when_present"
+      "actor_visual_identity_when_present",
+      "lifecycle_events"
     ],
     "backend_must_not_emit": [
       "pixi_object_ids",
@@ -27,6 +28,28 @@
       "particle_parameters"
     ]
   },
+  "replay_compression_policy": {
+    "backend_emits_cinematic_speed": false,
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "long_gap_handling": "ux_may_compress_presentation_time",
+    "owner": "ux",
+    "source_time_authority": "receipt_elapsed_seconds"
+  },
   "run_id": "arena-parent-spawn-20260706T134722Z",
-  "schema": "battle.transport_manifest.v1"
+  "schema": "battle.transport_manifest.v1",
+  "stream_contract": {
+    "authority": "normalized_fixture_and_receipt_events",
+    "event_schema": "battle.live_event.v1",
+    "fail_closed_unknown_terminal_states": true,
+    "lifecycle_schema": "battle.lifecycle_event.v1",
+    "phase": "phase_2_contract",
+    "schema": "battle.stream_contract.v1",
+    "snapshot_schema": "battle.snapshot.v1",
+    "transport": "append_only_jsonl"
+  }
 }
