@@ -1,0 +1,1432 @@
+/* Faithful element styles from battle-004-shell-preserving-scroll-timeline.html */
+
+.battle-mockup-shell {
+  --label-w: 290px;
+  --row-h-root: 92px;
+  --row-h-child: 86px;
+}
+
+.battle-mockup-shell .row {
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr;
+  position: relative;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.battle-mockup-shell .row.root {
+  height: var(--row-h-root);
+  min-height: var(--row-h-root);
+}
+
+.battle-mockup-shell .row.child {
+  height: var(--row-h-child);
+  min-height: var(--row-h-child);
+}
+
+.battle-mockup-shell .row:hover,
+.battle-mockup-shell .row.lineageHot {
+  background: rgba(90, 173, 255, 0.03);
+}
+
+.battle-mockup-shell .row.selected {
+  background: linear-gradient(90deg, rgba(60, 240, 122, 0.07), rgba(60, 240, 122, 0.015));
+  box-shadow: inset 3px 0 0 rgba(60, 240, 122, 0.4);
+}
+
+.battle-mockup-shell .labelCell {
+  position: sticky;
+  left: 0;
+  z-index: 8;
+  display: grid;
+  grid-template-columns: 20px 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 0 10px;
+  background: linear-gradient(90deg, rgba(8, 18, 32, 0.98) 85%, rgba(8, 18, 32, 0.85));
+  border-right: 1px solid rgba(90, 173, 255, 0.08);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
+  height: 100%;
+}
+
+.battle-mockup-shell .row.selected .labelCell {
+  background: linear-gradient(90deg, rgba(12, 32, 22, 0.98) 85%, rgba(12, 32, 22, 0.85));
+}
+
+.battle-mockup-shell .childIndent .labelCell {
+  padding-left: 28px;
+  position: relative;
+}
+
+.battle-mockup-shell .childIndent .labelCell::before {
+  content: "";
+  position: absolute;
+  left: 38px;
+  top: 50%;
+  width: 24px;
+  border-top: 1.5px solid rgba(60, 240, 122, 0.35);
+}
+
+.battle-mockup-shell .chev {
+  color: #8a9eb8;
+  cursor: pointer;
+  width: 20px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.battle-mockup-shell .laneIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid currentColor;
+}
+
+.battle-mockup-shell .row.root .laneIcon { color: #ff4d5c; }
+.battle-mockup-shell .row.child .laneIcon { color: #3cf07a; }
+.battle-mockup-shell .row.purple .laneIcon { color: #c47aff; }
+
+.battle-mockup-shell .name {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: #e6eef8;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-mockup-shell .payload {
+  font-size: 10px;
+  color: #5a6e85;
+  font-weight: 500;
+  margin-top: 2px;
+  font-family: ui-monospace, Menlo, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-mockup-shell .gen {
+  font-size: 8.5px;
+  color: #7ec0ff;
+  border: 1px solid rgba(90, 173, 255, 0.22);
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.battle-mockup-shell .gen.g2 {
+  color: #7affa5;
+  border-color: rgba(60, 240, 122, 0.18);
+}
+
+.battle-mockup-shell .track {
+  position: relative;
+  height: 100%;
+  overflow: visible;
+}
+
+.battle-mockup-shell .trackGrid {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(90, 173, 255, 0.06) 0 1px, transparent 1px 5.555%),
+    linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 19.95%,
+      rgba(90, 173, 255, 0.08) 20%,
+      transparent 20.05%,
+      transparent 39.95%,
+      rgba(90, 173, 255, 0.08) 40%,
+      transparent 40.05%,
+      transparent 59.95%,
+      rgba(90, 173, 255, 0.08) 60%,
+      transparent 60.05%,
+      transparent 79.95%,
+      rgba(90, 173, 255, 0.08) 80%,
+      transparent 80.05%
+    );
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.battle-mockup-shell .laneTop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.battle-mockup-shell .laneMidAbove {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.battle-mockup-shell .laneCenter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44%;
+  transform: translateY(-50%);
+  height: 24px;
+  z-index: 4;
+}
+
+.battle-mockup-shell .laneBottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.battle-mockup-shell .phaseLabel {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  background: rgba(4, 10, 18, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.1;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-mockup-shell .phaseLabel.top { color: #8a9eb8; top: 0; }
+.battle-mockup-shell .phaseLabel.bottom { color: #ff8a92; bottom: 0; }
+.battle-mockup-shell .phaseLabel.bottom.green { color: #8fffb0; }
+.battle-mockup-shell .phaseLabel.bottom.blue { color: #7ec0ff; }
+.battle-mockup-shell .phaseLabel.bottom.yellow { color: #ffe070; }
+
+.battle-mockup-shell .line {
+  position: absolute;
+  height: 4px;
+  border-radius: 99px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.battle-mockup-shell .line.red {
+  background: linear-gradient(90deg, #ff4d5c, #ff7a85);
+  box-shadow: 0 0 14px rgba(255, 77, 92, 0.3);
+}
+
+.battle-mockup-shell .line.green {
+  background: linear-gradient(90deg, #3cf07a, #7affa5);
+  box-shadow: 0 0 14px rgba(60, 240, 122, 0.3);
+}
+
+.battle-mockup-shell .line.purple {
+  background: linear-gradient(90deg, #c47aff, #e0aaff);
+  box-shadow: 0 0 14px rgba(196, 122, 255, 0.3);
+}
+
+.battle-mockup-shell .markerIcon {
+  position: absolute;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+}
+
+.battle-mockup-shell .markerIcon.terminal {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.battle-mockup-shell .markerIcon.terminal.big {
+  width: 34px;
+  height: 34px;
+}
+
+.battle-mockup-shell .tokYellow { color: #ffd24d; }
+.battle-mockup-shell .tokRed { color: #ff4d5c; }
+.battle-mockup-shell .tokBlue { color: #5aadff; }
+.battle-mockup-shell .tokGreen { color: #3cf07a; }
+.battle-mockup-shell .tokPurple { color: #c47aff; }
+
+.battle-mockup-shell .token.labelOnly {
+  position: absolute;
+  transform: translateX(-50%);
+  height: 18px;
+  padding: 0 5px;
+  font-size: 7.5px;
+  top: 0;
+  border-radius: 6px;
+  background: rgba(4, 10, 18, 0.95);
+  border: 1px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.battle-mockup-shell .bluePatchRow {
+  height: 34px;
+  position: relative;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.06);
+  background: rgba(4, 10, 18, 0.35);
+}
+
+.battle-mockup-shell .bluePatch {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 8.5px;
+  color: #7ec0ff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.battle-mockup-shell .bluePatch .bpSub {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 8px;
+  color: #5a6e85;
+  font-weight: 600;
+}
+
+.battle-mockup-shell .leaderItem .rank.r1 { color: #ff6b7a; }
+.battle-mockup-shell .leaderItem .rank.r2 { color: #3cf07a; }
+.battle-mockup-shell .leaderItem .rank.r3 { color: #5aadff; }
+
+.battle-mockup-shell .leaderItem.selected {
+  background: rgba(60, 240, 122, 0.06);
+  margin: 0 -8px;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.battle-mockup-shell .footerLegend {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+  border-top: 1px solid rgba(90, 173, 255, 0.07);
+  background: rgba(3, 8, 15, 0.45);
+  font-size: 10.5px;
+  color: #6a7d94;
+  flex-shrink: 0;
+}
+
+.battle-mockup-shell .footerLegend b {
+  color: #5a6e85;
+  margin-right: 8px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.battle-mockup-shell .footerLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+}
+
+.battle-mockup-shell .playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(94, 230, 255, 0.25), #5ee6ff, rgba(94, 230, 255, 0.25));
+  box-shadow: 0 0 14px rgba(94, 230, 255, 0.75), 0 0 2px #5ee6ff;
+  pointer-events: none;
+  z-index: 17;
+}
+
+.battle-mockup-shell .playhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -1px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #5ee6ff;
+  box-shadow: 0 0 16px rgba(94, 230, 255, 0.9);
+}
+
+.battle-mockup-shell .battle-lineage-branch {
+  stroke: rgba(60, 240, 122, 0.55);
+  stroke-width: 2;
+}
+
+.battle-mockup-shell .graphTitleBar {
+  height: 44px;
+}
+
+.battle-mockup-shell .field label {
+  display: block;
+  color: #5a6e85;
+  font-size: 11px;
+  margin-bottom: 5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.battle-mockup-shell .battle-lineage-svg .battle-lineage-branch {
+  stroke: rgba(60, 240, 122, 0.55);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(60, 240, 122, 0.25));
+}
+
+/* Lineage rails — HTML mockup parity (branchRail + spawnConnector) */
+.battle-mockup-shell .branchRail {
+  position: absolute;
+  left: calc(var(--label-w) + 38px);
+  border-left: 2px solid rgba(60, 240, 122, 0.55);
+  width: 2px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.battle-mockup-shell .branchRail::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 34px;
+  border-bottom: 2px solid rgba(60, 240, 122, 0.55);
+  border-radius: 0 0 0 6px;
+}
+
+.battle-mockup-shell .spawnConnector {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(60, 240, 122, 0.7), rgba(60, 240, 122, 0.25));
+  z-index: 3;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+
+.battle-mockup-shell .playheadOverlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr;
+  pointer-events: none;
+  z-index: 17;
+}
+
+.battle-mockup-shell .playheadTrack {
+  cursor: ew-resize;
+  pointer-events: auto;
+  position: relative;
+  height: 100%;
+}
+
+/* Header — battle-004 topbar */
+.battle-mockup-shell .topbar {
+  height: auto;
+  min-height: 118px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) 250px minmax(360px, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  border: 1px solid rgba(90, 173, 255, 0.1);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(10, 22, 38, 0.7), rgba(4, 10, 18, 0.76));
+  backdrop-filter: blur(28px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-mockup-shell .topbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(90, 173, 255, 0.2), transparent);
+  pointer-events: none;
+}
+
+.battle-mockup-shell .title h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fff, #b4d0ec);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.battle-mockup-shell .title p {
+  margin: 6px 0 0;
+  color: #7a8fa8;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.battle-mockup-shell .dim {
+  color: #6a7d94;
+  font-weight: 400;
+}
+
+.battle-mockup-shell .metaInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 11px;
+  color: #5a6e85;
+}
+
+.battle-mockup-shell .metaInline b {
+  color: #8a9eb8;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.battle-mockup-shell .roundClock {
+  font-variant-numeric: tabular-nums;
+  color: #7ec0ff;
+  font-weight: 700;
+}
+
+.battle-mockup-shell .score {
+  height: 58px;
+  display: grid;
+  grid-template-columns: 1fr 46px 1fr;
+  background: rgba(4, 10, 18, 0.65);
+  border: 1px solid rgba(90, 173, 255, 0.16);
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+  position: relative;
+}
+
+.battle-mockup-shell .scoreSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 10px;
+  min-width: 0;
+}
+
+.battle-mockup-shell .scoreSide.red {
+  background: linear-gradient(180deg, rgba(255, 77, 92, 0.16), rgba(255, 77, 92, 0.04));
+  color: #ff6b7a;
+}
+
+.battle-mockup-shell .scoreSide.blue {
+  background: linear-gradient(180deg, rgba(90, 173, 255, 0.14), rgba(90, 173, 255, 0.04));
+  color: #7ec0ff;
+}
+
+.battle-mockup-shell .scoreLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.battle-mockup-shell .scoreValueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.battle-mockup-shell .scoreIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid currentColor;
+  flex-shrink: 0;
+}
+
+.battle-mockup-shell .scoreNum {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.battle-mockup-shell .score .vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a5e75;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.battle-mockup-shell .liveEvents {
+  width: min(360px, 100%);
+  border: 1px solid rgba(90, 173, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(3, 8, 15, 0.75);
+  padding: 10px 12px;
+  flex-shrink: 0;
+  justify-self: end;
+}
+
+.battle-mockup-shell .liveEventsHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9ab0c8;
+  margin-bottom: 8px;
+}
+
+.battle-mockup-shell .dot.red {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff5a68;
+  box-shadow: 0 0 10px rgba(255, 90, 104, 0.6);
+}
+
+.battle-mockup-shell .liveEventRow {
+  display: grid;
+  grid-template-columns: 58px 18px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 5px 0;
+  border-top: 1px solid rgba(90, 173, 255, 0.06);
+  font-size: 11.5px;
+  color: #9ab0c8;
+  line-height: 1.35;
+}
+
+.battle-mockup-shell .liveEventRow:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.battle-mockup-shell .leTime {
+  font-family: ui-monospace, Menlo, monospace;
+  color: #6a7d94;
+  font-size: 11px;
+}
+
+.battle-mockup-shell .leText b.green { color: #3cf07a; }
+.battle-mockup-shell .leText b.blue { color: #5aadff; }
+
+/* Agent detail pane */
+.battle-mockup-shell .paneLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6a8098;
+}
+
+.battle-mockup-shell .agentName {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+  color: #f0f5fa;
+}
+
+.battle-mockup-shell .agentMeta {
+  font-size: 11px;
+  color: #8a9eb8;
+}
+
+.battle-mockup-shell .loopGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.battle-mockup-shell .loopGrid div {
+  border: 1px solid rgba(90, 173, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(4, 10, 18, 0.35);
+}
+
+.battle-mockup-shell .loopGrid small {
+  display: block;
+  font-size: 9px;
+  color: #5a6e85;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.battle-mockup-shell .loopGrid strong {
+  font-size: 13px;
+  color: #dce8f5;
+}
+
+.battle-mockup-shell .receiptBlock {
+  border: 1px solid rgba(90, 173, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(2, 6, 12, 0.9);
+  padding: 10px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8a9eb8;
+  position: relative;
+  white-space: pre-wrap;
+}
+
+.battle-mockup-shell .receiptBlock .copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: #6a7d94;
+  cursor: pointer;
+}
+
+.battle-mockup-shell .receiptBlock .ok {
+  color: #8fffb0;
+  font-weight: 600;
+}
+
+.battle-mockup-shell .statusPill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3cf07a;
+  box-shadow: 0 0 8px rgba(60, 240, 122, 0.5);
+}
+
+.battle-mockup-shell .dockerReplay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  border: 1px solid rgba(90, 173, 255, 0.35);
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(90, 173, 255, 0.15), rgba(90, 173, 255, 0.08));
+  color: #dce8f5;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.battle-mockup-shell .mutBox {
+  border: 1px solid rgba(90, 173, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(2, 6, 12, 0.85);
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #9ab0c8;
+}
+
+.battle-mockup-shell .kvGrid {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #9ab0c8;
+}
+
+.battle-mockup-shell .kvGrid > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+}
+
+.battle-mockup-shell .kvGrid b {
+  color: #5a6e85;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.battle-mockup-shell .graphTitleBar {
+  height: 36px;
+}
+
+.battle-mockup-shell .blueStripCenter {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.1);
+  background: linear-gradient(90deg, rgba(8, 24, 48, 0.85), rgba(4, 12, 24, 0.75));
+}
+
+.battle-mockup-shell .blueStripLabel {
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr auto;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 10px;
+}
+
+.battle-mockup-shell .blueStripLabel .stripIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: rgba(90, 173, 255, 0.12);
+  border: 1px solid rgba(90, 173, 255, 0.25);
+  color: #5aadff;
+}
+
+.battle-mockup-shell .stripTitle {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7ec0ff;
+  line-height: 1.2;
+}
+
+.battle-mockup-shell .stripSub {
+  font-size: 10px;
+  color: #5a6e85;
+  margin-top: 2px;
+}
+
+.battle-mockup-shell .blueStat {
+  font-size: 11px;
+  color: #5a6e85;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+
+.battle-mockup-shell .blueStat strong {
+  color: #7ec0ff;
+}
+
+.battle-mockup-shell .right {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 12px;
+  overflow: hidden;
+}
+
+.battle-mockup-shell .detailHead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  background: linear-gradient(180deg, rgba(8, 18, 32, 0.98) 70%, rgba(8, 18, 32, 0.85));
+  border-bottom: 1px solid rgba(90, 173, 255, 0.08);
+}
+
+.battle-mockup-shell .detailClose {
+  color: #5a6e85;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.battle-mockup-shell .agentTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.battle-mockup-shell .agentBug {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #ff6b7a;
+  color: #ff6b7a;
+  background: rgba(255, 77, 92, 0.08);
+}
+
+.battle-mockup-shell .agentPayload {
+  font-size: 11px;
+  color: #6a7d94;
+  font-family: ui-monospace, Menlo, monospace;
+  margin: 2px 0 8px;
+}
+
+.battle-mockup-shell .agentHeroBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.battle-mockup-shell .statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(60, 240, 122, 0.1);
+  border: 1px solid rgba(60, 240, 122, 0.25);
+  color: #3cf07a;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.battle-mockup-shell .dockerReplayTop {
+  margin: 0 0 14px;
+}
+
+.battle-mockup-shell .detailScroll {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+  padding-right: 2px;
+}
+
+.battle-mockup-shell .detailBody {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.battle-mockup-shell .field {
+  margin: 12px 0;
+}
+
+.battle-mockup-shell .graphTitleBar {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.07);
+  background: rgba(3, 8, 15, 0.35);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a6e85;
+  gap: 8px;
+}
+
+.battle-mockup-shell .graphTitleBar .zoomHint {
+  color: #4a5e75;
+  font-weight: 600;
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.battle-mockup-shell .leftRail {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+  overflow: auto;
+}
+
+.battle-mockup-shell .railBlock {
+  border: 1px solid rgba(90, 173, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(3, 8, 15, 0.45);
+  padding: 10px;
+}
+
+.battle-mockup-shell .railHead {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4a5e75;
+  margin-bottom: 8px;
+}
+
+.battle-mockup-shell .leaderItem {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.06);
+  cursor: pointer;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  width: 100%;
+  text-align: left;
+  color: #9ab0c8;
+  font-size: 12px;
+}
+
+.battle-mockup-shell .leaderItem:last-child {
+  border-bottom: 0;
+}
+
+.battle-mockup-shell .leaderItem:hover,
+.battle-mockup-shell .leaderItem.selected {
+  background: rgba(60, 240, 122, 0.08);
+  color: #d0ffe6;
+}
+
+.battle-mockup-shell .leaderItem .rank {
+  font-weight: 800;
+  font-size: 12px;
+  color: #5a6e85;
+}
+
+.battle-mockup-shell .leaderItem .liName {
+  font-weight: 700;
+  color: #dce8f5;
+  font-size: 12.5px;
+}
+
+.battle-mockup-shell .leaderItem .liGen {
+  font-size: 10px;
+  color: #5a6e85;
+}
+
+.battle-mockup-shell .leaderItem .liRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+}
+
+.battle-mockup-shell .standRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.06);
+}
+
+.battle-mockup-shell .standRow:last-child {
+  border-bottom: 0;
+}
+
+.battle-mockup-shell .standIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.03);
+  flex-shrink: 0;
+}
+
+.battle-mockup-shell .standRow.red .standIcon { color: #ff6b7a; }
+.battle-mockup-shell .standRow.blue .standIcon { color: #7ec0ff; }
+.battle-mockup-shell .standName { font-weight: 700; font-size: 13px; }
+.battle-mockup-shell .standRow.red .standName { color: #ff8a92; }
+.battle-mockup-shell .standRow.blue .standName { color: #9ec5ff; }
+.battle-mockup-shell .standSub { font-size: 10px; color: #5a6e85; margin-top: 1px; }
+.battle-mockup-shell .standScore { margin-left: auto; font-size: 24px; font-weight: 800; line-height: 1; }
+.battle-mockup-shell .standRow.red .standScore { color: #ff6b7a; }
+.battle-mockup-shell .standRow.blue .standScore { color: #7ec0ff; }
+
+.battle-mockup-shell .statusRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(90, 173, 255, 0.05);
+  font-size: 11px;
+  color: #8a9eb8;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.battle-mockup-shell .statusRow:last-child { border-bottom: 0; }
+.battle-mockup-shell .statusRow b { margin-left: auto; font-size: 14px; color: #dce8f5; }
+.battle-mockup-shell .statusRow svg { width: 14px; height: 14px; }
+
+/* Header refinements */
+.battle-mockup-shell .headerBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.battle-mockup-shell .topbar {
+  grid-template-columns: minmax(340px, 1fr) 250px minmax(360px, 1fr);
+}
+
+.battle-mockup-shell .score.battle-score-block {
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+  box-shadow: none;
+}
+
+.battle-mockup-shell .leIcon {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 18px;
+  line-height: 1;
+}
+
+.battle-mockup-shell .leIcon.green { color: #3cf07a; }
+.battle-mockup-shell .leIcon.blue { color: #5aadff; }
+.battle-mockup-shell .leIcon.red { color: #ff4d5c; }
+.battle-mockup-shell .leIcon.purple { color: #c47aff; }
+
+.battle-mockup-shell .leIconSvg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.battle-mockup-shell .leText b.green { color: #3cf07a; font-weight: 800; }
+.battle-mockup-shell .leText b.blue { color: #5aadff; font-weight: 800; }
+
+.battle-mockup-shell .statusPillInline {
+  display: inline-flex;
+  margin: 0;
+}
+
+.battle-mockup-shell .receiptBlock .receiptTime {
+  color: #5a6e85;
+}
+
+.battle-mockup-shell .dockerReplayIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Timeline axis — HTML mockup parity */
+.battle-mockup-shell .axis {
+  height: 72px;
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  background: linear-gradient(180deg, rgba(8, 18, 32, 0.98), rgba(8, 18, 32, 0.92));
+  border-bottom: 1px solid rgba(90, 173, 255, 0.08);
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr;
+}
+
+.battle-mockup-shell .axisCorner {
+  position: sticky;
+  left: 0;
+  z-index: 16;
+  background: linear-gradient(180deg, rgba(8, 18, 32, 0.98), rgba(8, 18, 32, 0.92));
+  border-right: 1px solid rgba(90, 173, 255, 0.08);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0 8px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4a5e75;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-mockup-shell .axis .axisTrack {
+  position: relative;
+  padding-top: 6px;
+  height: auto;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.battle-mockup-shell .ticks {
+  height: 28px;
+  position: relative;
+}
+
+.battle-mockup-shell .tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  color: #7a8fa8;
+  font-weight: 600;
+}
+
+.battle-mockup-shell .stage {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 34px;
+  border-top: 1px solid rgba(90, 173, 255, 0.05);
+}
+
+.battle-mockup-shell .stage > div {
+  border-left: 1px solid rgba(90, 173, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  color: #5a6e85;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.battle-mockup-shell .stage > div:first-child {
+  border-left: 0;
+}
+
+/* Overview marks — HTML mockup parity */
+.battle-mockup-shell .overviewViewport {
+  position: absolute;
+  top: -3px;
+  height: 12px;
+  border: 1px solid rgba(94, 230, 255, 0.45);
+  background: rgba(94, 230, 255, 0.08);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.battle-mockup-shell .overviewMark {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.battle-mockup-shell .overviewMark.crash {
+  background: #3cf07a;
+  color: #3cf07a;
+}
+
+.battle-mockup-shell .overviewMark.promoted {
+  background: #5aadff;
+  color: #5aadff;
+}
+
+.battle-mockup-shell .overviewMark.blocked {
+  background: #5aadff;
+  color: #5aadff;
+}
+
+.battle-mockup-shell .scrollHint {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #7ec0ff;
+  padding: 0 12px 0 4px;
+  white-space: nowrap;
+}
+
+.battle-mockup-shell .scrollHint.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Header + agent detail polish */
+.battle-mockup-shell .scoreIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.battle-mockup-shell .loopGrid {
+  margin-bottom: 12px;
+}
+
+.battle-mockup-shell .field .statusPill {
+  margin-bottom: 0;
+}
+
+.battle-mockup-shell .receiptBlock > div + div {
+  margin-top: 0;
+}
+
+.battle-mockup-shell .graphTitleBar {
+  height: 36px;
+}
+
+.battle-mockup-shell .leIconSlot {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 18px;
+  line-height: 1;
+}
+
+.battle-mockup-shell .leIconSlot .leIconSvg {
+  width: 16px;
+  height: 16px;
+}
+/* Header polish — score inner border; row height follows live-events column */
+.battle-mockup-shell .topbar {
+  min-height: 118px;
+  align-self: stretch;
+}
+
+.battle-mockup-shell .score {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+}
+
+.battle-mockup-shell .score::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+  pointer-events: none;
+}
+
+.battle-mockup-shell .scoreIcon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.battle-mockup-shell .agentHeroBadges .statusPill {
+  margin-bottom: 0;
+}
+
+.battle-mockup-shell .agentHeroBadges {
+  min-height: 0;
+}
+
+.battle-mockup-shell .agentHeroBadges:not(:empty) {
+  margin-bottom: 10px;
+}
+
+.battle-mockup-shell .dockerReplay {
+  margin-top: 0;
+  background: linear-gradient(90deg, rgba(90, 173, 255, 0.15), rgba(90, 173, 255, 0.08));
+  border: 1px solid rgba(90, 173, 255, 0.35);
+  color: #dce8f5;
+}
+
+.battle-mockup-shell .field {
+  margin: 0 0 12px;
+}
+
+.battle-mockup-shell .field:last-child {
+  margin-bottom: 0;
+}
+
+/* Center pane — scroll shell (battle-004 HTML parity) */
+.battle-mockup-shell .center {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px 14px 12px;
+}
+
+.battle-mockup-shell .graphWrapHost {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-mockup-shell .graphScrollHint {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 72px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(4, 10, 18, 0.82));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  z-index: 12;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.battle-mockup-shell .graphScrollHint.hidden {
+  opacity: 0;
+}
+
+.battle-mockup-shell .graphScrollHint span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #7ec0ff;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 12px rgba(94, 230, 255, 0.35);
+}
+
+.battle-mockup-shell .graphWrap {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.battle-mockup-shell .graphWrap::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.battle-mockup-shell .graphWrap::-webkit-scrollbar-thumb {
+  background: rgba(90, 173, 255, 0.15);
+  border-radius: 99px;
+}
+
+.battle-mockup-shell .graph {
+  padding: 0 0 8px;
+}
+
+.battle-mockup-shell .timelineShell {
+  position: relative;
+}
+
+.battle-mockup-shell .rows {
+  position: relative;
+}

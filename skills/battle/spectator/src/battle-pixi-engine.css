@@ -1,0 +1,105 @@
+/* Canonical names — BATTLE_RACE_ENGINE_PIXI_SPIKE.md */
+.battleRaceStageHost,
+.pixiRaceEngineHost {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.battleRaceTrackPlane,
+.pixiRaceCanvasHost {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--label-w, 290px);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.battleRacePixiCanvas,
+.pixiRaceCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.battlePixiHitMirrorLayer,
+.pixiHitTargetLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.battlePixiHitMirror,
+.pixiHitTargetMirror {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.battlePixiHitMirror:focus-visible,
+.pixiHitTargetMirror:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.55);
+  outline-offset: 1px;
+}
+
+.pixiHitTargetMirror--event {
+  border-radius: 999px;
+}
+
+.battle-mockup-center .rows.pixiRowsHost {
+  position: relative;
+}
+
+.battle-mockup-center .rows.pixiRowsHost > .battleRaceStageHost {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.battle-mockup-center .rows.pixiRowsHost > .battleRaceStageHost .battleRaceTrackPlane,
+.battle-mockup-center .rows.pixiRowsHost > .battleRaceStageHost .pixiHitTargetLayer {
+  pointer-events: auto;
+}
+
+
+.battle-mockup-center .row.pixiLabelsOnly .track {
+  visibility: hidden;
+}
+
+.battleRacePixiCanvas,
+.pixiRaceCanvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.battlePixiValidationWarning {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 40;
+  max-width: min(420px, 55%);
+  border: 1px solid rgba(255, 210, 77, 0.35);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fde68a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  padding: 6px 10px;
+  pointer-events: none;
+}

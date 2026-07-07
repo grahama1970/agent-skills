@@ -28,7 +28,8 @@
 
 Optional Pixi race renderer behind `#battle?engine=pixi`. Default remains DOM/SVG.
 
-- **Contract:** `pi-mono/packages/ux-lab/src/components/battle/dual-agent/BATTLE_RACE_ENGINE_PIXI_SPIKE.md`
+- **Spectator package (canonical UI):** `skills/battle/spectator/`
+- **Contract:** `skills/battle/docs/BATTLE_RACE_ENGINE_PIXI_SPIKE.md`
 - **Backend:** renderer-neutral — see `BACKEND_UX_CONTRACT.md`
 - **Agent skills:** official `pixijs*` + `best-practices-battle-pixi` overlay
 - **Sprite sheets:** not required for Phase 1 (procedural Graphics); see spike doc § Asset pipeline
@@ -159,7 +160,7 @@ Docker replay CTA state.
 - `src/battle_skill/battle_event_adapter.py`
 - `src/battle_skill/cli.py`
 - `/home/graham/workspace/experiments/tau/src/tau_coding/battle_live_handoff.py`
-- `/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/battle/dual-agent/`
+- `skills/battle/spectator/src/` (ux-lab mounts via `@agent-skills/battle-spectator`)
 
 ## 7. Verification Performed This Session
 

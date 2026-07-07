@@ -579,3 +579,14 @@ readiness still requires separate proof for:
 - Tau-style subagent schemas, persona selection, and cron orchestration
 - multi-round campaign convergence and termination behavior
 - report correctness over real battle state
+
+## Spectator package (`spectator/`)
+
+Self-contained BATTLE-004 spectator UI + Pixi race engine. Host apps (e.g. `ux-lab`) mount this package and serve static assets from `spectator/public/` or equivalent symlinks.
+
+```bash
+# Live receipt replay proof (requires ux-lab dev host on :3012)
+cd skills/battle/spectator
+UX_LAB_UI_PORT=3012 node scripts/prove-battle-receipt-replay-6.mjs
+```
+

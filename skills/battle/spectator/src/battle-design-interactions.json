@@ -1,0 +1,567 @@
+{
+  "version": 1,
+  "app": "BATTLE-004 Spectator",
+  "base_url": "http://127.0.0.1:3012",
+  "surfaces": [
+    {
+      "name": "battle-design",
+      "path": "/#battle",
+      "wait_ready": "[data-qid='battle:agent-pane:payload-857-A']",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "shell-mockup-fidelity",
+          "interactions": [
+            {
+              "action": "screenshot",
+              "description": "Full BATTLE-004 design shell \u2014 default Replay Fork selection",
+              "assert_count": {
+                "selector": "[data-lane-row]",
+                "min": 11,
+                "max": 11
+              },
+              "assert_selector": ".battle-mockup-shell .center",
+              "assert_visible": ".battle-mockup-shell .topbar",
+              "assert_texts": [
+                "BATTLE-004",
+                "8.4",
+                "7.2",
+                "LIVE EVENTS",
+                "Replay Fork",
+                "ZIP_SLIP_LAB"
+              ],
+              "assert_selector_agent": null
+            },
+            {
+              "action": "screenshot",
+              "description": "Center timeline marker density matches mockup",
+              "assert_count": {
+                "selector": "[data-battle-marker-icon]",
+                "min": 16
+              },
+              "assert_visible": "[data-qid='battle:agent-pane:payload-857-A']",
+              "assert_text": "FASTEST CRASH",
+              "assert_text_scope": "[data-qid='battle:agent-pane:payload-857-A']"
+            }
+          ]
+        },
+        {
+          "name": "leaderboard-all",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-857-A']",
+              "description": "Select race leader Replay Fork",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:leaderboard:item:payload-857-A']",
+              "assert_title": "[data-qid='battle:leaderboard:item:payload-857-A']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-912-D']",
+              "description": "Select race leader Boundary Fray D",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:leaderboard:item:payload-912-D']",
+              "assert_title": "[data-qid='battle:leaderboard:item:payload-912-D']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-D']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-912-B']",
+              "description": "Select race leader Boundary Fray B",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:leaderboard:item:payload-912-B']",
+              "assert_title": "[data-qid='battle:leaderboard:item:payload-912-B']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-B']"
+            }
+          ]
+        },
+        {
+          "name": "lanes-all",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-857']",
+              "description": "Select timeline lane payload-857",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-857']",
+              "assert_title": "[data-qid='battle:lane:payload-857']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-857-A']",
+              "description": "Select timeline lane payload-857-A",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-857-A']",
+              "assert_title": "[data-qid='battle:lane:payload-857-A']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-912']",
+              "description": "Select timeline lane payload-912",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-912']",
+              "assert_title": "[data-qid='battle:lane:payload-912']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-912-A']",
+              "description": "Select timeline lane payload-912-A",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-912-A']",
+              "assert_title": "[data-qid='battle:lane:payload-912-A']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-912-B']",
+              "description": "Select timeline lane payload-912-B",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-912-B']",
+              "assert_title": "[data-qid='battle:lane:payload-912-B']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-B']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-912-C']",
+              "description": "Select timeline lane payload-912-C",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-912-C']",
+              "assert_title": "[data-qid='battle:lane:payload-912-C']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-C']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-912-D']",
+              "description": "Select timeline lane payload-912-D",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-912-D']",
+              "assert_title": "[data-qid='battle:lane:payload-912-D']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-D']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-118']",
+              "description": "Select timeline lane payload-118",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-118']",
+              "assert_title": "[data-qid='battle:lane:payload-118']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-118']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-231']",
+              "description": "Select timeline lane payload-231",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-231']",
+              "assert_title": "[data-qid='battle:lane:payload-231']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-231']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-404']",
+              "description": "Select timeline lane payload-404",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-404']",
+              "assert_title": "[data-qid='battle:lane:payload-404']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-404']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-620']",
+              "description": "Select timeline lane payload-620",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:lane:payload-620']",
+              "assert_title": "[data-qid='battle:lane:payload-620']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-620']"
+            }
+          ]
+        },
+        {
+          "name": "markers-all",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-118:blocked']",
+              "description": "Select marker blocked on payload-118",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-118:blocked']",
+              "assert_title": "[data-qid='battle:marker:payload-118:blocked']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-118']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-118:killed']",
+              "description": "Select marker killed on payload-118",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-118:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-118:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-118']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-231:killed']",
+              "description": "Select marker killed on payload-231",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-231:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-231:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-231']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-404:blocked']",
+              "description": "Select marker blocked on payload-404",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-404:blocked']",
+              "assert_title": "[data-qid='battle:marker:payload-404:blocked']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-404']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-404:killed']",
+              "description": "Select marker killed on payload-404",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-404:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-404:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-404']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-620:blocked']",
+              "description": "Select marker blocked on payload-620",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-620:blocked']",
+              "assert_title": "[data-qid='battle:marker:payload-620:blocked']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-620']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-620:killed']",
+              "description": "Select marker killed on payload-620",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-620:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-620:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-620']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-857-A:fastest_crash']",
+              "description": "Select marker fastest_crash on payload-857-A",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-857-A:fastest_crash']",
+              "assert_title": "[data-qid='battle:marker:payload-857-A:fastest_crash']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-857:blocked']",
+              "description": "Select marker blocked on payload-857",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-857:blocked']",
+              "assert_title": "[data-qid='battle:marker:payload-857:blocked']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-857:handoff']",
+              "description": "Select marker handoff on payload-857",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-857:handoff']",
+              "assert_title": "[data-qid='battle:marker:payload-857:handoff']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912-A:killed']",
+              "description": "Select marker killed on payload-912-A",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912-A:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-912-A:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912-B:blocked']",
+              "description": "Select marker blocked on payload-912-B",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912-B:blocked']",
+              "assert_title": "[data-qid='battle:marker:payload-912-B:blocked']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-B']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912-C:killed']",
+              "description": "Select marker killed on payload-912-C",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912-C:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-912-C:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-C']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912-D:fastest_crash']",
+              "description": "Select marker fastest_crash on payload-912-D",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912-D:fastest_crash']",
+              "assert_title": "[data-qid='battle:marker:payload-912-D:fastest_crash']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-D']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912:handoff']",
+              "description": "Select marker handoff on payload-912",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912:handoff']",
+              "assert_title": "[data-qid='battle:marker:payload-912:handoff']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:marker:payload-912:killed']",
+              "description": "Select marker killed on payload-912",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:marker:payload-912:killed']",
+              "assert_title": "[data-qid='battle:marker:payload-912:killed']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912']"
+            }
+          ]
+        },
+        {
+          "name": "lane-collapse",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:collapse:payload-857']",
+              "description": "Collapse Archive Escape child lanes",
+              "assert_qs_action": "[data-qid='battle:lane:collapse:payload-857']",
+              "assert_title": "[data-qid='battle:lane:collapse:payload-857']"
+            },
+            {
+              "action": "screenshot",
+              "description": "Collapsed Archive Escape \u2014 child lanes hidden",
+              "wait_ms": 400,
+              "assert_count": {
+                "selector": "[data-lane-row]",
+                "min": 10,
+                "max": 10
+              }
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:collapse:payload-857']",
+              "description": "Expand Archive Escape child lanes",
+              "assert_qs_action": "[data-qid='battle:lane:collapse:payload-857']",
+              "assert_title": "[data-qid='battle:lane:collapse:payload-857']"
+            },
+            {
+              "action": "screenshot",
+              "description": "Expanded Archive Escape \u2014 11 lanes visible",
+              "wait_ms": 400,
+              "assert_count": {
+                "selector": "[data-lane-row]",
+                "min": 11,
+                "max": 11
+              }
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:collapse:payload-912']",
+              "description": "Collapse Boundary Fray parent lanes",
+              "assert_qs_action": "[data-qid='battle:lane:collapse:payload-912']",
+              "assert_title": "[data-qid='battle:lane:collapse:payload-912']"
+            }
+          ]
+        },
+        {
+          "name": "timeline-zoom",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:in']",
+              "description": "Zoom timeline in",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:in']",
+              "assert_title": "[data-qid='battle:timeline:zoom:in']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:in']",
+              "description": "Zoom timeline in again",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:in']",
+              "assert_title": "[data-qid='battle:timeline:zoom:in']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:out']",
+              "description": "Zoom timeline out",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:out']",
+              "assert_title": "[data-qid='battle:timeline:zoom:out']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:scroll']",
+              "description": "Focus scrollable timeline shell",
+              "assert_visible": "[data-qid='battle:timeline:scroll']",
+              "assert_qs_action": "[data-qid='battle:timeline:scroll']",
+              "assert_title": "[data-qid='battle:timeline:scroll']"
+            },
+            {
+              "action": "screenshot",
+              "description": "Timeline shell after zoom \u2014 graphWrapHost structure",
+              "assert_visible": ".graphWrapHost"
+            }
+          ]
+        },
+        {
+          "name": "footer-controls",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:speed:1x']",
+              "description": "Set replay speed 1x",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:speed:1x']",
+              "assert_title": "[data-qid='battle:footer:speed:1x']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:speed:2x']",
+              "description": "Set replay speed 2x",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:speed:2x']",
+              "assert_title": "[data-qid='battle:footer:speed:2x']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:speed:4x']",
+              "description": "Set replay speed 4x",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:speed:4x']",
+              "assert_title": "[data-qid='battle:footer:speed:4x']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:speed:8x']",
+              "description": "Set replay speed 8x",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:speed:8x']",
+              "assert_title": "[data-qid='battle:footer:speed:8x']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:focus:all']",
+              "description": "Focus filter All Lanes",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:focus:all']",
+              "assert_title": "[data-qid='battle:footer:focus:all']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:focus:red']",
+              "description": "Focus filter Red Team",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:focus:red']",
+              "assert_title": "[data-qid='battle:footer:focus:red']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:focus:blue']",
+              "description": "Focus filter Blue Team",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:focus:blue']",
+              "assert_title": "[data-qid='battle:footer:focus:blue']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:playhead']",
+              "description": "Toggle replay playhead",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:playhead']",
+              "assert_title": "[data-qid='battle:footer:playhead']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:footer:spectator-arm']",
+              "description": "Arm spectator sound",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:footer:spectator-arm']",
+              "assert_title": "[data-qid='battle:footer:spectator-arm']"
+            }
+          ]
+        },
+        {
+          "name": "live-events",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:mock-live-1']",
+              "description": "Select live event FASTEST CRASH",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:events:item:mock-live-1']",
+              "assert_title": "[data-qid='battle:events:item:mock-live-1']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:mock-live-2']",
+              "description": "Select live event SURVIVOR",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:events:item:mock-live-2']",
+              "assert_title": "[data-qid='battle:events:item:mock-live-2']",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-912-D']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:mock-live-3']",
+              "description": "Select Blue CanonGuard patch live event (no lane binding)",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:events:item:mock-live-3']",
+              "assert_title": "[data-qid='battle:events:item:mock-live-3']",
+              "assert_text": "CanonGuard patch",
+              "assert_text_scope": "[data-qid='battle:events:item:mock-live-3']"
+            }
+          ]
+        },
+        {
+          "name": "agent-pane-chrome",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-857-A']",
+              "description": "Re-select Replay Fork before agent pane chrome tests",
+              "assert_selector": "[data-qid='battle:agent-pane:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:docker-replay:payload-857-A']",
+              "description": "Docker replay CTA on Replay Fork",
+              "screenshot_after": true,
+              "assert_qs_action": "[data-qid='battle:agent-pane:docker-replay:payload-857-A']",
+              "assert_title": "[data-qid='battle:agent-pane:docker-replay:payload-857-A']",
+              "assert_text": "REPLAY IN DOCKER",
+              "assert_text_scope": "[data-qid='battle:agent-pane:docker-replay:payload-857-A']"
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:close']",
+              "description": "Close agent detail pane control",
+              "assert_qs_action": "[data-qid='battle:agent-pane:close']",
+              "assert_title": "[data-qid='battle:agent-pane:close']",
+              "assert_min_size": {
+                "selector": "[data-qid='battle:agent-pane:close']",
+                "min_width": 44,
+                "min_height": 44
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

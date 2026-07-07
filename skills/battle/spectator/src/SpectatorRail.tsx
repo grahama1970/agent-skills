@@ -1,0 +1,190 @@
+import type { LeaderboardEntry } from "./lib/battle-types";
+import { activeBattleFixture, battleLanesForView } from "./lib/battle-data";
+import { isBattleDesignView } from "./lib/battle-mockup-lanes";
+import { mockupAgentStatus, mockupRaceLeaders, mockupScoreboard } from "./lib/mockup-design-fixture";
+import { Icons } from "./battle-icons";
+import { useRegisterAction } from "./hooks/useRegisterAction";
+import { cn } from "./lib/utils";
+
+type Props = {
+  receiptFixture?: import("./lib/battle-types").BattleNormalizedUxFixture | null; leaderboard: LeaderboardEntry[]; selectedId?: string; onSelect: (id: string) => void };
+
+export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelect }: Props) {
+  const designView = isBattleDesignView();
+  const activeLanes = battleLanesForView(undefined, receiptFixture);
+  useRegisterAction("battle:leaderboard:select", { app: "ux-lab", action: "BATTLE_LEADERBOARD_SELECT", label: "Select Battle Leaderboard Entry", description: "Select a receipt-backed Battle lane from the spectator rail", tags: ["battle", "receipt-backed"] });
+
+  const entries = designView
+    ? mockupRaceLeaders.map((entry) => ({
+        rank: entry.rank,
+        laneId: entry.laneId,
+        name: entry.name,
+        status: entry.status,
+        time: entry.time,
+        proofMode: "receipt_backed_fixture" as const,
+        summary: `Gen ${entry.generation}`,
+      }))
+    : leaderboard.length > 0
+      ? leaderboard
+      : activeLanes.map((lane, index) => ({
+          rank: index + 1,
+          laneId: lane.id,
+          name: lane.name,
+          status:
+            lane.terminal === "fastest_crash" || lane.terminal === "promoted" || lane.terminal === "blocked" || lane.terminal === "killed"
+              ? lane.terminal
+              : "blocked",
+          time: "judge",
+          proofMode: lane.proofMode,
+          summary: lane.mutationRationale,
+        } satisfies LeaderboardEntry));
+
+  const scoreboard = activeBattleFixture(receiptFixture).scoreboard;
+
+  return (
+    <aside className={cn("min-h-0 overflow-hidden", designView ? "leftRail battle-mockup-left-rail battle-mockup-panel" : "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-3")}>
+      <Panel title="Race Leaders" designView={designView}>
+        {entries.slice(0, 4).map((entry) => (
+          <button
+            key={entry.laneId}
+            data-qid={`battle:leaderboard:item:${entry.laneId}`}
+            data-qs-action="BATTLE_LEADERBOARD_SELECT"
+            title={`Select ${entry.name}`}
+            type="button"
+            onClick={() => onSelect(entry.laneId)}
+            className={
+              designView
+                ? cn("leaderItem", selectedId === entry.laneId && "selected")
+                : "grid min-h-11 w-full grid-cols-[24px_1fr_auto] items-center gap-2 rounded-lg border border-white/10 bg-white/[.03] px-3 py-2 text-left text-sm transition-colors hover:bg-white/[.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40"
+            }
+          >
+            <span className={designView ? cn("rank", entry.rank === 1 ? "r1" : entry.rank === 2 ? "r2" : entry.rank === 3 ? "r3" : "") : "font-mono text-xs font-black text-battle-red"}>{entry.rank}</span>
+            <span className="min-w-0">
+              <span className={designView ? "liName" : "block truncate font-bold text-slate-100"}>{entry.name}</span>
+              <span className={designView ? "liGen" : "block truncate text-[10px] text-slate-500"}>{entry.summary ?? "receipt-backed Battle proof"}</span>
+            </span>
+            {designView ? (
+              <span className={cn("liRight", entry.status === "blocked" ? "text-battle-blue" : "text-battle-green")}>
+                <StatusIcon status={entry.status} />
+                {entry.time}
+              </span>
+            ) : (
+              <StatusIcon status={entry.status} />
+            )}
+          </button>
+        ))}
+      </Panel>
+
+      <Panel title="Team Standings" designView={designView}>
+        {designView ? (
+          <>
+            <StandRow tone="red" icon={<Icons.Bug className="h-4 w-4" />} label="Red Team" sub="Exploit Agents" score={mockupScoreboard().red} />
+            <StandRow tone="blue" icon={<Icons.Shield className="h-4 w-4" />} label="Blue Team" sub="Patch Agents" score={mockupScoreboard().blue} />
+          </>
+        ) : (
+          <div className="space-y-2">
+            <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatScore(scoreboard?.red_score)} tone="text-battle-red" />
+            <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatScore(scoreboard?.blue_score)} tone="text-battle-blue" />
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="Agent Status" designView={designView} className={designView ? "min-h-0 flex-1" : undefined}>
+        {designView
+          ? mockupAgentStatus.map((row) => (
+              <div key={row.label} className="statusRow">
+                <span className={mockStatusTone(row.tone)}>{mockStatusIcon(row.label)}</span>
+                {row.label} <b>{row.value}</b>
+              </div>
+            ))
+          : (
+            <>
+              <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(activeLanes.filter((lane) => lane.terminal === "none").length)} tone="text-battle-cyan" />
+              <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(activeLanes.filter((lane) => lane.terminal === "blocked").length)} tone="text-battle-blue" />
+              <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value="0" tone="text-battle-red" />
+              <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(activeLanes.reduce((n, lane) => n + lane.events.filter((event) => event.kind === "useful").length, 0))} tone="text-battle-yellow" />
+              <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Promoted" value="0" tone="text-battle-green" />
+              <ReceiptStatusLine icon={<Icons.Rocket className="h-4 w-4" />} label="Fastest crash" value="0" tone="text-slate-500" />
+            </>
+          )}
+      </Panel>
+    </aside>
+  );
+}
+
+function Panel({ title, children, designView = false, className }: { title: string; children: React.ReactNode; designView?: boolean; className?: string }) {
+  return (
+    <section className={cn(designView ? cn("railBlock", className) : "overflow-hidden rounded-2xl border border-white/10 bg-battle-panel/70 p-3 shadow-acrylic backdrop-blur-xl", className)}>
+      <div className={cn(designView ? "railHead" : "battle-label mb-3")}>{title}</div>
+      {children}
+    </section>
+  );
+}
+
+function StandRow({ tone, icon, label, sub, score }: { tone: "red" | "blue"; icon: React.ReactNode; label: string; sub: string; score: string }) {
+  return (
+    <div className={`standRow ${tone}`}>
+      <div className="standIcon">{icon}</div>
+      <div>
+        <div className="standName">{label}</div>
+        <div className="standSub">{sub}</div>
+      </div>
+      <div className="standScore">{score}</div>
+    </div>
+  );
+}
+
+function mockStatusIcon(label: string) {
+  if (label === "Running") return <Icons.Activity className="h-3.5 w-3.5" />;
+  if (label === "Blocked") return <Icons.ShieldX className="h-3.5 w-3.5" />;
+  if (label === "Killed") return <Icons.Skull className="h-3.5 w-3.5" />;
+  if (label === "Useful") return <Icons.Lightbulb className="h-3.5 w-3.5" />;
+  if (label === "Promoted") return <Icons.ShieldCheck className="h-3.5 w-3.5" />;
+  return <Icons.Rocket className="h-3.5 w-3.5" />;
+}
+
+function mockStatusTone(tone: "cyan" | "blue" | "red" | "yellow" | "green") {
+  if (tone === "cyan") return "text-battle-cyan";
+  if (tone === "blue") return "text-battle-blue";
+  if (tone === "red") return "text-battle-red";
+  if (tone === "yellow") return "text-battle-yellow";
+  return "text-battle-green";
+}
+
+function ReceiptStanding({ icon, label, sub, value, tone }: { icon: React.ReactNode; label: string; sub: string; value: string; tone: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.035] p-3">
+      <div className="flex items-center gap-2.5">
+        <span className={tone}>{icon}</span>
+        <div>
+          <div className={`text-[12px] font-black ${tone}`}>{label}</div>
+          <div className="text-[10px] text-slate-500">{sub}</div>
+        </div>
+      </div>
+      <div className={`text-2xl font-black ${tone}`}>{value}</div>
+    </div>
+  );
+}
+
+function ReceiptStatusLine({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-white/5 py-2 last:border-0">
+      <span className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+        <span className={tone}>{icon}</span>
+        {label}
+      </span>
+      <span className={`font-mono text-sm font-black ${tone}`}>{value}</span>
+    </div>
+  );
+}
+
+function StatusIcon({ status }: { status: LeaderboardEntry["status"] }) {
+  if (status === "fastest_crash") return <Icons.Rocket className="h-4 w-4 text-battle-green" />;
+  if (status === "promoted") return <Icons.ShieldCheck className="h-4 w-4 text-battle-green" />;
+  if (status === "killed") return <Icons.Skull className="h-4 w-4 text-battle-red" />;
+  return <Icons.ShieldX className="h-4 w-4 text-battle-blue" />;
+}
+
+function formatScore(value: number | undefined) {
+  return typeof value === "number" ? value.toFixed(value % 1 === 0 ? 0 : 1) : "0";
+}

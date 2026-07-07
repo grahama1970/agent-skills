@@ -21,3 +21,6 @@ monitor/**/test-results/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+spectator/node_modules/
+spectator/dist/
