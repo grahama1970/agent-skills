@@ -208,10 +208,43 @@ def test_phase2_transport_schemas_track_lifecycle_replay_contract() -> None:
     assert manifest_schema["properties"]["stream_contract"]["properties"]["phase"]["const"] == "phase_2_contract"
     assert manifest_schema["properties"]["replay_compression_policy"]["properties"]["owner"]["const"] == "ux"
     assert manifest_schema["properties"]["replay_compression_policy"]["properties"]["backend_emits_cinematic_speed"]["const"] is False
+    assert manifest_schema["properties"]["source_time_window"]["$ref"] == "#/$defs/source_time_window"
+    assert manifest_schema["$defs"]["source_time_window"]["properties"]["schema"]["const"] == "battle.source_time_window.v1"
+    assert manifest_schema["properties"]["replay_compression_policy"]["properties"]["source_time_window_schema"]["const"] == "battle.source_time_window.v1"
     assert event_schema["properties"]["lifecycle"]["$ref"] == "#/$defs/lifecycle_event"
     assert event_schema["$defs"]["lifecycle_event"]["properties"]["presentation_owner"]["const"] == "ux"
     assert "post_spawn_child_contained" in event_schema["$defs"]["lifecycle_event"]["properties"]["outcome_class"]["enum"]
     assert snapshot_schema["properties"]["replay_compression_policy"]["properties"]["long_gap_handling"]["const"] == "ux_may_compress_presentation_time"
+    assert snapshot_schema["properties"]["source_time_window"]["$ref"] == "#/$defs/source_time_window"
+
+
+def test_source_time_window_contract_marks_long_gaps_as_ux_compressible() -> None:
+    window = battle_event_adapter._stream_source_time_window(
+        [
+            {"at_seconds": 0.0},
+            {"at_seconds": 45.0},
+            {"at_seconds": 7200.0},
+            {"at_seconds": 7210.0},
+        ],
+        long_gap_threshold_seconds=300.0,
+    )
+
+    assert window["schema"] == "battle.source_time_window.v1"
+    assert window["source_time_authority"] == "receipt_elapsed_seconds"
+    assert window["source_duration_seconds"] == 7210.0
+    assert window["event_count"] == 4
+    assert window["max_gap_seconds"] == 7155.0
+    assert window["long_gap_count"] == 1
+    assert window["long_gap_segments"] == [
+        {
+            "from_source_seconds": 45.0,
+            "to_source_seconds": 7200.0,
+            "gap_seconds": 7155.0,
+            "compression_allowed": True,
+            "presentation_owner": "ux",
+        }
+    ]
+    assert window["presentation_owner"] == "ux"
 
 
 def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> None:
@@ -1954,6 +1987,16 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert manifest["stream_contract"]["lifecycle_schema"] == "battle.lifecycle_event.v1"
     assert manifest["replay_compression_policy"]["owner"] == "ux"
     assert manifest["replay_compression_policy"]["backend_emits_cinematic_speed"] is False
+    assert manifest["replay_compression_policy"]["source_time_window_schema"] == "battle.source_time_window.v1"
+    assert manifest["source_time_window"]["schema"] == "battle.source_time_window.v1"
+    assert manifest["source_time_window"] == snapshot["source_time_window"]
+    event_seconds = sorted(event["at_seconds"] for event in event_lines)
+    assert manifest["source_time_window"]["start_seconds"] == event_seconds[0]
+    assert manifest["source_time_window"]["end_seconds"] == event_seconds[-1]
+    assert manifest["source_time_window"]["source_duration_seconds"] == round(event_seconds[-1] - event_seconds[0], 6)
+    assert manifest["source_time_window"]["event_count"] == len(event_lines)
+    assert manifest["replay_compression_policy"]["source_duration_seconds"] == manifest["source_time_window"]["source_duration_seconds"]
+    assert manifest["replay_compression_policy"]["long_gap_count"] == manifest["source_time_window"]["long_gap_count"]
     assert snapshot["semantic_replay"]["event_count"] == fixture["semantic_replay"]["event_count"]
     spawn_event = next(event for event in event_lines if event["event_id"] == "payload-857-receipt-spawned-payload-857-red-1")
     assert spawn_event["lifecycle"]["schema"] == "battle.lifecycle_event.v1"

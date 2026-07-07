@@ -36,12 +36,30 @@
       "camera_path",
       "pixi_frame_timing"
     ],
+    "long_gap_count": 0,
     "long_gap_handling": "ux_may_compress_presentation_time",
+    "long_gap_threshold_seconds": 300.0,
     "owner": "ux",
-    "source_time_authority": "receipt_elapsed_seconds"
+    "source_duration_seconds": 98.39211,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "source_time_window_schema": "battle.source_time_window.v1"
   },
   "run_id": "arena-parent-spawn-20260707T220426Z",
   "schema": "battle.transport_manifest.v1",
+  "source_time_window": {
+    "end_seconds": 98.39211,
+    "event_count": 24,
+    "long_gap_count": 0,
+    "long_gap_segments": [],
+    "long_gap_threshold_seconds": 300.0,
+    "max_gap_seconds": 70.499052,
+    "presentation_owner": "ux",
+    "proof_mode": "receipt_backed_fixture",
+    "schema": "battle.source_time_window.v1",
+    "source_duration_seconds": 98.39211,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "start_seconds": 0.0
+  },
   "stream_contract": {
     "authority": "normalized_fixture_and_receipt_events",
     "event_schema": "battle.live_event.v1",

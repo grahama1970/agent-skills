@@ -150,6 +150,8 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
     stream_dir = out_dir.expanduser().resolve()
     stream_dir.mkdir(parents=True, exist_ok=True)
     envelopes = _live_event_envelopes(fixture)
+    replay_window = _stream_source_time_window(envelopes)
+    replay_policy = _replay_compression_policy(replay_window)
     events_path = stream_dir / "events.jsonl"
     events_path.write_text(
         "".join(f"{json.dumps(event, sort_keys=True)}\n" for event in envelopes),
@@ -182,12 +184,9 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
             "fail_closed_unknown_terminal_states": True,
         },
         "replay_compression_policy": {
-            "owner": "ux",
-            "source_time_authority": "receipt_elapsed_seconds",
-            "long_gap_handling": "ux_may_compress_presentation_time",
-            "backend_emits_cinematic_speed": False,
-            "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+            **replay_policy,
         },
+        "source_time_window": replay_window,
         "renderer_boundary": {
             "backend_emits": [
                 "clock",
@@ -3955,6 +3954,9 @@ def _live_event_envelopes(fixture: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _snapshot_envelope(*, fixture: dict[str, Any], last_seq: int) -> dict[str, Any]:
+    envelopes = _live_event_envelopes(fixture)
+    replay_window = _stream_source_time_window(envelopes)
+    replay_policy = _replay_compression_policy(replay_window)
     return {
         "schema": "battle.snapshot.v1",
         "battle_id": fixture.get("battle_id"),
@@ -3977,15 +3979,81 @@ def _snapshot_envelope(*, fixture: dict[str, Any], last_seq: int) -> dict[str, A
         "normalized_fixture_schema": fixture.get("schema"),
         "normalized_fixture_path": "battle.normalized_ux_fixture.json",
         "replay_compression_policy": {
-            "owner": "ux",
-            "source_time_authority": "receipt_elapsed_seconds",
-            "long_gap_handling": "ux_may_compress_presentation_time",
-            "backend_emits_cinematic_speed": False,
+            **replay_policy,
         },
+        "source_time_window": replay_window,
         "renderer_boundary": {
             "backend_authority": "clock/events/segments/lanes/lineage/receipts",
             "pixi_authority": "pixels/camera/scroll/easing/sprite frame playback/effects",
         },
+    }
+
+
+def _stream_source_time_window(envelopes: list[dict[str, Any]], *, long_gap_threshold_seconds: float = 300.0) -> dict[str, Any]:
+    """Expose renderer-neutral source-time bounds and gaps for long replay UX."""
+    times = sorted(
+        float(value)
+        for value in (_number_or_none(event.get("at_seconds")) for event in envelopes)
+        if value is not None
+    )
+    if not times:
+        return {
+            "schema": "battle.source_time_window.v1",
+            "source_time_authority": "receipt_elapsed_seconds",
+            "start_seconds": 0.0,
+            "end_seconds": 0.0,
+            "source_duration_seconds": 0.0,
+            "event_count": 0,
+            "long_gap_threshold_seconds": long_gap_threshold_seconds,
+            "max_gap_seconds": 0.0,
+            "long_gap_count": 0,
+            "long_gap_segments": [],
+            "presentation_owner": "ux",
+            "proof_mode": PROOF_MODE,
+        }
+
+    gaps: list[dict[str, Any]] = []
+    max_gap = 0.0
+    for index in range(1, len(times)):
+        gap = round(times[index] - times[index - 1], 6)
+        max_gap = max(max_gap, gap)
+        if gap >= long_gap_threshold_seconds:
+            gaps.append(
+                {
+                    "from_source_seconds": times[index - 1],
+                    "to_source_seconds": times[index],
+                    "gap_seconds": gap,
+                    "compression_allowed": True,
+                    "presentation_owner": "ux",
+                }
+            )
+    return {
+        "schema": "battle.source_time_window.v1",
+        "source_time_authority": "receipt_elapsed_seconds",
+        "start_seconds": times[0],
+        "end_seconds": times[-1],
+        "source_duration_seconds": round(times[-1] - times[0], 6),
+        "event_count": len(times),
+        "long_gap_threshold_seconds": long_gap_threshold_seconds,
+        "max_gap_seconds": round(max_gap, 6),
+        "long_gap_count": len(gaps),
+        "long_gap_segments": gaps,
+        "presentation_owner": "ux",
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _replay_compression_policy(source_time_window: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "owner": "ux",
+        "source_time_authority": "receipt_elapsed_seconds",
+        "source_time_window_schema": "battle.source_time_window.v1",
+        "source_duration_seconds": source_time_window.get("source_duration_seconds", 0.0),
+        "long_gap_handling": "ux_may_compress_presentation_time",
+        "long_gap_threshold_seconds": source_time_window.get("long_gap_threshold_seconds", 300.0),
+        "long_gap_count": source_time_window.get("long_gap_count", 0),
+        "backend_emits_cinematic_speed": False,
+        "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
     }
 
 

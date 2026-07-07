@@ -828,9 +828,19 @@
   },
   "replay_compression_policy": {
     "backend_emits_cinematic_speed": false,
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "long_gap_count": 0,
     "long_gap_handling": "ux_may_compress_presentation_time",
+    "long_gap_threshold_seconds": 300.0,
     "owner": "ux",
-    "source_time_authority": "receipt_elapsed_seconds"
+    "source_duration_seconds": 12.0,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "source_time_window_schema": "battle.source_time_window.v1"
   },
   "round_config": {
     "battle_id": "battle-005",
@@ -1038,6 +1048,20 @@
     "replay_mode": "compressed_spectator_replay",
     "schema": "battle.semantic_replay.v1",
     "time_authority": "receipt_elapsed_seconds"
+  },
+  "source_time_window": {
+    "end_seconds": 12.0,
+    "event_count": 12,
+    "long_gap_count": 0,
+    "long_gap_segments": [],
+    "long_gap_threshold_seconds": 300.0,
+    "max_gap_seconds": 2.0,
+    "presentation_owner": "ux",
+    "proof_mode": "receipt_backed_fixture",
+    "schema": "battle.source_time_window.v1",
+    "source_duration_seconds": 12.0,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "start_seconds": 0.0
   },
   "validation": {
     "child_lineage_receipt_backed": true,

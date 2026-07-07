@@ -689,10 +689,23 @@ def _validate_transport_stream_semantics(*, manifest: dict[str, Any], events: li
     _check(policy.get("backend_emits_cinematic_speed") is False, "backend must not emit cinematic speed", errors)
     _check("cinematic_speed" in {str(item) for item in policy.get("backend_must_not_emit", [])}, "transport policy must forbid cinematic_speed", errors)
 
+    source_window = manifest.get("source_time_window") if isinstance(manifest.get("source_time_window"), dict) else {}
+    snapshot_source_window = snapshot.get("source_time_window") if isinstance(snapshot.get("source_time_window"), dict) else {}
+    _validate_source_time_window(source_window=source_window, events=events, context="manifest.source_time_window", errors=errors)
+    _validate_source_time_window(source_window=snapshot_source_window, events=events, context="snapshot.source_time_window", errors=errors)
+    _check(source_window == snapshot_source_window, "manifest and snapshot source_time_window must match", errors)
+    _check(policy.get("source_time_window_schema") == "battle.source_time_window.v1", "transport policy must name source_time_window schema", errors)
+    _check(policy.get("source_duration_seconds") == source_window.get("source_duration_seconds"), "transport policy source_duration_seconds must match source_time_window", errors)
+    _check(policy.get("long_gap_threshold_seconds") == source_window.get("long_gap_threshold_seconds"), "transport policy long_gap_threshold_seconds must match source_time_window", errors)
+    _check(policy.get("long_gap_count") == source_window.get("long_gap_count"), "transport policy long_gap_count must match source_time_window", errors)
+
     semantic_replay = snapshot.get("semantic_replay") if isinstance(snapshot.get("semantic_replay"), dict) else {}
     _check(semantic_replay.get("presentation_owner") == "ux", "snapshot semantic_replay.presentation_owner must be ux", errors)
     _check(semantic_replay.get("time_authority") == "receipt_elapsed_seconds", "snapshot semantic_replay.time_authority must be receipt_elapsed_seconds", errors)
     _check("cinematic_speed" in {str(item) for item in semantic_replay.get("backend_must_not_emit", [])}, "snapshot semantic replay must forbid cinematic_speed", errors)
+    snapshot_policy = snapshot.get("replay_compression_policy") if isinstance(snapshot.get("replay_compression_policy"), dict) else {}
+    _check(snapshot_policy.get("source_time_window_schema") == "battle.source_time_window.v1", "snapshot policy must name source_time_window schema", errors)
+    _check(snapshot_policy.get("source_duration_seconds") == source_window.get("source_duration_seconds"), "snapshot policy source_duration_seconds must match source_time_window", errors)
 
     lanes = snapshot.get("lanes") if isinstance(snapshot.get("lanes"), list) else []
     lane_scores = {
@@ -731,6 +744,45 @@ def _validate_transport_stream_semantics(*, manifest: dict[str, Any], events: li
 
     if errors:
         raise ContractError("\n".join(errors))
+
+
+def _validate_source_time_window(*, source_window: dict[str, Any], events: list[dict[str, Any]], context: str, errors: list[str]) -> None:
+    _check(source_window.get("schema") == "battle.source_time_window.v1", f"{context}.schema must be battle.source_time_window.v1", errors)
+    _check(source_window.get("source_time_authority") == "receipt_elapsed_seconds", f"{context}.source_time_authority must be receipt_elapsed_seconds", errors)
+    _check(source_window.get("presentation_owner") == "ux", f"{context}.presentation_owner must be ux", errors)
+    times = [
+        float(value)
+        for value in (_number_or_none(event.get("at_seconds")) for event in events)
+        if value is not None
+    ]
+    expected_count = len(times)
+    _check(source_window.get("event_count") == expected_count, f"{context}.event_count must match event count", errors)
+    if not times:
+        _check(source_window.get("source_duration_seconds") == 0, f"{context}.source_duration_seconds must be zero without events", errors)
+        _check(source_window.get("long_gap_count") == 0, f"{context}.long_gap_count must be zero without events", errors)
+        return
+    sorted_times = sorted(times)
+    expected_start = sorted_times[0]
+    expected_end = sorted_times[-1]
+    expected_duration = round(expected_end - expected_start, 6)
+    threshold = _number_or_none(source_window.get("long_gap_threshold_seconds"))
+    _check(threshold is not None and threshold >= 0, f"{context}.long_gap_threshold_seconds must be >= 0", errors)
+    gaps = [round(sorted_times[index] - sorted_times[index - 1], 6) for index in range(1, len(sorted_times))]
+    max_gap = round(max(gaps) if gaps else 0.0, 6)
+    long_gaps = [gap for gap in gaps if threshold is not None and gap >= threshold]
+    _check(source_window.get("start_seconds") == expected_start, f"{context}.start_seconds must equal first source event", errors)
+    _check(source_window.get("end_seconds") == expected_end, f"{context}.end_seconds must equal last source event", errors)
+    _check(source_window.get("source_duration_seconds") == expected_duration, f"{context}.source_duration_seconds must equal end-start", errors)
+    _check(source_window.get("max_gap_seconds") == max_gap, f"{context}.max_gap_seconds must match stream gaps", errors)
+    _check(source_window.get("long_gap_count") == len(long_gaps), f"{context}.long_gap_count must match thresholded gaps", errors)
+    segments = source_window.get("long_gap_segments") if isinstance(source_window.get("long_gap_segments"), list) else []
+    _check(len(segments) == len(long_gaps), f"{context}.long_gap_segments must match long_gap_count", errors)
+    for segment in segments:
+        if not isinstance(segment, dict):
+            errors.append(f"{context}.long_gap_segments[] must be an object")
+            continue
+        _check(segment.get("compression_allowed") is True, f"{context}.long_gap_segments[] must allow UX compression", errors)
+        _check(segment.get("presentation_owner") == "ux", f"{context}.long_gap_segments[] presentation_owner must be ux", errors)
 
 
 def _validate_json_schema_payload(*, payload: dict[str, Any], schema_path: Path) -> None:

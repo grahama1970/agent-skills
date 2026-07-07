@@ -19,6 +19,7 @@
     "proof_mode",
     "stream_contract",
     "replay_compression_policy",
+    "source_time_window",
     "renderer_boundary"
   ],
   "properties": {
@@ -109,7 +110,11 @@
       "required": [
         "owner",
         "source_time_authority",
+        "source_time_window_schema",
+        "source_duration_seconds",
         "long_gap_handling",
+        "long_gap_threshold_seconds",
+        "long_gap_count",
         "backend_emits_cinematic_speed",
         "backend_must_not_emit"
       ],
@@ -120,8 +125,23 @@
         "source_time_authority": {
           "const": "receipt_elapsed_seconds"
         },
+        "source_time_window_schema": {
+          "const": "battle.source_time_window.v1"
+        },
+        "source_duration_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
         "long_gap_handling": {
           "const": "ux_may_compress_presentation_time"
+        },
+        "long_gap_threshold_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "long_gap_count": {
+          "type": "integer",
+          "minimum": 0
         },
         "backend_emits_cinematic_speed": {
           "const": false
@@ -134,9 +154,96 @@
         }
       }
     },
+    "source_time_window": {
+      "$ref": "#/$defs/source_time_window"
+    },
     "renderer_boundary": {
       "type": "object",
       "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "source_time_window": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "source_time_authority",
+        "start_seconds",
+        "end_seconds",
+        "source_duration_seconds",
+        "event_count",
+        "long_gap_threshold_seconds",
+        "max_gap_seconds",
+        "long_gap_count",
+        "long_gap_segments",
+        "presentation_owner",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.source_time_window.v1"
+        },
+        "source_time_authority": {
+          "const": "receipt_elapsed_seconds"
+        },
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_duration_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "long_gap_threshold_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_gap_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "long_gap_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "long_gap_segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "from_source_seconds",
+              "to_source_seconds",
+              "gap_seconds",
+              "compression_allowed",
+              "presentation_owner"
+            ],
+            "properties": {
+              "compression_allowed": {
+                "const": true
+              },
+              "presentation_owner": {
+                "const": "ux"
+              }
+            }
+          }
+        },
+        "presentation_owner": {
+          "const": "ux"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
     }
   }
 }
