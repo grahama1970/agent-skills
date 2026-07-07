@@ -527,15 +527,45 @@
       "type": "object",
       "additionalProperties": true,
       "required": [
+        "schema",
         "receipt_id",
+        "spawn_type",
+        "parent_exploit_id",
+        "child_exploit_id",
         "parent_lane_id",
         "child_lane_id",
+        "spawn_confidence",
+        "spawn_reason",
+        "threat_assessment",
+        "inherited_state",
+        "mutation_goal",
+        "source_receipts",
         "spawn_x",
         "child_x_start",
         "proof_mode"
       ],
       "properties": {
+        "schema": {
+          "const": "battle.exploit_spawn.v1"
+        },
         "receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spawn_type": {
+          "enum": [
+            "strategic_pre_kill",
+            "post_block_handoff",
+            "parallel_pivot",
+            "panic_spawn",
+            "invalid_spawn"
+          ]
+        },
+        "parent_exploit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "child_exploit_id": {
           "type": "string",
           "minLength": 1
         },
@@ -546,6 +576,78 @@
         "child_lane_id": {
           "type": "string",
           "minLength": 1
+        },
+        "spawn_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "spawn_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "threat_assessment": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "schema",
+            "assessment_type",
+            "suspected_imminent_kill",
+            "confirmed_kill",
+            "confirmed_blue_scan",
+            "signals",
+            "confidence",
+            "proof_mode"
+          ],
+          "properties": {
+            "schema": {
+              "const": "battle.exploit_threat_assessment.v1"
+            },
+            "assessment_type": {
+              "enum": [
+                "suspected_blue_pressure",
+                "post_block_handoff",
+                "confirmed_kill",
+                "no_pressure_evidence"
+              ]
+            },
+            "suspected_imminent_kill": {
+              "type": "boolean"
+            },
+            "confirmed_kill": {
+              "type": "boolean"
+            },
+            "confirmed_blue_scan": {
+              "type": "boolean"
+            },
+            "signals": {
+              "type": "array"
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "proof_mode": {
+              "const": "receipt_backed_fixture"
+            }
+          }
+        },
+        "inherited_state": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "mutation_goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_receipts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "spawn_x": {
           "type": "number"

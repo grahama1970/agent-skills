@@ -61,6 +61,8 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
 
 
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.normalized_ux_fixture.v1.schema.json"
+EXPLOIT_SPAWN_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.exploit_spawn.v1.schema.json"
+EXPLOIT_THREAT_ASSESSMENT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.exploit_threat_assessment.v1.schema.json"
 SUMMARY_PATH = Path(__file__).resolve().parents[1] / "local" / "battle-004-ux-json-contract-summary.json"
 SUMMARY_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.backend_ux_json_contract_summary.v1.schema.json"
 RESOLUTION_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.ux_renderer_fixture_resolution.v1.schema.json"
@@ -138,6 +140,31 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
     assert schema["$defs"]["semantic_replay"]["properties"]["time_authority"]["const"] == "receipt_elapsed_seconds"
     assert schema["$defs"]["timeline"]["properties"]["scroll_axis"]["const"] == "horizontal"
     assert schema["$defs"]["scenario"]["properties"]["public_entrypoint"]["pattern"] == "^/"
+
+
+def test_exploit_lifecycle_schemas_track_spawn_contract() -> None:
+    spawn_schema = json.loads(EXPLOIT_SPAWN_SCHEMA_PATH.read_text(encoding="utf-8"))
+    threat_schema = json.loads(EXPLOIT_THREAT_ASSESSMENT_SCHEMA_PATH.read_text(encoding="utf-8"))
+    normalized_schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    lineage_spawn = normalized_schema["$defs"]["lineage_spawn"]
+
+    assert spawn_schema["properties"]["schema"]["const"] == "battle.exploit_spawn.v1"
+    assert threat_schema["properties"]["schema"]["const"] == "battle.exploit_threat_assessment.v1"
+    assert spawn_schema["properties"]["spawn_type"]["enum"] == [
+        "strategic_pre_kill",
+        "post_block_handoff",
+        "parallel_pivot",
+        "panic_spawn",
+        "invalid_spawn",
+    ]
+    assert "threat_assessment" in spawn_schema["required"]
+    assert "source_receipts" in spawn_schema["required"]
+    assert "stderr_drift" in threat_schema["$defs"]["signal"]["properties"]["kind"]["enum"]
+    assert "response_body_drift" in threat_schema["$defs"]["signal"]["properties"]["kind"]["enum"]
+    assert "blue_scan_receipt" in threat_schema["$defs"]["signal"]["properties"]["kind"]["enum"]
+    assert lineage_spawn["properties"]["schema"]["const"] == "battle.exploit_spawn.v1"
+    assert "spawn_type" in lineage_spawn["required"]
+    assert "threat_assessment" in lineage_spawn["required"]
 
 
 def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> None:
@@ -1694,6 +1721,22 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert fixture["lineage"]["spawns"][0]["child_start_elapsed_seconds"] == 139.503599
     assert fixture["lineage"]["spawns"][0]["spawn_duration_elapsed_seconds"] == 25.866651
     assert fixture["lineage"]["spawns"][0]["timing_source"] == "battle_control_plane_perf_counter"
+    spawn = fixture["lineage"]["spawns"][0]
+    assert spawn["schema"] == "battle.exploit_spawn.v1"
+    assert spawn["spawn_type"] == "post_block_handoff"
+    assert spawn["parent_exploit_id"] == "payload-857-receipt"
+    assert spawn["child_exploit_id"] == "payload-857-red-1"
+    assert spawn["spawn_confidence"] == 0.72
+    assert spawn["threat_assessment"]["schema"] == "battle.exploit_threat_assessment.v1"
+    assert spawn["threat_assessment"]["assessment_type"] == "post_block_handoff"
+    assert spawn["threat_assessment"]["suspected_imminent_kill"] is False
+    assert spawn["threat_assessment"]["confirmed_kill"] is False
+    assert spawn["threat_assessment"]["confirmed_blue_scan"] is False
+    assert spawn["threat_assessment"]["signals"][0]["kind"] == "judge_block_receipt"
+    assert spawn["inherited_state"]["hypothesis"] == "Spawn child Red lane from receipt-backed useful signal."
+    assert "ZIP_SLIP_CONFIRMED" in spawn["inherited_state"]["known_failure_modes"]
+    assert spawn["mutation_goal"] == "Continue Red exploit from retained parent signal."
+    assert spawn["source_receipts"] == ["blue-tau-subagent-receipt", "judge-receipt", "red-0-tau-subagent-receipt"]
 
     assert "tau.spawned_child" in event_types
     assert "blue.kill_confirmed" not in event_types

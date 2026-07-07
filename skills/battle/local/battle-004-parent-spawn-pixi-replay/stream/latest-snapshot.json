@@ -1992,6 +1992,7 @@
     "spawn_count": 1,
     "spawns": [
       {
+        "child_exploit_id": "payload-857-red-1",
         "child_lane_id": "payload-857-red-1",
         "child_start_elapsed_seconds": 146.686852,
         "child_tau_subagent_id": "red-1",
@@ -2005,17 +2006,54 @@
           "parent_lane=payload-857-receipt",
           "ZIP_SLIP_CONFIRMED"
         ],
+        "inherited_state": {
+          "hypothesis": "Spawn child Red lane from receipt-backed parent handoff.",
+          "known_failure_modes": [
+            "parent_worker=red-0",
+            "parent_lane=payload-857-receipt",
+            "ZIP_SLIP_CONFIRMED"
+          ],
+          "observed_blue_patch": "receipt-backed Blue pressure or block observed before handoff.",
+          "working_payload_ref": "payload-857-red-1"
+        },
         "label": "SPAWN CHILD",
         "leased_task": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+        "mutation_goal": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+        "parent_exploit_id": "payload-857-receipt",
         "parent_lane_id": "payload-857-receipt",
         "parent_tau_subagent_id": "red-0",
         "parent_worker_id": "red-0",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
         "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+        "schema": "battle.exploit_spawn.v1",
+        "source_receipts": [
+          "blue-tau-subagent-receipt",
+          "judge-receipt",
+          "red-0-tau-subagent-receipt"
+        ],
+        "spawn_confidence": 0.72,
         "spawn_duration_elapsed_seconds": 29.713403,
         "spawn_elapsed_seconds": 116.973449,
+        "spawn_reason": "Parent exploit produced receipt-backed state for a child handoff.",
+        "spawn_type": "post_block_handoff",
         "spawn_x": 58,
+        "threat_assessment": {
+          "assessment_type": "post_block_handoff",
+          "confidence": 0.72,
+          "confirmed_blue_scan": false,
+          "confirmed_kill": false,
+          "proof_mode": "receipt_backed_fixture",
+          "schema": "battle.exploit_threat_assessment.v1",
+          "signals": [
+            {
+              "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+              "kind": "judge_block_receipt",
+              "summary": "Spawn authorized by receipt-backed parent handoff."
+            }
+          ],
+          "suspected_imminent_kill": false
+        },
         "time_label": "handoff",
         "timing_source": "battle_control_plane_perf_counter",
         "visible_from_elapsed_seconds": 116.973449

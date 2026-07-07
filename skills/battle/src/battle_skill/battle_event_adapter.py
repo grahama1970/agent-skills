@@ -1870,10 +1870,23 @@ def _lineage_spawns(path: Path) -> list[dict[str, Any]]:
             inherited_context = item.get("inheritedContext")
         if not isinstance(inherited_context, list):
             inherited_context = []
+        spawn_type = _spawn_type_from_lineage_item(item)
+        threat_assessment = _threat_assessment_from_lineage_item(item=item, spawn_type=spawn_type, receipt_id=receipt_id)
+        inherited_state = _inherited_state_from_lineage_item(item=item, inherited_context=inherited_context)
+        mutation_goal = _first_str(
+            item.get("mutation_goal"),
+            item.get("leased_task"),
+            item.get("goal"),
+            "Continue exploit from receipt-backed parent signal.",
+        )
+        source_receipts = _source_receipts_from_lineage_item(item=item)
         spawns.append(
             {
+                "schema": "battle.exploit_spawn.v1",
                 "parent_lane_id": parent_lane_id,
                 "child_lane_id": child_lane_id,
+                "parent_exploit_id": _first_str(item.get("parent_exploit_id"), item.get("parent_payload_id"), parent_lane_id),
+                "child_exploit_id": _first_str(item.get("child_exploit_id"), item.get("child_payload_id"), child_lane_id),
                 "parent_worker_id": _first_str(item.get("parent_worker_id"), item.get("parent_tau_subagent_id"), ""),
                 "child_worker_id": _first_str(item.get("child_worker_id"), item.get("child_tau_subagent_id"), ""),
                 "parent_tau_subagent_id": _first_str(item.get("parent_tau_subagent_id"), item.get("parent_worker_id"), ""),
@@ -1881,6 +1894,13 @@ def _lineage_spawns(path: Path) -> list[dict[str, Any]]:
                 "child_payload_id": _first_str(item.get("child_payload_id"), item.get("payload_id"), ""),
                 "receipt_id": receipt_id,
                 "receipt_path": _first_str(item.get("receipt_path"), item.get("artifact_ref"), "lineage-receipts.json"),
+                "spawn_type": spawn_type,
+                "spawn_confidence": _number_or_none(item.get("spawn_confidence")) if _number_or_none(item.get("spawn_confidence")) is not None else 0.72,
+                "spawn_reason": _first_str(item.get("spawn_reason"), "Parent exploit produced receipt-backed state for a child handoff."),
+                "threat_assessment": threat_assessment,
+                "inherited_state": inherited_state,
+                "mutation_goal": mutation_goal,
+                "source_receipts": source_receipts,
                 "x": _int_or_none(item.get("x")) or _int_or_none(item.get("spawn_x")) or 58,
                 "child_x_start": _int_or_none(item.get("child_x_start")) or _int_or_none(item.get("x")) or _int_or_none(item.get("spawn_x")) or 58,
                 "generation": _int_or_none(item.get("generation")) or 2,
@@ -1896,6 +1916,81 @@ def _lineage_spawns(path: Path) -> list[dict[str, Any]]:
             }
         )
     return spawns
+
+
+def _spawn_type_from_lineage_item(item: dict[str, Any]) -> str:
+    spawn_type = _first_str(item.get("spawn_type"), "")
+    if spawn_type in {"strategic_pre_kill", "post_block_handoff", "parallel_pivot", "panic_spawn", "invalid_spawn"}:
+        return spawn_type
+    threat = item.get("threat_assessment") if isinstance(item.get("threat_assessment"), dict) else {}
+    if threat.get("suspected_imminent_kill") is True:
+        confidence = _number_or_none(threat.get("confidence"))
+        if confidence is not None and confidence < 0.4:
+            return "panic_spawn"
+        return "strategic_pre_kill"
+    if _first_str(item.get("pivot_vector"), item.get("pivot_reason"), ""):
+        return "parallel_pivot"
+    return "post_block_handoff"
+
+
+def _threat_assessment_from_lineage_item(*, item: dict[str, Any], spawn_type: str, receipt_id: str) -> dict[str, Any]:
+    raw = item.get("threat_assessment") if isinstance(item.get("threat_assessment"), dict) else {}
+    signals = raw.get("signals") if isinstance(raw.get("signals"), list) else item.get("signals")
+    if not isinstance(signals, list):
+        signals = [
+            {
+                "kind": "judge_block_receipt" if spawn_type == "post_block_handoff" else "other",
+                "summary": "Spawn authorized by receipt-backed parent handoff.",
+                "after_receipt_id": receipt_id,
+            }
+        ]
+    suspected = bool(raw.get("suspected_imminent_kill")) or spawn_type in {"strategic_pre_kill", "panic_spawn"}
+    assessment_type = _first_str(raw.get("assessment_type"), "")
+    if not assessment_type:
+        assessment_type = "suspected_blue_pressure" if suspected else "post_block_handoff" if spawn_type == "post_block_handoff" else "no_pressure_evidence"
+    confidence = _number_or_none(raw.get("confidence"))
+    if confidence is None:
+        confidence = _number_or_none(item.get("spawn_confidence"))
+    if confidence is None:
+        confidence = 0.72 if spawn_type != "panic_spawn" else 0.35
+    return {
+        "schema": "battle.exploit_threat_assessment.v1",
+        "assessment_type": assessment_type,
+        "suspected_imminent_kill": suspected,
+        "confirmed_kill": bool(raw.get("confirmed_kill")),
+        "confirmed_blue_scan": bool(raw.get("confirmed_blue_scan")),
+        "signals": [signal for signal in signals if isinstance(signal, dict)],
+        "confidence": round(max(0.0, min(float(confidence), 1.0)), 3),
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _inherited_state_from_lineage_item(*, item: dict[str, Any], inherited_context: list[Any]) -> dict[str, Any]:
+    raw = item.get("inherited_state") if isinstance(item.get("inherited_state"), dict) else {}
+    known_failure_modes = raw.get("known_failure_modes") if isinstance(raw.get("known_failure_modes"), list) else item.get("known_failure_modes")
+    if not isinstance(known_failure_modes, list):
+        known_failure_modes = [str(value) for value in inherited_context if value]
+    return {
+        "hypothesis": _first_str(raw.get("hypothesis"), item.get("hypothesis"), item.get("goal"), "Parent exploit yielded useful signal for child continuation."),
+        "working_payload_ref": _first_str(raw.get("working_payload_ref"), item.get("working_payload_ref"), item.get("parent_payload_ref"), item.get("child_payload_id"), "unknown"),
+        "known_failure_modes": [str(value) for value in known_failure_modes if value is not None],
+        "observed_blue_patch": _first_str(raw.get("observed_blue_patch"), item.get("observed_blue_patch"), "receipt-backed Blue pressure or block observed before handoff."),
+    }
+
+
+def _source_receipts_from_lineage_item(*, item: dict[str, Any]) -> list[str]:
+    raw = item.get("source_receipts")
+    if isinstance(raw, list):
+        receipts = [str(value) for value in raw if value]
+    else:
+        receipts = []
+    for key in ("parent_receipt_id", "child_receipt_id", "blue_receipt_id", "judge_receipt_id"):
+        value = _first_str(item.get(key), "")
+        if value:
+            receipts.append(value)
+    if not receipts:
+        receipts = ["red-0-tau-subagent-receipt", "blue-tau-subagent-receipt", "judge-receipt"]
+    return sorted(set(receipts))
 
 
 def _default_lineage_request() -> dict[str, Any]:
@@ -1980,8 +2075,12 @@ def _lineage_payload(*, facts: dict[str, Any], lanes: list[dict[str, Any]]) -> d
         child_id = str(spawn["child_lane_id"])
         spawns.append(
             {
+                "schema": "battle.exploit_spawn.v1",
                 "receipt_id": str(spawn["receipt_id"]),
                 "receipt_path": str(spawn.get("receipt_path") or "lineage-receipts.json"),
+                "spawn_type": str(spawn.get("spawn_type") or "post_block_handoff"),
+                "parent_exploit_id": str(spawn.get("parent_exploit_id") or parent_id),
+                "child_exploit_id": str(spawn.get("child_exploit_id") or child_id),
                 "parent_lane_id": parent_id,
                 "child_lane_id": child_id,
                 "parent_worker_id": str(spawn.get("parent_worker_id") or ""),
@@ -1989,6 +2088,12 @@ def _lineage_payload(*, facts: dict[str, Any], lanes: list[dict[str, Any]]) -> d
                 "parent_tau_subagent_id": str(spawn.get("parent_tau_subagent_id") or ""),
                 "child_tau_subagent_id": str(spawn.get("child_tau_subagent_id") or ""),
                 "generation": int(spawn.get("generation") or lane_by_id[child_id].get("generation") or 2),
+                "spawn_confidence": _number_or_none(spawn.get("spawn_confidence")) if _number_or_none(spawn.get("spawn_confidence")) is not None else 0.72,
+                "spawn_reason": str(spawn.get("spawn_reason") or "Parent exploit produced receipt-backed state for a child handoff."),
+                "threat_assessment": deepcopy(spawn.get("threat_assessment")) if isinstance(spawn.get("threat_assessment"), dict) else _threat_assessment_from_lineage_item(item=spawn, spawn_type=str(spawn.get("spawn_type") or "post_block_handoff"), receipt_id=str(spawn["receipt_id"])),
+                "inherited_state": deepcopy(spawn.get("inherited_state")) if isinstance(spawn.get("inherited_state"), dict) else _inherited_state_from_lineage_item(item=spawn, inherited_context=spawn.get("inherited_context", [])),
+                "mutation_goal": str(spawn.get("mutation_goal") or spawn.get("leased_task") or spawn.get("goal") or "Continue exploit from receipt-backed parent signal."),
+                "source_receipts": [str(value) for value in spawn.get("source_receipts", []) if value] if isinstance(spawn.get("source_receipts"), list) else _source_receipts_from_lineage_item(item=spawn),
                 "spawn_x": int(spawn.get("x") or 58),
                 "child_x_start": int(spawn.get("child_x_start") or spawn.get("x") or lane_by_id[child_id].get("xStart") or 58),
                 **_elapsed_fields(spawn, "spawn_elapsed_seconds", "child_start_elapsed_seconds", "spawn_duration_elapsed_seconds"),

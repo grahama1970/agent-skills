@@ -752,8 +752,12 @@ export const generatedBattleFixture = {
     ],
     "spawns": [
       {
+        "schema": "battle.exploit_spawn.v1",
         "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
         "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+        "spawn_type": "post_block_handoff",
+        "parent_exploit_id": "payload-857-receipt",
+        "child_exploit_id": "payload-857-red-1",
         "parent_lane_id": "payload-857-receipt",
         "child_lane_id": "payload-857-red-1",
         "parent_worker_id": "red-0",
@@ -761,6 +765,40 @@ export const generatedBattleFixture = {
         "parent_tau_subagent_id": "red-0",
         "child_tau_subagent_id": "red-1",
         "generation": 2,
+        "spawn_confidence": 0.72,
+        "spawn_reason": "Parent exploit produced receipt-backed state for a child handoff.",
+        "threat_assessment": {
+          "schema": "battle.exploit_threat_assessment.v1",
+          "assessment_type": "post_block_handoff",
+          "suspected_imminent_kill": false,
+          "confirmed_kill": false,
+          "confirmed_blue_scan": false,
+          "signals": [
+            {
+              "kind": "judge_block_receipt",
+              "summary": "Spawn authorized by receipt-backed parent handoff.",
+              "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+            }
+          ],
+          "confidence": 0.72,
+          "proof_mode": "receipt_backed_fixture"
+        },
+        "inherited_state": {
+          "hypothesis": "Spawn child Red lane from receipt-backed parent handoff.",
+          "working_payload_ref": "payload-857-red-1",
+          "known_failure_modes": [
+            "parent_worker=red-0",
+            "parent_lane=payload-857-receipt",
+            "ZIP_SLIP_CONFIRMED"
+          ],
+          "observed_blue_patch": "receipt-backed Blue pressure or block observed before handoff."
+        },
+        "mutation_goal": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+        "source_receipts": [
+          "blue-tau-subagent-receipt",
+          "judge-receipt",
+          "red-0-tau-subagent-receipt"
+        ],
         "spawn_x": 58,
         "child_x_start": 62,
         "spawn_elapsed_seconds": 116.973449,

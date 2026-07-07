@@ -3121,10 +3121,26 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
             if not isinstance(spawn, dict):
                 errors.append("lineage.spawns entries must be objects")
                 continue
+            _check(spawn.get("schema") == "battle.exploit_spawn.v1", "lineage spawn schema must be battle.exploit_spawn.v1", errors)
             parent_id = str(spawn.get("parent_lane_id") or "")
             child_id = str(spawn.get("child_lane_id") or "")
             parent = lane_by_id.get(parent_id)
             child = lane_by_id.get(child_id)
+            _check(spawn.get("spawn_type") in {"strategic_pre_kill", "post_block_handoff", "parallel_pivot", "panic_spawn", "invalid_spawn"}, "lineage spawn_type is invalid", errors)
+            _check(bool(spawn.get("parent_exploit_id")), "lineage spawn must include parent_exploit_id", errors)
+            _check(bool(spawn.get("child_exploit_id")), "lineage spawn must include child_exploit_id", errors)
+            _check(_number_or_none(spawn.get("spawn_confidence")) is not None, "lineage spawn must include numeric spawn_confidence", errors)
+            _check(bool(spawn.get("spawn_reason")), "lineage spawn must include spawn_reason", errors)
+            threat = spawn.get("threat_assessment") if isinstance(spawn.get("threat_assessment"), dict) else {}
+            _check(threat.get("schema") == "battle.exploit_threat_assessment.v1", "lineage spawn threat_assessment schema must be battle.exploit_threat_assessment.v1", errors)
+            _check(threat.get("confirmed_kill") is False, "lineage spawn cannot claim confirmed_kill without a kill receipt", errors)
+            _check(threat.get("confirmed_blue_scan") in {True, False}, "lineage spawn threat_assessment confirmed_blue_scan must be boolean", errors)
+            _check(_number_or_none(threat.get("confidence")) is not None, "lineage spawn threat_assessment confidence must be numeric", errors)
+            _check(isinstance(threat.get("signals"), list), "lineage spawn threat_assessment signals must be a list", errors)
+            inherited_state = spawn.get("inherited_state") if isinstance(spawn.get("inherited_state"), dict) else {}
+            _check(bool(inherited_state), "lineage spawn must include inherited_state", errors)
+            _check(bool(spawn.get("mutation_goal")), "lineage spawn must include mutation_goal", errors)
+            _check(isinstance(spawn.get("source_receipts"), list) and bool(spawn.get("source_receipts")), "lineage spawn must include source_receipts", errors)
             _check(parent is not None, f"lineage parent lane missing: {parent_id}", errors)
             _check(child is not None, f"lineage child lane missing: {child_id}", errors)
             if isinstance(parent, dict) and isinstance(child, dict):
