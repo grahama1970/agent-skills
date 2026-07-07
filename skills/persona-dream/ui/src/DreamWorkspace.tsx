@@ -927,17 +927,25 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
   }, [packetPath, verdictPath])
 
   const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
+  const targetPanelIds = storyboardTargetPanelIds(packet)
+  const reviewPanels = targetPanelIds.length > 0
+    ? panels.filter((panel) => targetPanelIds.includes(String(panel.panel_id ?? panel.id ?? '')))
+    : panels
   const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
   const reviewBlockers = Array.isArray(verdict?.blockers) ? verdict.blockers.map(String).filter(Boolean) : []
   const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
-  const panelsHaveAcceptedFrames = panels.length >= 2 && panels.every(panelHasAcceptedStoryboardFrames)
+  const panelsHaveAcceptedFrames = reviewPanels.length > 0 && reviewPanels.every(panelHasAcceptedStoryboardFrames)
   const reviewAccepted = Boolean(verdict?.accepted) && String(verdict?.status ?? '').includes('PASS')
   const status = verdict
     ? String(verdict.status ?? (reviewAccepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
     : panelsHaveAcceptedFrames
       ? 'REVIEW_VERDICT_MISSING'
-    : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+      : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
   const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames || !reviewAccepted
+  const targetLabel = targetPanelIds.length > 0 ? targetPanelIds.join(', ') : null
+  const panelCountLabel = targetPanelIds.length > 0
+    ? `${reviewPanels.length}/${panels.length || reviewPanels.length} target`
+    : String(panels.length || '0')
 
   return (
     <section data-qid="dream:storyboard:console" style={nvis.storyboardConsole}>
@@ -960,14 +968,16 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
       <div style={nvis.storyboardHeader}>
         <div>
           <div style={nvis.storyboardEyebrow}>Animatic Storyboard</div>
-          <h3 style={nvis.storyboardTitle}>Four timed panels for a 10-second Kling scene</h3>
+          <h3 style={nvis.storyboardTitle}>
+            {targetLabel ? `Targeted proof for ${targetLabel}` : 'Four timed panels for a 10-second Kling scene'}
+          </h3>
         </div>
         <div style={nvis.storyboardMetaRow}>
           <span style={isBlocked ? nvis.storyboardStatusBlocked : nvis.storyboardStatusPass}>
             {isBlocked ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
             {status.replace(/_/g, ' ')}
           </span>
-          <span style={nvis.storyboardMetaPill}>{panels.length || '0'} panels</span>
+          <span style={nvis.storyboardMetaPill}>{panelCountLabel} panels</span>
           <span style={nvis.storyboardMetaPill}>{String(packet?.duration_seconds ?? '10')}s</span>
         </div>
       </div>
@@ -980,7 +990,9 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
               ? `Storyboard packet could not be loaded: ${loadError}.`
               : reviewBlockers.length
                 ? `Panel reviewer rejected this storyboard: ${reviewBlockers[0]}`
-              : 'A single generated image is not a storyboard. Phase 07 requires multiple timed panels with text, references, coverage seed IDs, and reviewer acceptance.'}
+              : targetLabel
+                ? `Targeted panel proof for ${targetLabel} requires reviewer-accepted start and end frames before it can pass.`
+                : 'A single generated image is not a storyboard. Phase 07 requires multiple timed panels with text, references, coverage seed IDs, and reviewer acceptance.'}
           </span>
         </div>
       )}
@@ -1345,6 +1357,13 @@ function panelHasAcceptedStoryboardFrames(panel: Record<string, unknown>): boole
   const startFrame = storyboardRecord(panel.start_frame)
   const endFrame = storyboardRecord(panel.end_frame)
   return Boolean(acceptedStoryboardFrame(startFrame) && acceptedStoryboardFrame(endFrame))
+}
+
+function storyboardTargetPanelIds(packet: Record<string, unknown> | null): string[] {
+  const generationScope = storyboardRecord(packet?.generation_scope)
+  const targetPanelIds = generationScope.target_panel_ids
+  if (!Array.isArray(targetPanelIds)) return []
+  return targetPanelIds.map(String).filter(Boolean)
 }
 
 function acceptedStoryboardFrame(frame: Record<string, unknown>): Record<string, unknown> | null {

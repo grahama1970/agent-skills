@@ -1,78 +1,30 @@
 {
-  "accepted": false,
-  "blockers": [
-    "panel[0]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[0]:accepted_start_frame_missing_identity_continuity_review",
-    "panel[0]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[0]:accepted_end_frame_missing_identity_continuity_review",
-    "panel[1]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[1]:accepted_start_frame_missing_identity_continuity_review",
-    "panel[1]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[1]:accepted_end_frame_missing_identity_continuity_review",
-    "panel[2]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[2]:accepted_start_frame_missing_identity_continuity_review",
-    "panel[2]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[2]:accepted_end_frame_missing_identity_continuity_review",
-    "panel[3]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[3]:accepted_start_frame_missing_identity_continuity_review",
-    "panel[3]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-    "panel[3]:accepted_end_frame_missing_identity_continuity_review"
-  ],
+  "accepted": true,
+  "auth_repair_required": false,
+  "blockers": [],
   "claims": {
     "does_not_prove": [
       "This reviewer receipt does not by itself prove live provider image generation; use storyboard_frame_generation_receipt.json and accepted_frame metadata for provider evidence.",
       "No downstream video provider submission occurred."
     ],
     "proves": [
-      "Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."
+      "Tau dispatched the Phase 07 panel-reviewer node.",
+      "The storyboard packet includes accepted storyboard frame evidence for each panel.",
+      "Each accepted panel has script action, start/end frame evidence, camera, lighting, acting beats, production notes, references, and coverage seeds.",
+      "Phase 04 object/location/environment references are attached as references only, not accepted panel frames."
     ]
   },
-  "created_at": "2026-07-06T14:26:28.538230+00:00",
+  "created_at": "2026-07-07T19:48:09.730359+00:00",
   "duration_seconds": 10,
   "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
   "live": true,
   "mocked": false,
-  "panel_count": 4,
+  "panel_count": 1,
   "per_panel": [
     {
-      "blockers": [
-        "panel[0]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[0]:accepted_start_frame_missing_identity_continuity_review",
-        "panel[0]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[0]:accepted_end_frame_missing_identity_continuity_review"
-      ],
+      "blockers": [],
       "panel_id": "sb_001",
-      "status": "BLOCKED"
-    },
-    {
-      "blockers": [
-        "panel[1]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[1]:accepted_start_frame_missing_identity_continuity_review",
-        "panel[1]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[1]:accepted_end_frame_missing_identity_continuity_review"
-      ],
-      "panel_id": "sb_002",
-      "status": "BLOCKED"
-    },
-    {
-      "blockers": [
-        "panel[2]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[2]:accepted_start_frame_missing_identity_continuity_review",
-        "panel[2]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[2]:accepted_end_frame_missing_identity_continuity_review"
-      ],
-      "panel_id": "sb_003",
-      "status": "BLOCKED"
-    },
-    {
-      "blockers": [
-        "panel[3]:accepted_start_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[3]:accepted_start_frame_missing_identity_continuity_review",
-        "panel[3]:accepted_end_frame_aspect_mismatch:1536x1024:expected_1536x864",
-        "panel[3]:accepted_end_frame_missing_identity_continuity_review"
-      ],
-      "panel_id": "sb_004",
-      "status": "BLOCKED"
+      "status": "PASS"
     }
   ],
   "provider_calls": {
@@ -85,7 +37,7 @@
   "reference_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_coverage.json",
   "role": "panel-reviewer",
   "schema": "persona_dream.storyboard_review_verdict.v1",
-  "status": "BLOCKED_PANEL_REVIEW",
+  "status": "PASS_PANEL_REVIEWED",
   "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
-  "storyboard_packet_sha256": "sha256:b4244d8b68e910181c2dc840050d5f6db744769caabbdd53ff2a7b453d2b6c11"
+  "storyboard_packet_sha256": "sha256:8ee03125ebaa5a4239b67da8c12c9294c60bf9c904f3e98ac2c5fd9dca78619f"
 }
