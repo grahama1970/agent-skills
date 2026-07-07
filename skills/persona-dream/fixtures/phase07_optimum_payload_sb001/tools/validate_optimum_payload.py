@@ -76,6 +76,9 @@ def main() -> None:
                 fail(f"{identity} reference must use references/ bundle_path")
             assert_file_sha(root, bundle_path, str(asset.get("sha256", "")))
             for flag in (
+                "pane_visible",
+                "sent_to_generator_required",
+                "sent_to_reviewer_required",
                 "pane_visible_required",
                 "generator_attachment_required",
                 "reviewer_attachment_required",
@@ -95,14 +98,22 @@ def main() -> None:
 
     if get(payload, "model_policy.identity_review.provider_route") != "codex_oauth":
         fail("identity_review provider_route must be codex_oauth")
-    if get(payload, "model_policy.identity_review.model") != "gpt-2":
-        fail("identity_review model must be gpt-2")
+    if get(payload, "model_policy.identity_review.model") != "gpt-5.5":
+        fail("identity_review model must be gpt-5.5")
 
     if get(payload, "generation_scope.mode") not in {"failed_unlocked_only", "initial_all"}:
         fail("generation_scope.mode must be failed_unlocked_only or initial_all")
 
     if payload.get("accepted_frame") is not None:
         fail("optimum payload must not start with accepted_frame")
+
+    forbidden = get(payload, "terminal_truth_rule.creator_must_not_write", [])
+    if "accepted_frame" not in forbidden:
+        fail("terminal_truth_rule must forbid creator writing accepted_frame")
+
+    writer = get(payload, "terminal_truth_rule.accepted_frame_writer")
+    if writer != "panel-reviewer":
+        fail("accepted_frame_writer must be panel-reviewer")
     if payload.get("candidate_frame") is not None:
         fail("optimum payload fixture must start without candidate_frame")
 

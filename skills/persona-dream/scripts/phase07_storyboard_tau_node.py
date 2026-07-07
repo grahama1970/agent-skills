@@ -491,13 +491,23 @@ def _validate_storyboard_packet(
 ) -> dict[str, Any]:
     blockers: list[str] = []
     per_panel: list[dict[str, Any]] = []
+    targeted_panel_ids = _targeted_generation_panel_ids(packet)
     if packet.get("schema") != "persona_dream.storyboard_packet.v1":
         blockers.append(f"packet.schema mismatch: {packet.get('schema')}")
     panels = packet.get("panels")
     if not isinstance(panels, list):
         blockers.append("packet.panels must be a list")
         panels = []
-    if len(panels) < 4:
+    if targeted_panel_ids:
+        present_panel_ids = {
+            str(panel.get("panel_id"))
+            for panel in panels
+            if isinstance(panel, Mapping) and panel.get("panel_id")
+        }
+        missing_target_panels = sorted(targeted_panel_ids - present_panel_ids)
+        if missing_target_panels:
+            blockers.append("missing_target_panel_ids:" + ",".join(missing_target_panels))
+    elif len(panels) < 4:
         blockers.append(f"panel_count_below_minimum:{len(panels)}")
     if packet.get("duration_seconds") != 10:
         blockers.append(f"duration_seconds_not_10:{packet.get('duration_seconds')}")
@@ -548,7 +558,7 @@ def _validate_storyboard_packet(
             }
         )
 
-    required_seeds = {f"seed-{index}" for index in range(7)}
+    required_seeds = _required_coverage_seeds(packet, panels, targeted_panel_ids)
     missing_seeds = sorted(required_seeds - seed_ids)
     if reviewer and missing_seeds:
         blockers.append("missing_coverage_seed_ids:" + ",".join(missing_seeds))
@@ -581,6 +591,39 @@ def _validate_storyboard_packet(
         "reference_coverage": reference_coverage,
         "entity_coverage": entity_coverage,
     }
+
+
+def _targeted_generation_panel_ids(packet: Mapping[str, Any]) -> set[str]:
+    generation_scope = packet.get("generation_scope")
+    if not isinstance(generation_scope, Mapping):
+        return set()
+    mode = str(generation_scope.get("mode") or "")
+    if mode not in {"failed_unlocked_only", "targeted_panel_proof"}:
+        return set()
+    target_ids = generation_scope.get("target_panel_ids")
+    if not isinstance(target_ids, list):
+        return set()
+    return {str(item) for item in target_ids if isinstance(item, str) and item.strip()}
+
+
+def _required_coverage_seeds(
+    packet: Mapping[str, Any],
+    panels: Sequence[Any],
+    targeted_panel_ids: set[str],
+) -> set[str]:
+    if not targeted_panel_ids:
+        return {f"seed-{index}" for index in range(7)}
+    required: set[str] = set()
+    for panel in panels:
+        if not isinstance(panel, Mapping):
+            continue
+        if str(panel.get("panel_id") or "") not in targeted_panel_ids:
+            continue
+        required.update(str(item) for item in panel.get("coverage_seed_ids", []) if isinstance(item, str))
+    explicit = packet.get("target_coverage_seed_ids")
+    if isinstance(explicit, list):
+        required.update(str(item) for item in explicit if isinstance(item, str))
+    return required
 
 
 def _validate_panel(panel: Any, *, index: int, reviewer: bool) -> list[str]:
@@ -842,6 +885,7 @@ def _ensure_storyboard_frame_artifacts(
         if not isinstance(panel, dict):
             continue
         blockers.extend(_ensure_panel_identity_references(panel))
+        _ensure_panel_required_identities(panel)
         packet_updated = _purge_invalid_accepted_frames(panel) or packet_updated
         panel_id = str(panel.get("panel_id") or "panel")
         if panel_index > 0:
@@ -1770,6 +1814,17 @@ def _ensure_panel_identity_references(panel: dict[str, Any]) -> list[str]:
     return blockers
 
 
+def _ensure_panel_required_identities(panel: dict[str, Any]) -> None:
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    }
+    required_identities = sorted(required_entities & {"Embry", "Kai"})
+    if required_identities:
+        panel["required_identities"] = required_identities
+
+
 def _attach_identity_continuity_review(
     accepted_frame: dict[str, Any],
     *,
@@ -1786,7 +1841,17 @@ def _attach_identity_continuity_review(
     if not required_entities:
         return []
     existing = accepted_frame.get("identity_continuity_review")
-    if isinstance(existing, Mapping) and existing.get("status") == "PASS":
+    panel_id = str(panel.get("panel_id") or "panel")
+    receipt_path = receipts_dir / f"{panel_id}_{frame_key}_identity_continuity_review.json"
+    if (
+        isinstance(existing, Mapping)
+        and existing.get("status") == "PASS"
+        and _identity_review_receipt_matches_policy(
+            existing,
+            identity_review_policy=identity_review_policy,
+            receipt_path=receipt_path,
+        )
+    ):
         return []
     review = _run_identity_continuity_review(
         accepted_frame,
@@ -1807,11 +1872,38 @@ def _attach_identity_continuity_review(
         "model_policy_enforced": review.get("model_policy_enforced"),
     }
     if review.get("status") != "PASS":
-        panel_id = str(panel.get("panel_id") or "panel")
         accepted_frame["status"] = "REJECTED_IDENTITY_CONTINUITY"
         accepted_frame["rejected_reason"] = "identity_continuity_review_failed"
         return [f"{panel_id}:accepted_{frame_key}_identity_continuity_not_pass:{review.get('status') or 'missing_status'}"]
     return []
+
+
+def _identity_review_receipt_matches_policy(
+    existing_review: Mapping[str, Any],
+    *,
+    identity_review_policy: Mapping[str, Any],
+    receipt_path: Path,
+) -> bool:
+    model = str(identity_review_policy.get("model") or "")
+    expected_source = f"scillm:{model}:image_url"
+    if (
+        existing_review.get("model") != model
+        or existing_review.get("reviewer_source") != expected_source
+        or existing_review.get("model_policy_enforced") is not True
+    ):
+        return False
+    if not receipt_path.exists():
+        return False
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return (
+        receipt.get("status") == "PASS"
+        and receipt.get("model") == model
+        and receipt.get("reviewer_source") == expected_source
+        and receipt.get("model_policy_enforced") is True
+    )
 
 
 def _run_identity_continuity_review(
@@ -2186,7 +2278,7 @@ def _provider_route_receipt(
         expected_policy = {
             "provider": "codex",
             "auth": "codex-oauth",
-            "model": "gpt-2",
+            "model": "gpt-5.5" if role == "panel-reviewer" else "gpt-2",
         }
         for key, expected in expected_policy.items():
             actual = model_policy.get(key)

@@ -179,6 +179,139 @@ class TestPhase07StoryboardTauNode(unittest.TestCase):
             self.assertEqual(handoff["next_agent"]["name"], "human")
             self.assertIn("do not regenerate images", handoff["stop_condition"])
 
+    def test_provider_route_allows_vlm_reviewer_model_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact_dir = root / "artifacts"
+            receipts_dir = root / "receipts"
+            artifact_dir.mkdir()
+            receipts_dir.mkdir()
+            payload = {
+                "context": {
+                    "tau_dag_node": {
+                        "agent": "panel-reviewer",
+                        "model_policy": {
+                            "provider": "codex",
+                            "auth": "codex-oauth",
+                            "model": "gpt-5.5",
+                        },
+                        "prompt_contract": {"schema": "tau.prompt_contract.v1"},
+                    }
+                }
+            }
+
+            receipt = tau_node._provider_route_receipt(
+                payload,
+                role="panel-reviewer",
+                artifact_dir=artifact_dir,
+                receipts_dir=receipts_dir,
+            )
+
+        self.assertEqual(receipt["status"], "PASS")
+        self.assertEqual(receipt["blockers"], [])
+
+    def test_provider_route_still_requires_gpt2_creator_model_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact_dir = root / "artifacts"
+            receipts_dir = root / "receipts"
+            artifact_dir.mkdir()
+            receipts_dir.mkdir()
+            payload = {
+                "context": {
+                    "tau_dag_node": {
+                        "agent": "panel-creator",
+                        "model_policy": {
+                            "provider": "codex",
+                            "auth": "codex-oauth",
+                            "model": "gpt-5.5",
+                        },
+                        "prompt_contract": {"schema": "tau.prompt_contract.v1"},
+                    }
+                }
+            }
+
+            receipt = tau_node._provider_route_receipt(
+                payload,
+                role="panel-creator",
+                artifact_dir=artifact_dir,
+                receipts_dir=receipts_dir,
+            )
+
+        self.assertEqual(receipt["status"], "BLOCKED_PROVIDER_ROUTE")
+        self.assertIn("model_policy_model_mismatch:gpt-5.5", receipt["blockers"])
+
+    def test_existing_identity_review_must_match_current_reviewer_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            receipt_path = root / "sb_001_start_frame_identity_continuity_review.json"
+            receipt_path.write_text(
+                json.dumps(
+                    {
+                        "status": "PASS",
+                        "model": "gpt-2",
+                        "reviewer_source": "scillm:gpt-2:image_url",
+                        "model_policy_enforced": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            existing_review = {
+                "status": "PASS",
+                "model": "gpt-2",
+                "reviewer_source": "scillm:gpt-2:image_url",
+                "model_policy_enforced": True,
+            }
+
+            matches = tau_node._identity_review_receipt_matches_policy(
+                existing_review,
+                identity_review_policy={"model": "gpt-5.5"},
+                receipt_path=receipt_path,
+            )
+
+        self.assertFalse(matches)
+
+    def test_targeted_panel_proof_does_not_require_full_storyboard_panel_count(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            packet_path = Path(tmp) / "storyboard_packet.json"
+            packet = {
+                "schema": "persona_dream.storyboard_packet.v1",
+                "duration_seconds": 10,
+                "panel_count": 0,
+                "generation_scope": {
+                    "mode": "failed_unlocked_only",
+                    "target_panel_ids": ["sb_001"],
+                },
+                "panels": [],
+            }
+
+            review = tau_node._validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
+
+        self.assertNotIn("panel_count_below_minimum:0", review["blockers"])
+        self.assertFalse(any(item.startswith("missing_coverage_seed_ids:") for item in review["blockers"]))
+        self.assertIn("missing_target_panel_ids:sb_001", review["blockers"])
+
+    def test_full_storyboard_still_requires_minimum_panel_count(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            packet_path = Path(tmp) / "storyboard_packet.json"
+            packet = {
+                "schema": "persona_dream.storyboard_packet.v1",
+                "duration_seconds": 10,
+                "panel_count": 0,
+                "panels": [],
+            }
+
+            review = tau_node._validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
+
+        self.assertIn("panel_count_below_minimum:0", review["blockers"])
+
+    def test_panel_identity_contract_is_written_from_required_entities(self) -> None:
+        panel = {"required_entities": ["Embry", "Kai", "Lava Reef"]}
+
+        tau_node._ensure_panel_required_identities(panel)
+
+        self.assertEqual(panel["required_identities"], ["Embry", "Kai"])
+
 
 if __name__ == "__main__":
     unittest.main()

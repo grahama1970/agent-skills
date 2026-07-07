@@ -22,7 +22,10 @@
         "pane_visible_required": true,
         "generator_attachment_required": true,
         "reviewer_attachment_required": true,
-        "reference_only_not_output": true
+        "reference_only_not_output": true,
+        "pane_visible": true,
+        "sent_to_generator_required": true,
+        "sent_to_reviewer_required": true
       }
     ],
     "Kai": [
@@ -35,7 +38,10 @@
         "pane_visible_required": true,
         "generator_attachment_required": true,
         "reviewer_attachment_required": true,
-        "reference_only_not_output": true
+        "reference_only_not_output": true,
+        "pane_visible": true,
+        "sent_to_generator_required": true,
+        "sent_to_reviewer_required": true
       }
     ]
   },
@@ -57,7 +63,7 @@
       "provider_route": "codex_oauth",
       "provider": "codex",
       "auth": "codex-oauth",
-      "model": "gpt-2",
+      "model": "gpt-5.5",
       "fallbacks": []
     }
   },
@@ -146,5 +152,26 @@
     "start_frame_prompt_path": "sb_001.start_frame.optimum_creator_prompt.md",
     "end_frame_prompt_path": "sb_001.end_frame.optimum_creator_prompt.md",
     "reviewer_prompt_path": "sb_001.optimum_reviewer_prompt.md"
+  },
+  "terminal_truth_rule": {
+    "creator_writes": [
+      "candidate_frame",
+      "creator_receipt"
+    ],
+    "creator_must_not_write": [
+      "accepted_frame",
+      "panel_review.accepted",
+      "review_status"
+    ],
+    "reviewer_writes": [
+      "panel_review",
+      "identity_review",
+      "accepted_frame_if_passed"
+    ],
+    "accepted_frame_writer": "panel-reviewer",
+    "accepted_frame_requires": {
+      "identity_review.status": "PASS",
+      "accepted_by": "panel-reviewer"
+    }
   }
 }
