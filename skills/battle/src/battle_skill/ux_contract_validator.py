@@ -3042,6 +3042,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
     _check(isinstance(fixture.get("spectator_shell"), dict), "spectator_shell must be an object", errors)
     _check(isinstance(fixture.get("renderer_binding_contract"), dict), "renderer_binding_contract must be an object", errors)
     _check(isinstance(fixture.get("sprite_theme"), dict), "sprite_theme must be an object", errors)
+    _check(isinstance(fixture.get("semantic_replay"), dict), "semantic_replay must be an object", errors)
 
     scenario = fixture.get("scenario") if isinstance(fixture.get("scenario"), dict) else {}
     public_entrypoint = str(scenario.get("public_entrypoint") or "")
@@ -3096,6 +3097,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
         errors=errors,
     )
     _validate_actor_visuals(lanes=lanes, sprite_theme=sprite_theme, errors=errors)
+    _validate_semantic_scoring_and_replay(fixture=fixture, lanes=lanes, scoreboard=scoreboard, errors=errors)
     _validate_renderer_binding_contract(renderer_bindings, errors=errors)
     _validate_lane_event_layout(lanes=lanes, errors=errors)
     _validate_proof_blockers(proof_blockers=proof_blockers, events=events, errors=errors)
@@ -3127,6 +3129,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
             _check(child is not None, f"lineage child lane missing: {child_id}", errors)
             if isinstance(parent, dict) and isinstance(child, dict):
                 _check(child.get("parentId") == parent_id, f"child lane {child_id} parentId must match lineage parent", errors)
+                _check(child.get("parent_id") == parent_id, f"child lane {child_id} parent_id must match lineage parent", errors)
                 _check(child_id in (parent.get("children") or []), f"parent lane {parent_id} must list child {child_id}", errors)
                 _check(_int(child.get("generation")) > _int(parent.get("generation")), f"child lane {child_id} generation must exceed parent generation", errors)
                 group_id = f"lineage:{parent_id}"
@@ -3774,6 +3777,55 @@ def _validate_actor_visuals(*, lanes: list[Any], sprite_theme: dict[str, Any], e
                     f"lane {lane_id} terminal actor_visual state {transition.get('state')} requires source_receipt_id",
                     errors,
                 )
+
+
+def _validate_semantic_scoring_and_replay(*, fixture: dict[str, Any], lanes: list[Any], scoreboard: dict[str, Any], errors: list[str]) -> None:
+    semantic_replay = fixture.get("semantic_replay") if isinstance(fixture.get("semantic_replay"), dict) else {}
+    _check(semantic_replay.get("schema") == "battle.semantic_replay.v1", "semantic_replay.schema must be battle.semantic_replay.v1", errors)
+    _check(semantic_replay.get("time_authority") == "receipt_elapsed_seconds", "semantic_replay.time_authority must be receipt_elapsed_seconds", errors)
+    _check(semantic_replay.get("presentation_owner") == "ux", "semantic_replay.presentation_owner must be ux", errors)
+    _check("cinematic_speed" in {str(item) for item in (semantic_replay.get("backend_must_not_emit") or [])}, "semantic_replay must forbid backend cinematic speed", errors)
+    replay_events = semantic_replay.get("events") if isinstance(semantic_replay.get("events"), list) else []
+    _check(_int(semantic_replay.get("event_count")) == len(replay_events), "semantic_replay.event_count must match events length", errors)
+
+    semantic_scoring = scoreboard.get("semantic_scoring") if isinstance(scoreboard.get("semantic_scoring"), dict) else {}
+    _check(semantic_scoring.get("schema") == "battle.semantic_scoring.v1", "scoreboard.semantic_scoring.schema must be battle.semantic_scoring.v1", errors)
+    _check(semantic_scoring.get("score_owner") == "scorekeeper", "scoreboard.semantic_scoring.score_owner must be scorekeeper", errors)
+    rules = semantic_scoring.get("rules") if isinstance(semantic_scoring.get("rules"), dict) else {}
+    pre_multiplier = _number_or_none(rules.get("pre_spawn_block_blue_multiplier"))
+    post_multiplier = _number_or_none(rules.get("post_spawn_containment_blue_multiplier"))
+    _check(
+        pre_multiplier is not None and post_multiplier is not None and pre_multiplier > post_multiplier,
+        "semantic scoring must value pre-spawn Blue blocks above post-spawn containment",
+        errors,
+    )
+
+    lane_scores = semantic_scoring.get("lanes") if isinstance(semantic_scoring.get("lanes"), list) else []
+    _check(len(lane_scores) == len(lanes), "scoreboard.semantic_scoring.lanes must match lanes length", errors)
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane_id = str(lane.get("id") or "")
+        profile = lane.get("exploit_profile") if isinstance(lane.get("exploit_profile"), dict) else {}
+        score = lane.get("score_semantics") if isinstance(lane.get("score_semantics"), dict) else {}
+        replay = lane.get("replay_semantics") if isinstance(lane.get("replay_semantics"), dict) else {}
+        visual = lane.get("actor_visual") if isinstance(lane.get("actor_visual"), dict) else {}
+        _check(profile.get("schema") == "battle.exploit_profile.v1", f"lane {lane_id} exploit_profile.schema must be battle.exploit_profile.v1", errors)
+        _check(profile.get("lane_id") == lane_id, f"lane {lane_id} exploit_profile.lane_id must match lane.id", errors)
+        for key in ("strength", "complexity", "durability", "lineage_pressure", "score_weight"):
+            value = _number_or_none(profile.get(key))
+            _check(value is not None and 0 <= value <= 1, f"lane {lane_id} exploit_profile.{key} must be 0..1", errors)
+        _check(score.get("schema") == "battle.semantic_scoring.v1", f"lane {lane_id} score_semantics.schema must be battle.semantic_scoring.v1", errors)
+        _check(score.get("lane_id") == lane_id, f"lane {lane_id} score_semantics.lane_id must match lane.id", errors)
+        delta = score.get("score_delta") if isinstance(score.get("score_delta"), dict) else {}
+        _check(_number_or_none(delta.get("red")) is not None, f"lane {lane_id} score_semantics.score_delta.red must be numeric", errors)
+        _check(_number_or_none(delta.get("blue")) is not None, f"lane {lane_id} score_semantics.score_delta.blue must be numeric", errors)
+        _check(replay.get("schema") == "battle.replay_semantics.v1", f"lane {lane_id} replay_semantics.schema must be battle.replay_semantics.v1", errors)
+        _check(replay.get("presentation_owner") == "ux", f"lane {lane_id} replay_semantics.presentation_owner must be ux", errors)
+        if str(profile.get("tier") or "") == "adaptive_lineage":
+            _check(visual.get("variant_id") == "plague_nurgling", f"lane {lane_id} adaptive lineage exploit must map to plague_nurgling", errors)
+        if str(profile.get("tier") or "") == "heavy_durable":
+            _check(visual.get("variant_id") == "crimson_hornbreaker", f"lane {lane_id} heavy durable exploit must map to crimson_hornbreaker", errors)
 
 
 def _validate_lane_cockpit(*, lane: dict[str, Any], errors: list[str]) -> None:

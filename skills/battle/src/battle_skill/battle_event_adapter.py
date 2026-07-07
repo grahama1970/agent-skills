@@ -42,6 +42,9 @@ DEFAULT_LANE_ID = "payload-857-receipt"
 DEFAULT_PAYLOAD_ID = "payload-857"
 DEFAULT_LANE_NAME = "Archive Escape"
 DEFAULT_BLUE_ACTION_ID = "blue-receipt-backed-patch"
+SEMANTIC_SCORE_VERSION = "battle.semantic_scoring.v1"
+EXPLOIT_PROFILE_VERSION = "battle.exploit_profile.v1"
+REPLAY_SEMANTICS_VERSION = "battle.replay_semantics.v1"
 ACTOR_STATE_VOCABULARY = [
     "idle",
     "walk",
@@ -343,6 +346,9 @@ def _fixture_from_facts(facts: dict[str, Any]) -> dict[str, Any]:
     lanes = _apply_lineage_to_lanes(lanes=lanes, facts=facts)
     _attach_elapsed_timing(lanes=lanes, facts=facts)
     _attach_activity_segments(lanes)
+    _attach_exploit_profiles(lanes=lanes, facts=facts)
+    _attach_lane_score_semantics(lanes=lanes, facts=facts)
+    _attach_lane_replay_semantics(lanes=lanes)
     _attach_actor_visuals(lanes)
     events = _with_timeline_order(_events(facts=facts))
     blue_actions = _blue_patch_actions(facts=facts)
@@ -351,7 +357,7 @@ def _fixture_from_facts(facts: dict[str, Any]) -> dict[str, Any]:
     round_config = _round_config(facts=facts, battle_clock=battle_clock)
     clock = _canonical_clock(facts=facts, battle_clock=battle_clock, round_config=round_config)
     timeline_control = _battle_timeline_control(clock=clock, timeline=_timeline(facts=facts, lanes=lanes, events=events))
-    scoreboard = _scoreboard_payload(facts)
+    scoreboard = _scoreboard_payload(facts, lanes=lanes)
     proof_blockers = _proof_blockers(facts=facts)
     fixture = {
         "schema": "battle.normalized_ux_fixture.v1",
@@ -381,6 +387,7 @@ def _fixture_from_facts(facts: dict[str, Any]) -> dict[str, Any]:
             key: value for key, value in timeline_control.items() if key != "_legacy_timeline"
         },
         "sprite_theme": _sprite_theme_for_lanes(lanes),
+        "semantic_replay": _semantic_replay(lanes=lanes),
         "segments": _snapshot_segments(lanes),
         "lineage_request": facts["lineage_request"],
         "lineage": _lineage_payload(facts=facts, lanes=lanes),
@@ -813,6 +820,172 @@ def _attach_activity_segments(lanes: list[dict[str, Any]]) -> None:
         lane["activitySegments"] = _activity_segments_for_lane(lane)
 
 
+def _attach_exploit_profiles(*, lanes: list[dict[str, Any]], facts: dict[str, Any]) -> None:
+    spawn_count = len(_valid_lineage_spawns(facts=facts))
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane["exploit_profile"] = _exploit_profile_for_lane(lane=lane, spawn_count=spawn_count)
+
+
+def _exploit_profile_for_lane(*, lane: dict[str, Any], spawn_count: int) -> dict[str, Any]:
+    is_child = bool(lane.get("parentId"))
+    has_payload = any(isinstance(event, dict) and event.get("kind") in {"payload", "useful"} for event in lane.get("events", []))
+    is_blocked = str(lane.get("terminal") or "") in {"blocked", "blocked_handoff"}
+    lineage_pressure = 0.0
+    if is_child:
+        lineage_pressure = 0.65
+    elif spawn_count > 0 and lane.get("children"):
+        lineage_pressure = 0.45
+
+    strength = 0.82 if has_payload else 0.35
+    complexity = 0.58 + (0.22 if is_child else 0.10) + min(0.10, lineage_pressure * 0.10)
+    durability = 0.62 + (0.10 if is_blocked else 0.0) + (0.06 if is_child else 0.0)
+    reproducibility = 0.84 if has_payload else 0.40
+    stealth = 0.42 + (0.10 if is_child else 0.0)
+    score_weight = round((strength * 0.35) + (complexity * 0.25) + (durability * 0.25) + (reproducibility * 0.15), 3)
+    tier = _exploit_tier(score_weight=score_weight, lineage_pressure=lineage_pressure)
+    return {
+        "schema": EXPLOIT_PROFILE_VERSION,
+        "lane_id": str(lane.get("id") or ""),
+        "strength": round(min(strength, 1.0), 3),
+        "complexity": round(min(complexity, 1.0), 3),
+        "durability": round(min(durability, 1.0), 3),
+        "stealth": round(min(stealth, 1.0), 3),
+        "reproducibility": round(min(reproducibility, 1.0), 3),
+        "lineage_pressure": round(min(lineage_pressure, 1.0), 3),
+        "score_weight": score_weight,
+        "tier": tier,
+        "evidence_source": "receipt_events_and_lineage",
+        "proof_scope": {
+            "receipt_backed_inputs": True,
+            "heuristic_profile": True,
+            "does_not_prove": [
+                "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+                "Sprite tier does not prove Battle outcome.",
+            ],
+        },
+    }
+
+
+def _exploit_tier(*, score_weight: float, lineage_pressure: float) -> str:
+    if lineage_pressure >= 0.6:
+        return "adaptive_lineage"
+    if score_weight >= 0.78:
+        return "heavy_durable"
+    if score_weight >= 0.62:
+        return "standard_exploit"
+    return "fragile_probe"
+
+
+def _attach_lane_score_semantics(*, lanes: list[dict[str, Any]], facts: dict[str, Any]) -> None:
+    spawn_count = len(_valid_lineage_spawns(facts=facts))
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane["score_semantics"] = _lane_score_semantics(lane=lane, spawn_count=spawn_count)
+        cockpit = lane.get("cockpit") if isinstance(lane.get("cockpit"), dict) else {}
+        if cockpit:
+            cockpit["score_semantics"] = deepcopy(lane["score_semantics"])
+
+
+def _lane_score_semantics(*, lane: dict[str, Any], spawn_count: int) -> dict[str, Any]:
+    profile = lane.get("exploit_profile") if isinstance(lane.get("exploit_profile"), dict) else {}
+    profile_weight = float(_number_or_none(profile.get("score_weight")) or 0.5)
+    is_child = bool(lane.get("parentId"))
+    is_blocked = str(lane.get("terminal") or "") in {"blocked", "blocked_handoff"}
+    if not is_blocked:
+        tier = "UNRESOLVED"
+        blue_delta = 0.0
+        red_delta = round(4.0 * profile_weight, 3)
+    elif spawn_count == 0:
+        tier = "PRE_SPAWN_BLOCK"
+        blue_delta = round(12.0 * profile_weight, 3)
+        red_delta = round(2.0 * profile_weight, 3)
+    elif is_child:
+        tier = "POST_SPAWN_CONTAINMENT"
+        blue_delta = round(7.0 * profile_weight, 3)
+        red_delta = round(3.5 * profile_weight, 3)
+    else:
+        tier = "SPAWN_PRESSURE_CONCEDED"
+        blue_delta = round(4.0 * profile_weight, 3)
+        red_delta = round(4.5 * profile_weight, 3)
+    return {
+        "schema": SEMANTIC_SCORE_VERSION,
+        "lane_id": str(lane.get("id") or ""),
+        "outcome_tier": tier,
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+            "red": red_delta,
+            "blue": blue_delta,
+        },
+        "rules": {
+            "pre_spawn_block_is_highest_blue_credit": True,
+            "spawn_pressure_reduces_blue_credit": True,
+            "functionality_preservation_required_for_full_blue_credit": True,
+            "sprite_choice_does_not_create_score_truth": True,
+        },
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _attach_lane_replay_semantics(*, lanes: list[dict[str, Any]]) -> None:
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane["replay_semantics"] = _lane_replay_semantics(lane)
+
+
+def _lane_replay_semantics(lane: dict[str, Any]) -> dict[str, Any]:
+    profile = lane.get("exploit_profile") if isinstance(lane.get("exploit_profile"), dict) else {}
+    score_semantics = lane.get("score_semantics") if isinstance(lane.get("score_semantics"), dict) else {}
+    events = [
+        {
+            "source_time_seconds": _number_or_none(event.get("elapsed_seconds")),
+            "phase": _replay_phase_for_event(event),
+            "importance": _replay_importance_for_event(event),
+            "lineage_pressure": profile.get("lineage_pressure", 0),
+            "score_delta": score_semantics.get("score_delta", {}),
+            "receipt_id": _first_str(event.get("receipt_id"), event.get("receiptId"), ""),
+            "source_event_id": _first_str(event.get("id"), ""),
+            "proof_mode": PROOF_MODE,
+        }
+        for event in lane.get("events", [])
+        if isinstance(event, dict) and _number_or_none(event.get("elapsed_seconds")) is not None
+    ]
+    return {
+        "schema": REPLAY_SEMANTICS_VERSION,
+        "lane_id": str(lane.get("id") or ""),
+        "time_authority": "receipt_elapsed_seconds",
+        "presentation_owner": "ux",
+        "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+        "events": events,
+        "proof_mode": PROOF_MODE,
+    }
+
+
+def _replay_phase_for_event(event: dict[str, Any]) -> str:
+    kind = str(event.get("kind") or "")
+    if kind == "blue_blast":
+        return "blue_defense_intervention"
+    if kind == "blocked":
+        return "judge_block_verdict"
+    if kind == "handoff":
+        return "lineage_spawn_pressure"
+    if kind in {"payload", "useful"}:
+        return "red_exploit_pressure"
+    return kind or "receipt_event"
+
+
+def _replay_importance_for_event(event: dict[str, Any]) -> str:
+    kind = str(event.get("kind") or "")
+    if kind in {"blocked", "handoff"}:
+        return "major"
+    if kind in {"payload", "useful", "blue_blast"}:
+        return "visible"
+    return "background"
+
+
 def _attach_actor_visuals(lanes: list[dict[str, Any]]) -> None:
     for lane in lanes:
         if not isinstance(lane, dict):
@@ -823,7 +996,8 @@ def _attach_actor_visuals(lanes: list[dict[str, Any]]) -> None:
 def _actor_visual_for_lane(lane: dict[str, Any]) -> dict[str, Any]:
     lane_id = str(lane.get("id") or "lane")
     is_child = bool(lane.get("parentId"))
-    variant_id = _variant_id_for_lane(lane_id)
+    profile = lane.get("exploit_profile") if isinstance(lane.get("exploit_profile"), dict) else {}
+    variant_id = _variant_id_for_lane(lane_id=lane_id, exploit_profile=profile)
     archetype = "chaos_marine_child" if is_child or variant_id in {"plague_nurgling", "nurgling"} else "chaos_marine_heavy"
     transitions = _actor_state_timeline(lane)
     initial_state = transitions[0]["state"] if transitions else ("spawn" if is_child else "idle")
@@ -835,6 +1009,7 @@ def _actor_visual_for_lane(lane: dict[str, Any]) -> dict[str, Any]:
         "team": "red",
         "archetype": archetype,
         "variant_id": variant_id,
+        "variant_source": "exploit_profile_tier",
         "style_family": "vintage_16bit_genesis",
         "facing": "right",
         "scale_class": "heavy_64",
@@ -914,7 +1089,19 @@ def _segment_id_for_event(*, lane: dict[str, Any], event_id: str) -> str | None:
     return None
 
 
-def _variant_id_for_lane(lane_id: str) -> str:
+def _variant_id_for_lane(*, lane_id: str, exploit_profile: dict[str, Any] | None = None) -> str:
+    profile = exploit_profile if isinstance(exploit_profile, dict) else {}
+    tier = str(profile.get("tier") or "")
+    lineage_pressure = _number_or_none(profile.get("lineage_pressure")) or 0.0
+    strength = _number_or_none(profile.get("strength")) or 0.0
+    complexity = _number_or_none(profile.get("complexity")) or 0.0
+    durability = _number_or_none(profile.get("durability")) or 0.0
+    if tier == "adaptive_lineage" or lineage_pressure >= 0.6:
+        return "plague_nurgling"
+    if tier == "heavy_durable" or (strength >= 0.75 and durability >= 0.70):
+        return "crimson_hornbreaker"
+    if complexity >= 0.75:
+        return "purple_horn_imp"
     if lane_id in LANE_VARIANT_DEFAULTS:
         return LANE_VARIANT_DEFAULTS[lane_id]
     index = sum(ord(char) for char in lane_id) % len(SPRITE_VARIANT_ORDER)
@@ -998,6 +1185,30 @@ def _snapshot_segments(lanes: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 }
             )
     return segments
+
+
+def _semantic_replay(*, lanes: list[dict[str, Any]]) -> dict[str, Any]:
+    events: list[dict[str, Any]] = []
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        replay = lane.get("replay_semantics") if isinstance(lane.get("replay_semantics"), dict) else {}
+        lane_events = replay.get("events") if isinstance(replay.get("events"), list) else []
+        for event in lane_events:
+            if isinstance(event, dict):
+                events.append({**event, "lane_id": str(lane.get("id") or "")})
+    events.sort(key=lambda event: (_number_or_none(event.get("source_time_seconds")) or 0.0, str(event.get("source_event_id") or "")))
+    return {
+        "schema": "battle.semantic_replay.v1",
+        "time_authority": "receipt_elapsed_seconds",
+        "presentation_owner": "ux",
+        "replay_mode": "compressed_spectator_replay",
+        "backend_emits": ["source_time_seconds", "phase", "importance", "lineage_pressure", "score_delta", "receipt_id"],
+        "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+        "event_count": len(events),
+        "events": events,
+        "proof_mode": PROOF_MODE,
+    }
 
 
 def _fixture_validation(fixture: dict[str, Any]) -> dict[str, Any]:
@@ -1495,9 +1706,10 @@ def _claims(*, facts: dict[str, Any]) -> dict[str, list[str]]:
     }
 
 
-def _scoreboard_payload(facts: dict[str, Any]) -> dict[str, Any]:
+def _scoreboard_payload(facts: dict[str, Any], lanes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     scoreboard = facts["scoreboard"] if isinstance(facts["scoreboard"], dict) else {}
     blue_success_count = sum(1 for attempt in facts["attempts"] if attempt.get("verdict") == "BLUE_SUCCESS")
+    semantic_scoring = _semantic_scoring_payload(lanes or [])
     return {
         "red_score": scoreboard.get("red_score"),
         "blue_score": scoreboard.get("blue_score"),
@@ -1514,6 +1726,39 @@ def _scoreboard_payload(facts: dict[str, Any]) -> dict[str, Any]:
         "judged_pair_count": scoreboard.get("judged_pair_count", len(facts["attempts"])),
         "blue_success_count": scoreboard.get("blue_success_count", blue_success_count),
         "per_pair": scoreboard.get("per_pair", facts["attempts"]),
+        "semantic_scoring": semantic_scoring,
+    }
+
+
+def _semantic_scoring_payload(lanes: list[dict[str, Any]]) -> dict[str, Any]:
+    lane_scores = [
+        deepcopy(lane.get("score_semantics"))
+        for lane in lanes
+        if isinstance(lane, dict) and isinstance(lane.get("score_semantics"), dict)
+    ]
+    red_delta = round(sum(float(_number_or_none(score.get("score_delta", {}).get("red")) or 0.0) for score in lane_scores), 3)
+    blue_delta = round(sum(float(_number_or_none(score.get("score_delta", {}).get("blue")) or 0.0) for score in lane_scores), 3)
+    outcome_tiers = sorted({str(score.get("outcome_tier")) for score in lane_scores if score.get("outcome_tier")})
+    return {
+        "schema": SEMANTIC_SCORE_VERSION,
+        "score_owner": "scorekeeper",
+        "status": "advisory_contract",
+        "does_not_override_legacy_scoreboard_totals": True,
+        "rules": {
+            "pre_spawn_block_blue_multiplier": 12.0,
+            "post_spawn_containment_blue_multiplier": 7.0,
+            "spawn_pressure_parent_blue_multiplier": 4.0,
+            "pre_spawn_block_is_more_valuable_than_post_spawn_block": True,
+            "killed_requires_explicit_kill_receipt": True,
+            "functionality_preservation_required_for_full_blue_credit": True,
+        },
+        "semantic_totals": {
+            "red": red_delta,
+            "blue": blue_delta,
+        },
+        "outcome_tiers": outcome_tiers,
+        "lanes": lane_scores,
+        "proof_mode": PROOF_MODE,
     }
 
 

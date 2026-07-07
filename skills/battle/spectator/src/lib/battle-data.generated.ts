@@ -350,6 +350,198 @@ export const generatedBattleFixture = {
       ]
     }
   },
+  "semantic_replay": {
+    "schema": "battle.semantic_replay.v1",
+    "time_authority": "receipt_elapsed_seconds",
+    "presentation_owner": "ux",
+    "replay_mode": "compressed_spectator_replay",
+    "backend_emits": [
+      "source_time_seconds",
+      "phase",
+      "importance",
+      "lineage_pressure",
+      "score_delta",
+      "receipt_id"
+    ],
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "event_count": 12,
+    "events": [
+      {
+        "source_time_seconds": 2.324156,
+        "phase": "research",
+        "importance": "background",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "arena-receipt",
+        "source_event_id": "payload-857-receipt:arena",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 114.671919,
+        "phase": "red_exploit_pressure",
+        "importance": "visible",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "red-tau-subagent-receipt",
+        "source_event_id": "payload-857-receipt:red",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 114.671919,
+        "phase": "red_exploit_pressure",
+        "importance": "visible",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "red-tau-subagent-receipt",
+        "source_event_id": "payload-857-receipt:useful",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 116.973449,
+        "phase": "lineage_spawn_pressure",
+        "importance": "major",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+        "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 116.973449,
+        "phase": "research",
+        "importance": "background",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "arena-receipt",
+        "source_event_id": "payload-857-red-1:arena",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      },
+      {
+        "source_time_seconds": 116.973449,
+        "phase": "lineage_spawn_pressure",
+        "importance": "major",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+        "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      },
+      {
+        "source_time_seconds": 146.686852,
+        "phase": "red_exploit_pressure",
+        "importance": "visible",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "red-1-tau-subagent-receipt",
+        "source_event_id": "payload-857-red-1:red",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      },
+      {
+        "source_time_seconds": 146.686852,
+        "phase": "red_exploit_pressure",
+        "importance": "visible",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "red-1-tau-subagent-receipt",
+        "source_event_id": "payload-857-red-1:useful",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      },
+      {
+        "source_time_seconds": 146.687555,
+        "phase": "blue_defense_intervention",
+        "importance": "visible",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "blue-tau-subagent-receipt",
+        "source_event_id": "payload-857-receipt:blue",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 147.740205,
+        "phase": "judge_block_verdict",
+        "importance": "major",
+        "lineage_pressure": 0.45,
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "receipt_id": "judge-receipt",
+        "source_event_id": "payload-857-receipt:judge",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-receipt"
+      },
+      {
+        "source_time_seconds": 148.780876,
+        "phase": "blue_defense_intervention",
+        "importance": "visible",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "blue-tau-subagent-receipt",
+        "source_event_id": "payload-857-red-1:blue",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      },
+      {
+        "source_time_seconds": 149.77601,
+        "phase": "judge_block_verdict",
+        "importance": "major",
+        "lineage_pressure": 0.65,
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "receipt_id": "judge-receipt",
+        "source_event_id": "payload-857-red-1:judge",
+        "proof_mode": "receipt_backed_fixture",
+        "lane_id": "payload-857-red-1"
+      }
+    ],
+    "proof_mode": "receipt_backed_fixture"
+  },
   "segments": [
     {
       "schema": "battle.segment.v1",
@@ -1093,6 +1285,23 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           "proof_mode": "receipt_backed_fixture"
+        },
+        "score_semantics": {
+          "schema": "battle.semantic_scoring.v1",
+          "lane_id": "payload-857-receipt",
+          "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "red": 3.483,
+            "blue": 3.096
+          },
+          "rules": {
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "proof_mode": "receipt_backed_fixture"
         }
       },
       "children": [
@@ -1185,6 +1394,137 @@ export const generatedBattleFixture = {
           "proof_mode": "receipt_backed_fixture"
         }
       ],
+      "exploit_profile": {
+        "schema": "battle.exploit_profile.v1",
+        "lane_id": "payload-857-receipt",
+        "strength": 0.82,
+        "complexity": 0.725,
+        "durability": 0.72,
+        "stealth": 0.42,
+        "reproducibility": 0.84,
+        "lineage_pressure": 0.45,
+        "score_weight": 0.774,
+        "tier": "standard_exploit",
+        "evidence_source": "receipt_events_and_lineage",
+        "proof_scope": {
+          "receipt_backed_inputs": true,
+          "heuristic_profile": true,
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ]
+        }
+      },
+      "score_semantics": {
+        "schema": "battle.semantic_scoring.v1",
+        "lane_id": "payload-857-receipt",
+        "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "red": 3.483,
+          "blue": 3.096
+        },
+        "rules": {
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true
+        },
+        "proof_mode": "receipt_backed_fixture"
+      },
+      "replay_semantics": {
+        "schema": "battle.replay_semantics.v1",
+        "lane_id": "payload-857-receipt",
+        "time_authority": "receipt_elapsed_seconds",
+        "presentation_owner": "ux",
+        "backend_must_not_emit": [
+          "cinematic_speed",
+          "easing",
+          "camera_path",
+          "pixi_frame_timing"
+        ],
+        "events": [
+          {
+            "source_time_seconds": 2.324156,
+            "phase": "research",
+            "importance": "background",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "arena-receipt",
+            "source_event_id": "payload-857-receipt:arena",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 114.671919,
+            "phase": "red_exploit_pressure",
+            "importance": "visible",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "red-tau-subagent-receipt",
+            "source_event_id": "payload-857-receipt:red",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 114.671919,
+            "phase": "red_exploit_pressure",
+            "importance": "visible",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "red-tau-subagent-receipt",
+            "source_event_id": "payload-857-receipt:useful",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 116.973449,
+            "phase": "lineage_spawn_pressure",
+            "importance": "major",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 146.687555,
+            "phase": "blue_defense_intervention",
+            "importance": "visible",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "blue-tau-subagent-receipt",
+            "source_event_id": "payload-857-receipt:blue",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 147.740205,
+            "phase": "judge_block_verdict",
+            "importance": "major",
+            "lineage_pressure": 0.45,
+            "score_delta": {
+              "red": 3.483,
+              "blue": 3.096
+            },
+            "receipt_id": "judge-receipt",
+            "source_event_id": "payload-857-receipt:judge",
+            "proof_mode": "receipt_backed_fixture"
+          }
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
       "actor_visual": {
         "schema": "battle.actor_visual.v1",
         "actor_id": "payload-857-receipt",
@@ -1193,6 +1533,7 @@ export const generatedBattleFixture = {
         "team": "red",
         "archetype": "chaos_marine_heavy",
         "variant_id": "crimson_hornbreaker",
+        "variant_source": "exploit_profile_tier",
         "style_family": "vintage_16bit_genesis",
         "facing": "right",
         "scale_class": "heavy_64",
@@ -1528,6 +1869,23 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           "proof_mode": "receipt_backed_fixture"
+        },
+        "score_semantics": {
+          "schema": "battle.semantic_scoring.v1",
+          "lane_id": "payload-857-red-1",
+          "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "red": 2.884,
+            "blue": 5.768
+          },
+          "rules": {
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "proof_mode": "receipt_backed_fixture"
         }
       },
       "parentId": "payload-857-receipt",
@@ -1597,6 +1955,137 @@ export const generatedBattleFixture = {
           "proof_mode": "receipt_backed_fixture"
         }
       ],
+      "exploit_profile": {
+        "schema": "battle.exploit_profile.v1",
+        "lane_id": "payload-857-red-1",
+        "strength": 0.82,
+        "complexity": 0.865,
+        "durability": 0.78,
+        "stealth": 0.52,
+        "reproducibility": 0.84,
+        "lineage_pressure": 0.65,
+        "score_weight": 0.824,
+        "tier": "adaptive_lineage",
+        "evidence_source": "receipt_events_and_lineage",
+        "proof_scope": {
+          "receipt_backed_inputs": true,
+          "heuristic_profile": true,
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ]
+        }
+      },
+      "score_semantics": {
+        "schema": "battle.semantic_scoring.v1",
+        "lane_id": "payload-857-red-1",
+        "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "rules": {
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true
+        },
+        "proof_mode": "receipt_backed_fixture"
+      },
+      "replay_semantics": {
+        "schema": "battle.replay_semantics.v1",
+        "lane_id": "payload-857-red-1",
+        "time_authority": "receipt_elapsed_seconds",
+        "presentation_owner": "ux",
+        "backend_must_not_emit": [
+          "cinematic_speed",
+          "easing",
+          "camera_path",
+          "pixi_frame_timing"
+        ],
+        "events": [
+          {
+            "source_time_seconds": 116.973449,
+            "phase": "lineage_spawn_pressure",
+            "importance": "major",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 116.973449,
+            "phase": "research",
+            "importance": "background",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "arena-receipt",
+            "source_event_id": "payload-857-red-1:arena",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 146.686852,
+            "phase": "red_exploit_pressure",
+            "importance": "visible",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "red-1-tau-subagent-receipt",
+            "source_event_id": "payload-857-red-1:red",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 146.686852,
+            "phase": "red_exploit_pressure",
+            "importance": "visible",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "red-1-tau-subagent-receipt",
+            "source_event_id": "payload-857-red-1:useful",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 148.780876,
+            "phase": "blue_defense_intervention",
+            "importance": "visible",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "blue-tau-subagent-receipt",
+            "source_event_id": "payload-857-red-1:blue",
+            "proof_mode": "receipt_backed_fixture"
+          },
+          {
+            "source_time_seconds": 149.77601,
+            "phase": "judge_block_verdict",
+            "importance": "major",
+            "lineage_pressure": 0.65,
+            "score_delta": {
+              "red": 2.884,
+              "blue": 5.768
+            },
+            "receipt_id": "judge-receipt",
+            "source_event_id": "payload-857-red-1:judge",
+            "proof_mode": "receipt_backed_fixture"
+          }
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
       "actor_visual": {
         "schema": "battle.actor_visual.v1",
         "actor_id": "payload-857-red-1",
@@ -1605,6 +2094,7 @@ export const generatedBattleFixture = {
         "team": "red",
         "archetype": "chaos_marine_child",
         "variant_id": "plague_nurgling",
+        "variant_source": "exploit_profile_tier",
         "style_family": "vintage_16bit_genesis",
         "facing": "right",
         "scale_class": "heavy_64",
@@ -2602,7 +3092,66 @@ export const generatedBattleFixture = {
         "duration_elapsed_seconds": 1.03665,
         "timing_source": "battle_control_plane_perf_counter"
       }
-    ]
+    ],
+    "semantic_scoring": {
+      "schema": "battle.semantic_scoring.v1",
+      "score_owner": "scorekeeper",
+      "status": "advisory_contract",
+      "does_not_override_legacy_scoreboard_totals": true,
+      "rules": {
+        "pre_spawn_block_blue_multiplier": 12.0,
+        "post_spawn_containment_blue_multiplier": 7.0,
+        "spawn_pressure_parent_blue_multiplier": 4.0,
+        "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
+        "killed_requires_explicit_kill_receipt": true,
+        "functionality_preservation_required_for_full_blue_credit": true
+      },
+      "semantic_totals": {
+        "red": 6.367,
+        "blue": 8.864
+      },
+      "outcome_tiers": [
+        "POST_SPAWN_CONTAINMENT",
+        "SPAWN_PRESSURE_CONCEDED"
+      ],
+      "lanes": [
+        {
+          "schema": "battle.semantic_scoring.v1",
+          "lane_id": "payload-857-receipt",
+          "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "red": 3.483,
+            "blue": 3.096
+          },
+          "rules": {
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "proof_mode": "receipt_backed_fixture"
+        },
+        {
+          "schema": "battle.semantic_scoring.v1",
+          "lane_id": "payload-857-red-1",
+          "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "red": 2.884,
+            "blue": 5.768
+          },
+          "rules": {
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "proof_mode": "receipt_backed_fixture"
+    }
   },
   "validation": {
     "schema": "battle.fixture_validation.v1",
@@ -3702,6 +4251,23 @@ export const generatedBattleFixture = {
           "disabled_reason": "No executable replay endpoint or command receipt is attached to this selected lane.",
           "tooltip": "Judge replay receipt is available; live container execution is not attached.",
           "proof_mode": "receipt_backed_fixture"
+        },
+        "proof_mode": "receipt_backed_fixture"
+      },
+      "score_semantics": {
+        "schema": "battle.semantic_scoring.v1",
+        "lane_id": "payload-857-red-1",
+        "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "red": 2.884,
+          "blue": 5.768
+        },
+        "rules": {
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true
         },
         "proof_mode": "receipt_backed_fixture"
       }

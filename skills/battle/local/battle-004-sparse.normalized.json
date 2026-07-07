@@ -565,7 +565,8 @@
         ],
         "style_family": "vintage_16bit_genesis",
         "team": "red",
-        "variant_id": "crimson_hornbreaker"
+        "variant_id": "crimson_hornbreaker",
+        "variant_source": "exploit_profile_tier"
       },
       "cockpit": {
         "blue_outcome": {
@@ -609,6 +610,23 @@
         },
         "replay": null,
         "schema": "battle.lane_cockpit.v1",
+        "score_semantics": {
+          "lane_id": "payload-857-receipt",
+          "outcome_tier": "UNRESOLVED",
+          "proof_mode": "receipt_backed_fixture",
+          "rules": {
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "schema": "battle.semantic_scoring.v1",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "blue": 0.0,
+            "red": 2.952
+          }
+        },
         "selected_tau_exploit_subagent": {
           "actor_id": "payload-857-receipt",
           "generation": 1,
@@ -702,6 +720,27 @@
           "x": 82
         }
       ],
+      "exploit_profile": {
+        "complexity": 0.68,
+        "durability": 0.62,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "payload-857-receipt",
+        "lineage_pressure": 0.0,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.84,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.738,
+        "stealth": 0.42,
+        "strength": 0.82,
+        "tier": "standard_exploit"
+      },
       "generation": 1,
       "id": "payload-857-receipt",
       "inheritedContext": [
@@ -728,6 +767,20 @@
         "blue-1-tau-subagent-receipt"
       ],
       "replay": null,
+      "replay_semantics": {
+        "backend_must_not_emit": [
+          "cinematic_speed",
+          "easing",
+          "camera_path",
+          "pixi_frame_timing"
+        ],
+        "events": [],
+        "lane_id": "payload-857-receipt",
+        "presentation_owner": "ux",
+        "proof_mode": "receipt_backed_fixture",
+        "schema": "battle.replay_semantics.v1",
+        "time_authority": "receipt_elapsed_seconds"
+      },
       "runnerState": "research",
       "runnerVerb": "insufficient evidence",
       "runnerX": 50,
@@ -736,6 +789,23 @@
         "hidden_vulnerability_family": "Zip Slip path traversal",
         "public_entrypoint": "/api/import-zip",
         "scenario_id": "arena-zip-slip-import-001"
+      },
+      "score_semantics": {
+        "lane_id": "payload-857-receipt",
+        "outcome_tier": "UNRESOLVED",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true
+        },
+        "schema": "battle.semantic_scoring.v1",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "blue": 0.0,
+          "red": 2.952
+        }
       },
       "stderr": [
         "not emitted",
@@ -1144,6 +1214,47 @@
     "red_score": 0.0,
     "requested_blue_workers": 2,
     "requested_red_workers": 1,
+    "semantic_scoring": {
+      "does_not_override_legacy_scoreboard_totals": true,
+      "lanes": [
+        {
+          "lane_id": "payload-857-receipt",
+          "outcome_tier": "UNRESOLVED",
+          "proof_mode": "receipt_backed_fixture",
+          "rules": {
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true
+          },
+          "schema": "battle.semantic_scoring.v1",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "blue": 0.0,
+            "red": 2.952
+          }
+        }
+      ],
+      "outcome_tiers": [
+        "UNRESOLVED"
+      ],
+      "proof_mode": "receipt_backed_fixture",
+      "rules": {
+        "functionality_preservation_required_for_full_blue_credit": true,
+        "killed_requires_explicit_kill_receipt": true,
+        "post_spawn_containment_blue_multiplier": 7.0,
+        "pre_spawn_block_blue_multiplier": 12.0,
+        "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
+        "spawn_pressure_parent_blue_multiplier": 4.0
+      },
+      "schema": "battle.semantic_scoring.v1",
+      "score_owner": "scorekeeper",
+      "semantic_totals": {
+        "blue": 0.0,
+        "red": 2.952
+      },
+      "status": "advisory_contract"
+    },
     "tdsr": 0.0,
     "verdict": "INSUFFICIENT_EVIDENCE"
   },
@@ -1262,6 +1373,23 @@
       },
       "replay": null,
       "schema": "battle.lane_cockpit.v1",
+      "score_semantics": {
+        "lane_id": "payload-857-receipt",
+        "outcome_tier": "UNRESOLVED",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true
+        },
+        "schema": "battle.semantic_scoring.v1",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "blue": 0.0,
+          "red": 2.952
+        }
+      },
       "selected_tau_exploit_subagent": {
         "actor_id": "payload-857-receipt",
         "generation": 1,
@@ -1305,6 +1433,29 @@
     "replay_cta_path": "/lanes/0/replay/cta",
     "schema": "battle.selected_lane_model.v1",
     "selection_strategy": "first_lane"
+  },
+  "semantic_replay": {
+    "backend_emits": [
+      "source_time_seconds",
+      "phase",
+      "importance",
+      "lineage_pressure",
+      "score_delta",
+      "receipt_id"
+    ],
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "event_count": 0,
+    "events": [],
+    "presentation_owner": "ux",
+    "proof_mode": "receipt_backed_fixture",
+    "replay_mode": "compressed_spectator_replay",
+    "schema": "battle.semantic_replay.v1",
+    "time_authority": "receipt_elapsed_seconds"
   },
   "source_proof_dir": "/home/graham/workspace/experiments/agent-skills/skills/.battle-artifacts/battle-004-parent-spawn-20260704T211932Z",
   "spawn_gate_model": {

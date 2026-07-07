@@ -77,6 +77,7 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
     assert "cockpit" in schema["$defs"]["lane"]["required"]
     assert "spectator_shell" in schema["required"]
     assert "lineage_request" in schema["required"]
+    assert "semantic_replay" in schema["required"]
     assert "renderer_binding_contract" in schema["required"]
     assert schema["$defs"]["spectator_shell"]["properties"]["schema"]["const"] == "battle.spectator_shell.v1"
     assert schema["$defs"]["lineage_request"]["properties"]["schema"]["const"] == "battle.lineage_request.v1"
@@ -108,6 +109,11 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
     assert "keyframes" in schema["$defs"]["playhead"]["required"]
     assert schema["$defs"]["replay_cta"]["properties"]["label"]["const"] == "REPLAY IN DOCKER"
     assert schema["$defs"]["replay_cta"]["properties"]["state"]["enum"] == ["receipt_only", "executable"]
+    assert schema["$defs"]["exploit_profile"]["properties"]["schema"]["const"] == "battle.exploit_profile.v1"
+    assert schema["$defs"]["score_semantics"]["properties"]["schema"]["const"] == "battle.semantic_scoring.v1"
+    assert schema["$defs"]["semantic_scoring"]["properties"]["score_owner"]["const"] == "scorekeeper"
+    assert schema["$defs"]["replay_semantics"]["properties"]["presentation_owner"]["const"] == "ux"
+    assert schema["$defs"]["semantic_replay"]["properties"]["time_authority"]["const"] == "receipt_elapsed_seconds"
     assert schema["$defs"]["timeline"]["properties"]["scroll_axis"]["const"] == "horizontal"
     assert schema["$defs"]["scenario"]["properties"]["public_entrypoint"]["pattern"] == "^/"
 
@@ -817,7 +823,11 @@ def test_renderer_values_extracts_direct_ux_values_from_bundle() -> None:
     assert values["timeline_lane_start_model"]["starts"][1]["start_kind"] == "child_spawn_start"
     assert values["timeline_lane_start_model"]["starts"][1]["start_source"] == "lineage.spawns[].child_x_start"
     assert values["timeline_lane_start_model"]["starts"][1]["line_must_start_at_x"] == 62
-    assert values["timeline_lane_start_model"]["starts"][1]["elapsed_start_seconds"] == values["lineage"]["spawns"][0]["child_start_elapsed_seconds"]
+    assert values["timeline_lane_start_model"]["starts"][1]["elapsed_start_seconds"] == values["lineage"]["spawns"][0]["spawn_elapsed_seconds"]
+    assert (
+        values["timeline_lane_start_model"]["starts"][1]["first_active_segment_elapsed_seconds"]
+        == values["lineage"]["spawns"][0]["child_start_elapsed_seconds"]
+    )
     assert values["timeline_lane_start_model"]["starts"][1]["elapsed_line_must_start_at_x"] == elapsed_keyframes[4]["x"]
     assert values["timeline_lane_start_model"]["starts"][1]["elapsed_line_end_x"] == elapsed_keyframes[-1]["x"]
     assert values["timeline_lane_start_model"]["starts"][1]["source_receipt_id"] == "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
@@ -859,7 +869,7 @@ def test_renderer_values_extracts_direct_ux_values_from_bundle() -> None:
     assert values["lane_activity_timeline_model"]["lanes"][1]["segment_count"] == 5
     child_first_segment = values["lane_activity_timeline_model"]["lanes"][1]["segments"][0]
     assert child_first_segment["start_x"] == 62
-    assert child_first_segment["start_elapsed_seconds"] == values["lineage"]["spawns"][0]["child_start_elapsed_seconds"]
+    assert child_first_segment["start_elapsed_seconds"] == values["lineage"]["spawns"][0]["spawn_elapsed_seconds"]
     assert child_first_segment["elapsed_start_x"] == values["timeline_lane_start_model"]["starts"][1]["elapsed_line_must_start_at_x"]
     assert child_first_segment["phase"] == "handoff"
     assert (
@@ -1467,6 +1477,12 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
         }
     ]
     assert fixture["scoreboard"]["child_spawn_count"] == 1
+    assert fixture["scoreboard"]["semantic_scoring"]["schema"] == "battle.semantic_scoring.v1"
+    assert fixture["scoreboard"]["semantic_scoring"]["score_owner"] == "scorekeeper"
+    assert fixture["scoreboard"]["semantic_scoring"]["rules"]["pre_spawn_block_is_more_valuable_than_post_spawn_block"] is True
+    assert fixture["semantic_replay"]["schema"] == "battle.semantic_replay.v1"
+    assert fixture["semantic_replay"]["presentation_owner"] == "ux"
+    assert "cinematic_speed" in fixture["semantic_replay"]["backend_must_not_emit"]
     assert fixture["timeline"]["scroll_axis"] == "horizontal"
     assert fixture["timeline"]["playhead"]["current_x"] == 98
     assert fixture["timeline"]["playhead"]["animation_semantics"] == "receipt_replay_only"
@@ -1476,8 +1492,8 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
         111.566487,
         111.566487,
         113.636948,
-        139.503599,
-        139.503599,
+        113.636948,
+        113.636948,
         139.504352,
         139.503599,
         140.536077,
@@ -1500,6 +1516,7 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert spawn_event["collision_group"] == "x05"
     assert [event["x"] for event in parent["events"]] == [14, 33, 50, 58, 67, 82]
     assert parent["children"] == ["payload-857-red-1"]
+    assert "parent_id" not in parent
     assert parent["lineageGroupId"] == "lineage:payload-857-receipt"
     assert parent["collapsible"] is True
     assert parent["expandedByDefault"] is True
@@ -1508,6 +1525,10 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert parent["start_elapsed_seconds"] == 1.63961
     assert parent["end_elapsed_seconds"] == 140.536077
     assert parent["duration_elapsed_seconds"] == 138.896467
+    assert parent["exploit_profile"]["schema"] == "battle.exploit_profile.v1"
+    assert parent["exploit_profile"]["lineage_pressure"] > 0
+    assert parent["score_semantics"]["outcome_tier"] == "SPAWN_PRESSURE_CONCEDED"
+    assert parent["replay_semantics"]["presentation_owner"] == "ux"
     assert [event["elapsed_seconds"] for event in parent["events"]] == [
         1.63961,
         111.566487,
@@ -1540,6 +1561,12 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
         "visible": True,
     }
     assert child["parentId"] == "payload-857-receipt"
+    assert child["parent_id"] == "payload-857-receipt"
+    assert child["exploit_profile"]["tier"] == "adaptive_lineage"
+    assert child["actor_visual"]["variant_id"] == "plague_nurgling"
+    assert child["score_semantics"]["outcome_tier"] == "POST_SPAWN_CONTAINMENT"
+    assert child["score_semantics"]["score_delta"]["blue"] > parent["score_semantics"]["score_delta"]["blue"]
+    assert child["replay_semantics"]["time_authority"] == "receipt_elapsed_seconds"
     assert parent["cockpit"]["schema"] == "battle.lane_cockpit.v1"
     assert parent["cockpit"]["proof_label"] == "FIXTURE TRACE"
     assert parent["cockpit"]["selected_tau_exploit_subagent"]["actor_id"] == "payload-857-receipt"
@@ -1567,22 +1594,24 @@ def test_adapter_emits_parent_child_lineage_only_from_receipts(tmp_path: Path) -
     assert child["cockpit"]["current_turn"]["phase"] == "child_red_exploit"
     assert child["cockpit"]["public_trace"]["observation"] == "Spawned from parent lane payload-857-receipt at x=62."
     assert child["xStart"] == 62
-    assert child["start_elapsed_seconds"] == 139.503599
+    assert child["start_elapsed_seconds"] == 113.636948
+    assert child["visible_from_elapsed_seconds"] == 113.636948
+    assert child["first_active_segment_elapsed_seconds"] == 139.503599
     assert child["end_elapsed_seconds"] == 142.60098
-    assert child["duration_elapsed_seconds"] == 3.097381
+    assert child["duration_elapsed_seconds"] == 28.964032
     assert all(event["x"] >= child["xStart"] for event in child["events"])
     assert [event["x"] for event in child["events"]] == [62, 66, 76, 86, 96, 98]
     assert [event["elapsed_seconds"] for event in child["events"]] == [
-        139.503599,
-        139.503599,
+        113.636948,
+        113.636948,
         139.503599,
         139.503599,
         141.582963,
         142.60098,
     ]
     assert child["activitySegments"][0]["start_x"] == 62
-    assert child["activitySegments"][0]["start_elapsed_seconds"] == 139.503599
-    assert child["activitySegments"][0]["end_elapsed_seconds"] == 139.503599
+    assert child["activitySegments"][0]["start_elapsed_seconds"] == 113.636948
+    assert child["activitySegments"][0]["end_elapsed_seconds"] == 113.636948
     assert child["activitySegments"][0]["phase"] == "handoff"
     assert all(segment["start_x"] >= child["xStart"] for segment in child["activitySegments"])
     assert "ZIP_SLIP_CONFIRMED" in child["inheritedContext"]
@@ -1725,6 +1754,8 @@ def test_adapter_fails_closed_when_lineage_receipt_is_missing_or_invalid(tmp_pat
     assert "children" not in lanes["payload-857-receipt"]
     assert "parentId" not in lanes["payload-857-red-1"]
     assert lanes["payload-857-receipt"]["terminal"] == "blocked"
+    assert lanes["payload-857-receipt"]["score_semantics"]["outcome_tier"] == "PRE_SPAWN_BLOCK"
+    assert lanes["payload-857-receipt"]["score_semantics"]["score_delta"]["blue"] > 0
 
     assert "Child-spawn lineage." in fixture["claims"]["does_not_prove"]
     assert fixture["ux_contract"]["receipt_backed_values"]["child_spawn_count"] == 0

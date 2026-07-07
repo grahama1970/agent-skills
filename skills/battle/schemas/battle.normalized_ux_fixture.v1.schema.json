@@ -19,6 +19,7 @@
     "lineage_request",
     "lineage",
     "sprite_theme",
+    "semantic_replay",
     "spectator_shell",
     "renderer_binding_contract",
     "ux_contract",
@@ -78,6 +79,9 @@
     },
     "sprite_theme": {
       "$ref": "#/$defs/sprite_theme"
+    },
+    "semantic_replay": {
+      "$ref": "#/$defs/semantic_replay"
     },
     "spectator_shell": {
       "$ref": "#/$defs/spectator_shell"
@@ -1193,6 +1197,9 @@
         "runnerX",
         "runnerState",
         "actor_visual",
+        "exploit_profile",
+        "score_semantics",
+        "replay_semantics",
         "events",
         "activitySegments",
         "cockpit",
@@ -1231,6 +1238,15 @@
         },
         "actor_visual": {
           "$ref": "#/$defs/actor_visual"
+        },
+        "exploit_profile": {
+          "$ref": "#/$defs/exploit_profile"
+        },
+        "score_semantics": {
+          "$ref": "#/$defs/score_semantics"
+        },
+        "replay_semantics": {
+          "$ref": "#/$defs/replay_semantics"
         },
         "events": {
           "type": "array",
@@ -1841,6 +1857,211 @@
             "type": "object",
             "additionalProperties": true
           }
+        },
+        "semantic_scoring": {
+          "$ref": "#/$defs/semantic_scoring"
+        }
+      }
+    },
+    "exploit_profile": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "lane_id",
+        "strength",
+        "complexity",
+        "durability",
+        "lineage_pressure",
+        "score_weight",
+        "tier"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.exploit_profile.v1"
+        },
+        "lane_id": {
+          "type": "string"
+        },
+        "strength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "complexity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "durability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "lineage_pressure": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "score_weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "tier": {
+          "enum": [
+            "fragile_probe",
+            "standard_exploit",
+            "heavy_durable",
+            "adaptive_lineage"
+          ]
+        }
+      }
+    },
+    "score_semantics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "lane_id",
+        "outcome_tier",
+        "score_delta",
+        "rules",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.semantic_scoring.v1"
+        },
+        "lane_id": {
+          "type": "string"
+        },
+        "outcome_tier": {
+          "enum": [
+            "UNRESOLVED",
+            "PRE_SPAWN_BLOCK",
+            "POST_SPAWN_CONTAINMENT",
+            "SPAWN_PRESSURE_CONCEDED"
+          ]
+        },
+        "score_delta": {
+          "type": "object",
+          "required": [
+            "red",
+            "blue"
+          ],
+          "properties": {
+            "red": {
+              "type": "number"
+            },
+            "blue": {
+              "type": "number"
+            }
+          }
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "replay_semantics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "lane_id",
+        "time_authority",
+        "presentation_owner",
+        "backend_must_not_emit",
+        "events",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.replay_semantics.v1"
+        },
+        "time_authority": {
+          "const": "receipt_elapsed_seconds"
+        },
+        "presentation_owner": {
+          "const": "ux"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "semantic_scoring": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "score_owner",
+        "semantic_totals",
+        "rules",
+        "lanes",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.semantic_scoring.v1"
+        },
+        "score_owner": {
+          "const": "scorekeeper"
+        },
+        "semantic_totals": {
+          "type": "object",
+          "required": [
+            "red",
+            "blue"
+          ]
+        },
+        "lanes": {
+          "type": "array"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "semantic_replay": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "time_authority",
+        "presentation_owner",
+        "backend_must_not_emit",
+        "event_count",
+        "events",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.semantic_replay.v1"
+        },
+        "time_authority": {
+          "const": "receipt_elapsed_seconds"
+        },
+        "presentation_owner": {
+          "const": "ux"
+        },
+        "event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "array"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
         }
       }
     }
