@@ -9,6 +9,7 @@ the packet is not complete enough to be treated as accepted storyboard panels.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -17,6 +18,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
+from urllib import request as urllib_request
+from urllib.error import HTTPError, URLError
 
 
 REQUIRED_PANEL_FIELDS = (
@@ -72,6 +75,25 @@ ACCEPTED_FRAME_STATUSES = {
 STORYBOARD_FRAME_SIZE = (1536, 864)
 STORYBOARD_FRAME_ASPECT = STORYBOARD_FRAME_SIZE[0] / STORYBOARD_FRAME_SIZE[1]
 STORYBOARD_FRAME_ASPECT_TOLERANCE = 0.02
+SCILLM_SKILL_RUN = Path("/home/graham/workspace/experiments/agent-skills/skills/scillm/run.sh")
+IMAGEMAGICK_BIN = Path("/usr/local/bin/magick")
+SCILLM_CHAT_COMPLETIONS_URL = "http://localhost:4001/v1/chat/completions"
+IDENTITY_REFERENCE_ASSETS = {
+    "Embry": {
+        "id": "embry_character_sheet",
+        "title": "Embry character sheet montage",
+        "role": "identity_reference",
+        "media_type": "image",
+        "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+    },
+    "Kai": {
+        "id": "kai_character_sheet",
+        "title": "Kai Akana character sheet",
+        "role": "identity_reference",
+        "media_type": "image",
+        "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+    },
+}
 
 
 def main() -> int:
@@ -114,7 +136,12 @@ def _run_creator(
     context: Mapping[str, Any],
 ) -> dict[str, Any]:
     run_root = Path(str(context["run_root"])).expanduser().resolve()
-    generation = _ensure_storyboard_frame_artifacts(packet, packet_path=packet_path, run_root=run_root)
+    generation = _ensure_storyboard_frame_artifacts(
+        packet,
+        packet_path=packet_path,
+        run_root=run_root,
+        start_payload=start_payload,
+    )
     if generation["packet_updated"]:
         packet = _read_json(packet_path)
     creator_check = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=False)
@@ -167,15 +194,15 @@ def _run_creator(
         summary=(
             "Panel creator emitted a complete storyboard packet manifest for reviewer."
             if not creator_check["blockers"]
-            else "Panel creator failed closed because the storyboard packet is incomplete."
+            else "Panel creator emitted a storyboard packet with blockers for reviewer adjudication."
         ),
         evidence=evidence,
-        next_subagent="panel-reviewer" if not creator_check["blockers"] else "human",
-        next_executor="local" if not creator_check["blockers"] else "human",
+        next_subagent="panel-reviewer",
+        next_executor="local",
         next_reason=(
             "Panel reviewer must independently validate per-panel storyboard coverage."
             if not creator_check["blockers"]
-            else "Packet must be repaired before reviewer can accept it."
+            else "Panel reviewer must reject with exact blockers and route repair back to panel-creator."
         ),
     )
     _write_json(tau_receipt_path, tau_receipt)
@@ -601,19 +628,53 @@ def _ensure_storyboard_frame_artifacts(
     *,
     packet_path: Path,
     run_root: Path,
+    start_payload: Mapping[str, Any],
 ) -> dict[str, Any]:
+    image_policy = _resolve_image_policy(start_payload)
+    identity_review_policy = _resolve_identity_review_policy(start_payload)
     panels = packet.get("panels")
     receipt: dict[str, Any] = {
         "schema": "persona_dream.storyboard_frame_generation_receipt.v1",
         "created_at": _now_iso(),
         "storyboard_packet": str(packet_path),
-        "backend": os.environ.get("PERSONA_DREAM_STORYBOARD_IMAGE_BACKEND", "google"),
-        "model": os.environ.get("PERSONA_DREAM_STORYBOARD_IMAGE_MODEL", "gemini-2.5-flash-image"),
+        "backend": "scillm",
+        "model": image_policy.get("model"),
+        "image_policy": image_policy,
+        "identity_review_policy": identity_review_policy,
+        "model_policy_enforced": image_policy["source"] == "dag_model_policy",
+        "fallback_performed": False,
         "mocked": False,
         "live": True,
         "provider_calls": [],
     }
     blockers: list[str] = []
+    if image_policy["source"] != "dag_model_policy":
+        blockers.append(f"frame_generation:missing_dag_model_policy:{image_policy.get('error') or image_policy.get('source')}")
+        receipt["status"] = "BLOCKED"
+        receipt["blockers"] = blockers
+        _write_json(run_root / "receipts" / "storyboard_frame_generation_receipt.json", receipt)
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
+    if image_policy["supported"] is not True:
+        blockers.append(f"frame_generation:image_policy_blocked:{image_policy.get('error')}")
+        receipt["status"] = "BLOCKED"
+        receipt["blockers"] = blockers
+        _write_json(run_root / "receipts" / "storyboard_frame_generation_receipt.json", receipt)
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
+    if identity_review_policy["source"] != "dag_identity_review_model_policy":
+        blockers.append(
+            "identity_review:missing_dag_identity_review_model_policy:"
+            + str(identity_review_policy.get("error") or identity_review_policy.get("source"))
+        )
+        receipt["status"] = "BLOCKED"
+        receipt["blockers"] = blockers
+        _write_json(run_root / "receipts" / "storyboard_frame_generation_receipt.json", receipt)
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
+    if identity_review_policy["supported"] is not True:
+        blockers.append(f"identity_review:model_policy_blocked:{identity_review_policy.get('error')}")
+        receipt["status"] = "BLOCKED"
+        receipt["blockers"] = blockers
+        _write_json(run_root / "receipts" / "storyboard_frame_generation_receipt.json", receipt)
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
     if not isinstance(panels, list):
         blockers.append("frame_generation:packet.panels_not_list")
         receipt["status"] = "BLOCKED"
@@ -633,6 +694,7 @@ def _ensure_storyboard_frame_artifacts(
     for panel in mutable_packet.get("panels", []):
         if not isinstance(panel, dict):
             continue
+        blockers.extend(_ensure_panel_identity_references(panel))
         panel_id = str(panel.get("panel_id") or "panel")
         for frame_key, prompt_key in (("start_frame", "start_frame_prompt"), ("end_frame", "end_frame_prompt")):
             frame = panel.get(frame_key)
@@ -642,9 +704,49 @@ def _ensure_storyboard_frame_artifacts(
             existing = frame.get("accepted_frame")
             if isinstance(existing, Mapping):
                 existing_path = existing.get("path") or existing.get("image_path")
-                if isinstance(existing_path, str) and Path(existing_path).expanduser().exists():
+                existing_blockers = _existing_frame_blockers(
+                    existing,
+                    panel=panel,
+                    frame_label=frame_key,
+                )
+                if (
+                    isinstance(existing_path, str)
+                    and Path(existing_path).expanduser().exists()
+                    and not existing_blockers
+                ):
                     continue
+                if any("identity_continuity" in item for item in existing_blockers):
+                    existing = None
             output_path = output_dir / f"{panel_id}_{frame_key}.png"
+            resume_blockers = _validate_accepted_frame_file(
+                str(output_path),
+                label=panel_id,
+                frame_label=frame_key,
+            )
+            if output_path.exists() and not resume_blockers:
+                accepted_frame = {
+                    "status": "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME",
+                    "role": frame_key,
+                    "path": str(output_path),
+                    "sha256": _sha256(output_path),
+                    "prompt": _frame_generation_prompt(panel, frame_key=frame_key, prompt_key=prompt_key),
+                    "backend": backend,
+                    "model": model,
+                    "source_prompt_key": prompt_key,
+                    "provider_receipt": str(run_root / "receipts" / "storyboard_frame_generation" / f"{panel_id}_{frame_key}_scillm_image_generation_receipt.json"),
+                    "normalization_receipt": str(run_root / "receipts" / "storyboard_frame_generation" / f"{panel_id}_{frame_key}_frame_normalization_receipt.json"),
+                }
+                identity_blockers = _attach_identity_continuity_review(
+                    accepted_frame,
+                    panel=panel,
+                    frame_key=frame_key,
+                    identity_review_policy=identity_review_policy,
+                    receipts_dir=run_root / "receipts" / "storyboard_identity_review",
+                )
+                frame["accepted_frame"] = accepted_frame
+                blockers.extend(identity_blockers)
+                _write_json(packet_path, mutable_packet)
+                continue
             prompt = _frame_generation_prompt(panel, frame_key=frame_key, prompt_key=prompt_key)
             provider_called = True
             call = _generate_image(
@@ -652,13 +754,17 @@ def _ensure_storyboard_frame_artifacts(
                 output_path=output_path,
                 backend=backend,
                 model=model,
+                image_policy=image_policy,
+                receipts_dir=run_root / "receipts" / "storyboard_frame_generation",
+                panel_id=panel_id,
+                frame_key=frame_key,
             )
             call.update({"panel_id": panel_id, "frame": frame_key, "output_path": str(output_path)})
             receipt["provider_calls"].append(call)
             if call.get("status") != "PASS":
                 blockers.append(f"{panel_id}:{frame_key}:image_generation_failed:{call.get('error')}")
                 continue
-            frame["accepted_frame"] = {
+            accepted_frame = {
                 "status": "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME",
                 "role": frame_key,
                 "path": str(output_path),
@@ -668,7 +774,18 @@ def _ensure_storyboard_frame_artifacts(
                 "model": model,
                 "source_prompt_key": prompt_key,
                 "provider_receipt": call.get("receipt"),
+                "normalization_receipt": call.get("normalization_receipt"),
             }
+            identity_blockers = _attach_identity_continuity_review(
+                accepted_frame,
+                panel=panel,
+                frame_key=frame_key,
+                identity_review_policy=identity_review_policy,
+                receipts_dir=run_root / "receipts" / "storyboard_identity_review",
+            )
+            frame["accepted_frame"] = accepted_frame
+            blockers.extend(identity_blockers)
+            _write_json(packet_path, mutable_packet)
 
     if not blockers:
         _write_json(packet_path, mutable_packet)
@@ -683,43 +800,367 @@ def _ensure_storyboard_frame_artifacts(
     }
 
 
-def _generate_image(prompt: str, *, output_path: Path, backend: str, model: str) -> dict[str, Any]:
-    create_image = Path(__file__).resolve().parents[2] / "create-image" / "run.sh"
-    if not create_image.exists():
-        return {"status": "FAIL", "error": f"create-image run.sh not found: {create_image}"}
+def _existing_frame_blockers(
+    frame_ref: Mapping[str, Any],
+    *,
+    panel: Mapping[str, Any],
+    frame_label: str,
+) -> list[str]:
+    path_value = frame_ref.get("path") or frame_ref.get("image_path")
+    blockers: list[str] = []
+    if not isinstance(path_value, str) or not path_value.strip():
+        return [f"{frame_label}:existing_frame_missing_path"]
+    path = Path(path_value).expanduser()
+    if not path.exists():
+        return [f"{frame_label}:existing_frame_path_missing:{path_value}"]
+    blockers.extend(_validate_accepted_frame_file(path_value, label=str(panel.get("panel_id") or "panel"), frame_label=frame_label))
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    }
+    blockers.extend(
+        _validate_identity_continuity_review(
+            frame_ref,
+            label=str(panel.get("panel_id") or "panel"),
+            frame_label=frame_label,
+            required_entities=required_entities,
+            required=bool(required_entities & {"Embry", "Kai"}),
+        )
+    )
+    return blockers
+
+
+def _generate_image(
+    prompt: str,
+    *,
+    output_path: Path,
+    backend: str,
+    model: str,
+    image_policy: Mapping[str, Any],
+    receipts_dir: Path,
+    panel_id: str,
+    frame_key: str,
+) -> dict[str, Any]:
+    if image_policy.get("source") == "dag_model_policy":
+        return _generate_image_with_scillm_policy(
+            prompt,
+            output_path=output_path,
+            image_policy=image_policy,
+            receipts_dir=receipts_dir,
+            panel_id=panel_id,
+            frame_key=frame_key,
+        )
+    return {
+        "status": "FAIL",
+        "error": f"missing_dag_model_policy:{image_policy.get('error') or image_policy.get('source')}",
+        "image_policy": dict(image_policy),
+        "fallback_performed": False,
+    }
+
+
+def _generate_image_with_scillm_policy(
+    prompt: str,
+    *,
+    output_path: Path,
+    image_policy: Mapping[str, Any],
+    receipts_dir: Path,
+    panel_id: str,
+    frame_key: str,
+) -> dict[str, Any]:
+    if not SCILLM_SKILL_RUN.exists():
+        return {"status": "FAIL", "error": f"scillm run.sh not found: {SCILLM_SKILL_RUN}"}
+    receipts_dir.mkdir(parents=True, exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt_path = receipts_dir / f"{panel_id}_{frame_key}.prompt.md"
+    receipt_path = receipts_dir / f"{panel_id}_{frame_key}_scillm_image_generation_receipt.json"
+    events_path = receipts_dir / f"{panel_id}_{frame_key}_scillm_image_generation_events.jsonl"
+    prompt_path.write_text(prompt + "\n", encoding="utf-8")
+    auth = str(image_policy.get("auth") or "codex-oauth")
+    model = str(image_policy.get("model") or "gpt-2")
     cmd = [
         "bash",
-        str(create_image),
-        "generate",
-        prompt,
-        "--output",
+        str(SCILLM_SKILL_RUN),
+        "generate-image",
+        "--auth",
+        auth,
+        "--prompt-file",
+        str(prompt_path),
+        "--out",
         str(output_path),
-        "--size",
-        f"{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}",
-        "--backend",
-        backend,
+        "--receipt",
+        str(receipt_path),
+        "--events-out",
+        str(events_path),
         "--model",
         model,
+        "--size",
+        f"{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}",
+        "--quality",
+        "high",
+        "--caller-skill",
+        "persona-dream-phase07-panel-creator",
+        "--json",
     ]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=420)
-    except subprocess.TimeoutExpired as exc:
-        return {"status": "FAIL", "error": f"create-image timeout after {exc.timeout}s", "command": cmd}
-    if result.returncode != 0:
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    receipt: dict[str, Any] = {}
+    if receipt_path.exists():
+        try:
+            receipt = _read_json(receipt_path)
+        except Exception as exc:
+            receipt = {"receipt_parse_error": str(exc)}
+    ok = (
+        result.returncode == 0
+        and output_path.exists()
+        and output_path.stat().st_size > 0
+        and receipt.get("ok") is True
+        and receipt.get("sha256")
+    )
+    if not ok:
         return {
             "status": "FAIL",
-            "error": (result.stderr or result.stdout)[-1600:],
+            "error": (result.stderr or result.stdout or str(receipt))[-2400:],
             "command": cmd,
             "returncode": result.returncode,
+            "prompt_file": str(prompt_path),
+            "receipt": str(receipt_path),
+            "events": str(events_path),
+            "image_policy": dict(image_policy),
+            "model_policy_enforced": True,
+            "fallback_performed": False,
+            "receipt_payload": receipt,
         }
-    if not output_path.exists() or output_path.stat().st_size == 0:
-        return {"status": "FAIL", "error": "create-image did not write a non-empty output", "command": cmd}
+    normalization = _normalize_storyboard_frame_if_needed(
+        output_path,
+        receipts_dir=receipts_dir,
+        panel_id=panel_id,
+        frame_key=frame_key,
+        provider_receipt=receipt,
+    )
+    if normalization.get("status") != "PASS":
+        return {
+            "status": "FAIL",
+            "error": normalization.get("error") or "storyboard frame normalization failed",
+            "command": cmd,
+            "returncode": result.returncode,
+            "prompt_file": str(prompt_path),
+            "receipt": str(receipt_path),
+            "events": str(events_path),
+            "image_policy": dict(image_policy),
+            "model_policy_enforced": True,
+            "fallback_performed": False,
+            "receipt_payload": receipt,
+            "normalization": normalization,
+        }
+    width, height = _read_png_size(output_path)
     return {
         "status": "PASS",
         "command": cmd,
         "stdout_tail": result.stdout[-1200:],
         "stderr_tail": result.stderr[-1200:],
-        "receipt": str(output_path),
+        "receipt": str(receipt_path),
+        "events": str(events_path),
+        "prompt_file": str(prompt_path),
+        "image_policy": dict(image_policy),
+        "model_policy_enforced": True,
+        "fallback_performed": False,
+        "sha256": _sha256(output_path),
+        "width": width,
+        "height": height,
+        "provider_width": receipt.get("width"),
+        "provider_height": receipt.get("height"),
+        "normalized": normalization.get("normalized") is True,
+        "normalization_receipt": normalization.get("receipt"),
+    }
+
+
+def _normalize_storyboard_frame_if_needed(
+    output_path: Path,
+    *,
+    receipts_dir: Path,
+    panel_id: str,
+    frame_key: str,
+    provider_receipt: Mapping[str, Any],
+) -> dict[str, Any]:
+    target_width, target_height = STORYBOARD_FRAME_SIZE
+    try:
+        width, height = _read_png_size(output_path)
+    except Exception as exc:
+        return {"status": "FAIL", "error": f"read_png_size_failed:{exc}", "path": str(output_path)}
+
+    receipt_path = receipts_dir / f"{panel_id}_{frame_key}_frame_normalization_receipt.json"
+    if (width, height) == STORYBOARD_FRAME_SIZE:
+        receipt = {
+            "status": "PASS",
+            "normalized": False,
+            "path": str(output_path),
+            "width": width,
+            "height": height,
+            "sha256": _sha256(output_path),
+            "provider_receipt": dict(provider_receipt),
+        }
+        _write_json(receipt_path, receipt)
+        receipt["receipt"] = str(receipt_path)
+        return receipt
+
+    raw_path = output_path.with_name(f"{output_path.stem}.provider{output_path.suffix}")
+    if raw_path.exists():
+        raw_path.unlink()
+    output_path.replace(raw_path)
+    if not IMAGEMAGICK_BIN.exists():
+        return {
+            "status": "FAIL",
+            "error": f"imagemagick_missing:{IMAGEMAGICK_BIN}",
+            "raw_path": str(raw_path),
+            "path": str(output_path),
+            "provider_width": width,
+            "provider_height": height,
+        }
+    command = [
+        str(IMAGEMAGICK_BIN),
+        str(raw_path),
+        "-auto-orient",
+        "-resize",
+        f"{target_width}x{target_height}^",
+        "-gravity",
+        "center",
+        "-extent",
+        f"{target_width}x{target_height}",
+        "PNG24:" + str(output_path),
+    ]
+    completed = subprocess.run(command, capture_output=True, text=True)
+    if completed.returncode != 0:
+        return {
+            "status": "FAIL",
+            "error": (completed.stderr or completed.stdout or "imagemagick normalize failed")[-1600:],
+            "raw_path": str(raw_path),
+            "path": str(output_path),
+            "provider_width": width,
+            "provider_height": height,
+            "command": command,
+            "returncode": completed.returncode,
+        }
+
+    final_width, final_height = _read_png_size(output_path)
+    receipt = {
+        "status": "PASS",
+        "normalized": True,
+        "method": "center_crop_resize_to_storyboard_frame",
+        "path": str(output_path),
+        "raw_provider_path": str(raw_path),
+        "provider_width": width,
+        "provider_height": height,
+        "width": final_width,
+        "height": final_height,
+        "sha256": _sha256(output_path),
+        "raw_sha256": _sha256(raw_path),
+        "target_width": target_width,
+        "target_height": target_height,
+        "command": command,
+        "provider_receipt": dict(provider_receipt),
+    }
+    _write_json(receipt_path, receipt)
+    receipt["receipt"] = str(receipt_path)
+    return receipt
+
+
+def _resolve_image_policy(start_payload: Mapping[str, Any]) -> dict[str, Any]:
+    context = start_payload.get("context")
+    if not isinstance(context, Mapping):
+        context = {}
+    raw_policy: Mapping[str, Any] | None = None
+    for key in ("image_model_policy", "model_policy"):
+        value = context.get(key)
+        if isinstance(value, Mapping):
+            raw_policy = value
+            break
+    tau_dag_node = context.get("tau_dag_node")
+    if raw_policy is None and isinstance(tau_dag_node, Mapping):
+        for key in ("image_model_policy", "model_policy"):
+            value = tau_dag_node.get(key)
+            if isinstance(value, Mapping):
+                raw_policy = value
+                break
+    if raw_policy is None:
+        return {
+            "schema": "persona_dream.image_policy.v1",
+            "source": "missing",
+            "provider": None,
+            "auth": None,
+            "model": None,
+            "supported": False,
+            "error": "missing_dag_model_policy",
+            "fallback_performed": False,
+        }
+    provider = str(raw_policy.get("provider") or "").strip()
+    auth = str(raw_policy.get("auth") or "").strip()
+    model = str(raw_policy.get("model") or "").strip()
+    supported_provider = provider in {"codex", "scillm", "openai", "openai-codex"}
+    supported_auth = auth in {"codex-oauth", "openai-api-key"}
+    supported = bool(provider and auth and model and supported_provider and supported_auth)
+    error = None
+    if not supported_provider:
+        error = "unsupported_image_model_provider"
+    elif not supported_auth:
+        error = "unsupported_image_model_auth"
+    elif not model:
+        error = "missing_image_model"
+    return {
+        "schema": "persona_dream.image_policy.v1",
+        "source": "dag_model_policy",
+        "provider": provider,
+        "auth": auth,
+        "model": model,
+        "supported": supported,
+        "error": error,
+        "fallback_performed": False,
+    }
+
+
+def _resolve_identity_review_policy(start_payload: Mapping[str, Any]) -> dict[str, Any]:
+    context = start_payload.get("context")
+    if not isinstance(context, Mapping):
+        context = {}
+    raw_policy = context.get("identity_review_model_policy")
+    if not isinstance(raw_policy, Mapping):
+        tau_dag_node = context.get("tau_dag_node")
+        if isinstance(tau_dag_node, Mapping):
+            value = tau_dag_node.get("identity_review_model_policy")
+            if isinstance(value, Mapping):
+                raw_policy = value
+    if not isinstance(raw_policy, Mapping):
+        return {
+            "schema": "persona_dream.identity_review_policy.v1",
+            "source": "missing",
+            "provider": None,
+            "auth": None,
+            "model": None,
+            "supported": False,
+            "error": "missing_dag_identity_review_model_policy",
+            "fallback_performed": False,
+        }
+    provider = str(raw_policy.get("provider") or "").strip()
+    auth = str(raw_policy.get("auth") or "").strip()
+    model = str(raw_policy.get("model") or "").strip()
+    supported_provider = provider in {"codex", "scillm", "openai", "openai-codex"}
+    supported_auth = auth in {"codex-oauth", "openai-api-key"}
+    supported = bool(provider and auth and model and supported_provider and supported_auth)
+    error = None
+    if not supported_provider:
+        error = "unsupported_identity_review_provider"
+    elif not supported_auth:
+        error = "unsupported_identity_review_auth"
+    elif not model:
+        error = "missing_identity_review_model"
+    return {
+        "schema": "persona_dream.identity_review_policy.v1",
+        "source": "dag_identity_review_model_policy",
+        "provider": provider,
+        "auth": auth,
+        "model": model,
+        "supported": supported,
+        "error": error,
+        "fallback_performed": False,
     }
 
 
@@ -763,10 +1204,42 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
         for ref in refs
         if isinstance(ref, Mapping)
     )
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    }
+    identity_required = bool(required_entities & {"Embry", "Kai"})
+    identity_prompt = ""
+    if identity_required:
+        identity_prompt = "\n".join(
+            [
+                "MANDATORY CHARACTER IDENTITY REQUIREMENT:",
+                "Embry and Kai must both be clearly visible, foreground, and strongly matched to the attached character reference images. The attached Embry reference image and attached Kai reference image are mandatory identity references, not loose inspiration. Do not invent new faces or substitute generic surfers. Character identity is the highest priority, above location, surf action, reef detail, or cinematic beauty.",
+                "",
+                "CHARACTERS:",
+                "Embry is on the left foreground. She must match the attached Embry character sheet: adult woman, brown hair tied back or wet and pulled back, recognizable face visible in three-quarter view, navy rashguard or navy polo-style surf top. Embry must read clearly as the same woman from the reference. Do not depict her as male, teenage, blond, short-haired, generic, back-facing, or too distant to identify.",
+                "Kai is on the right foreground. He must match the attached Kai character sheet: young adult man, tan skin, dark curly wet hair, athletic surfer build, black rashguard, recognizable face visible in three-quarter view. Kai must read clearly as the same person from the reference. Do not make him generic, back-facing only, hidden, or too distant to identify.",
+                "",
+                "COMPOSITION:",
+                "Medium-wide waterline two-shot, not a distant wide establishing shot. Embry and Kai are the only large foreground people. Both characters are chest-up or waist-up above the waterline, with faces clearly visible. Their faces must not be blocked by surfboards, spray, glare, other surfers, hair, shadows, or water.",
+                "Embry sits on or beside her surfboard on the left, angled parallel to the reef, waiting respectfully outside the takeoff path. Kai sits on or beside his surfboard on the right, also angled parallel to the reef, waiting respectfully. They are near each other but not heroic or posed; the mood is restrained, observant, and socially tense.",
+                "",
+                "SCENE:",
+                "Hot, humid daylight at Kahaluʻu Bay. Clear shallow water reveals dark lava reef shapes below the surface. A public surf lineup is visible in the background, with local surfers holding priority. Background surfers must remain smaller and secondary; they must not compete with Embry and Kai or be mistaken for them.",
+                "",
+                "STYLE:",
+                "Realistic cinematic storyboard frame, natural daylight, believable surf photography, low waterline camera, subtle humidity and ocean glare, emotionally grounded, not glossy tourism advertising.",
+                "",
+                "NEGATIVE CONSTRAINTS:",
+                "No missing Embry. No missing Kai. No generic male surfer substituted for Embry. No swapped identities. No back-facing-only Embry or Kai. No tiny distant faces. No occluded faces. No extra foreground surfers. No crowd blocking the main characters. No heroic takeoff. No empty tropical postcard. No contact sheet. No collage. No character-sheet layout. No unrelated surfers in the foreground.",
+            ]
+        )
     return "\n".join(
         part
         for part in [
             "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.",
+            identity_prompt,
             str(generation_prompt.get("panel_prompt") or panel.get("shot") or ""),
             str(generation_prompt.get(prompt_key) or frame.get("description") or ""),
             "Visual requirements: " + "; ".join(str(item) for item in frame.get("visual_requirements", []) if isinstance(item, str)),
@@ -775,10 +1248,340 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
             "Camera: " + json.dumps(panel.get("camera", {}), sort_keys=True),
             "Lighting: " + json.dumps(panel.get("lighting", {}), sort_keys=True),
             "Acting beats: " + "; ".join(str(item) for item in panel.get("acting_beats", []) if isinstance(item, str)),
-            "Reference assets for continuity only: " + reference_text,
+            "Reference assets attached as mandatory identity/reference inputs, not loose inspiration: " + reference_text,
         ]
         if part
     )
+
+
+def _ensure_panel_identity_references(panel: dict[str, Any]) -> list[str]:
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    }
+    needed = sorted(required_entities & set(IDENTITY_REFERENCE_ASSETS))
+    if not needed:
+        return []
+    refs = panel.get("references")
+    if not isinstance(refs, list):
+        refs = []
+        panel["references"] = refs
+    present = {
+        str(ref.get("title") or ref.get("id") or ref.get("entity") or "")
+        for ref in refs
+        if isinstance(ref, Mapping)
+    }
+    blockers: list[str] = []
+    for entity in needed:
+        asset = dict(IDENTITY_REFERENCE_ASSETS[entity])
+        path = Path(str(asset["path"])).expanduser()
+        if not path.exists():
+            blockers.append(f"{panel.get('panel_id')}:identity_reference_missing:{entity}:{path}")
+            continue
+        if asset["id"] not in present and asset["title"] not in present:
+            refs.append(asset)
+    return blockers
+
+
+def _attach_identity_continuity_review(
+    accepted_frame: dict[str, Any],
+    *,
+    panel: Mapping[str, Any],
+    frame_key: str,
+    identity_review_policy: Mapping[str, Any],
+    receipts_dir: Path,
+) -> list[str]:
+    required_entities = {
+        str(entity)
+        for entity in panel.get("required_entities", [])
+        if isinstance(entity, str)
+    } & set(IDENTITY_REFERENCE_ASSETS)
+    if not required_entities:
+        return []
+    existing = accepted_frame.get("identity_continuity_review")
+    if isinstance(existing, Mapping) and existing.get("status") == "PASS":
+        return []
+    review = _run_identity_continuity_review(
+        accepted_frame,
+        panel=panel,
+        frame_key=frame_key,
+        required_entities=sorted(required_entities),
+        identity_review_policy=identity_review_policy,
+        receipts_dir=receipts_dir,
+    )
+    accepted_frame["identity_continuity_review"] = {
+        "status": review.get("status"),
+        "required_entities": review.get("required_entities", []),
+        "visible_entities": review.get("visible_entities", []),
+        "blocking_findings": review.get("blocking_findings", []),
+        "reviewer_source": review.get("reviewer_source"),
+        "receipt": review.get("receipt_path"),
+        "model": review.get("model"),
+        "model_policy_enforced": review.get("model_policy_enforced"),
+    }
+    if review.get("status") != "PASS":
+        panel_id = str(panel.get("panel_id") or "panel")
+        accepted_frame["status"] = "REJECTED_IDENTITY_CONTINUITY"
+        accepted_frame["rejected_reason"] = "identity_continuity_review_failed"
+        return [f"{panel_id}:accepted_{frame_key}_identity_continuity_not_pass:{review.get('status') or 'missing_status'}"]
+    return []
+
+
+def _run_identity_continuity_review(
+    accepted_frame: Mapping[str, Any],
+    *,
+    panel: Mapping[str, Any],
+    frame_key: str,
+    required_entities: list[str],
+    identity_review_policy: Mapping[str, Any],
+    receipts_dir: Path,
+) -> dict[str, Any]:
+    receipts_dir.mkdir(parents=True, exist_ok=True)
+    panel_id = str(panel.get("panel_id") or "panel")
+    receipt_path = receipts_dir / f"{panel_id}_{frame_key}_identity_continuity_review.json"
+    frame_path = Path(str(accepted_frame.get("path") or accepted_frame.get("image_path") or "")).expanduser()
+    if not frame_path.exists():
+        receipt = _identity_review_receipt(
+            panel=panel,
+            frame_key=frame_key,
+            status="FAIL",
+            required_entities=required_entities,
+            visible_entities=[],
+            blocking_findings=[f"accepted frame path missing: {frame_path}"],
+            frame_path=str(frame_path),
+            raw_response=None,
+            model=str(identity_review_policy.get("model")),
+            model_policy=identity_review_policy,
+        )
+        receipt["receipt_path"] = str(receipt_path)
+        _write_json(receipt_path, receipt)
+        return receipt
+
+    references = _identity_reference_paths(panel, required_entities)
+    missing_refs = [entity for entity in required_entities if entity not in references]
+    if missing_refs:
+        receipt = _identity_review_receipt(
+            panel=panel,
+            frame_key=frame_key,
+            status="FAIL",
+            required_entities=required_entities,
+            visible_entities=[],
+            blocking_findings=["missing identity reference assets: " + ",".join(missing_refs)],
+            frame_path=str(frame_path),
+            raw_response=None,
+            model=str(identity_review_policy.get("model")),
+            model_policy=identity_review_policy,
+        )
+        receipt["receipt_path"] = str(receipt_path)
+        _write_json(receipt_path, receipt)
+        return receipt
+
+    prompt = _identity_review_prompt(panel, frame_key=frame_key, required_entities=required_entities)
+    content: list[dict[str, Any]] = [{"type": "text", "text": prompt}]
+    content.append(_image_url_part(frame_path, label="accepted storyboard frame"))
+    for entity in required_entities:
+        content.append({"type": "text", "text": f"Reference asset for {entity}:"})
+        content.append(_image_url_part(references[entity], label=f"{entity} identity reference"))
+    request_payload = {
+        "model": identity_review_policy.get("model"),
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a strict visual storyboard identity reviewer. "
+                    "Return JSON only. Do not infer identity from metadata. "
+                    "Reject generic or wrong people."
+                ),
+            },
+            {"role": "user", "content": content},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+    try:
+        raw = _post_scillm_json(request_payload)
+        model_text = raw["choices"][0]["message"]["content"]
+        parsed = json.loads(model_text)
+    except (KeyError, IndexError, TypeError, ValueError, HTTPError, URLError) as exc:
+        receipt = _identity_review_receipt(
+            panel=panel,
+            frame_key=frame_key,
+            status="FAIL",
+            required_entities=required_entities,
+            visible_entities=[],
+            blocking_findings=[f"identity review call failed: {exc}"],
+            frame_path=str(frame_path),
+            raw_response=None,
+            model=str(identity_review_policy.get("model")),
+            model_policy=identity_review_policy,
+        )
+        receipt["receipt_path"] = str(receipt_path)
+        _write_json(receipt_path, receipt)
+        return receipt
+
+    visible_entities = [
+        str(entity)
+        for entity in parsed.get("visible_entities", [])
+        if isinstance(entity, str)
+    ]
+    blocking_findings = [
+        str(item)
+        for item in parsed.get("blocking_findings", [])
+        if isinstance(item, str)
+    ]
+    missing_visible = sorted(set(required_entities) - set(visible_entities))
+    if missing_visible:
+        blocking_findings.append("required identity not visibly verified: " + ",".join(missing_visible))
+    if parsed.get("verdict") != "PASS" and not blocking_findings:
+        blocking_findings.append(f"reviewer verdict was {parsed.get('verdict') or 'missing'}")
+    status = "PASS" if not blocking_findings and parsed.get("verdict") == "PASS" else "FAIL"
+    receipt = _identity_review_receipt(
+        panel=panel,
+        frame_key=frame_key,
+        status=status,
+        required_entities=required_entities,
+        visible_entities=visible_entities,
+        blocking_findings=blocking_findings,
+        frame_path=str(frame_path),
+        raw_response=parsed,
+        model=str(identity_review_policy.get("model")),
+        model_policy=identity_review_policy,
+    )
+    receipt["receipt_path"] = str(receipt_path)
+    _write_json(receipt_path, receipt)
+    return receipt
+
+
+def _identity_reference_paths(panel: Mapping[str, Any], required_entities: list[str]) -> dict[str, Path]:
+    refs = panel.get("references") if isinstance(panel.get("references"), list) else []
+    paths: dict[str, Path] = {}
+    for entity in required_entities:
+        expected = IDENTITY_REFERENCE_ASSETS[entity]
+        expected_id = str(expected["id"])
+        expected_title = str(expected["title"])
+        for ref in refs:
+            if not isinstance(ref, Mapping):
+                continue
+            if ref.get("id") != expected_id and ref.get("title") != expected_title:
+                continue
+            path_value = ref.get("path")
+            if isinstance(path_value, str) and Path(path_value).expanduser().exists():
+                paths[entity] = Path(path_value).expanduser()
+                break
+    return paths
+
+
+def _identity_review_prompt(panel: Mapping[str, Any], *, frame_key: str, required_entities: list[str]) -> str:
+    return "\n".join(
+        [
+            "Review the generated storyboard panel for identity continuity.",
+            f"Panel: {panel.get('panel_id')}",
+            f"Frame: {frame_key}",
+            "Required identities: " + ", ".join(required_entities),
+            "Required scene entities: " + ", ".join(str(item) for item in panel.get("required_entities", []) if isinstance(item, str)),
+            "",
+            "Pass only if all of the following are true:",
+            "1. Embry is visible in the foreground.",
+            "2. Embry clearly matches the attached Embry reference sheet.",
+            "3. Embry is recognizable as an adult woman with brown hair and navy rashguard/polo-style surf top.",
+            "4. Kai is visible in the foreground.",
+            "5. Kai clearly matches the attached Kai reference sheet.",
+            "6. Kai is recognizable as a young adult man with tan skin, dark curly wet hair, athletic surfer build, and black rashguard.",
+            "7. Both faces are visible enough to verify identity.",
+            "8. Embry and Kai are not replaced by generic surfers.",
+            "9. No other foreground person competes with or confuses the identities.",
+            "",
+            "Fail automatically if:",
+            "- Embry is missing.",
+            "- Kai is missing.",
+            "- Embry appears male or generic.",
+            "- Kai is only back-facing or too distant.",
+            "- Either character's face is too small, hidden, blurred, or not reference-verifiable.",
+            "- The panel is mostly a location establishing shot rather than a character-readable two-shot.",
+            "",
+            "Return strict JSON with exactly these keys:",
+            '{"verdict":"PASS|FAIL","visible_entities":["Embry"],"blocking_findings":["..."],"identity_notes":"..."}',
+            "If any identity condition fails, return FAIL and require regeneration. Do not accept the frame.",
+            "Do not give credit for prompt text, captions, filenames, or metadata. Judge the image pixels.",
+        ]
+    )
+
+
+def _identity_review_receipt(
+    *,
+    panel: Mapping[str, Any],
+    frame_key: str,
+    status: str,
+    required_entities: list[str],
+    visible_entities: list[str],
+    blocking_findings: list[str],
+    frame_path: str,
+    raw_response: Any,
+    model: str,
+    model_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    dimensions: dict[str, Any] = {}
+    try:
+        width, height = _read_png_size(Path(frame_path).expanduser())
+        dimensions = {"width": width, "height": height}
+    except Exception as exc:
+        dimensions = {"error": str(exc)}
+    return {
+        "schema": "persona_dream.identity_continuity_review.v1",
+        "created_at": _now_iso(),
+        "panel_id": panel.get("panel_id"),
+        "frame_key": frame_key,
+        "status": status,
+        "required_entities": required_entities,
+        "visible_entities": visible_entities,
+        "blocking_findings": blocking_findings,
+        "reviewer_source": f"scillm:{model}:image_url",
+        "model": model,
+        "model_policy": dict(model_policy),
+        "model_policy_enforced": model_policy.get("source") == "dag_identity_review_model_policy",
+        "frame_path": frame_path,
+        "image_dimensions": dimensions,
+        "mocked": False,
+        "live": True,
+        "raw_response": raw_response,
+    }
+
+
+def _image_url_part(path: Path, *, label: str) -> dict[str, Any]:
+    media_type = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return {
+        "type": "image_url",
+        "image_url": {
+            "url": f"data:{media_type};base64,{encoded}",
+            "detail": "high",
+        },
+        "label": label,
+    }
+
+
+def _post_scillm_json(payload: Mapping[str, Any]) -> dict[str, Any]:
+    proxy_key = os.environ.get("LITELLM_MASTER_KEY") or os.environ.get("SCILLM_PROXY_KEY")
+    if not proxy_key:
+        raise ValueError("missing LITELLM_MASTER_KEY or SCILLM_PROXY_KEY for identity review")
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib_request.Request(
+        SCILLM_CHAT_COMPLETIONS_URL,
+        data=data,
+        headers={
+            "Authorization": f"Bearer {proxy_key}",
+            "X-Caller-Skill": "persona-dream-phase07-panel-reviewer",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib_request.urlopen(req) as response:
+        body = response.read().decode("utf-8")
+    parsed = json.loads(body)
+    if not isinstance(parsed, dict):
+        raise ValueError("scillm response root is not an object")
+    return parsed
+
 
 def _panel_manifest(packet: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:
     panels = packet.get("panels") if isinstance(packet.get("panels"), list) else []
