@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_phase07_prompt_dag_review.py",
+    "--request",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/phase07_storyboard_prompt_dag_webgpt_followup.md",
+    "--response",
+    "/mnt/storage12tb/persona-dream/phase07_tau_runs/webgpt-prompt-dag-followup-20260707T/webgpt_response.md",
+    "--meta",
+    "/mnt/storage12tb/persona-dream/phase07_tau_runs/webgpt-prompt-dag-followup-20260707T/webgpt_response.meta.json"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills"
+}

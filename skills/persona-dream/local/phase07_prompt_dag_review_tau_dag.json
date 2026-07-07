@@ -1,0 +1,87 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-phase07-prompt-dag-review-check",
+  "goal": {
+    "goal_id": "persona-dream-phase07-prompt-dag-review",
+    "goal_version": 1,
+    "goal_hash": "sha256:phase07-prompt-dag-review-20260707",
+    "summary": "Check that WebGPT closed the Phase 07 prompt-DAG ambiguities before implementation."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/local/phase07_storyboard_prompt_dag_webgpt_followup.md",
+    "allowed_paths": [
+      "skills/persona-dream/local/phase07_storyboard_prompt_dag_webgpt_followup.md",
+      "skills/persona-dream/scripts/check_phase07_prompt_dag_review.py",
+      "/mnt/storage12tb/persona-dream/phase07_tau_runs/webgpt-prompt-dag-followup-20260707T/webgpt_response.md",
+      "/mnt/storage12tb/persona-dream/phase07_tau_runs/webgpt-prompt-dag-followup-20260707T/webgpt_response.meta.json"
+    ]
+  },
+  "context": {
+    "review_tab": {
+      "name": "dreams",
+      "tab_id": "837358015",
+      "url": "https://chatgpt.com/c/6a4c25f5-1460-83ea-83cc-e63ce7a497d9",
+      "desktop": 2
+    },
+    "expected_first_slice": "A_prompt_contract_json_plus_deterministic_validator_only",
+    "expected_non_claims": [
+      "does not prove prompt validator implementation",
+      "does not prove provider reference attachment",
+      "does not prove visual identity pass",
+      "does not prove five-minute live performance"
+    ]
+  },
+  "entry_node": "review-checker",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 1
+  },
+  "nodes": [
+    {
+      "id": "review-checker",
+      "agent": "phase07-prompt-dag-review-checker",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/phase07_prompt_dag_review_tau_command.json",
+      "required_evidence": [
+        "phase07_prompt_dag_review_check_receipt.json"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "review-checker",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "phase07_prompt_dag_review_check_receipt.json",
+    "requested_tab_id=837358015",
+    "controlled_tab_id=837358015",
+    "tab_was_created=false",
+    "chosen_first_slice=A_prompt_contract_json_plus_deterministic_validator_only"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}
