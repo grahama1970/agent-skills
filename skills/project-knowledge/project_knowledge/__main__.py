@@ -34,7 +34,19 @@ def get_working_dir() -> Path:
 
 def get_project_name() -> str:
     """Get project name from git or directory."""
+    explicit_project = os.environ.get("PROJECT_KNOWLEDGE_PROJECT")
+    if explicit_project:
+        return explicit_project
+
     cwd = get_working_dir()
+    knowledge_path = cwd / KNOWLEDGE_FILE
+    if knowledge_path.exists():
+        first_line = knowledge_path.read_text(errors="ignore").splitlines()[0:1]
+        if first_line and first_line[0].startswith("# Project Knowledge:"):
+            title_project = first_line[0].split(":", 1)[1].strip()
+            if title_project:
+                return title_project
+
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
