@@ -6,8 +6,9 @@
 
 ## 1. Project Overview
 
-- **Ecosystem**: Python Battle skill producing receipt-backed JSON for a
-  separate React `ux-lab` renderer.
+- **Ecosystem**: Python Battle skill producing receipt-backed JSON for the
+  self-contained React spectator package at `skills/battle/spectator/`.
+  `ux-lab` is a thin host only.
 - **Core Purpose**: Run and display Red/Blue Battle proof artifacts for
   canonical BATTLE-004: `POST /api/import-zip`, `CWE-22`, Zip Slip.
 
@@ -24,9 +25,9 @@
   mockup parity, visual design, or CDP screenshot acceptance.
 
 
-## Pixi Phase 1 spike (ux-lab)
+## Pixi Phase 1 spike (spectator package)
 
-Optional Pixi race renderer behind `#battle?engine=pixi`. Default remains DOM/SVG.
+Optional Pixi race renderer behind `#battle?engine=pixi` and `#battle/receipt?engine=pixi`. Default remains DOM/SVG. Implementation lives in `skills/battle/spectator/`.
 
 - **Spectator package (canonical UI):** `skills/battle/spectator/`
 - **Contract:** `skills/battle/docs/BATTLE_RACE_ENGINE_PIXI_SPIKE.md`

@@ -16,10 +16,10 @@ type Props = {
 };
 
 export function BattleMockupFooter({ playing, setPlaying, speed, setSpeed, filter, setFilter, enabled, arm }: Props) {
-  useRegisterAction("battle:footer:spectator-arm", { app: "ux-lab", action: "BATTLE_SOUND_ARM", label: "Arm Battle Spectator Sound", description: "Arm local sound cues for Battle spectator mode.", tags: ["battle", "design"] });
-  useRegisterAction("battle:footer:speed", { app: "ux-lab", action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Set Battle design-view replay speed.", tags: ["battle", "design"] });
-  useRegisterAction("battle:footer:focus", { app: "ux-lab", action: "BATTLE_FILTER_SET", label: "Set Battle Lane Focus", description: "Filter visible Battle lanes in design view.", tags: ["battle", "design"] });
-  useRegisterAction("battle:footer:playhead", { app: "ux-lab", action: "BATTLE_REPLAY_PLAYHEAD_TOGGLE", label: "Toggle Battle Playhead", description: "Play or pause the Battle timeline playhead.", tags: ["battle", "design"] });
+  useRegisterAction("battle:footer:spectator-arm", { action: "BATTLE_SOUND_ARM", label: "Arm Battle Spectator Sound", description: "Arm local sound cues for Battle spectator mode.", tags: ["battle", "design"] });
+  useRegisterAction("battle:footer:speed", { action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Set Battle design-view replay speed.", tags: ["battle", "design"] });
+  useRegisterAction("battle:footer:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Lane Focus", description: "Filter visible Battle lanes in design view.", tags: ["battle", "design"] });
+  useRegisterAction("battle:footer:playhead", { action: "BATTLE_REPLAY_PLAYHEAD_TOGGLE", label: "Toggle Battle Playhead", description: "Play or pause the Battle timeline playhead.", tags: ["battle", "design"] });
 
   return (
     <footer className="footer flex h-[64px] items-center justify-between gap-3 rounded-xl border border-[rgba(90,173,255,.07)] bg-[rgba(4,10,18,.45)] px-3 text-[11.5px] text-[#4a5e75]">

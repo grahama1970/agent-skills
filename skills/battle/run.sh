@@ -18,4 +18,10 @@ fi
 cd "$SCRIPT_DIR"
 
 export PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+
+if [[ "${1:-}" == "prove-spectator" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/prove-spectator-local.sh" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

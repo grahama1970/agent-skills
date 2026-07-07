@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import parentSpawnReplayFixture from "./battle-data.parent-spawn-replay.json";
+import { generatedBattleFixture } from "./battle-data.generated";
 import type { BattleNormalizedUxFixture, Lane } from "./battle-types";
 import { childSpawnElapsedSeconds, lanesVisibleAtPlayhead } from "./battle-receipt-replay";
 
-const fixture = parentSpawnReplayFixture as unknown as BattleNormalizedUxFixture;
+const fixture = generatedBattleFixture as unknown as BattleNormalizedUxFixture;
 const lanes = fixture.lanes as Lane[];
 
 describe("battle receipt lineage", () => {

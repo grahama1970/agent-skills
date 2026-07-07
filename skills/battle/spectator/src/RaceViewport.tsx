@@ -48,13 +48,13 @@ type Props = {
 };
 
 export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false }: Props) {
-  useRegisterAction("battle:timeline:scroll", { app: "ux-lab", action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:timeline:zoom", { app: "ux-lab", action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:timeline:zoom:out", { app: "ux-lab", action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:timeline:zoom:in", { app: "ux-lab", action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline In", description: "Zoom the Battle timeline in.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:marker:select", { app: "ux-lab", action: "BATTLE_MARKER_SELECT", label: "Select Battle Lane Marker", description: "Select the Battle lane associated with a timeline marker.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:lane:select", { app: "ux-lab", action: "BATTLE_LANE_SELECT", label: "Select Battle Lane", description: "Select a Battle lane on the race timeline.", tags: ["battle", "timeline"] });
-  useRegisterAction("battle:lane:collapse", { app: "ux-lab", action: "BATTLE_LANE_COLLAPSE", label: "Toggle Battle Lane Children", description: "Expand or collapse child lanes for a parent Battle lane.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:timeline:scroll", { action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:timeline:zoom", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:timeline:zoom:out", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:timeline:zoom:in", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline In", description: "Zoom the Battle timeline in.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:marker:select", { action: "BATTLE_MARKER_SELECT", label: "Select Battle Lane Marker", description: "Select the Battle lane associated with a timeline marker.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:lane:select", { action: "BATTLE_LANE_SELECT", label: "Select Battle Lane", description: "Select a Battle lane on the race timeline.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:lane:collapse", { action: "BATTLE_LANE_COLLAPSE", label: "Toggle Battle Lane Children", description: "Expand or collapse child lanes for a parent Battle lane.", tags: ["battle", "timeline"] });
 
   const [zoom, setZoom] = useState(1);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(lanes.filter((lane) => lane.children?.length && lane.expanded === false).map((lane) => lane.id)));

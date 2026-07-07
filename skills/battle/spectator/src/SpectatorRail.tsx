@@ -12,7 +12,7 @@ type Props = {
 export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelect }: Props) {
   const designView = isBattleDesignView();
   const activeLanes = battleLanesForView(undefined, receiptFixture);
-  useRegisterAction("battle:leaderboard:select", { app: "ux-lab", action: "BATTLE_LEADERBOARD_SELECT", label: "Select Battle Leaderboard Entry", description: "Select a receipt-backed Battle lane from the spectator rail", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:leaderboard:select", { action: "BATTLE_LEADERBOARD_SELECT", label: "Select Battle Leaderboard Entry", description: "Select a receipt-backed Battle lane from the spectator rail", tags: ["battle", "receipt-backed"] });
 
   const entries = designView
     ? mockupRaceLeaders.map((entry) => ({

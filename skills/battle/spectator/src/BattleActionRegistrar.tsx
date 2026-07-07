@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useMemo, useRef } from "react";
+import { BATTLE_SPECTATOR_APP_ID } from "./lib/battle-spectator-app";
 
 export type BattleRegisteredAction = {
 	app: string;
@@ -15,13 +16,15 @@ export type BattleActionRegistrar = {
 };
 
 export const BattleActionRegistrarContext = createContext<BattleActionRegistrar | null>(null);
+export const BattleSpectatorAppIdContext = createContext<string>(BATTLE_SPECTATOR_APP_ID);
 
 type Props = {
 	children: ReactNode;
+	appId?: string;
 	registerAction?: (qid: string, action: BattleRegisteredAction) => void | (() => void);
 };
 
-export function BattleSpectatorRoot({ children, registerAction }: Props) {
+export function BattleSpectatorRoot({ children, appId = BATTLE_SPECTATOR_APP_ID, registerAction }: Props) {
 	const cleanupsRef = useRef(new Map<string, () => void>());
 
 	const registrar = useMemo<BattleActionRegistrar>(
@@ -42,5 +45,9 @@ export function BattleSpectatorRoot({ children, registerAction }: Props) {
 		[registerAction],
 	);
 
-	return <BattleActionRegistrarContext.Provider value={registrar}>{children}</BattleActionRegistrarContext.Provider>;
+	return (
+		<BattleSpectatorAppIdContext.Provider value={appId}>
+			<BattleActionRegistrarContext.Provider value={registrar}>{children}</BattleActionRegistrarContext.Provider>
+		</BattleSpectatorAppIdContext.Provider>
+	);
 }

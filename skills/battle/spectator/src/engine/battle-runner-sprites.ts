@@ -75,8 +75,16 @@ function runnerAlias(spriteId: BattleRunnerSpriteId): string {
 	return `${RUNNER_ALIAS_PREFIX}${spriteId}`;
 }
 
+function manifestAsset(spriteId: BattleRunnerSpriteId) {
+	if (!manifest) throw new Error("Battle runner sprite manifest not loaded");
+	const asset = manifest.assets.find((item) => item.sprite_id === spriteId);
+	if (!asset) throw new Error(`Battle runner sprite missing from manifest: ${spriteId}`);
+	return asset;
+}
+
 function runnerJsonUrl(spriteId: BattleRunnerSpriteId): string {
-	return `${BATTLE_RUNNER_SPRITE_BASE_URL}/${spriteId}.png.json?v=4`;
+	const asset = manifestAsset(spriteId);
+	return `${BATTLE_RUNNER_SPRITE_BASE_URL}/${asset.json}?v=4`;
 }
 
 async function ensureAssetsReady(): Promise<void> {

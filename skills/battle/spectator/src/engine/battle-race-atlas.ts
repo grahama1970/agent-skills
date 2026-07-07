@@ -1,11 +1,12 @@
 import { Assets, Cache, type Spritesheet, type Texture } from "pixi.js";
 
 /**
- * pixijs-assets: spritesheet resolver expects `{name}.{format}.json` (e.g. `.png.json`).
- * @see pixijs-assets/references/spritesheet.md
+ * Marker/effect atlas lives under the same host contract as runner sprites:
+ * `/battle-sprites/pixijs/*` (see skills/battle/assets/sprites/pixijs/).
+ * Pixi loader expects `{name}.{format}.json` (e.g. `battle-race-atlas.png.json`).
  */
 export const BATTLE_RACE_ATLAS_ALIAS = "battle-race-atlas";
-export const BATTLE_RACE_ATLAS_URL = "/battle-race/battle-race-atlas.png.json";
+export const BATTLE_RACE_ATLAS_URL = "/battle-sprites/pixijs/battle-race-atlas.png.json";
 
 let atlasSheet: Spritesheet | null = null;
 let atlasLoad: Promise<Spritesheet> | null = null;

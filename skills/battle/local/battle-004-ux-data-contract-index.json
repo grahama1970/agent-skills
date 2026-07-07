@@ -10,7 +10,7 @@
     },
     "goal_source": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
-      "sha256": "d3f7d8bc9fe43dbaea4a692736d3c7d6a3d60c71554c1d110d20e9fd1fdea9f0"
+      "sha256": "e56a314c5f460cf3adfbd19729aa64484ff3fbd7981770b2c67705ae24b3a911"
     },
     "renderer_bundle": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",

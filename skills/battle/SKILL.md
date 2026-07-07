@@ -411,6 +411,7 @@ battle/
     qemu_support.py          # QEMU emulator support
     qemu_peripherals.py      # QEMU peripheral emulation
   fixtures/battle-001/       # Deterministic local fixture
+  spectator/               # Self-contained BATTLE-004 spectator UI + Pixi engine
   monitor/battle/            # Artifact-backed React monitor
 ```
 

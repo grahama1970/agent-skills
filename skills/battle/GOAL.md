@@ -7,6 +7,8 @@ parity, React layout, or CDP screenshot acceptance. Treat the UI sections below
 as historical design intent and renderer requirements, not as authorization for
 this agent to redesign or patch the interface.
 
+Canonical spectator UI: `skills/battle/spectator/` (see `spectator/HOST_INTEGRATION.md`).
+
 Current Battle-agent responsibility:
 
 - generate Arena/Tau/Judge proof receipts for canonical BATTLE-004;
@@ -203,10 +205,12 @@ MISSING PROOF
 
 ## Primary Proof
 
+Canonical UI lives in `skills/battle/spectator/`. `ux-lab` is a thin host.
+
 ```bash
-cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab
-npm run build
-~/.codex/hooks/verify-ui-cdp.sh --url http://localhost:3002/#battle --name battle-agent-cockpit
+cd skills/battle
+./run.sh prove-spectator
+# or with live host: BATTLE_HOST=http://127.0.0.1:3013 ./run.sh prove-spectator
 ```
 
 The screenshot must be compared to this mockup. The page outside the right pane
@@ -229,7 +233,7 @@ must remain recognizably unchanged.
 
 ## Allowed Scope
 
-- `packages/ux-lab/src/components/battle/dual-agent/**`
+- `skills/battle/spectator/src/**` (canonical UI; `ux-lab` mounts via `@agent-skills/battle-spectator`)
 - Battle-local primitive imports used by the Battle surface
 - Battle-local type definitions and fixture/event adapters needed for the Battle surface
 - This goal file and plan documentation

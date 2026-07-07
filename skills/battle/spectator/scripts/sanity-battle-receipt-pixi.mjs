@@ -3,7 +3,8 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 
-const baseUrl = process.env.BATTLE_RECEIPT_URL ?? 'http://127.0.0.1:3012/#battle/receipt?engine=pixi'
+const host = process.env.BATTLE_HOST ?? 'http://127.0.0.1:3012'
+const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
 const outDir = resolve(process.env.BATTLE_RECEIPT_CAPTURE_DIR ?? '/tmp/battle-receipt-pixi-sanity')
 const spawnAt = Number(process.env.BATTLE_RECEIPT_SPAWN_SECONDS ?? '116.973449')
 

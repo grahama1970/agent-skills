@@ -6,8 +6,8 @@ import { useRegisterAction } from "./hooks/useRegisterAction";
 type Props = { lane: Lane };
 
 export function MockupAgentDetailPane({ lane }: Props) {
-  useRegisterAction("battle:agent-pane:close", { app: "ux-lab", action: "BATTLE_AGENT_PANE_CLOSE", label: "Close Battle Agent Pane", description: "Close the Battle agent detail pane.", tags: ["battle", "design"] });
-  useRegisterAction("battle:agent-pane:docker-replay", { app: "ux-lab", action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Open Docker Replay", description: "Open Docker replay for the selected Battle lane.", tags: ["battle", "design"] });
+  useRegisterAction("battle:agent-pane:close", { action: "BATTLE_AGENT_PANE_CLOSE", label: "Close Battle Agent Pane", description: "Close the Battle agent detail pane.", tags: ["battle", "design"] });
+  useRegisterAction("battle:agent-pane:docker-replay", { action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Open Docker Replay", description: "Open Docker replay for the selected Battle lane.", tags: ["battle", "design"] });
   const detail = mockupAgentDetail(lane);
   const cockpit = lane.cockpit;
   const replay = lane.replay;

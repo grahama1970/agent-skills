@@ -23,9 +23,9 @@ const filters: Array<{ id: BattleFilter; label: string; icon: React.ReactNode }>
 ];
 
 export function BattleToolbar({ mode, setMode, filter, setFilter, query, setQuery }: Props) {
-  useRegisterAction("battle:toolbar:search", { app: "ux-lab", action: "BATTLE_SEARCH", label: "Search Battle", description: "Search receipt-backed Battle lanes and events.", tags: ["battle"] });
-  useRegisterAction("battle:toolbar:filter", { app: "ux-lab", action: "BATTLE_FILTER_SET", label: "Set Battle Filter", description: "Filter visible Battle lanes and events.", tags: ["battle"] });
-  useRegisterAction("battle:toolbar:mode", { app: "ux-lab", action: "BATTLE_MODE_SET", label: "Set Battle View Mode", description: "Set the Battle spectator focus mode.", tags: ["battle"] });
+  useRegisterAction("battle:toolbar:search", { action: "BATTLE_SEARCH", label: "Search Battle", description: "Search receipt-backed Battle lanes and events.", tags: ["battle"] });
+  useRegisterAction("battle:toolbar:filter", { action: "BATTLE_FILTER_SET", label: "Set Battle Filter", description: "Filter visible Battle lanes and events.", tags: ["battle"] });
+  useRegisterAction("battle:toolbar:mode", { action: "BATTLE_MODE_SET", label: "Set Battle View Mode", description: "Set the Battle spectator focus mode.", tags: ["battle"] });
 
   return (
     <section className="flex min-h-[54px] items-center justify-between gap-3 rounded-2xl border border-white/10 bg-battle-panel/70 px-3 py-2 shadow-acrylic backdrop-blur-xl">

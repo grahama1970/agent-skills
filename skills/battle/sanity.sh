@@ -121,4 +121,11 @@ uv run --project "$SCRIPT_DIR" python -m battle_skill.cli validate-ux-data-contr
 cat /tmp/battle-sanity-ux-data-contract-index.out
 echo "BATTLE_UX_DATA_CONTRACT_INDEX_PASS"
 
+if [[ "${BATTLE_PROVE_SPECTATOR:-}" == "1" ]]; then
+  echo "11. Running full spectator local proof gate"
+  "$SCRIPT_DIR/scripts/prove-spectator-local.sh"
+else
+  echo "11. Skipping spectator live proof (set BATTLE_PROVE_SPECTATOR=1 to enable)"
+fi
+
 echo "Result: PASS"

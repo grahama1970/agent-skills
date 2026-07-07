@@ -719,6 +719,14 @@ export type BattleNormalizedUxFixture = {
 	spectator_shell?: BattleSpectatorShell;
 	renderer_binding_contract?: BattleRendererBindingContract;
 	timeline?: BattleTimeline;
+	timeline_elapsed_axis_model?: {
+		x_position_is_elapsed_time?: boolean;
+		x_axis_mode?: string;
+		axis_max_elapsed_seconds?: number;
+		keyframes?: Array<{ x?: number; receipt_order_x?: number; elapsed_seconds?: number }>;
+		playhead?: { current_x?: number; current_elapsed_seconds?: number };
+		render_rules?: string[];
+	};
 	lineage?: {
 		mode: "missing" | "receipt_backed" | string;
 		spawn_count: number;

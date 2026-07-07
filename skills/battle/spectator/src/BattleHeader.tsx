@@ -22,9 +22,9 @@ type Props = {
 };
 
 export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJsonl }: Props) {
-  useRegisterAction("battle:events:rail", { app: "ux-lab", action: "BATTLE_EVENTS_OPEN", label: "Open Battle Receipt Events", description: "Open the receipt-backed Battle event stream popover", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:events:item", { app: "ux-lab", action: "BATTLE_EVENT_SELECT", label: "Select Battle Event Actor", description: "Select the lane associated with a receipt-backed Battle event", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:events:view-all", { app: "ux-lab", action: "BATTLE_EVENTS_VIEW_ALL", label: "View All Battle Receipts", description: "Open the full receipt-backed Battle event list", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:events:rail", { action: "BATTLE_EVENTS_OPEN", label: "Open Battle Receipt Events", description: "Open the receipt-backed Battle event stream popover", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:events:item", { action: "BATTLE_EVENT_SELECT", label: "Select Battle Event Actor", description: "Select the lane associated with a receipt-backed Battle event", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:events:view-all", { action: "BATTLE_EVENTS_VIEW_ALL", label: "View All Battle Receipts", description: "Open the full receipt-backed Battle event list", tags: ["battle", "receipt-backed"] });
 
   const designView = isBattleDesignView();
   const fixture = activeBattleFixture(receiptFixture);

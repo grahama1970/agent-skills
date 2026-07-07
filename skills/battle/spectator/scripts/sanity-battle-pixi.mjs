@@ -3,7 +3,8 @@ import { mkdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { chromium } from 'playwright'
 
-const baseUrl = process.env.BATTLE_PIXI_URL ?? 'http://127.0.0.1:3012/#battle?engine=pixi'
+const host = process.env.BATTLE_HOST ?? 'http://127.0.0.1:3012'
+const baseUrl = process.env.BATTLE_PIXI_URL ?? `${host}/#battle?engine=pixi`
 const outDir = resolve(process.env.BATTLE_PIXI_CAPTURE_DIR ?? '/tmp/battle-pixi-sanity')
 const url = process.env.BATTLE_PIXI_TEST === '1'
   ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}pixiTest=1&pixiSeconds=10`

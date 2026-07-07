@@ -18,12 +18,12 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
   if (isBattleDesignView()) return <MockupAgentDetailPane lane={lane} />;
   void activeFinisher;
   void onSound;
-  useRegisterAction("battle:agent-pane:tab:summary", { app: "ux-lab", action: "BATTLE_AGENT_PANE_TAB_SUMMARY", label: "Show Battle Agent Summary", description: "Show the Summary tab in the Battle agent detail pane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:tab:turns", { app: "ux-lab", action: "BATTLE_AGENT_PANE_TAB_TURNS", label: "Show Battle Agent Turns", description: "Show the public Battle event trace for the selected lane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:tab:logs", { app: "ux-lab", action: "BATTLE_AGENT_PANE_TAB_LOGS", label: "Show Battle Agent Logs", description: "Show receipt-backed JSON events for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:tab:skills", { app: "ux-lab", action: "BATTLE_AGENT_PANE_TAB_SKILLS", label: "Show Battle Agent Skills", description: "Show emitted skills/tools for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:tab:receipts", { app: "ux-lab", action: "BATTLE_AGENT_PANE_TAB_RECEIPTS", label: "Show Battle Agent Receipts", description: "Show proof artifacts for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:proof:docker-replay", { app: "ux-lab", action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Show Docker Replay Proof", description: "Show the receipt-backed Docker/Judge replay proof for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:summary", { action: "BATTLE_AGENT_PANE_TAB_SUMMARY", label: "Show Battle Agent Summary", description: "Show the Summary tab in the Battle agent detail pane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:turns", { action: "BATTLE_AGENT_PANE_TAB_TURNS", label: "Show Battle Agent Turns", description: "Show the public Battle event trace for the selected lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:logs", { action: "BATTLE_AGENT_PANE_TAB_LOGS", label: "Show Battle Agent Logs", description: "Show receipt-backed JSON events for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:skills", { action: "BATTLE_AGENT_PANE_TAB_SKILLS", label: "Show Battle Agent Skills", description: "Show emitted skills/tools for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:receipts", { action: "BATTLE_AGENT_PANE_TAB_RECEIPTS", label: "Show Battle Agent Receipts", description: "Show proof artifacts for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:proof:docker-replay", { action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Show Docker Replay Proof", description: "Show the receipt-backed Docker/Judge replay proof for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
 
   const model = useMemo(() => buildModel(lane, events), [lane, events]);
   const replay = model.replay;

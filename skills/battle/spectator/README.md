@@ -2,29 +2,18 @@
 
 Self-contained receipt-backed spectator UI + Pixi race engine for Battle.
 
-## Host responsibilities
+**Canonical location:** `skills/battle/spectator/` (not `ux-lab`).
 
-The embedding app (e.g. `ux-lab`) must serve:
-
-- `/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json`
-- `/battle-sprites/pixijs/*` (symlink to `skills/battle/assets/sprites/pixijs`)
-
-## Usage
-
-```tsx
-import { BattleSpectatorRoot, BattleSpectatorArena } from "@agent-skills/battle-spectator";
-
-export function BattleHost() {
-  return (
-    <BattleSpectatorRoot>
-      <BattleSpectatorArena />
-    </BattleSpectatorRoot>
-  );
-}
-```
-
-## Proof
+## Scripts
 
 ```bash
-UX_LAB_UI_PORT=3012 node scripts/prove-battle-receipt-replay-6.mjs
+npm install
+npm run typecheck   # TypeScript
+npm test            # Vitest unit tests
+npm run prove:pixi  # Live Pixi route sanity (requires host on BATTLE_HOST)
+npm run prove:receipt-replay  # 6 receipt requirements (requires host)
 ```
+
+Full local gate from battle skill root: `./run.sh prove-spectator`
+
+See `HOST_INTEGRATION.md` for ux-lab wiring.

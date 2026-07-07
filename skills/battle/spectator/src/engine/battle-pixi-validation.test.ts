@@ -9,7 +9,7 @@ const baseFixture = {
 		terminal_claims_receipt_backed: true,
 		errors: [],
 	},
-} as BattleNormalizedUxFixture;
+} as unknown as BattleNormalizedUxFixture;
 
 describe("pixiReceiptValidationGate", () => {
 	it("allows design fixture mode", () => {

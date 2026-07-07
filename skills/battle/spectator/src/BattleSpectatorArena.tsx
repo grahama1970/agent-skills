@@ -41,11 +41,11 @@ export function BattleSpectatorArena() {
   const initialLanes = useMemo(() => (receiptReady ? battleLanesForView(undefined, typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const battleEvents = useMemo(() => (receiptReady ? battleEventsForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const leaderboard = useMemo(() => (receiptReady ? battleLeaderboardForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
-  useRegisterAction("battle:control:sound-arm", { app: "ux-lab", action: "BATTLE_SOUND_ARM", label: "Arm Battle Sound", description: "Enable local sound cues for receipt-backed Battle events when a cue exists", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:control:speed", { app: "ux-lab", action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Change the receipt-backed Battle replay speed control", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:control:focus", { app: "ux-lab", action: "BATTLE_FILTER_SET", label: "Set Battle Focus", description: "Filter receipt-backed Battle lanes.", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:stream:jsonl-open", { app: "ux-lab", action: "BATTLE_JSONL_STREAM_OPEN", label: "Open Receipt Event Stream", description: "Open the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
-  useRegisterAction("battle:sheet:close", { app: "ux-lab", action: "BATTLE_SHEET_CLOSE", label: "Close Battle Sheet", description: "Close the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:control:sound-arm", { action: "BATTLE_SOUND_ARM", label: "Arm Battle Sound", description: "Enable local sound cues for receipt-backed Battle events when a cue exists", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:control:speed", { action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Change the receipt-backed Battle replay speed control", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:control:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Focus", description: "Filter receipt-backed Battle lanes.", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:stream:jsonl-open", { action: "BATTLE_JSONL_STREAM_OPEN", label: "Open Receipt Event Stream", description: "Open the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:sheet:close", { action: "BATTLE_SHEET_CLOSE", label: "Close Battle Sheet", description: "Close the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
 
   const firstReplayLane = initialLanes.find((lane) => lane.replay)?.id;
   const defaultLaneId = isBattleDesignView() ? mockupDefaultSelectedLaneId() : (firstReplayLane ?? initialLanes[0]?.id ?? "");
