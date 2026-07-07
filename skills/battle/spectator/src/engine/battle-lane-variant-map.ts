@@ -1,4 +1,4 @@
-import type { Lane } from "../lib/battle-types";
+import type { BattleSpriteThemeV1, Lane } from "../lib/battle-types";
 import type { BattleRunnerSpriteId } from "./battle-runner-sprites";
 import { BATTLE_RUNNER_SPRITE_IDS } from "./battle-runner-sprites";
 
@@ -29,10 +29,41 @@ function hashLaneId(laneId: string): number {
 	return hash;
 }
 
-export function spriteVariantForLane(lane: Lane): BattleRunnerSpriteId {
-	const actorVariantId = lane.actor_visual?.variant_id;
-	if (actorVariantId && BATTLE_RUNNER_SPRITE_ID_SET.has(actorVariantId)) {
-		return actorVariantId as BattleRunnerSpriteId;
+function asRunnerSpriteId(spriteId: string | undefined): BattleRunnerSpriteId | null {
+	if (spriteId && BATTLE_RUNNER_SPRITE_ID_SET.has(spriteId)) {
+		return spriteId as BattleRunnerSpriteId;
 	}
-	return LANE_VARIANT_OVERRIDES[lane.id] ?? BATTLE_RUNNER_SPRITE_IDS[hashLaneId(lane.id) % BATTLE_RUNNER_SPRITE_IDS.length];
+	return null;
+}
+
+function variantIdForLane(lane: Lane): string | null {
+	return lane.actor_visual?.variant_id ?? null;
+}
+
+/** Resolve backend variant_id through fixture sprite_theme before loading Pixi spritesheets. */
+export function spriteThemeSpriteId(variantId: string, spriteTheme?: BattleSpriteThemeV1): string {
+	const themed = spriteTheme?.variants?.[variantId]?.sprite_id;
+	return themed ?? variantId;
+}
+
+export function spriteIdForLane(lane: Lane, spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
+	const actorVariantId = variantIdForLane(lane);
+	if (actorVariantId) {
+		const resolved = asRunnerSpriteId(spriteThemeSpriteId(actorVariantId, spriteTheme));
+		if (resolved) return resolved;
+	}
+
+	const fallbackVariant = LANE_VARIANT_OVERRIDES[lane.id];
+	if (fallbackVariant) {
+		const resolved = asRunnerSpriteId(spriteThemeSpriteId(fallbackVariant, spriteTheme));
+		if (resolved) return resolved;
+	}
+
+	const hashed = BATTLE_RUNNER_SPRITE_IDS[hashLaneId(lane.id) % BATTLE_RUNNER_SPRITE_IDS.length];
+	return asRunnerSpriteId(spriteThemeSpriteId(hashed, spriteTheme)) ?? hashed;
+}
+
+/** @deprecated use spriteIdForLane */
+export function spriteVariantForLane(lane: Lane, spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
+	return spriteIdForLane(lane, spriteTheme);
 }

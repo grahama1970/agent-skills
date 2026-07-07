@@ -25,7 +25,10 @@ describe("battleTimelineDomain", () => {
 	it("uses elapsed-axis playhead on parent-spawn replay fixture", () => {
 		const domain = battleTimelineDomain(receiptReplayFixture, false);
 		expect(domain.source).toBe("timeline_elapsed_axis");
-		expect(domain.currentSeconds).toBeCloseTo(149.77601, 5);
+		expect(domain.currentSeconds).toBeCloseTo(
+			receiptReplayFixture.timeline_elapsed_axis_model?.playhead?.current_elapsed_seconds ?? 0,
+			5,
+		);
 		expect(domain.currentSeconds).not.toBe(receiptReplayFixture.battle_clock?.elapsed_seconds);
 	});
 });

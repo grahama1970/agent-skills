@@ -40,7 +40,7 @@
     "owner": "ux",
     "source_time_authority": "receipt_elapsed_seconds"
   },
-  "run_id": "arena-parent-spawn-20260706T134722Z",
+  "run_id": "arena-parent-spawn-20260707T220426Z",
   "schema": "battle.transport_manifest.v1",
   "stream_contract": {
     "authority": "normalized_fixture_and_receipt_events",

@@ -145,7 +145,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
             <button key={`${event.id}:${index}`} type="button" data-qid={`battle:events:item:${event.id}`} data-qs-action="BATTLE_EVENT_SELECT" title={`Select receipt event ${event.id}`} onClick={() => selectEvent(event)} className="battle-live-event-row w-full text-left transition-colors hover:bg-white/[.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40">
               <span className="battle-live-event-time">{new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
               <EventIcon event={event} />
-              <span className="text-slate-300">{event.ui.notification ?? event.summary}</span>
+              <ReceiptLiveEventText event={event} />
             </button>
           ))}
         </div>
@@ -185,12 +185,30 @@ function ScoreCell({ label, sub, value, tone, icon, align }: { label: string; su
 }
 
 function EventIcon({ event }: { event: BattleEvent }) {
+  if (event.event_type === "replay.killed") return <Icons.Skull className="h-4 w-4 text-battle-red" />;
+  if (event.event_type === "replay.blocked") return <Icons.ShieldCheck className="h-4 w-4 text-battle-green" />;
+  if (event.event_type === "replay.blue_blast") return <Icons.Crosshair className="h-4 w-4 text-battle-blue" />;
   if (event.event_type === "judge.verdict") return <Icons.ShieldCheck className="h-4 w-4 text-battle-green" />;
   if (event.event_type === "blue.blocked_red") return <Icons.ShieldX className="h-4 w-4 text-battle-blue" />;
   if (event.event_type === "blue.patch_deployed") return <Icons.Shield className="h-4 w-4 text-battle-blue" />;
   if (event.team === "red") return <Icons.Bug className="h-4 w-4 text-battle-red" />;
   if (event.event_type === "tau.handoff_created") return <Icons.GitBranch className="h-4 w-4 text-battle-purple" />;
   return <Icons.Activity className="h-4 w-4 text-battle-yellow" />;
+}
+
+function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
+  const prefix = event.ui.notification_prefix;
+  const highlight = event.ui.notification_highlight;
+  const tone = event.ui.notification_highlight_tone ?? (event.team === "blue" ? "blue" : event.team === "red" ? "red" : "green");
+  if (prefix && highlight) {
+    return (
+      <span className="min-w-0 truncate">
+        {prefix}
+        <b className={tone}>{highlight}</b>
+      </span>
+    );
+  }
+  return <span className="min-w-0 truncate">{event.ui.notification ?? event.summary}</span>;
 }
 
 function formatScore(value: number | undefined) {

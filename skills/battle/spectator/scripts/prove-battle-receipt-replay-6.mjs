@@ -6,7 +6,6 @@ import { chromium } from 'playwright'
 const host = process.env.BATTLE_HOST ?? 'http://127.0.0.1:3012'
 const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
 const outDir = resolve(process.env.BATTLE_RECEIPT_PROOF_DIR ?? '/tmp/battle-receipt-replay-6-proof')
-const spawnAt = 116.973449
 
 const checks = []
 
@@ -38,9 +37,20 @@ async function main() {
     const r = await fetch('/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json')
     if (!r.ok) return { ok: false, status: r.status }
     const j = await r.json()
-    return { ok: true, laneIds: (j.lanes ?? []).map((l) => l.id), lineage: j.lineage?.spawn_count }
+    const spawn = (j.lineage?.spawns ?? []).find((item) => item.child_lane_id === 'payload-857-red-1')
+    return {
+      ok: true,
+      laneIds: (j.lanes ?? []).map((l) => l.id),
+      lineage: j.lineage?.spawn_count,
+      spawnAt: spawn?.visible_from_elapsed_seconds ?? spawn?.spawn_elapsed_seconds,
+      allottedSeconds: j.battle_clock?.allotted_seconds ?? j.clock?.allotted_seconds ?? 1200,
+    }
   })
-  record('2-fixture-fetch', fixtureFetch.ok && fixtureFetch.laneIds?.includes('payload-857-receipt'), JSON.stringify(fixtureFetch))
+  record(
+    '2-fixture-fetch',
+    fixtureFetch.ok && fixtureFetch.laneIds?.includes('payload-857-receipt') && Number.isFinite(fixtureFetch.spawnAt),
+    JSON.stringify(fixtureFetch),
+  )
 
   const pixiInput = await page.evaluate(() => ({
     engine: document.querySelector('[data-battle-pixi-engine]')?.getAttribute('data-battle-pixi-engine'),
@@ -64,12 +74,13 @@ async function main() {
   const scrubChanged = beforeScrub.label !== afterScrub.label && beforeScrub.viewport !== afterScrub.viewport
   record('4-scrub-sync', scrubChanged, JSON.stringify({ beforeScrub, afterScrub }))
 
-  const allotted = fixtureFetch.ok ? 1200 : 1200
+  const allotted = Number.isFinite(fixtureFetch.allottedSeconds) ? fixtureFetch.allottedSeconds : 1200
+  const spawnAt = Number(fixtureFetch.spawnAt)
   async function scrubPlayheadToSeconds(targetSeconds) {
     const track = page.locator('.playheadTrack').first()
     const box = await track.boundingBox()
     if (!box) throw new Error('playhead track missing')
-    const pct = targetSeconds / allotted
+    const pct = Math.max(0, Math.min(1, targetSeconds / allotted))
     await page.mouse.click(box.x + box.width * pct, box.y + box.height / 2)
     await page.waitForTimeout(600)
   }

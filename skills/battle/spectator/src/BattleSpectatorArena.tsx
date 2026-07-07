@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Toaster, toast } from "sonner";
 import { Button } from "./ui/button";
@@ -6,6 +6,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { battleBluePatchActionsForView, battleEventsForView, battleLanesForView, battleLeaderboardForView } from "./lib/battle-data";
+import { replayTickerEventsForPlayhead } from "./lib/battle-replay-cues";
+import { battleTimelineDomain } from "./lib/battle-timeline-domain";
+import type { BattleEffectCue } from "./lib/battle-types";
 import { isBattleDesignView, mockupDefaultSelectedLaneId } from "./lib/battle-mockup-lanes";
 import { isBattleReceiptReplayView } from "./lib/battle-receipt-replay";
 import { useReceiptReplayFixture } from "./hooks/useReceiptReplayFixture";
@@ -54,6 +57,12 @@ export function BattleSpectatorArena() {
   const [playing, setPlaying] = useState(false);
   const [filter, setFilter] = useState<BattleFilter>("all");
   const [jsonlOpen, setJsonlOpen] = useState(false);
+  const [playheadSeconds, setPlayheadSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!typedReceiptFixture) return;
+    setPlayheadSeconds(battleTimelineDomain(typedReceiptFixture, false).currentSeconds);
+  }, [typedReceiptFixture]);
   const { enabled, arm, play } = useBattleSound();
 
   const selectedLane = useMemo(() => initialLanes.find((lane) => lane.id === selectedId) ?? initialLanes[0], [selectedId]);
@@ -63,6 +72,15 @@ export function BattleSpectatorArena() {
     arm();
     play(cue as never);
   }
+
+  const handleReplayCue = useCallback((cue: BattleEffectCue) => {
+    if (cue.soundCue && cue.soundCue !== "none") playCue(cue.soundCue);
+  }, []);
+
+  const tickerEvents = useMemo(() => {
+    if (!receiptReplay || !typedReceiptFixture) return battleEvents;
+    return replayTickerEventsForPlayhead(battleEvents, typedReceiptFixture, initialLanes, playheadSeconds);
+  }, [battleEvents, initialLanes, playheadSeconds, receiptReplay, typedReceiptFixture]);
 
   function selectActor(id: string) {
     const exists = initialLanes.some((lane) => lane.id === id);
@@ -105,7 +123,7 @@ export function BattleSpectatorArena() {
             : undefined
         }
       >
-        <BattleHeader receiptFixture={typedReceiptFixture} events={battleEvents} onTestSound={playCue} onSelectActor={selectActor} onOpenJsonl={() => setJsonlOpen(true)} />
+        <BattleHeader receiptFixture={typedReceiptFixture} events={tickerEvents} onTestSound={playCue} onSelectActor={selectActor} onOpenJsonl={() => setJsonlOpen(true)} />
 
         <div
           className={cn(
@@ -124,7 +142,7 @@ export function BattleSpectatorArena() {
           }
         >
           <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
-          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} />
+          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onPlayheadSeconds={setPlayheadSeconds} />
           {selectedLane ? <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} /> : null}
         </div>
 

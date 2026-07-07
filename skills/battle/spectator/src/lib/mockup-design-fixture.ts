@@ -96,7 +96,7 @@ export type MockupLiveEvent = {
   iconTone: "green" | "blue" | "red" | "purple";
   prefix: string;
   highlight: string;
-  highlightTone: "green" | "blue";
+  highlightTone: "green" | "blue" | "red";
 };
 
 export const mockupLiveEvents: MockupLiveEvent[] = [

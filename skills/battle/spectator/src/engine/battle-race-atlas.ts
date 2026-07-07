@@ -1,4 +1,5 @@
 import { Assets, Cache, type Spritesheet, type Texture } from "pixi.js";
+import { ensureBattlePixiAssets } from "./battle-runner-sprites";
 
 /**
  * Marker/effect atlas lives under the same host contract as runner sprites:
@@ -6,16 +7,9 @@ import { Assets, Cache, type Spritesheet, type Texture } from "pixi.js";
  * Pixi loader expects `{name}.{format}.json` (e.g. `battle-race-atlas.png.json`).
  */
 export const BATTLE_RACE_ATLAS_ALIAS = "battle-race-atlas";
-export const BATTLE_RACE_ATLAS_URL = "/battle-sprites/pixijs/battle-race-atlas.png.json";
 
 let atlasSheet: Spritesheet | null = null;
 let atlasLoad: Promise<Spritesheet> | null = null;
-let assetsInit: Promise<void> | null = null;
-
-async function ensureAssetsReady(): Promise<void> {
-	if (!assetsInit) assetsInit = Assets.init();
-	await assetsInit;
-}
 
 export function battleRaceSpritesheet(): Spritesheet | null {
 	return atlasSheet;
@@ -34,13 +28,10 @@ export async function loadBattleRaceAtlas(): Promise<Spritesheet> {
 	}
 	if (!atlasLoad) {
 		atlasLoad = (async () => {
-			await ensureAssetsReady();
-			if (!Cache.has(BATTLE_RACE_ATLAS_ALIAS)) {
-				Assets.add({ alias: BATTLE_RACE_ATLAS_ALIAS, src: BATTLE_RACE_ATLAS_URL });
-			}
+			await ensureBattlePixiAssets();
 			const sheet = await Assets.load<Spritesheet>(BATTLE_RACE_ATLAS_ALIAS);
 			if (!sheet?.textures || Object.keys(sheet.textures).length === 0) {
-				throw new Error(`Battle race spritesheet missing frames: ${BATTLE_RACE_ATLAS_URL}`);
+				throw new Error("Battle race spritesheet missing frames: battle-race-atlas.png.json");
 			}
 			atlasSheet = sheet;
 			return atlasSheet;

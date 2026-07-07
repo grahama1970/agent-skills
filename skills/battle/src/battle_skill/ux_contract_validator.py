@@ -497,6 +497,7 @@ def validate_handoff_summary(
     schema_path: Path = DEFAULT_SCHEMA_PATH,
     summary_schema_path: Path = DEFAULT_HANDOFF_SUMMARY_SCHEMA_PATH,
     require_data_contract_index: bool = True,
+    require_renderer_artifacts: bool = True,
 ) -> dict[str, Any]:
     """Validate the backend UX handoff summary against its referenced fixtures."""
     errors: list[str] = []
@@ -616,23 +617,24 @@ def validate_handoff_summary(
         fixture_reports=fixture_reports,
         errors=errors,
     )
-    _validate_renderer_fixture_resolution_summary(
-        summary=summary,
-        recommended_report=recommended_report,
-        errors=errors,
-    )
-    _validate_renderer_bundle_summary(
-        summary=summary,
-        recommended_report=recommended_report,
-        errors=errors,
-    )
-    _validate_renderer_values_summary(
-        summary=summary,
-        recommended_report=recommended_report,
-        errors=errors,
-    )
+    if require_renderer_artifacts:
+        _validate_renderer_fixture_resolution_summary(
+            summary=summary,
+            recommended_report=recommended_report,
+            errors=errors,
+        )
+        _validate_renderer_bundle_summary(
+            summary=summary,
+            recommended_report=recommended_report,
+            errors=errors,
+        )
+        _validate_renderer_values_summary(
+            summary=summary,
+            recommended_report=recommended_report,
+            errors=errors,
+        )
     index_report = None
-    if require_data_contract_index:
+    if require_data_contract_index and require_renderer_artifacts:
         index_report = _validate_data_contract_index_summary(
             summary=summary,
             recommended_report=recommended_report,
@@ -1031,12 +1033,159 @@ def _validate_recommended_renderer_fixture(
     }
 
 
+def _refresh_fixture_summary(existing: dict[str, Any], *, fixture: dict[str, Any]) -> dict[str, Any]:
+    refreshed = dict(existing)
+    timeline = fixture.get("timeline") if isinstance(fixture.get("timeline"), dict) else {}
+    playhead = timeline.get("playhead") if isinstance(timeline.get("playhead"), dict) else {}
+    keyframes = playhead.get("keyframes") if isinstance(playhead.get("keyframes"), list) else []
+    viewport = timeline.get("viewport") if isinstance(timeline.get("viewport"), dict) else {}
+    lineage = fixture.get("lineage") if isinstance(fixture.get("lineage"), dict) else {}
+    groups = lineage.get("groups") if isinstance(lineage.get("groups"), list) else []
+    lanes = fixture.get("lanes") if isinstance(fixture.get("lanes"), list) else []
+    lane_ids_with_activity = [
+        str(lane.get("id"))
+        for lane in lanes
+        if isinstance(lane, dict) and lane.get("id") and isinstance(lane.get("activitySegments"), list) and lane.get("activitySegments")
+    ]
+    replay_lanes = [
+        lane
+        for lane in lanes
+        if isinstance(lane, dict) and isinstance(lane.get("replay"), dict)
+    ]
+
+    refreshed.update(
+        {
+            "status": fixture.get("status"),
+            "mocked": fixture.get("mocked"),
+            "live_source": fixture.get("live_source"),
+            "source_proof_dir": fixture.get("source_proof_dir"),
+            "battle_clock": fixture.get("battle_clock"),
+            "lineage_request": fixture.get("lineage_request"),
+            "lineage": {
+                "mode": lineage.get("mode"),
+                "spawn_count": lineage.get("spawn_count"),
+                "parent_lane_ids": lineage.get("parent_lane_ids"),
+                "child_lane_ids": lineage.get("child_lane_ids"),
+            },
+            "scoreboard": {
+                "verdict": (fixture.get("scoreboard") if isinstance(fixture.get("scoreboard"), dict) else {}).get("verdict"),
+                "judged_pair_count": (fixture.get("scoreboard") if isinstance(fixture.get("scoreboard"), dict) else {}).get("judged_pair_count"),
+                "blue_success_count": (fixture.get("scoreboard") if isinstance(fixture.get("scoreboard"), dict) else {}).get("blue_success_count"),
+                "child_spawn_count": (fixture.get("scoreboard") if isinstance(fixture.get("scoreboard"), dict) else {}).get("child_spawn_count"),
+            },
+            "timeline": {
+                "mode": timeline.get("mode"),
+                "lane_count": timeline.get("lane_count"),
+                "event_count": timeline.get("event_count"),
+                "supports_pan": timeline.get("supports_pan"),
+                "supports_zoom": timeline.get("supports_zoom"),
+                "playhead": {
+                    "mode": playhead.get("mode"),
+                    "current_x": playhead.get("current_x"),
+                    "elapsed_seconds": playhead.get("elapsed_seconds"),
+                    "source_receipt_id": playhead.get("source_receipt_id"),
+                    "animation_semantics": playhead.get("animation_semantics"),
+                    "keyframe_count": len(keyframes),
+                    "keyframe_x_values": [frame.get("x") for frame in keyframes if isinstance(frame, dict)],
+                },
+                "viewport": {
+                    "initial_min_x": viewport.get("initial_min_x"),
+                    "initial_max_x": viewport.get("initial_max_x"),
+                    "min_zoom": viewport.get("min_zoom"),
+                    "max_zoom": viewport.get("max_zoom"),
+                    "proof_mode": viewport.get("proof_mode"),
+                },
+            },
+        }
+    )
+
+    refreshed["collapsible_lineage_groups"] = {
+        "group_count": len(groups),
+        "groups": [
+            {
+                "group_id": group.get("group_id"),
+                "parent_lane_id": group.get("parent_lane_id"),
+                "child_lane_ids": group.get("child_lane_ids"),
+                "collapsible": group.get("collapsible"),
+                "expanded_by_default": group.get("expanded_by_default"),
+            }
+            for group in groups
+            if isinstance(group, dict)
+        ],
+    }
+
+    activity_segments = dict(refreshed.get("activity_segments") if isinstance(refreshed.get("activity_segments"), dict) else {})
+    activity_segments["lane_ids"] = lane_ids_with_activity
+    activity_segments["required"] = True
+    if len(lane_ids_with_activity) > 1:
+        parent_lane = next((lane for lane in lanes if isinstance(lane, dict) and not lane.get("parentId")), {})
+        child_lane = next((lane for lane in lanes if isinstance(lane, dict) and lane.get("parentId")), {})
+        activity_segments["sample_parent_phases"] = _activity_phases(parent_lane)
+        activity_segments["sample_child_phases"] = _activity_phases(child_lane)
+        activity_segments.pop("sample_phases", None)
+    else:
+        first_lane = lanes[0] if lanes and isinstance(lanes[0], dict) else {}
+        activity_segments["sample_phases"] = _activity_phases(first_lane)
+        activity_segments.pop("sample_parent_phases", None)
+        activity_segments.pop("sample_child_phases", None)
+    refreshed["activity_segments"] = activity_segments
+
+    if replay_lanes:
+        replay = replay_lanes[0].get("replay") if isinstance(replay_lanes[0], dict) else {}
+        cta = replay.get("cta") if isinstance(replay, dict) and isinstance(replay.get("cta"), dict) else {}
+        refreshed["replay_cta"] = {
+            "lane_ids": [str(lane.get("id")) for lane in replay_lanes if isinstance(lane, dict) and lane.get("id")],
+            "label": cta.get("label"),
+            "state": cta.get("state"),
+            "can_execute_now": replay.get("can_execute_now") if isinstance(replay, dict) else None,
+            "required_disabled_reason": cta.get("disabled_reason"),
+            "sample": cta,
+        }
+    else:
+        refreshed["replay_cta"] = {
+            "lane_ids": [],
+            "note": "No replay CTA exists when no Judge BLUE_SUCCESS replay metadata exists.",
+        }
+
+    child_lanes = [lane for lane in lanes if isinstance(lane, dict) and lane.get("parentId")]
+    if child_lanes:
+        child = child_lanes[0]
+        child_segments = child.get("activitySegments") if isinstance(child.get("activitySegments"), list) else []
+        child_events = child.get("events") if isinstance(child.get("events"), list) else []
+        refreshed["timeline"]["child_lane_timing"] = {
+            "child_lane_id": child.get("id"),
+            "xStart": child.get("xStart"),
+            "event_x_values": [event.get("x") for event in child_events if isinstance(event, dict)],
+            "activity_segment_bounds": [
+                [segment.get("start_x"), segment.get("end_x")]
+                for segment in child_segments
+                if isinstance(segment, dict)
+            ],
+            "invariant": "Child lane events and activity segments must not occur before child lane xStart.",
+        }
+    else:
+        refreshed["timeline"].pop("child_lane_timing", None)
+
+    return refreshed
+
+
+def _activity_phases(lane: Any) -> list[str]:
+    if not isinstance(lane, dict):
+        return []
+    return [
+        str(segment.get("phase"))
+        for segment in lane.get("activitySegments", [])
+        if isinstance(segment, dict) and segment.get("phase")
+    ]
+
+
 def validate_handoff_summary_path(
     summary_path: Path,
     *,
     schema_path: Path = DEFAULT_SCHEMA_PATH,
     summary_schema_path: Path = DEFAULT_HANDOFF_SUMMARY_SCHEMA_PATH,
     require_data_contract_index: bool = True,
+    require_renderer_artifacts: bool = True,
 ) -> dict[str, Any]:
     try:
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -1047,6 +1196,7 @@ def validate_handoff_summary_path(
         schema_path=schema_path,
         summary_schema_path=summary_schema_path,
         require_data_contract_index=require_data_contract_index,
+        require_renderer_artifacts=require_renderer_artifacts,
     )
     report["summary"] = str(summary_path)
     return report
@@ -1066,11 +1216,48 @@ def resolve_renderer_fixture_from_summary_path(
         schema_path=schema_path,
         summary_schema_path=summary_schema_path,
         require_data_contract_index=require_data_contract_index,
+        require_renderer_artifacts=False,
     )
     resolution = renderer_fixture_resolution_from_report(report, summary_path=summary_path)
     validate_renderer_fixture_resolution_schema(resolution, schema_path=resolution_schema_path)
     validate_renderer_fixture_resolution(resolution)
     return resolution
+
+
+def export_handoff_summary_from_current_fixtures(summary_path: Path) -> dict[str, Any]:
+    """Refresh fixture-derived fields in the backend UX handoff summary.
+
+    Renderer resolution, bundle, values, and index artifacts can be stale while
+    fresh Arena/Tau/Judge receipts are being normalized. This exporter updates
+    only fields whose source of truth is the selected normalized fixture JSON,
+    then validates the summary without requiring dependent renderer artifacts.
+    """
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"summary is not valid JSON: {summary_path}: {exc}") from exc
+
+    for fixture_key in HANDOFF_SUMMARY_FIXTURE_KEYS:
+        fixture_summary = summary.get(fixture_key)
+        if not isinstance(fixture_summary, dict):
+            raise ContractError(f"summary.{fixture_key} must be an object")
+        fixture_path_value = fixture_summary.get("normalized_json")
+        if not isinstance(fixture_path_value, str) or not fixture_path_value:
+            raise ContractError(f"summary.{fixture_key}.normalized_json must be a path string")
+        fixture_path = Path(fixture_path_value)
+        if not fixture_path.exists():
+            raise ContractError(f"summary.{fixture_key}.normalized_json does not exist: {fixture_path}")
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        validate_fixture(fixture)
+        validate_fixture_schema(fixture)
+        summary[fixture_key] = _refresh_fixture_summary(fixture_summary, fixture=fixture)
+
+    validate_handoff_summary(
+        summary,
+        require_data_contract_index=False,
+        require_renderer_artifacts=False,
+    )
+    return summary
 
 
 def renderer_fixture_resolution_from_report(report: dict[str, Any], *, summary_path: Path | str) -> dict[str, Any]:

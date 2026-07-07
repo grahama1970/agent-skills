@@ -1,6 +1,7 @@
 import type { BattleEvent, Lane, LaneEvent } from "./battle-types";
 import type { MockupLiveEvent } from "./mockup-design-fixture";
 import { isIconEvent } from "./layout-lane-events";
+import { hungerGamesNotification } from "./battle-hunger-games-notifications";
 
 type EventBand = "top" | "bottom" | "above" | "icon";
 
@@ -62,10 +63,23 @@ export function liveEventsFromBattleEvents(events: BattleEvent[], limit = 3): Mo
 		.slice(-limit)
 		.reverse()
 		.map((event) => {
+			const ticker =
+				event.ui.notification_prefix && event.ui.notification_highlight
+					? {
+							prefix: event.ui.notification_prefix,
+							highlight: event.ui.notification_highlight,
+							highlightTone: event.ui.notification_highlight_tone ?? "green",
+						}
+					: event.event_type === "replay.killed"
+						? hungerGamesNotification("killed", { id: event.actor_id, name: event.actor_id, payloadId: event.actor_id, generation: 1, team: "red", xStart: 0, xEnd: 0, runnerX: 0, runnerState: "advance", lineColor: "red", terminal: "killed", events: [] })
+					: event.event_type === "replay.blocked" || event.event_type === "blue.blocked_red"
+						? hungerGamesNotification("blocked", { id: event.red_lane_id ?? event.actor_id, name: event.red_lane_id ?? event.actor_id, payloadId: event.red_lane_id ?? event.actor_id, generation: 1, team: "red", xStart: 0, xEnd: 0, runnerX: 0, runnerState: "advance", lineColor: "red", terminal: "blocked", events: [] })
+					: null;
 			const summary = event.ui.notification ?? event.summary;
 			const highlightMatch = summary.match(/\b([A-Z][A-Z0-9_ ]{3,})\b/);
-			const highlight = highlightMatch?.[1] ?? summary.split(" ").slice(-2).join(" ").toUpperCase();
-			const prefix = highlightMatch ? summary.slice(0, summary.indexOf(highlightMatch[0])) : `${summary.slice(0, 24)} `;
+			const highlight = ticker?.highlight ?? highlightMatch?.[1] ?? summary.split(" ").slice(-2).join(" ").toUpperCase();
+			const prefix = ticker?.prefix ?? (highlightMatch ? summary.slice(0, summary.indexOf(highlightMatch[0])) : `${summary.slice(0, 24)} `);
+			const highlightTone = ticker?.highlightTone ?? (liveEventTone(event) === "blue" ? "blue" : "green");
 			return {
 				id: event.id,
 				time: new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
@@ -73,7 +87,7 @@ export function liveEventsFromBattleEvents(events: BattleEvent[], limit = 3): Mo
 				iconTone: liveEventTone(event),
 				prefix,
 				highlight,
-				highlightTone: liveEventTone(event) === "blue" ? "blue" : "green",
+				highlightTone,
 			} satisfies MockupLiveEvent;
 		});
 }

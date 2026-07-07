@@ -25,14 +25,16 @@
       ]
     },
     "battle_clock": {
-      "allotted_seconds": 240.0,
-      "elapsed_seconds": 86.977656,
+      "allotted_seconds": 1200.0,
+      "current_seconds": 76.414883,
+      "elapsed_seconds": 76.414883,
       "ended_at": null,
       "mode": "receipt_elapsed",
       "proof_mode": "receipt_backed_fixture",
-      "remaining_seconds": 153.022344,
+      "remaining_seconds": 1123.585117,
+      "schema": "battle.clock.legacy_receipt_elapsed.v1",
       "source_receipt_id": "scoreboard",
-      "started_at": "2026-07-05T16:33:54Z"
+      "started_at": "2026-07-07T22:06:06Z"
     },
     "collapsible_lineage_groups": {
       "group_count": 1,
@@ -63,7 +65,6 @@
       "mode": "spawn_red_child_after_blue_success",
       "proof_mode": "receipt_backed_fixture",
       "receipt": "lineage-receipts.json",
-      "render_rule": "This explains requested/proven spawn state only. Render child lanes from lineage.spawns[] and lanes[].children[], not from lineage_request alone.",
       "requested": true,
       "schema": "battle.lineage_request.v1",
       "status": "PASS"
@@ -91,12 +92,12 @@
       "state": "receipt_only"
     },
     "scoreboard": {
-      "blue_success_count": 2,
+      "blue_success_count": 4,
       "child_spawn_count": 1,
-      "judged_pair_count": 2,
+      "judged_pair_count": 4,
       "verdict": "BLUE_SUCCESS"
     },
-    "source_proof_dir": "/tmp/battle-004-parent-spawn-live-20260705T163150Z",
+    "source_proof_dir": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z",
     "status": "PASS",
     "timeline": {
       "child_lane_timing": {
@@ -135,28 +136,12 @@
         "xStart": 62
       },
       "event_count": 12,
-      "event_layout_hints": {
-        "fields": [
-          "label_band",
-          "marker_priority",
-          "collision_group"
-        ],
-        "sample": {
-          "collision_group": "x01",
-          "event_id": "payload-857-receipt:arena",
-          "kind": "research",
-          "label_band": "upper",
-          "lane_id": "payload-857-receipt",
-          "marker_priority": 40,
-          "x": 14
-        }
-      },
       "lane_count": 2,
       "mode": "receipt_order",
       "playhead": {
         "animation_semantics": "receipt_replay_only",
         "current_x": 98,
-        "elapsed_seconds": 110.502136,
+        "elapsed_seconds": 76.414883,
         "keyframe_count": 12,
         "keyframe_x_values": [
           14,
@@ -202,10 +187,19 @@
     },
     "battle_clock": {
       "allotted_seconds": 120.0,
+      "current_seconds": 317.402596,
       "elapsed_seconds": 317.402596,
+      "ended_at": null,
       "mode": "receipt_elapsed",
+      "proof_mode": "receipt_backed_fixture",
       "remaining_seconds": 0.0,
-      "source_receipt_id": "scoreboard"
+      "schema": "battle.clock.legacy_receipt_elapsed.v1",
+      "source_receipt_id": "scoreboard",
+      "started_at": "2026-07-04T21:24:54Z"
+    },
+    "collapsible_lineage_groups": {
+      "group_count": 0,
+      "groups": []
     },
     "lineage": {
       "child_lane_ids": [],
@@ -214,10 +208,12 @@
       "spawn_count": 0
     },
     "lineage_request": {
+      "condition": "Child lineage was not requested for this proof rung.",
       "mode": "not_requested",
+      "proof_mode": "receipt_backed_fixture",
       "receipt": null,
-      "render_rule": "Do not render child lanes or parent collapse affordances from sparse proof without lineage.spawns[].",
       "requested": false,
+      "schema": "battle.lineage_request.v1",
       "status": "NOT_REQUESTED"
     },
     "live_source": "brave_search_docker_arena_oracle_tau_harness",

@@ -5,9 +5,9 @@ export const generatedBattleFixture = {
   "schema": "battle.normalized_ux_fixture.v1",
   "battle_id": "battle-004",
   "mode": "receipt_replay",
-  "source_proof_dir": "/tmp/battle-004-parent-spawn-20260706T134722Z",
+  "source_proof_dir": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z",
   "proof_mode": "receipt_backed_fixture",
-  "generated_at": "2026-07-06T13:49:53Z",
+  "generated_at": "2026-07-07T22:06:06Z",
   "mocked": false,
   "live_source": "brave_search_docker_arena_oracle_tau_harness",
   "status": "PASS",
@@ -33,13 +33,13 @@ export const generatedBattleFixture = {
     "schema": "battle.clock.v1",
     "mode": "receipt_replay",
     "source": "receipt_timestamps",
-    "started_at": "2026-07-06T13:49:53Z",
+    "started_at": "2026-07-07T22:06:06Z",
     "server_now": null,
     "ended_at": null,
     "allotted_seconds": 1200.0,
-    "elapsed_seconds": 110.502136,
-    "remaining_seconds": 1089.497864,
-    "current_seconds": 110.502136,
+    "elapsed_seconds": 76.414883,
+    "remaining_seconds": 1123.585117,
+    "current_seconds": 76.414883,
     "source_receipt_id": "scoreboard",
     "proof_mode": "receipt_backed_fixture",
     "round_config": {
@@ -51,12 +51,12 @@ export const generatedBattleFixture = {
   "battle_clock": {
     "schema": "battle.clock.legacy_receipt_elapsed.v1",
     "mode": "receipt_elapsed",
-    "started_at": "2026-07-06T13:49:53Z",
+    "started_at": "2026-07-07T22:06:06Z",
     "ended_at": null,
-    "elapsed_seconds": 110.502136,
+    "elapsed_seconds": 76.414883,
     "allotted_seconds": 1200.0,
-    "remaining_seconds": 1089.497864,
-    "current_seconds": 110.502136,
+    "remaining_seconds": 1123.585117,
+    "current_seconds": 76.414883,
     "source_receipt_id": "scoreboard",
     "proof_mode": "receipt_backed_fixture"
   },
@@ -72,14 +72,14 @@ export const generatedBattleFixture = {
     "playhead": {
       "mode": "receipt_elapsed",
       "current_x": 98,
-      "elapsed_seconds": 110.502136,
+      "elapsed_seconds": 76.414883,
       "source_receipt_id": "scoreboard",
       "can_animate": true,
       "animation_semantics": "receipt_replay_only",
       "keyframes": [
         {
           "x": 14,
-          "elapsed_seconds": 2.324156,
+          "elapsed_seconds": 2.119725,
           "timing_source": "tau_manifest",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:arena",
@@ -89,7 +89,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 33,
-          "elapsed_seconds": 114.671919,
+          "elapsed_seconds": 81.499052,
           "timing_source": "tau_manifest",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:red",
@@ -99,7 +99,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 50,
-          "elapsed_seconds": 114.671919,
+          "elapsed_seconds": 81.499052,
           "timing_source": "tau_manifest",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:useful",
@@ -109,7 +109,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 58,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "timing_source": "lineage_spawn_receipt",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:spawn:payload-857-red-1",
@@ -119,7 +119,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 62,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "timing_source": "lineage_spawn_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
@@ -129,7 +129,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 66,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "timing_source": "lineage_spawn_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:arena",
@@ -139,7 +139,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 67,
-          "elapsed_seconds": 146.687555,
+          "elapsed_seconds": 96.294927,
           "timing_source": "judge_attempt_receipt",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:blue",
@@ -149,7 +149,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 76,
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 96.294338,
           "timing_source": "lineage_spawn_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:red",
@@ -159,7 +159,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 82,
-          "elapsed_seconds": 147.740205,
+          "elapsed_seconds": 97.354126,
           "timing_source": "judge_attempt_receipt",
           "lane_id": "payload-857-receipt",
           "event_id": "payload-857-receipt:judge",
@@ -169,7 +169,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 86,
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 96.294338,
           "timing_source": "lineage_spawn_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:useful",
@@ -179,7 +179,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 96,
-          "elapsed_seconds": 148.780876,
+          "elapsed_seconds": 98.39211,
           "timing_source": "judge_attempt_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:blue",
@@ -189,7 +189,7 @@ export const generatedBattleFixture = {
         },
         {
           "x": 98,
-          "elapsed_seconds": 149.77601,
+          "elapsed_seconds": 99.392622,
           "timing_source": "judge_attempt_receipt",
           "lane_id": "payload-857-red-1",
           "event_id": "payload-857-red-1:judge",
@@ -217,12 +217,12 @@ export const generatedBattleFixture = {
       "allotted_seconds": 1200.0
     },
     "playhead": {
-      "current_seconds": 149.77601,
-      "current_pct": 12.481334,
+      "current_seconds": 99.392622,
+      "current_pct": 8.282718,
       "can_animate": true,
       "source": "timeline_elapsed_axis_model.playhead.current_elapsed_seconds",
       "proof_mode": "receipt_backed_fixture",
-      "legacy_clock_current_seconds": 110.502136,
+      "legacy_clock_current_seconds": 76.414883,
       "semantics": "receipt_elapsed_axis_playhead"
     },
     "viewport_defaults": {
@@ -372,7 +372,7 @@ export const generatedBattleFixture = {
     "event_count": 12,
     "events": [
       {
-        "source_time_seconds": 2.324156,
+        "source_time_seconds": 2.119725,
         "phase": "research",
         "importance": "background",
         "lineage_pressure": 0.45,
@@ -386,7 +386,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 114.671919,
+        "source_time_seconds": 81.499052,
         "phase": "red_exploit_pressure",
         "importance": "visible",
         "lineage_pressure": 0.45,
@@ -400,7 +400,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 114.671919,
+        "source_time_seconds": 81.499052,
         "phase": "red_exploit_pressure",
         "importance": "visible",
         "lineage_pressure": 0.45,
@@ -414,7 +414,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 116.973449,
+        "source_time_seconds": 83.585509,
         "phase": "lineage_spawn_pressure",
         "importance": "major",
         "lineage_pressure": 0.45,
@@ -428,7 +428,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 116.973449,
+        "source_time_seconds": 83.585509,
         "phase": "research",
         "importance": "background",
         "lineage_pressure": 0.65,
@@ -442,7 +442,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-red-1"
       },
       {
-        "source_time_seconds": 116.973449,
+        "source_time_seconds": 83.585509,
         "phase": "lineage_spawn_pressure",
         "importance": "major",
         "lineage_pressure": 0.65,
@@ -456,7 +456,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-red-1"
       },
       {
-        "source_time_seconds": 146.686852,
+        "source_time_seconds": 96.294338,
         "phase": "red_exploit_pressure",
         "importance": "visible",
         "lineage_pressure": 0.65,
@@ -470,7 +470,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-red-1"
       },
       {
-        "source_time_seconds": 146.686852,
+        "source_time_seconds": 96.294338,
         "phase": "red_exploit_pressure",
         "importance": "visible",
         "lineage_pressure": 0.65,
@@ -484,7 +484,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-red-1"
       },
       {
-        "source_time_seconds": 146.687555,
+        "source_time_seconds": 96.294927,
         "phase": "blue_defense_intervention",
         "importance": "visible",
         "lineage_pressure": 0.45,
@@ -498,7 +498,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 147.740205,
+        "source_time_seconds": 97.354126,
         "phase": "judge_block_verdict",
         "importance": "major",
         "lineage_pressure": 0.45,
@@ -512,7 +512,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-receipt"
       },
       {
-        "source_time_seconds": 148.780876,
+        "source_time_seconds": 98.39211,
         "phase": "blue_defense_intervention",
         "importance": "visible",
         "lineage_pressure": 0.65,
@@ -526,7 +526,7 @@ export const generatedBattleFixture = {
         "lane_id": "payload-857-red-1"
       },
       {
-        "source_time_seconds": 149.77601,
+        "source_time_seconds": 99.392622,
         "phase": "judge_block_verdict",
         "importance": "major",
         "lineage_pressure": 0.65,
@@ -549,8 +549,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "materialize",
       "label": "spawn / materialize",
-      "start_seconds": 2.324156,
-      "end_seconds": 2.324156,
+      "start_seconds": 2.119725,
+      "end_seconds": 2.119725,
       "start_x": 7,
       "end_x": 14,
       "source_event_id": null,
@@ -563,8 +563,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "research",
       "label": "research",
-      "start_seconds": 2.324156,
-      "end_seconds": 114.671919,
+      "start_seconds": 2.119725,
+      "end_seconds": 81.499052,
       "start_x": 14,
       "end_x": 33,
       "source_event_id": "payload-857-receipt:arena",
@@ -577,8 +577,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "payload",
       "label": "payload",
-      "start_seconds": 114.671919,
-      "end_seconds": 114.671919,
+      "start_seconds": 81.499052,
+      "end_seconds": 81.499052,
       "start_x": 33,
       "end_x": 50,
       "source_event_id": "payload-857-receipt:red",
@@ -591,8 +591,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "useful_signal",
       "label": "useful signal",
-      "start_seconds": 114.671919,
-      "end_seconds": 116.973449,
+      "start_seconds": 81.499052,
+      "end_seconds": 83.585509,
       "start_x": 50,
       "end_x": 58,
       "source_event_id": "payload-857-receipt:useful",
@@ -605,8 +605,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "handoff",
       "label": "handoff / child spawn",
-      "start_seconds": 116.973449,
-      "end_seconds": 146.687555,
+      "start_seconds": 83.585509,
+      "end_seconds": 96.294927,
       "start_x": 58,
       "end_x": 67,
       "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
@@ -619,8 +619,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "patch_gate",
       "label": "Blue patch gate",
-      "start_seconds": 146.687555,
-      "end_seconds": 147.740205,
+      "start_seconds": 96.294927,
+      "end_seconds": 97.354126,
       "start_x": 67,
       "end_x": 82,
       "source_event_id": "payload-857-receipt:blue",
@@ -633,8 +633,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-receipt",
       "kind": "judge_replay",
       "label": "Judge replay",
-      "start_seconds": 147.740205,
-      "end_seconds": 147.740205,
+      "start_seconds": 97.354126,
+      "end_seconds": 97.354126,
       "start_x": 82,
       "end_x": 84,
       "source_event_id": "payload-857-receipt:judge",
@@ -647,8 +647,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-red-1",
       "kind": "handoff",
       "label": "handoff / child spawn",
-      "start_seconds": 116.973449,
-      "end_seconds": 116.973449,
+      "start_seconds": 83.585509,
+      "end_seconds": 83.585509,
       "start_x": 62,
       "end_x": 66,
       "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
@@ -661,8 +661,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-red-1",
       "kind": "research",
       "label": "research",
-      "start_seconds": 116.973449,
-      "end_seconds": 146.686852,
+      "start_seconds": 83.585509,
+      "end_seconds": 96.294338,
       "start_x": 66,
       "end_x": 76,
       "source_event_id": "payload-857-red-1:arena",
@@ -675,8 +675,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-red-1",
       "kind": "payload",
       "label": "payload",
-      "start_seconds": 146.686852,
-      "end_seconds": 146.686852,
+      "start_seconds": 96.294338,
+      "end_seconds": 96.294338,
       "start_x": 76,
       "end_x": 86,
       "source_event_id": "payload-857-red-1:red",
@@ -689,8 +689,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-red-1",
       "kind": "useful_signal",
       "label": "useful signal",
-      "start_seconds": 146.686852,
-      "end_seconds": 148.780876,
+      "start_seconds": 96.294338,
+      "end_seconds": 98.39211,
       "start_x": 86,
       "end_x": 96,
       "source_event_id": "payload-857-red-1:useful",
@@ -703,8 +703,8 @@ export const generatedBattleFixture = {
       "lane_id": "payload-857-red-1",
       "kind": "patch_gate",
       "label": "Blue patch gate",
-      "start_seconds": 148.780876,
-      "end_seconds": 149.77601,
+      "start_seconds": 98.39211,
+      "end_seconds": 99.392622,
       "start_x": 96,
       "end_x": 98,
       "source_event_id": "payload-857-red-1:blue",
@@ -801,11 +801,11 @@ export const generatedBattleFixture = {
         ],
         "spawn_x": 58,
         "child_x_start": 62,
-        "spawn_elapsed_seconds": 116.973449,
-        "child_start_elapsed_seconds": 146.686852,
-        "spawn_duration_elapsed_seconds": 29.713403,
-        "visible_from_elapsed_seconds": 116.973449,
-        "first_active_segment_elapsed_seconds": 146.686852,
+        "spawn_elapsed_seconds": 83.585509,
+        "child_start_elapsed_seconds": 96.294338,
+        "spawn_duration_elapsed_seconds": 12.708829,
+        "visible_from_elapsed_seconds": 83.585509,
+        "first_active_segment_elapsed_seconds": 96.294338,
         "timing_source": "battle_control_plane_perf_counter",
         "label": "SPAWN CHILD",
         "time_label": "handoff",
@@ -848,7 +848,7 @@ export const generatedBattleFixture = {
       },
       {
         "label": "Round time",
-        "value": "01:50 / 20:00"
+        "value": "01:16 / 20:00"
       }
     ],
     "score": {
@@ -1081,7 +1081,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "arena-receipt",
           "order_index": 14,
-          "elapsed_seconds": 2.324156,
+          "elapsed_seconds": 2.119725,
           "label_band": "upper",
           "marker_priority": 40,
           "collision_group": "x01",
@@ -1097,7 +1097,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "red-tau-subagent-receipt",
           "order_index": 33,
-          "elapsed_seconds": 114.671919,
+          "elapsed_seconds": 81.499052,
           "label_band": "lower",
           "marker_priority": 50,
           "collision_group": "x03",
@@ -1113,7 +1113,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "red-tau-subagent-receipt",
           "order_index": 50,
-          "elapsed_seconds": 114.671919,
+          "elapsed_seconds": 81.499052,
           "label_band": "upper",
           "marker_priority": 90,
           "collision_group": "x05",
@@ -1130,7 +1130,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
           "order_index": 58,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "label_band": "lower",
           "marker_priority": 85,
           "collision_group": "x05",
@@ -1147,7 +1147,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "blue-tau-subagent-receipt",
           "order_index": 67,
-          "elapsed_seconds": 146.687555,
+          "elapsed_seconds": 96.294927,
           "label_band": "upper",
           "marker_priority": 80,
           "collision_group": "x06",
@@ -1165,7 +1165,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "judge-receipt",
           "order_index": 82,
-          "elapsed_seconds": 147.740205,
+          "elapsed_seconds": 97.354126,
           "label_band": "lower",
           "marker_priority": 70,
           "collision_group": "x08",
@@ -1239,8 +1239,8 @@ export const generatedBattleFixture = {
           "actor_id": "payload-857-receipt",
           "payload_id": "payload-857",
           "tau_subagent_id": "red-0",
-          "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-          "tau_turn_id": "arena-parent-spawn-20260706T134722Z:red-0:red",
+          "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+          "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-0:red",
           "worker_id": "red-0",
           "generation": 1,
           "missing_tau_id": false
@@ -1360,9 +1360,9 @@ export const generatedBattleFixture = {
       "expandedByDefault": true,
       "expanded": true,
       "summary": "1 child lane(s) receipt-backed",
-      "start_elapsed_seconds": 2.324156,
-      "end_elapsed_seconds": 147.740205,
-      "duration_elapsed_seconds": 145.416049,
+      "start_elapsed_seconds": 2.119725,
+      "end_elapsed_seconds": 97.354126,
+      "duration_elapsed_seconds": 95.234401,
       "activitySegments": [
         {
           "id": "payload-857-receipt:segment:01",
@@ -1370,8 +1370,8 @@ export const generatedBattleFixture = {
           "label": "spawn / materialize",
           "start_x": 7,
           "end_x": 14,
-          "start_elapsed_seconds": 2.324156,
-          "end_elapsed_seconds": 2.324156,
+          "start_elapsed_seconds": 2.119725,
+          "end_elapsed_seconds": 2.119725,
           "source_event_id": null,
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1381,8 +1381,8 @@ export const generatedBattleFixture = {
           "label": "research",
           "start_x": 14,
           "end_x": 33,
-          "start_elapsed_seconds": 2.324156,
-          "end_elapsed_seconds": 114.671919,
+          "start_elapsed_seconds": 2.119725,
+          "end_elapsed_seconds": 81.499052,
           "source_event_id": "payload-857-receipt:arena",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1392,8 +1392,8 @@ export const generatedBattleFixture = {
           "label": "payload",
           "start_x": 33,
           "end_x": 50,
-          "start_elapsed_seconds": 114.671919,
-          "end_elapsed_seconds": 114.671919,
+          "start_elapsed_seconds": 81.499052,
+          "end_elapsed_seconds": 81.499052,
           "source_event_id": "payload-857-receipt:red",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1403,8 +1403,8 @@ export const generatedBattleFixture = {
           "label": "useful signal",
           "start_x": 50,
           "end_x": 58,
-          "start_elapsed_seconds": 114.671919,
-          "end_elapsed_seconds": 116.973449,
+          "start_elapsed_seconds": 81.499052,
+          "end_elapsed_seconds": 83.585509,
           "source_event_id": "payload-857-receipt:useful",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1414,8 +1414,8 @@ export const generatedBattleFixture = {
           "label": "handoff / child spawn",
           "start_x": 58,
           "end_x": 67,
-          "start_elapsed_seconds": 116.973449,
-          "end_elapsed_seconds": 146.687555,
+          "start_elapsed_seconds": 83.585509,
+          "end_elapsed_seconds": 96.294927,
           "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1425,8 +1425,8 @@ export const generatedBattleFixture = {
           "label": "Blue patch gate",
           "start_x": 67,
           "end_x": 82,
-          "start_elapsed_seconds": 146.687555,
-          "end_elapsed_seconds": 147.740205,
+          "start_elapsed_seconds": 96.294927,
+          "end_elapsed_seconds": 97.354126,
           "source_event_id": "payload-857-receipt:blue",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1436,8 +1436,8 @@ export const generatedBattleFixture = {
           "label": "Judge replay",
           "start_x": 82,
           "end_x": 84,
-          "start_elapsed_seconds": 147.740205,
-          "end_elapsed_seconds": 147.740205,
+          "start_elapsed_seconds": 97.354126,
+          "end_elapsed_seconds": 97.354126,
           "source_event_id": "payload-857-receipt:judge",
           "proof_mode": "receipt_backed_fixture"
         }
@@ -1452,7 +1452,7 @@ export const generatedBattleFixture = {
         "reproducibility": 0.84,
         "lineage_pressure": 0.45,
         "score_weight": 0.774,
-        "tier": "standard_exploit",
+        "tier": "heavy_durable",
         "evidence_source": "receipt_events_and_lineage",
         "proof_scope": {
           "receipt_backed_inputs": true,
@@ -1503,7 +1503,7 @@ export const generatedBattleFixture = {
         ],
         "events": [
           {
-            "source_time_seconds": 2.324156,
+            "source_time_seconds": 2.119725,
             "phase": "research",
             "importance": "background",
             "lineage_pressure": 0.45,
@@ -1516,7 +1516,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 114.671919,
+            "source_time_seconds": 81.499052,
             "phase": "red_exploit_pressure",
             "importance": "visible",
             "lineage_pressure": 0.45,
@@ -1529,7 +1529,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 114.671919,
+            "source_time_seconds": 81.499052,
             "phase": "red_exploit_pressure",
             "importance": "visible",
             "lineage_pressure": 0.45,
@@ -1542,7 +1542,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 116.973449,
+            "source_time_seconds": 83.585509,
             "phase": "lineage_spawn_pressure",
             "importance": "major",
             "lineage_pressure": 0.45,
@@ -1555,7 +1555,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 146.687555,
+            "source_time_seconds": 96.294927,
             "phase": "blue_defense_intervention",
             "importance": "visible",
             "lineage_pressure": 0.45,
@@ -1568,7 +1568,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 147.740205,
+            "source_time_seconds": 97.354126,
             "phase": "judge_block_verdict",
             "importance": "major",
             "lineage_pressure": 0.45,
@@ -1599,7 +1599,7 @@ export const generatedBattleFixture = {
         "state_source": "canonical_events",
         "state_timeline": [
           {
-            "at_seconds": 2.324156,
+            "at_seconds": 2.119725,
             "state": "research",
             "source_event_id": "payload-857-receipt:arena",
             "source_receipt_id": "arena-receipt",
@@ -1607,7 +1607,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 114.671919,
+            "at_seconds": 81.499052,
             "state": "payload",
             "source_event_id": "payload-857-receipt:red",
             "source_receipt_id": "red-tau-subagent-receipt",
@@ -1615,7 +1615,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 114.671919,
+            "at_seconds": 81.499052,
             "state": "payload",
             "source_event_id": "payload-857-receipt:useful",
             "source_receipt_id": "red-tau-subagent-receipt",
@@ -1623,7 +1623,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 116.973449,
+            "at_seconds": 83.585509,
             "state": "handoff",
             "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
             "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
@@ -1631,7 +1631,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 146.687555,
+            "at_seconds": 96.294927,
             "state": "blocked",
             "source_event_id": "payload-857-receipt:blue",
             "source_receipt_id": "blue-tau-subagent-receipt",
@@ -1639,7 +1639,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 147.740205,
+            "at_seconds": 97.354126,
             "state": "blocked",
             "source_event_id": "payload-857-receipt:judge",
             "source_receipt_id": "judge-receipt",
@@ -1680,7 +1680,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
           "order_index": 62,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "label_band": "lower",
           "marker_priority": 85,
           "collision_group": "x06",
@@ -1697,7 +1697,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "arena-receipt",
           "order_index": 66,
-          "elapsed_seconds": 116.973449,
+          "elapsed_seconds": 83.585509,
           "label_band": "upper",
           "marker_priority": 40,
           "collision_group": "x06",
@@ -1713,7 +1713,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "red-1-tau-subagent-receipt",
           "order_index": 76,
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 96.294338,
           "label_band": "lower",
           "marker_priority": 50,
           "collision_group": "x07",
@@ -1729,7 +1729,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "red-1-tau-subagent-receipt",
           "order_index": 86,
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 96.294338,
           "label_band": "upper",
           "marker_priority": 90,
           "collision_group": "x08",
@@ -1746,7 +1746,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "blue-tau-subagent-receipt",
           "order_index": 96,
-          "elapsed_seconds": 148.780876,
+          "elapsed_seconds": 98.39211,
           "label_band": "upper",
           "marker_priority": 80,
           "collision_group": "x09",
@@ -1764,7 +1764,7 @@ export const generatedBattleFixture = {
           "proofMode": "receipt_backed_fixture",
           "receiptId": "judge-receipt",
           "order_index": 98,
-          "elapsed_seconds": 149.77601,
+          "elapsed_seconds": 99.392622,
           "label_band": "lower",
           "marker_priority": 70,
           "collision_group": "x09",
@@ -1841,8 +1841,8 @@ export const generatedBattleFixture = {
           "actor_id": "payload-857-red-1",
           "payload_id": "payload-857-red-1",
           "tau_subagent_id": "red-1",
-          "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-          "tau_turn_id": "arena-parent-spawn-20260706T134722Z:red-1:red",
+          "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+          "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
           "worker_id": "red-1",
           "generation": 2,
           "missing_tau_id": false,
@@ -1961,11 +1961,11 @@ export const generatedBattleFixture = {
       "lineageGroupId": "lineage:payload-857-receipt",
       "collapsible": false,
       "expandedByDefault": true,
-      "start_elapsed_seconds": 116.973449,
-      "visible_from_elapsed_seconds": 116.973449,
-      "first_active_segment_elapsed_seconds": 146.686852,
-      "end_elapsed_seconds": 149.77601,
-      "duration_elapsed_seconds": 32.802561,
+      "start_elapsed_seconds": 83.585509,
+      "visible_from_elapsed_seconds": 83.585509,
+      "first_active_segment_elapsed_seconds": 96.294338,
+      "end_elapsed_seconds": 99.392622,
+      "duration_elapsed_seconds": 15.807113,
       "activitySegments": [
         {
           "id": "payload-857-red-1:segment:02",
@@ -1973,8 +1973,8 @@ export const generatedBattleFixture = {
           "label": "handoff / child spawn",
           "start_x": 62,
           "end_x": 66,
-          "start_elapsed_seconds": 116.973449,
-          "end_elapsed_seconds": 116.973449,
+          "start_elapsed_seconds": 83.585509,
+          "end_elapsed_seconds": 83.585509,
           "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1984,8 +1984,8 @@ export const generatedBattleFixture = {
           "label": "research",
           "start_x": 66,
           "end_x": 76,
-          "start_elapsed_seconds": 116.973449,
-          "end_elapsed_seconds": 146.686852,
+          "start_elapsed_seconds": 83.585509,
+          "end_elapsed_seconds": 96.294338,
           "source_event_id": "payload-857-red-1:arena",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -1995,8 +1995,8 @@ export const generatedBattleFixture = {
           "label": "payload",
           "start_x": 76,
           "end_x": 86,
-          "start_elapsed_seconds": 146.686852,
-          "end_elapsed_seconds": 146.686852,
+          "start_elapsed_seconds": 96.294338,
+          "end_elapsed_seconds": 96.294338,
           "source_event_id": "payload-857-red-1:red",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -2006,8 +2006,8 @@ export const generatedBattleFixture = {
           "label": "useful signal",
           "start_x": 86,
           "end_x": 96,
-          "start_elapsed_seconds": 146.686852,
-          "end_elapsed_seconds": 148.780876,
+          "start_elapsed_seconds": 96.294338,
+          "end_elapsed_seconds": 98.39211,
           "source_event_id": "payload-857-red-1:useful",
           "proof_mode": "receipt_backed_fixture"
         },
@@ -2017,8 +2017,8 @@ export const generatedBattleFixture = {
           "label": "Blue patch gate",
           "start_x": 96,
           "end_x": 98,
-          "start_elapsed_seconds": 148.780876,
-          "end_elapsed_seconds": 149.77601,
+          "start_elapsed_seconds": 98.39211,
+          "end_elapsed_seconds": 99.392622,
           "source_event_id": "payload-857-red-1:blue",
           "proof_mode": "receipt_backed_fixture"
         }
@@ -2084,7 +2084,7 @@ export const generatedBattleFixture = {
         ],
         "events": [
           {
-            "source_time_seconds": 116.973449,
+            "source_time_seconds": 83.585509,
             "phase": "lineage_spawn_pressure",
             "importance": "major",
             "lineage_pressure": 0.65,
@@ -2097,7 +2097,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 116.973449,
+            "source_time_seconds": 83.585509,
             "phase": "research",
             "importance": "background",
             "lineage_pressure": 0.65,
@@ -2110,7 +2110,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 146.686852,
+            "source_time_seconds": 96.294338,
             "phase": "red_exploit_pressure",
             "importance": "visible",
             "lineage_pressure": 0.65,
@@ -2123,7 +2123,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 146.686852,
+            "source_time_seconds": 96.294338,
             "phase": "red_exploit_pressure",
             "importance": "visible",
             "lineage_pressure": 0.65,
@@ -2136,7 +2136,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 148.780876,
+            "source_time_seconds": 98.39211,
             "phase": "blue_defense_intervention",
             "importance": "visible",
             "lineage_pressure": 0.65,
@@ -2149,7 +2149,7 @@ export const generatedBattleFixture = {
             "proof_mode": "receipt_backed_fixture"
           },
           {
-            "source_time_seconds": 149.77601,
+            "source_time_seconds": 99.392622,
             "phase": "judge_block_verdict",
             "importance": "major",
             "lineage_pressure": 0.65,
@@ -2180,7 +2180,7 @@ export const generatedBattleFixture = {
         "state_source": "canonical_events",
         "state_timeline": [
           {
-            "at_seconds": 116.973449,
+            "at_seconds": 83.585509,
             "state": "spawn",
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
             "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
@@ -2188,7 +2188,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 116.973449,
+            "at_seconds": 83.585509,
             "state": "research",
             "source_event_id": "payload-857-red-1:arena",
             "source_receipt_id": "arena-receipt",
@@ -2196,7 +2196,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 146.686852,
+            "at_seconds": 96.294338,
             "state": "payload",
             "source_event_id": "payload-857-red-1:red",
             "source_receipt_id": "red-1-tau-subagent-receipt",
@@ -2204,7 +2204,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 146.686852,
+            "at_seconds": 96.294338,
             "state": "payload",
             "source_event_id": "payload-857-red-1:useful",
             "source_receipt_id": "red-1-tau-subagent-receipt",
@@ -2212,7 +2212,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 148.780876,
+            "at_seconds": 98.39211,
             "state": "blocked",
             "source_event_id": "payload-857-red-1:blue",
             "source_receipt_id": "blue-tau-subagent-receipt",
@@ -2220,7 +2220,7 @@ export const generatedBattleFixture = {
             "provisional": false
           },
           {
-            "at_seconds": 149.77601,
+            "at_seconds": 99.392622,
             "state": "blocked",
             "source_event_id": "payload-857-red-1:judge",
             "source_receipt_id": "judge-receipt",
@@ -2240,7 +2240,7 @@ export const generatedBattleFixture = {
   "events": [
     {
       "id": "battle-004-run-started",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "system",
       "actor_id": "battle-orchestrator",
@@ -2273,7 +2273,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "battle-004-scenario-loaded",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "system",
       "actor_id": "battle-arena",
@@ -2312,7 +2312,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-0-red-exploit",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "red",
       "actor_id": "payload-857-receipt",
@@ -2321,8 +2321,8 @@ export const generatedBattleFixture = {
       "summary": "Red worker red-0 materialized exploit artifact.",
       "proof_mode": "receipt_backed_fixture",
       "payload_id": "payload-857",
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-      "tau_turn_id": "arena-parent-spawn-20260706T134722Z:red-0:red",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-0:red",
       "turn": {
         "loop_index": 1,
         "phase": "red_exploit",
@@ -2338,7 +2338,7 @@ export const generatedBattleFixture = {
           "name": "scillm.chat_completions",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Red worker proof receipt.",
           "receipt_id": "red-tau-subagent-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2354,8 +2354,8 @@ export const generatedBattleFixture = {
       },
       "evidence": {
         "receipt_id": "red-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
-        "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
+        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture"
       },
       "receipts": [],
@@ -2364,7 +2364,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-1-red-exploit",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "red",
       "actor_id": "payload-857-red-1",
@@ -2373,8 +2373,8 @@ export const generatedBattleFixture = {
       "summary": "Red worker red-1 materialized exploit artifact.",
       "proof_mode": "receipt_backed_fixture",
       "payload_id": "payload-857-red-1",
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-      "tau_turn_id": "arena-parent-spawn-20260706T134722Z:red-1:red",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
       "turn": {
         "loop_index": 1,
         "phase": "red_exploit",
@@ -2390,7 +2390,7 @@ export const generatedBattleFixture = {
           "name": "scillm.chat_completions",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Red worker proof receipt.",
           "receipt_id": "red-1-tau-subagent-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2406,8 +2406,8 @@ export const generatedBattleFixture = {
       },
       "evidence": {
         "receipt_id": "red-1-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
-        "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture"
       },
       "receipts": [],
@@ -2416,7 +2416,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "payload-857-receipt-spawned-payload-857-red-1",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "red",
       "actor_id": "payload-857-receipt",
@@ -2430,8 +2430,8 @@ export const generatedBattleFixture = {
         "payload-857-red-1"
       ],
       "payload_id": "payload-857-red-1",
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-      "tau_turn_id": "arena-parent-spawn-20260706T134722Z:payload-857-red-1:spawn",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:payload-857-red-1:spawn",
       "handoff": {
         "handoff_schema": "tau.agent_handoff.v1",
         "handoff_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
@@ -2484,7 +2484,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "blue-0-blue-patch",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-receipt-backed-patch",
@@ -2496,8 +2496,8 @@ export const generatedBattleFixture = {
         "payload-857-receipt",
         "payload-857-red-1"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-      "tau_turn_id": "arena-parent-spawn-20260706T134722Z:blue-0:blue",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:blue-0:blue",
       "turn": {
         "loop_index": 2,
         "phase": "blue_patch",
@@ -2513,7 +2513,7 @@ export const generatedBattleFixture = {
           "name": "scillm.chat_completions",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Blue worker proof receipt.",
           "receipt_id": "blue-tau-subagent-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2528,8 +2528,8 @@ export const generatedBattleFixture = {
       },
       "evidence": {
         "receipt_id": "blue-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/tau-subagent-receipt.json",
-        "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/tau-subagent-receipt.json",
+        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture"
       },
       "receipts": [],
@@ -2538,7 +2538,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "blue-1-blue-patch",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-blue-1-patch",
@@ -2550,8 +2550,8 @@ export const generatedBattleFixture = {
         "payload-857-receipt",
         "payload-857-red-1"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-      "tau_turn_id": "arena-parent-spawn-20260706T134722Z:blue-1:blue",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:blue-1:blue",
       "turn": {
         "loop_index": 2,
         "phase": "blue_patch",
@@ -2567,7 +2567,7 @@ export const generatedBattleFixture = {
           "name": "scillm.chat_completions",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Blue worker proof receipt.",
           "receipt_id": "blue-1-tau-subagent-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2582,8 +2582,8 @@ export const generatedBattleFixture = {
       },
       "evidence": {
         "receipt_id": "blue-1-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
-        "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture"
       },
       "receipts": [],
@@ -2592,7 +2592,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-0__blue-0-blue-success",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-blue-0-patch",
@@ -2603,7 +2603,7 @@ export const generatedBattleFixture = {
       "target_actor_ids": [
         "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
       "pair_id": "red-0__blue-0",
       "red_worker_id": "red-0",
       "red_lane_id": "payload-857-receipt",
@@ -2648,7 +2648,7 @@ export const generatedBattleFixture = {
           "name": "docker-replay",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Judge replayed exploit after patch and verified functionality.",
           "receipt_id": "judge-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2675,7 +2675,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-0__blue-1-blue-success",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-blue-1-patch",
@@ -2686,7 +2686,7 @@ export const generatedBattleFixture = {
       "target_actor_ids": [
         "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
       "pair_id": "red-0__blue-1",
       "red_worker_id": "red-0",
       "red_lane_id": "payload-857-receipt",
@@ -2731,7 +2731,7 @@ export const generatedBattleFixture = {
           "name": "docker-replay",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Judge replayed exploit after patch and verified functionality.",
           "receipt_id": "judge-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2758,7 +2758,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-1__blue-0-blue-success",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-blue-0-patch",
@@ -2769,7 +2769,7 @@ export const generatedBattleFixture = {
       "target_actor_ids": [
         "payload-857-red-1"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
       "pair_id": "red-1__blue-0",
       "red_worker_id": "red-1",
       "red_lane_id": "payload-857-red-1",
@@ -2814,7 +2814,7 @@ export const generatedBattleFixture = {
           "name": "docker-replay",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Judge replayed exploit after patch and verified functionality.",
           "receipt_id": "judge-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2841,7 +2841,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "red-1__blue-1-blue-success",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "blue",
       "actor_id": "blue-blue-1-patch",
@@ -2852,7 +2852,7 @@ export const generatedBattleFixture = {
       "target_actor_ids": [
         "payload-857-red-1"
       ],
-      "tau_run_id": "arena-parent-spawn-20260706T134722Z",
+      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
       "pair_id": "red-1__blue-1",
       "red_worker_id": "red-1",
       "red_lane_id": "payload-857-red-1",
@@ -2897,7 +2897,7 @@ export const generatedBattleFixture = {
           "name": "docker-replay",
           "kind": "tool",
           "status": "ok",
-          "timestamp": "2026-07-06T13:49:53Z",
+          "timestamp": "2026-07-07T22:06:06Z",
           "summary": "Judge replayed exploit after patch and verified functionality.",
           "receipt_id": "judge-receipt",
           "proof_mode": "receipt_backed_fixture"
@@ -2924,7 +2924,7 @@ export const generatedBattleFixture = {
     },
     {
       "id": "scoreboard-blue-success",
-      "ts": "2026-07-06T13:49:53Z",
+      "ts": "2026-07-07T22:06:06Z",
       "battle_id": "battle-004",
       "team": "judge",
       "actor_id": "battle-scorekeeper",
@@ -3020,32 +3020,32 @@ export const generatedBattleFixture = {
     {
       "receipt_id": "red-tau-subagent-receipt",
       "receipt_type": "tau_subagent",
-      "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
-      "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
       "summary": "Tau Red subagent receipt red-0.",
       "proof_mode": "receipt_backed_fixture"
     },
     {
       "receipt_id": "red-1-tau-subagent-receipt",
       "receipt_type": "tau_subagent",
-      "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
-      "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
       "summary": "Tau Red subagent receipt red-1.",
       "proof_mode": "receipt_backed_fixture"
     },
     {
       "receipt_id": "blue-tau-subagent-receipt",
       "receipt_type": "tau_subagent",
-      "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/tau-subagent-receipt.json",
-      "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
       "summary": "Tau Blue subagent receipt blue-0.",
       "proof_mode": "receipt_backed_fixture"
     },
     {
       "receipt_id": "blue-1-tau-subagent-receipt",
       "receipt_type": "tau_subagent",
-      "receipt_path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
-      "artifact_ref": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
       "summary": "Tau Blue subagent receipt blue-1.",
       "proof_mode": "receipt_backed_fixture"
     },
@@ -3117,9 +3117,9 @@ export const generatedBattleFixture = {
         "exploit_confirmed_before_patch": true,
         "exploit_blocked_after_patch": true,
         "functionality_preserved": true,
-        "started_elapsed_seconds": 146.687555,
-        "ended_elapsed_seconds": 147.740205,
-        "duration_elapsed_seconds": 1.05265,
+        "started_elapsed_seconds": 96.294927,
+        "ended_elapsed_seconds": 97.354126,
+        "duration_elapsed_seconds": 1.059199,
         "timing_source": "battle_control_plane_perf_counter"
       },
       {
@@ -3133,9 +3133,9 @@ export const generatedBattleFixture = {
         "exploit_confirmed_before_patch": true,
         "exploit_blocked_after_patch": true,
         "functionality_preserved": true,
-        "started_elapsed_seconds": 147.740446,
-        "ended_elapsed_seconds": 148.780567,
-        "duration_elapsed_seconds": 1.040121,
+        "started_elapsed_seconds": 97.35431,
+        "ended_elapsed_seconds": 98.391925,
+        "duration_elapsed_seconds": 1.037615,
         "timing_source": "battle_control_plane_perf_counter"
       },
       {
@@ -3149,9 +3149,9 @@ export const generatedBattleFixture = {
         "exploit_confirmed_before_patch": true,
         "exploit_blocked_after_patch": true,
         "functionality_preserved": true,
-        "started_elapsed_seconds": 148.780876,
-        "ended_elapsed_seconds": 149.77601,
-        "duration_elapsed_seconds": 0.995134,
+        "started_elapsed_seconds": 98.39211,
+        "ended_elapsed_seconds": 99.392622,
+        "duration_elapsed_seconds": 1.000512,
         "timing_source": "battle_control_plane_perf_counter"
       },
       {
@@ -3165,9 +3165,9 @@ export const generatedBattleFixture = {
         "exploit_confirmed_before_patch": true,
         "exploit_blocked_after_patch": true,
         "functionality_preserved": true,
-        "started_elapsed_seconds": 149.776164,
-        "ended_elapsed_seconds": 150.812814,
-        "duration_elapsed_seconds": 1.03665,
+        "started_elapsed_seconds": 99.392812,
+        "ended_elapsed_seconds": 100.486355,
+        "duration_elapsed_seconds": 1.093543,
         "timing_source": "battle_control_plane_perf_counter"
       }
     ],
@@ -3179,6 +3179,7 @@ export const generatedBattleFixture = {
       "rules": {
         "pre_spawn_block_blue_multiplier": 12.0,
         "explicit_kill_blue_multiplier": 10.0,
+        "explicit_kill_with_child_blue_multiplier": 5.5,
         "post_spawn_containment_blue_multiplier": 7.0,
         "spawn_pressure_parent_blue_multiplier": 4.0,
         "red_breakthrough_multiplier": 9.0,
@@ -3282,15 +3283,15 @@ export const generatedBattleFixture = {
     "receipt_elapsed_keyframes_are_monotonic_by_x": false,
     "round_clock_source": "battle_clock",
     "round_clock": {
-      "elapsed_seconds": 110.502136,
+      "elapsed_seconds": 76.414883,
       "allotted_seconds": 1200.0,
-      "remaining_seconds": 1089.497864,
+      "remaining_seconds": 1123.585117,
       "source_receipt_id": "scoreboard",
       "proof_mode": "receipt_backed_fixture"
     },
     "playhead": {
       "current_x": 98,
-      "receipt_elapsed_seconds": 110.502136,
+      "receipt_elapsed_seconds": 76.414883,
       "animation_semantics": "receipt_replay_only",
       "source_receipt_id": "scoreboard"
     },
@@ -3308,21 +3309,21 @@ export const generatedBattleFixture = {
     "axis_min_elapsed_seconds": 0,
     "axis_max_elapsed_seconds": 1200.0,
     "axis_source": "timeline.playhead.keyframes[].elapsed_seconds",
-    "round_clock_elapsed_seconds": 110.502136,
+    "round_clock_elapsed_seconds": 76.414883,
     "round_clock_allotted_seconds": 1200.0,
-    "round_clock_remaining_seconds": 1089.497864,
+    "round_clock_remaining_seconds": 1123.585117,
     "keyframe_count": 12,
     "keyframes_are_monotonic": true,
     "playhead": {
-      "current_elapsed_seconds": 149.77601,
-      "current_x": 12.481334,
+      "current_elapsed_seconds": 99.392622,
+      "current_x": 8.282718,
       "source_event_id": "payload-857-red-1:judge",
       "animation_semantics": "receipt_elapsed_replay"
     },
     "keyframes": [
       {
-        "elapsed_seconds": 2.324156,
-        "x": 0.19368,
+        "elapsed_seconds": 2.119725,
+        "x": 0.176644,
         "receipt_order_x": 14,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:arena",
@@ -3332,8 +3333,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 114.671919,
-        "x": 9.555993,
+        "elapsed_seconds": 81.499052,
+        "x": 6.791588,
         "receipt_order_x": 33,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:red",
@@ -3343,8 +3344,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 114.671919,
-        "x": 9.555993,
+        "elapsed_seconds": 81.499052,
+        "x": 6.791588,
         "receipt_order_x": 50,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:useful",
@@ -3354,8 +3355,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 116.973449,
-        "x": 9.747787,
+        "elapsed_seconds": 83.585509,
+        "x": 6.965459,
         "receipt_order_x": 58,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:spawn:payload-857-red-1",
@@ -3365,8 +3366,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 116.973449,
-        "x": 9.747787,
+        "elapsed_seconds": 83.585509,
+        "x": 6.965459,
         "receipt_order_x": 62,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
@@ -3376,8 +3377,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 116.973449,
-        "x": 9.747787,
+        "elapsed_seconds": 83.585509,
+        "x": 6.965459,
         "receipt_order_x": 66,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:arena",
@@ -3387,8 +3388,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 146.686852,
-        "x": 12.223904,
+        "elapsed_seconds": 96.294338,
+        "x": 8.024528,
         "receipt_order_x": 76,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:red",
@@ -3398,8 +3399,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 146.686852,
-        "x": 12.223904,
+        "elapsed_seconds": 96.294338,
+        "x": 8.024528,
         "receipt_order_x": 86,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:useful",
@@ -3409,8 +3410,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 146.687555,
-        "x": 12.223963,
+        "elapsed_seconds": 96.294927,
+        "x": 8.024577,
         "receipt_order_x": 67,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:blue",
@@ -3420,8 +3421,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 147.740205,
-        "x": 12.311684,
+        "elapsed_seconds": 97.354126,
+        "x": 8.112844,
         "receipt_order_x": 82,
         "lane_id": "payload-857-receipt",
         "event_id": "payload-857-receipt:judge",
@@ -3431,8 +3432,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 148.780876,
-        "x": 12.398406,
+        "elapsed_seconds": 98.39211,
+        "x": 8.199343,
         "receipt_order_x": 96,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:blue",
@@ -3442,8 +3443,8 @@ export const generatedBattleFixture = {
         "proof_mode": "receipt_backed_fixture"
       },
       {
-        "elapsed_seconds": 149.77601,
-        "x": 12.481334,
+        "elapsed_seconds": 99.392622,
+        "x": 8.282718,
         "receipt_order_x": 98,
         "lane_id": "payload-857-red-1",
         "event_id": "payload-857-red-1:judge",
@@ -3534,12 +3535,12 @@ export const generatedBattleFixture = {
         "start_kind": "parent_lane_start",
         "start_source": "lane.xStart",
         "line_must_start_at_x": 7,
-        "elapsed_start_seconds": 2.324156,
-        "visible_from_elapsed_seconds": 2.324156,
-        "first_active_segment_elapsed_seconds": 2.324156,
-        "elapsed_end_seconds": 147.740205,
-        "elapsed_line_must_start_at_x": 0.19368,
-        "elapsed_line_end_x": 12.311684,
+        "elapsed_start_seconds": 2.119725,
+        "visible_from_elapsed_seconds": 2.119725,
+        "first_active_segment_elapsed_seconds": 2.119725,
+        "elapsed_end_seconds": 97.354126,
+        "elapsed_line_must_start_at_x": 0.176644,
+        "elapsed_line_end_x": 8.112844,
         "elapsed_axis_source": "timeline_elapsed_axis_model",
         "source_receipt_id": null,
         "source_receipt_path": null,
@@ -3558,12 +3559,12 @@ export const generatedBattleFixture = {
         "start_kind": "child_spawn_start",
         "start_source": "lineage.spawns[].child_x_start",
         "line_must_start_at_x": 62,
-        "elapsed_start_seconds": 116.973449,
-        "visible_from_elapsed_seconds": 116.973449,
-        "first_active_segment_elapsed_seconds": 146.686852,
-        "elapsed_end_seconds": 149.77601,
-        "elapsed_line_must_start_at_x": 9.747787,
-        "elapsed_line_end_x": 12.481334,
+        "elapsed_start_seconds": 83.585509,
+        "visible_from_elapsed_seconds": 83.585509,
+        "first_active_segment_elapsed_seconds": 96.294338,
+        "elapsed_end_seconds": 99.392622,
+        "elapsed_line_must_start_at_x": 6.965459,
+        "elapsed_line_end_x": 8.282718,
         "elapsed_axis_source": "timeline_elapsed_axis_model",
         "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
         "source_receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
@@ -3609,10 +3610,10 @@ export const generatedBattleFixture = {
             "label": "spawn / materialize",
             "start_x": 7,
             "end_x": 14,
-            "start_elapsed_seconds": 2.324156,
-            "end_elapsed_seconds": 2.324156,
-            "elapsed_start_x": 0.19368,
-            "elapsed_end_x": 0.19368,
+            "start_elapsed_seconds": 2.119725,
+            "end_elapsed_seconds": 2.119725,
+            "elapsed_start_x": 0.176644,
+            "elapsed_end_x": 0.176644,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": null,
             "proof_mode": "receipt_backed_fixture"
@@ -3624,10 +3625,10 @@ export const generatedBattleFixture = {
             "label": "research",
             "start_x": 14,
             "end_x": 33,
-            "start_elapsed_seconds": 2.324156,
-            "end_elapsed_seconds": 114.671919,
-            "elapsed_start_x": 0.19368,
-            "elapsed_end_x": 9.555993,
+            "start_elapsed_seconds": 2.119725,
+            "end_elapsed_seconds": 81.499052,
+            "elapsed_start_x": 0.176644,
+            "elapsed_end_x": 6.791588,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:arena",
             "proof_mode": "receipt_backed_fixture"
@@ -3639,10 +3640,10 @@ export const generatedBattleFixture = {
             "label": "payload",
             "start_x": 33,
             "end_x": 50,
-            "start_elapsed_seconds": 114.671919,
-            "end_elapsed_seconds": 114.671919,
-            "elapsed_start_x": 9.555993,
-            "elapsed_end_x": 9.555993,
+            "start_elapsed_seconds": 81.499052,
+            "end_elapsed_seconds": 81.499052,
+            "elapsed_start_x": 6.791588,
+            "elapsed_end_x": 6.791588,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:red",
             "proof_mode": "receipt_backed_fixture"
@@ -3654,10 +3655,10 @@ export const generatedBattleFixture = {
             "label": "useful signal",
             "start_x": 50,
             "end_x": 58,
-            "start_elapsed_seconds": 114.671919,
-            "end_elapsed_seconds": 116.973449,
-            "elapsed_start_x": 9.555993,
-            "elapsed_end_x": 9.747787,
+            "start_elapsed_seconds": 81.499052,
+            "end_elapsed_seconds": 83.585509,
+            "elapsed_start_x": 6.791588,
+            "elapsed_end_x": 6.965459,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:useful",
             "proof_mode": "receipt_backed_fixture"
@@ -3669,10 +3670,10 @@ export const generatedBattleFixture = {
             "label": "handoff / child spawn",
             "start_x": 58,
             "end_x": 67,
-            "start_elapsed_seconds": 116.973449,
-            "end_elapsed_seconds": 146.687555,
-            "elapsed_start_x": 9.747787,
-            "elapsed_end_x": 12.223963,
+            "start_elapsed_seconds": 83.585509,
+            "end_elapsed_seconds": 96.294927,
+            "elapsed_start_x": 6.965459,
+            "elapsed_end_x": 8.024577,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
             "proof_mode": "receipt_backed_fixture"
@@ -3684,10 +3685,10 @@ export const generatedBattleFixture = {
             "label": "Blue patch gate",
             "start_x": 67,
             "end_x": 82,
-            "start_elapsed_seconds": 146.687555,
-            "end_elapsed_seconds": 147.740205,
-            "elapsed_start_x": 12.223963,
-            "elapsed_end_x": 12.311684,
+            "start_elapsed_seconds": 96.294927,
+            "end_elapsed_seconds": 97.354126,
+            "elapsed_start_x": 8.024577,
+            "elapsed_end_x": 8.112844,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:blue",
             "proof_mode": "receipt_backed_fixture"
@@ -3699,10 +3700,10 @@ export const generatedBattleFixture = {
             "label": "Judge replay",
             "start_x": 82,
             "end_x": 84,
-            "start_elapsed_seconds": 147.740205,
-            "end_elapsed_seconds": 147.740205,
-            "elapsed_start_x": 12.311684,
-            "elapsed_end_x": 12.311684,
+            "start_elapsed_seconds": 97.354126,
+            "end_elapsed_seconds": 97.354126,
+            "elapsed_start_x": 8.112844,
+            "elapsed_end_x": 8.112844,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-receipt:judge",
             "proof_mode": "receipt_backed_fixture"
@@ -3724,10 +3725,10 @@ export const generatedBattleFixture = {
             "label": "handoff / child spawn",
             "start_x": 62,
             "end_x": 66,
-            "start_elapsed_seconds": 116.973449,
-            "end_elapsed_seconds": 116.973449,
-            "elapsed_start_x": 9.747787,
-            "elapsed_end_x": 9.747787,
+            "start_elapsed_seconds": 83.585509,
+            "end_elapsed_seconds": 83.585509,
+            "elapsed_start_x": 6.965459,
+            "elapsed_end_x": 6.965459,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
             "proof_mode": "receipt_backed_fixture"
@@ -3739,10 +3740,10 @@ export const generatedBattleFixture = {
             "label": "research",
             "start_x": 66,
             "end_x": 76,
-            "start_elapsed_seconds": 116.973449,
-            "end_elapsed_seconds": 146.686852,
-            "elapsed_start_x": 9.747787,
-            "elapsed_end_x": 12.223904,
+            "start_elapsed_seconds": 83.585509,
+            "end_elapsed_seconds": 96.294338,
+            "elapsed_start_x": 6.965459,
+            "elapsed_end_x": 8.024528,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-red-1:arena",
             "proof_mode": "receipt_backed_fixture"
@@ -3754,10 +3755,10 @@ export const generatedBattleFixture = {
             "label": "payload",
             "start_x": 76,
             "end_x": 86,
-            "start_elapsed_seconds": 146.686852,
-            "end_elapsed_seconds": 146.686852,
-            "elapsed_start_x": 12.223904,
-            "elapsed_end_x": 12.223904,
+            "start_elapsed_seconds": 96.294338,
+            "end_elapsed_seconds": 96.294338,
+            "elapsed_start_x": 8.024528,
+            "elapsed_end_x": 8.024528,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-red-1:red",
             "proof_mode": "receipt_backed_fixture"
@@ -3769,10 +3770,10 @@ export const generatedBattleFixture = {
             "label": "useful signal",
             "start_x": 86,
             "end_x": 96,
-            "start_elapsed_seconds": 146.686852,
-            "end_elapsed_seconds": 148.780876,
-            "elapsed_start_x": 12.223904,
-            "elapsed_end_x": 12.398406,
+            "start_elapsed_seconds": 96.294338,
+            "end_elapsed_seconds": 98.39211,
+            "elapsed_start_x": 8.024528,
+            "elapsed_end_x": 8.199343,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-red-1:useful",
             "proof_mode": "receipt_backed_fixture"
@@ -3784,10 +3785,10 @@ export const generatedBattleFixture = {
             "label": "Blue patch gate",
             "start_x": 96,
             "end_x": 98,
-            "start_elapsed_seconds": 148.780876,
-            "end_elapsed_seconds": 149.77601,
-            "elapsed_start_x": 12.398406,
-            "elapsed_end_x": 12.481334,
+            "start_elapsed_seconds": 98.39211,
+            "end_elapsed_seconds": 99.392622,
+            "elapsed_start_x": 8.199343,
+            "elapsed_end_x": 8.282718,
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "source_event_id": "payload-857-red-1:blue",
             "proof_mode": "receipt_backed_fixture"
@@ -4269,8 +4270,8 @@ export const generatedBattleFixture = {
         "actor_id": "payload-857-red-1",
         "payload_id": "payload-857-red-1",
         "tau_subagent_id": "red-1",
-        "tau_run_id": "arena-parent-spawn-20260706T134722Z",
-        "tau_turn_id": "arena-parent-spawn-20260706T134722Z:red-1:red",
+        "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+        "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
         "worker_id": "red-1",
         "generation": 2,
         "missing_tau_id": false,

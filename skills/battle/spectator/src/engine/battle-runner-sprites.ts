@@ -1,4 +1,5 @@
-import { Assets, Cache, type Spritesheet, type Texture } from "pixi.js";
+import { Assets, Cache, type AssetsManifest, type Spritesheet, type Texture } from "pixi.js";
+const BATTLE_MARKER_ATLAS_ALIAS = "battle-race-atlas";
 
 export const BATTLE_RUNNER_SPRITE_MANIFEST_URL = "/battle-sprites/pixijs/battle-sprite-assets.manifest.json";
 export const BATTLE_RUNNER_SPRITE_BASE_URL = "/battle-sprites/pixijs";
@@ -66,29 +67,56 @@ export const BATTLE_RUNNER_SPRITE_IDS: BattleRunnerSpriteId[] = [
 ];
 
 const RUNNER_ALIAS_PREFIX = "battle-runner-";
+const RUNNER_MANIFEST_VERSION = "v=4";
 const sheets = new Map<BattleRunnerSpriteId, Spritesheet>();
 let manifest: BattleRunnerSpriteManifest | null = null;
 let loadPromise: Promise<Map<BattleRunnerSpriteId, Spritesheet>> | null = null;
 let assetsInit: Promise<void> | null = null;
 
-function runnerAlias(spriteId: BattleRunnerSpriteId): string {
+export function runnerAlias(spriteId: BattleRunnerSpriteId): string {
 	return `${RUNNER_ALIAS_PREFIX}${spriteId}`;
 }
 
-function manifestAsset(spriteId: BattleRunnerSpriteId) {
+function runnerJsonSrc(spriteId: BattleRunnerSpriteId): string {
 	if (!manifest) throw new Error("Battle runner sprite manifest not loaded");
 	const asset = manifest.assets.find((item) => item.sprite_id === spriteId);
 	if (!asset) throw new Error(`Battle runner sprite missing from manifest: ${spriteId}`);
-	return asset;
+	return `${asset.json}?${RUNNER_MANIFEST_VERSION}`;
 }
 
-function runnerJsonUrl(spriteId: BattleRunnerSpriteId): string {
-	const asset = manifestAsset(spriteId);
-	return `${BATTLE_RUNNER_SPRITE_BASE_URL}/${asset.json}?v=4`;
+function battlePixiAssetsManifest(runnerManifest: BattleRunnerSpriteManifest): AssetsManifest {
+	return {
+		bundles: [
+			{
+				name: "battle-runners",
+				assets: runnerManifest.assets.map((asset) => ({
+					alias: runnerAlias(asset.sprite_id),
+					src: `${asset.json}?${RUNNER_MANIFEST_VERSION}`,
+				})),
+			},
+			{
+				name: "battle-markers",
+				assets: [{ alias: BATTLE_MARKER_ATLAS_ALIAS, src: "battle-race-atlas.png.json" }],
+			},
+		],
+	};
 }
 
-async function ensureAssetsReady(): Promise<void> {
-	if (!assetsInit) assetsInit = Assets.init();
+export async function ensureBattlePixiAssets(): Promise<void> {
+	if (!assetsInit) {
+		assetsInit = (async () => {
+			const response = await fetch(BATTLE_RUNNER_SPRITE_MANIFEST_URL);
+			if (!response.ok) throw new Error(`Failed to load battle runner sprite manifest: ${response.status}`);
+			manifest = (await response.json()) as BattleRunnerSpriteManifest;
+			await Assets.init({
+				basePath: BATTLE_RUNNER_SPRITE_BASE_URL,
+				manifest: battlePixiAssetsManifest(manifest),
+			});
+		})().catch((error) => {
+			assetsInit = null;
+			throw error;
+		});
+	}
 	await assetsInit;
 }
 
@@ -114,24 +142,17 @@ export async function loadBattleRunnerSprites(spriteIds: BattleRunnerSpriteId[] 
 
 	if (!loadPromise) {
 		loadPromise = (async () => {
-			await ensureAssetsReady();
-			if (!manifest) {
-				const response = await fetch(BATTLE_RUNNER_SPRITE_MANIFEST_URL);
-				if (!response.ok) throw new Error(`Failed to load battle runner sprite manifest: ${response.status}`);
-				manifest = (await response.json()) as BattleRunnerSpriteManifest;
-			}
+			await ensureBattlePixiAssets();
+			if (!manifest) throw new Error("Battle runner sprite manifest not loaded");
 
 			const targets = spriteIds.length ? spriteIds : manifest.assets.map((asset) => asset.sprite_id);
 			await Promise.all(
 				targets.map(async (spriteId) => {
 					if (sheets.has(spriteId)) return;
 					const alias = runnerAlias(spriteId);
-					if (!Cache.has(alias)) {
-						Assets.add({ alias, src: runnerJsonUrl(spriteId) });
-					}
 					const sheet = await Assets.load<Spritesheet>(alias);
 					if (!sheet?.textures || Object.keys(sheet.textures).length === 0) {
-						throw new Error(`Battle runner spritesheet missing frames: ${spriteId}`);
+						throw new Error(`Battle runner spritesheet missing frames: ${spriteId} (${runnerJsonSrc(spriteId)})`);
 					}
 					applyNearestNeighbor(sheet);
 					sheets.set(spriteId, sheet);
@@ -161,6 +182,7 @@ export async function unloadBattleRunnerSprites(): Promise<void> {
 	sheets.clear();
 	manifest = null;
 	loadPromise = null;
+	assetsInit = null;
 	await Promise.all(
 		aliases.map(async (alias) => {
 			if (!Cache.has(alias)) return;

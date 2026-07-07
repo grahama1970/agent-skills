@@ -107,7 +107,14 @@ export type BattleEventType =
 	| "blue.kill_confirmed"
 	| "judge.receipt_verified"
 	| "judge.verdict"
-	| "judge.insufficient_evidence";
+	| "judge.insufficient_evidence"
+	| "replay.killed"
+	| "replay.blocked"
+	| "replay.useful"
+	| "replay.blue_blast"
+	| "replay.spawn"
+	| "replay.fastest_crash"
+	| "replay.promoted";
 
 export type BattleSkillEvent = {
 	name: string;
@@ -507,6 +514,9 @@ export type BattleEvent = {
 		importance: Importance;
 		spectator_caption?: string;
 		notification?: string;
+		notification_prefix?: string;
+		notification_highlight?: string;
+		notification_highlight_tone?: "red" | "blue" | "green";
 	};
 	proof_mode?: ProofMode;
 };
@@ -705,6 +715,29 @@ export type LeaderboardEntry = {
 	summary?: string;
 };
 
+
+export type BattleSpriteThemeVariantV1 = {
+	sprite_id: string;
+	display_name?: string;
+	team?: string;
+	archetype?: string;
+	spritesheet_alias?: string;
+	src?: string;
+	frame_width?: number;
+	frame_height?: number;
+	scale?: number;
+	anchor?: { x: number; y: number };
+	state_animation_map?: Record<string, string>;
+};
+
+export type BattleSpriteThemeV1 = {
+	schema: "battle.sprite_theme.v1";
+	style_family?: string;
+	renderer?: string;
+	state_vocabulary?: string[];
+	variants: Record<string, BattleSpriteThemeVariantV1>;
+};
+
 /** Versioned alias — schema battle.normalized_ux_fixture.v1 — see BATTLE_RACE_ENGINE_PIXI_SPIKE.md */
 export type BattleNormalizedUxFixture = {
 	schema: "battle.normalized_ux_fixture.v1";
@@ -818,6 +851,7 @@ export type BattleNormalizedUxFixture = {
 		child_spawn_count?: number;
 		per_pair?: Array<Record<string, unknown>>;
 	};
+	sprite_theme?: BattleSpriteThemeV1;
 	lanes: Lane[];
 	events: BattleEvent[];
 	leaderboard: LeaderboardEntry[];
@@ -847,7 +881,7 @@ export type BattleTimelineViewportState = {
 
 export type BattleRaceEngineMode = "design_fixture" | "receipt_replay" | "live";
 
-export type BattleEffectCueKind = "spawn" | "blocked" | "killed" | "fastest_crash" | "promoted" | "useful";
+export type BattleEffectCueKind = "spawn" | "blocked" | "killed" | "fastest_crash" | "promoted" | "useful" | "blue_blast";
 
 export type BattleEffectCue = {
 	eventId: string;
@@ -856,6 +890,8 @@ export type BattleEffectCue = {
 	atSeconds: number;
 	receiptId: string;
 	proofMode: "receipt_backed" | "live" | "design_fixture";
+	soundCue?: SoundCue;
+	notification?: string;
 };
 
 export type BattleEngineRenderTestMode = {

@@ -566,6 +566,49 @@ def validate_ux_handoff_summary(
     console.print_json(data=report)
 
 
+@app.command("export-ux-handoff-summary")
+def export_ux_handoff_summary(
+    summary: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Battle backend UX JSON handoff summary to refresh from current fixture JSON.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output refreshed Battle backend UX handoff summary JSON path."),
+):
+    """Refresh fixture-derived fields in the backend UX handoff summary."""
+    import json as _json
+
+    from .ux_contract_validator import ContractError, export_handoff_summary_from_current_fixtures
+
+    try:
+        payload = export_handoff_summary_from_current_fixtures(summary)
+    except ContractError as exc:
+        console.print(f"[red]Battle UX handoff summary export invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    parent = payload.get("authoritative_parent_spawn_fixture") if isinstance(payload.get("authoritative_parent_spawn_fixture"), dict) else {}
+    timeline = parent.get("timeline") if isinstance(parent.get("timeline"), dict) else {}
+    playhead = timeline.get("playhead") if isinstance(timeline.get("playhead"), dict) else {}
+    console.print_json(
+        data={
+            "status": "PASS",
+            "out": str(out),
+            "schema": payload.get("schema"),
+            "battle_id": payload.get("battle_id"),
+            "parent_spawn_status": parent.get("status"),
+            "child_spawn_count": parent.get("scoreboard", {}).get("child_spawn_count") if isinstance(parent.get("scoreboard"), dict) else None,
+            "playhead_current_x": playhead.get("current_x"),
+            "mocked": parent.get("mocked"),
+            "live_source": parent.get("live_source"),
+        }
+    )
+
+
 @app.command("resolve-ux-renderer-fixture")
 def resolve_ux_renderer_fixture(
     summary: Path = typer.Argument(

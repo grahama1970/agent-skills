@@ -31,6 +31,8 @@ import { isBattlePixiEngine } from "./lib/is-battle-pixi-engine";
 import { battlePixiTestModeFromUrl } from "./lib/is-battle-pixi-test-mode";
 import { buildRaceEngineInput, buildRaceEngineRowLayout } from "./lib/build-race-engine-input";
 import { battleTimelineDomain } from "./lib/battle-timeline-domain";
+import { useBattleReplayCues } from "./hooks/useBattleReplayCues";
+import type { BattleEffectCue, BattleEvent } from "./lib/battle-types";
 import { BattleRacePixiSpike } from "./engine/BattleRacePixiSpike";
 
 export type RaceViewportFilter = "all" | "useful" | "blue" | "receipt" | "red" | "handoff";
@@ -45,9 +47,13 @@ type Props = {
   filter?: RaceViewportFilter | string;
   speed?: string;
   playing?: boolean;
+  battleEvents?: BattleEvent[];
+  soundEnabled?: boolean;
+  onReplayCue?: (cue: BattleEffectCue) => void;
+  onPlayheadSeconds?: (seconds: number) => void;
 };
 
-export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false }: Props) {
+export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onPlayheadSeconds }: Props) {
   useRegisterAction("battle:timeline:scroll", { action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom:out", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
@@ -78,6 +84,19 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   }, [timelineDomain.currentSeconds, receiptReplay, typeof window !== "undefined" ? window.location.hash : ""]);
 
   const effectivePlayheadSeconds = testModeFromUrl?.freezeTime ? testModeFromUrl.currentSeconds : playheadSeconds;
+
+  useEffect(() => {
+    onPlayheadSeconds?.(effectivePlayheadSeconds);
+  }, [effectivePlayheadSeconds, onPlayheadSeconds]);
+
+  useBattleReplayCues({
+    playheadSeconds: effectivePlayheadSeconds,
+    fixture,
+    lanes,
+    battleEvents,
+    enabled: receiptReplay && Boolean(onReplayCue) && !testModeFromUrl?.freezeTime,
+    onCue: onReplayCue,
+  });
   const [scrollMetrics, setScrollMetrics] = useState({ scrollLeft: 0, scrollWidth: 0, viewportWidth: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
   const lanesContainerRef = useRef<HTMLDivElement>(null);
@@ -275,8 +294,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
           const lane = visibleLanes.find((item) => item.events.some((event) => event.id === eventId));
           if (lane) onSelect(lane.id);
         },
+        onEffectCue: onReplayCue,
       }),
-    [allotted, effectivePlayheadSeconds, fixture, onSelect, selectedId, visibleLanes, zoom],
+    [allotted, effectivePlayheadSeconds, fixture, onReplayCue, onSelect, selectedId, visibleLanes, zoom],
   );
   const pixiRowsHeight = useMemo(
     () => pixiRowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0),
@@ -342,6 +362,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
               syncScrollMetrics();
             }}
             heightPx={pixiRowsHeight}
+            playing={playing}
           />
         ) : null}
       </div>

@@ -2,11 +2,11 @@
   "artifact_digests": {
     "authoritative_normalized_fixture": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
-      "sha256": "1a507a57ba76c7da3603618c3c57a032077c4cb5fd07e20b0d43d31a0f2cb8ae"
+      "sha256": "64c6cddf69ef9e33b35e1c22292bff85bd0d7eb20ec75ea84a1dcf609cc38fa1"
     },
     "authoritative_renderer_values": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json",
-      "sha256": "45fe1d3e1ed907e46c52804ff9200d4a99aae1cd9446063dcada21714f9c8cef"
+      "sha256": "57e9253bab2c1900b7caf5ab387c85800f8ab30fb807842c12e3a59a82cc4705"
     },
     "goal_source": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
@@ -14,7 +14,7 @@
     },
     "renderer_bundle": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",
-      "sha256": "201ee8dca55fa603ee13d3810f589b7d47bc4f68f9753dd949390f10ef538e70"
+      "sha256": "0d70f6e0d00eb6a0764bdfb002e42f3cc639b42bae190fc6e93a72908cdfaed8"
     },
     "renderer_fixture_resolution": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-fixture-resolution.json",
@@ -65,8 +65,8 @@
     "child_spawn_request_status": "PASS",
     "child_spawn_requested": true,
     "complete_elapsed_activity_segment_count": 12,
-    "elapsed_axis_current_elapsed_seconds": 149.77601,
-    "elapsed_axis_current_x": 12.481334,
+    "elapsed_axis_current_elapsed_seconds": 99.392622,
+    "elapsed_axis_current_x": 8.282718,
     "elapsed_axis_keyframe_count": 12,
     "elapsed_axis_keyframes_are_monotonic": true,
     "elapsed_axis_x_axis_mode": "elapsed_seconds",
@@ -88,8 +88,8 @@
     "playhead_elapsed_monotonic_by_x": false,
     "proof_blocker_count": 0,
     "round_allotted_seconds": 1200.0,
-    "round_elapsed_seconds": 110.502136,
-    "round_remaining_seconds": 1089.497864,
+    "round_elapsed_seconds": 76.414883,
+    "round_remaining_seconds": 1123.585117,
     "spawn_receipt_ids": [
       "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
     ],
@@ -176,8 +176,8 @@
   "timing_contract": {
     "activity_segment_count_for_timing": 12,
     "complete_elapsed_activity_segment_count": 12,
-    "elapsed_axis_current_elapsed_seconds": 149.77601,
-    "elapsed_axis_current_x": 12.481334,
+    "elapsed_axis_current_elapsed_seconds": 99.392622,
+    "elapsed_axis_current_x": 8.282718,
     "elapsed_axis_keyframe_count": 12,
     "elapsed_axis_keyframes_are_monotonic": true,
     "elapsed_axis_mode": "receipt_elapsed_axis",

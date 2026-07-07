@@ -18,23 +18,23 @@ const receiptLanes = receiptReplayFixture.lanes as Lane[];
 
 describe("battle receipt lineage", () => {
 	it("reads spawn time for payload-857-red-1", () => {
-		expect(childSpawnElapsedSeconds(legacyFixture, "payload-857-red-1")).toBeCloseTo(116.973449, 3);
+		expect(childSpawnElapsedSeconds(legacyFixture, "payload-857-red-1")).toBeCloseTo(83.585509, 3);
 	});
 
 	it("hides child lane before spawn", () => {
-		const before = lanesVisibleAtPlayhead(legacyLanes, legacyFixture, 100);
+		const before = lanesVisibleAtPlayhead(legacyLanes, legacyFixture, 80);
 		expect(before.map((lane) => lane.id)).toEqual(["payload-857-receipt"]);
 	});
 
 	it("shows child lane after spawn", () => {
-		const after = lanesVisibleAtPlayhead(legacyLanes, legacyFixture, 120);
+		const after = lanesVisibleAtPlayhead(legacyLanes, legacyFixture, 90);
 		expect(after.map((lane) => lane.id)).toEqual(["payload-857-receipt", "payload-857-red-1"]);
 	});
 
 	it("accepts split visibility vs first-active-segment timing on replay fixture", () => {
 		expect(spawnTimingFieldsConsistent(receiptReplayFixture, "payload-857-red-1")).toBe(true);
-		expect(childSpawnElapsedSeconds(receiptReplayFixture, "payload-857-red-1")).toBeCloseTo(116.973449, 3);
-		expect(lanesVisibleAtPlayhead(receiptLanes, receiptReplayFixture, 120).map((lane) => lane.id)).toEqual([
+		expect(childSpawnElapsedSeconds(receiptReplayFixture, "payload-857-red-1")).toBeCloseTo(83.585509, 3);
+		expect(lanesVisibleAtPlayhead(receiptLanes, receiptReplayFixture, 90).map((lane) => lane.id)).toEqual([
 			"payload-857-receipt",
 			"payload-857-red-1",
 		]);
