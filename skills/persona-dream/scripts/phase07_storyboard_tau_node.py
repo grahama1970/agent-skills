@@ -13,11 +13,12 @@ import base64
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
 
@@ -100,6 +101,11 @@ IDENTITY_REFERENCE_ASSETS = {
         "media_type": "image",
         "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
     },
+}
+
+IDENTITY_REFERENCE_BUNDLE_NAMES = {
+    "Embry": "01-embry_character_sheet.jpg",
+    "Kai": "02-kai_character_sheet.png",
 }
 
 
@@ -256,14 +262,18 @@ def _run_reviewer(
     review["blockers"].extend(provider_route["blockers"])
     status = "PASS_PANEL_REVIEWED" if not review["blockers"] else "BLOCKED_PANEL_REVIEW"
     accepted = status == "PASS_PANEL_REVIEWED"
-    if accepted:
-        accepted_packet = dict(packet)
-        accepted_packet["status"] = status
-        accepted_packet["accepted"] = True
-        accepted_packet["review_status"] = status
-        accepted_packet["reviewed_at"] = _now_iso()
-        _write_json(packet_path, accepted_packet)
-        packet = accepted_packet
+    auth_repair_required = (not accepted) and _review_requires_auth_repair(review["blockers"])
+    if auth_repair_required:
+        status = "AUTH_REPAIR_REQUIRED"
+    reviewed_packet = dict(packet)
+    reviewed_packet["status"] = status
+    reviewed_packet["accepted"] = accepted
+    reviewed_packet["review_status"] = status
+    reviewed_packet["reviewed_at"] = _now_iso()
+    reviewed_packet["review_blockers"] = review["blockers"]
+    reviewed_packet["auth_repair_required"] = auth_repair_required
+    _write_json(packet_path, reviewed_packet)
+    packet = reviewed_packet
     reference_coverage_path = receipts_dir / "storyboard_reference_coverage.json"
     entity_coverage_path = receipts_dir / "storyboard_entity_coverage.json"
     verdict_path = receipts_dir / "storyboard_review_verdict.json"
@@ -279,6 +289,7 @@ def _run_reviewer(
         "panel_count": len(packet.get("panels") or []),
         "duration_seconds": packet.get("duration_seconds"),
         "accepted": accepted,
+        "auth_repair_required": auth_repair_required,
         "blockers": review["blockers"],
         "per_panel": review["per_panel"],
         "reference_coverage": str(reference_coverage_path),
@@ -300,7 +311,13 @@ def _run_reviewer(
                 "Phase 04 object/location/environment references are attached as references only, not accepted panel frames.",
             ]
             if status == "PASS_PANEL_REVIEWED"
-            else ["Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."],
+            else [
+                (
+                    "Tau dispatched the Phase 07 panel-reviewer node and failed closed on identity-review auth repair."
+                    if auth_repair_required
+                    else "Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."
+                )
+            ],
             "does_not_prove": [
                 "This reviewer receipt does not by itself prove live provider image generation; use storyboard_frame_generation_receipt.json and accepted_frame metadata for provider evidence.",
                 "No downstream video provider submission occurred.",
@@ -320,14 +337,18 @@ def _run_reviewer(
         summary=(
             "Panel-reviewer accepted the Phase 07 storyboard panels."
             if status == "PASS_PANEL_REVIEWED"
+            else "Panel-reviewer requires auth repair before storyboard regeneration."
+            if auth_repair_required
             else "Panel-reviewer rejected the storyboard packet with exact blockers."
         ),
         evidence=evidence,
-        next_subagent="human" if accepted else "panel-creator",
-        next_executor="human" if accepted else "local",
+        next_subagent="human" if accepted or auth_repair_required else "panel-creator",
+        next_executor="human" if accepted or auth_repair_required else "local",
         next_reason=(
             "Human reviews the accepted Tau receipt and storyboard pane rendering."
             if accepted
+            else "Identity reviewer auth failed; repair Scillm/Codex OAuth credentials before regenerating panels."
+            if auth_repair_required
             else "Panel creator must repair the storyboard packet with accepted per-panel frame evidence before review can pass."
         ),
     )
@@ -340,24 +361,47 @@ def _run_reviewer(
         evidence=tau_receipt["evidence"],
         artifacts=[str(verdict_path), str(reference_coverage_path), str(entity_coverage_path), str(provider_route["receipt_path"]), str(tau_receipt_path), str(packet_path)],
         context_update={"persona_dream_phase07_storyboard": dict(context)},
-        next_agent="human" if accepted else "panel-creator",
-        next_executor="human" if accepted else "local",
+        next_agent="human" if accepted or auth_repair_required else "panel-creator",
+        next_executor="human" if accepted or auth_repair_required else "local",
         next_reason=(
             "Phase 07 storyboard panel review accepted the packet."
             if accepted
+            else "Identity reviewer auth failed; Tau must repair credentials/provider route before another panel-creator attempt."
+            if auth_repair_required
             else "Panel-reviewer rejected the packet; Tau should route back to panel-creator until retry budget is exhausted."
         ),
         required_evidence=(
             "Fresh CDP verification of http://localhost:3002/dream#storyboard."
             if accepted
+            else "Valid Scillm/Codex OAuth identity-review route; rerun panel-reviewer after HTTP 401 Unauthorized is resolved."
+            if auth_repair_required
             else "Repaired storyboard_packet.json containing accepted per-panel storyboard frame evidence."
         ),
         stop_condition=(
             "Stop because panel-reviewer accepted."
             if accepted
+            else "Stop because identity reviewer auth failed; do not regenerate images until auth is repaired."
+            if auth_repair_required
             else "Continue until panel-reviewer accepts or Tau max attempts are exceeded."
         ),
     )
+
+
+def _review_requires_auth_repair(blockers: Sequence[str]) -> bool:
+    auth_markers = (
+        "HTTP Error 401",
+        "Unauthorized",
+        "identity review call failed",
+        "authentication",
+        "auth failed",
+        "missing api key",
+        "missing proxy key",
+    )
+    for blocker in blockers:
+        text = str(blocker).lower()
+        if any(marker.lower() in text for marker in auth_markers):
+            return True
+    return False
 
 
 def _validate_storyboard_packet(
@@ -708,18 +752,35 @@ def _ensure_storyboard_frame_artifacts(
     receipt["storyboard_panel_contract"] = str(contract_path)
 
     mutable_packet = json.loads(json.dumps(packet))
+    blockers.extend(_ensure_optimum_identity_contract(mutable_packet, packet_path=packet_path, image_policy=image_policy))
+    mutable_packet["status"] = "PENDING_PANEL_REVIEW"
+    mutable_packet["accepted"] = False
+    mutable_packet["review_status"] = "PENDING_PANEL_REVIEW"
     provider_called = False
-    for panel in mutable_packet.get("panels", []):
+    panel_list = mutable_packet.get("panels", [])
+    for panel_index, panel in enumerate(panel_list):
         if not isinstance(panel, dict):
             continue
         blockers.extend(_ensure_panel_identity_references(panel))
         panel_id = str(panel.get("panel_id") or "panel")
+        if panel_index > 0:
+            continuity = _previous_panel_end_frame_reference(panel_list, panel_index)
+            if continuity["blockers"]:
+                blockers.extend(f"{panel_id}:{item}" for item in continuity["blockers"])
+                continue
+            panel["temporal_continuity_reference_assets"] = {
+                "previous_panel_end_frame": continuity["reference"]
+            }
         for frame_key, prompt_key in (("start_frame", "start_frame_prompt"), ("end_frame", "end_frame_prompt")):
             frame = panel.get(frame_key)
             if not isinstance(frame, dict):
                 blockers.append(f"{panel_id}:{frame_key}:missing_frame_object")
                 continue
             existing = frame.get("accepted_frame")
+            if isinstance(existing, Mapping):
+                if existing.get("accepted_by") != "panel-reviewer":
+                    frame.pop("accepted_frame", None)
+                    existing = None
             if isinstance(existing, Mapping):
                 existing_path = existing.get("path") or existing.get("image_path")
                 existing_blockers = _existing_frame_blockers(
@@ -736,12 +797,15 @@ def _ensure_storyboard_frame_artifacts(
                 if any("identity_continuity" in item for item in existing_blockers):
                     frame.pop("accepted_frame", None)
             output_path = output_dir / f"{panel_id}_{frame_key}.png"
+            force_regenerate = _candidate_frame_requires_regeneration(frame)
+            if force_regenerate:
+                _archive_rejected_frame_path(output_path, panel_id=panel_id, frame_key=frame_key)
             resume_blockers = _validate_accepted_frame_file(
                 str(output_path),
                 label=panel_id,
                 frame_label=frame_key,
             )
-            if output_path.exists() and not resume_blockers:
+            if output_path.exists() and not resume_blockers and not force_regenerate:
                 frame["candidate_frame"] = {
                     "status": "GENERATED_CANDIDATE_FRAME",
                     "role": frame_key,
@@ -868,6 +932,169 @@ def _promote_reviewer_accepted_frames(
     if packet_updated:
         _write_json(packet_path, mutable_packet)
     return {"packet_updated": packet_updated, "blockers": blockers}
+
+
+def _ensure_optimum_identity_contract(
+    packet: dict[str, Any],
+    *,
+    packet_path: Path,
+    image_policy: Mapping[str, Any],
+) -> list[str]:
+    blockers: list[str] = []
+    packet["required_identities"] = ["Embry", "Kai"]
+    refs_root = packet_path.parent / "references"
+    refs_root.mkdir(parents=True, exist_ok=True)
+    identity_assets: dict[str, list[dict[str, Any]]] = {}
+    for identity in ("Embry", "Kai"):
+        asset = IDENTITY_REFERENCE_ASSETS[identity]
+        source_path = Path(str(asset["path"])).expanduser()
+        bundle_name = IDENTITY_REFERENCE_BUNDLE_NAMES[identity]
+        bundle_rel = f"references/{bundle_name}"
+        bundle_path = packet_path.parent / bundle_rel
+        if not source_path.exists():
+            blockers.append(f"identity_reference_source_missing:{identity}:{source_path}")
+            continue
+        if not bundle_path.exists() or _sha256(bundle_path) != _sha256(source_path):
+            shutil.copy2(source_path, bundle_path)
+        identity_assets[identity] = [
+            {
+                "id": asset["id"],
+                "title": asset["title"],
+                "role": "primary_identity_reference",
+                "media_type": "image",
+                "bundle_path": bundle_rel,
+                "source_path": str(source_path),
+                "path": str(bundle_path),
+                "sha256": _sha256(bundle_path),
+                "pane_visible": True,
+                "pane_visible_required": True,
+                "sent_to_generator_required": True,
+                "generator_attachment_required": True,
+                "sent_to_reviewer_required": True,
+                "reviewer_attachment_required": True,
+                "reference_only_not_output": True,
+            }
+        ]
+    if identity_assets:
+        packet["identity_reference_assets"] = identity_assets
+
+    model = str(image_policy.get("model") or "gpt-2")
+    packet["model_policy"] = {
+        "image_generation": {
+            "provider_route": "codex_oauth",
+            "provider": image_policy.get("provider") or "codex",
+            "auth": image_policy.get("auth") or "codex-oauth",
+            "model": model,
+            "output_size": f"{STORYBOARD_FRAME_SIZE[0]}x{STORYBOARD_FRAME_SIZE[1]}",
+            "aspect_ratio": "16:9",
+            "fallbacks": [],
+            "disallowed_fallbacks": ["flux", "google-api-key", "mock", "fixture"],
+            "on_generation_failure": "FAIL_LOUDLY",
+            "on_reference_attachment_failure": "FAIL_LOUDLY",
+        },
+        "review": {
+            "review_basis": "generated_image_pixels_plus_reference_assets",
+            "metadata_claims_are_not_visual_proof": True,
+        },
+    }
+    packet["generation_scope"] = {
+        "mode": "failed_unlocked_only",
+        "target_frames": ["start_frame", "end_frame"],
+        "max_attempts": 4,
+        "reject_known_failed_candidates": True,
+    }
+    truth_rule = {
+        "creator_writes": ["candidate_frame", "creator_receipt"],
+        "creator_must_not_write": ["accepted_frame", "panel_review.accepted", "review_status"],
+        "reviewer_writes": ["panel_review", "identity_review", "accepted_frame_if_passed"],
+        "accepted_frame_writer": "panel-reviewer",
+        "accepted_frame_requires": [
+            "identity_continuity_review.status == PASS",
+            "panel_review.accepted == true",
+            "Embry.visible == true",
+            "Embry.matches_reference == true",
+            "Kai.visible == true",
+            "Kai.matches_reference == true",
+        ],
+        "illegal_states": [
+            "accepted_frame.status starts with ACCEPTED and identity_continuity_review.status == FAIL",
+            "creator writes accepted_frame",
+        ],
+    }
+    packet["terminal_truth_rule"] = truth_rule
+    packet["state_truth_rule"] = truth_rule
+    return blockers
+
+
+def _candidate_frame_requires_regeneration(frame: Mapping[str, Any]) -> bool:
+    candidate = frame.get("candidate_frame")
+    if not isinstance(candidate, Mapping):
+        return False
+    if str(candidate.get("status") or "") == "REJECTED_IDENTITY_CONTINUITY":
+        return True
+    prompt = str(candidate.get("prompt") or "")
+    stale_prompt_markers = (
+        "Waterline wide establishing frame",
+        "wide establishing frame",
+        "wide waterline establishing frame",
+    )
+    if any(marker in prompt for marker in stale_prompt_markers):
+        return True
+    review_status = str(
+        candidate.get("identity_continuity_review", {}).get("status")
+        if isinstance(candidate.get("identity_continuity_review"), Mapping)
+        else ""
+    )
+    return review_status == "FAIL"
+
+
+def _previous_panel_end_frame_reference(panels: list[Any], panel_index: int) -> dict[str, Any]:
+    previous = panels[panel_index - 1] if 0 <= panel_index - 1 < len(panels) else None
+    if not isinstance(previous, Mapping):
+        return {"reference": None, "blockers": ["previous_panel_missing"]}
+    previous_id = str(previous.get("panel_id") or f"panel_{panel_index}")
+    end_frame = previous.get("end_frame")
+    if not isinstance(end_frame, Mapping):
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_missing:{previous_id}"]}
+    accepted = end_frame.get("accepted_frame")
+    if not isinstance(accepted, Mapping):
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_not_accepted:{previous_id}"]}
+    if accepted.get("accepted_by") != "panel-reviewer":
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_not_reviewer_accepted:{previous_id}"]}
+    review = accepted.get("identity_continuity_review")
+    if not isinstance(review, Mapping) or review.get("status") != "PASS":
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_identity_not_pass:{previous_id}"]}
+    path_value = accepted.get("path") or accepted.get("image_path")
+    if not isinstance(path_value, str) or not path_value.strip():
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_path_missing:{previous_id}"]}
+    path = Path(path_value).expanduser()
+    if not path.exists():
+        return {"reference": None, "blockers": [f"previous_panel_end_frame_file_missing:{previous_id}:{path_value}"]}
+    return {
+        "reference": {
+            "panel_id": previous_id,
+            "frame_id": f"{previous_id}.end_frame",
+            "path": str(path),
+            "sha256": _sha256(path),
+            "role": "temporal_continuity_reference",
+            "accepted_by": "panel-reviewer",
+            "identity_review_status": "PASS",
+            "pane_visible_required": True,
+            "generator_attachment_required": True,
+            "reviewer_attachment_required": True,
+            "reference_only_not_output": True,
+            "must_not_be_rendered_as_collage_or_inset": True,
+        },
+        "blockers": [],
+    }
+
+
+def _archive_rejected_frame_path(path: Path, *, panel_id: str, frame_key: str) -> None:
+    if not path.exists():
+        return
+    digest = _sha256(path).removeprefix("sha256:")[:12]
+    archived = path.with_name(f"{path.stem}.rejected_identity.{_now_iso().replace(':', '').replace('+', 'Z')}.{digest}{path.suffix}")
+    path.rename(archived)
 
 
 def _existing_frame_blockers(
@@ -1274,6 +1501,19 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
         for ref in refs
         if isinstance(ref, Mapping)
     )
+    continuity_assets = panel.get("temporal_continuity_reference_assets")
+    continuity_text = ""
+    if isinstance(continuity_assets, Mapping):
+        previous = continuity_assets.get("previous_panel_end_frame")
+        if isinstance(previous, Mapping):
+            continuity_text = (
+                "Temporal continuity reference, not identity truth: "
+                f"{previous.get('panel_id')}.{previous.get('frame_id')} at {previous.get('path')}. "
+                "Use it only to preserve wardrobe, board continuity, lighting, waterline camera style, "
+                "scene geography, emotional continuity, and relative placement. Do not copy it as a "
+                "collage, inset, contact sheet, split screen, or UI screenshot. Embry and Kai identity "
+                "must still match the attached character sheets."
+            )
     required_entities = {
         str(entity)
         for entity in panel.get("required_entities", [])
@@ -1310,8 +1550,8 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
         for part in [
             "Create a single cinematic storyboard frame for Kling planning. This must be a real storyboard frame, not a contact sheet, not a collage, not a UI mockup.",
             identity_prompt,
-            str(generation_prompt.get("panel_prompt") or panel.get("shot") or ""),
-            str(generation_prompt.get(prompt_key) or frame.get("description") or ""),
+            _identity_safe_prompt_text(str(generation_prompt.get("panel_prompt") or panel.get("shot") or ""), identity_required=identity_required),
+            _identity_safe_prompt_text(str(generation_prompt.get(prompt_key) or frame.get("description") or ""), identity_required=identity_required),
             "Visual requirements: " + "; ".join(str(item) for item in frame.get("visual_requirements", []) if isinstance(item, str)),
             "Negative constraints: " + "; ".join(str(item) for item in frame.get("negative_constraints", []) if isinstance(item, str)),
             str(panel.get("prompt_fragment") or ""),
@@ -1319,9 +1559,30 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
             "Lighting: " + json.dumps(panel.get("lighting", {}), sort_keys=True),
             "Acting beats: " + "; ".join(str(item) for item in panel.get("acting_beats", []) if isinstance(item, str)),
             "Reference assets attached as mandatory identity/reference inputs, not loose inspiration: " + reference_text,
+            continuity_text,
         ]
         if part
     )
+
+
+def _identity_safe_prompt_text(text: str, *, identity_required: bool) -> str:
+    if not identity_required:
+        return text
+    replacements = {
+        "Waterline wide establishing frame": "Identity-readable medium-wide waterline two-shot",
+        "wide establishing frame": "identity-readable medium-wide two-shot",
+        "wide waterline establishing frame": "identity-readable medium-wide waterline two-shot",
+        "distant wide establishing shot": "identity-readable medium-wide two-shot",
+    }
+    safe = text
+    for old, new in replacements.items():
+        safe = safe.replace(old, new)
+    if safe != text:
+        safe = (
+            "Subordinate story context, rewritten to preserve identity readability: "
+            + safe
+        )
+    return safe
 
 
 def _ensure_panel_identity_references(panel: dict[str, Any]) -> list[str]:
@@ -1809,7 +2070,7 @@ def _handoff(
         "summary": summary,
         "artifacts": [str(item) for item in context.get("artifacts", []) if isinstance(context.get("artifacts"), list)] + artifacts,
     }
-    for key in ("tau_dag_node", "model_policy", "prompt_contract"):
+    for key in ("tau_dag_node", "model_policy", "prompt_contract", "identity_review_model_policy", "image_model_policy"):
         if key in context:
             next_context[key] = context[key]
     next_context.update(context_update)
@@ -1848,6 +2109,17 @@ def _subagent_receipt(
 ) -> dict[str, Any]:
     goal = _required_mapping(start_payload, "goal")
     context = _context(start_payload)
+    raw_context = start_payload.get("context")
+    if not isinstance(raw_context, Mapping):
+        raw_context = {}
+    receipt_context: dict[str, Any] = {
+        "run_id": context["run_id"],
+        "subagent": subagent,
+        "actor_type": "subagent",
+    }
+    for key in ("tau_dag_node", "model_policy", "prompt_contract", "identity_review_model_policy", "image_model_policy"):
+        if key in raw_context:
+            receipt_context[key] = raw_context[key]
     return {
         "schema": "tau.subagent_receipt.v1",
         "goal": {
@@ -1856,11 +2128,7 @@ def _subagent_receipt(
             "goal_hash": str(goal.get("goal_hash")),
             "immutable_goal_preserved": True,
         },
-        "context": {
-            "run_id": context["run_id"],
-            "subagent": subagent,
-            "actor_type": "subagent",
-        },
+        "context": receipt_context,
         "result": {
             "status": status,
             "summary": summary,
