@@ -85,7 +85,8 @@ STORYBOARD_FRAME_ASPECT = STORYBOARD_FRAME_SIZE[0] / STORYBOARD_FRAME_SIZE[1]
 STORYBOARD_FRAME_ASPECT_TOLERANCE = 0.02
 SCILLM_SKILL_RUN = Path("/home/graham/workspace/experiments/agent-skills/skills/scillm/run.sh")
 IMAGEMAGICK_BIN = Path("/usr/local/bin/magick")
-SCILLM_CHAT_COMPLETIONS_URL = "http://localhost:4001/v1/chat/completions"
+SCILLM_CHAT_COMPLETIONS_URL = os.environ.get("SCILLM_CHAT_COMPLETIONS_URL", "http://localhost:4001/v1/chat/completions")
+SCILLM_ENV_PATH = Path(os.environ.get("SCILLM_ENV_PATH", "/home/graham/workspace/experiments/scillm/.env"))
 IDENTITY_REFERENCE_ASSETS = {
     "Embry": {
         "id": "embry_character_sheet",
@@ -106,6 +107,84 @@ IDENTITY_REFERENCE_ASSETS = {
 IDENTITY_REFERENCE_BUNDLE_NAMES = {
     "Embry": "01-embry_character_sheet.jpg",
     "Kai": "02-kai_character_sheet.png",
+}
+
+IDENTITY_SLOT_MAP = {
+    "Embry": {
+        "slot": "A",
+        "screen_position": "foreground_left_or_midforeground_left",
+        "dominance": "one_of_two_largest_people",
+        "must_remain_same_person_across_start_and_end": True,
+        "positive_cues": [
+            "adult woman matching Embry reference sheet",
+            "brown hair",
+            "navy polo/rashguard continuity",
+            "salt-wet, heat-fatigued but controlled",
+            "visible face or clear three-quarter face",
+        ],
+        "hard_negatives": [
+            "blond or light-haired male",
+            "young male surfer",
+            "generic woman",
+            "generic surfer in navy",
+            "back-only",
+            "tiny/distant",
+            "occluded or cropped",
+            "unreadable side silhouette",
+        ],
+    },
+    "Kai": {
+        "slot": "B",
+        "screen_position": "foreground_right_or_midforeground_right",
+        "dominance": "one_of_two_largest_people",
+        "must_remain_same_person_across_start_and_end": True,
+        "positive_cues": [
+            "young Hawaiian male matching Kai reference sheet",
+            "curly dark hair",
+            "black rashguard continuity",
+            "calm, watchful, restrained",
+            "visible face or clear three-quarter face",
+        ],
+        "hard_negatives": [
+            "generic male surfer",
+            "only implied by black rashguard",
+            "only implied by surfboard",
+            "back-only",
+            "tiny/distant",
+            "occluded or cropped",
+            "unreadable side silhouette",
+        ],
+    },
+}
+
+COMPOSITION_PRIORITY = [
+    "1_identity_readability",
+    "2_correct_character_roles",
+    "3_story_action_waiting_outside_takeoff_path",
+    "4_public_reef_break_context",
+    "5_lava_reef_and_glare",
+]
+
+CAMERA_CONTRACT = {
+    "shot_type": "identity-readable medium-wide waterline two-shot",
+    "forbidden_shot_types": [
+        "wide establishing shot",
+        "crowd lineup shot",
+        "distant silhouettes",
+        "back-facing two-shot",
+    ],
+    "lens_language": "waterline surf photography, approximately 28-35mm equivalent; not ultra-wide",
+    "framing": [
+        "Embry and Kai are the two dominant foreground/midforeground people",
+        "both faces or three-quarter faces readable",
+        "reef visible in lower foreground but not at the cost of faces",
+        "background surfers, if any, are smaller and clearly subordinate",
+    ],
+    "identity_readability_targets": {
+        "each_required_face_min_height_px": 80,
+        "no_required_identity_back_only": True,
+        "no_unrelated_foreground_people": True,
+    },
 }
 
 
@@ -757,11 +836,13 @@ def _ensure_storyboard_frame_artifacts(
     mutable_packet["accepted"] = False
     mutable_packet["review_status"] = "PENDING_PANEL_REVIEW"
     provider_called = False
+    packet_updated = False
     panel_list = mutable_packet.get("panels", [])
     for panel_index, panel in enumerate(panel_list):
         if not isinstance(panel, dict):
             continue
         blockers.extend(_ensure_panel_identity_references(panel))
+        packet_updated = _purge_invalid_accepted_frames(panel) or packet_updated
         panel_id = str(panel.get("panel_id") or "panel")
         if panel_index > 0:
             continuity = _previous_panel_end_frame_reference(panel_list, panel_index)
@@ -819,6 +900,7 @@ def _ensure_storyboard_frame_artifacts(
                     "normalization_receipt": str(run_root / "receipts" / "storyboard_frame_generation" / f"{panel_id}_{frame_key}_frame_normalization_receipt.json"),
                 }
                 frame.pop("accepted_frame", None)
+                packet_updated = True
                 _write_json(packet_path, mutable_packet)
                 continue
             prompt = _frame_generation_prompt(panel, frame_key=frame_key, prompt_key=prompt_key)
@@ -851,9 +933,10 @@ def _ensure_storyboard_frame_artifacts(
                 "normalization_receipt": call.get("normalization_receipt"),
             }
             frame.pop("accepted_frame", None)
+            packet_updated = True
             _write_json(packet_path, mutable_packet)
 
-    if not blockers:
+    if packet_updated or not blockers:
         _write_json(packet_path, mutable_packet)
     receipt["status"] = "PASS" if not blockers else "BLOCKED"
     receipt["blockers"] = blockers
@@ -999,9 +1082,61 @@ def _ensure_optimum_identity_contract(
     }
     packet["generation_scope"] = {
         "mode": "failed_unlocked_only",
+        "target_panel_ids": ["sb_001"],
+        "target_frame_ids": ["sb_001.start_frame", "sb_001.end_frame"],
+        "locked_panel_ids": [],
+        "do_not_regenerate_panel_ids": [],
         "target_frames": ["start_frame", "end_frame"],
         "max_attempts": 4,
         "reject_known_failed_candidates": True,
+    }
+    packet["identity_slot_map"] = json.loads(json.dumps(IDENTITY_SLOT_MAP, sort_keys=True))
+    packet["composition_priority"] = list(COMPOSITION_PRIORITY)
+    packet["camera_contract"] = json.loads(json.dumps(CAMERA_CONTRACT, sort_keys=True))
+    packet["provider_request_shape"] = {
+        "text_prompt_source": "frame_payloads.{frame_id}.prompt joined in section order",
+        "image_reference_inputs": [
+            {
+                "identity": "Embry",
+                "asset_id": "embry_character_sheet",
+                "path": "references/01-embry_character_sheet.jpg",
+                "role": "hard_identity_reference",
+            },
+            {
+                "identity": "Kai",
+                "asset_id": "kai_character_sheet",
+                "path": "references/02-kai_character_sheet.png",
+                "role": "hard_identity_reference",
+            },
+        ],
+        "output": {
+            "width": STORYBOARD_FRAME_SIZE[0],
+            "height": STORYBOARD_FRAME_SIZE[1],
+            "mime": "image/png",
+        },
+    }
+    packet["review_contract"] = {
+        "hard_acceptance_rule": "accepted=true only when every required identity is visible, reference-matched, and scene-appropriate in pixels.",
+        "automatic_failures": [
+            "Embry missing",
+            "Kai missing",
+            "Embry identity mismatch",
+            "Kai identity mismatch",
+            "generic surfer substitution",
+            "wrong gender or age presentation",
+            "identity too distant or occluded",
+            "required identity back-only",
+            "contact sheet or collage output",
+            "fallback model used",
+        ],
+        "per_identity_required_fields": [
+            "required",
+            "visible",
+            "matches_reference",
+            "confidence",
+            "failure_code",
+            "visible_evidence",
+        ],
     }
     truth_rule = {
         "creator_writes": ["candidate_frame", "creator_receipt"],
@@ -1565,6 +1700,26 @@ def _frame_generation_prompt(panel: Mapping[str, Any], *, frame_key: str, prompt
     )
 
 
+def _purge_invalid_accepted_frames(panel: dict[str, Any]) -> bool:
+    changed = False
+    for frame_key in ("start_frame", "end_frame"):
+        frame = panel.get(frame_key)
+        if not isinstance(frame, dict):
+            continue
+        accepted = frame.get("accepted_frame")
+        if not isinstance(accepted, Mapping):
+            continue
+        identity_review = accepted.get("identity_continuity_review")
+        if (
+            accepted.get("accepted_by") != "panel-reviewer"
+            or not isinstance(identity_review, Mapping)
+            or identity_review.get("status") != "PASS"
+        ):
+            frame.pop("accepted_frame", None)
+            changed = True
+    return changed
+
+
 def _identity_safe_prompt_text(text: str, *, identity_required: bool) -> str:
     if not identity_required:
         return text
@@ -1891,23 +2046,64 @@ def _image_url_part(path: Path, *, label: str) -> dict[str, Any]:
     }
 
 
+def _scillm_proxy_key_candidates() -> list[tuple[str, str]]:
+    candidates: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def add(source: str, value: object) -> None:
+        if not isinstance(value, str):
+            return
+        key = value.strip().strip("\"'")
+        if not key or key in seen:
+            return
+        seen.add(key)
+        candidates.append((source, key))
+
+    for name in ("SCILLM_PROXY_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
+        add(f"env:{name}", os.environ.get(name))
+
+    if SCILLM_ENV_PATH.exists():
+        for line in SCILLM_ENV_PATH.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if not line or line.lstrip().startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            name = name.strip()
+            if name in {"SCILLM_PROXY_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"}:
+                add(f"{SCILLM_ENV_PATH.name}:{name}", value)
+
+    add("default:dev-proxy", "sk-dev-proxy-123")
+    return candidates
+
+
 def _post_scillm_json(payload: Mapping[str, Any]) -> dict[str, Any]:
-    proxy_key = os.environ.get("LITELLM_MASTER_KEY") or os.environ.get("SCILLM_PROXY_KEY")
-    if not proxy_key:
-        raise ValueError("missing LITELLM_MASTER_KEY or SCILLM_PROXY_KEY for identity review")
+    key_candidates = _scillm_proxy_key_candidates()
+    if not key_candidates:
+        raise ValueError("missing Scillm proxy key candidates for identity review")
     data = json.dumps(payload).encode("utf-8")
-    req = urllib_request.Request(
-        SCILLM_CHAT_COMPLETIONS_URL,
-        data=data,
-        headers={
-            "Authorization": f"Bearer {proxy_key}",
-            "X-Caller-Skill": "persona-dream-phase07-panel-reviewer",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    with urllib_request.urlopen(req) as response:
-        body = response.read().decode("utf-8")
+    auth_failures: list[str] = []
+    body: str | None = None
+    for source, proxy_key in key_candidates:
+        req = urllib_request.Request(
+            SCILLM_CHAT_COMPLETIONS_URL,
+            data=data,
+            headers={
+                "Authorization": f"Bearer {proxy_key}",
+                "X-Caller-Skill": "persona-dream-phase07-panel-reviewer",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib_request.urlopen(req) as response:
+                body = response.read().decode("utf-8")
+            break
+        except HTTPError as exc:
+            if exc.code in {401, 403}:
+                auth_failures.append(f"{source}:HTTP {exc.code}")
+                continue
+            raise
+    if body is None:
+        raise ValueError("Scillm proxy auth failed for identity review: " + "; ".join(auth_failures))
     parsed = json.loads(body)
     if not isinstance(parsed, dict):
         raise ValueError("scillm response root is not an object")

@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+from urllib.error import HTTPError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +15,99 @@ import phase07_storyboard_tau_node as tau_node  # noqa: E402
 
 
 class TestPhase07StoryboardTauNode(unittest.TestCase):
+    def test_scillm_proxy_key_candidates_include_scillm_env_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env_path = Path(tmp) / ".env"
+            env_path.write_text("SCILLM_MASTER_KEY=file-master\n", encoding="utf-8")
+
+            with mock.patch.object(tau_node, "SCILLM_ENV_PATH", env_path), mock.patch.dict(
+                "os.environ",
+                {"SCILLM_PROXY_KEY": "process-proxy"},
+                clear=True,
+            ):
+                candidates = tau_node._scillm_proxy_key_candidates()
+
+        self.assertEqual(candidates[0], ("env:SCILLM_PROXY_KEY", "process-proxy"))
+        self.assertIn((".env:SCILLM_MASTER_KEY", "file-master"), candidates)
+
+    def test_post_scillm_json_retries_scillm_auth_candidates(self) -> None:
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def read(self) -> bytes:
+                return b'{"choices":[{"message":{"content":"{}"}}]}'
+
+        calls = []
+
+        def fake_urlopen(req):
+            calls.append(req.get_header("Authorization"))
+            if len(calls) == 1:
+                raise HTTPError(
+                    req.full_url,
+                    401,
+                    "Unauthorized",
+                    hdrs=None,
+                    fp=None,
+                )
+            return FakeResponse()
+
+        with mock.patch.object(
+            tau_node,
+            "_scillm_proxy_key_candidates",
+            return_value=[("bad", "bad-key"), ("good", "good-key")],
+        ), mock.patch.object(tau_node.urllib_request, "urlopen", side_effect=fake_urlopen):
+            parsed = tau_node._post_scillm_json({"model": "gpt-2", "messages": []})
+
+        self.assertEqual(parsed["choices"][0]["message"]["content"], "{}")
+        self.assertEqual(calls, ["Bearer bad-key", "Bearer good-key"])
+
+    def test_purge_invalid_accepted_frames_removes_non_reviewer_acceptance(self) -> None:
+        panel = {
+            "panel_id": "sb_002",
+            "start_frame": {
+                "accepted_frame": {
+                    "status": "ACCEPTED_START_FRAME",
+                    "accepted_by": None,
+                    "identity_continuity_review": {"status": "PASS"},
+                }
+            },
+            "end_frame": {
+                "accepted_frame": {
+                    "status": "ACCEPTED_END_FRAME",
+                    "accepted_by": "panel-reviewer",
+                    "identity_continuity_review": {"status": "FAIL"},
+                }
+            },
+        }
+
+        changed = tau_node._purge_invalid_accepted_frames(panel)
+
+        self.assertTrue(changed)
+        self.assertNotIn("accepted_frame", panel["start_frame"])
+        self.assertNotIn("accepted_frame", panel["end_frame"])
+
+    def test_purge_invalid_accepted_frames_keeps_reviewer_pass(self) -> None:
+        panel = {
+            "panel_id": "sb_001",
+            "start_frame": {
+                "accepted_frame": {
+                    "status": "ACCEPTED_START_FRAME",
+                    "accepted_by": "panel-reviewer",
+                    "identity_continuity_review": {"status": "PASS"},
+                }
+            },
+            "end_frame": {},
+        }
+
+        changed = tau_node._purge_invalid_accepted_frames(panel)
+
+        self.assertFalse(changed)
+        self.assertIn("accepted_frame", panel["start_frame"])
+
     def test_reviewer_auth_failure_routes_to_human_repair_not_panel_creator(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_root = Path(tmp)
