@@ -1290,6 +1290,14 @@ export const generatedBattleFixture = {
           "schema": "battle.semantic_scoring.v1",
           "lane_id": "payload-857-receipt",
           "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+          "outcome_class": "spawn_pressure_conceded",
+          "spawn_state": "spawned_child",
+          "terminal_state": "blocked_handoff",
+          "score_weight": 0.774,
+          "multipliers": {
+            "red": 4.5,
+            "blue": 4.0
+          },
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
             "red": 3.483,
@@ -1298,6 +1306,8 @@ export const generatedBattleFixture = {
           "rules": {
             "pre_spawn_block_is_highest_blue_credit": true,
             "spawn_pressure_reduces_blue_credit": true,
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true
           },
@@ -1419,6 +1429,14 @@ export const generatedBattleFixture = {
         "schema": "battle.semantic_scoring.v1",
         "lane_id": "payload-857-receipt",
         "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+        "outcome_class": "spawn_pressure_conceded",
+        "spawn_state": "spawned_child",
+        "terminal_state": "blocked_handoff",
+        "score_weight": 0.774,
+        "multipliers": {
+          "red": 4.5,
+          "blue": 4.0
+        },
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
           "red": 3.483,
@@ -1427,6 +1445,8 @@ export const generatedBattleFixture = {
         "rules": {
           "pre_spawn_block_is_highest_blue_credit": true,
           "spawn_pressure_reduces_blue_credit": true,
+          "explicit_kill_scores_below_pre_spawn_block": true,
+          "unblocked_spawned_exploit_scores_red_breakthrough": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true
         },
@@ -1874,6 +1894,14 @@ export const generatedBattleFixture = {
           "schema": "battle.semantic_scoring.v1",
           "lane_id": "payload-857-red-1",
           "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "outcome_class": "post_spawn_child_contained",
+          "spawn_state": "post_spawn",
+          "terminal_state": "blocked",
+          "score_weight": 0.824,
+          "multipliers": {
+            "red": 3.5,
+            "blue": 7.0
+          },
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
             "red": 2.884,
@@ -1882,6 +1910,8 @@ export const generatedBattleFixture = {
           "rules": {
             "pre_spawn_block_is_highest_blue_credit": true,
             "spawn_pressure_reduces_blue_credit": true,
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true
           },
@@ -1980,6 +2010,14 @@ export const generatedBattleFixture = {
         "schema": "battle.semantic_scoring.v1",
         "lane_id": "payload-857-red-1",
         "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "outcome_class": "post_spawn_child_contained",
+        "spawn_state": "post_spawn",
+        "terminal_state": "blocked",
+        "score_weight": 0.824,
+        "multipliers": {
+          "red": 3.5,
+          "blue": 7.0
+        },
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
           "red": 2.884,
@@ -1988,6 +2026,8 @@ export const generatedBattleFixture = {
         "rules": {
           "pre_spawn_block_is_highest_blue_credit": true,
           "spawn_pressure_reduces_blue_credit": true,
+          "explicit_kill_scores_below_pre_spawn_block": true,
+          "unblocked_spawned_exploit_scores_red_breakthrough": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true
         },
@@ -3100,10 +3140,14 @@ export const generatedBattleFixture = {
       "does_not_override_legacy_scoreboard_totals": true,
       "rules": {
         "pre_spawn_block_blue_multiplier": 12.0,
+        "explicit_kill_blue_multiplier": 10.0,
         "post_spawn_containment_blue_multiplier": 7.0,
         "spawn_pressure_parent_blue_multiplier": 4.0,
+        "red_breakthrough_multiplier": 9.0,
         "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
+        "pre_spawn_block_is_more_valuable_than_explicit_kill": true,
         "killed_requires_explicit_kill_receipt": true,
+        "spawned_unblocked_lane_scores_red_breakthrough": true,
         "functionality_preservation_required_for_full_blue_credit": true
       },
       "semantic_totals": {
@@ -3119,6 +3163,14 @@ export const generatedBattleFixture = {
           "schema": "battle.semantic_scoring.v1",
           "lane_id": "payload-857-receipt",
           "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+          "outcome_class": "spawn_pressure_conceded",
+          "spawn_state": "spawned_child",
+          "terminal_state": "blocked_handoff",
+          "score_weight": 0.774,
+          "multipliers": {
+            "red": 4.5,
+            "blue": 4.0
+          },
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
             "red": 3.483,
@@ -3127,6 +3179,8 @@ export const generatedBattleFixture = {
           "rules": {
             "pre_spawn_block_is_highest_blue_credit": true,
             "spawn_pressure_reduces_blue_credit": true,
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true
           },
@@ -3136,6 +3190,14 @@ export const generatedBattleFixture = {
           "schema": "battle.semantic_scoring.v1",
           "lane_id": "payload-857-red-1",
           "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "outcome_class": "post_spawn_child_contained",
+          "spawn_state": "post_spawn",
+          "terminal_state": "blocked",
+          "score_weight": 0.824,
+          "multipliers": {
+            "red": 3.5,
+            "blue": 7.0
+          },
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
             "red": 2.884,
@@ -3144,6 +3206,8 @@ export const generatedBattleFixture = {
           "rules": {
             "pre_spawn_block_is_highest_blue_credit": true,
             "spawn_pressure_reduces_blue_credit": true,
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true
           },
@@ -4258,6 +4322,14 @@ export const generatedBattleFixture = {
         "schema": "battle.semantic_scoring.v1",
         "lane_id": "payload-857-red-1",
         "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "outcome_class": "post_spawn_child_contained",
+        "spawn_state": "post_spawn",
+        "terminal_state": "blocked",
+        "score_weight": 0.824,
+        "multipliers": {
+          "red": 3.5,
+          "blue": 7.0
+        },
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
           "red": 2.884,
@@ -4266,6 +4338,8 @@ export const generatedBattleFixture = {
         "rules": {
           "pre_spawn_block_is_highest_blue_credit": true,
           "spawn_pressure_reduces_blue_credit": true,
+          "explicit_kill_scores_below_pre_spawn_block": true,
+          "unblocked_spawned_exploit_scores_red_breakthrough": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true
         },

@@ -3793,10 +3793,16 @@ def _validate_semantic_scoring_and_replay(*, fixture: dict[str, Any], lanes: lis
     _check(semantic_scoring.get("score_owner") == "scorekeeper", "scoreboard.semantic_scoring.score_owner must be scorekeeper", errors)
     rules = semantic_scoring.get("rules") if isinstance(semantic_scoring.get("rules"), dict) else {}
     pre_multiplier = _number_or_none(rules.get("pre_spawn_block_blue_multiplier"))
+    kill_multiplier = _number_or_none(rules.get("explicit_kill_blue_multiplier"))
     post_multiplier = _number_or_none(rules.get("post_spawn_containment_blue_multiplier"))
     _check(
         pre_multiplier is not None and post_multiplier is not None and pre_multiplier > post_multiplier,
         "semantic scoring must value pre-spawn Blue blocks above post-spawn containment",
+        errors,
+    )
+    _check(
+        pre_multiplier is not None and kill_multiplier is not None and pre_multiplier > kill_multiplier,
+        "semantic scoring must value no-spawn Blue prevention above explicit kill",
         errors,
     )
 
@@ -3817,6 +3823,35 @@ def _validate_semantic_scoring_and_replay(*, fixture: dict[str, Any], lanes: lis
             _check(value is not None and 0 <= value <= 1, f"lane {lane_id} exploit_profile.{key} must be 0..1", errors)
         _check(score.get("schema") == "battle.semantic_scoring.v1", f"lane {lane_id} score_semantics.schema must be battle.semantic_scoring.v1", errors)
         _check(score.get("lane_id") == lane_id, f"lane {lane_id} score_semantics.lane_id must match lane.id", errors)
+        _check(
+            score.get("outcome_tier")
+            in {"UNRESOLVED", "PRE_SPAWN_BLOCK", "POST_SPAWN_CONTAINMENT", "SPAWN_PRESSURE_CONCEDED", "KILLED_CONFIRMED", "RED_BREAKTHROUGH"},
+            f"lane {lane_id} score_semantics.outcome_tier is invalid",
+            errors,
+        )
+        _check(
+            score.get("outcome_class")
+            in {
+                "unresolved_pressure",
+                "pre_spawn_blue_block",
+                "confirmed_blue_kill_no_child",
+                "confirmed_blue_kill_with_child",
+                "post_spawn_child_contained",
+                "spawn_pressure_conceded",
+                "red_breakthrough",
+            },
+            f"lane {lane_id} score_semantics.outcome_class is invalid",
+            errors,
+        )
+        _check(
+            score.get("spawn_state") in {"not_spawned", "spawned_child", "post_spawn"},
+            f"lane {lane_id} score_semantics.spawn_state is invalid",
+            errors,
+        )
+        multiplier = score.get("multipliers") if isinstance(score.get("multipliers"), dict) else {}
+        _check(_number_or_none(score.get("score_weight")) is not None, f"lane {lane_id} score_semantics.score_weight must be numeric", errors)
+        _check(_number_or_none(multiplier.get("red")) is not None, f"lane {lane_id} score_semantics.multipliers.red must be numeric", errors)
+        _check(_number_or_none(multiplier.get("blue")) is not None, f"lane {lane_id} score_semantics.multipliers.blue must be numeric", errors)
         delta = score.get("score_delta") if isinstance(score.get("score_delta"), dict) else {}
         _check(_number_or_none(delta.get("red")) is not None, f"lane {lane_id} score_semantics.score_delta.red must be numeric", errors)
         _check(_number_or_none(delta.get("blue")) is not None, f"lane {lane_id} score_semantics.score_delta.blue must be numeric", errors)

@@ -111,11 +111,86 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
     assert schema["$defs"]["replay_cta"]["properties"]["state"]["enum"] == ["receipt_only", "executable"]
     assert schema["$defs"]["exploit_profile"]["properties"]["schema"]["const"] == "battle.exploit_profile.v1"
     assert schema["$defs"]["score_semantics"]["properties"]["schema"]["const"] == "battle.semantic_scoring.v1"
+    assert schema["$defs"]["score_semantics"]["properties"]["outcome_tier"]["enum"] == [
+        "UNRESOLVED",
+        "PRE_SPAWN_BLOCK",
+        "POST_SPAWN_CONTAINMENT",
+        "SPAWN_PRESSURE_CONCEDED",
+        "KILLED_CONFIRMED",
+        "RED_BREAKTHROUGH",
+    ]
+    assert schema["$defs"]["score_semantics"]["properties"]["spawn_state"]["enum"] == [
+        "not_spawned",
+        "spawned_child",
+        "post_spawn",
+    ]
+    assert schema["$defs"]["score_semantics"]["properties"]["outcome_class"]["enum"] == [
+        "unresolved_pressure",
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+    ]
     assert schema["$defs"]["semantic_scoring"]["properties"]["score_owner"]["const"] == "scorekeeper"
     assert schema["$defs"]["replay_semantics"]["properties"]["presentation_owner"]["const"] == "ux"
     assert schema["$defs"]["semantic_replay"]["properties"]["time_authority"]["const"] == "receipt_elapsed_seconds"
     assert schema["$defs"]["timeline"]["properties"]["scroll_axis"]["const"] == "horizontal"
     assert schema["$defs"]["scenario"]["properties"]["public_entrypoint"]["pattern"] == "^/"
+
+
+def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> None:
+    def lane(**updates: Any) -> dict[str, Any]:
+        base = {
+            "id": "lane",
+            "terminal": "none",
+            "events": [],
+            "exploit_profile": {"score_weight": 0.5},
+        }
+        base.update(updates)
+        return base
+
+    pre_spawn = battle_event_adapter._lane_score_semantics(lane=lane(terminal="blocked"), spawn_count=0)
+    killed = battle_event_adapter._lane_score_semantics(
+        lane=lane(terminal="killed", events=[{"kind": "kill_confirmed"}]),
+        spawn_count=0,
+    )
+    parent_spawned = battle_event_adapter._lane_score_semantics(
+        lane=lane(terminal="blocked_handoff", children=["child"]),
+        spawn_count=1,
+    )
+    child_contained = battle_event_adapter._lane_score_semantics(
+        lane=lane(terminal="blocked", parentId="parent"),
+        spawn_count=1,
+    )
+    breakthrough = battle_event_adapter._lane_score_semantics(
+        lane=lane(terminal="none", parentId="parent"),
+        spawn_count=1,
+    )
+    unrelated_unresolved = battle_event_adapter._lane_score_semantics(lane=lane(terminal="none"), spawn_count=1)
+
+    assert pre_spawn["outcome_tier"] == "PRE_SPAWN_BLOCK"
+    assert pre_spawn["outcome_class"] == "pre_spawn_blue_block"
+    assert pre_spawn["spawn_state"] == "not_spawned"
+    assert killed["outcome_tier"] == "KILLED_CONFIRMED"
+    assert killed["outcome_class"] == "confirmed_blue_kill_no_child"
+    assert parent_spawned["outcome_tier"] == "SPAWN_PRESSURE_CONCEDED"
+    assert parent_spawned["outcome_class"] == "spawn_pressure_conceded"
+    assert parent_spawned["spawn_state"] == "spawned_child"
+    assert child_contained["outcome_tier"] == "POST_SPAWN_CONTAINMENT"
+    assert child_contained["outcome_class"] == "post_spawn_child_contained"
+    assert child_contained["spawn_state"] == "post_spawn"
+    assert breakthrough["outcome_tier"] == "RED_BREAKTHROUGH"
+    assert breakthrough["outcome_class"] == "red_breakthrough"
+    assert unrelated_unresolved["outcome_tier"] == "UNRESOLVED"
+    assert unrelated_unresolved["outcome_class"] == "unresolved_pressure"
+    assert unrelated_unresolved["spawn_state"] == "not_spawned"
+
+    assert pre_spawn["score_delta"]["blue"] > killed["score_delta"]["blue"]
+    assert killed["score_delta"]["blue"] > child_contained["score_delta"]["blue"]
+    assert child_contained["score_delta"]["blue"] > parent_spawned["score_delta"]["blue"]
+    assert breakthrough["score_delta"]["red"] > unrelated_unresolved["score_delta"]["red"]
 
 
 def test_ux_renderer_value_schemas_require_elapsed_binding_contract_paths() -> None:

@@ -1925,6 +1925,11 @@
         "schema",
         "lane_id",
         "outcome_tier",
+        "outcome_class",
+        "spawn_state",
+        "terminal_state",
+        "score_weight",
+        "multipliers",
         "score_delta",
         "rules",
         "proof_mode"
@@ -1941,8 +1946,51 @@
             "UNRESOLVED",
             "PRE_SPAWN_BLOCK",
             "POST_SPAWN_CONTAINMENT",
-            "SPAWN_PRESSURE_CONCEDED"
+            "SPAWN_PRESSURE_CONCEDED",
+            "KILLED_CONFIRMED",
+            "RED_BREAKTHROUGH"
           ]
+        },
+        "outcome_class": {
+          "enum": [
+            "unresolved_pressure",
+            "pre_spawn_blue_block",
+            "confirmed_blue_kill_no_child",
+            "confirmed_blue_kill_with_child",
+            "post_spawn_child_contained",
+            "spawn_pressure_conceded",
+            "red_breakthrough"
+          ]
+        },
+        "spawn_state": {
+          "enum": [
+            "not_spawned",
+            "spawned_child",
+            "post_spawn"
+          ]
+        },
+        "terminal_state": {
+          "type": "string"
+        },
+        "score_weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "multipliers": {
+          "type": "object",
+          "required": [
+            "red",
+            "blue"
+          ],
+          "properties": {
+            "red": {
+              "type": "number"
+            },
+            "blue": {
+              "type": "number"
+            }
+          }
         },
         "score_delta": {
           "type": "object",

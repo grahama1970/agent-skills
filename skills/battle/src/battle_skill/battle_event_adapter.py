@@ -45,6 +45,17 @@ DEFAULT_BLUE_ACTION_ID = "blue-receipt-backed-patch"
 SEMANTIC_SCORE_VERSION = "battle.semantic_scoring.v1"
 EXPLOIT_PROFILE_VERSION = "battle.exploit_profile.v1"
 REPLAY_SEMANTICS_VERSION = "battle.replay_semantics.v1"
+SEMANTIC_SCORE_MULTIPLIERS = {
+    "pre_spawn_block_blue": 12.0,
+    "explicit_kill_blue": 10.0,
+    "post_spawn_containment_blue": 7.0,
+    "spawn_pressure_parent_blue": 4.0,
+    "unresolved_red_pressure": 4.0,
+    "red_breakthrough": 9.0,
+    "pre_spawn_red_pressure": 2.0,
+    "post_spawn_red_pressure": 3.5,
+    "spawn_pressure_parent_red": 4.5,
+}
 ACTOR_STATE_VOCABULARY = [
     "idle",
     "walk",
@@ -892,28 +903,22 @@ def _attach_lane_score_semantics(*, lanes: list[dict[str, Any]], facts: dict[str
 def _lane_score_semantics(*, lane: dict[str, Any], spawn_count: int) -> dict[str, Any]:
     profile = lane.get("exploit_profile") if isinstance(lane.get("exploit_profile"), dict) else {}
     profile_weight = float(_number_or_none(profile.get("score_weight")) or 0.5)
-    is_child = bool(lane.get("parentId"))
-    is_blocked = str(lane.get("terminal") or "") in {"blocked", "blocked_handoff"}
-    if not is_blocked:
-        tier = "UNRESOLVED"
-        blue_delta = 0.0
-        red_delta = round(4.0 * profile_weight, 3)
-    elif spawn_count == 0:
-        tier = "PRE_SPAWN_BLOCK"
-        blue_delta = round(12.0 * profile_weight, 3)
-        red_delta = round(2.0 * profile_weight, 3)
-    elif is_child:
-        tier = "POST_SPAWN_CONTAINMENT"
-        blue_delta = round(7.0 * profile_weight, 3)
-        red_delta = round(3.5 * profile_weight, 3)
-    else:
-        tier = "SPAWN_PRESSURE_CONCEDED"
-        blue_delta = round(4.0 * profile_weight, 3)
-        red_delta = round(4.5 * profile_weight, 3)
+    outcome = _lane_score_outcome(lane=lane, spawn_count=spawn_count)
+    tier = outcome["outcome_tier"]
+    blue_delta = round(float(outcome["blue_multiplier"]) * profile_weight, 3)
+    red_delta = round(float(outcome["red_multiplier"]) * profile_weight, 3)
     return {
         "schema": SEMANTIC_SCORE_VERSION,
         "lane_id": str(lane.get("id") or ""),
         "outcome_tier": tier,
+        "outcome_class": outcome["outcome_class"],
+        "spawn_state": outcome["spawn_state"],
+        "terminal_state": outcome["terminal_state"],
+        "score_weight": profile_weight,
+        "multipliers": {
+            "red": outcome["red_multiplier"],
+            "blue": outcome["blue_multiplier"],
+        },
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
             "red": red_delta,
@@ -922,11 +927,79 @@ def _lane_score_semantics(*, lane: dict[str, Any], spawn_count: int) -> dict[str
         "rules": {
             "pre_spawn_block_is_highest_blue_credit": True,
             "spawn_pressure_reduces_blue_credit": True,
+            "explicit_kill_scores_below_pre_spawn_block": True,
+            "unblocked_spawned_exploit_scores_red_breakthrough": True,
             "functionality_preservation_required_for_full_blue_credit": True,
             "sprite_choice_does_not_create_score_truth": True,
         },
         "proof_mode": PROOF_MODE,
     }
+
+
+def _lane_score_outcome(*, lane: dict[str, Any], spawn_count: int) -> dict[str, Any]:
+    terminal_state = str(lane.get("terminal") or "none")
+    is_child = bool(lane.get("parentId"))
+    has_children = bool(lane.get("children"))
+    spawned = is_child or has_children
+    has_kill_receipt = _lane_has_event_kind(lane, {"killed", "kill_confirmed"}) or terminal_state == "killed"
+    is_blocked = terminal_state in {"blocked", "blocked_handoff"}
+    if has_kill_receipt:
+        return {
+            "outcome_tier": "KILLED_CONFIRMED",
+            "outcome_class": "confirmed_blue_kill_with_child" if spawned else "confirmed_blue_kill_no_child",
+            "spawn_state": "post_spawn" if spawned else "not_spawned",
+            "terminal_state": "killed",
+            "red_multiplier": 1.0,
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
+        }
+    if is_blocked and not spawned:
+        return {
+            "outcome_tier": "PRE_SPAWN_BLOCK",
+            "outcome_class": "pre_spawn_blue_block",
+            "spawn_state": "not_spawned",
+            "terminal_state": terminal_state,
+            "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["pre_spawn_red_pressure"],
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["pre_spawn_block_blue"],
+        }
+    if is_blocked and is_child:
+        return {
+            "outcome_tier": "POST_SPAWN_CONTAINMENT",
+            "outcome_class": "post_spawn_child_contained",
+            "spawn_state": "post_spawn",
+            "terminal_state": terminal_state,
+            "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_red_pressure"],
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_containment_blue"],
+        }
+    if is_blocked and has_children:
+        return {
+            "outcome_tier": "SPAWN_PRESSURE_CONCEDED",
+            "outcome_class": "spawn_pressure_conceded",
+            "spawn_state": "spawned_child",
+            "terminal_state": terminal_state,
+            "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["spawn_pressure_parent_red"],
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["spawn_pressure_parent_blue"],
+        }
+    if spawned:
+        return {
+            "outcome_tier": "RED_BREAKTHROUGH",
+            "outcome_class": "red_breakthrough",
+            "spawn_state": "post_spawn" if is_child else "spawned_child",
+            "terminal_state": terminal_state,
+            "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["red_breakthrough"],
+            "blue_multiplier": 0.0,
+        }
+    return {
+        "outcome_tier": "UNRESOLVED",
+        "outcome_class": "unresolved_pressure",
+        "spawn_state": "not_spawned",
+        "terminal_state": terminal_state,
+        "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["unresolved_red_pressure"],
+        "blue_multiplier": 0.0,
+    }
+
+
+def _lane_has_event_kind(lane: dict[str, Any], kinds: set[str]) -> bool:
+    return any(isinstance(event, dict) and str(event.get("kind") or "") in kinds for event in lane.get("events", []))
 
 
 def _attach_lane_replay_semantics(*, lanes: list[dict[str, Any]]) -> None:
@@ -1745,11 +1818,15 @@ def _semantic_scoring_payload(lanes: list[dict[str, Any]]) -> dict[str, Any]:
         "status": "advisory_contract",
         "does_not_override_legacy_scoreboard_totals": True,
         "rules": {
-            "pre_spawn_block_blue_multiplier": 12.0,
-            "post_spawn_containment_blue_multiplier": 7.0,
-            "spawn_pressure_parent_blue_multiplier": 4.0,
+            "pre_spawn_block_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["pre_spawn_block_blue"],
+            "explicit_kill_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
+            "post_spawn_containment_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_containment_blue"],
+            "spawn_pressure_parent_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["spawn_pressure_parent_blue"],
+            "red_breakthrough_multiplier": SEMANTIC_SCORE_MULTIPLIERS["red_breakthrough"],
             "pre_spawn_block_is_more_valuable_than_post_spawn_block": True,
+            "pre_spawn_block_is_more_valuable_than_explicit_kill": True,
             "killed_requires_explicit_kill_receipt": True,
+            "spawned_unblocked_lane_scores_red_breakthrough": True,
             "functionality_preservation_required_for_full_blue_credit": True,
         },
         "semantic_totals": {
