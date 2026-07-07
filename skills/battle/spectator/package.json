@@ -15,6 +15,7 @@
     "prove:pixi": "node scripts/sanity-battle-pixi.mjs",
     "prove:receipt-pixi": "node scripts/sanity-battle-receipt-pixi.mjs",
     "prove:receipt-replay": "node scripts/prove-battle-receipt-replay-6.mjs",
+    "prove:fresh-fixture-replay": "node scripts/prove-battle-fresh-fixture-replay.mjs",
     "prove:sparse-negative": "node scripts/prove-battle-sparse-negative.mjs"
   },
   "dependencies": {

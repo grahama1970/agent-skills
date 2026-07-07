@@ -34,6 +34,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
   const endpoint = scenario?.public_entrypoint ?? "/api/import-zip";
   const cwe = scenario?.cwe ?? "CWE-22";
   const family = scenario?.hidden_vulnerability_family ?? "Zip Slip path traversal";
+  const battleTitle = fixture.spectator_shell?.battle_title ?? `${fixture.battle_id?.toUpperCase() ?? "BATTLE-004"} · POST ${endpoint}`;
   const arenaLabel = designView ? mockupArenaLabel() : "ZIP_SLIP_ARB";
   const difficultyLabel = designView ? mockupDifficultyLabel() : "JUDGE";
 
@@ -117,7 +118,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
             <Icons.Swords className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-black tracking-tight text-white 2xl:text-3xl">BATTLE-004 · POST {endpoint}</h1>
+            <h1 className="truncate text-2xl font-black tracking-tight text-white 2xl:text-3xl">{battleTitle}</h1>
             <p className="mt-1 truncate text-sm font-medium text-slate-400">{`${cwe} · ${family} · autonomous exploit agents evolve under pressure · fastest proven crash wins`}</p>
           </div>
         </div>

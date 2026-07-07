@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BattleNormalizedUxFixture } from "../lib/battle-types";
-import { BATTLE_RECEIPT_REPLAY_FIXTURE_URL, isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
+import { battleReceiptReplayFixtureUrl, isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
 
 export function useReceiptReplayFixture() {
 	const [fixture, setFixture] = useState<BattleNormalizedUxFixture | null>(null);
@@ -20,7 +20,7 @@ export function useReceiptReplayFixture() {
 		setLoading(true);
 		setError(null);
 
-		fetch(BATTLE_RECEIPT_REPLAY_FIXTURE_URL)
+		fetch(battleReceiptReplayFixtureUrl(routeKey))
 			.then((response) => {
 				if (!response.ok) throw new Error(`fixture fetch failed: HTTP ${response.status}`);
 				return response.json() as Promise<BattleNormalizedUxFixture>;

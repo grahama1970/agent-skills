@@ -6,6 +6,15 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URL =
 export const BATTLE_SPARSE_REPLAY_FIXTURE_URL =
 	"/battle-fixtures/battle-004-sparse-pixi-replay/battle.normalized_ux_fixture.json";
 
+export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
+	"battle-004-parent-spawn": BATTLE_RECEIPT_REPLAY_FIXTURE_URL,
+	"battle-005-ssrf-metadata": "/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json",
+	"battle-006-pickle-deserialization": "/battle-fixtures/battle-006-pickle-deserialization-pixi-replay/battle.normalized_ux_fixture.json",
+	"battle-007-file-upload": "/battle-fixtures/battle-007-file-upload-pixi-replay/battle.normalized_ux_fixture.json",
+} as const;
+
+export type BattleReceiptReplayFixtureKey = keyof typeof BATTLE_RECEIPT_REPLAY_FIXTURE_URLS;
+
 export function battleHashPath(): string {
 	if (typeof window === "undefined") return "";
 	return window.location.hash.split("?")[0];
@@ -14,6 +23,20 @@ export function battleHashPath(): string {
 export function isBattleReceiptReplayView(): boolean {
 	const path = battleHashPath();
 	return path === "#battle/receipt" || path.startsWith("#battle/receipt/");
+}
+
+export function battleHashSearchParams(hash: string): URLSearchParams {
+	const query = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "";
+	return new URLSearchParams(query);
+}
+
+export function battleReceiptReplayFixtureKey(hash: string): BattleReceiptReplayFixtureKey {
+	const requested = battleHashSearchParams(hash).get("fixture") ?? "battle-004-parent-spawn";
+	return requested in BATTLE_RECEIPT_REPLAY_FIXTURE_URLS ? (requested as BattleReceiptReplayFixtureKey) : "battle-004-parent-spawn";
+}
+
+export function battleReceiptReplayFixtureUrl(hash: string): string {
+	return BATTLE_RECEIPT_REPLAY_FIXTURE_URLS[battleReceiptReplayFixtureKey(hash)];
 }
 
 function nearlyEqual(a: number, b: number): boolean {
