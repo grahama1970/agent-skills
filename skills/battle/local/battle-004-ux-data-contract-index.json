@@ -2,11 +2,11 @@
   "artifact_digests": {
     "authoritative_normalized_fixture": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
-      "sha256": "3308f683ce4a6dec5ddca1cdec3c130a1a742a7b7922f3e8cea43c30b57a9714"
+      "sha256": "ab0cc879a3d154df418d84f414337c23f66d93986fbacc0799773c1f2c6854cd"
     },
     "authoritative_renderer_values": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json",
-      "sha256": "9f97d625bfb10317f9520292d975068788f225edd9554fdc09b4d8c1a29163c4"
+      "sha256": "54c21735b509974037c26eedc02a6662cc617ca66211277165dfe1549793a1da"
     },
     "goal_source": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
@@ -14,7 +14,7 @@
     },
     "renderer_bundle": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",
-      "sha256": "297e284d782f5c01d481d9ff966015f1d4e8fadbc66f688dfc3a9c1140d89ddb"
+      "sha256": "62443af21373bb4723a476fdc4c5284c2a93291b225ce75542ef7372041817fd"
     },
     "renderer_fixture_resolution": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-fixture-resolution.json",

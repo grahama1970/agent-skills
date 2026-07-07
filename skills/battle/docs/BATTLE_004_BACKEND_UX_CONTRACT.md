@@ -105,11 +105,15 @@ Optional per-team budgets:
 | Mode | Playhead source | Fixture |
 |------|-----------------|---------|
 | `live` | Server-authoritative `elapsed_seconds` / `current_seconds` | SSE/JSONL + snapshot |
-| `receipt_replay` | Receipt timestamps / replay `current_seconds` | Generated fixture |
+| `receipt_replay` | `timeline_elapsed_axis_model.playhead.current_elapsed_seconds` when `timeline_elapsed_axis_model.x_position_is_elapsed_time=true`; otherwise replay `current_seconds` | Generated fixture |
 | `paused_replay` | Local scrub selection | Same fixture, frozen stream |
 | `design_fixture` | `mockup-design-fixture.ts` static/scripted time | `#battle` design parity only |
 
 `clock.mode` + `clock.source` declare which applies. UI must not invent elapsed time in receipt/live modes.
+
+When the elapsed-axis model is present and enabled, `battle_timeline_control.playhead.current_seconds` is synchronized to
+`timeline_elapsed_axis_model.playhead.current_elapsed_seconds` for compatibility. The original clock value may remain as
+`battle_timeline_control.playhead.legacy_clock_current_seconds`.
 
 ---
 
@@ -445,13 +449,16 @@ Backend uses **seconds and normalized percent** — not pixel `x`.
     "clock_mode": "receipt_replay",
     "time_domain": {
       "start_seconds": 0,
-      "end_seconds": 120,
+      "end_seconds": 1200,
       "allotted_seconds": 1200
     },
     "playhead": {
       "current_seconds": 614.0,
       "current_pct": 46.0,
-      "can_animate": true
+      "can_animate": true,
+      "source": "timeline_elapsed_axis_model.playhead.current_elapsed_seconds",
+      "legacy_clock_current_seconds": 110.5,
+      "semantics": "receipt_elapsed_axis_playhead"
     },
     "viewport_defaults": {
       "follow_mode": "scroll_after_threshold",
@@ -488,12 +495,12 @@ Types: `lib/battle-types.ts` → `BattleTimelineControlV1`, `BattleClockV1`.
 1. One global battle clock
 2. Per-team budgets optional; not timeline authorities
 3. Live playhead → server `current_seconds`
-4. Replay playhead → receipt timestamps
+4. Replay playhead → receipt timestamps; use `timeline_elapsed_axis_model.playhead.current_elapsed_seconds` when `x_position_is_elapsed_time=true`
 5. Default scroll: `scroll_after_threshold`
 6. Backend: semantic events; UI: animation
 7. Replay interpolation: receipt-backed segments only
 8. Live interpolation: active/provisional segments only
-9. Child lanes after lineage receipt only
+9. Child lanes after lineage receipt only; visibility starts at `visible_from_elapsed_seconds` / `spawn_elapsed_seconds`, while first active movement may start later at `first_active_segment_elapsed_seconds` / `child_start_elapsed_seconds`
 10. Judge owns terminal outcomes
 11. `events[]` canonical; `lanes[]` derived with provenance
 12. Live: SSE/JSONL + snapshots

@@ -2378,11 +2378,21 @@ def _timeline_lane_start_model(*, lineage: dict[str, Any], lanes: list[dict[str,
             ),
             {},
         )
-        elapsed_start_seconds = (
-            spawn.get("child_start_elapsed_seconds")
+        visible_from_elapsed_seconds = (
+            spawn.get("visible_from_elapsed_seconds")
+            if is_child and _number_or_none(spawn.get("visible_from_elapsed_seconds")) is not None
+            else spawn.get("spawn_elapsed_seconds")
+            if is_child and _number_or_none(spawn.get("spawn_elapsed_seconds")) is not None
+            else first_segment.get("start_elapsed_seconds")
+        )
+        first_active_segment_elapsed_seconds = (
+            spawn.get("first_active_segment_elapsed_seconds")
+            if is_child and _number_or_none(spawn.get("first_active_segment_elapsed_seconds")) is not None
+            else spawn.get("child_start_elapsed_seconds")
             if is_child and _number_or_none(spawn.get("child_start_elapsed_seconds")) is not None
             else first_segment.get("start_elapsed_seconds")
         )
+        elapsed_start_seconds = visible_from_elapsed_seconds
         elapsed_end_seconds = max(
             [
                 value
@@ -2408,6 +2418,8 @@ def _timeline_lane_start_model(*, lineage: dict[str, Any], lanes: list[dict[str,
                 "start_source": "lineage.spawns[].child_x_start" if is_child else "lane.xStart",
                 "line_must_start_at_x": spawn.get("child_x_start") if is_child else lane.get("xStart"),
                 "elapsed_start_seconds": elapsed_start_seconds,
+                "visible_from_elapsed_seconds": visible_from_elapsed_seconds,
+                "first_active_segment_elapsed_seconds": first_active_segment_elapsed_seconds,
                 "elapsed_end_seconds": elapsed_end_seconds,
                 "elapsed_line_must_start_at_x": _elapsed_axis_x(elapsed_start_seconds, axis_max),
                 "elapsed_line_end_x": _elapsed_axis_x(elapsed_end_seconds, axis_max),
@@ -2751,7 +2763,17 @@ def _validate_timeline_lane_start_model(*, values: dict[str, Any], errors: list[
             _check(start.get("start_source") == "lineage.spawns[].child_x_start", f"timeline_lane_start_model child lane {lane_id} must source start from lineage spawn", errors)
             _check(_number_or_none(start.get("line_must_start_at_x")) == _number_or_none(spawn.get("child_x_start")), f"timeline_lane_start_model child lane {lane_id} start must match lineage child_x_start", errors)
             _check(_number_or_none(start.get("line_must_start_at_x")) == _number_or_none(start.get("x_start")), f"timeline_lane_start_model child lane {lane_id} line start must match lane xStart", errors)
-            _check(elapsed_start_seconds == _number_or_none(spawn.get("child_start_elapsed_seconds")), f"timeline_lane_start_model child lane {lane_id} elapsed start must match lineage child_start_elapsed_seconds", errors)
+            _check(elapsed_start_seconds == _number_or_none(spawn.get("spawn_elapsed_seconds")), f"timeline_lane_start_model child lane {lane_id} elapsed start must match lineage spawn_elapsed_seconds", errors)
+            _check(
+                _number_or_none(start.get("visible_from_elapsed_seconds")) == _number_or_none(spawn.get("spawn_elapsed_seconds")),
+                f"timeline_lane_start_model child lane {lane_id} visible_from_elapsed_seconds must match lineage spawn_elapsed_seconds",
+                errors,
+            )
+            _check(
+                _number_or_none(start.get("first_active_segment_elapsed_seconds")) == _number_or_none(spawn.get("child_start_elapsed_seconds")),
+                f"timeline_lane_start_model child lane {lane_id} first_active_segment_elapsed_seconds must match lineage child_start_elapsed_seconds",
+                errors,
+            )
             _check(start.get("source_receipt_id") == spawn.get("receipt_id"), f"timeline_lane_start_model child lane {lane_id} receipt must match lineage spawn", errors)
             _check(isinstance(start.get("source_event_id"), str) and bool(start.get("source_event_id")), f"timeline_lane_start_model child lane {lane_id} requires source_event_id", errors)
         else:

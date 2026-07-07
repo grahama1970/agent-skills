@@ -3,6 +3,9 @@ import type { BattleNormalizedUxFixture, Lane } from "./battle-types";
 export const BATTLE_RECEIPT_REPLAY_FIXTURE_URL =
 	"/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json";
 
+export const BATTLE_SPARSE_REPLAY_FIXTURE_URL =
+	"/battle-fixtures/battle-004-sparse-pixi-replay/battle.normalized_ux_fixture.json";
+
 export function battleHashPath(): string {
 	if (typeof window === "undefined") return "";
 	return window.location.hash.split("?")[0];
@@ -13,24 +16,54 @@ export function isBattleReceiptReplayView(): boolean {
 	return path === "#battle/receipt" || path.startsWith("#battle/receipt/");
 }
 
+function nearlyEqual(a: number, b: number): boolean {
+	return Math.abs(a - b) <= 0.001;
+}
+
 /**
  * Backend fixture diagnostic only — not a frontend gate.
- * Child visibility uses lineage.spawns[].spawn_elapsed_seconds.
- * If child_start_elapsed_seconds or lane.start_elapsed_seconds disagree with spawn time,
- * that is a backend fixture/schema defect to fix upstream.
+ * Validates split spawn semantics after backend schema correction:
+ * visibility (visible_from/spawn_elapsed) vs first active segment timing.
  */
 export function spawnTimingFieldsConsistent(fixture: BattleNormalizedUxFixture, childLaneId: string): boolean {
 	const spawn = fixture.lineage?.spawns?.find((item) => item.child_lane_id === childLaneId);
 	const spawnElapsed = spawn?.spawn_elapsed_seconds;
-	if (typeof spawnElapsed !== "number") return false;
+	const visibleFrom = spawn?.visible_from_elapsed_seconds ?? spawnElapsed;
+	if (typeof spawnElapsed !== "number" || typeof visibleFrom !== "number") return false;
+	if (!nearlyEqual(visibleFrom, spawnElapsed)) return false;
+
+	const firstActive = spawn?.first_active_segment_elapsed_seconds ?? spawn?.child_start_elapsed_seconds;
+	if (typeof firstActive === "number" && typeof spawn?.child_start_elapsed_seconds === "number") {
+		if (!nearlyEqual(firstActive, spawn.child_start_elapsed_seconds)) return false;
+	}
+
 	const lane = fixture.lanes?.find((item) => item.id === childLaneId);
-	const derived = [spawn?.child_start_elapsed_seconds, lane?.start_elapsed_seconds];
-	return derived.every((value) => value == null || Math.abs(value - spawnElapsed) <= 0.001);
+	if (typeof lane?.visible_from_elapsed_seconds === "number" && !nearlyEqual(lane.visible_from_elapsed_seconds, visibleFrom)) {
+		return false;
+	}
+	if (typeof lane?.start_elapsed_seconds === "number" && !nearlyEqual(lane.start_elapsed_seconds, visibleFrom)) {
+		return false;
+	}
+	if (
+		typeof lane?.first_active_segment_elapsed_seconds === "number" &&
+		typeof firstActive === "number" &&
+		!nearlyEqual(lane.first_active_segment_elapsed_seconds, firstActive)
+	) {
+		return false;
+	}
+	return true;
 }
 
+/** Phase 1 child lane visibility gate — receipt-backed spawn visibility time. */
 export function childSpawnElapsedSeconds(fixture: BattleNormalizedUxFixture, childLaneId: string): number | null {
 	const spawn = fixture.lineage?.spawns?.find((item) => item.child_lane_id === childLaneId);
-	if (typeof spawn?.spawn_elapsed_seconds === "number") return spawn.spawn_elapsed_seconds;
+	if (spawn) {
+		const visibleFrom = spawn.visible_from_elapsed_seconds ?? spawn.spawn_elapsed_seconds;
+		if (typeof visibleFrom === "number") return visibleFrom;
+	}
+
+	const lane = fixture.lanes?.find((item) => item.id === childLaneId && item.parentId);
+	if (typeof lane?.visible_from_elapsed_seconds === "number") return lane.visible_from_elapsed_seconds;
 
 	const event = fixture.events?.find(
 		(item) =>

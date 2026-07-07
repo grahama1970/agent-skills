@@ -396,7 +396,9 @@ export type BattleTimeline = {
 			label: string;
 			proof_mode: ProofMode;
 			spawn_elapsed_seconds?: number;
+			visible_from_elapsed_seconds?: number;
 			child_start_elapsed_seconds?: number;
+			first_active_segment_elapsed_seconds?: number;
 			spawn_duration_elapsed_seconds?: number;
 		}>;
 		proof_mode: ProofMode;
@@ -553,6 +555,8 @@ export type LaneActivitySegment = {
 	start_x: number;
 	end_x: number;
 	start_elapsed_seconds?: number;
+	visible_from_elapsed_seconds?: number;
+	first_active_segment_elapsed_seconds?: number;
 	end_elapsed_seconds?: number;
 	source_event_id?: string | null;
 	proof_mode: ProofMode;
@@ -622,6 +626,8 @@ export type Lane = {
 	xStart: number;
 	xEnd: number;
 	start_elapsed_seconds?: number;
+	visible_from_elapsed_seconds?: number;
+	first_active_segment_elapsed_seconds?: number;
 	end_elapsed_seconds?: number;
 	duration_elapsed_seconds?: number;
 	runnerX: number;
@@ -762,7 +768,9 @@ export type BattleNormalizedUxFixture = {
 			goal?: string;
 			proof_mode: ProofMode;
 			spawn_elapsed_seconds?: number;
+			visible_from_elapsed_seconds?: number;
 			child_start_elapsed_seconds?: number;
+			first_active_segment_elapsed_seconds?: number;
 			spawn_duration_elapsed_seconds?: number;
 		}>;
 		proof_mode: ProofMode;

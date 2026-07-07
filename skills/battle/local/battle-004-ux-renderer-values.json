@@ -23,10 +23,12 @@
     },
     "playhead": {
       "can_animate": true,
-      "current_pct": 9.2085,
-      "current_seconds": 110.502136,
+      "current_pct": 12.481334,
+      "current_seconds": 149.77601,
+      "legacy_clock_current_seconds": 110.502136,
       "proof_mode": "receipt_backed_fixture",
-      "source": "clock.current_seconds"
+      "semantics": "receipt_elapsed_axis_playhead",
+      "source": "timeline_elapsed_axis_model.playhead.current_elapsed_seconds"
     },
     "render_guards": {
       "auto_scroll_only_while_playback_active": true,
@@ -964,9 +966,9 @@
         "segments": [
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 12.223904,
-            "elapsed_start_x": 12.223904,
-            "end_elapsed_seconds": 146.686852,
+            "elapsed_end_x": 9.747787,
+            "elapsed_start_x": 9.747787,
+            "end_elapsed_seconds": 116.973449,
             "end_x": 66,
             "label": "handoff / child spawn",
             "phase": "handoff",
@@ -974,13 +976,13 @@
             "segment_id": "payload-857-red-1:segment:02",
             "segment_index": 0,
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-            "start_elapsed_seconds": 146.686852,
+            "start_elapsed_seconds": 116.973449,
             "start_x": 62
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
             "elapsed_end_x": 12.223904,
-            "elapsed_start_x": 12.223904,
+            "elapsed_start_x": 9.747787,
             "end_elapsed_seconds": 146.686852,
             "end_x": 76,
             "label": "research",
@@ -989,7 +991,7 @@
             "segment_id": "payload-857-red-1:segment:03",
             "segment_index": 1,
             "source_event_id": "payload-857-red-1:arena",
-            "start_elapsed_seconds": 146.686852,
+            "start_elapsed_seconds": 116.973449,
             "start_x": 66
           },
           {
@@ -1511,14 +1513,14 @@
     {
       "activitySegments": [
         {
-          "end_elapsed_seconds": 146.686852,
+          "end_elapsed_seconds": 116.973449,
           "end_x": 66,
           "id": "payload-857-red-1:segment:02",
           "label": "handoff / child spawn",
           "phase": "handoff",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-          "start_elapsed_seconds": 146.686852,
+          "start_elapsed_seconds": 116.973449,
           "start_x": 62
         },
         {
@@ -1529,7 +1531,7 @@
           "phase": "research",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:arena",
-          "start_elapsed_seconds": 146.686852,
+          "start_elapsed_seconds": 116.973449,
           "start_x": 66
         },
         {
@@ -1663,13 +1665,13 @@
         ]
       },
       "collapsible": false,
-      "duration_elapsed_seconds": 3.089158,
+      "duration_elapsed_seconds": 32.802561,
       "end_elapsed_seconds": 149.77601,
       "events": [
         {
           "animation": "child_ignite",
           "collision_group": "x06",
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 116.973449,
           "id": "payload-857-red-1:spawned-from:payload-857-receipt",
           "kind": "handoff",
           "label": "SPAWNED",
@@ -1685,7 +1687,7 @@
         },
         {
           "collision_group": "x06",
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 116.973449,
           "id": "payload-857-red-1:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -1769,6 +1771,7 @@
         }
       ],
       "expandedByDefault": true,
+      "first_active_segment_elapsed_seconds": 146.686852,
       "generation": 2,
       "id": "payload-857-red-1",
       "inheritedContext": [
@@ -1832,7 +1835,7 @@
         "public_entrypoint": "/api/import-zip",
         "scenario_id": "arena-zip-slip-import-001"
       },
-      "start_elapsed_seconds": 146.686852,
+      "start_elapsed_seconds": 116.973449,
       "stderr": [
         "not emitted",
         "not emitted"
@@ -1843,6 +1846,7 @@
       ],
       "team": "red",
       "terminal": "blocked",
+      "visible_from_elapsed_seconds": 116.973449,
       "xEnd": 98,
       "xStart": 62
     }
@@ -1905,6 +1909,7 @@
         "child_tau_subagent_id": "red-1",
         "child_worker_id": "red-1",
         "child_x_start": 62,
+        "first_active_segment_elapsed_seconds": 146.686852,
         "generation": 2,
         "goal": "Spawn child Red lane from receipt-backed parent handoff.",
         "inherited_context": [
@@ -1924,7 +1929,8 @@
         "spawn_elapsed_seconds": 116.973449,
         "spawn_x": 58,
         "time_label": "handoff",
-        "timing_source": "battle_control_plane_perf_counter"
+        "timing_source": "battle_control_plane_perf_counter",
+        "visible_from_elapsed_seconds": 116.973449
       }
     ]
   },
@@ -2539,7 +2545,7 @@
       "start_x": 82
     },
     {
-      "end_seconds": 146.686852,
+      "end_seconds": 116.973449,
       "end_x": 66,
       "id": "payload-857-red-1:segment:02",
       "interpolation": "receipt_backed_segment",
@@ -2549,7 +2555,7 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-      "start_seconds": 146.686852,
+      "start_seconds": 116.973449,
       "start_x": 62
     },
     {
@@ -2563,7 +2569,7 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:arena",
-      "start_seconds": 146.686852,
+      "start_seconds": 116.973449,
       "start_x": 66
     },
     {
@@ -2957,7 +2963,7 @@
           "x": 58
         },
         {
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 116.973449,
           "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
           "kind": "handoff",
           "label": "SPAWNED",
@@ -2967,7 +2973,7 @@
           "x": 62
         },
         {
-          "elapsed_seconds": 146.686852,
+          "elapsed_seconds": 116.973449,
           "event_id": "payload-857-red-1:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -3103,7 +3109,7 @@
         "x": 9.747787
       },
       {
-        "elapsed_seconds": 146.686852,
+        "elapsed_seconds": 116.973449,
         "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
         "kind": "handoff",
         "label": "SPAWNED",
@@ -3111,10 +3117,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 62,
         "timing_source": "lineage_spawn_receipt",
-        "x": 12.223904
+        "x": 9.747787
       },
       {
-        "elapsed_seconds": 146.686852,
+        "elapsed_seconds": 116.973449,
         "event_id": "payload-857-red-1:arena",
         "kind": "research",
         "label": "ARENA SCENARIO",
@@ -3122,7 +3128,7 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 66,
         "timing_source": "lineage_spawn_receipt",
-        "x": 12.223904
+        "x": 9.747787
       },
       {
         "elapsed_seconds": 146.686852,
@@ -3568,6 +3574,7 @@
         "elapsed_line_end_x": 12.311684,
         "elapsed_line_must_start_at_x": 0.19368,
         "elapsed_start_seconds": 2.324156,
+        "first_active_segment_elapsed_seconds": 2.324156,
         "generation": 1,
         "lane_id": "payload-857-receipt",
         "lane_index": 0,
@@ -3581,6 +3588,7 @@
         "source_receipt_path": null,
         "start_kind": "parent_lane_start",
         "start_source": "lane.xStart",
+        "visible_from_elapsed_seconds": 2.324156,
         "x_end": 84,
         "x_start": 7
       },
@@ -3588,8 +3596,9 @@
         "elapsed_axis_source": "timeline_elapsed_axis_model",
         "elapsed_end_seconds": 149.77601,
         "elapsed_line_end_x": 12.481334,
-        "elapsed_line_must_start_at_x": 12.223904,
-        "elapsed_start_seconds": 146.686852,
+        "elapsed_line_must_start_at_x": 9.747787,
+        "elapsed_start_seconds": 116.973449,
+        "first_active_segment_elapsed_seconds": 146.686852,
         "generation": 2,
         "lane_id": "payload-857-red-1",
         "lane_index": 1,
@@ -3603,6 +3612,7 @@
         "source_receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
         "start_kind": "child_spawn_start",
         "start_source": "lineage.spawns[].child_x_start",
+        "visible_from_elapsed_seconds": 116.973449,
         "x_end": 98,
         "x_start": 62
       }

@@ -24,7 +24,10 @@ This example is copied from receipt-backed proof:
 
 - Render one parent Red lane.
 - Render one child Red lane only after the `tau.spawned_child` event.
-- Use `battle_timeline_control.time_domain` and `playhead.current_seconds`.
+- Use `timeline_elapsed_axis_model.playhead.current_elapsed_seconds` as the receipt replay playhead when `x_position_is_elapsed_time=true`.
+- Treat `battle_timeline_control.playhead.current_seconds` as synchronized compatibility metadata.
+- Use `lineage.spawns[].visible_from_elapsed_seconds` / `spawn_elapsed_seconds` for child lane visibility.
+- Use `lineage.spawns[].first_active_segment_elapsed_seconds` / `child_start_elapsed_seconds` for the first active child segment.
 - Use `segments[]` for runner interpolation.
 - Do not draw lane progress before each lane start.
 - Do not invent fastest crash, killed, promotion, or Blue kill states.

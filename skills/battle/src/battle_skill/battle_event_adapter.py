@@ -103,8 +103,8 @@ def generate_transport_files(*, fixture: dict[str, Any], out_dir: Path) -> dict[
         "live_source": fixture.get("live_source"),
         "event_count": len(envelopes),
         "last_seq": len(envelopes),
-        "events_jsonl": str(events_path),
-        "latest_snapshot": str(snapshot_path),
+        "events_jsonl": "events.jsonl",
+        "latest_snapshot": "latest-snapshot.json",
         "normalized_fixture_schema": fixture.get("schema"),
         "proof_mode": fixture.get("proof_mode"),
         "renderer_boundary": {
@@ -389,6 +389,30 @@ def _attach_renderer_models(fixture: dict[str, Any]) -> None:
             "lane_phase_coverage": _lane_phase_coverage(lanes),
         }
     )
+    _sync_timeline_control_to_elapsed_axis(fixture)
+
+
+def _sync_timeline_control_to_elapsed_axis(fixture: dict[str, Any]) -> None:
+    """Align legacy timeline_control playhead with the elapsed-axis replay model."""
+    control = fixture.get("battle_timeline_control")
+    axis = fixture.get("timeline_elapsed_axis_model")
+    if not isinstance(control, dict) or not isinstance(axis, dict):
+        return
+    playhead = control.get("playhead")
+    axis_playhead = axis.get("playhead")
+    if not isinstance(playhead, dict) or not isinstance(axis_playhead, dict):
+        return
+    current = _number_or_none(axis_playhead.get("current_elapsed_seconds"))
+    current_x = _number_or_none(axis_playhead.get("current_x"))
+    if current is None:
+        return
+    legacy_clock_seconds = playhead.get("current_seconds")
+    playhead["current_seconds"] = current
+    if current_x is not None:
+        playhead["current_pct"] = current_x
+    playhead["source"] = "timeline_elapsed_axis_model.playhead.current_elapsed_seconds"
+    playhead["legacy_clock_current_seconds"] = legacy_clock_seconds
+    playhead["semantics"] = "receipt_elapsed_axis_playhead"
 
 
 def _base_facts(
@@ -1437,6 +1461,8 @@ def _lineage_payload(*, facts: dict[str, Any], lanes: list[dict[str, Any]]) -> d
                 "spawn_x": int(spawn.get("x") or 58),
                 "child_x_start": int(spawn.get("child_x_start") or spawn.get("x") or lane_by_id[child_id].get("xStart") or 58),
                 **_elapsed_fields(spawn, "spawn_elapsed_seconds", "child_start_elapsed_seconds", "spawn_duration_elapsed_seconds"),
+                "visible_from_elapsed_seconds": _number_or_none(spawn.get("spawn_elapsed_seconds")),
+                "first_active_segment_elapsed_seconds": _number_or_none(spawn.get("child_start_elapsed_seconds")),
                 **({"timing_source": _first_str(spawn.get("timing_source"), "")} if _first_str(spawn.get("timing_source"), "") else {}),
                 "label": str(spawn.get("label") or "SPAWN CHILD"),
                 "time_label": str(spawn.get("time_label") or "handoff"),
@@ -1635,15 +1661,21 @@ def _attach_elapsed_timing(*, lanes: list[dict[str, Any]], facts: dict[str, Any]
         attempt = attempts_by_lane.get(lane_id, {})
         spawn_for_parent = spawns_by_parent.get(lane_id, {})
         spawn_for_child = spawns_by_child.get(lane_id, {})
-        lane_start_elapsed = _number_or_none(spawn_for_child.get("child_start_elapsed_seconds")) if spawn_for_child else initial_start
+        spawn_visible_elapsed = _number_or_none(spawn_for_child.get("spawn_elapsed_seconds")) if spawn_for_child else None
+        child_active_elapsed = _number_or_none(spawn_for_child.get("child_start_elapsed_seconds")) if spawn_for_child else None
+        lane_start_elapsed = spawn_visible_elapsed if spawn_for_child else initial_start
         lane_end_elapsed = _number_or_none(attempt.get("ended_elapsed_seconds"))
         if lane_end_elapsed is None and spawn_for_child:
-            child_start_elapsed = _number_or_none(spawn_for_child.get("child_start_elapsed_seconds"))
             spawn_duration = _number_or_none(spawn_for_child.get("spawn_duration_elapsed_seconds"))
-            if child_start_elapsed is not None and spawn_duration is not None:
-                lane_end_elapsed = round(child_start_elapsed + spawn_duration, 6)
+            if child_active_elapsed is not None and spawn_duration is not None:
+                lane_end_elapsed = round(child_active_elapsed + spawn_duration, 6)
         if lane_start_elapsed is not None:
             lane["start_elapsed_seconds"] = lane_start_elapsed
+        if spawn_for_child:
+            if spawn_visible_elapsed is not None:
+                lane["visible_from_elapsed_seconds"] = spawn_visible_elapsed
+            if child_active_elapsed is not None:
+                lane["first_active_segment_elapsed_seconds"] = child_active_elapsed
         if lane_end_elapsed is not None:
             lane["end_elapsed_seconds"] = lane_end_elapsed
         if lane_start_elapsed is not None and lane_end_elapsed is not None and lane_end_elapsed >= lane_start_elapsed:
@@ -1687,7 +1719,7 @@ def _event_elapsed_timing(
         if spawn_for_parent and event.get("id") == f"{lane_id}:spawn:{spawn_for_parent.get('child_lane_id')}":
             return _number_or_none(spawn_for_parent.get("spawn_elapsed_seconds")), "lineage_spawn_receipt"
         if spawn_for_child:
-            return _number_or_none(spawn_for_child.get("child_start_elapsed_seconds")), "lineage_spawn_receipt"
+            return _number_or_none(spawn_for_child.get("spawn_elapsed_seconds")), "lineage_spawn_receipt"
     if kind == "blue_blast":
         elapsed = _number_or_none(attempt.get("started_elapsed_seconds"))
         if elapsed is not None:

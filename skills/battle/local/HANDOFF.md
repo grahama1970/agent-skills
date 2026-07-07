@@ -25,10 +25,6 @@
   mockup parity, visual design, or CDP screenshot acceptance.
 
 
-## Open backend fixture defect (Phase 1)
-
-The parent-spawn replay fixture currently disagrees on child timing:
-
 - `lineage.spawns[].spawn_elapsed_seconds` = 116.97 (authoritative for child visibility)
 - `child_start_elapsed_seconds` / child `lane.start_elapsed_seconds` = 146.68
 
