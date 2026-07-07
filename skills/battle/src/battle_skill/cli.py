@@ -253,7 +253,7 @@ def arena_battle_proof(
     ),
     scenario_kind: str = typer.Option(
         "zip-slip",
-        help="Scenario kind: zip-slip, signed-token-duplicate-claim, or ssrf-metadata-probe.",
+        help="Scenario kind: zip-slip, signed-token-duplicate-claim, ssrf-metadata-probe, or pickle-deserialization-gadget.",
     ),
 ):
     """Run Arena-created scenario through deterministic Red/Blue/Judge proof."""

@@ -68,6 +68,13 @@ def run_arena_battle_proof(
             run_id=f"{run_id}-arena",
             docker_image=docker_image,
         )
+    elif scenario_kind == "pickle-deserialization-gadget":
+        arena_override_oracle_path = _write_pickle_deserialization_scenario(
+            arena_out=arena_out,
+            battle_id=battle_id,
+            run_id=f"{run_id}-arena",
+            docker_image=docker_image,
+        )
     elif scenario_kind != "zip-slip":
         raise ValueError(f"unknown scenario_kind: {scenario_kind}")
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
@@ -223,6 +230,10 @@ def _run_red_phase(
         red_submission = work_dir / "red_exploit_submission.py"
         red_submission.write_text(_ssrf_metadata_exploit_source(), encoding="utf-8")
         args = ["python", red_submission.name, "--expect-vulnerable"]
+    elif scenario.get("scenario_kind") == "pickle-deserialization-gadget":
+        red_submission = work_dir / "red_exploit_submission.py"
+        red_submission.write_text(_pickle_deserialization_exploit_source(), encoding="utf-8")
+        args = ["python", red_submission.name, "--expect-vulnerable"]
     command = _python_docker_command(
         docker_image=docker_image,
         work_dir=work_dir,
@@ -330,6 +341,12 @@ def _run_judge_phase(
     elif scenario.get("scenario_kind") == "ssrf-metadata-probe":
         (work_dir / "red_exploit_submission.py").write_text(
             _ssrf_metadata_exploit_source(),
+            encoding="utf-8",
+        )
+        args = ["python", "red_exploit_submission.py"]
+    elif scenario.get("scenario_kind") == "pickle-deserialization-gadget":
+        (work_dir / "red_exploit_submission.py").write_text(
+            _pickle_deserialization_exploit_source(),
             encoding="utf-8",
         )
         args = ["python", "red_exploit_submission.py"]
@@ -583,6 +600,8 @@ def _smoke_import(
         if scenario.get("scenario_kind") == "signed-token-duplicate-claim"
         else "from app import fetch_url; print(callable(fetch_url) and fetch_url('https://example.com') == 'FETCHED:https://example.com')"
         if scenario.get("scenario_kind") == "ssrf-metadata-probe"
+        else "from app import load_profile; print(load_profile('{\"user\":\"alice\",\"role\":\"user\"}') == {'user':'alice','role':'user'})"
+        if scenario.get("scenario_kind") == "pickle-deserialization-gadget"
         else "from app import import_zip; print(callable(import_zip))"
     )
     command = _python_docker_command(
@@ -599,6 +618,8 @@ def _safe_app_source(scenario: dict[str, Any]) -> str:
         return _safe_signed_token_app_source()
     if scenario.get("scenario_kind") == "ssrf-metadata-probe":
         return _safe_ssrf_metadata_app_source()
+    if scenario.get("scenario_kind") == "pickle-deserialization-gadget":
+        return _safe_pickle_deserialization_app_source()
     return textwrap.dedent(
         """
         from pathlib import Path
@@ -1122,6 +1143,266 @@ def _ssrf_metadata_exploit_source() -> str:
                 print("SSRF_METADATA_NOT_CONFIRMED")
                 return 1
             return 1 if exposed else 0
+
+
+        if __name__ == "__main__":
+            raise SystemExit(main())
+        """
+    ).strip() + "\n"
+
+
+def _write_pickle_deserialization_scenario(
+    *,
+    arena_out: Path,
+    battle_id: str,
+    run_id: str,
+    docker_image: str,
+) -> Path:
+    target_dir = arena_out / "target"
+    public_dir = arena_out / "team-public"
+    public_target_dir = public_dir / "target"
+    private_dir = arena_out / "private"
+    private_oracle_dir = private_dir / "oracle"
+    scenario = {
+        "schema": "battle.arena_scenario.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": "arena-pickle-deserialization-gadget-001",
+        "scenario_kind": "pickle-deserialization-gadget",
+        "title": "Serialized profile import gadget",
+        "public_entrypoint": "/api/profile/import",
+        "entry_point_type": "serialized-profile-import-api",
+        "public_contract": {
+            "method": "POST",
+            "input": "Base64-encoded serialized profile payload.",
+            "visible_behavior": "Return imported user profile fields.",
+        },
+        "difficulty": "hard",
+        "target_language": "python",
+        "hidden_vulnerability_family": "Unsafe Python pickle deserialization",
+        "cwe": "CWE-502",
+        "red_success_marker": "PICKLE_GADGET_CONFIRMED",
+        "finding_id": "arena-hidden-pickle-gadget-001",
+        "red_blue_visible": {
+            "entrypoint": "/api/profile/import",
+            "files": ["app.py"],
+            "hint": "The service imports user profile payloads.",
+        },
+        "stop_condition": "Red confirms deserialization side effect, Blue rejects pickle payloads, Judge verifies JSON profile import remains.",
+    }
+    hidden = {
+        "schema": "battle.hidden_ground_truth.v1",
+        "battle_id": battle_id,
+        "scenario_id": scenario["scenario_id"],
+        "not_visible_to": ["red", "blue"],
+        "hidden_vulnerabilities": [
+            {
+                "id": "hidden-pickle-gadget-001",
+                "name": "Unsafe pickle profile import",
+                "cwe": "CWE-502",
+                "entry_point": scenario["public_entrypoint"],
+                "oracle": "The profile loader unpickles attacker-controlled bytes and executes reducer side effects.",
+            }
+        ],
+    }
+    public_brief = {
+        "schema": "battle.team_public_scenario_brief.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "title": "Serialized profile import",
+        "public_entrypoint": scenario["public_entrypoint"],
+        "entry_point_type": scenario["entry_point_type"],
+        "public_contract": scenario["public_contract"],
+        "target_language": scenario["target_language"],
+        "allowed_files": ["app.py"],
+        "normal_behavior_examples": [
+            "load_profile('{\"user\":\"alice\",\"role\":\"user\"}') should return profile fields.",
+            "malformed profile payloads should be rejected.",
+        ],
+        "not_visible": [
+            "hidden bug class",
+            "CWE",
+            "finding id",
+            "gadget oracle",
+            "safe patch template",
+            "judge private assertions",
+        ],
+    }
+    visibility = {
+        "schema": "battle.visibility_contract.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "arena_creator_private": [
+            "arena/private/hidden-ground-truth.json",
+            "arena/private/oracle/app.py",
+            "arena/private/oracle/exploit_check.py",
+        ],
+        "team_public": [
+            "arena/team-public/scenario-brief.json",
+            "arena/team-public/target/app.py",
+        ],
+        "red_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "blue_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "judge_private": [
+            "red exploit submission",
+            "arena oracle",
+            "regression checks",
+        ],
+    }
+    _write_json(arena_out / "scenario.json", scenario)
+    stale_root_hidden = arena_out / "hidden-ground-truth.json"
+    if stale_root_hidden.exists():
+        stale_root_hidden.unlink()
+    _write_json(private_dir / "hidden-ground-truth.json", hidden)
+    _write_json(public_dir / "scenario-brief.json", public_brief)
+    _write_json(arena_out / "visibility-contract.json", visibility)
+    public_target_dir.mkdir(parents=True, exist_ok=True)
+    private_oracle_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "app.py").write_text(_vulnerable_pickle_deserialization_app_source(), encoding="utf-8")
+    for leaked_oracle in [target_dir / "exploit_check.py"]:
+        if leaked_oracle.exists():
+            leaked_oracle.unlink()
+    (public_target_dir / "app.py").write_text(_vulnerable_pickle_deserialization_app_source(), encoding="utf-8")
+    (private_oracle_dir / "app.py").write_text(_vulnerable_pickle_deserialization_app_source(), encoding="utf-8")
+    (private_oracle_dir / "exploit_check.py").write_text(_pickle_deserialization_exploit_source(), encoding="utf-8")
+    oracle_result = _run_command(
+        _python_docker_command(
+            docker_image=docker_image,
+            work_dir=private_oracle_dir,
+            args=["python", "exploit_check.py", "--expect-vulnerable"],
+        ),
+        out_dir=arena_out,
+        name="pickle-deserialization-hidden-oracle",
+    )
+    oracle_passed = (
+        oracle_result["exit_code"] == 0
+        and _stdout_contains(oracle_result, scenario["red_success_marker"])
+    )
+    return _write_json(
+        arena_out / "pickle-deserialization-hidden-oracle-receipt.json",
+        {
+            "schema": "battle.arena_hidden_oracle_receipt.v1",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "scenario_id": scenario["scenario_id"],
+            "scenario_kind": scenario["scenario_kind"],
+            "status": "PASS" if oracle_passed else "FAIL",
+            "mocked": False,
+            "live": "docker_hidden_oracle",
+            "entry_point": scenario["public_entrypoint"],
+            "finding_id": scenario["finding_id"],
+            "hidden_vulnerability_family": scenario["hidden_vulnerability_family"],
+            "success_marker": scenario["red_success_marker"],
+            "exploit_confirmed": oracle_passed,
+            "commands_run": [oracle_result],
+            "created_at": _now(),
+        },
+    )
+
+
+def _vulnerable_pickle_deserialization_app_source() -> str:
+    return textwrap.dedent(
+        """
+        import base64
+        import json
+        import pickle
+
+
+        def mark_profile_imported() -> str:
+            return "PROFILE_IMPORT_MARKED"
+
+
+        def load_profile(payload: str) -> dict[str, str]:
+            try:
+                return json.loads(payload)
+            except json.JSONDecodeError:
+                raw = base64.b64decode(payload)
+                result = pickle.loads(raw)
+                if isinstance(result, dict):
+                    return result
+                return {"result": str(result)}
+        """
+    ).strip() + "\n"
+
+
+def _safe_pickle_deserialization_app_source() -> str:
+    return textwrap.dedent(
+        """
+        import json
+
+
+        def load_profile(payload: str) -> dict[str, str]:
+            result = json.loads(payload)
+            if not isinstance(result, dict):
+                raise ValueError("profile must be an object")
+            allowed = {"user", "role"}
+            unexpected = set(result) - allowed
+            if unexpected:
+                raise ValueError(f"unexpected profile fields: {sorted(unexpected)}")
+            return {str(key): str(value) for key, value in result.items()}
+        """
+    ).strip() + "\n"
+
+
+def _pickle_deserialization_exploit_source() -> str:
+    return textwrap.dedent(
+        """
+        import argparse
+        import base64
+        import pickle
+
+        import app
+
+
+        class ProfileGadget:
+            def __reduce__(self):
+                return (app.mark_profile_imported, ())
+
+
+        def main() -> int:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--expect-vulnerable", action="store_true")
+            args = parser.parse_args()
+
+            try:
+                normal = app.load_profile('{"user":"alice","role":"user"}')
+            except Exception:
+                print("NORMAL_PROFILE_BROKEN")
+                return 2
+            if normal != {"user": "alice", "role": "user"}:
+                print("NORMAL_PROFILE_UNEXPECTED")
+                return 2
+
+            exploited = False
+            try:
+                payload = base64.b64encode(pickle.dumps(ProfileGadget())).decode()
+                exploited = app.load_profile(payload).get("result") == "PROFILE_IMPORT_MARKED"
+            except (AttributeError, ValueError):
+                exploited = False
+
+            if args.expect_vulnerable and exploited:
+                print("PICKLE_GADGET_CONFIRMED")
+                return 0
+            if args.expect_vulnerable:
+                print("PICKLE_GADGET_NOT_CONFIRMED")
+                return 1
+            return 1 if exploited else 0
 
 
         if __name__ == "__main__":

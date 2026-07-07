@@ -1,0 +1,2276 @@
+{
+  "battle_clock": {
+    "allotted_seconds": null,
+    "current_seconds": null,
+    "elapsed_seconds": null,
+    "ended_at": null,
+    "mode": "receipt_elapsed",
+    "proof_mode": "receipt_backed_fixture",
+    "remaining_seconds": null,
+    "schema": "battle.clock.legacy_receipt_elapsed.v1",
+    "source_receipt_id": "scoreboard",
+    "started_at": "2026-07-07T22:40:50Z"
+  },
+  "battle_id": "battle-006",
+  "battle_timeline_control": {
+    "clock_mode": "receipt_replay",
+    "controls": {
+      "can_pan": true,
+      "can_pause": true,
+      "can_play": true,
+      "can_scrub": true,
+      "can_zoom": true
+    },
+    "playhead": {
+      "can_animate": true,
+      "current_pct": 0.0,
+      "current_seconds": 0.0,
+      "proof_mode": "receipt_backed_fixture",
+      "source": "clock.current_seconds"
+    },
+    "render_guards": {
+      "auto_scroll_only_while_playback_active": true,
+      "child_lane_requires_lineage_receipt": true,
+      "derive_x_positions_from_elapsed_seconds": true,
+      "do_not_draw_lane_progress_before_lane_start": true,
+      "do_not_reveal_terminal_outcome_before_receipt_time": true,
+      "terminal_outcome_requires_judge_receipt": true
+    },
+    "schema": "battle.timeline_control.v1",
+    "time_domain": {
+      "allotted_seconds": 1200.0,
+      "end_seconds": 1200.0,
+      "start_seconds": 0
+    },
+    "transport_target": {
+      "future_stream": "append_only_jsonl_or_sse",
+      "phase": "generated_replay_snapshot",
+      "snapshot_schema": "battle.normalized_ux_fixture.v1"
+    },
+    "viewport_defaults": {
+      "can_override_locally": true,
+      "follow_mode": "scroll_after_threshold",
+      "follow_threshold_pct": 0.72
+    }
+  },
+  "bluePatchActions": [
+    {
+      "agentName": "deterministic-blue-language-selector",
+      "id": "blue-receipt-backed-patch",
+      "name": "Receipt-backed Patch",
+      "proofMode": "receipt_backed_fixture",
+      "receiptId": "blue-tau-subagent-receipt",
+      "state": "deployed",
+      "summary": "Blue patch artifact present for Unsafe Python pickle deserialization.",
+      "targetLaneIds": [
+        "payload-857-receipt"
+      ],
+      "xEnd": 82,
+      "xStart": 56
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "Unbounded Battle swarm execution.",
+      "Multi-round Battle orchestration.",
+      "Child-spawn lineage.",
+      "Blue kill attribution.",
+      "Fastest crash or survivor promotion."
+    ],
+    "proves": [
+      "Arena created a receipt-backed scenario with entry point, runtime, and language constraints.",
+      "At least one Red exploit artifact was materialized.",
+      "At least one Blue patch artifact was materialized.",
+      "Judge replay verified BLUE_SUCCESS for at least one Red/Blue pair."
+    ]
+  },
+  "clock": {
+    "allotted_seconds": 1200.0,
+    "current_seconds": null,
+    "elapsed_seconds": null,
+    "ended_at": null,
+    "mode": "receipt_replay",
+    "proof_mode": "receipt_backed_fixture",
+    "remaining_seconds": null,
+    "round_config": {
+      "canonical_allotted_seconds": 1200.0,
+      "resolved_allotted_seconds": 1200.0,
+      "time_limit_source": "scenario_default"
+    },
+    "schema": "battle.clock.v1",
+    "server_now": null,
+    "source": "receipt_timestamps",
+    "source_receipt_id": "scoreboard",
+    "started_at": "2026-07-07T22:40:50Z"
+  },
+  "events": [
+    {
+      "actor_id": "battle-orchestrator",
+      "actor_kind": "battle_orchestrator",
+      "battle_id": "battle-006",
+      "elapsed_seconds": null,
+      "event_type": "battle.run_started",
+      "evidence": {
+        "artifact_ref": "run-receipt.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "run-receipt",
+        "receipt_path": "run-receipt.json"
+      },
+      "id": "battle-004-run-started",
+      "order_index": 0,
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [],
+      "scenario": {
+        "cwe": "CWE-502",
+        "hidden_vulnerability_family": "Unsafe Python pickle deserialization",
+        "public_entrypoint": "/api/profile/import"
+      },
+      "summary": "BATTLE-004 proof loaded.",
+      "team": "system",
+      "ts": "2026-07-07T22:40:50Z",
+      "ui": {
+        "importance": "visible",
+        "notification": "BATTLE-004 receipt-backed proof loaded",
+        "runner_animation": "scan_research",
+        "runner_state": "research",
+        "sound_cue": "none",
+        "spectator_caption": "Receipt-backed BATTLE-004 proof loaded."
+      }
+    },
+    {
+      "actor_id": "battle-arena",
+      "actor_kind": "battle_orchestrator",
+      "battle_id": "battle-006",
+      "elapsed_seconds": null,
+      "event_type": "battle.scenario_loaded",
+      "evidence": {
+        "artifact_ref": "arena/arena-receipt.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "arena-receipt",
+        "receipt_path": "arena/arena-receipt.json"
+      },
+      "id": "battle-004-scenario-loaded",
+      "order_index": 1,
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [],
+      "scenario": {
+        "cwe": "CWE-502",
+        "hidden_vulnerability_family": "Unsafe Python pickle deserialization",
+        "public_entrypoint": "/api/profile/import"
+      },
+      "summary": "Arena created arena-pickle-deserialization-gadget-001 for POST /api/profile/import.",
+      "team": "system",
+      "ts": "2026-07-07T22:40:50Z",
+      "turn": {
+        "current_action": "Create Unsafe Python pickle deserialization scenario and Docker oracle.",
+        "loop_index": 0,
+        "phase": "arena",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "spectator",
+        "notification": "Arena scenario created",
+        "runner_animation": "scan_research",
+        "runner_state": "research",
+        "sound_cue": "none",
+        "spectator_caption": "Arena scenario created for /api/profile/import."
+      }
+    },
+    {
+      "actor_id": "payload-857-receipt",
+      "actor_kind": "exploit_agent",
+      "battle_id": "battle-006",
+      "elapsed_seconds": null,
+      "event_type": "red.learned",
+      "evidence": {
+        "artifact_ref": "red-receipt.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "red-tau-subagent-receipt",
+        "receipt_path": "red-receipt.json"
+      },
+      "id": "red-0-red-exploit",
+      "order_index": 2,
+      "output": {
+        "stderr_excerpt": "not emitted",
+        "stdout_excerpt": "PICKLE_GADGET_CONFIRMED"
+      },
+      "payload_id": "payload-857",
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [],
+      "skills": [
+        {
+          "kind": "tool",
+          "name": "docker-replay",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "red-tau-subagent-receipt",
+          "status": "ok",
+          "summary": "Red worker proof receipt.",
+          "timestamp": "2026-07-07T22:40:50Z"
+        }
+      ],
+      "summary": "Red worker red-0 materialized exploit artifact.",
+      "tau_run_id": "arena-battle-20260707T224048Z",
+      "tau_turn_id": "arena-battle-20260707T224048Z:red-0:red",
+      "team": "red",
+      "ts": "2026-07-07T22:40:50Z",
+      "turn": {
+        "current_action": "Materialize Red exploit artifact.",
+        "loop_index": 1,
+        "phase": "red_exploit",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "hero",
+        "notification": "Red exploit materialized",
+        "runner_animation": "retry_charge",
+        "runner_state": "retry",
+        "sound_cue": "retry_tick",
+        "spectator_caption": "Red exploit artifact materialized."
+      }
+    },
+    {
+      "actor_id": "blue-receipt-backed-patch",
+      "actor_kind": "patch_agent",
+      "battle_id": "battle-006",
+      "elapsed_seconds": null,
+      "event_type": "blue.patch_deployed",
+      "evidence": {
+        "artifact_ref": "blue-receipt.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "blue-tau-subagent-receipt",
+        "receipt_path": "blue-receipt.json"
+      },
+      "id": "blue-0-blue-patch",
+      "order_index": 3,
+      "output": {
+        "stderr_excerpt": "not emitted",
+        "stdout_excerpt": "blue patch artifact present"
+      },
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [],
+      "skills": [
+        {
+          "kind": "tool",
+          "name": "file-overwrite",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "blue-tau-subagent-receipt",
+          "status": "ok",
+          "summary": "Blue worker proof receipt.",
+          "timestamp": "2026-07-07T22:40:50Z"
+        }
+      ],
+      "summary": "Blue worker blue-0 materialized patch artifact.",
+      "target_actor_ids": [
+        "payload-857-receipt"
+      ],
+      "tau_run_id": "arena-battle-20260707T224048Z",
+      "tau_turn_id": "arena-battle-20260707T224048Z:blue-0:blue",
+      "team": "blue",
+      "ts": "2026-07-07T22:40:50Z",
+      "turn": {
+        "current_action": "Materialize Blue patch artifact.",
+        "loop_index": 2,
+        "phase": "blue_patch",
+        "status": "PASS"
+      },
+      "ui": {
+        "blue_animation": "patch_wave_deploy",
+        "importance": "hero",
+        "notification": "Blue patch materialized",
+        "sound_cue": "blue_patch_deploy",
+        "spectator_caption": "Blue patch artifact materialized."
+      }
+    },
+    {
+      "actor_id": "blue-receipt-backed-patch",
+      "actor_kind": "patch_agent",
+      "battle_id": "battle-006",
+      "blue_action_id": "blue-receipt-backed-patch",
+      "blue_worker_id": "blue-0",
+      "elapsed_seconds": null,
+      "event_type": "blue.blocked_red",
+      "evidence": {
+        "artifact_ref": "judge/judge-receipt.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "judge-receipt",
+        "receipt_path": "judge/judge-receipt.json"
+      },
+      "id": "red-0__blue-0-blue-success",
+      "judge_attempt": {
+        "blue_action_id": "blue-receipt-backed-patch",
+        "blue_worker_id": "blue-0",
+        "pair_id": "red-0__blue-0",
+        "red_lane_id": "payload-857-receipt",
+        "red_worker_id": "red-0",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      },
+      "order_index": 4,
+      "output": {
+        "stderr_excerpt": "not emitted",
+        "stdout_excerpt": "functionality stdout: True"
+      },
+      "pair_id": "red-0__blue-0",
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [
+        {
+          "artifact_ref": "judge/judge-receipt.json",
+          "blue_action_id": "blue-receipt-backed-patch",
+          "blue_worker_id": "blue-0",
+          "pair_id": "red-0__blue-0",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "judge-receipt",
+          "receipt_path": "judge/judge-receipt.json",
+          "receipt_type": "judge",
+          "red_lane_id": "payload-857-receipt",
+          "red_worker_id": "red-0",
+          "summary": "Judge receipt for Red/Blue worker pair."
+        }
+      ],
+      "red_lane_id": "payload-857-receipt",
+      "red_worker_id": "red-0",
+      "skills": [
+        {
+          "kind": "tool",
+          "name": "docker-replay",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "judge-receipt",
+          "status": "ok",
+          "summary": "Judge replayed exploit after patch and verified functionality.",
+          "timestamp": "2026-07-07T22:40:50Z"
+        }
+      ],
+      "summary": "Judge verified blue-0 blocked red-0.",
+      "target_actor_ids": [
+        "payload-857-receipt"
+      ],
+      "tau_run_id": "arena-battle-20260707T224048Z",
+      "team": "blue",
+      "ts": "2026-07-07T22:40:50Z",
+      "turn": {
+        "current_action": "Run Red exploit after Blue patch and verify functionality.",
+        "loop_index": 3,
+        "phase": "judge_replay",
+        "status": "PASS"
+      },
+      "ui": {
+        "blue_animation": "blue_sonic_blast",
+        "impact_animation": "blue_sonic_blast",
+        "importance": "hero",
+        "notification": "Blue blocks Red exploit",
+        "runner_animation": "runner_hit_by_blast",
+        "runner_state": "blocked",
+        "sound_cue": "blue_blast",
+        "spectator_caption": "Blue blocked Red exploit in Judge replay."
+      }
+    },
+    {
+      "actor_id": "battle-scorekeeper",
+      "actor_kind": "scorekeeper",
+      "battle_id": "battle-006",
+      "elapsed_seconds": null,
+      "event_type": "judge.verdict",
+      "evidence": {
+        "artifact_ref": "scoreboard.json",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "scoreboard",
+        "receipt_path": "scoreboard.json"
+      },
+      "id": "scoreboard-blue-success",
+      "order_index": 5,
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [],
+      "summary": "Scoreboard verdict BLUE_SUCCESS: red_score 1.5, blue_score 3.6, TDSR 1.0.",
+      "target_actor_ids": [
+        "payload-857-receipt",
+        "blue-receipt-backed-patch"
+      ],
+      "team": "judge",
+      "ts": "2026-07-07T22:40:50Z",
+      "turn": {
+        "current_action": "Write scoreboard and terminal run receipt.",
+        "loop_index": 4,
+        "phase": "verdict",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "hero",
+        "notification": "BLUE_SUCCESS \u00b7 Judge replay proof",
+        "runner_animation": "runner_hit_by_blast",
+        "runner_state": "blocked",
+        "sound_cue": "none",
+        "spectator_caption": "BLUE_SUCCESS \u00b7 Judge replay proof."
+      }
+    }
+  ],
+  "generated_at": "2026-07-07T22:40:50Z",
+  "lane_activity_timeline_model": {
+    "lane_count": 1,
+    "lanes": [
+      {
+        "lane_id": "payload-857-receipt",
+        "lane_index": 0,
+        "parent_lane_id": null,
+        "segment_count": 6,
+        "segments": [
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 14,
+            "label": "spawn / materialize",
+            "phase": "materialize",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:01",
+            "segment_index": 0,
+            "source_event_id": null,
+            "start_elapsed_seconds": null,
+            "start_x": 7
+          },
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 33,
+            "label": "research",
+            "phase": "research",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:02",
+            "segment_index": 1,
+            "source_event_id": "payload-857-receipt:arena",
+            "start_elapsed_seconds": null,
+            "start_x": 14
+          },
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 50,
+            "label": "payload",
+            "phase": "payload",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:03",
+            "segment_index": 2,
+            "source_event_id": "payload-857-receipt:red",
+            "start_elapsed_seconds": null,
+            "start_x": 33
+          },
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 67,
+            "label": "useful signal",
+            "phase": "useful_signal",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:04",
+            "segment_index": 3,
+            "source_event_id": "payload-857-receipt:useful",
+            "start_elapsed_seconds": null,
+            "start_x": 50
+          },
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 82,
+            "label": "Blue patch gate",
+            "phase": "patch_gate",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:05",
+            "segment_index": 4,
+            "source_event_id": "payload-857-receipt:blue",
+            "start_elapsed_seconds": null,
+            "start_x": 67
+          },
+          {
+            "elapsed_axis_source": "timeline_elapsed_axis_model",
+            "elapsed_end_x": null,
+            "elapsed_start_x": null,
+            "end_elapsed_seconds": null,
+            "end_x": 84,
+            "label": "Judge replay",
+            "phase": "judge_replay",
+            "proof_mode": "receipt_backed_fixture",
+            "segment_id": "payload-857-receipt:segment:06",
+            "segment_index": 5,
+            "source_event_id": "payload-857-receipt:judge",
+            "start_elapsed_seconds": null,
+            "start_x": 82
+          }
+        ],
+        "x_end": 84,
+        "x_start": 7
+      }
+    ],
+    "mode": "receipt_backed_activity_segments",
+    "phases": [
+      "judge_replay",
+      "materialize",
+      "patch_gate",
+      "payload",
+      "research",
+      "useful_signal"
+    ],
+    "render_rules": [
+      "Render exploit activity labels from lane_activity_timeline_model.lanes[].segments only.",
+      "Do not invent research, payload, mutate, trigger, patch, crash, or terminal phases client-side.",
+      "Do not draw any segment before its lane x_start.",
+      "For elapsed-time/DAW placement, render segments from elapsed_start_x to elapsed_end_x.",
+      "Use source_event_id and proof_mode to connect visible activity to receipts."
+    ],
+    "schema": "battle.lane_activity_timeline_model.v1",
+    "segment_count": 6
+  },
+  "lane_phase_coverage": [
+    {
+      "child_lane_ids": [],
+      "has_judge_replay": true,
+      "has_materialize": true,
+      "has_patch_gate": true,
+      "has_research": true,
+      "has_spawn_handoff": false,
+      "is_child": false,
+      "is_parent": false,
+      "lane_id": "payload-857-receipt",
+      "parent_id": null,
+      "phase_sources": {
+        "judge_replay": [
+          "payload-857-receipt:segment:06"
+        ],
+        "materialize": [
+          "payload-857-receipt:segment:01"
+        ],
+        "patch_gate": [
+          "payload-857-receipt:segment:05"
+        ],
+        "payload": [
+          "payload-857-receipt:segment:03"
+        ],
+        "research": [
+          "payload-857-receipt:segment:02"
+        ],
+        "useful_signal": [
+          "payload-857-receipt:segment:04"
+        ]
+      },
+      "phases": [
+        "materialize",
+        "research",
+        "payload",
+        "useful_signal",
+        "patch_gate",
+        "judge_replay"
+      ],
+      "x_start": 7
+    }
+  ],
+  "lanes": [
+    {
+      "activitySegments": [
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 14,
+          "id": "payload-857-receipt:segment:01",
+          "label": "spawn / materialize",
+          "phase": "materialize",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": null,
+          "start_elapsed_seconds": null,
+          "start_x": 7
+        },
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 33,
+          "id": "payload-857-receipt:segment:02",
+          "label": "research",
+          "phase": "research",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": "payload-857-receipt:arena",
+          "start_elapsed_seconds": null,
+          "start_x": 14
+        },
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 50,
+          "id": "payload-857-receipt:segment:03",
+          "label": "payload",
+          "phase": "payload",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": "payload-857-receipt:red",
+          "start_elapsed_seconds": null,
+          "start_x": 33
+        },
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 67,
+          "id": "payload-857-receipt:segment:04",
+          "label": "useful signal",
+          "phase": "useful_signal",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": "payload-857-receipt:useful",
+          "start_elapsed_seconds": null,
+          "start_x": 50
+        },
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 82,
+          "id": "payload-857-receipt:segment:05",
+          "label": "Blue patch gate",
+          "phase": "patch_gate",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": "payload-857-receipt:blue",
+          "start_elapsed_seconds": null,
+          "start_x": 67
+        },
+        {
+          "end_elapsed_seconds": null,
+          "end_x": 84,
+          "id": "payload-857-receipt:segment:06",
+          "label": "Judge replay",
+          "phase": "judge_replay",
+          "proof_mode": "receipt_backed_fixture",
+          "source_event_id": "payload-857-receipt:judge",
+          "start_elapsed_seconds": null,
+          "start_x": 82
+        }
+      ],
+      "actor_visual": {
+        "actor_id": "payload-857-receipt",
+        "archetype": "chaos_marine_heavy",
+        "facing": "right",
+        "initial_state": "idle",
+        "lane_id": "payload-857-receipt",
+        "proof_scope": {
+          "cosmetic_identity_only": true,
+          "does_not_prove": [
+            "Sprite selection does not prove Battle outcome."
+          ],
+          "terminal_states_receipt_gated": true
+        },
+        "role": "red_exploit",
+        "scale_class": "heavy_64",
+        "schema": "battle.actor_visual.v1",
+        "state_source": "canonical_events",
+        "state_timeline": [
+          {
+            "at_seconds": 0.0,
+            "provisional": false,
+            "source_event_id": "payload-857-receipt:actor-visual-default",
+            "state": "idle"
+          }
+        ],
+        "style_family": "vintage_16bit_genesis",
+        "team": "red",
+        "variant_id": "crimson_hornbreaker",
+        "variant_source": "exploit_profile_tier"
+      },
+      "cockpit": {
+        "blue_outcome": {
+          "blocked": true,
+          "detected": true,
+          "forced_handoff": false,
+          "killed": false,
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "judge-receipt",
+          "status": "blocked"
+        },
+        "current_turn": {
+          "current_action": "Materialize Red exploit artifact.",
+          "loop_index": 1,
+          "phase": "red_exploit",
+          "status": "PASS"
+        },
+        "latest_receipt_id": "judge-receipt",
+        "learned": "EXPLOIT_CONFIRMED",
+        "memory_project_knowledge_events": [],
+        "next_move": "Render parent/child handoff only from lineage receipts; do not infer fastest crash or promotion.",
+        "output": {
+          "stderr": [
+            "not emitted",
+            "not emitted"
+          ],
+          "stdout": [
+            "PICKLE_GADGET_CONFIRMED\n",
+            "BLUE_SUCCESS"
+          ]
+        },
+        "proof_label": "FIXTURE TRACE",
+        "proof_mode": "receipt_backed_fixture",
+        "public_trace": {
+          "action": "Materialize Red worker artifact, replay against materialized Blue patch, and preserve Judge pair verdict.",
+          "hypothesis": "A materialized Red exploit can exercise the archive import path traversal before Blue patch replay.",
+          "learned": "EXPLOIT_CONFIRMED",
+          "next_move": "Render parent/child handoff only from lineage receipts; do not infer fastest crash or promotion.",
+          "observation": "CWE-502 Unsafe Python pickle deserialization at /api/profile/import.",
+          "result": "BLUE_SUCCESS"
+        },
+        "replay": {
+          "attempt_id": "red-0__blue-0",
+          "blue_action_id": "blue-receipt-backed-patch",
+          "blue_worker_id": "blue-0",
+          "can_execute_now": false,
+          "command_receipt_id": null,
+          "cta": {
+            "disabled_reason": "No executable replay endpoint or command receipt is attached to this selected lane.",
+            "icon": "container",
+            "label": "REPLAY IN DOCKER",
+            "proof_mode": "receipt_backed_fixture",
+            "state": "receipt_only",
+            "tooltip": "Judge replay receipt is available; live container execution is not attached.",
+            "visible": true
+          },
+          "endpoint": null,
+          "kind": "receipt_only",
+          "label": "REPLAY IN DOCKER",
+          "pair_id": "red-0__blue-0",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "judge-receipt",
+          "red_lane_id": "payload-857-receipt",
+          "red_worker_id": "red-0"
+        },
+        "schema": "battle.lane_cockpit.v1",
+        "score_semantics": {
+          "lane_id": "payload-857-receipt",
+          "multipliers": {
+            "blue": 12.0,
+            "red": 2.0
+          },
+          "outcome_class": "pre_spawn_blue_block",
+          "outcome_tier": "PRE_SPAWN_BLOCK",
+          "proof_mode": "receipt_backed_fixture",
+          "rules": {
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true
+          },
+          "schema": "battle.semantic_scoring.v1",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "blue": 9.156,
+            "red": 1.526
+          },
+          "score_weight": 0.763,
+          "spawn_state": "not_spawned",
+          "terminal_state": "blocked"
+        },
+        "selected_tau_exploit_subagent": {
+          "actor_id": "payload-857-receipt",
+          "generation": 1,
+          "missing_tau_id": false,
+          "payload_id": "payload-857",
+          "tau_run_id": "arena-battle-20260707T224048Z",
+          "tau_subagent_id": "red-0",
+          "tau_turn_id": "arena-battle-20260707T224048Z:red-0:red",
+          "worker_id": "red-0"
+        },
+        "skills_tools": [
+          {
+            "kind": "tool",
+            "name": "docker-replay",
+            "proof_label": "FIXTURE SKILL TRACE",
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "red-tau-subagent-receipt",
+            "status": "ok"
+          },
+          {
+            "kind": "tool",
+            "name": "docker-replay",
+            "proof_label": "FIXTURE SKILL TRACE",
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "judge-receipt",
+            "status": "ok"
+          }
+        ]
+      },
+      "events": [
+        {
+          "collision_group": "x01",
+          "elapsed_seconds": null,
+          "id": "payload-857-receipt:arena",
+          "kind": "research",
+          "label": "ARENA SCENARIO",
+          "label_band": "upper",
+          "marker_priority": 40,
+          "order_index": 14,
+          "proofMode": "receipt_backed_fixture",
+          "proven": true,
+          "receiptId": "arena-receipt",
+          "timeLabel": "public",
+          "x": 14
+        },
+        {
+          "collision_group": "x03",
+          "elapsed_seconds": null,
+          "id": "payload-857-receipt:red",
+          "kind": "payload",
+          "label": "RED EXPLOIT",
+          "label_band": "lower",
+          "marker_priority": 50,
+          "order_index": 33,
+          "proofMode": "receipt_backed_fixture",
+          "proven": true,
+          "receiptId": "red-tau-subagent-receipt",
+          "timeLabel": "materialized",
+          "x": 33
+        },
+        {
+          "animation": "pause_terminal",
+          "collision_group": "x05",
+          "elapsed_seconds": null,
+          "id": "payload-857-receipt:useful",
+          "kind": "useful",
+          "label": "EXPLOIT_CONFIRMED",
+          "label_band": "upper",
+          "marker_priority": 90,
+          "order_index": 50,
+          "proofMode": "receipt_backed_fixture",
+          "proven": true,
+          "receiptId": "red-tau-subagent-receipt",
+          "timeLabel": "before patch",
+          "x": 50
+        },
+        {
+          "animation": "blue_sonic_blast",
+          "blueSourceId": "blue-receipt-backed-patch",
+          "collision_group": "x06",
+          "elapsed_seconds": null,
+          "id": "payload-857-receipt:blue",
+          "kind": "blue_blast",
+          "label": "PATCH",
+          "label_band": "upper",
+          "marker_priority": 80,
+          "order_index": 67,
+          "proofMode": "receipt_backed_fixture",
+          "proven": true,
+          "receiptId": "blue-tau-subagent-receipt",
+          "timeLabel": "blue",
+          "x": 67
+        },
+        {
+          "animation": "blue_sonic_blast",
+          "collision_group": "x08",
+          "elapsed_seconds": null,
+          "id": "payload-857-receipt:judge",
+          "kind": "blocked",
+          "label": "BLUE_SUCCESS",
+          "label_band": "lower",
+          "marker_priority": 70,
+          "order_index": 82,
+          "proofMode": "receipt_backed_fixture",
+          "proven": true,
+          "receiptId": "judge-receipt",
+          "timeLabel": "judge",
+          "x": 82
+        }
+      ],
+      "exploit_profile": {
+        "complexity": 0.68,
+        "durability": 0.72,
+        "evidence_source": "receipt_events_and_lineage",
+        "lane_id": "payload-857-receipt",
+        "lineage_pressure": 0.0,
+        "proof_scope": {
+          "does_not_prove": [
+            "Exploit profile is a deterministic scoring projection, not independent exploit truth.",
+            "Sprite tier does not prove Battle outcome."
+          ],
+          "heuristic_profile": true,
+          "receipt_backed_inputs": true
+        },
+        "reproducibility": 0.84,
+        "schema": "battle.exploit_profile.v1",
+        "score_weight": 0.763,
+        "stealth": 0.42,
+        "strength": 0.82,
+        "tier": "heavy_durable"
+      },
+      "generation": 1,
+      "id": "payload-857-receipt",
+      "inheritedContext": [
+        "CWE-502 Unsafe Python pickle deserialization",
+        "Public entrypoint /api/profile/import",
+        "Red worker red-0 status PASS",
+        "Blue worker blue-0 status PASS",
+        "Judge verdict BLUE_SUCCESS"
+      ],
+      "lineColor": "red",
+      "mutationRationale": "Receipt-backed BATTLE-004 Tau worker lane. The lane only shows worker and Judge events present in receipts. No child spawn, Blue kill, fastest crash, or promotion is shown.",
+      "name": "Archive Escape",
+      "payloadId": "payload-857",
+      "proofMode": "receipt_backed_fixture",
+      "receipts": [
+        "run-receipt",
+        "scoreboard",
+        "arena-receipt",
+        "language-contract",
+        "red-receipt",
+        "blue-receipt",
+        "judge-receipt",
+        "monitor-index"
+      ],
+      "replay": {
+        "attempt_id": "red-0__blue-0",
+        "blue_action_id": "blue-receipt-backed-patch",
+        "blue_worker_id": "blue-0",
+        "can_execute_now": false,
+        "command_receipt_id": null,
+        "cta": {
+          "disabled_reason": "No executable replay endpoint or command receipt is attached to this selected lane.",
+          "icon": "container",
+          "label": "REPLAY IN DOCKER",
+          "proof_mode": "receipt_backed_fixture",
+          "state": "receipt_only",
+          "tooltip": "Judge replay receipt is available; live container execution is not attached.",
+          "visible": true
+        },
+        "endpoint": null,
+        "kind": "receipt_only",
+        "label": "REPLAY IN DOCKER",
+        "pair_id": "red-0__blue-0",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "judge-receipt",
+        "red_lane_id": "payload-857-receipt",
+        "red_worker_id": "red-0"
+      },
+      "replay_semantics": {
+        "backend_must_not_emit": [
+          "cinematic_speed",
+          "easing",
+          "camera_path",
+          "pixi_frame_timing"
+        ],
+        "events": [],
+        "lane_id": "payload-857-receipt",
+        "presentation_owner": "ux",
+        "proof_mode": "receipt_backed_fixture",
+        "schema": "battle.replay_semantics.v1",
+        "time_authority": "receipt_elapsed_seconds"
+      },
+      "runnerState": "blocked",
+      "runnerVerb": "blocked by Blue",
+      "runnerX": 82,
+      "scenario": {
+        "battle_id": "battle-006",
+        "hidden_vulnerability_family": "Unsafe Python pickle deserialization",
+        "public_entrypoint": "/api/profile/import",
+        "scenario_id": "arena-pickle-deserialization-gadget-001"
+      },
+      "score_semantics": {
+        "lane_id": "payload-857-receipt",
+        "multipliers": {
+          "blue": 12.0,
+          "red": 2.0
+        },
+        "outcome_class": "pre_spawn_blue_block",
+        "outcome_tier": "PRE_SPAWN_BLOCK",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "explicit_kill_scores_below_pre_spawn_block": true,
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true,
+          "unblocked_spawned_exploit_scores_red_breakthrough": true
+        },
+        "schema": "battle.semantic_scoring.v1",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "blue": 9.156,
+          "red": 1.526
+        },
+        "score_weight": 0.763,
+        "spawn_state": "not_spawned",
+        "terminal_state": "blocked"
+      },
+      "stderr": [
+        "not emitted",
+        "not emitted"
+      ],
+      "stdout": [
+        "PICKLE_GADGET_CONFIRMED\n",
+        "BLUE_SUCCESS"
+      ],
+      "team": "red",
+      "terminal": "blocked",
+      "xEnd": 84,
+      "xStart": 7
+    }
+  ],
+  "leaderboard": [
+    {
+      "laneId": "payload-857-receipt",
+      "name": "Archive Escape",
+      "proofMode": "receipt_backed_fixture",
+      "rank": 1,
+      "status": "blocked",
+      "summary": "BLUE_SUCCESS: blocked by Blue.",
+      "time": "judge"
+    }
+  ],
+  "lineage": {
+    "child_lane_ids": [],
+    "does_not_prove": [
+      "Child-spawn lineage."
+    ],
+    "groups": [],
+    "mode": "missing",
+    "parent_lane_ids": [],
+    "proof_mode": "receipt_backed_fixture",
+    "spawn_count": 0,
+    "spawns": []
+  },
+  "lineage_render_model": {
+    "collapse_source": "lineage.groups",
+    "connector_count": 0,
+    "connector_source": "lineage.spawns",
+    "connectors": [],
+    "group_count": 0,
+    "groups": [],
+    "mode": "receipt_backed_parent_child",
+    "render_rules": [
+      "Render parent and child lanes from lineage.groups only.",
+      "Render connector origin from parent_event_id/source_receipt_id, not from the graph left edge.",
+      "Render child lane start from child_x_start and matching child handoff event."
+    ],
+    "schema": "battle.lineage_render_model.v1"
+  },
+  "lineage_request": {
+    "condition": "Child lineage was not requested for this proof rung.",
+    "mode": "not_requested",
+    "proof_mode": "receipt_backed_fixture",
+    "receipt": null,
+    "requested": false,
+    "schema": "battle.lineage_request.v1",
+    "status": "NOT_REQUESTED"
+  },
+  "live_source": "brave_search_and_docker_red_blue_judge",
+  "mocked": false,
+  "mode": "receipt_replay",
+  "outcome_truth_constraints_model": {
+    "allowed": {
+      "blue_blocks": {
+        "allowed": true,
+        "blue_success_pair_count": 1,
+        "event_count": 1,
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "render_policy": "render_blue_blocks_only_for_BLUE_SUCCESS_pairs",
+        "source": "scoreboard.per_pair + events[blue.blocked_red]"
+      },
+      "child_lineage": {
+        "allowed": false,
+        "count": 0,
+        "lane_ids": [],
+        "render_policy": "render_child_lanes_only_from_lineage_receipts",
+        "source": "lineage.spawns"
+      },
+      "docker_replay_cta": {
+        "allowed": true,
+        "executable_count": 0,
+        "receipt_only_count": 1,
+        "render_policy": "show_cta_from_replay_cta_state_do_not_imply_execution",
+        "source": "lanes[].replay.cta"
+      }
+    },
+    "forbidden": {
+      "blue_kill": {
+        "allowed": false,
+        "forbidden_inference_present": true,
+        "inference": "Blue kill attribution",
+        "present_event_types": [],
+        "render_policy": "render_only_when_allowed_true",
+        "required_event_types": [
+          "blue.kill_confirmed"
+        ]
+      },
+      "fastest_crash": {
+        "allowed": false,
+        "forbidden_inference_present": true,
+        "inference": "Fastest crash",
+        "present_event_types": [],
+        "render_policy": "render_only_when_allowed_true",
+        "required_event_types": [
+          "tau.fastest_crash",
+          "red.fastest_crash"
+        ]
+      },
+      "live_replay_execution": {
+        "allowed": false,
+        "executable_count": 0,
+        "forbidden_inference_present": true,
+        "inference": "Live stream execution",
+        "render_policy": "execute_only_when_allowed_true",
+        "required_fields": [
+          "lanes[].replay.can_execute_now"
+        ]
+      },
+      "survivor_promotion": {
+        "allowed": false,
+        "forbidden_inference_present": true,
+        "inference": "Survivor promotion",
+        "present_event_types": [],
+        "render_policy": "render_only_when_allowed_true",
+        "required_event_types": [
+          "tau.promoted",
+          "red.promoted"
+        ]
+      }
+    },
+    "mode": "receipt_backed_outcome_gates",
+    "render_rules": [
+      "Read outcome permissions from this model before rendering dramatic states.",
+      "Do not render forbidden outcomes when allowed is false.",
+      "Use allowed.blue_blocks.lane_ids rather than Blue patch presence for block counts.",
+      "Use allowed.docker_replay_cta.executable_count before enabling live replay execution."
+    ],
+    "schema": "battle.outcome_truth_constraints_model.v1"
+  },
+  "proof_blockers": [],
+  "proof_mode": "receipt_backed_fixture",
+  "receipts": [
+    {
+      "artifact_ref": "run-receipt.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "run-receipt",
+      "receipt_path": "run-receipt.json",
+      "receipt_type": "battle_run",
+      "summary": "BATTLE-004 Arena Red/Blue/Judge run receipt."
+    },
+    {
+      "artifact_ref": "scoreboard.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "scoreboard",
+      "receipt_path": "scoreboard.json",
+      "receipt_type": "scoreboard",
+      "summary": "Scoreboard records verdict and scores."
+    },
+    {
+      "artifact_ref": "arena/arena-receipt.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "arena-receipt",
+      "receipt_path": "arena/arena-receipt.json",
+      "receipt_type": "arena",
+      "summary": "Arena created the scenario."
+    },
+    {
+      "artifact_ref": "language-contract.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "language-contract",
+      "receipt_path": "language-contract.json",
+      "receipt_type": "language_contract",
+      "summary": "Language and runtime contract."
+    },
+    {
+      "artifact_ref": "red-receipt.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "red-receipt",
+      "receipt_path": "red-receipt.json",
+      "receipt_type": "red_team",
+      "summary": "Red receipt records exploit evidence."
+    },
+    {
+      "artifact_ref": "blue-receipt.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "blue-receipt",
+      "receipt_path": "blue-receipt.json",
+      "receipt_type": "blue_team",
+      "summary": "Blue receipt records patch evidence."
+    },
+    {
+      "artifact_ref": "judge/judge-receipt.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "judge-receipt",
+      "receipt_path": "judge/judge-receipt.json",
+      "receipt_type": "judge",
+      "summary": "Judge receipt records replay verdict."
+    },
+    {
+      "artifact_ref": "monitor-index.json",
+      "proof_mode": "receipt_backed_fixture",
+      "receipt_id": "monitor-index",
+      "receipt_path": "monitor-index.json",
+      "receipt_type": "monitor_index",
+      "summary": "Monitor index lists proof artifacts."
+    }
+  ],
+  "renderer_binding_contract": {
+    "agent_detail_cockpit": {
+      "blue_outcome": "lanes[].cockpit.blue_outcome",
+      "current_turn": "lanes[].cockpit.current_turn",
+      "latest_receipt_id": "lanes[].cockpit.latest_receipt_id",
+      "public_trace": "lanes[].cockpit.public_trace",
+      "replay": "lanes[].cockpit.replay",
+      "selected_tau_identity": "lanes[].cockpit.selected_tau_exploit_subagent",
+      "skills_tools": "lanes[].cockpit.skills_tools",
+      "stderr": "lanes[].cockpit.output.stderr",
+      "stdout": "lanes[].cockpit.output.stdout"
+    },
+    "battle_shell": {
+      "blue_score": "spectator_shell.score.blue.value",
+      "fact_chips": "spectator_shell.facts[]",
+      "mode_badge": "spectator_shell.mode_badge",
+      "receipt_ticker": "spectator_shell.event_ticker",
+      "red_score": "spectator_shell.score.red.value",
+      "score_verdict": "spectator_shell.score.verdict",
+      "subtitle": "spectator_shell.subtitle",
+      "title": "spectator_shell.battle_title",
+      "truth_label": "spectator_shell.truth_label"
+    },
+    "docker_replay_cta": {
+      "can_execute_now": "lanes[].replay.can_execute_now",
+      "cta": "lanes[].replay.cta",
+      "disabled_reason": "lanes[].replay.cta.disabled_reason",
+      "label": "lanes[].replay.cta.label",
+      "lane_replay": "lanes[].replay",
+      "state": "lanes[].replay.cta.state",
+      "visible": "lanes[].replay.cta.visible"
+    },
+    "elapsed_timeline_axis": {
+      "activity_model": "lane_activity_timeline_model",
+      "activity_segment_elapsed_end_x": "lane_activity_timeline_model.lanes[].segments[].elapsed_end_x",
+      "activity_segment_elapsed_start_x": "lane_activity_timeline_model.lanes[].segments[].elapsed_start_x",
+      "elapsed_x": "timeline_elapsed_axis_model.keyframes[].x",
+      "keyframes": "timeline_elapsed_axis_model.keyframes[]",
+      "lane_end_elapsed_x": "timeline_lane_start_model.starts[].elapsed_line_end_x",
+      "lane_start_elapsed_x": "timeline_lane_start_model.starts[].elapsed_line_must_start_at_x",
+      "lane_start_model": "timeline_lane_start_model",
+      "legacy_receipt_order_x": "timeline_elapsed_axis_model.keyframes[].receipt_order_x",
+      "model": "timeline_elapsed_axis_model",
+      "playhead": "timeline_elapsed_axis_model.playhead",
+      "render_rule": "Use this section for elapsed-time/DAW-style placement; use timeline.playhead.keyframes[].x only for legacy receipt-order renderers.",
+      "render_rules": "timeline_elapsed_axis_model.render_rules[]",
+      "x_axis_mode": "timeline_elapsed_axis_model.x_axis_mode",
+      "x_position_is_elapsed_time": "timeline_elapsed_axis_model.x_position_is_elapsed_time"
+    },
+    "lane_activity_and_label_layout": {
+      "activity_timeline_model": "lane_activity_timeline_model",
+      "between_marker_phases": "lanes[].activitySegments[]",
+      "collision_group": "lanes[].events[].collision_group",
+      "event_markers": "lanes[].events[]",
+      "label_band": "lanes[].events[].label_band",
+      "lane_end": "lanes[].xEnd",
+      "lane_start": "lanes[].xStart",
+      "marker_priority": "lanes[].events[].marker_priority",
+      "runner_position": "lanes[].runnerX",
+      "timeline_lane_start_model": "timeline_lane_start_model"
+    },
+    "moving_playhead": {
+      "animation_semantics": "timeline.playhead.animation_semantics",
+      "current_x": "timeline.playhead.current_x",
+      "elapsed_seconds": "timeline.playhead.elapsed_seconds",
+      "keyframes": "timeline.playhead.keyframes[]",
+      "render_rule": "Animate only as receipt replay when timeline.playhead.can_animate is true; never label as live stream unless proof_mode/live_source changes."
+    },
+    "parent_spawn_and_collapse": {
+      "child_parent_id": "lanes[].parentId",
+      "collapsible_flag": "lanes[].collapsible",
+      "expanded_default": "lanes[].expandedByDefault",
+      "groups": "lineage.groups[]",
+      "lineage_mode": "lineage.mode",
+      "parent_lane_children": "lanes[].children[]",
+      "request": "lineage_request",
+      "request_condition": "lineage_request.condition",
+      "request_status": "lineage_request.status",
+      "spawn_count": "lineage.spawn_count",
+      "spawn_records": "lineage.spawns[]"
+    },
+    "proof_blockers": {
+      "blocked_worker_reasons": "proof_blockers[]",
+      "blocker_kind": "proof_blockers[].blocker.kind",
+      "blocker_message": "proof_blockers[].blocker.message",
+      "blocker_receipt": "proof_blockers[].receipt_id"
+    },
+    "proof_mode": "receipt_backed_fixture",
+    "purpose": "Exact JSON paths the UX renderer should bind to. This is backend-owned data shape, not visual design direction.",
+    "round_time": {
+      "allotted_seconds": "battle_clock.allotted_seconds",
+      "clock_source": "battle_clock",
+      "display_value": "spectator_shell.facts[label=Round time].value",
+      "elapsed_seconds": "battle_clock.elapsed_seconds",
+      "remaining_seconds": "battle_clock.remaining_seconds"
+    },
+    "schema": "battle.renderer_binding_contract.v1",
+    "scrollable_timeline": {
+      "event_count": "timeline.event_count",
+      "lane_count": "timeline.lane_count",
+      "mode": "timeline.mode",
+      "supports_pan": "timeline.supports_pan",
+      "supports_zoom": "timeline.supports_zoom",
+      "viewport": "timeline.viewport"
+    }
+  },
+  "round_config": {
+    "battle_id": "battle-006",
+    "canonical_allotted_seconds": 1200.0,
+    "proof_mode": "receipt_backed_fixture",
+    "resolved_allotted_seconds": 1200.0,
+    "schema": "battle.round_config.v1",
+    "time_limit_source": "scenario_default"
+  },
+  "scenario": {
+    "cwe": "CWE-502",
+    "difficulty": "hard",
+    "hidden_vulnerability_family": "Unsafe Python pickle deserialization",
+    "public_entrypoint": "/api/profile/import",
+    "runtime_image": "python:3.12-slim",
+    "scenario_id": "arena-pickle-deserialization-gadget-001",
+    "target_language": "python",
+    "title": "Serialized profile import gadget"
+  },
+  "schema": "battle.normalized_ux_fixture.v1",
+  "scoreboard": {
+    "asc": 1,
+    "blue_action_count": 1,
+    "blue_materialized_count": 1,
+    "blue_score": 3.6,
+    "blue_success_count": 1,
+    "child_spawn_count": 0,
+    "judged_pair_count": 1,
+    "per_pair": [
+      {
+        "blue_action_id": "blue-receipt-backed-patch",
+        "blue_worker_id": "blue-0",
+        "exploit_blocked_after_patch": true,
+        "exploit_confirmed_before_patch": true,
+        "functionality_preserved": true,
+        "pair_id": "red-0__blue-0",
+        "red_lane_id": "payload-857-receipt",
+        "red_worker_id": "red-0",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      }
+    ],
+    "red_lane_count": 1,
+    "red_materialized_count": 1,
+    "red_score": 1.5,
+    "requested_blue_workers": 1,
+    "requested_red_workers": 1,
+    "semantic_scoring": {
+      "does_not_override_legacy_scoreboard_totals": true,
+      "lanes": [
+        {
+          "lane_id": "payload-857-receipt",
+          "multipliers": {
+            "blue": 12.0,
+            "red": 2.0
+          },
+          "outcome_class": "pre_spawn_blue_block",
+          "outcome_tier": "PRE_SPAWN_BLOCK",
+          "proof_mode": "receipt_backed_fixture",
+          "rules": {
+            "explicit_kill_scores_below_pre_spawn_block": true,
+            "functionality_preservation_required_for_full_blue_credit": true,
+            "pre_spawn_block_is_highest_blue_credit": true,
+            "spawn_pressure_reduces_blue_credit": true,
+            "sprite_choice_does_not_create_score_truth": true,
+            "unblocked_spawned_exploit_scores_red_breakthrough": true
+          },
+          "schema": "battle.semantic_scoring.v1",
+          "score_basis": "judge_receipts_lineage_and_exploit_profile",
+          "score_delta": {
+            "blue": 9.156,
+            "red": 1.526
+          },
+          "score_weight": 0.763,
+          "spawn_state": "not_spawned",
+          "terminal_state": "blocked"
+        }
+      ],
+      "outcome_tiers": [
+        "PRE_SPAWN_BLOCK"
+      ],
+      "proof_mode": "receipt_backed_fixture",
+      "rules": {
+        "explicit_kill_blue_multiplier": 10.0,
+        "explicit_kill_with_child_blue_multiplier": 5.5,
+        "functionality_preservation_required_for_full_blue_credit": true,
+        "killed_requires_explicit_kill_receipt": true,
+        "post_spawn_containment_blue_multiplier": 7.0,
+        "pre_spawn_block_blue_multiplier": 12.0,
+        "pre_spawn_block_is_more_valuable_than_explicit_kill": true,
+        "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
+        "preemptive_spawn_blue_pressure_multiplier": 2.5,
+        "preemptive_spawn_red_adaptation_multiplier": 6.0,
+        "red_breakthrough_multiplier": 9.0,
+        "spawn_pressure_parent_blue_multiplier": 4.0,
+        "spawned_unblocked_lane_scores_red_breakthrough": true
+      },
+      "schema": "battle.semantic_scoring.v1",
+      "score_owner": "scorekeeper",
+      "semantic_totals": {
+        "blue": 9.156,
+        "red": 1.526
+      },
+      "status": "advisory_contract"
+    },
+    "tdsr": 1.0,
+    "verdict": "BLUE_SUCCESS"
+  },
+  "segments": [
+    {
+      "end_seconds": null,
+      "end_x": 14,
+      "id": "payload-857-receipt:segment:01",
+      "interpolation": "receipt_backed_segment",
+      "kind": "materialize",
+      "label": "spawn / materialize",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": null,
+      "start_seconds": null,
+      "start_x": 7
+    },
+    {
+      "end_seconds": null,
+      "end_x": 33,
+      "id": "payload-857-receipt:segment:02",
+      "interpolation": "receipt_backed_segment",
+      "kind": "research",
+      "label": "research",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": "payload-857-receipt:arena",
+      "start_seconds": null,
+      "start_x": 14
+    },
+    {
+      "end_seconds": null,
+      "end_x": 50,
+      "id": "payload-857-receipt:segment:03",
+      "interpolation": "receipt_backed_segment",
+      "kind": "payload",
+      "label": "payload",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": "payload-857-receipt:red",
+      "start_seconds": null,
+      "start_x": 33
+    },
+    {
+      "end_seconds": null,
+      "end_x": 67,
+      "id": "payload-857-receipt:segment:04",
+      "interpolation": "receipt_backed_segment",
+      "kind": "useful_signal",
+      "label": "useful signal",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": "payload-857-receipt:useful",
+      "start_seconds": null,
+      "start_x": 50
+    },
+    {
+      "end_seconds": null,
+      "end_x": 82,
+      "id": "payload-857-receipt:segment:05",
+      "interpolation": "receipt_backed_segment",
+      "kind": "patch_gate",
+      "label": "Blue patch gate",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": "payload-857-receipt:blue",
+      "start_seconds": null,
+      "start_x": 67
+    },
+    {
+      "end_seconds": null,
+      "end_x": 84,
+      "id": "payload-857-receipt:segment:06",
+      "interpolation": "receipt_backed_segment",
+      "kind": "judge_replay",
+      "label": "Judge replay",
+      "lane_id": "payload-857-receipt",
+      "proof_mode": "receipt_backed_fixture",
+      "schema": "battle.segment.v1",
+      "source_event_id": "payload-857-receipt:judge",
+      "start_seconds": null,
+      "start_x": 82
+    }
+  ],
+  "selected_lane_model": {
+    "cockpit": {
+      "blue_outcome": {
+        "blocked": true,
+        "detected": true,
+        "forced_handoff": false,
+        "killed": false,
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "judge-receipt",
+        "status": "blocked"
+      },
+      "current_turn": {
+        "current_action": "Materialize Red exploit artifact.",
+        "loop_index": 1,
+        "phase": "red_exploit",
+        "status": "PASS"
+      },
+      "latest_receipt_id": "judge-receipt",
+      "learned": "EXPLOIT_CONFIRMED",
+      "memory_project_knowledge_events": [],
+      "next_move": "Render parent/child handoff only from lineage receipts; do not infer fastest crash or promotion.",
+      "output": {
+        "stderr": [
+          "not emitted",
+          "not emitted"
+        ],
+        "stdout": [
+          "PICKLE_GADGET_CONFIRMED\n",
+          "BLUE_SUCCESS"
+        ]
+      },
+      "proof_label": "FIXTURE TRACE",
+      "proof_mode": "receipt_backed_fixture",
+      "public_trace": {
+        "action": "Materialize Red worker artifact, replay against materialized Blue patch, and preserve Judge pair verdict.",
+        "hypothesis": "A materialized Red exploit can exercise the archive import path traversal before Blue patch replay.",
+        "learned": "EXPLOIT_CONFIRMED",
+        "next_move": "Render parent/child handoff only from lineage receipts; do not infer fastest crash or promotion.",
+        "observation": "CWE-502 Unsafe Python pickle deserialization at /api/profile/import.",
+        "result": "BLUE_SUCCESS"
+      },
+      "replay": {
+        "attempt_id": "red-0__blue-0",
+        "blue_action_id": "blue-receipt-backed-patch",
+        "blue_worker_id": "blue-0",
+        "can_execute_now": false,
+        "command_receipt_id": null,
+        "cta": {
+          "disabled_reason": "No executable replay endpoint or command receipt is attached to this selected lane.",
+          "icon": "container",
+          "label": "REPLAY IN DOCKER",
+          "proof_mode": "receipt_backed_fixture",
+          "state": "receipt_only",
+          "tooltip": "Judge replay receipt is available; live container execution is not attached.",
+          "visible": true
+        },
+        "endpoint": null,
+        "kind": "receipt_only",
+        "label": "REPLAY IN DOCKER",
+        "pair_id": "red-0__blue-0",
+        "proof_mode": "receipt_backed_fixture",
+        "receipt_id": "judge-receipt",
+        "red_lane_id": "payload-857-receipt",
+        "red_worker_id": "red-0"
+      },
+      "schema": "battle.lane_cockpit.v1",
+      "score_semantics": {
+        "lane_id": "payload-857-receipt",
+        "multipliers": {
+          "blue": 12.0,
+          "red": 2.0
+        },
+        "outcome_class": "pre_spawn_blue_block",
+        "outcome_tier": "PRE_SPAWN_BLOCK",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "explicit_kill_scores_below_pre_spawn_block": true,
+          "functionality_preservation_required_for_full_blue_credit": true,
+          "pre_spawn_block_is_highest_blue_credit": true,
+          "spawn_pressure_reduces_blue_credit": true,
+          "sprite_choice_does_not_create_score_truth": true,
+          "unblocked_spawned_exploit_scores_red_breakthrough": true
+        },
+        "schema": "battle.semantic_scoring.v1",
+        "score_basis": "judge_receipts_lineage_and_exploit_profile",
+        "score_delta": {
+          "blue": 9.156,
+          "red": 1.526
+        },
+        "score_weight": 0.763,
+        "spawn_state": "not_spawned",
+        "terminal_state": "blocked"
+      },
+      "selected_tau_exploit_subagent": {
+        "actor_id": "payload-857-receipt",
+        "generation": 1,
+        "missing_tau_id": false,
+        "payload_id": "payload-857",
+        "tau_run_id": "arena-battle-20260707T224048Z",
+        "tau_subagent_id": "red-0",
+        "tau_turn_id": "arena-battle-20260707T224048Z:red-0:red",
+        "worker_id": "red-0"
+      },
+      "skills_tools": [
+        {
+          "kind": "tool",
+          "name": "docker-replay",
+          "proof_label": "FIXTURE SKILL TRACE",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "red-tau-subagent-receipt",
+          "status": "ok"
+        },
+        {
+          "kind": "tool",
+          "name": "docker-replay",
+          "proof_label": "FIXTURE SKILL TRACE",
+          "proof_mode": "receipt_backed_fixture",
+          "receipt_id": "judge-receipt",
+          "status": "ok"
+        }
+      ]
+    },
+    "cockpit_path": "/lanes/0/cockpit",
+    "lane_id": "payload-857-receipt",
+    "lane_index": 0,
+    "lane_path": "/lanes/0",
+    "proof_mode": "receipt_backed_fixture",
+    "render_rules": [
+      "Select the first receipt-backed child lane when lineage groups contain children.",
+      "Use lane_index and JSON pointers from this object; do not assume lane 0 is selected.",
+      "Use cockpit and replay_cta copies here as backend-owned convenience values only."
+    ],
+    "replay_cta": {
+      "disabled_reason": "No executable replay endpoint or command receipt is attached to this selected lane.",
+      "icon": "container",
+      "label": "REPLAY IN DOCKER",
+      "proof_mode": "receipt_backed_fixture",
+      "state": "receipt_only",
+      "tooltip": "Judge replay receipt is available; live container execution is not attached.",
+      "visible": true
+    },
+    "replay_cta_path": "/lanes/0/replay/cta",
+    "schema": "battle.selected_lane_model.v1",
+    "selection_strategy": "first_lane"
+  },
+  "semantic_replay": {
+    "backend_emits": [
+      "source_time_seconds",
+      "phase",
+      "importance",
+      "lineage_pressure",
+      "score_delta",
+      "receipt_id"
+    ],
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "event_count": 0,
+    "events": [],
+    "presentation_owner": "ux",
+    "proof_mode": "receipt_backed_fixture",
+    "replay_mode": "compressed_spectator_replay",
+    "schema": "battle.semantic_replay.v1",
+    "time_authority": "receipt_elapsed_seconds"
+  },
+  "source_proof_dir": "/tmp/battle-006-pickle-deserialization-20260707T224047Z",
+  "spawn_gate_model": {
+    "gate_count": 0,
+    "gates": [],
+    "mode": "receipt_backed_spawn_gates",
+    "render_rules": [
+      "Render parent-child lanes only from spawn_gate_model.gates where renderable is true.",
+      "Use parent_event_id and child_event_id from this model for spawn affordances.",
+      "Use required_sources to show why a requested spawn is not renderable."
+    ],
+    "renderable_gate_count": 0,
+    "schema": "battle.spawn_gate_model.v1"
+  },
+  "spectator_shell": {
+    "battle_title": "BATTLE-006 \u00b7 POST /api/profile/import",
+    "event_ticker": {
+      "count": 6,
+      "label": "Receipt events",
+      "latest_text": "BLUE_SUCCESS \u00b7 Judge replay proof",
+      "live": false,
+      "source": "events"
+    },
+    "facts": [
+      {
+        "label": "Arena",
+        "value": "arena-pickle-deserialization-gadget-001"
+      },
+      {
+        "label": "Objective",
+        "value": "Prevent archive path traversal"
+      },
+      {
+        "label": "Target",
+        "value": "POST /api/profile/import"
+      },
+      {
+        "label": "Difficulty",
+        "value": "HARD"
+      },
+      {
+        "label": "Round time",
+        "value": "n/a / n/a"
+      }
+    ],
+    "mode_badge": "RECEIPT-BACKED",
+    "proof_mode": "receipt_backed_fixture",
+    "render_guards": [
+      "Render shell text from spectator_shell; do not hard-code mockup copy.",
+      "Do not label receipt replay as live execution.",
+      "Round time is a receipt value from battle_clock."
+    ],
+    "schema": "battle.spectator_shell.v1",
+    "score": {
+      "blue": {
+        "label": "Blue Team",
+        "sub": "Patch Agents",
+        "value": "3.6"
+      },
+      "red": {
+        "label": "Red Team",
+        "sub": "Exploit Agents",
+        "value": "1.5"
+      },
+      "verdict": "BLUE_SUCCESS"
+    },
+    "subtitle": "CWE-502 \u00b7 Unsafe Python pickle deserialization \u00b7 receipt-backed Battle proof",
+    "truth_label": "receipt-backed fixture"
+  },
+  "sprite_theme": {
+    "effect_sheets": {},
+    "proof_scope": {
+      "cosmetic_identity_only": true,
+      "does_not_prove": [
+        "Sprite theme selection does not prove Battle outcome."
+      ]
+    },
+    "renderer": "pixijs",
+    "rules": {
+      "backend_never_emits_animation_names": true,
+      "backend_never_emits_frame_indices": true,
+      "nearest_neighbor_scaling": true,
+      "terminal_animations_receipt_gated": true,
+      "transparent_background": true
+    },
+    "schema": "battle.sprite_theme.v1",
+    "state_vocabulary": [
+      "idle",
+      "walk",
+      "run",
+      "research",
+      "payload",
+      "mutate",
+      "handoff",
+      "spawn",
+      "hit",
+      "blocked",
+      "killed",
+      "fastest_crash",
+      "promoted",
+      "stale_pending"
+    ],
+    "style_family": "vintage_16bit_genesis",
+    "variants": {
+      "crimson_hornbreaker": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "archetype": "heavy",
+        "display_name": "Crimson Hornbreaker",
+        "frame_height": 64,
+        "frame_width": 64,
+        "scale": 1,
+        "sprite_id": "crimson_hornbreaker",
+        "spritesheet_alias": "battle-runner-crimson_hornbreaker",
+        "src": "/battle-sprites/pixijs/crimson_hornbreaker.json",
+        "state_animation_map": {
+          "blocked": "blocked",
+          "fastest_crash": "fastest_crash",
+          "handoff": "handoff",
+          "hit": "hit",
+          "idle": "idle",
+          "killed": "killed",
+          "mutate": "mutate",
+          "payload": "payload",
+          "promoted": "promoted",
+          "research": "research",
+          "run": "run",
+          "spawn": "spawn",
+          "stale_pending": "idle",
+          "walk": "walk"
+        },
+        "team": "red"
+      }
+    }
+  },
+  "status": "PASS",
+  "timeline": {
+    "event_count": 6,
+    "lane_count": 1,
+    "max_x": 100,
+    "min_x": 0,
+    "mode": "receipt_order",
+    "playhead": {
+      "animation_semantics": "receipt_replay_only",
+      "can_animate": true,
+      "current_x": 82,
+      "elapsed_seconds": null,
+      "keyframes": [
+        {
+          "event_id": "payload-857-receipt:arena",
+          "kind": "research",
+          "label": "ARENA SCENARIO",
+          "lane_id": "payload-857-receipt",
+          "proof_mode": "receipt_backed_fixture",
+          "x": 14
+        },
+        {
+          "event_id": "payload-857-receipt:red",
+          "kind": "payload",
+          "label": "RED EXPLOIT",
+          "lane_id": "payload-857-receipt",
+          "proof_mode": "receipt_backed_fixture",
+          "x": 33
+        },
+        {
+          "event_id": "payload-857-receipt:useful",
+          "kind": "useful",
+          "label": "EXPLOIT_CONFIRMED",
+          "lane_id": "payload-857-receipt",
+          "proof_mode": "receipt_backed_fixture",
+          "x": 50
+        },
+        {
+          "event_id": "payload-857-receipt:blue",
+          "kind": "blue_blast",
+          "label": "PATCH",
+          "lane_id": "payload-857-receipt",
+          "proof_mode": "receipt_backed_fixture",
+          "x": 67
+        },
+        {
+          "event_id": "payload-857-receipt:judge",
+          "kind": "blocked",
+          "label": "BLUE_SUCCESS",
+          "lane_id": "payload-857-receipt",
+          "proof_mode": "receipt_backed_fixture",
+          "x": 82
+        }
+      ],
+      "mode": "receipt_elapsed",
+      "proof_mode": "receipt_backed_fixture",
+      "source_receipt_id": "scoreboard"
+    },
+    "scroll_axis": "horizontal",
+    "supports_pan": true,
+    "supports_zoom": true,
+    "viewport": {
+      "initial_max_x": 97,
+      "initial_min_x": 37,
+      "max_zoom": 4.0,
+      "min_zoom": 0.75,
+      "proof_mode": "receipt_backed_fixture"
+    }
+  },
+  "timeline_elapsed_axis_model": {
+    "axis_max_elapsed_seconds": 100.0,
+    "axis_min_elapsed_seconds": 0,
+    "axis_source": "timeline.playhead.keyframes[].elapsed_seconds",
+    "keyframe_count": 0,
+    "keyframes": [],
+    "keyframes_are_monotonic": false,
+    "mode": "receipt_elapsed_axis",
+    "playhead": {
+      "animation_semantics": "receipt_elapsed_replay",
+      "current_elapsed_seconds": null,
+      "current_x": null,
+      "source_event_id": null
+    },
+    "render_rules": [
+      "Use timeline_elapsed_axis_model for DAW-style elapsed-time placement.",
+      "Use keyframes[].x for elapsed-time playhead animation and keyframes[].receipt_order_x only for legacy receipt-order renderers.",
+      "Do not use battle_clock.elapsed_seconds as the final playhead when receipt keyframes extend beyond the clock receipt.",
+      "Do not render elapsed-time x positions unless keyframes_are_monotonic is true."
+    ],
+    "round_clock_allotted_seconds": null,
+    "round_clock_elapsed_seconds": null,
+    "round_clock_remaining_seconds": null,
+    "schema": "battle.timeline_elapsed_axis_model.v1",
+    "x_axis_mode": "elapsed_seconds",
+    "x_position_is_elapsed_time": true
+  },
+  "timeline_label_layout_model": {
+    "collision_group_count": 5,
+    "collision_groups": [
+      {
+        "bands": [
+          "upper"
+        ],
+        "collision_group": "x01",
+        "event_count": 1,
+        "event_ids": [
+          "payload-857-receipt:arena"
+        ],
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "layout_policy": "separate_by_label_band_then_priority",
+        "priority_order": [
+          "payload-857-receipt:arena"
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "bands": [
+          "lower"
+        ],
+        "collision_group": "x03",
+        "event_count": 1,
+        "event_ids": [
+          "payload-857-receipt:red"
+        ],
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "layout_policy": "separate_by_label_band_then_priority",
+        "priority_order": [
+          "payload-857-receipt:red"
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "bands": [
+          "upper"
+        ],
+        "collision_group": "x05",
+        "event_count": 1,
+        "event_ids": [
+          "payload-857-receipt:useful"
+        ],
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "layout_policy": "separate_by_label_band_then_priority",
+        "priority_order": [
+          "payload-857-receipt:useful"
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "bands": [
+          "upper"
+        ],
+        "collision_group": "x06",
+        "event_count": 1,
+        "event_ids": [
+          "payload-857-receipt:blue"
+        ],
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "layout_policy": "separate_by_label_band_then_priority",
+        "priority_order": [
+          "payload-857-receipt:blue"
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "bands": [
+          "lower"
+        ],
+        "collision_group": "x08",
+        "event_count": 1,
+        "event_ids": [
+          "payload-857-receipt:judge"
+        ],
+        "lane_ids": [
+          "payload-857-receipt"
+        ],
+        "layout_policy": "separate_by_label_band_then_priority",
+        "priority_order": [
+          "payload-857-receipt:judge"
+        ],
+        "proof_mode": "receipt_backed_fixture"
+      }
+    ],
+    "label_count": 5,
+    "lanes": [
+      {
+        "label_count": 5,
+        "labels": [
+          {
+            "collision_group": "x01",
+            "event_id": "payload-857-receipt:arena",
+            "kind": "research",
+            "label": "ARENA SCENARIO",
+            "label_band": "upper",
+            "marker_priority": 40,
+            "order_index": 14,
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "arena-receipt",
+            "slot_key": "payload-857-receipt:x01:upper",
+            "suppress_when_colliding": true,
+            "x": 14
+          },
+          {
+            "collision_group": "x03",
+            "event_id": "payload-857-receipt:red",
+            "kind": "payload",
+            "label": "RED EXPLOIT",
+            "label_band": "lower",
+            "marker_priority": 50,
+            "order_index": 33,
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "red-tau-subagent-receipt",
+            "slot_key": "payload-857-receipt:x03:lower",
+            "suppress_when_colliding": true,
+            "x": 33
+          },
+          {
+            "collision_group": "x05",
+            "event_id": "payload-857-receipt:useful",
+            "kind": "useful",
+            "label": "EXPLOIT_CONFIRMED",
+            "label_band": "upper",
+            "marker_priority": 90,
+            "order_index": 50,
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "red-tau-subagent-receipt",
+            "slot_key": "payload-857-receipt:x05:upper",
+            "suppress_when_colliding": false,
+            "x": 50
+          },
+          {
+            "collision_group": "x06",
+            "event_id": "payload-857-receipt:blue",
+            "kind": "blue_blast",
+            "label": "PATCH",
+            "label_band": "upper",
+            "marker_priority": 80,
+            "order_index": 67,
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "blue-tau-subagent-receipt",
+            "slot_key": "payload-857-receipt:x06:upper",
+            "suppress_when_colliding": false,
+            "x": 67
+          },
+          {
+            "collision_group": "x08",
+            "event_id": "payload-857-receipt:judge",
+            "kind": "blocked",
+            "label": "BLUE_SUCCESS",
+            "label_band": "lower",
+            "marker_priority": 70,
+            "order_index": 82,
+            "proof_mode": "receipt_backed_fixture",
+            "receipt_id": "judge-receipt",
+            "slot_key": "payload-857-receipt:x08:lower",
+            "suppress_when_colliding": false,
+            "x": 82
+          }
+        ],
+        "lane_id": "payload-857-receipt",
+        "lane_index": 0
+      }
+    ],
+    "mode": "receipt_event_label_slots",
+    "render_rules": [
+      "Use label_band and collision_group from this model; do not infer label stacking from pixel position alone.",
+      "Within a collision_group, render higher marker_priority first and separate upper/lower bands.",
+      "If every label cannot be placed cleanly, preserve markers and hide lower-priority text labels first."
+    ],
+    "schema": "battle.timeline_label_layout_model.v1"
+  },
+  "timeline_lane_start_model": {
+    "mode": "receipt_order_lane_starts",
+    "render_rules": [
+      "Render each lane line from line_must_start_at_x; do not draw exploit progress before x_start.",
+      "For elapsed-time/DAW placement, render each lane line from elapsed_line_must_start_at_x.",
+      "Render child lanes from child_spawn_start/source_receipt_id, not from global time zero.",
+      "Use lineage_render_model.connectors for parent-to-child origin."
+    ],
+    "schema": "battle.timeline_lane_start_model.v1",
+    "start_count": 1,
+    "starts": [
+      {
+        "elapsed_axis_source": "timeline_elapsed_axis_model",
+        "elapsed_end_seconds": null,
+        "elapsed_line_end_x": null,
+        "elapsed_line_must_start_at_x": null,
+        "elapsed_start_seconds": null,
+        "first_active_segment_elapsed_seconds": null,
+        "generation": 1,
+        "lane_id": "payload-857-receipt",
+        "lane_index": 0,
+        "line_must_start_at_x": 7,
+        "parent_lane_id": null,
+        "pre_start_render_policy": "do_not_draw_exploit_progress_before_x_start",
+        "proof_mode": "receipt_backed_fixture",
+        "runner_x": 82,
+        "source_event_id": null,
+        "source_receipt_id": null,
+        "source_receipt_path": null,
+        "start_kind": "parent_lane_start",
+        "start_source": "lane.xStart",
+        "visible_from_elapsed_seconds": null,
+        "x_end": 84,
+        "x_start": 7
+      }
+    ]
+  },
+  "timeline_time_model": {
+    "elapsed_time_axis_requirements": [
+      "Every lane event must include a numeric elapsed_seconds value from the source receipt.",
+      "Every lane activity segment must include numeric start_elapsed_seconds and end_elapsed_seconds values.",
+      "Lineage spawn receipts must include numeric spawn_elapsed_seconds and child_start_elapsed_seconds values.",
+      "Judge attempts must include numeric started_elapsed_seconds and ended_elapsed_seconds values.",
+      "The adapter must validate monotonic elapsed timestamps before setting x_position_is_elapsed_time=true."
+    ],
+    "mode": "receipt_order_with_round_clock",
+    "playhead": {
+      "animation_semantics": "receipt_replay_only",
+      "current_x": 82,
+      "receipt_elapsed_seconds": null,
+      "source_receipt_id": "scoreboard"
+    },
+    "receipt_elapsed_keyframe_count": 0,
+    "receipt_elapsed_keyframes_are_monotonic_by_x": false,
+    "render_rules": [
+      "Render x positions as receipt-order positions, not wall-clock seconds.",
+      "Render round elapsed/allotted/remaining time from round_clock.",
+      "Animate the playhead as receipt replay only; do not present it as a live timer."
+    ],
+    "round_clock": {
+      "allotted_seconds": null,
+      "elapsed_seconds": null,
+      "proof_mode": "receipt_backed_fixture",
+      "remaining_seconds": null,
+      "source_receipt_id": "scoreboard"
+    },
+    "round_clock_source": "battle_clock",
+    "schema": "battle.timeline_time_model.v1",
+    "x_axis_label": "Receipt order",
+    "x_axis_mode": "receipt_order_percent",
+    "x_position_is_elapsed_time": false
+  },
+  "timeline_viewport_model": {
+    "bounds": {
+      "max_x": 100,
+      "min_x": 0
+    },
+    "initial_window": {
+      "max_x": 97,
+      "min_x": 37,
+      "proof_mode": "receipt_backed_fixture",
+      "source": "timeline.viewport",
+      "width_x": 60.0
+    },
+    "mode": "receipt_replay_scroll_viewport",
+    "pan_policy": {
+      "clamp_to_bounds": true,
+      "initial_window_source": "timeline.viewport.initial_min_x/max_x",
+      "scroll_unit": "receipt_order_x"
+    },
+    "playhead_follow": {
+      "animation_semantics": "receipt_replay_only",
+      "current_x": 82,
+      "follow_policy": "keep_current_keyframe_visible_without_claiming_live_time",
+      "keyframe_count": 5,
+      "keyframe_x_values": [
+        14,
+        33,
+        50,
+        67,
+        82
+      ],
+      "mode": "receipt_keyframe_follow",
+      "proof_mode": "receipt_backed_fixture",
+      "source_receipt_id": "scoreboard"
+    },
+    "render_rules": [
+      "Render the timeline as a horizontally scrollable receipt-order viewport.",
+      "Clamp panning to bounds.min_x and bounds.max_x.",
+      "Keep playhead_follow.current_x visible during receipt replay without presenting it as live time.",
+      "Use playhead_follow.keyframe_x_values as the only backend-owned animation stops."
+    ],
+    "schema": "battle.timeline_viewport_model.v1",
+    "scroll_axis": "horizontal",
+    "supports_pan": true,
+    "supports_zoom": true,
+    "zoom": {
+      "max_zoom": 4.0,
+      "min_zoom": 0.75,
+      "proof_mode": "receipt_backed_fixture",
+      "source": "timeline.viewport"
+    }
+  },
+  "ux_contract": {
+    "authoritative_fields": {
+      "battle_clock": "Receipt elapsed/allotted/remaining time. Do not synthesize live timers.",
+      "bluePatchActions": "Materialized Blue patch artifacts only.",
+      "claims": "Human-readable proof and non-proof boundaries.",
+      "events": "Receipt-backed public event stream, including tau.spawned_child when present.",
+      "lanes": "Red lane identities, parentId/children, runner state, events, activitySegments, stdout/stderr, replay metadata.",
+      "lineage": "Parent/child spawn relationships. Render children only when lineage.mode == receipt_backed.",
+      "lineage_request": "Whether child spawn was requested and whether a lineage receipt was produced. This does not authorize child rendering by itself.",
+      "proof_blockers": "Receipt-backed causes for blocked worker materialization or missing proof density.",
+      "receipts": "Inspectable proof references.",
+      "scenario": "Battle identity, public entrypoint, CWE, runtime, and target language.",
+      "scoreboard": "Judge/scorekeeper counts and pair verdicts.",
+      "spectator_shell": "Header, fact chips, score labels, round-time label, and receipt event ticker text.",
+      "timeline": "Timeline bounds, pan/zoom capability, viewport defaults, and receipt replay playhead state/keyframes."
+    },
+    "forbidden_inferences": [
+      "Blue kill attribution",
+      "Fastest crash",
+      "Survivor promotion",
+      "Unbounded swarm execution",
+      "Live stream execution",
+      "Child lineage without lineage receipt"
+    ],
+    "mode": "receipt_backed",
+    "proof_mode": "receipt_backed_fixture",
+    "receipt_backed_values": {
+      "blue_blocked_lane_ids": [
+        "payload-857-receipt"
+      ],
+      "child_spawn_count": 0,
+      "child_spawn_request_status": "NOT_REQUESTED",
+      "child_spawn_requested": false,
+      "event_count": 6,
+      "judge_pair_count": 1,
+      "lane_count": 1,
+      "lineage_group_count": 0,
+      "playhead_current_x": 82,
+      "proof_blocker_count": 0
+    },
+    "required_render_guards": [
+      "Do not render child lanes unless lineage.spawn_count > 0 and child lane ids exist in lanes[].",
+      "Use lineage_request to explain requested-but-unproven child spawn; do not render children from lineage_request alone.",
+      "Do not render Blue kill, fastest crash, or promotion unless matching event_type is present.",
+      "Do not show live replay execution unless lane.replay.can_execute_now is true.",
+      "Use battle_clock.mode and timeline.mode labels; do not imply live streaming from receipt_backed_fixture.",
+      "Use scoreboard.per_pair for Blue block counts; do not infer blocks from Blue patch presence alone.",
+      "Use timeline.playhead as receipt replay state; do not synthesize a live playhead.",
+      "Use timeline_elapsed_axis_model for elapsed-time/DAW-style placement; use timeline.playhead.keyframes[].x only for legacy receipt-order renderers.",
+      "Use lane.cockpit for Agent Detail pane values; do not infer Tau identity or trace fields from display labels.",
+      "Use lane.replay.cta to render Docker replay button state; receipt_only means visible but not executable.",
+      "Use lane.activitySegments for between-marker action labels; do not invent exploit phases client-side.",
+      "Use spectator_shell for header/fact/score/ticker text; do not hard-code mockup shell copy."
+    ],
+    "schema": "battle.ux_contract.v1"
+  },
+  "validation": {
+    "child_lineage_receipt_backed": true,
+    "derived_from_canonical_events": true,
+    "errors": [],
+    "fail_closed": true,
+    "proof_mode": "receipt_backed_fixture",
+    "schema": "battle.fixture_validation.v1",
+    "terminal_claims_receipt_backed": true,
+    "warnings": []
+  }
+}
