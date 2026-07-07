@@ -544,6 +544,57 @@ def validate_semantic_outcome_matrix_command(
     console.print_json(data=report)
 
 
+@app.command("export-exploit-lifecycle-dag")
+def export_exploit_lifecycle_dag(
+    out: Path = typer.Option(..., "--out", help="Output Battle exploit lifecycle DAG JSON path."),
+):
+    """Export deterministic exploit lifecycle DAG contract."""
+    from .battle_event_adapter import write_exploit_lifecycle_dag
+    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_dag, validate_exploit_lifecycle_dag_schema
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    dag = write_exploit_lifecycle_dag(out=out)
+    try:
+        validate_exploit_lifecycle_dag_schema(dag)
+        validate_exploit_lifecycle_dag(dag)
+    except ContractError as exc:
+        console.print(f"[red]Battle exploit lifecycle DAG invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(
+        data={
+            "status": "PASS",
+            "out": str(out),
+            "schema": dag.get("schema"),
+            "node_count": len(dag.get("nodes", [])),
+            "edge_count": len(dag.get("edges", [])),
+            "outcome_classes": dag.get("outcome_classes"),
+            "proof_mode": dag.get("proof_mode"),
+        }
+    )
+
+
+@app.command("validate-exploit-lifecycle-dag")
+def validate_exploit_lifecycle_dag_command(
+    dag: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Battle exploit lifecycle DAG JSON.",
+    ),
+):
+    """Validate deterministic exploit lifecycle DAG contract."""
+    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_dag_path
+
+    try:
+        report = validate_exploit_lifecycle_dag_path(dag)
+    except ContractError as exc:
+        console.print(f"[red]Battle exploit lifecycle DAG invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

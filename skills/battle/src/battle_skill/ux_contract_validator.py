@@ -30,6 +30,9 @@ DEFAULT_SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" /
 DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH = (
     Path(__file__).resolve().parents[2] / "schemas" / "battle.semantic_outcome_matrix.v1.schema.json"
 )
+DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH = (
+    Path(__file__).resolve().parents[2] / "schemas" / "battle.exploit_lifecycle_dag.v1.schema.json"
+)
 BATTLE_SKILL_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_SCHEMA = "battle.normalized_ux_fixture.v1"
 EXPECTED_UX_CONTRACT_SCHEMA = "battle.ux_contract.v1"
@@ -43,6 +46,7 @@ EXPECTED_TRANSPORT_MANIFEST_SCHEMA = "battle.transport_manifest.v1"
 EXPECTED_LIVE_EVENT_SCHEMA = "battle.live_event.v1"
 EXPECTED_SNAPSHOT_SCHEMA = "battle.snapshot.v1"
 EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA = "battle.semantic_outcome_matrix.v1"
+EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA = "battle.exploit_lifecycle_dag.v1"
 EXPECTED_CANONICAL_SCENARIO = {
     "battle_id": "battle-004",
     "public_entrypoint": "/api/import-zip",
@@ -379,6 +383,164 @@ def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
             _check(case.get("cosmetic_identity_only") is True, f"profile calibration {case_id} must remain cosmetic only", errors)
     if errors:
         raise ContractError("\n".join(errors))
+
+
+def validate_exploit_lifecycle_dag_schema(
+    dag: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=dag, schema_path=schema_path)
+
+
+def validate_exploit_lifecycle_dag_path(
+    dag_path: Path,
+    *,
+    schema_path: Path = DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH,
+) -> dict[str, Any]:
+    dag = json.loads(dag_path.read_text(encoding="utf-8"))
+    validate_exploit_lifecycle_dag_schema(dag, schema_path=schema_path)
+    validate_exploit_lifecycle_dag(dag)
+    nodes = dag.get("nodes") if isinstance(dag.get("nodes"), list) else []
+    edges = dag.get("edges") if isinstance(dag.get("edges"), list) else []
+    return {
+        "status": "PASS",
+        "schema": EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA,
+        "dag": str(dag_path),
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "outcome_classes": dag.get("outcome_classes"),
+        "mocked": dag.get("mocked"),
+        "live": dag.get("live"),
+        "proof_mode": dag.get("proof_mode"),
+    }
+
+
+def validate_exploit_lifecycle_dag(dag: dict[str, Any]) -> None:
+    errors: list[str] = []
+    _check(dag.get("schema") == EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA, "exploit lifecycle DAG schema is invalid", errors)
+    _check(dag.get("status") == "PASS", "exploit lifecycle DAG status must be PASS", errors)
+    _check(dag.get("score_owner") == "scorekeeper", "exploit lifecycle DAG score_owner must be scorekeeper", errors)
+    _check(dag.get("profile_owner") == "backend", "exploit lifecycle DAG profile_owner must be backend", errors)
+    _check(dag.get("sprite_identity_owner") == "backend_variant_id_ux_theme_resolution", "sprite identity must be backend variant_id with UX theme resolution", errors)
+    _check(dag.get("mocked") is False, "exploit lifecycle DAG must not be mocked", errors)
+    _check(dag.get("live") is False, "exploit lifecycle DAG must declare live false until fresh Arena proof exists", errors)
+    _check(dag.get("proof_mode") == EXPECTED_PROOF_MODE, "exploit lifecycle DAG proof_mode must be receipt_backed_fixture", errors)
+
+    nodes = dag.get("nodes") if isinstance(dag.get("nodes"), list) else []
+    edges = dag.get("edges") if isinstance(dag.get("edges"), list) else []
+    node_by_id = {str(node.get("id")): node for node in nodes if isinstance(node, dict)}
+    _check(len(node_by_id) == len(nodes), "exploit lifecycle DAG node ids must be unique", errors)
+    for edge in edges:
+        if not isinstance(edge, dict):
+            errors.append("exploit lifecycle DAG edge must be an object")
+            continue
+        _check(str(edge.get("source")) in node_by_id, f"edge source not found: {edge.get('source')}", errors)
+        _check(str(edge.get("target")) in node_by_id, f"edge target not found: {edge.get('target')}", errors)
+
+    kinds = {str(node.get("kind")) for node in nodes if isinstance(node, dict)}
+    required_kinds = {
+        "research",
+        "payload_proof",
+        "defender_pressure_suspected",
+        "preemptive_spawn",
+        "parallel_pivot",
+        "blue_block",
+        "blue_kill_confirmed",
+    }
+    _check(kinds >= required_kinds, "exploit lifecycle DAG must cover research, proof, pressure, spawn, pivot, block, and kill nodes", errors)
+
+    outcome_classes = {str(node.get("score_semantics", {}).get("outcome_class")) for node in nodes if isinstance(node, dict)}
+    required_outcomes = set(dag.get("required_outcome_classes") or [])
+    _check(outcome_classes >= required_outcomes, "exploit lifecycle DAG must cover every required outcome class", errors)
+
+    for node in nodes:
+        if not isinstance(node, dict):
+            errors.append("exploit lifecycle DAG node must be an object")
+            continue
+        profile = node.get("exploit_profile") if isinstance(node.get("exploit_profile"), dict) else {}
+        score = node.get("score_semantics") if isinstance(node.get("score_semantics"), dict) else {}
+        actor_visual = node.get("actor_visual") if isinstance(node.get("actor_visual"), dict) else {}
+        _check(profile.get("schema") == "battle.exploit_profile.v1", f"node {node.get('id')} profile schema invalid", errors)
+        for field in ["strength", "complexity", "durability", "score_weight"]:
+            value = profile.get(field)
+            _check(isinstance(value, (int, float)) and 0 <= value <= 1, f"node {node.get('id')} profile {field} must be 0..1", errors)
+        _check(score.get("schema") == "battle.semantic_scoring.v1", f"node {node.get('id')} score schema invalid", errors)
+        _check(score.get("score_owner") == "scorekeeper", f"node {node.get('id')} score owner must be scorekeeper", errors)
+        _check(actor_visual.get("schema") == "battle.actor_visual.v1", f"node {node.get('id')} actor_visual schema invalid", errors)
+        _check(bool(actor_visual.get("variant_id")), f"node {node.get('id')} actor_visual.variant_id is required", errors)
+        _check(actor_visual.get("cosmetic_identity_only") is True, f"node {node.get('id')} actor_visual must be cosmetic only", errors)
+
+    pressure = node_by_id.get("observe:defender-pressure", {})
+    pressure_assessment = pressure.get("threat_assessment") if isinstance(pressure.get("threat_assessment"), dict) else {}
+    signal_kinds = {
+        str(signal.get("kind"))
+        for signal in pressure_assessment.get("signals", [])
+        if isinstance(signal, dict)
+    }
+    _check(pressure_assessment.get("suspected_imminent_kill") is True, "pressure node must suspect imminent kill", errors)
+    _check(pressure_assessment.get("confirmed_kill") is False, "pressure node must not claim confirmed kill", errors)
+    _check({"stderr_drift", "response_body_drift"} <= signal_kinds, "pressure node must include stderr and response-body drift signals", errors)
+
+    preemptive_spawn = node_by_id.get("spawn:preemptive-child", {}).get("spawn", {})
+    pivot_spawn = node_by_id.get("pivot:ssrf", {}).get("spawn", {})
+    _check(isinstance(preemptive_spawn, dict) and preemptive_spawn.get("spawn_type") == "strategic_pre_kill", "preemptive spawn node must use strategic_pre_kill", errors)
+    _check(isinstance(pivot_spawn, dict) and pivot_spawn.get("spawn_type") == "parallel_pivot", "pivot node must use parallel_pivot", errors)
+    _check(node_by_id.get("spawn:preemptive-child", {}).get("actor_visual", {}).get("variant_id") == "plague_nurgling", "preemptive child must map to adaptive lineage variant", errors)
+    _check(node_by_id.get("pivot:ssrf", {}).get("actor_visual", {}).get("variant_id") == "purple_horn_imp", "pivot must map to high-complexity variant", errors)
+
+    replay = dag.get("replay_contract") if isinstance(dag.get("replay_contract"), dict) else {}
+    _check(replay.get("time_authority") == "receipt_elapsed_seconds", "lifecycle replay time authority must be receipt elapsed seconds", errors)
+    _check(replay.get("presentation_owner") == "ux", "lifecycle replay presentation owner must be UX", errors)
+    _check("cinematic_speed" in (replay.get("backend_must_not_emit") or []), "backend must not emit cinematic speed", errors)
+    _check(replay.get("ux_may_speed_up_replay") is True, "UX must own speed-up replay presentation", errors)
+
+    _check(_dag_path_exists(edges=edges, source="observe:defender-pressure", target="pivot:ssrf"), "DAG must connect suspected pressure through preemptive spawn to pivot", errors)
+    _check(_dag_is_acyclic(edges=edges), "exploit lifecycle DAG must be acyclic", errors)
+    if errors:
+        raise ContractError("\n".join(errors))
+
+
+def _dag_path_exists(*, edges: list[Any], source: str, target: str) -> bool:
+    adjacency: dict[str, list[str]] = {}
+    for edge in edges:
+        if isinstance(edge, dict):
+            adjacency.setdefault(str(edge.get("source")), []).append(str(edge.get("target")))
+    stack = [source]
+    seen: set[str] = set()
+    while stack:
+        current = stack.pop()
+        if current == target:
+            return True
+        if current in seen:
+            continue
+        seen.add(current)
+        stack.extend(adjacency.get(current, []))
+    return False
+
+
+def _dag_is_acyclic(*, edges: list[Any]) -> bool:
+    adjacency: dict[str, list[str]] = {}
+    for edge in edges:
+        if isinstance(edge, dict):
+            adjacency.setdefault(str(edge.get("source")), []).append(str(edge.get("target")))
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node: str) -> bool:
+        if node in visiting:
+            return False
+        if node in visited:
+            return True
+        visiting.add(node)
+        for child in adjacency.get(node, []):
+            if not visit(child):
+                return False
+        visiting.remove(node)
+        visited.add(node)
+        return True
+
+    return all(visit(node) for node in list(adjacency))
 
 
 def validate_transport_stream_path(

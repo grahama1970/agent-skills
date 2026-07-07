@@ -46,6 +46,7 @@ SEMANTIC_SCORE_VERSION = "battle.semantic_scoring.v1"
 EXPLOIT_PROFILE_VERSION = "battle.exploit_profile.v1"
 REPLAY_SEMANTICS_VERSION = "battle.replay_semantics.v1"
 SEMANTIC_OUTCOME_MATRIX_VERSION = "battle.semantic_outcome_matrix.v1"
+EXPLOIT_LIFECYCLE_DAG_VERSION = "battle.exploit_lifecycle_dag.v1"
 SEMANTIC_SCORE_MULTIPLIERS = {
     "pre_spawn_block_blue": 12.0,
     "explicit_kill_blue": 10.0,
@@ -270,6 +271,323 @@ def write_semantic_outcome_matrix(*, out: Path) -> dict[str, Any]:
     matrix = semantic_outcome_matrix()
     _write_json(out, matrix)
     return matrix
+
+
+def exploit_lifecycle_dag() -> dict[str, Any]:
+    """Return an inspectable backend contract for exploit research/pivot/spawn DAGs."""
+    nodes = [
+        _lifecycle_node(
+            node_id="research:zip-slip",
+            kind="research",
+            team="red",
+            lane_id="dag-zip-slip-parent",
+            cwe="CWE-22",
+            exploit_class="archive_path_traversal",
+            summary="Red researches Zip Slip archive traversal and selects a payload path strategy.",
+            profile=_profile_for_contract_lane("dag-zip-slip-parent", strength=0.82, complexity=0.72, durability=0.72, lineage_pressure=0.45, tier="heavy_durable"),
+            outcome_class="spawn_pressure_conceded",
+            variant_id="crimson_hornbreaker",
+        ),
+        _lifecycle_node(
+            node_id="payload:zip-slip",
+            kind="payload_proof",
+            team="red",
+            lane_id="dag-zip-slip-parent",
+            cwe="CWE-22",
+            exploit_class="archive_path_traversal",
+            summary="Parent exploit confirms useful write primitive before defender pressure.",
+            profile=_profile_for_contract_lane("dag-zip-slip-parent", strength=0.82, complexity=0.72, durability=0.72, lineage_pressure=0.45, tier="heavy_durable"),
+            outcome_class="spawn_pressure_conceded",
+            variant_id="crimson_hornbreaker",
+        ),
+        _lifecycle_node(
+            node_id="observe:defender-pressure",
+            kind="defender_pressure_suspected",
+            team="red",
+            lane_id="dag-zip-slip-parent",
+            cwe="CWE-22",
+            exploit_class="archive_path_traversal",
+            summary="Red observes stdout/stderr and response-shape drift consistent with Blue scanning.",
+            profile=_profile_for_contract_lane("dag-zip-slip-parent", strength=0.82, complexity=0.78, durability=0.72, lineage_pressure=0.58, tier="heavy_durable"),
+            outcome_class="preemptive_spawn_adaptation",
+            variant_id="crimson_hornbreaker",
+            threat_assessment={
+                "schema": "battle.exploit_threat_assessment.v1",
+                "assessment_type": "suspected_blue_pressure",
+                "suspected_imminent_kill": True,
+                "confirmed_kill": False,
+                "confirmed_blue_scan": False,
+                "signals": [
+                    {
+                        "kind": "stderr_drift",
+                        "summary": "stderr wording and timing changed while payload behavior still reproduced.",
+                    },
+                    {
+                        "kind": "response_body_drift",
+                        "summary": "HTTP response became sanitized before an explicit kill receipt existed.",
+                    },
+                ],
+                "confidence": 0.78,
+                "proof_mode": PROOF_MODE,
+            },
+        ),
+        _lifecycle_node(
+            node_id="spawn:preemptive-child",
+            kind="preemptive_spawn",
+            team="red",
+            lane_id="dag-zip-slip-child",
+            cwe="CWE-22",
+            exploit_class="archive_path_traversal",
+            summary="Parent spawns a child before confirmed kill to preserve exploit state and pivot options.",
+            profile=_profile_for_contract_lane("dag-zip-slip-child", strength=0.82, complexity=0.88, durability=0.80, lineage_pressure=0.68, tier="adaptive_lineage"),
+            outcome_class="preemptive_spawn_adaptation",
+            variant_id="plague_nurgling",
+            spawn={
+                "schema": "battle.exploit_spawn.v1",
+                "spawn_type": "strategic_pre_kill",
+                "parent_lane_id": "dag-zip-slip-parent",
+                "child_lane_id": "dag-zip-slip-child",
+                "spawn_confidence": 0.78,
+                "spawn_reason": "Suspected defender pressure before confirmed kill.",
+                "proof_mode": PROOF_MODE,
+            },
+        ),
+        _lifecycle_node(
+            node_id="pivot:ssrf",
+            kind="parallel_pivot",
+            team="red",
+            lane_id="dag-ssrf-pivot",
+            cwe="CWE-918",
+            exploit_class="ssrf_metadata_probe",
+            summary="Spawned child pivots from archive write into metadata fetch probing.",
+            profile=_profile_for_contract_lane("dag-ssrf-pivot", strength=0.62, complexity=0.86, durability=0.58, lineage_pressure=0.2, tier="standard_exploit"),
+            outcome_class="red_breakthrough",
+            variant_id="purple_horn_imp",
+            spawn={
+                "schema": "battle.exploit_spawn.v1",
+                "spawn_type": "parallel_pivot",
+                "parent_lane_id": "dag-zip-slip-child",
+                "child_lane_id": "dag-ssrf-pivot",
+                "spawn_confidence": 0.64,
+                "spawn_reason": "Course correction into adjacent exploit family.",
+                "proof_mode": PROOF_MODE,
+            },
+        ),
+        _lifecycle_node(
+            node_id="blue:pre-spawn-block",
+            kind="blue_block",
+            team="blue",
+            lane_id="dag-upload-probe",
+            cwe="CWE-434",
+            exploit_class="file_upload_probe",
+            summary="Blue blocks a fragile upload probe before it can spawn.",
+            profile=_profile_for_contract_lane("dag-upload-probe", strength=0.35, complexity=0.68, durability=0.62, lineage_pressure=0.0, tier="fragile_probe"),
+            outcome_class="pre_spawn_blue_block",
+            variant_id="green_horn",
+        ),
+        _lifecycle_node(
+            node_id="blue:kill-confirmed",
+            kind="blue_kill_confirmed",
+            team="blue",
+            lane_id="dag-deser-gadget",
+            cwe="CWE-502",
+            exploit_class="deserialization_gadget",
+            summary="Blue confirms a kill receipt for an exploit that had no valid child.",
+            profile=_profile_for_contract_lane("dag-deser-gadget", strength=0.82, complexity=0.74, durability=0.66, lineage_pressure=0.0, tier="standard_exploit"),
+            outcome_class="confirmed_blue_kill_no_child",
+            variant_id="crimson_hornbreaker",
+        ),
+    ]
+    edges = [
+        _lifecycle_edge("research:zip-slip", "payload:zip-slip", "research_informs_payload"),
+        _lifecycle_edge("payload:zip-slip", "observe:defender-pressure", "runtime_feedback_changes"),
+        _lifecycle_edge("observe:defender-pressure", "spawn:preemptive-child", "suspected_pressure_triggers_preemptive_spawn"),
+        _lifecycle_edge("spawn:preemptive-child", "pivot:ssrf", "child_course_corrects_to_parallel_pivot"),
+        _lifecycle_edge("payload:zip-slip", "blue:kill-confirmed", "alternative_blue_kill_branch"),
+        _lifecycle_edge("research:zip-slip", "blue:pre-spawn-block", "alternative_pre_spawn_block_branch"),
+    ]
+    outcome_classes = sorted({str(node["score_semantics"]["outcome_class"]) for node in nodes})
+    return {
+        "schema": EXPLOIT_LIFECYCLE_DAG_VERSION,
+        "status": "PASS",
+        "battle_id": "battle-lifecycle-contract",
+        "purpose": "Backend-owned exploit lifecycle DAG contract for research, pressure detection, preemptive spawn, pivot, block, and kill semantics.",
+        "proof_mode": PROOF_MODE,
+        "mocked": False,
+        "live": False,
+        "artifact_kind": "deterministic_contract_fixture",
+        "score_owner": "scorekeeper",
+        "profile_owner": "backend",
+        "sprite_identity_owner": "backend_variant_id_ux_theme_resolution",
+        "tau_contract": {
+            "agent_can_course_correct": True,
+            "research_and_pivot_are_nodes": True,
+            "subagent_receipts_required_for_runtime_truth": True,
+            "pressure_detection_is_suspected_until_blue_receipt_confirms": True,
+            "preemptive_spawn_before_confirmed_kill_allowed": True,
+        },
+        "scenario_coverage": [
+            {"battle_id": "battle-004", "cwe": "CWE-22", "exploit_class": "archive_path_traversal", "fixture": "fresh_parent_spawn"},
+            {"battle_id": "battle-005", "cwe": "CWE-918", "exploit_class": "ssrf_metadata_probe", "fixture": "contract_only"},
+            {"battle_id": "battle-006", "cwe": "CWE-502", "exploit_class": "deserialization_gadget", "fixture": "contract_only"},
+            {"battle_id": "battle-007", "cwe": "CWE-434", "exploit_class": "file_upload_probe", "fixture": "contract_only"},
+        ],
+        "nodes": nodes,
+        "edges": edges,
+        "outcome_classes": outcome_classes,
+        "required_outcome_classes": [
+            "pre_spawn_blue_block",
+            "confirmed_blue_kill_no_child",
+            "preemptive_spawn_adaptation",
+            "spawn_pressure_conceded",
+            "red_breakthrough",
+        ],
+        "replay_contract": {
+            "time_authority": "receipt_elapsed_seconds",
+            "presentation_owner": "ux",
+            "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
+            "ux_may_speed_up_replay": True,
+        },
+        "claims": {
+            "proves": [
+                "Backend lifecycle model includes research, runtime observation, preemptive spawn, parallel pivot, block, and kill branches.",
+                "Preemptive spawn is represented as suspected defender pressure, not confirmed Blue kill.",
+                "Every lifecycle node carries backend-owned exploit profile, score semantics, and actor_visual.variant_id.",
+            ],
+            "does_not_prove": [
+                "Fresh Arena execution for battle-005, battle-006, or battle-007.",
+                "UX rendered this DAG.",
+                "Any suspected defender pressure signal is confirmed without a Blue receipt.",
+            ],
+        },
+    }
+
+
+def write_exploit_lifecycle_dag(*, out: Path) -> dict[str, Any]:
+    dag = exploit_lifecycle_dag()
+    _write_json(out, dag)
+    return dag
+
+
+def _profile_for_contract_lane(
+    lane_id: str,
+    *,
+    strength: float,
+    complexity: float,
+    durability: float,
+    lineage_pressure: float,
+    tier: str,
+) -> dict[str, Any]:
+    score_weight = round((strength * 0.4) + (complexity * 0.25) + (durability * 0.25) + (lineage_pressure * 0.1), 3)
+    return {
+        "schema": EXPLOIT_PROFILE_VERSION,
+        "lane_id": lane_id,
+        "strength": strength,
+        "complexity": complexity,
+        "durability": durability,
+        "stealth": round(max(0.1, 1.0 - lineage_pressure), 3),
+        "reproducibility": round((strength + durability) / 2, 3),
+        "lineage_pressure": lineage_pressure,
+        "score_weight": score_weight,
+        "tier": tier,
+        "evidence_source": "lifecycle_contract_fixture",
+        "proof_scope": {
+            "deterministic_contract": True,
+            "receipt_backed_inputs": False,
+            "fresh_arena_execution": False,
+        },
+        "does_not_prove": [
+            "Real exploit success.",
+            "Runtime durability outside this deterministic contract.",
+            "Sprite tier outcome beyond cosmetic identity selection.",
+        ],
+    }
+
+
+def _lifecycle_node(
+    *,
+    node_id: str,
+    kind: str,
+    team: str,
+    lane_id: str,
+    cwe: str,
+    exploit_class: str,
+    summary: str,
+    profile: dict[str, Any],
+    outcome_class: str,
+    variant_id: str,
+    threat_assessment: dict[str, Any] | None = None,
+    spawn: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    case_by_outcome = {str(case.get("outcome_class")): case for case in semantic_outcome_matrix()["outcome_cases"]}
+    outcome = case_by_outcome[outcome_class]
+    score_semantics = {
+        "schema": SEMANTIC_SCORE_VERSION,
+        "score_owner": "scorekeeper",
+        "lane_id": lane_id,
+        "outcome_tier": outcome["outcome_tier"],
+        "outcome_class": outcome["outcome_class"],
+        "spawn_state": outcome["spawn_state"],
+        "score_weight": profile["score_weight"],
+        "multipliers": outcome["multipliers"],
+        "score_delta": outcome["score_delta"],
+        "proof_mode": PROOF_MODE,
+        "does_not_prove": outcome.get("does_not_prove", []),
+    }
+    node = {
+        "id": node_id,
+        "kind": kind,
+        "team": team,
+        "lane_id": lane_id,
+        "cwe": cwe,
+        "exploit_class": exploit_class,
+        "summary": summary,
+        "exploit_profile": profile,
+        "score_semantics": score_semantics,
+        "actor_visual": {
+            "schema": "battle.actor_visual.v1",
+            "variant_id": variant_id,
+            "variant_source": "exploit_profile_tier",
+            "cosmetic_identity_only": True,
+            "proof_mode": PROOF_MODE,
+        },
+        "proof_mode": PROOF_MODE,
+    }
+    if threat_assessment is not None:
+        node["threat_assessment"] = threat_assessment
+    if spawn is not None:
+        node["spawn"] = {
+            "receipt_id": f"{node_id}:receipt",
+            "parent_exploit_id": spawn.get("parent_lane_id", lane_id),
+            "child_exploit_id": spawn.get("child_lane_id", lane_id),
+            "spawn_elapsed_seconds": 420.0,
+            "child_start_elapsed_seconds": 435.0,
+            "threat_assessment": threat_assessment
+            or {
+                "schema": "battle.exploit_threat_assessment.v1",
+                "assessment_type": "suspected_blue_pressure",
+                "suspected_imminent_kill": False,
+                "confirmed_kill": False,
+                "confirmed_blue_scan": False,
+                "signals": [{"kind": "other", "summary": "No direct pressure signal in this contract node."}],
+                "confidence": spawn.get("spawn_confidence", 0.5),
+                "proof_mode": PROOF_MODE,
+            },
+            "inherited_state": {
+                "hypothesis": summary,
+                "working_payload_ref": node_id,
+                "known_failure_modes": [],
+                "observed_blue_patch": "unconfirmed",
+            },
+            "mutation_goal": spawn.get("spawn_reason", "Course correct exploit strategy."),
+            "source_receipts": [f"{node_id}:source"],
+            **spawn,
+        }
+    return node
+
+
+def _lifecycle_edge(source: str, target: str, relation: str) -> dict[str, str]:
+    return {"source": source, "target": target, "relation": relation}
 
 
 def adapt_proof_dir(*, proof_dir: Path, battle_id: str) -> dict[str, Any]:

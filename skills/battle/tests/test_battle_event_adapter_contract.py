@@ -25,6 +25,7 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     DEFAULT_RENDERER_FIXTURE_RESOLUTION_SCHEMA_PATH,
     DEFAULT_SNAPSHOT_SCHEMA_PATH,
     DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH,
+    DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH,
     DEFAULT_TRANSPORT_MANIFEST_SCHEMA_PATH,
     DEFAULT_UX_DATA_CONTRACT_INDEX_SCHEMA_PATH,
     EXPECTED_LIVE_EVENT_SCHEMA,
@@ -33,6 +34,7 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     EXPECTED_RENDERER_VALUES_SCHEMA,
     EXPECTED_SNAPSHOT_SCHEMA,
     EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA,
+    EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA,
     EXPECTED_TRANSPORT_MANIFEST_SCHEMA,
     EXPECTED_UX_DATA_CONTRACT_INDEX_SCHEMA,
     EXPECTED_RENDERER_FIXTURE_RESOLUTION_COMMAND,
@@ -69,6 +71,9 @@ from battle_skill.ux_contract_validator import (  # noqa: E402
     validate_semantic_outcome_matrix,
     validate_semantic_outcome_matrix_path,
     validate_semantic_outcome_matrix_schema,
+    validate_exploit_lifecycle_dag,
+    validate_exploit_lifecycle_dag_path,
+    validate_exploit_lifecycle_dag_schema,
     validate_snapshot_schema,
     validate_transport_manifest_schema,
     validate_transport_stream_path,
@@ -88,6 +93,7 @@ TRANSPORT_MANIFEST_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas"
 LIVE_EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.live_event.v1.schema.json"
 SNAPSHOT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.snapshot.v1.schema.json"
 SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.semantic_outcome_matrix.v1.schema.json"
+EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "battle.exploit_lifecycle_dag.v1.schema.json"
 
 
 def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
@@ -325,6 +331,46 @@ def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
     assert profile_cases["adaptive_lineage"]["variant_id"] == "plague_nurgling"
     assert profile_cases["high_complexity_pivot"]["variant_id"] == "purple_horn_imp"
     assert all(case["cosmetic_identity_only"] is True for case in profile_cases.values())
+
+
+def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_outcomes(tmp_path: Path) -> None:
+    schema = json.loads(EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH.read_text(encoding="utf-8"))
+    assert DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH == EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH
+    assert schema["properties"]["schema"]["const"] == EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA
+    assert schema["properties"]["replay_contract"]["properties"]["presentation_owner"]["const"] == "ux"
+    assert schema["properties"]["tau_contract"]["properties"]["preemptive_spawn_before_confirmed_kill_allowed"]["const"] is True
+
+    dag = battle_event_adapter.exploit_lifecycle_dag()
+    validate_exploit_lifecycle_dag_schema(dag)
+    validate_exploit_lifecycle_dag(dag)
+    out = tmp_path / "battle-exploit-lifecycle-dag.json"
+    battle_event_adapter.write_exploit_lifecycle_dag(out=out)
+    report = validate_exploit_lifecycle_dag_path(out)
+    assert report["status"] == "PASS"
+    assert report["schema"] == EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA
+    assert report["node_count"] == 7
+
+    coverage = {item["battle_id"]: item["exploit_class"] for item in dag["scenario_coverage"]}
+    assert coverage == {
+        "battle-004": "archive_path_traversal",
+        "battle-005": "ssrf_metadata_probe",
+        "battle-006": "deserialization_gadget",
+        "battle-007": "file_upload_probe",
+    }
+    nodes = {node["id"]: node for node in dag["nodes"]}
+    pressure = nodes["observe:defender-pressure"]["threat_assessment"]
+    assert pressure["suspected_imminent_kill"] is True
+    assert pressure["confirmed_kill"] is False
+    assert {signal["kind"] for signal in pressure["signals"]} >= {"stderr_drift", "response_body_drift"}
+    assert nodes["spawn:preemptive-child"]["spawn"]["spawn_type"] == "strategic_pre_kill"
+    assert nodes["spawn:preemptive-child"]["score_semantics"]["outcome_class"] == "preemptive_spawn_adaptation"
+    assert nodes["spawn:preemptive-child"]["actor_visual"]["variant_id"] == "plague_nurgling"
+    assert nodes["pivot:ssrf"]["spawn"]["spawn_type"] == "parallel_pivot"
+    assert nodes["pivot:ssrf"]["actor_visual"]["variant_id"] == "purple_horn_imp"
+    assert nodes["blue:pre-spawn-block"]["score_semantics"]["outcome_class"] == "pre_spawn_blue_block"
+    assert nodes["blue:kill-confirmed"]["score_semantics"]["outcome_class"] == "confirmed_blue_kill_no_child"
+    assert dag["replay_contract"]["ux_may_speed_up_replay"] is True
+    assert "cinematic_speed" in dag["replay_contract"]["backend_must_not_emit"]
 
 
 def test_ux_renderer_value_schemas_require_elapsed_binding_contract_paths() -> None:
