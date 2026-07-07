@@ -538,6 +538,35 @@
           "start_x": 82
         }
       ],
+      "actor_visual": {
+        "actor_id": "payload-857-receipt",
+        "archetype": "chaos_marine_heavy",
+        "facing": "right",
+        "initial_state": "idle",
+        "lane_id": "payload-857-receipt",
+        "proof_scope": {
+          "cosmetic_identity_only": true,
+          "does_not_prove": [
+            "Sprite selection does not prove Battle outcome."
+          ],
+          "terminal_states_receipt_gated": true
+        },
+        "role": "red_exploit",
+        "scale_class": "heavy_64",
+        "schema": "battle.actor_visual.v1",
+        "state_source": "canonical_events",
+        "state_timeline": [
+          {
+            "at_seconds": 0.0,
+            "provisional": false,
+            "source_event_id": "payload-857-receipt:actor-visual-default",
+            "state": "idle"
+          }
+        ],
+        "style_family": "vintage_16bit_genesis",
+        "team": "red",
+        "variant_id": "crimson_hornbreaker"
+      },
       "cockpit": {
         "blue_outcome": {
           "blocked": false,
@@ -1345,6 +1374,74 @@
     "subtitle": "CWE-22 \u00b7 Zip Slip path traversal \u00b7 receipt-backed Battle proof",
     "truth_label": "receipt-backed fixture"
   },
+  "sprite_theme": {
+    "effect_sheets": {},
+    "proof_scope": {
+      "cosmetic_identity_only": true,
+      "does_not_prove": [
+        "Sprite theme selection does not prove Battle outcome."
+      ]
+    },
+    "renderer": "pixijs",
+    "rules": {
+      "backend_never_emits_animation_names": true,
+      "backend_never_emits_frame_indices": true,
+      "nearest_neighbor_scaling": true,
+      "terminal_animations_receipt_gated": true,
+      "transparent_background": true
+    },
+    "schema": "battle.sprite_theme.v1",
+    "state_vocabulary": [
+      "idle",
+      "walk",
+      "run",
+      "research",
+      "payload",
+      "mutate",
+      "handoff",
+      "spawn",
+      "hit",
+      "blocked",
+      "killed",
+      "fastest_crash",
+      "promoted",
+      "stale_pending"
+    ],
+    "style_family": "vintage_16bit_genesis",
+    "variants": {
+      "crimson_hornbreaker": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "archetype": "heavy",
+        "display_name": "Crimson Hornbreaker",
+        "frame_height": 64,
+        "frame_width": 64,
+        "scale": 1,
+        "sprite_id": "crimson_hornbreaker",
+        "spritesheet_alias": "battle-runner-crimson_hornbreaker",
+        "src": "/battle-sprites/pixijs/crimson_hornbreaker.json",
+        "state_animation_map": {
+          "blocked": "blocked",
+          "fastest_crash": "fastest_crash",
+          "handoff": "handoff",
+          "hit": "hit",
+          "idle": "idle",
+          "killed": "killed",
+          "mutate": "mutate",
+          "payload": "payload",
+          "promoted": "promoted",
+          "research": "research",
+          "run": "run",
+          "spawn": "spawn",
+          "stale_pending": "idle",
+          "walk": "walk"
+        },
+        "team": "red"
+      }
+    }
+  },
   "status": "INSUFFICIENT_EVIDENCE",
   "timeline": {
     "event_count": 5,
@@ -1600,6 +1697,7 @@
         "elapsed_line_end_x": null,
         "elapsed_line_must_start_at_x": null,
         "elapsed_start_seconds": null,
+        "first_active_segment_elapsed_seconds": null,
         "generation": 1,
         "lane_id": "payload-857-receipt",
         "lane_index": 0,
@@ -1613,6 +1711,7 @@
         "source_receipt_path": null,
         "start_kind": "parent_lane_start",
         "start_source": "lane.xStart",
+        "visible_from_elapsed_seconds": null,
         "x_end": 84,
         "x_start": 7
       }

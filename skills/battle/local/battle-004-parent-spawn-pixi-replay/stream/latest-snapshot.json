@@ -866,6 +866,77 @@
           "start_x": 82
         }
       ],
+      "actor_visual": {
+        "actor_id": "payload-857-receipt",
+        "archetype": "chaos_marine_heavy",
+        "facing": "right",
+        "initial_state": "research",
+        "lane_id": "payload-857-receipt",
+        "proof_scope": {
+          "cosmetic_identity_only": true,
+          "does_not_prove": [
+            "Sprite selection does not prove Battle outcome."
+          ],
+          "terminal_states_receipt_gated": true
+        },
+        "role": "red_exploit",
+        "scale_class": "heavy_64",
+        "schema": "battle.actor_visual.v1",
+        "state_source": "canonical_events",
+        "state_timeline": [
+          {
+            "at_seconds": 2.324156,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:02",
+            "source_event_id": "payload-857-receipt:arena",
+            "source_receipt_id": "arena-receipt",
+            "state": "research"
+          },
+          {
+            "at_seconds": 114.671919,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:03",
+            "source_event_id": "payload-857-receipt:red",
+            "source_receipt_id": "red-tau-subagent-receipt",
+            "state": "payload"
+          },
+          {
+            "at_seconds": 114.671919,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:04",
+            "source_event_id": "payload-857-receipt:useful",
+            "source_receipt_id": "red-tau-subagent-receipt",
+            "state": "payload"
+          },
+          {
+            "at_seconds": 116.973449,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:05",
+            "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
+            "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "state": "handoff"
+          },
+          {
+            "at_seconds": 146.687555,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:06",
+            "source_event_id": "payload-857-receipt:blue",
+            "source_receipt_id": "blue-tau-subagent-receipt",
+            "state": "blocked"
+          },
+          {
+            "at_seconds": 147.740205,
+            "provisional": false,
+            "segment_id": "payload-857-receipt:segment:07",
+            "source_event_id": "payload-857-receipt:judge",
+            "source_receipt_id": "judge-receipt",
+            "state": "blocked"
+          }
+        ],
+        "style_family": "vintage_16bit_genesis",
+        "team": "red",
+        "variant_id": "crimson_hornbreaker"
+      },
       "children": [
         "payload-857-red-1"
       ],
@@ -1199,6 +1270,76 @@
           "start_x": 96
         }
       ],
+      "actor_visual": {
+        "actor_id": "payload-857-red-1",
+        "archetype": "chaos_marine_child",
+        "facing": "right",
+        "initial_state": "spawn",
+        "lane_id": "payload-857-red-1",
+        "proof_scope": {
+          "cosmetic_identity_only": true,
+          "does_not_prove": [
+            "Sprite selection does not prove Battle outcome."
+          ],
+          "terminal_states_receipt_gated": true
+        },
+        "role": "red_exploit",
+        "scale_class": "heavy_64",
+        "schema": "battle.actor_visual.v1",
+        "state_source": "canonical_events",
+        "state_timeline": [
+          {
+            "at_seconds": 116.973449,
+            "provisional": false,
+            "segment_id": "payload-857-red-1:segment:02",
+            "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
+            "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "state": "spawn"
+          },
+          {
+            "at_seconds": 116.973449,
+            "provisional": false,
+            "segment_id": "payload-857-red-1:segment:03",
+            "source_event_id": "payload-857-red-1:arena",
+            "source_receipt_id": "arena-receipt",
+            "state": "research"
+          },
+          {
+            "at_seconds": 146.686852,
+            "provisional": false,
+            "segment_id": "payload-857-red-1:segment:04",
+            "source_event_id": "payload-857-red-1:red",
+            "source_receipt_id": "red-1-tau-subagent-receipt",
+            "state": "payload"
+          },
+          {
+            "at_seconds": 146.686852,
+            "provisional": false,
+            "segment_id": "payload-857-red-1:segment:05",
+            "source_event_id": "payload-857-red-1:useful",
+            "source_receipt_id": "red-1-tau-subagent-receipt",
+            "state": "payload"
+          },
+          {
+            "at_seconds": 148.780876,
+            "provisional": false,
+            "segment_id": "payload-857-red-1:segment:06",
+            "source_event_id": "payload-857-red-1:blue",
+            "source_receipt_id": "blue-tau-subagent-receipt",
+            "state": "blocked"
+          },
+          {
+            "at_seconds": 149.77601,
+            "provisional": false,
+            "source_event_id": "payload-857-red-1:judge",
+            "source_receipt_id": "judge-receipt",
+            "state": "blocked"
+          }
+        ],
+        "style_family": "vintage_16bit_genesis",
+        "team": "red",
+        "variant_id": "plague_nurgling"
+      },
       "cockpit": {
         "blue_outcome": {
           "blocked": true,

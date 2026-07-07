@@ -2,7 +2,9 @@ import type { Lane } from "../lib/battle-types";
 import type { BattleRunnerSpriteId } from "./battle-runner-sprites";
 import { BATTLE_RUNNER_SPRITE_IDS } from "./battle-runner-sprites";
 
-/** UX-owned lane → runtime sprite mapping. Backend must not hardcode asset paths. */
+const BATTLE_RUNNER_SPRITE_ID_SET = new Set<string>(BATTLE_RUNNER_SPRITE_IDS);
+
+/** Design-fixture fallback only. Receipt-backed lanes should carry actor_visual.variant_id. */
 const LANE_VARIANT_OVERRIDES: Record<string, BattleRunnerSpriteId> = {
 	"payload-857": "crimson_chainsword_berserker",
 	"payload-857-A": "crimson_chainsaw_demon",
@@ -28,5 +30,9 @@ function hashLaneId(laneId: string): number {
 }
 
 export function spriteVariantForLane(lane: Lane): BattleRunnerSpriteId {
+	const actorVariantId = lane.actor_visual?.variant_id;
+	if (actorVariantId && BATTLE_RUNNER_SPRITE_ID_SET.has(actorVariantId)) {
+		return actorVariantId as BattleRunnerSpriteId;
+	}
 	return LANE_VARIANT_OVERRIDES[lane.id] ?? BATTLE_RUNNER_SPRITE_IDS[hashLaneId(lane.id) % BATTLE_RUNNER_SPRITE_IDS.length];
 }

@@ -42,6 +42,51 @@ DEFAULT_LANE_ID = "payload-857-receipt"
 DEFAULT_PAYLOAD_ID = "payload-857"
 DEFAULT_LANE_NAME = "Archive Escape"
 DEFAULT_BLUE_ACTION_ID = "blue-receipt-backed-patch"
+ACTOR_STATE_VOCABULARY = [
+    "idle",
+    "walk",
+    "run",
+    "research",
+    "payload",
+    "mutate",
+    "handoff",
+    "spawn",
+    "hit",
+    "blocked",
+    "killed",
+    "fastest_crash",
+    "promoted",
+    "stale_pending",
+]
+SPRITE_VARIANT_ORDER = [
+    "blue_lizard",
+    "green_horn",
+    "nurgling",
+    "purple_horn_imp",
+    "red_human",
+    "skull_horn",
+    "slug_demon",
+    "typhus",
+    "crimson_chainsword_berserker",
+    "crimson_hornbreaker",
+    "crimson_chainsaw_demon",
+    "plague_nurgling",
+]
+LANE_VARIANT_DEFAULTS = {
+    "payload-857": "crimson_chainsword_berserker",
+    "payload-857-A": "crimson_chainsaw_demon",
+    "payload-857-receipt": "crimson_hornbreaker",
+    "payload-857-red-1": "plague_nurgling",
+    "payload-231": "purple_horn_imp",
+    "payload-404": "skull_horn",
+    "payload-118": "blue_lizard",
+    "payload-620": "typhus",
+    "payload-912": "crimson_chainsword_berserker",
+    "payload-912-A": "plague_nurgling",
+    "payload-912-B": "crimson_hornbreaker",
+    "payload-912-C": "purple_horn_imp",
+    "payload-912-D": "crimson_chainsaw_demon",
+}
 
 app = typer.Typer(add_completion=False, help="Generate Battle UX data from receipt artifacts.")
 
@@ -298,6 +343,7 @@ def _fixture_from_facts(facts: dict[str, Any]) -> dict[str, Any]:
     lanes = _apply_lineage_to_lanes(lanes=lanes, facts=facts)
     _attach_elapsed_timing(lanes=lanes, facts=facts)
     _attach_activity_segments(lanes)
+    _attach_actor_visuals(lanes)
     events = _with_timeline_order(_events(facts=facts))
     blue_actions = _blue_patch_actions(facts=facts)
     leaderboard = [_leaderboard_entry(facts=facts, lane=lane) for lane in lanes]
@@ -334,6 +380,7 @@ def _fixture_from_facts(facts: dict[str, Any]) -> dict[str, Any]:
         "battle_timeline_control": {
             key: value for key, value in timeline_control.items() if key != "_legacy_timeline"
         },
+        "sprite_theme": _sprite_theme_for_lanes(lanes),
         "segments": _snapshot_segments(lanes),
         "lineage_request": facts["lineage_request"],
         "lineage": _lineage_payload(facts=facts, lanes=lanes),
@@ -679,6 +726,7 @@ def _apply_lineage_to_lanes(*, lanes: list[dict[str, Any]], facts: dict[str, Any
             parent_cockpit["blue_outcome"] = blue_outcome
 
         child["parentId"] = parent_lane_id
+        child["parent_id"] = parent_lane_id
         child["lineageGroupId"] = f"lineage:{parent_lane_id}"
         child["collapsible"] = False
         child["expandedByDefault"] = True
@@ -763,6 +811,167 @@ def _attach_activity_segments(lanes: list[dict[str, Any]]) -> None:
     for lane in lanes:
         lane["events"] = _sorted_lane_events(lane.get("events", []))
         lane["activitySegments"] = _activity_segments_for_lane(lane)
+
+
+def _attach_actor_visuals(lanes: list[dict[str, Any]]) -> None:
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane["actor_visual"] = _actor_visual_for_lane(lane)
+
+
+def _actor_visual_for_lane(lane: dict[str, Any]) -> dict[str, Any]:
+    lane_id = str(lane.get("id") or "lane")
+    is_child = bool(lane.get("parentId"))
+    variant_id = _variant_id_for_lane(lane_id)
+    archetype = "chaos_marine_child" if is_child or variant_id in {"plague_nurgling", "nurgling"} else "chaos_marine_heavy"
+    transitions = _actor_state_timeline(lane)
+    initial_state = transitions[0]["state"] if transitions else ("spawn" if is_child else "idle")
+    return {
+        "schema": "battle.actor_visual.v1",
+        "actor_id": lane_id,
+        "lane_id": lane_id,
+        "role": "red_exploit",
+        "team": "red",
+        "archetype": archetype,
+        "variant_id": variant_id,
+        "style_family": "vintage_16bit_genesis",
+        "facing": "right",
+        "scale_class": "heavy_64",
+        "initial_state": initial_state,
+        "state_source": "canonical_events",
+        "state_timeline": transitions,
+        "proof_scope": {
+            "cosmetic_identity_only": True,
+            "terminal_states_receipt_gated": True,
+            "does_not_prove": [
+                "Sprite selection does not prove Battle outcome.",
+            ],
+        },
+    }
+
+
+def _actor_state_timeline(lane: dict[str, Any]) -> list[dict[str, Any]]:
+    lane_id = str(lane.get("id") or "lane")
+    transitions: list[dict[str, Any]] = []
+    events = _sorted_lane_events(lane.get("events", []))
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        elapsed = _number_or_none(event.get("elapsed_seconds"))
+        if elapsed is None:
+            continue
+        state = _actor_state_for_event(event=event, lane=lane)
+        transition = {
+            "at_seconds": elapsed,
+            "state": state,
+            "source_event_id": str(event.get("id") or f"{lane_id}:event"),
+        }
+        receipt_id = _first_str(event.get("receipt_id"), event.get("receiptId"), "")
+        if receipt_id:
+            transition["source_receipt_id"] = receipt_id
+        segment_id = _segment_id_for_event(lane=lane, event_id=str(event.get("id") or ""))
+        if segment_id:
+            transition["segment_id"] = segment_id
+        transition["provisional"] = False
+        transitions.append(transition)
+    if not transitions:
+        start = _number_or_none(lane.get("start_elapsed_seconds")) or 0.0
+        transitions.append(
+            {
+                "at_seconds": start,
+                "state": "spawn" if lane.get("parentId") else "idle",
+                "source_event_id": f"{lane_id}:actor-visual-default",
+                "provisional": False,
+            }
+        )
+    return transitions
+
+
+def _actor_state_for_event(*, event: dict[str, Any], lane: dict[str, Any]) -> str:
+    kind = str(event.get("kind") or "")
+    event_id = str(event.get("id") or "")
+    if kind == "handoff" and "spawned-from" in event_id:
+        return "spawn"
+    if kind == "handoff":
+        return "handoff"
+    if kind == "research":
+        return "research"
+    if kind in {"payload", "useful"}:
+        return "payload"
+    if kind in {"blue_blast", "blocked"}:
+        return "blocked"
+    runner_state = str(lane.get("runnerState") or "")
+    if runner_state in ACTOR_STATE_VOCABULARY:
+        return runner_state
+    return "run"
+
+
+def _segment_id_for_event(*, lane: dict[str, Any], event_id: str) -> str | None:
+    for segment in lane.get("activitySegments", []):
+        if isinstance(segment, dict) and segment.get("source_event_id") == event_id:
+            return str(segment.get("id") or "")
+    return None
+
+
+def _variant_id_for_lane(lane_id: str) -> str:
+    if lane_id in LANE_VARIANT_DEFAULTS:
+        return LANE_VARIANT_DEFAULTS[lane_id]
+    index = sum(ord(char) for char in lane_id) % len(SPRITE_VARIANT_ORDER)
+    return SPRITE_VARIANT_ORDER[index]
+
+
+def _sprite_theme_for_lanes(lanes: list[dict[str, Any]]) -> dict[str, Any]:
+    used_variant_ids = sorted(
+        {
+            str(lane.get("actor_visual", {}).get("variant_id"))
+            for lane in lanes
+            if isinstance(lane, dict)
+            and isinstance(lane.get("actor_visual"), dict)
+            and lane.get("actor_visual", {}).get("variant_id")
+        }
+    )
+    return {
+        "schema": "battle.sprite_theme.v1",
+        "style_family": "vintage_16bit_genesis",
+        "renderer": "pixijs",
+        "state_vocabulary": ACTOR_STATE_VOCABULARY,
+        "variants": {variant_id: _sprite_theme_variant(variant_id) for variant_id in used_variant_ids},
+        "effect_sheets": {},
+        "rules": {
+            "backend_never_emits_animation_names": True,
+            "backend_never_emits_frame_indices": True,
+            "terminal_animations_receipt_gated": True,
+            "nearest_neighbor_scaling": True,
+            "transparent_background": True,
+        },
+        "proof_scope": {
+            "cosmetic_identity_only": True,
+            "does_not_prove": [
+                "Sprite theme selection does not prove Battle outcome.",
+            ],
+        },
+    }
+
+
+def _sprite_theme_variant(variant_id: str) -> dict[str, Any]:
+    return {
+        "sprite_id": variant_id,
+        "display_name": variant_id.replace("_", " ").title(),
+        "team": "red",
+        "archetype": "child" if variant_id in {"plague_nurgling", "nurgling"} else "heavy",
+        "spritesheet_alias": f"battle-runner-{variant_id}",
+        "src": f"/battle-sprites/pixijs/{variant_id}.json",
+        "frame_width": 64,
+        "frame_height": 64,
+        "scale": 1,
+        "anchor": {
+            "x": 0.5,
+            "y": 0.85,
+        },
+        "state_animation_map": {state: state for state in ACTOR_STATE_VOCABULARY if state != "stale_pending"}
+        | {"stale_pending": "idle"},
+    }
 
 
 def _snapshot_segments(lanes: list[dict[str, Any]]) -> list[dict[str, Any]]:

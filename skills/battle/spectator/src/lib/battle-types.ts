@@ -562,6 +562,29 @@ export type LaneActivitySegment = {
 	proof_mode: ProofMode;
 };
 
+export type ActorVisual = {
+	schema: "battle.actor_visual.v1";
+	actor_id: string;
+	lane_id: string;
+	role: string;
+	team: Team;
+	archetype: string;
+	variant_id: string;
+	style_family?: string;
+	facing?: string;
+	scale_class?: string;
+	initial_state?: string;
+	state_source?: string;
+	state_timeline?: Array<{
+		at_seconds: number;
+		state: string;
+		source_event_id: string;
+		source_receipt_id?: string;
+		segment_id?: string;
+		provisional?: boolean;
+	}>;
+};
+
 export type LaneCockpit = {
 	schema: "battle.lane_cockpit.v1";
 	proof_mode: ProofMode;
@@ -620,6 +643,7 @@ export type Lane = {
 	generation: number;
 	team: "red";
 	parentId?: string;
+	parent_id?: string;
 	expanded?: boolean;
 	selected?: boolean;
 	summary?: string;
@@ -647,6 +671,7 @@ export type Lane = {
 	stderr?: string[];
 	receipts?: string[];
 	proofMode?: ProofMode;
+	actor_visual?: ActorVisual;
 	scenario?: {
 		battle_id?: string;
 		public_entrypoint?: string;

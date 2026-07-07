@@ -3041,6 +3041,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
     _check(isinstance(fixture.get("timeline"), dict), "timeline must be an object", errors)
     _check(isinstance(fixture.get("spectator_shell"), dict), "spectator_shell must be an object", errors)
     _check(isinstance(fixture.get("renderer_binding_contract"), dict), "renderer_binding_contract must be an object", errors)
+    _check(isinstance(fixture.get("sprite_theme"), dict), "sprite_theme must be an object", errors)
 
     scenario = fixture.get("scenario") if isinstance(fixture.get("scenario"), dict) else {}
     public_entrypoint = str(scenario.get("public_entrypoint") or "")
@@ -3058,6 +3059,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
     timeline = fixture.get("timeline") if isinstance(fixture.get("timeline"), dict) else {}
     spectator_shell = fixture.get("spectator_shell") if isinstance(fixture.get("spectator_shell"), dict) else {}
     renderer_bindings = fixture.get("renderer_binding_contract") if isinstance(fixture.get("renderer_binding_contract"), dict) else {}
+    sprite_theme = fixture.get("sprite_theme") if isinstance(fixture.get("sprite_theme"), dict) else {}
 
     lane_by_id = {str(lane.get("id")): lane for lane in lanes if isinstance(lane, dict) and lane.get("id")}
     event_types = [str(event.get("event_type")) for event in events if isinstance(event, dict)]
@@ -3093,6 +3095,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
         events=events,
         errors=errors,
     )
+    _validate_actor_visuals(lanes=lanes, sprite_theme=sprite_theme, errors=errors)
     _validate_renderer_binding_contract(renderer_bindings, errors=errors)
     _validate_lane_event_layout(lanes=lanes, errors=errors)
     _validate_proof_blockers(proof_blockers=proof_blockers, events=events, errors=errors)
@@ -3738,6 +3741,39 @@ def _validate_lane_event_layout(*, lanes: list[Any], errors: list[str]) -> None:
                 _check(event_x <= lane_x_end, f"lane event {event.get('id')} must not occur after lane xEnd", errors)
             if is_child_lane and lane_x_start is not None and event_x is not None:
                 _check(event_x >= lane_x_start, f"child lane event {event.get('id')} must not occur before lane xStart", errors)
+
+
+def _validate_actor_visuals(*, lanes: list[Any], sprite_theme: dict[str, Any], errors: list[str]) -> None:
+    _check(sprite_theme.get("schema") == "battle.sprite_theme.v1", "sprite_theme.schema must be battle.sprite_theme.v1", errors)
+    _check(sprite_theme.get("renderer") == "pixijs", "sprite_theme.renderer must be pixijs", errors)
+    variants = sprite_theme.get("variants") if isinstance(sprite_theme.get("variants"), dict) else {}
+    _check(bool(variants), "sprite_theme.variants must not be empty", errors)
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane_id = str(lane.get("id") or "")
+        visual = lane.get("actor_visual") if isinstance(lane.get("actor_visual"), dict) else {}
+        _check(visual.get("schema") == "battle.actor_visual.v1", f"lane {lane_id} actor_visual.schema must be battle.actor_visual.v1", errors)
+        _check(visual.get("lane_id") == lane_id, f"lane {lane_id} actor_visual.lane_id must match lane.id", errors)
+        _check(visual.get("team") == lane.get("team"), f"lane {lane_id} actor_visual.team must match lane.team", errors)
+        variant_id = str(visual.get("variant_id") or "")
+        _check(bool(variant_id), f"lane {lane_id} actor_visual.variant_id is required", errors)
+        _check(variant_id in variants, f"lane {lane_id} actor_visual.variant_id must exist in sprite_theme.variants", errors)
+        timeline = visual.get("state_timeline") if isinstance(visual.get("state_timeline"), list) else []
+        _check(bool(timeline), f"lane {lane_id} actor_visual.state_timeline must not be empty", errors)
+        for transition in timeline:
+            if not isinstance(transition, dict):
+                errors.append(f"lane {lane_id} actor_visual.state_timeline entries must be objects")
+                continue
+            _check(_number_or_none(transition.get("at_seconds")) is not None, f"lane {lane_id} actor_visual transition requires at_seconds", errors)
+            _check(isinstance(transition.get("state"), str) and bool(transition.get("state")), f"lane {lane_id} actor_visual transition requires state", errors)
+            _check(isinstance(transition.get("source_event_id"), str) and bool(transition.get("source_event_id")), f"lane {lane_id} actor_visual transition requires source_event_id", errors)
+            if transition.get("state") in {"blocked", "killed", "fastest_crash", "promoted"}:
+                _check(
+                    isinstance(transition.get("source_receipt_id"), str) and bool(transition.get("source_receipt_id")),
+                    f"lane {lane_id} terminal actor_visual state {transition.get('state')} requires source_receipt_id",
+                    errors,
+                )
 
 
 def _validate_lane_cockpit(*, lane: dict[str, Any], errors: list[str]) -> None:

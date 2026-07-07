@@ -18,6 +18,7 @@
     "timeline",
     "lineage_request",
     "lineage",
+    "sprite_theme",
     "spectator_shell",
     "renderer_binding_contract",
     "ux_contract",
@@ -74,6 +75,9 @@
     },
     "lineage": {
       "$ref": "#/$defs/lineage"
+    },
+    "sprite_theme": {
+      "$ref": "#/$defs/sprite_theme"
     },
     "spectator_shell": {
       "$ref": "#/$defs/spectator_shell"
@@ -889,6 +893,292 @@
         }
       }
     },
+    "actor_visual": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "actor_id",
+        "lane_id",
+        "role",
+        "team",
+        "archetype",
+        "variant_id",
+        "style_family",
+        "initial_state",
+        "state_source",
+        "state_timeline",
+        "proof_scope"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.actor_visual.v1"
+        },
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "const": "red_exploit"
+        },
+        "team": {
+          "const": "red"
+        },
+        "archetype": {
+          "enum": [
+            "chaos_marine_light",
+            "chaos_marine_heavy",
+            "chaos_marine_support",
+            "chaos_marine_child"
+          ]
+        },
+        "variant_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"
+        },
+        "style_family": {
+          "const": "vintage_16bit_genesis"
+        },
+        "initial_state": {
+          "$ref": "#/$defs/actor_state"
+        },
+        "state_source": {
+          "enum": [
+            "canonical_events",
+            "derived_segments",
+            "fixture_script"
+          ]
+        },
+        "state_timeline": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/actor_state_transition"
+          }
+        },
+        "proof_scope": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "cosmetic_identity_only",
+            "terminal_states_receipt_gated",
+            "does_not_prove"
+          ],
+          "properties": {
+            "cosmetic_identity_only": {
+              "const": true
+            },
+            "terminal_states_receipt_gated": {
+              "const": true
+            },
+            "does_not_prove": {
+              "type": "array",
+              "contains": {
+                "const": "Sprite selection does not prove Battle outcome."
+              },
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "actor_state": {
+      "enum": [
+        "idle",
+        "walk",
+        "run",
+        "research",
+        "payload",
+        "mutate",
+        "handoff",
+        "spawn",
+        "hit",
+        "blocked",
+        "killed",
+        "fastest_crash",
+        "promoted",
+        "stale_pending"
+      ]
+    },
+    "actor_state_transition": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "at_seconds",
+        "state",
+        "source_event_id"
+      ],
+      "properties": {
+        "at_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "state": {
+          "$ref": "#/$defs/actor_state"
+        },
+        "source_event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provisional": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sprite_theme": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "style_family",
+        "renderer",
+        "state_vocabulary",
+        "variants",
+        "rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.sprite_theme.v1"
+        },
+        "style_family": {
+          "const": "vintage_16bit_genesis"
+        },
+        "renderer": {
+          "const": "pixijs"
+        },
+        "state_vocabulary": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor_state"
+          },
+          "minItems": 9,
+          "uniqueItems": true
+        },
+        "variants": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/sprite_theme_variant"
+          }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "backend_never_emits_animation_names",
+            "backend_never_emits_frame_indices",
+            "terminal_animations_receipt_gated",
+            "nearest_neighbor_scaling",
+            "transparent_background"
+          ],
+          "properties": {
+            "backend_never_emits_animation_names": {
+              "const": true
+            },
+            "backend_never_emits_frame_indices": {
+              "const": true
+            },
+            "terminal_animations_receipt_gated": {
+              "const": true
+            },
+            "nearest_neighbor_scaling": {
+              "const": true
+            },
+            "transparent_background": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "sprite_theme_variant": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "sprite_id",
+        "display_name",
+        "team",
+        "archetype",
+        "spritesheet_alias",
+        "src",
+        "frame_width",
+        "frame_height",
+        "anchor",
+        "state_animation_map"
+      ],
+      "properties": {
+        "sprite_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "team": {
+          "enum": [
+            "red",
+            "blue",
+            "neutral"
+          ]
+        },
+        "archetype": {
+          "enum": [
+            "light",
+            "heavy",
+            "support",
+            "child",
+            "defender",
+            "survivor"
+          ]
+        },
+        "spritesheet_alias": {
+          "type": "string",
+          "minLength": 1
+        },
+        "src": {
+          "type": "string",
+          "pattern": "^/.*\\.json$"
+        },
+        "frame_width": {
+          "enum": [
+            48,
+            64
+          ]
+        },
+        "frame_height": {
+          "enum": [
+            48,
+            64
+          ]
+        },
+        "anchor": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "state_animation_map": {
+          "type": "object",
+          "minProperties": 7
+        }
+      }
+    },
     "lane": {
       "type": "object",
       "additionalProperties": true,
@@ -902,6 +1192,7 @@
         "xEnd",
         "runnerX",
         "runnerState",
+        "actor_visual",
         "events",
         "activitySegments",
         "cockpit",
@@ -937,6 +1228,9 @@
         },
         "runnerState": {
           "type": "string"
+        },
+        "actor_visual": {
+          "$ref": "#/$defs/actor_visual"
         },
         "events": {
           "type": "array",
