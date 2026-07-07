@@ -428,7 +428,15 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
         },
         "scenario_coverage": [
             {"battle_id": "battle-004", "cwe": "CWE-22", "exploit_class": "archive_path_traversal", "fixture": "fresh_parent_spawn"},
-            {"battle_id": "battle-005", "cwe": "CWE-918", "exploit_class": "ssrf_metadata_probe", "fixture": "contract_only"},
+            {
+                "battle_id": "battle-005",
+                "cwe": "CWE-918",
+                "exploit_class": "ssrf_metadata_probe",
+                "fixture": "fresh_arena_ssrf_metadata",
+                "normalized_fixture": "local/battle-005-ssrf-metadata.normalized.json",
+                "transport_stream": "local/battle-005-ssrf-metadata-stream",
+                "public_fixture": "spectator/public/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json",
+            },
             {"battle_id": "battle-006", "cwe": "CWE-502", "exploit_class": "deserialization_gadget", "fixture": "contract_only"},
             {"battle_id": "battle-007", "cwe": "CWE-434", "exploit_class": "file_upload_probe", "fixture": "contract_only"},
         ],
@@ -455,7 +463,7 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
                 "Every lifecycle node carries backend-owned exploit profile, score semantics, and actor_visual.variant_id.",
             ],
             "does_not_prove": [
-                "Fresh Arena execution for battle-005, battle-006, or battle-007.",
+                "Fresh Arena execution for battle-006 or battle-007.",
                 "UX rendered this DAG.",
                 "Any suspected defender pressure signal is confirmed without a Blue receipt.",
             ],

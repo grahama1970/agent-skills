@@ -357,6 +357,10 @@ def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_out
         "battle-006": "deserialization_gadget",
         "battle-007": "file_upload_probe",
     }
+    coverage_by_battle = {item["battle_id"]: item for item in dag["scenario_coverage"]}
+    assert coverage_by_battle["battle-005"]["fixture"] == "fresh_arena_ssrf_metadata"
+    assert coverage_by_battle["battle-005"]["normalized_fixture"] == "local/battle-005-ssrf-metadata.normalized.json"
+    assert coverage_by_battle["battle-005"]["transport_stream"] == "local/battle-005-ssrf-metadata-stream"
     nodes = {node["id"]: node for node in dag["nodes"]}
     pressure = nodes["observe:defender-pressure"]["threat_assessment"]
     assert pressure["suspected_imminent_kill"] is True

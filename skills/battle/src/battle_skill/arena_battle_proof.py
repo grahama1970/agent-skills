@@ -61,6 +61,13 @@ def run_arena_battle_proof(
             run_id=f"{run_id}-arena",
             docker_image=docker_image,
         )
+    elif scenario_kind == "ssrf-metadata-probe":
+        arena_override_oracle_path = _write_ssrf_metadata_scenario(
+            arena_out=arena_out,
+            battle_id=battle_id,
+            run_id=f"{run_id}-arena",
+            docker_image=docker_image,
+        )
     elif scenario_kind != "zip-slip":
         raise ValueError(f"unknown scenario_kind: {scenario_kind}")
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
@@ -212,6 +219,10 @@ def _run_red_phase(
         red_submission = work_dir / "red_exploit_submission.py"
         red_submission.write_text(_signed_token_exploit_source(), encoding="utf-8")
         args = ["python", red_submission.name, "--expect-vulnerable"]
+    elif scenario.get("scenario_kind") == "ssrf-metadata-probe":
+        red_submission = work_dir / "red_exploit_submission.py"
+        red_submission.write_text(_ssrf_metadata_exploit_source(), encoding="utf-8")
+        args = ["python", red_submission.name, "--expect-vulnerable"]
     command = _python_docker_command(
         docker_image=docker_image,
         work_dir=work_dir,
@@ -313,6 +324,12 @@ def _run_judge_phase(
     if scenario.get("scenario_kind") == "signed-token-duplicate-claim":
         (work_dir / "red_exploit_submission.py").write_text(
             _signed_token_exploit_source(),
+            encoding="utf-8",
+        )
+        args = ["python", "red_exploit_submission.py"]
+    elif scenario.get("scenario_kind") == "ssrf-metadata-probe":
+        (work_dir / "red_exploit_submission.py").write_text(
+            _ssrf_metadata_exploit_source(),
             encoding="utf-8",
         )
         args = ["python", "red_exploit_submission.py"]
@@ -564,6 +581,8 @@ def _smoke_import(
     smoke = (
         "from app import verify_token, make_token; print(callable(verify_token) and callable(make_token))"
         if scenario.get("scenario_kind") == "signed-token-duplicate-claim"
+        else "from app import fetch_url; print(callable(fetch_url) and fetch_url('https://example.com') == 'FETCHED:https://example.com')"
+        if scenario.get("scenario_kind") == "ssrf-metadata-probe"
         else "from app import import_zip; print(callable(import_zip))"
     )
     command = _python_docker_command(
@@ -578,6 +597,8 @@ def _smoke_import(
 def _safe_app_source(scenario: dict[str, Any]) -> str:
     if scenario.get("scenario_kind") == "signed-token-duplicate-claim":
         return _safe_signed_token_app_source()
+    if scenario.get("scenario_kind") == "ssrf-metadata-probe":
+        return _safe_ssrf_metadata_app_source()
     return textwrap.dedent(
         """
         from pathlib import Path
@@ -849,6 +870,262 @@ def _safe_signed_token_app_source() -> str:
             if not hmac.compare_digest(_sign(canonical), sig):
                 raise ValueError("invalid signature")
             return dict(unsigned)
+        """
+    ).strip() + "\n"
+
+
+def _write_ssrf_metadata_scenario(
+    *,
+    arena_out: Path,
+    battle_id: str,
+    run_id: str,
+    docker_image: str,
+) -> Path:
+    target_dir = arena_out / "target"
+    public_dir = arena_out / "team-public"
+    public_target_dir = public_dir / "target"
+    private_dir = arena_out / "private"
+    private_oracle_dir = private_dir / "oracle"
+    scenario = {
+        "schema": "battle.arena_scenario.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": "arena-ssrf-metadata-probe-001",
+        "scenario_kind": "ssrf-metadata-probe",
+        "title": "Server-side metadata URL fetch probe",
+        "public_entrypoint": "/api/fetch-url",
+        "entry_point_type": "server-side-url-fetch-api",
+        "public_contract": {
+            "method": "POST",
+            "input": "URL to fetch from an allowlisted public origin.",
+            "visible_behavior": "Return a normalized fetch result for allowed URLs.",
+        },
+        "difficulty": "medium",
+        "target_language": "python",
+        "hidden_vulnerability_family": "SSRF metadata endpoint access",
+        "cwe": "CWE-918",
+        "red_success_marker": "SSRF_METADATA_CONFIRMED",
+        "finding_id": "arena-hidden-ssrf-metadata-001",
+        "red_blue_visible": {
+            "entrypoint": "/api/fetch-url",
+            "files": ["app.py"],
+            "hint": "The service fetches URLs on behalf of callers.",
+        },
+        "stop_condition": "Red confirms metadata URL access, Blue blocks internal metadata targets, Judge verifies normal public fetch behavior remains.",
+    }
+    hidden = {
+        "schema": "battle.hidden_ground_truth.v1",
+        "battle_id": battle_id,
+        "scenario_id": scenario["scenario_id"],
+        "not_visible_to": ["red", "blue"],
+        "hidden_vulnerabilities": [
+            {
+                "id": "hidden-ssrf-metadata-001",
+                "name": "Metadata endpoint SSRF",
+                "cwe": "CWE-918",
+                "entry_point": scenario["public_entrypoint"],
+                "oracle": "The fetch helper allows link-local metadata host access.",
+            }
+        ],
+    }
+    public_brief = {
+        "schema": "battle.team_public_scenario_brief.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "title": "Server-side URL fetch helper",
+        "public_entrypoint": scenario["public_entrypoint"],
+        "entry_point_type": scenario["entry_point_type"],
+        "public_contract": scenario["public_contract"],
+        "target_language": scenario["target_language"],
+        "allowed_files": ["app.py"],
+        "normal_behavior_examples": [
+            "fetch_url('https://example.com') should return a public fetch marker.",
+            "unsupported URL schemes should be rejected.",
+        ],
+        "not_visible": [
+            "hidden bug class",
+            "CWE",
+            "finding id",
+            "metadata oracle URL",
+            "safe patch template",
+            "judge private assertions",
+        ],
+    }
+    visibility = {
+        "schema": "battle.visibility_contract.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario["scenario_id"],
+        "arena_creator_private": [
+            "arena/private/hidden-ground-truth.json",
+            "arena/private/oracle/app.py",
+            "arena/private/oracle/exploit_check.py",
+        ],
+        "team_public": [
+            "arena/team-public/scenario-brief.json",
+            "arena/team-public/target/app.py",
+        ],
+        "red_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "blue_must_not_receive": [
+            "hidden-ground-truth",
+            "hidden_vulnerability_family",
+            "cwe",
+            "finding_id",
+            "oracle source",
+            "safe patch template",
+        ],
+        "judge_private": [
+            "red exploit submission",
+            "arena oracle",
+            "regression checks",
+        ],
+    }
+    _write_json(arena_out / "scenario.json", scenario)
+    stale_root_hidden = arena_out / "hidden-ground-truth.json"
+    if stale_root_hidden.exists():
+        stale_root_hidden.unlink()
+    _write_json(private_dir / "hidden-ground-truth.json", hidden)
+    _write_json(public_dir / "scenario-brief.json", public_brief)
+    _write_json(arena_out / "visibility-contract.json", visibility)
+    public_target_dir.mkdir(parents=True, exist_ok=True)
+    private_oracle_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "app.py").write_text(_vulnerable_ssrf_metadata_app_source(), encoding="utf-8")
+    for leaked_oracle in [target_dir / "exploit_check.py"]:
+        if leaked_oracle.exists():
+            leaked_oracle.unlink()
+    (public_target_dir / "app.py").write_text(_vulnerable_ssrf_metadata_app_source(), encoding="utf-8")
+    (private_oracle_dir / "app.py").write_text(_vulnerable_ssrf_metadata_app_source(), encoding="utf-8")
+    (private_oracle_dir / "exploit_check.py").write_text(_ssrf_metadata_exploit_source(), encoding="utf-8")
+    oracle_result = _run_command(
+        _python_docker_command(
+            docker_image=docker_image,
+            work_dir=private_oracle_dir,
+            args=["python", "exploit_check.py", "--expect-vulnerable"],
+        ),
+        out_dir=arena_out,
+        name="ssrf-metadata-hidden-oracle",
+    )
+    oracle_passed = (
+        oracle_result["exit_code"] == 0
+        and _stdout_contains(oracle_result, scenario["red_success_marker"])
+    )
+    return _write_json(
+        arena_out / "ssrf-metadata-hidden-oracle-receipt.json",
+        {
+            "schema": "battle.arena_hidden_oracle_receipt.v1",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "scenario_id": scenario["scenario_id"],
+            "scenario_kind": scenario["scenario_kind"],
+            "status": "PASS" if oracle_passed else "FAIL",
+            "mocked": False,
+            "live": "docker_hidden_oracle",
+            "entry_point": scenario["public_entrypoint"],
+            "finding_id": scenario["finding_id"],
+            "hidden_vulnerability_family": scenario["hidden_vulnerability_family"],
+            "success_marker": scenario["red_success_marker"],
+            "exploit_confirmed": oracle_passed,
+            "commands_run": [oracle_result],
+            "created_at": _now(),
+        },
+    )
+
+
+def _vulnerable_ssrf_metadata_app_source() -> str:
+    return textwrap.dedent(
+        """
+        from urllib.parse import urlparse
+
+
+        def fetch_url(url: str) -> str:
+            parsed = urlparse(url)
+            if parsed.scheme not in {"http", "https"}:
+                raise ValueError("unsupported scheme")
+            if parsed.netloc == "169.254.169.254":
+                return "METADATA:instance-credentials"
+            return f"FETCHED:{url}"
+        """
+    ).strip() + "\n"
+
+
+def _safe_ssrf_metadata_app_source() -> str:
+    return textwrap.dedent(
+        """
+        import ipaddress
+        from urllib.parse import urlparse
+
+
+        BLOCKED_HOSTS = {"169.254.169.254", "metadata.google.internal"}
+
+
+        def _is_blocked_host(hostname: str) -> bool:
+            if hostname in BLOCKED_HOSTS:
+                return True
+            try:
+                address = ipaddress.ip_address(hostname)
+            except ValueError:
+                return False
+            return address.is_private or address.is_loopback or address.is_link_local
+
+
+        def fetch_url(url: str) -> str:
+            parsed = urlparse(url)
+            if parsed.scheme not in {"http", "https"}:
+                raise ValueError("unsupported scheme")
+            if not parsed.hostname or _is_blocked_host(parsed.hostname):
+                raise ValueError("blocked internal target")
+            return f"FETCHED:{url}"
+        """
+    ).strip() + "\n"
+
+
+def _ssrf_metadata_exploit_source() -> str:
+    return textwrap.dedent(
+        """
+        import argparse
+
+        from app import fetch_url
+
+
+        def main() -> int:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--expect-vulnerable", action="store_true")
+            args = parser.parse_args()
+
+            try:
+                public = fetch_url("https://example.com")
+            except ValueError:
+                print("PUBLIC_FETCH_BROKEN")
+                return 2
+            if public != "FETCHED:https://example.com":
+                print("PUBLIC_FETCH_UNEXPECTED")
+                return 2
+
+            exposed = False
+            try:
+                exposed = fetch_url("http://169.254.169.254/latest/meta-data/iam") == "METADATA:instance-credentials"
+            except ValueError:
+                exposed = False
+
+            if args.expect_vulnerable and exposed:
+                print("SSRF_METADATA_CONFIRMED")
+                return 0
+            if args.expect_vulnerable:
+                print("SSRF_METADATA_NOT_CONFIRMED")
+                return 1
+            return 1 if exposed else 0
+
+
+        if __name__ == "__main__":
+            raise SystemExit(main())
         """
     ).strip() + "\n"
 

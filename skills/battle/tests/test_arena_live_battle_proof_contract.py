@@ -260,6 +260,11 @@ def test_arena_parent_spawn_proof_cli_uses_canonical_spawn_defaults(
         }
 
     monkeypatch.setattr(proof, "run_arena_tau_public_only_proof", fake_run_arena_tau_public_only_proof)
+    monkeypatch.setattr(
+        battle_cli,
+        "_write_ux_transport_artifacts",
+        lambda *, out, battle_id: {"status": "PASS", "battle_id": battle_id, "out": str(out)},
+    )
 
     result = CliRunner().invoke(
         battle_cli.app,
@@ -277,7 +282,7 @@ def test_arena_parent_spawn_proof_cli_uses_canonical_spawn_defaults(
     assert calls["docker_image"] == "python:3.12-slim"
     assert calls["model"] == "gpt-5.5"
     assert calls["scillm_base_url"] == "http://localhost:4001"
-    assert calls["timeout_s"] == 240.0
+    assert calls["timeout_s"] == 1200.0
     assert calls["red_workers"] == 2
     assert calls["blue_workers"] == 2
     assert calls["spawn_red_child_on_blue_success"] is True
