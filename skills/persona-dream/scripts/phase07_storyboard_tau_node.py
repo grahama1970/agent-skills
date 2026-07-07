@@ -72,6 +72,13 @@ ACCEPTED_FRAME_STATUSES = {
     "ACCEPTED_END_FRAME",
 }
 
+CANDIDATE_FRAME_STATUSES = {
+    "GENERATED_CANDIDATE_FRAME",
+    "CANDIDATE_START_FRAME",
+    "CANDIDATE_END_FRAME",
+    "REJECTED_IDENTITY_CONTINUITY",
+}
+
 STORYBOARD_FRAME_SIZE = (1536, 864)
 STORYBOARD_FRAME_ASPECT = STORYBOARD_FRAME_SIZE[0] / STORYBOARD_FRAME_SIZE[1]
 STORYBOARD_FRAME_ASPECT_TOLERANCE = 0.02
@@ -230,7 +237,16 @@ def _run_reviewer(
     packet: Mapping[str, Any],
     context: Mapping[str, Any],
 ) -> dict[str, Any]:
+    review_promotion = _promote_reviewer_accepted_frames(
+        packet,
+        packet_path=packet_path,
+        run_root=Path(str(context["run_root"])).expanduser().resolve(),
+        start_payload=start_payload,
+    )
+    if review_promotion["packet_updated"]:
+        packet = _read_json(packet_path)
     review = _validate_storyboard_packet(packet, packet_path=packet_path, reviewer=True)
+    review["blockers"].extend(review_promotion["blockers"])
     provider_route = _provider_route_receipt(
         start_payload,
         role="panel-reviewer",
@@ -522,6 +538,9 @@ def _validate_accepted_storyboard_frame_evidence(panel: Mapping[str, Any], *, la
             if status not in ACCEPTED_FRAME_STATUSES:
                 blockers.append(f"{label}:{frame_label}_not_accepted:{status or 'missing_status'}")
                 continue
+            if frame_ref.get("accepted_by") != "panel-reviewer":
+                blockers.append(f"{label}:accepted_{frame_label}_not_reviewer_accepted")
+                continue
             if not isinstance(path_value, str) or not path_value.strip():
                 blockers.append(f"{label}:accepted_{frame_label}_missing_path")
                 continue
@@ -608,12 +627,11 @@ def _frame_references(panel: Mapping[str, Any], *, frame_key: str | None = None)
     if frame_key is not None:
         value = panel.get(frame_key)
         if isinstance(value, Mapping):
-            for nested_key in ("image", "image_reference", "accepted_frame"):
-                nested = value.get(nested_key)
-                if isinstance(nested, Mapping):
-                    refs.append(nested)
+            nested = value.get("accepted_frame")
+            if isinstance(nested, Mapping):
+                refs.append(nested)
         return refs
-    for key in ("storyboard_frame", "panel_image", "accepted_frame"):
+    for key in ("accepted_frame",):
         value = panel.get(key)
         if isinstance(value, Mapping):
             refs.append(value)
@@ -716,7 +734,7 @@ def _ensure_storyboard_frame_artifacts(
                 ):
                     continue
                 if any("identity_continuity" in item for item in existing_blockers):
-                    existing = None
+                    frame.pop("accepted_frame", None)
             output_path = output_dir / f"{panel_id}_{frame_key}.png"
             resume_blockers = _validate_accepted_frame_file(
                 str(output_path),
@@ -724,8 +742,8 @@ def _ensure_storyboard_frame_artifacts(
                 frame_label=frame_key,
             )
             if output_path.exists() and not resume_blockers:
-                accepted_frame = {
-                    "status": "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME",
+                frame["candidate_frame"] = {
+                    "status": "GENERATED_CANDIDATE_FRAME",
                     "role": frame_key,
                     "path": str(output_path),
                     "sha256": _sha256(output_path),
@@ -736,15 +754,7 @@ def _ensure_storyboard_frame_artifacts(
                     "provider_receipt": str(run_root / "receipts" / "storyboard_frame_generation" / f"{panel_id}_{frame_key}_scillm_image_generation_receipt.json"),
                     "normalization_receipt": str(run_root / "receipts" / "storyboard_frame_generation" / f"{panel_id}_{frame_key}_frame_normalization_receipt.json"),
                 }
-                identity_blockers = _attach_identity_continuity_review(
-                    accepted_frame,
-                    panel=panel,
-                    frame_key=frame_key,
-                    identity_review_policy=identity_review_policy,
-                    receipts_dir=run_root / "receipts" / "storyboard_identity_review",
-                )
-                frame["accepted_frame"] = accepted_frame
-                blockers.extend(identity_blockers)
+                frame.pop("accepted_frame", None)
                 _write_json(packet_path, mutable_packet)
                 continue
             prompt = _frame_generation_prompt(panel, frame_key=frame_key, prompt_key=prompt_key)
@@ -764,8 +774,8 @@ def _ensure_storyboard_frame_artifacts(
             if call.get("status") != "PASS":
                 blockers.append(f"{panel_id}:{frame_key}:image_generation_failed:{call.get('error')}")
                 continue
-            accepted_frame = {
-                "status": "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME",
+            frame["candidate_frame"] = {
+                "status": "GENERATED_CANDIDATE_FRAME",
                 "role": frame_key,
                 "path": str(output_path),
                 "sha256": _sha256(output_path),
@@ -776,15 +786,7 @@ def _ensure_storyboard_frame_artifacts(
                 "provider_receipt": call.get("receipt"),
                 "normalization_receipt": call.get("normalization_receipt"),
             }
-            identity_blockers = _attach_identity_continuity_review(
-                accepted_frame,
-                panel=panel,
-                frame_key=frame_key,
-                identity_review_policy=identity_review_policy,
-                receipts_dir=run_root / "receipts" / "storyboard_identity_review",
-            )
-            frame["accepted_frame"] = accepted_frame
-            blockers.extend(identity_blockers)
+            frame.pop("accepted_frame", None)
             _write_json(packet_path, mutable_packet)
 
     if not blockers:
@@ -798,6 +800,74 @@ def _ensure_storyboard_frame_artifacts(
         "blockers": blockers,
         "receipt": receipt,
     }
+
+
+def _promote_reviewer_accepted_frames(
+    packet: Mapping[str, Any],
+    *,
+    packet_path: Path,
+    run_root: Path,
+    start_payload: Mapping[str, Any],
+) -> dict[str, Any]:
+    identity_review_policy = _resolve_identity_review_policy(start_payload)
+    blockers: list[str] = []
+    if identity_review_policy["source"] != "dag_identity_review_model_policy":
+        return {
+            "packet_updated": False,
+            "blockers": [
+                "identity_review:missing_dag_identity_review_model_policy:"
+                + str(identity_review_policy.get("error") or identity_review_policy.get("source"))
+            ],
+        }
+    if identity_review_policy["supported"] is not True:
+        return {
+            "packet_updated": False,
+            "blockers": [f"identity_review:model_policy_blocked:{identity_review_policy.get('error')}"],
+        }
+
+    mutable_packet = json.loads(json.dumps(packet))
+    packet_updated = False
+    for panel in mutable_packet.get("panels", []):
+        if not isinstance(panel, dict):
+            continue
+        panel_id = str(panel.get("panel_id") or "panel")
+        for frame_key in ("start_frame", "end_frame"):
+            frame = panel.get(frame_key)
+            if not isinstance(frame, dict):
+                continue
+            candidate = frame.get("candidate_frame")
+            if not isinstance(candidate, dict):
+                if "accepted_frame" not in frame:
+                    blockers.append(f"{panel_id}:{frame_key}:missing_candidate_frame")
+                continue
+            if str(candidate.get("status") or "") not in CANDIDATE_FRAME_STATUSES:
+                blockers.append(f"{panel_id}:{frame_key}:candidate_frame_bad_status:{candidate.get('status') or 'missing_status'}")
+                frame.pop("accepted_frame", None)
+                packet_updated = True
+                continue
+            identity_blockers = _attach_identity_continuity_review(
+                candidate,
+                panel=panel,
+                frame_key=frame_key,
+                identity_review_policy=identity_review_policy,
+                receipts_dir=run_root / "receipts" / "storyboard_identity_review",
+            )
+            if identity_blockers:
+                blockers.extend(identity_blockers)
+                frame.pop("accepted_frame", None)
+                packet_updated = True
+                continue
+            accepted = dict(candidate)
+            accepted["status"] = "ACCEPTED_START_FRAME" if frame_key == "start_frame" else "ACCEPTED_END_FRAME"
+            accepted["accepted_by"] = "panel-reviewer"
+            accepted["accepted_at"] = _now_iso()
+            accepted["source_candidate_sha256"] = candidate.get("sha256")
+            frame["accepted_frame"] = accepted
+            packet_updated = True
+
+    if packet_updated:
+        _write_json(packet_path, mutable_packet)
+    return {"packet_updated": packet_updated, "blockers": blockers}
 
 
 def _existing_frame_blockers(

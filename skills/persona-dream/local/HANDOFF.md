@@ -1,6 +1,6 @@
 # Handoff Report: persona-dream
 
-**Timestamp**: 2026-07-07T13:05:00Z
+**Timestamp**: 2026-07-07T13:42:00Z
 **Active Agent**: Codex
 
 ## 1. Project Overview
@@ -13,9 +13,10 @@
 
 - **Documented Contract**: Storyboard panels must be generated through a Tau creator/reviewer loop, must preserve Embry/Kai identity with contact/reference sheets, and must fail closed when visual identity review fails.
 - **Implemented Reality**: The Phase 07 packet and UI currently show `BLOCKED_PANEL_REVIEW`, not a passing storyboard. The pane is correctly blocked, but the visible SB_001 frame in the browser still does not prove Embry identity.
+- **Source Repair Applied**: `phase07_storyboard_tau_node.py` now separates generated `candidate_frame` from reviewer-owned `accepted_frame`. The creator path no longer writes `accepted_frame`; the reviewer promotion path is the only source path that writes `accepted_frame`, and accepted frames must include `accepted_by: panel-reviewer`.
 - **Drift/Misalignments**:
   - The prompt payload previously treated Embry/Kai as weak `required_entities` rather than hard `required_identities`.
-  - A generated frame was able to appear as an `accepted_frame` while nested identity review had `status: FAIL`.
+  - A generated frame was able to appear as an `accepted_frame` while nested identity review had `status: FAIL`. Source validation now catches this state and blocks old creator-minted frames with `accepted_*_not_reviewer_accepted`.
   - Local image replacement updated on-disk PNGs, but CDP still showed a stale/wrong SB_001 frame in the live pane, meaning the rendered asset path/cache remains unresolved.
 
 ## 3. What is Working Well
@@ -30,6 +31,9 @@
   - `fail_closed_decision: True`
   - `structured_schema_question: True`
 - The latest CDP run successfully loaded the Storyboard pane and produced a screenshot artifact.
+- The optimum SB_001 payload fixture validates with `PASS`, while the current live Phase 07 packet fails the hard identity contract:
+  - `python3 skills/persona-dream/fixtures/phase07_optimum_payload_sb001/tools/validate_optimum_payload.py skills/persona-dream/fixtures/phase07_optimum_payload_sb001/sb_001.optimum_prompt_payload.v1.json` -> `PASS`
+  - `python3 skills/persona-dream/tools/assert_panel_contract.py skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json` -> `FAIL: required_identities must include Embry and Kai`
 
 ## 4. What is Currently Broken
 
@@ -55,6 +59,7 @@
 1. Trace the live `<img src>` for SB_001 in `DreamWorkspace.tsx`/UX Lab runtime and compare the served bytes to the repaired PNG SHA.
 2. Add cache busting or correct source-path selection so the browser renders the intended repaired asset, not a stale provider/cached frame.
 3. Fix the Phase 07 acceptance model so `accepted_frame` is written only after panel-reviewer identity continuity PASS.
+   - Source patch is applied; the live packet still needs regeneration through the repaired Tau DAG.
 4. Regenerate Phase 07 through Tau using hard `required_identities`, attached Embry/Kai identity references, and no fallback image provider.
 5. Re-run CDP and visually inspect the screenshot. Acceptance requires the screenshot to show Embry and Kai as the correct characters, not just a blocked status page.
 
