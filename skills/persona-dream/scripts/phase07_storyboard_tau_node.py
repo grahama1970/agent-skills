@@ -544,6 +544,16 @@ def _validate_storyboard_packet(
     seed_ids: set[str] = set()
     entity_names: set[str] = set()
     for index, panel in enumerate(panels):
+        panel_id = str(panel.get("panel_id") or "") if isinstance(panel, Mapping) else ""
+        if targeted_panel_ids and panel_id not in targeted_panel_ids:
+            per_panel.append(
+                {
+                    "panel_id": panel_id or f"panel_{index + 1}",
+                    "status": "SKIPPED_TARGET_SCOPE",
+                    "blockers": [],
+                }
+            )
+            continue
         panel_blockers = _validate_panel(panel, index=index, reviewer=reviewer)
         if isinstance(panel, Mapping):
             seed_ids.update(str(item) for item in panel.get("coverage_seed_ids", []) if isinstance(item, str))
@@ -881,13 +891,16 @@ def _ensure_storyboard_frame_artifacts(
     provider_called = False
     packet_updated = False
     panel_list = mutable_packet.get("panels", [])
+    targeted_panel_ids = _targeted_generation_panel_ids(mutable_packet)
     for panel_index, panel in enumerate(panel_list):
         if not isinstance(panel, dict):
             continue
-        blockers.extend(_ensure_panel_identity_references(panel))
-        _ensure_panel_required_identities(panel)
-        packet_updated = _purge_invalid_accepted_frames(panel) or packet_updated
         panel_id = str(panel.get("panel_id") or "panel")
+        if targeted_panel_ids and panel_id not in targeted_panel_ids:
+            continue
+        _ensure_panel_required_identities(panel)
+        blockers.extend(_ensure_panel_identity_references(panel))
+        packet_updated = _purge_invalid_accepted_frames(panel) or packet_updated
         if panel_index > 0:
             continuity = _previous_panel_end_frame_reference(panel_list, panel_index)
             if continuity["blockers"]:
@@ -1022,6 +1035,9 @@ def _promote_reviewer_accepted_frames(
         if not isinstance(panel, dict):
             continue
         panel_id = str(panel.get("panel_id") or "panel")
+        targeted_panel_ids = _targeted_generation_panel_ids(mutable_packet)
+        if targeted_panel_ids and panel_id not in targeted_panel_ids:
+            continue
         for frame_key in ("start_frame", "end_frame"):
             frame = panel.get(frame_key)
             if not isinstance(frame, dict):
@@ -1124,16 +1140,18 @@ def _ensure_optimum_identity_contract(
             "metadata_claims_are_not_visual_proof": True,
         },
     }
-    packet["generation_scope"] = {
-        "mode": "failed_unlocked_only",
-        "target_panel_ids": ["sb_001"],
-        "target_frame_ids": ["sb_001.start_frame", "sb_001.end_frame"],
-        "locked_panel_ids": [],
-        "do_not_regenerate_panel_ids": [],
-        "target_frames": ["start_frame", "end_frame"],
-        "max_attempts": 4,
-        "reject_known_failed_candidates": True,
-    }
+    existing_scope = packet.get("generation_scope")
+    if not isinstance(existing_scope, Mapping):
+        packet["generation_scope"] = {
+            "mode": "failed_unlocked_only",
+            "target_panel_ids": ["sb_001"],
+            "target_frame_ids": ["sb_001.start_frame", "sb_001.end_frame"],
+            "locked_panel_ids": [],
+            "do_not_regenerate_panel_ids": [],
+            "target_frames": ["start_frame", "end_frame"],
+            "max_attempts": 4,
+            "reject_known_failed_candidates": True,
+        }
     packet["identity_slot_map"] = json.loads(json.dumps(IDENTITY_SLOT_MAP, sort_keys=True))
     packet["composition_priority"] = list(COMPOSITION_PRIORITY)
     packet["camera_contract"] = json.loads(json.dumps(CAMERA_CONTRACT, sort_keys=True))
@@ -1815,14 +1833,16 @@ def _ensure_panel_identity_references(panel: dict[str, Any]) -> list[str]:
 
 
 def _ensure_panel_required_identities(panel: dict[str, Any]) -> None:
-    required_entities = {
+    required_entities = [
         str(entity)
         for entity in panel.get("required_entities", [])
         if isinstance(entity, str)
-    }
-    required_identities = sorted(required_entities & {"Embry", "Kai"})
-    if required_identities:
-        panel["required_identities"] = required_identities
+    ]
+    for identity in ("Embry", "Kai"):
+        if identity not in required_entities:
+            required_entities.append(identity)
+    panel["required_entities"] = required_entities
+    panel["required_identities"] = ["Embry", "Kai"]
 
 
 def _attach_identity_continuity_review(

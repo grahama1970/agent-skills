@@ -1,0 +1,94 @@
+name: "Persona Dream Phase 07 Sequential Storyboard DAG"
+components:
+  - id: source_packet
+    label: Four-panel storyboard packet
+    tech: "JSON artifact"
+    latency: "static"
+    color: blue
+    files:
+      - skills/persona-dream/local/phase07_storyboard_architecture_review_bundle.md
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: scope_gate
+    label: Target scope + previous accepted end-frame gate
+    tech: "Tau adapter"
+    latency: "deterministic"
+    color: green
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: prompt_builder
+    label: Identity-first prompt builder
+    tech: "Prompt contract"
+    latency: "deterministic"
+    color: amber
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: image_creator
+    label: Live frame generation
+    tech: "Scillm/Codex OAuth image route"
+    latency: "minutes"
+    color: amber
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: identity_review
+    label: Per-frame identity review
+    tech: "gpt-5.5 image_url reviewer"
+    latency: "live model"
+    color: amber
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: tau_acceptance
+    label: Tau reviewer acceptance
+    tech: "DAG receipt + reviewer verdict"
+    latency: "deterministic gate over live receipts"
+    color: green
+    files:
+      - skills/persona-dream/local/phase07_storyboard_architecture_review_bundle.md
+
+  - id: next_panel
+    label: Next panel unlock
+    tech: "accepted end-frame continuity"
+    latency: "sequential only"
+    color: green
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: final_review
+    label: Full-storyboard no-target review
+    tech: "Tau reviewer"
+    latency: "final gate"
+    color: green
+    files:
+      - skills/persona-dream/local/phase07_storyboard_architecture_review_bundle.md
+
+  - id: ui_sync
+    label: Report/UI sync + browser proof
+    tech: "artifact install + CDP"
+    latency: "deterministic/browser"
+    color: purple
+    files:
+      - skills/persona-dream/ui/src/DreamWorkspace.tsx
+
+connections:
+  - from: source_packet
+    to: scope_gate
+  - from: scope_gate
+    to: prompt_builder
+  - from: prompt_builder
+    to: image_creator
+  - from: image_creator
+    to: identity_review
+  - from: identity_review
+    to: tau_acceptance
+  - from: tau_acceptance
+    to: next_panel
+  - from: next_panel
+    to: scope_gate
+  - from: tau_acceptance
+    to: final_review
+  - from: final_review
+    to: ui_sync
