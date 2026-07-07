@@ -1063,6 +1063,7 @@
         ]
       },
       "collapsible": true,
+      "dominant_spawn_type": "post_block_handoff",
       "duration_elapsed_seconds": 95.234401,
       "end_elapsed_seconds": 97.354126,
       "events": [
@@ -1198,6 +1199,9 @@
       ],
       "lineColor": "red",
       "lineageGroupId": "lineage:payload-857-receipt",
+      "lineage_spawn_types": [
+        "post_block_handoff"
+      ],
       "mutationRationale": "Receipt-backed parent handoff spawned child lane(s). No fastest crash, survivor promotion, Blue kill, or killed state is inferred without separate receipts.",
       "name": "Archive Escape",
       "payloadId": "payload-857",
@@ -1378,6 +1382,22 @@
       "summary": "1 child lane(s) receipt-backed",
       "team": "red",
       "terminal": "blocked_handoff",
+      "threat_assessment": {
+        "assessment_type": "post_block_handoff",
+        "confidence": 0.72,
+        "confirmed_blue_scan": false,
+        "confirmed_kill": false,
+        "proof_mode": "receipt_backed_fixture",
+        "schema": "battle.exploit_threat_assessment.v1",
+        "signals": [
+          {
+            "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "kind": "judge_block_receipt",
+            "summary": "Spawn authorized by receipt-backed parent handoff."
+          }
+        ],
+        "suspected_imminent_kill": false
+      },
       "xEnd": 84,
       "xStart": 7
     },
@@ -1776,6 +1796,22 @@
       "name": "Archive Escape red-1",
       "parentId": "payload-857-receipt",
       "parent_id": "payload-857-receipt",
+      "parent_threat_assessment": {
+        "assessment_type": "post_block_handoff",
+        "confidence": 0.72,
+        "confirmed_blue_scan": false,
+        "confirmed_kill": false,
+        "proof_mode": "receipt_backed_fixture",
+        "schema": "battle.exploit_threat_assessment.v1",
+        "signals": [
+          {
+            "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+            "kind": "judge_block_receipt",
+            "summary": "Spawn authorized by receipt-backed parent handoff."
+          }
+        ],
+        "suspected_imminent_kill": false
+      },
       "payloadId": "payload-857-red-1",
       "proofMode": "receipt_backed_fixture",
       "receipts": [
@@ -1942,6 +1978,7 @@
         "spawn_state": "post_spawn",
         "terminal_state": "blocked"
       },
+      "spawn_type": "post_block_handoff",
       "start_elapsed_seconds": 83.585509,
       "stderr": [
         "not emitted",
@@ -2234,6 +2271,8 @@
         "pre_spawn_block_blue_multiplier": 12.0,
         "pre_spawn_block_is_more_valuable_than_explicit_kill": true,
         "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
+        "preemptive_spawn_blue_pressure_multiplier": 2.5,
+        "preemptive_spawn_red_adaptation_multiplier": 6.0,
         "red_breakthrough_multiplier": 9.0,
         "spawn_pressure_parent_blue_multiplier": 4.0,
         "spawned_unblocked_lane_scores_red_breakthrough": true

@@ -98,6 +98,29 @@
       "terminal": "blocked"
     },
     {
+      "case_id": "preemptive_spawn_adaptation",
+      "event_kinds": [
+        "handoff"
+      ],
+      "has_children": true,
+      "has_parent": false,
+      "lane_id": "matrix-preemptive-spawn",
+      "multipliers": {
+        "blue": 2.5,
+        "red": 6.0
+      },
+      "outcome_class": "preemptive_spawn_adaptation",
+      "outcome_tier": "PREEMPTIVE_SPAWN_ADAPTATION",
+      "proof_mode": "receipt_backed_fixture",
+      "score_delta": {
+        "blue": 2.0,
+        "red": 4.8
+      },
+      "score_weight": 0.8,
+      "spawn_state": "spawned_child",
+      "terminal": "blocked_handoff"
+    },
+    {
       "case_id": "spawn_pressure_conceded",
       "event_kinds": [
         "handoff"
@@ -317,6 +340,7 @@
     "confirmed_kill_requires_kill_receipt": true,
     "not_spawned_blue_block_scores_above_kill": true,
     "pre_spawn_block_scores_above_post_spawn_containment": true,
+    "preemptive_spawn_scores_red_adaptation_above_spawn_pressure": true,
     "spawn_pressure_reduces_blue_credit": true,
     "sprite_choice_is_cosmetic": true
   },
@@ -326,7 +350,9 @@
     "confirmed_blue_kill_with_child_gt_spawn_pressure_conceded": true,
     "post_spawn_child_contained_gt_confirmed_blue_kill_with_child": true,
     "pre_spawn_blue_block_gt_confirmed_blue_kill_no_child": true,
-    "red_breakthrough_gt_unresolved_pressure": true
+    "preemptive_spawn_adaptation_red_gt_spawn_pressure_conceded": true,
+    "red_breakthrough_gt_unresolved_pressure": true,
+    "spawn_pressure_conceded_blue_gt_preemptive_spawn_adaptation": true
   },
   "score_owner": "scorekeeper",
   "sprite_identity_owner": "backend_variant_id_ux_theme_resolution",

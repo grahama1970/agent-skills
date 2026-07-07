@@ -136,6 +136,7 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
         "UNRESOLVED",
         "PRE_SPAWN_BLOCK",
         "POST_SPAWN_CONTAINMENT",
+        "PREEMPTIVE_SPAWN_ADAPTATION",
         "SPAWN_PRESSURE_CONCEDED",
         "KILLED_CONFIRMED",
         "RED_BREAKTHROUGH",
@@ -151,6 +152,7 @@ def test_normalized_ux_json_schema_tracks_backend_contract() -> None:
         "confirmed_blue_kill_no_child",
         "confirmed_blue_kill_with_child",
         "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
         "spawn_pressure_conceded",
         "red_breakthrough",
     ]
@@ -230,6 +232,18 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
         lane=lane(terminal="blocked_handoff", children=["child"]),
         spawn_count=1,
     )
+    preemptive_spawn = battle_event_adapter._lane_score_semantics(
+        lane=lane(
+            terminal="blocked_handoff",
+            children=["child"],
+            lineage_spawn_types=["strategic_pre_kill"],
+            threat_assessment={
+                "schema": "battle.exploit_threat_assessment.v1",
+                "suspected_imminent_kill": True,
+            },
+        ),
+        spawn_count=1,
+    )
     child_contained = battle_event_adapter._lane_score_semantics(
         lane=lane(terminal="blocked", parentId="parent"),
         spawn_count=1,
@@ -250,6 +264,9 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
     assert parent_spawned["outcome_tier"] == "SPAWN_PRESSURE_CONCEDED"
     assert parent_spawned["outcome_class"] == "spawn_pressure_conceded"
     assert parent_spawned["spawn_state"] == "spawned_child"
+    assert preemptive_spawn["outcome_tier"] == "PREEMPTIVE_SPAWN_ADAPTATION"
+    assert preemptive_spawn["outcome_class"] == "preemptive_spawn_adaptation"
+    assert preemptive_spawn["spawn_state"] == "spawned_child"
     assert child_contained["outcome_tier"] == "POST_SPAWN_CONTAINMENT"
     assert child_contained["outcome_class"] == "post_spawn_child_contained"
     assert child_contained["spawn_state"] == "post_spawn"
@@ -263,6 +280,8 @@ def test_semantic_scoring_policy_covers_spawn_block_kill_and_breakthrough() -> N
     assert killed["score_delta"]["blue"] > child_contained["score_delta"]["blue"]
     assert child_contained["score_delta"]["blue"] > killed_with_child["score_delta"]["blue"]
     assert killed_with_child["score_delta"]["blue"] > parent_spawned["score_delta"]["blue"]
+    assert parent_spawned["score_delta"]["blue"] > preemptive_spawn["score_delta"]["blue"]
+    assert preemptive_spawn["score_delta"]["red"] > parent_spawned["score_delta"]["red"]
     assert breakthrough["score_delta"]["red"] > unrelated_unresolved["score_delta"]["red"]
 
 
@@ -287,6 +306,7 @@ def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
         "confirmed_blue_kill_no_child",
         "confirmed_blue_kill_with_child",
         "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
         "spawn_pressure_conceded",
         "red_breakthrough",
         "unresolved_pressure",
@@ -294,6 +314,8 @@ def test_semantic_outcome_matrix_schema_and_calibration(tmp_path: Path) -> None:
     assert cases["pre_spawn_blue_block"]["score_delta"]["blue"] > cases["confirmed_blue_kill_no_child"]["score_delta"]["blue"]
     assert cases["post_spawn_child_contained"]["score_delta"]["blue"] > cases["confirmed_blue_kill_with_child"]["score_delta"]["blue"]
     assert cases["confirmed_blue_kill_with_child"]["score_delta"]["blue"] > cases["spawn_pressure_conceded"]["score_delta"]["blue"]
+    assert cases["spawn_pressure_conceded"]["score_delta"]["blue"] > cases["preemptive_spawn_adaptation"]["score_delta"]["blue"]
+    assert cases["preemptive_spawn_adaptation"]["score_delta"]["red"] > cases["spawn_pressure_conceded"]["score_delta"]["red"]
     assert cases["red_breakthrough"]["score_delta"]["red"] > cases["unresolved_pressure"]["score_delta"]["red"]
 
     profile_cases = {case["case_id"]: case for case in matrix["profile_cases"]}

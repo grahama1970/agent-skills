@@ -1355,6 +1355,26 @@ export const generatedBattleFixture = {
       "children": [
         "payload-857-red-1"
       ],
+      "lineage_spawn_types": [
+        "post_block_handoff"
+      ],
+      "dominant_spawn_type": "post_block_handoff",
+      "threat_assessment": {
+        "schema": "battle.exploit_threat_assessment.v1",
+        "assessment_type": "post_block_handoff",
+        "suspected_imminent_kill": false,
+        "confirmed_kill": false,
+        "confirmed_blue_scan": false,
+        "signals": [
+          {
+            "kind": "judge_block_receipt",
+            "summary": "Spawn authorized by receipt-backed parent handoff.",
+            "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+          }
+        ],
+        "confidence": 0.72,
+        "proof_mode": "receipt_backed_fixture"
+      },
       "lineageGroupId": "lineage:payload-857-receipt",
       "collapsible": true,
       "expandedByDefault": true,
@@ -1958,6 +1978,23 @@ export const generatedBattleFixture = {
       },
       "parentId": "payload-857-receipt",
       "parent_id": "payload-857-receipt",
+      "spawn_type": "post_block_handoff",
+      "parent_threat_assessment": {
+        "schema": "battle.exploit_threat_assessment.v1",
+        "assessment_type": "post_block_handoff",
+        "suspected_imminent_kill": false,
+        "confirmed_kill": false,
+        "confirmed_blue_scan": false,
+        "signals": [
+          {
+            "kind": "judge_block_receipt",
+            "summary": "Spawn authorized by receipt-backed parent handoff.",
+            "after_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+          }
+        ],
+        "confidence": 0.72,
+        "proof_mode": "receipt_backed_fixture"
+      },
       "lineageGroupId": "lineage:payload-857-receipt",
       "collapsible": false,
       "expandedByDefault": true,
@@ -3181,7 +3218,9 @@ export const generatedBattleFixture = {
         "explicit_kill_blue_multiplier": 10.0,
         "explicit_kill_with_child_blue_multiplier": 5.5,
         "post_spawn_containment_blue_multiplier": 7.0,
+        "preemptive_spawn_blue_pressure_multiplier": 2.5,
         "spawn_pressure_parent_blue_multiplier": 4.0,
+        "preemptive_spawn_red_adaptation_multiplier": 6.0,
         "red_breakthrough_multiplier": 9.0,
         "pre_spawn_block_is_more_valuable_than_post_spawn_block": true,
         "pre_spawn_block_is_more_valuable_than_explicit_kill": true,

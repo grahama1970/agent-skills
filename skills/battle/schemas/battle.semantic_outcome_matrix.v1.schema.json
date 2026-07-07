@@ -170,6 +170,7 @@
             "confirmed_blue_kill_no_child",
             "confirmed_blue_kill_with_child",
             "post_spawn_child_contained",
+            "preemptive_spawn_adaptation",
             "spawn_pressure_conceded",
             "red_breakthrough"
           ]

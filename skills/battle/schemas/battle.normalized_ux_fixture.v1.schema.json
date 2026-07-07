@@ -2048,6 +2048,7 @@
             "UNRESOLVED",
             "PRE_SPAWN_BLOCK",
             "POST_SPAWN_CONTAINMENT",
+            "PREEMPTIVE_SPAWN_ADAPTATION",
             "SPAWN_PRESSURE_CONCEDED",
             "KILLED_CONFIRMED",
             "RED_BREAKTHROUGH"
@@ -2060,6 +2061,7 @@
             "confirmed_blue_kill_no_child",
             "confirmed_blue_kill_with_child",
             "post_spawn_child_contained",
+            "preemptive_spawn_adaptation",
             "spawn_pressure_conceded",
             "red_breakthrough"
           ]

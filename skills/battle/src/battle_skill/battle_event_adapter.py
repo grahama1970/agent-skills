@@ -51,11 +51,13 @@ SEMANTIC_SCORE_MULTIPLIERS = {
     "explicit_kill_blue": 10.0,
     "explicit_kill_with_child_blue": 5.5,
     "post_spawn_containment_blue": 7.0,
+    "preemptive_spawn_blue_pressure": 2.5,
     "spawn_pressure_parent_blue": 4.0,
     "unresolved_red_pressure": 4.0,
     "red_breakthrough": 9.0,
     "pre_spawn_red_pressure": 2.0,
     "post_spawn_red_pressure": 3.5,
+    "preemptive_spawn_red_adaptation": 6.0,
     "spawn_pressure_parent_red": 4.5,
 }
 ACTOR_STATE_VOCABULARY = [
@@ -240,6 +242,7 @@ def semantic_outcome_matrix() -> dict[str, Any]:
             "not_spawned_blue_block_scores_above_kill": True,
             "pre_spawn_block_scores_above_post_spawn_containment": True,
             "spawn_pressure_reduces_blue_credit": True,
+            "preemptive_spawn_scores_red_adaptation_above_spawn_pressure": True,
             "confirmed_kill_requires_kill_receipt": True,
             "sprite_choice_is_cosmetic": True,
             "backend_must_not_emit": ["cinematic_speed", "easing", "camera_path", "pixi_frame_timing"],
@@ -249,6 +252,8 @@ def semantic_outcome_matrix() -> dict[str, Any]:
             "confirmed_blue_kill_no_child_gt_post_spawn_child_contained": score_by_class["confirmed_blue_kill_no_child"]["blue"] > score_by_class["post_spawn_child_contained"]["blue"],
             "post_spawn_child_contained_gt_confirmed_blue_kill_with_child": score_by_class["post_spawn_child_contained"]["blue"] > score_by_class["confirmed_blue_kill_with_child"]["blue"],
             "confirmed_blue_kill_with_child_gt_spawn_pressure_conceded": score_by_class["confirmed_blue_kill_with_child"]["blue"] > score_by_class["spawn_pressure_conceded"]["blue"],
+            "preemptive_spawn_adaptation_red_gt_spawn_pressure_conceded": score_by_class["preemptive_spawn_adaptation"]["red"] > score_by_class["spawn_pressure_conceded"]["red"],
+            "spawn_pressure_conceded_blue_gt_preemptive_spawn_adaptation": score_by_class["spawn_pressure_conceded"]["blue"] > score_by_class["preemptive_spawn_adaptation"]["blue"],
             "red_breakthrough_gt_unresolved_pressure": score_by_class["red_breakthrough"]["red"] > score_by_class["unresolved_pressure"]["red"],
         },
         "outcome_cases": cases,
@@ -770,9 +775,15 @@ def _apply_lineage_to_lanes(*, lanes: list[dict[str, Any]], facts: dict[str, Any
         spawn_x = int(spawn.get("x") or spawn.get("spawn_x") or 58)
         child_x_start = int(spawn.get("child_x_start") or spawn_x)
         inherited_context = [str(value) for value in spawn.get("inherited_context", []) if value]
+        spawn_type = str(spawn.get("spawn_type") or "post_block_handoff")
+        threat_assessment = deepcopy(spawn.get("threat_assessment")) if isinstance(spawn.get("threat_assessment"), dict) else {}
 
         parent.setdefault("children", [])
         parent["children"] = sorted({*parent.get("children", []), child_lane_id})
+        parent.setdefault("lineage_spawn_types", [])
+        parent["lineage_spawn_types"] = sorted({*parent.get("lineage_spawn_types", []), spawn_type})
+        parent["dominant_spawn_type"] = spawn_type
+        parent["threat_assessment"] = threat_assessment
         parent["lineageGroupId"] = f"lineage:{parent_lane_id}"
         parent["collapsible"] = True
         parent["expandedByDefault"] = True
@@ -813,6 +824,8 @@ def _apply_lineage_to_lanes(*, lanes: list[dict[str, Any]], facts: dict[str, Any
 
         child["parentId"] = parent_lane_id
         child["parent_id"] = parent_lane_id
+        child["spawn_type"] = spawn_type
+        child["parent_threat_assessment"] = threat_assessment
         child["lineageGroupId"] = f"lineage:{parent_lane_id}"
         child["collapsible"] = False
         child["expandedByDefault"] = True
@@ -1009,6 +1022,13 @@ def _lane_score_outcome(*, lane: dict[str, Any], spawn_count: int) -> dict[str, 
     is_child = bool(lane.get("parentId"))
     has_children = bool(lane.get("children"))
     spawned = is_child or has_children
+    spawn_types = {str(item) for item in lane.get("lineage_spawn_types", []) if item}
+    if lane.get("dominant_spawn_type"):
+        spawn_types.add(str(lane.get("dominant_spawn_type")))
+    if lane.get("spawn_type"):
+        spawn_types.add(str(lane.get("spawn_type")))
+    threat = lane.get("threat_assessment") if isinstance(lane.get("threat_assessment"), dict) else {}
+    suspected_pressure = threat.get("suspected_imminent_kill") is True or bool(spawn_types & {"strategic_pre_kill", "panic_spawn"})
     has_kill_receipt = _lane_has_event_kind(lane, {"killed", "kill_confirmed"}) or terminal_state == "killed"
     is_blocked = terminal_state in {"blocked", "blocked_handoff"}
     if has_kill_receipt:
@@ -1037,6 +1057,15 @@ def _lane_score_outcome(*, lane: dict[str, Any], spawn_count: int) -> dict[str, 
             "terminal_state": terminal_state,
             "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_red_pressure"],
             "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_containment_blue"],
+        }
+    if has_children and suspected_pressure:
+        return {
+            "outcome_tier": "PREEMPTIVE_SPAWN_ADAPTATION",
+            "outcome_class": "preemptive_spawn_adaptation",
+            "spawn_state": "spawned_child",
+            "terminal_state": terminal_state,
+            "red_multiplier": SEMANTIC_SCORE_MULTIPLIERS["preemptive_spawn_red_adaptation"],
+            "blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["preemptive_spawn_blue_pressure"],
         }
     if is_blocked and has_children:
         return {
@@ -1104,6 +1133,27 @@ def _semantic_outcome_case_lanes() -> list[tuple[str, dict[str, Any]]]:
                 score_weight=0.8,
                 parent_id="matrix-parent",
                 events=[{"kind": "blocked", "id": "child-contained:judge", "receipt_id": "judge-child-contained"}],
+            ),
+        ),
+        (
+            "preemptive_spawn_adaptation",
+            _matrix_lane(
+                lane_id="matrix-preemptive-spawn",
+                terminal="blocked_handoff",
+                score_weight=0.8,
+                children=["matrix-preemptive-child"],
+                lineage_spawn_types=["strategic_pre_kill"],
+                threat_assessment={
+                    "schema": "battle.exploit_threat_assessment.v1",
+                    "assessment_type": "suspected_blue_pressure",
+                    "suspected_imminent_kill": True,
+                    "confirmed_kill": False,
+                    "confirmed_blue_scan": False,
+                    "signals": [{"kind": "stderr_shift", "summary": "stderr response shape changed before Blue block receipt"}],
+                    "confidence": 0.78,
+                    "proof_mode": PROOF_MODE,
+                },
+                events=[{"kind": "handoff", "id": "preemptive-spawn:handoff", "receipt_id": "lineage-preemptive-spawn"}],
             ),
         ),
         (
@@ -1244,6 +1294,8 @@ def _matrix_lane(
     events: list[dict[str, Any]],
     parent_id: str | None = None,
     children: list[str] | None = None,
+    lineage_spawn_types: list[str] | None = None,
+    threat_assessment: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     lane: dict[str, Any] = {
         "id": lane_id,
@@ -1256,6 +1308,11 @@ def _matrix_lane(
         lane["parent_id"] = parent_id
     if children:
         lane["children"] = children
+    if lineage_spawn_types:
+        lane["lineage_spawn_types"] = lineage_spawn_types
+        lane["dominant_spawn_type"] = lineage_spawn_types[0]
+    if threat_assessment:
+        lane["threat_assessment"] = threat_assessment
     return lane
 
 
@@ -2083,7 +2140,9 @@ def _semantic_scoring_payload(lanes: list[dict[str, Any]]) -> dict[str, Any]:
             "explicit_kill_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_blue"],
             "explicit_kill_with_child_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["explicit_kill_with_child_blue"],
             "post_spawn_containment_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["post_spawn_containment_blue"],
+            "preemptive_spawn_blue_pressure_multiplier": SEMANTIC_SCORE_MULTIPLIERS["preemptive_spawn_blue_pressure"],
             "spawn_pressure_parent_blue_multiplier": SEMANTIC_SCORE_MULTIPLIERS["spawn_pressure_parent_blue"],
+            "preemptive_spawn_red_adaptation_multiplier": SEMANTIC_SCORE_MULTIPLIERS["preemptive_spawn_red_adaptation"],
             "red_breakthrough_multiplier": SEMANTIC_SCORE_MULTIPLIERS["red_breakthrough"],
             "pre_spawn_block_is_more_valuable_than_post_spawn_block": True,
             "pre_spawn_block_is_more_valuable_than_explicit_kill": True,

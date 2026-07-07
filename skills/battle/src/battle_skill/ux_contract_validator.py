@@ -327,6 +327,7 @@ def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
         "confirmed_blue_kill_no_child",
         "confirmed_blue_kill_with_child",
         "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
         "spawn_pressure_conceded",
         "red_breakthrough",
         "unresolved_pressure",
@@ -349,6 +350,18 @@ def validate_semantic_outcome_matrix(matrix: dict[str, Any]) -> None:
             by_class["confirmed_blue_kill_with_child"]["score_delta"]["blue"]
             > by_class["spawn_pressure_conceded"]["score_delta"]["blue"],
             "kill with child must still outrank mere spawn pressure conceded",
+            errors,
+        )
+        _check(
+            by_class["preemptive_spawn_adaptation"]["score_delta"]["red"]
+            > by_class["spawn_pressure_conceded"]["score_delta"]["red"],
+            "preemptive spawn under suspected pressure must score more Red adaptation credit than post-block handoff",
+            errors,
+        )
+        _check(
+            by_class["spawn_pressure_conceded"]["score_delta"]["blue"]
+            > by_class["preemptive_spawn_adaptation"]["score_delta"]["blue"],
+            "receipt-backed post-block handoff must score more Blue pressure credit than suspected-pressure preemptive spawn",
             errors,
         )
     profile_cases = matrix.get("profile_cases") if isinstance(matrix.get("profile_cases"), list) else []
@@ -453,7 +466,16 @@ def _validate_transport_stream_semantics(*, manifest: dict[str, Any], events: li
     }
     lifecycle_events = [event.get("lifecycle") for event in events if isinstance(event.get("lifecycle"), dict)]
     _check(len(lifecycle_events) == len(events), "every stream event must include lifecycle semantics", errors)
-    terminal_outcomes = {"pre_spawn_blue_block", "confirmed_blue_kill_no_child", "confirmed_blue_kill_with_child", "post_spawn_child_contained", "spawn_pressure_conceded", "red_breakthrough", "unresolved_pressure"}
+    terminal_outcomes = {
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+        "unresolved_pressure",
+    }
     for event in events:
         lifecycle = event.get("lifecycle") if isinstance(event.get("lifecycle"), dict) else {}
         lane_id = str(lifecycle.get("lane_id") or "")
@@ -4246,7 +4268,15 @@ def _validate_semantic_scoring_and_replay(*, fixture: dict[str, Any], lanes: lis
         _check(score.get("lane_id") == lane_id, f"lane {lane_id} score_semantics.lane_id must match lane.id", errors)
         _check(
             score.get("outcome_tier")
-            in {"UNRESOLVED", "PRE_SPAWN_BLOCK", "POST_SPAWN_CONTAINMENT", "SPAWN_PRESSURE_CONCEDED", "KILLED_CONFIRMED", "RED_BREAKTHROUGH"},
+            in {
+                "UNRESOLVED",
+                "PRE_SPAWN_BLOCK",
+                "POST_SPAWN_CONTAINMENT",
+                "PREEMPTIVE_SPAWN_ADAPTATION",
+                "SPAWN_PRESSURE_CONCEDED",
+                "KILLED_CONFIRMED",
+                "RED_BREAKTHROUGH",
+            },
             f"lane {lane_id} score_semantics.outcome_tier is invalid",
             errors,
         )
@@ -4258,6 +4288,7 @@ def _validate_semantic_scoring_and_replay(*, fixture: dict[str, Any], lanes: lis
                 "confirmed_blue_kill_no_child",
                 "confirmed_blue_kill_with_child",
                 "post_spawn_child_contained",
+                "preemptive_spawn_adaptation",
                 "spawn_pressure_conceded",
                 "red_breakthrough",
             },
