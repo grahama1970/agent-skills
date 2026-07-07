@@ -94,4 +94,31 @@ assert run["execution"]["agentic"] is False, run
 print("BATTLE_SANITY_PASS")
 PY
 
+echo "7. Validating stable normalized UX JSON contracts"
+for fixture in \
+  "$SCRIPT_DIR/local/battle-004-parent-spawn.normalized.json" \
+  "$SCRIPT_DIR/local/battle-004-sparse.normalized.json"; do
+  test -f "$fixture"
+  uv run --project "$SCRIPT_DIR" python -m battle_skill.cli validate-ux-contract "$fixture" >/tmp/battle-sanity-ux-contract.out
+  cat /tmp/battle-sanity-ux-contract.out
+done
+
+if [[ -n "${BATTLE_UX_CONTRACT_FIXTURE:-}" ]]; then
+  echo "8. Validating caller-provided normalized UX JSON contract"
+  uv run --project "$SCRIPT_DIR" python -m battle_skill.cli validate-ux-contract "$BATTLE_UX_CONTRACT_FIXTURE" >/tmp/battle-sanity-ux-contract.out
+  cat /tmp/battle-sanity-ux-contract.out
+else
+  echo "8. No caller-provided normalized UX JSON contract; set BATTLE_UX_CONTRACT_FIXTURE=/path/to/fixture.json to validate an extra fixture"
+fi
+
+echo "9. Checking normalized UX handoff summary matches local artifacts"
+uv run --project "$SCRIPT_DIR" python -m battle_skill.cli validate-ux-handoff-summary "$SCRIPT_DIR/local/battle-004-ux-json-contract-summary.json" >/tmp/battle-sanity-ux-handoff-summary.out
+cat /tmp/battle-sanity-ux-handoff-summary.out
+echo "BATTLE_UX_HANDOFF_SUMMARY_PASS"
+
+echo "10. Checking UX data contract index points at authoritative backend JSON"
+uv run --project "$SCRIPT_DIR" python -m battle_skill.cli validate-ux-data-contract-index "$SCRIPT_DIR/local/battle-004-ux-data-contract-index.json" >/tmp/battle-sanity-ux-data-contract-index.out
+cat /tmp/battle-sanity-ux-data-contract-index.out
+echo "BATTLE_UX_DATA_CONTRACT_INDEX_PASS"
+
 echo "Result: PASS"

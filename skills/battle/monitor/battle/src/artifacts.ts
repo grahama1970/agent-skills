@@ -1,15 +1,18 @@
-import type { BattleMonitorIndex, BattleScoreboard } from "./types";
-
-export interface LoadedBattleArtifacts {
-  baseUrl: string;
-  monitorIndex: BattleMonitorIndex;
-  scoreboard: BattleScoreboard;
-  receipts: Record<string, unknown>;
-}
+import type {
+  ArenaScenario,
+  BattleRunReceipt,
+  BattleScoreboard,
+  HiddenLedger,
+  JudgeReceipt,
+  LoadedBattleArtifacts,
+  TauManifest,
+  TauSubagentReceipt,
+  VisibilityValidation
+} from "./types";
 
 function artifactBaseUrl(): string {
   const params = new URLSearchParams(window.location.search);
-  return params.get("artifactBase") ?? "/artifacts/battle-001";
+  return params.get("artifactBase") ?? "/artifacts/arena-tau-public-only-002";
 }
 
 async function fetchJson<T>(baseUrl: string, relativePath: string): Promise<T> {
@@ -20,52 +23,69 @@ async function fetchJson<T>(baseUrl: string, relativePath: string): Promise<T> {
     throw new Error(`Missing or unreadable Battle artifact: ${url} (${response.status})`);
   }
 
-  const text = await response.text();
   try {
-    return JSON.parse(text) as T;
-  } catch (error) {
-    throw new Error(`Missing or unreadable Battle artifact: ${url}`);
+    return (await response.json()) as T;
+  } catch {
+    throw new Error(`Invalid JSON Battle artifact: ${url}`);
   }
 }
 
-function assertMonitorIndex(value: BattleMonitorIndex): void {
-  if (value.schema !== "battle.monitor_index.v1") {
-    throw new Error(`Invalid monitor-index schema: ${String(value.schema)}`);
-  }
-  if (!value.scoreboard) {
-    throw new Error("monitor-index missing scoreboard path");
-  }
-  if (!Array.isArray(value.players) || value.players.length !== 3) {
-    throw new Error("monitor-index must contain Red, Blue, and Judge players");
-  }
-}
-
-function assertScoreboard(value: BattleScoreboard): void {
-  if (value.schema !== "battle.scoreboard.v1") {
-    throw new Error(`Invalid scoreboard schema: ${String(value.schema)}`);
-  }
-  if (!value.verdict || !value.status) {
-    throw new Error("scoreboard missing verdict or status");
+function requireSchema(value: { schema?: string }, expected: string, path: string): void {
+  if (value.schema !== expected) {
+    throw new Error(`Invalid schema for ${path}: ${String(value.schema)}`);
   }
 }
 
 export async function loadBattleArtifacts(): Promise<LoadedBattleArtifacts> {
   const baseUrl = artifactBaseUrl();
-  const monitorIndex = await fetchJson<BattleMonitorIndex>(baseUrl, "monitor-index.json");
-  assertMonitorIndex(monitorIndex);
+  const run = await fetchJson<BattleRunReceipt>(baseUrl, "run-receipt.json");
+  requireSchema(run, "battle.arena_tau_public_only_run_receipt.v1", "run-receipt.json");
 
-  const scoreboard = await fetchJson<BattleScoreboard>(baseUrl, monitorIndex.scoreboard);
-  assertScoreboard(scoreboard);
+  const scoreboard = await fetchJson<BattleScoreboard>(baseUrl, run.artifacts.scoreboard);
+  requireSchema(scoreboard, "battle.arena_tau_public_only_scoreboard.v1", run.artifacts.scoreboard);
 
-  const receipts: Record<string, unknown> = {};
-  for (const player of monitorIndex.players) {
-    receipts[player.team] = await fetchJson<unknown>(baseUrl, player.receipt);
-  }
+  const visibility = await fetchJson<VisibilityValidation>(
+    baseUrl,
+    run.artifacts.visibility_validation
+  );
+  requireSchema(
+    visibility,
+    "battle.arena_tau_public_only_visibility_validation.v1",
+    run.artifacts.visibility_validation
+  );
+
+  const judge = await fetchJson<JudgeReceipt>(baseUrl, run.artifacts.judge_receipt);
+  requireSchema(judge, "battle.arena_tau_public_only_judge_receipt.v1", run.artifacts.judge_receipt);
+
+  const tau = await fetchJson<TauManifest>(baseUrl, run.artifacts.tau_manifest);
+  requireSchema(tau, "tau.battle_live_handoff_proof.v1", run.artifacts.tau_manifest);
+
+  const red = await fetchJson<TauSubagentReceipt>(baseUrl, run.artifacts.red_tau_subagent_receipt);
+  requireSchema(red, "tau.subagent_receipt.v1", run.artifacts.red_tau_subagent_receipt);
+
+  const blue = await fetchJson<TauSubagentReceipt>(baseUrl, run.artifacts.blue_tau_subagent_receipt);
+  requireSchema(blue, "tau.subagent_receipt.v1", run.artifacts.blue_tau_subagent_receipt);
+
+  const scenario = await fetchJson<ArenaScenario>(baseUrl, "arena/scenario.json");
+  requireSchema(scenario, "battle.arena_scenario.v1", "arena/scenario.json");
+
+  const ledger = await fetchJson<HiddenLedger>(baseUrl, run.artifacts.arena_private_ledger);
+  requireSchema(
+    ledger,
+    "battle.hidden_vulnerability_ledger.v1",
+    run.artifacts.arena_private_ledger
+  );
 
   return {
     baseUrl,
-    monitorIndex,
+    run,
     scoreboard,
-    receipts
+    visibility,
+    judge,
+    tau,
+    red,
+    blue,
+    scenario,
+    ledger
   };
 }

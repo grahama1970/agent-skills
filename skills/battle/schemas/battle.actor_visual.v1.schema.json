@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.actor_visual.v1.schema.json",
+  "title": "Battle Actor Visual Identity",
+  "description": "Renderer-neutral visual identity and semantic state timeline for a Battle actor. This schema may appear in generated UX fixtures, but it does not carry proof truth. Receipts and canonical events remain authoritative.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "actor_id",
+    "lane_id",
+    "role",
+    "team",
+    "archetype",
+    "variant_id",
+    "style_family",
+    "initial_state",
+    "state_source",
+    "state_timeline",
+    "proof_scope"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.actor_visual.v1"
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lane_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "enum": [
+        "red_exploit",
+        "blue_patch",
+        "judge",
+        "system"
+      ]
+    },
+    "team": {
+      "enum": [
+        "red",
+        "blue",
+        "judge",
+        "system"
+      ]
+    },
+    "archetype": {
+      "enum": [
+        "chaos_marine_light",
+        "chaos_marine_heavy",
+        "chaos_marine_support",
+        "chaos_marine_child",
+        "blue_defender",
+        "blue_heavy",
+        "survivor",
+        "system"
+      ]
+    },
+    "variant_id": {
+      "description": "Stable cosmetic roster id chosen by scenario config or deterministic adapter mapping. This is not a spritesheet path, Pixi object id, animation name, or proof claim.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"
+    },
+    "style_family": {
+      "description": "Art direction hint consumed by the UI asset manifest.",
+      "const": "vintage_16bit_genesis"
+    },
+    "facing": {
+      "enum": [
+        "right",
+        "left"
+      ],
+      "default": "right"
+    },
+    "scale_class": {
+      "enum": [
+        "normal_48",
+        "heavy_64"
+      ],
+      "default": "normal_48"
+    },
+    "initial_state": {
+      "$ref": "#/$defs/actor_state"
+    },
+    "state_source": {
+      "enum": [
+        "canonical_events",
+        "derived_segments",
+        "fixture_script"
+      ]
+    },
+    "state_timeline": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/state_transition"
+      }
+    },
+    "proof_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cosmetic_identity_only",
+        "terminal_states_receipt_gated",
+        "does_not_prove"
+      ],
+      "properties": {
+        "cosmetic_identity_only": {
+          "const": true
+        },
+        "terminal_states_receipt_gated": {
+          "const": true
+        },
+        "does_not_prove": {
+          "type": "array",
+          "contains": {
+            "const": "Sprite selection does not prove Battle outcome."
+          },
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "actor_state": {
+      "enum": [
+        "idle",
+        "walk",
+        "run",
+        "research",
+        "payload",
+        "mutate",
+        "handoff",
+        "spawn",
+        "hit",
+        "blocked",
+        "killed",
+        "fastest_crash",
+        "promoted",
+        "stale_pending"
+      ]
+    },
+    "terminal_actor_state": {
+      "enum": [
+        "blocked",
+        "killed",
+        "fastest_crash",
+        "promoted"
+      ]
+    },
+    "state_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at_seconds",
+        "state",
+        "source_event_id"
+      ],
+      "properties": {
+        "at_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "state": {
+          "$ref": "#/$defs/actor_state"
+        },
+        "source_event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provisional": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "$ref": "#/$defs/terminal_actor_state"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "required": [
+              "source_receipt_id"
+            ],
+            "properties": {
+              "provisional": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

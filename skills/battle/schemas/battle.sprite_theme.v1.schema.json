@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.sprite_theme.v1.schema.json",
+  "title": "Battle Sprite Theme",
+  "description": "UI-owned mapping from Battle actor visual identities to PixiJS spritesheet assets and animation names. This is not a proof artifact and must not be used to infer Battle outcomes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "style_family",
+    "renderer",
+    "state_vocabulary",
+    "variants",
+    "effect_sheets",
+    "rules"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.sprite_theme.v1"
+    },
+    "style_family": {
+      "const": "vintage_16bit_genesis"
+    },
+    "renderer": {
+      "const": "pixijs"
+    },
+    "state_vocabulary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/actor_state"
+      },
+      "minItems": 9,
+      "uniqueItems": true
+    },
+    "variants": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/variant"
+      }
+    },
+    "effect_sheets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/effect_sheet"
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_never_emits_animation_names",
+        "backend_never_emits_frame_indices",
+        "terminal_animations_receipt_gated",
+        "nearest_neighbor_scaling",
+        "transparent_background"
+      ],
+      "properties": {
+        "backend_never_emits_animation_names": {
+          "const": true
+        },
+        "backend_never_emits_frame_indices": {
+          "const": true
+        },
+        "terminal_animations_receipt_gated": {
+          "const": true
+        },
+        "nearest_neighbor_scaling": {
+          "const": true
+        },
+        "transparent_background": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "actor_state": {
+      "enum": [
+        "idle",
+        "walk",
+        "run",
+        "research",
+        "payload",
+        "mutate",
+        "handoff",
+        "spawn",
+        "hit",
+        "blocked",
+        "killed",
+        "fastest_crash",
+        "promoted",
+        "stale_pending"
+      ]
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sprite_id",
+        "display_name",
+        "team",
+        "archetype",
+        "spritesheet_alias",
+        "src",
+        "frame_width",
+        "frame_height",
+        "scale",
+        "anchor",
+        "state_animation_map"
+      ],
+      "properties": {
+        "sprite_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "team": {
+          "enum": [
+            "red",
+            "blue",
+            "neutral"
+          ]
+        },
+        "archetype": {
+          "enum": [
+            "light",
+            "heavy",
+            "support",
+            "child",
+            "defender",
+            "survivor"
+          ]
+        },
+        "spritesheet_alias": {
+          "type": "string",
+          "minLength": 1
+        },
+        "src": {
+          "type": "string",
+          "pattern": "^/.*\\.json$"
+        },
+        "frame_width": {
+          "enum": [
+            48,
+            64
+          ]
+        },
+        "frame_height": {
+          "enum": [
+            48,
+            64
+          ]
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "anchor": {
+          "$ref": "#/$defs/anchor"
+        },
+        "state_animation_map": {
+          "type": "object",
+          "required": [
+            "idle",
+            "run",
+            "research",
+            "payload",
+            "spawn",
+            "blocked",
+            "killed"
+          ],
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          },
+          "properties": {
+            "idle": { "type": "string", "minLength": 1 },
+            "walk": { "type": "string", "minLength": 1 },
+            "run": { "type": "string", "minLength": 1 },
+            "research": { "type": "string", "minLength": 1 },
+            "payload": { "type": "string", "minLength": 1 },
+            "mutate": { "type": "string", "minLength": 1 },
+            "handoff": { "type": "string", "minLength": 1 },
+            "spawn": { "type": "string", "minLength": 1 },
+            "hit": { "type": "string", "minLength": 1 },
+            "blocked": { "type": "string", "minLength": 1 },
+            "killed": { "type": "string", "minLength": 1 },
+            "fastest_crash": { "type": "string", "minLength": 1 },
+            "promoted": { "type": "string", "minLength": 1 },
+            "stale_pending": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "effect_sheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spritesheet_alias",
+        "src",
+        "animations"
+      ],
+      "properties": {
+        "spritesheet_alias": {
+          "type": "string",
+          "minLength": 1
+        },
+        "src": {
+          "type": "string",
+          "pattern": "^/.*\\.json$"
+        },
+        "animations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

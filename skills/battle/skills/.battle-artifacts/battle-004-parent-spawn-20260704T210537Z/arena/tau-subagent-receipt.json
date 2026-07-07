@@ -1,0 +1,60 @@
+{
+  "context": {
+    "actor_type": "tau",
+    "artifacts_read": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/exploit_check.py"
+    ],
+    "assumptions": [
+      "Arena sees performance history but does not judge the current round.",
+      "Hidden ground truth is not visible to Red or Blue."
+    ],
+    "run_id": "arena-tau-public-only-20260704T210537Z-arena",
+    "subagent": "battle-arena",
+    "unknowns": []
+  },
+  "evidence": [
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-research-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/scenario.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/hidden-ground-truth.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/app.py",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/exploit_check.py"
+  ],
+  "goal": {
+    "goal_hash": "sha256:33e789b8483b5b065fda175f46f807df0a0d06141920af6e331d1678f5eb3550",
+    "goal_id": "goal-battle-battle-004-arena",
+    "goal_version": 1,
+    "immutable_goal_preserved": true
+  },
+  "next": {
+    "executor": "local",
+    "reason": "Scenario and hidden oracle are ready for Red/Blue dispatch.",
+    "subagent": "battle-red-blue-dispatch"
+  },
+  "rationale": "Arena built the next hidden-bug Battle scenario for scorekeeper replay.",
+  "result": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/arena/target/exploit_check.py"
+    ],
+    "commands_run": [],
+    "live": true,
+    "mocked": false,
+    "status": "PASS",
+    "summary": "Arena selected and built one researched hidden-bug scenario."
+  },
+  "schema": "tau.subagent_receipt.v1",
+  "stop_condition": "Red/Blue consume the public scenario while scorekeeper retains hidden truth."
+}

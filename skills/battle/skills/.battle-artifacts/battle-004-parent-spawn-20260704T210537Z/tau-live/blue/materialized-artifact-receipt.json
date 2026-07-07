@@ -1,0 +1,12 @@
+{
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/app.py",
+  "rationale": "The original `import_zip` function was vulnerable to a 'zip slip' or path traversal attack. An attacker could craft a zip file containing entries with names like `../../../../tmp/malicious_file.txt`. When extracted, `target = dest / name` would construct a path outside the intended `destination` directory. The patch addresses this by resolving the full path of each entry (`target.resolve()`) and then verifying that the resolved path remains a child of the `destination` directory using `is_relative_to()`. If an entry attempts to write outside the `destination`, it is skipped, preventing arbitrary file writes.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "status": "PASS"
+}

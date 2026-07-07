@@ -1,0 +1,33 @@
+Generate a PixiJS v8 spritesheet JSON manifest for this atlas.
+
+Variant id: {VARIANT_ID}
+Image file: {VARIANT_ID}.png
+Cell size: {FRAME_W}x{FRAME_H}
+Grid: 8 columns x 14 rows
+Anchor: { "x": 0.5, "y": 0.85 }
+
+Rows:
+0 idle 4
+1 walk 6
+2 run 8
+3 research 6
+4 payload 6
+5 mutate 6
+6 handoff 6
+7 spawn 8
+8 blocked 6
+9 hit 3
+10 killed 8
+11 victory 8
+12 promoted 8
+13 fastest_crash 8
+
+Return valid PixiJS spritesheet JSON with:
+- frames
+- animations
+- meta.image
+- meta.format = "RGBA8888"
+- meta.scale = "1"
+
+Frame names must use:
+{variant_id}_{animation}_{frame_index}

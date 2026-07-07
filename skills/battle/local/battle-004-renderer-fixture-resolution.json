@@ -1,0 +1,37 @@
+{
+  "battle_id": "battle-004",
+  "canonical_scenario": {
+    "cwe": "CWE-22",
+    "hidden_vulnerability_family": "Zip Slip path traversal",
+    "public_entrypoint": "/api/import-zip",
+    "runtime_image": "python:3.12-slim",
+    "target_language": "python"
+  },
+  "fixture_child_spawn_count": 1,
+  "fixture_key": "authoritative_parent_spawn_fixture",
+  "fixture_lineage_mode": "receipt_backed",
+  "fixture_playhead_current_x": 98,
+  "fixture_playhead_keyframe_x_values": [
+    14,
+    33,
+    50,
+    58,
+    62,
+    66,
+    67,
+    76,
+    82,
+    86,
+    96,
+    98
+  ],
+  "fixture_status": "PASS",
+  "live_source": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "normalized_json": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
+  "proof_mode": "receipt_backed_fixture",
+  "schema": "battle.ux_renderer_fixture_resolution.v1",
+  "selection_reason": "Use this fixture for the UX renderer because it is the local canonical BATTLE-004 PASS fixture with receipt-backed lineage, parent spawn, child lane values, playhead keyframes, and Docker replay CTA state.",
+  "status": "PASS",
+  "summary": "local/battle-004-ux-json-contract-summary.json"
+}

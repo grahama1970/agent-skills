@@ -1,0 +1,331 @@
+{
+  "$schema": "https://battle.local/schemas/battle-runtime-matrix.v1.json",
+  "matrix_version": "2026.06.30",
+  "default_policy": {
+    "network": "none",
+    "user": "1000:1000",
+    "cap_drop": ["ALL"],
+    "security_opt": ["no-new-privileges"],
+    "allow_host_mutation": false,
+    "runtime_dependency_installs": "deny_unless_adapter_declared",
+    "architectures": ["linux/amd64"],
+    "receipt_required": true
+  },
+  "team_language_policy": {
+    "arena_selects": [
+      "project_context",
+      "target_language",
+      "entry_point_type",
+      "hidden_bug_class",
+      "runtime_image",
+      "allowed_language_sets"
+    ],
+    "red_selects": [
+      "red_selected_language",
+      "red_selected_tools",
+      "exploit_driver_strategy"
+    ],
+    "blue_selects": [
+      "blue_selected_language",
+      "blue_selected_tools",
+      "defense_strategy"
+    ],
+    "selection_rule": "teams_choose_from_allowed_languages_declared_by_arena_or_runtime_profile",
+    "runtime_installs_during_round": "deny_unless_adapter_declared",
+    "receipt_required_fields": [
+      "target_language",
+      "red_allowed_languages",
+      "blue_allowed_languages",
+      "red_selected_language",
+      "blue_selected_language",
+      "image_digest",
+      "tool_versions"
+    ]
+  },
+  "images": [
+    {
+      "id": "battle-base",
+      "phase": "v1",
+      "role": "foundation",
+      "language_families": [],
+      "team_language_selection": {
+        "target_language": "scenario_declared",
+        "red_allowed_languages": [
+          "shell",
+          "curl",
+          "raw-http",
+          "network-cli",
+          "wifi-cli",
+          "usb-media-cli"
+        ],
+        "blue_allowed_languages": [
+          "shell",
+          "config",
+          "network-cli",
+          "wifi-cli",
+          "usb-media-cli"
+        ],
+        "red_selected_language": "receipt_declared",
+        "blue_selected_language": "receipt_declared",
+        "missing_language_policy": "request_runtime_profile_for_future_round"
+      },
+      "base": {
+        "image": "debian",
+        "tag": "bookworm-slim",
+        "digest": "sha256:60eac759739651111db372c07be67863818726f754804b8707c90979bda511df"
+      },
+      "battle_image": {
+        "name": "battle-base",
+        "tag": "2026.06.30",
+        "digest": "sha256:903ef87dccba257fd7d7c0e4a4746780df5a582a7f354d66048e2bde57b5a731",
+        "digest_kind": "local_image_id_until_pushed"
+      },
+      "os": {
+        "family": "debian",
+        "version": "bookworm"
+      },
+      "toolchain": [
+        {
+          "name": "bash",
+          "version_command": "bash --version | head -n 1"
+        },
+        {
+          "name": "jq",
+          "version_command": "jq --version"
+        },
+        {
+          "name": "file",
+          "version_command": "file --version | head -n 1"
+        },
+        {
+          "name": "curl",
+          "version_command": "curl --version | head -n 1"
+        },
+        {
+          "name": "ab",
+          "version_command": "ab -V 2>&1 | head -n 1"
+        },
+        {
+          "name": "nc",
+          "version_command": "command -v nc"
+        },
+        {
+          "name": "socat",
+          "version_command": "socat -V 2>&1 | head -n 1"
+        },
+        {
+          "name": "ip",
+          "version_command": "ip -Version"
+        },
+        {
+          "name": "dig",
+          "version_command": "dig -v"
+        },
+        {
+          "name": "dnsmasq",
+          "version_command": "dnsmasq --version | head -n 1"
+        },
+        {
+          "name": "nmap",
+          "version_command": "nmap --version | head -n 1"
+        },
+        {
+          "name": "hping3",
+          "version_command": "hping3 --version 2>&1 | head -n 1"
+        },
+        {
+          "name": "tcpdump",
+          "version_command": "tcpdump --version | head -n 1"
+        },
+        {
+          "name": "nft",
+          "version_command": "nft --version"
+        },
+        {
+          "name": "iptables",
+          "version_command": "iptables --version"
+        },
+        {
+          "name": "traceroute",
+          "version_command": "traceroute --version 2>&1 | head -n 1"
+        },
+        {
+          "name": "lsusb",
+          "version_command": "lsusb --version"
+        },
+        {
+          "name": "iw",
+          "version_command": "iw --version"
+        },
+        {
+          "name": "iwconfig",
+          "version_command": "iwconfig --version 2>&1 | head -n 1"
+        },
+        {
+          "name": "hostapd",
+          "version_command": "hostapd -v 2>&1 | head -n 1"
+        },
+        {
+          "name": "wpa_supplicant",
+          "version_command": "wpa_supplicant -v 2>&1 | head -n 1"
+        },
+        {
+          "name": "rfkill",
+          "version_command": "rfkill --version"
+        },
+        {
+          "name": "udevadm",
+          "version_command": "udevadm --version"
+        },
+        {
+          "name": "mkfs.vfat",
+          "version_command": "mkfs.vfat -V 2>&1 | head -n 1"
+        },
+        {
+          "name": "fsck.exfat",
+          "version_command": "fsck.exfat -V 2>&1 | head -n 1"
+        },
+        {
+          "name": "mtools",
+          "version_command": "mtools -V 2>&1 | head -n 1"
+        },
+        {
+          "name": "parted",
+          "version_command": "parted --version | head -n 1"
+        },
+        {
+          "name": "battle-http-junk",
+          "version_command": "battle-http-junk --help | head -n 1"
+        },
+        {
+          "name": "tini",
+          "version_command": "tini --version"
+        }
+      ],
+      "package_managers": [],
+      "capabilities": [
+        "receipt",
+        "filesystem",
+        "archive",
+        "process-control",
+        "entry-point-driving",
+        "bounded-http-junk-requests",
+        "local-service-networking",
+        "dns-spoof-simulation",
+        "rogue-service-simulation",
+        "route-and-firewall-inspection",
+        "packet-capture",
+        "packet-crafting",
+        "port-and-service-discovery",
+        "wifi-radio-tooling",
+        "usb-removable-media-tooling"
+      ],
+      "scenario_classes": [
+        "http-entry-point",
+        "http-junk-requests",
+        "local-service-fuzzing",
+        "request-rate-resilience",
+        "dns-spoofing-simulation",
+        "wifi-spoofing-simulation",
+        "arp-route-simulation",
+        "rogue-service",
+        "packet-capture-analysis",
+        "port-scan-resilience",
+        "wifi-radio-entry-point",
+        "usb-removable-media-entry-point"
+      ],
+      "cwe_targets": ["CWE-200", "CWE-287", "CWE-300", "CWE-319", "CWE-400", "CWE-770"],
+      "allowed_tool_overlays": [],
+      "receipt_commands": [
+        "id",
+        "uname -a",
+        "cat /etc/os-release",
+        "bash --version | head -n 1",
+        "jq --version",
+        "file --version | head -n 1",
+        "curl --version | head -n 1",
+        "ab -V 2>&1 | head -n 1",
+        "command -v nc",
+        "socat -V 2>&1 | head -n 1",
+        "ip -Version",
+        "dig -v",
+        "dnsmasq --version | head -n 1",
+        "nmap --version | head -n 1",
+        "hping3 --version 2>&1 | head -n 1",
+        "tcpdump --version | head -n 1",
+        "nft --version",
+        "iptables --version",
+        "traceroute --version 2>&1 | head -n 1",
+        "lsusb --version",
+        "iw --version",
+        "iwconfig --version 2>&1 | head -n 1",
+        "hostapd -v 2>&1 | head -n 1",
+        "wpa_supplicant -v 2>&1 | head -n 1",
+        "rfkill --version",
+        "udevadm --version",
+        "mkfs.vfat -V 2>&1 | head -n 1",
+        "fsck.exfat -V 2>&1 | head -n 1",
+        "mtools -V 2>&1 | head -n 1",
+        "parted --version | head -n 1",
+        "battle-http-junk --help | head -n 1",
+        "tini --version",
+        "battle-runtime-info"
+      ],
+      "run_contract": {
+        "docker_args": [
+          "--network",
+          "none",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--user",
+          "1000:1000"
+        ],
+        "workdir": "/workspace",
+        "timeout_seconds_default": 30,
+        "memory_limit": "512m",
+        "pids_limit": 256,
+        "entry_point_driver": {
+          "default_target_scope": "container_local_only",
+          "http_junk_receipt_schema": "battle.http_junk_receipt.v1",
+          "max_requests_without_explicit_override": 10000,
+          "max_concurrency_without_explicit_override": 100,
+          "network_simulation_scope": [
+            "container_local_dns",
+            "container_local_rogue_service",
+            "loopback_packet_capture",
+            "local_port_scan",
+            "route_and_firewall_inspection",
+            "wifi_radio_tool_presence",
+            "usb_media_tool_presence"
+          ],
+          "requires_elevated_runtime_for": [
+            "raw_packet_transmit",
+            "iptables_mutation",
+            "nftables_mutation",
+            "non-loopback_packet_capture",
+            "real_wifi_radio_control",
+            "host_usb_device_access"
+          ],
+          "default_denies": [
+            "host_wifi_device_mounts"
+          ],
+          "observed_default_host_usb_metadata_visible": true,
+          "topology_orchestration_location": "arena_host_harness_not_battle_base",
+          "arena_profile_must_declare": [
+            "device_mounts",
+            "cap_add",
+            "network_mode",
+            "host_mutation_risk"
+          ]
+        }
+      }
+    }
+  ],
+  "selection_policy": {
+    "arena_selects_by": ["language_families", "scenario_classes", "cwe_targets"],
+    "red_tools_require_explicit_overlay": true,
+    "blue_tools_require_explicit_overlay": true
+  }
+}

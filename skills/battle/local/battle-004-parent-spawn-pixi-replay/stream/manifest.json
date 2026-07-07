@@ -1,0 +1,32 @@
+{
+  "battle_id": "battle-004",
+  "event_count": 24,
+  "events_jsonl": "/tmp/battle-004-parent-spawn-20260706T134722Z/stream/events.jsonl",
+  "last_seq": 24,
+  "latest_snapshot": "/tmp/battle-004-parent-spawn-20260706T134722Z/stream/latest-snapshot.json",
+  "live_source": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "mode": "file_backed_replay_stream",
+  "normalized_fixture_schema": "battle.normalized_ux_fixture.v1",
+  "proof_mode": "receipt_backed_fixture",
+  "renderer_boundary": {
+    "backend_emits": [
+      "clock",
+      "semantic_events",
+      "segments",
+      "lanes",
+      "lineage",
+      "receipts",
+      "actor_visual_identity_when_present"
+    ],
+    "backend_must_not_emit": [
+      "pixi_object_ids",
+      "sprite_frame_indices",
+      "canvas_pixels",
+      "easing_names",
+      "particle_parameters"
+    ]
+  },
+  "run_id": "arena-parent-spawn-20260706T134722Z",
+  "schema": "battle.transport_manifest.v1"
+}

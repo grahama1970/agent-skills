@@ -1,0 +1,58 @@
+{
+  "agentic": true,
+  "artifacts": {
+    "arena_private_ledger": "arena/private/hidden-vulnerability-ledger.json",
+    "arena_private_oracle_receipt": "arena/arena-receipt.json",
+    "arena_run_receipt": "arena/run-receipt.json",
+    "blue_handoff": "tau-live/blue/handoff.json",
+    "blue_tau_subagent_receipt": "tau-live/blue/tau-subagent-receipt.json",
+    "judge_receipt": "judge/judge-receipt.json",
+    "red_handoff": "tau-live/red/handoff.json",
+    "red_tau_subagent_receipt": "tau-live/red/tau-subagent-receipt.json",
+    "scoreboard": "scoreboard.json",
+    "tau_manifest": "tau-live/manifest.json",
+    "tau_public_context": "context/tau-public-context.json",
+    "team_public_brief": "arena/team-public/scenario-brief.json",
+    "team_public_target": "arena/team-public/target/app.py",
+    "visibility_validation": "visibility-validation.json"
+  },
+  "battle_clock": {
+    "allotted_seconds": 120.0,
+    "elapsed_seconds": 37.973064,
+    "mode": "receipt_elapsed",
+    "remaining_seconds": 82.026936,
+    "source_receipt_id": "tau-live/manifest"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Autonomous child-spawn lineage.",
+      "Unbounded Battle swarm execution.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Arena created private answer-key artifacts and public team artifacts.",
+      "Battle invoked Tau's Red/Blue live handoff bridge, not direct Scillm.",
+      "Tau wrote tau.agent_handoff.v1 and tau.subagent_receipt.v1 artifacts for requested workers.",
+      "The Tau handoff context references only arena/team-public artifacts.",
+      "Battle Judge replayed materialized Tau Red/Blue artifact pairs in Docker."
+    ]
+  },
+  "created_at": "2026-07-04T21:06:22Z",
+  "execution_scope": "public_only_tau_worker_matrix_rung",
+  "live": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "run_id": "arena-tau-public-only-20260704T210537Z",
+  "schema": "battle.arena_tau_public_only_run_receipt.v1",
+  "status": "PASS",
+  "upstream_arena_status": "PASS",
+  "verdict": "RED_SUCCESS",
+  "worker_counts": {
+    "blue_materialized": 2,
+    "blue_requested": 2,
+    "blue_success_pairs": 0,
+    "judged_pairs": 2,
+    "red_materialized": 1,
+    "red_requested": 2
+  }
+}

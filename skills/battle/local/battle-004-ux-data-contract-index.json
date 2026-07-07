@@ -1,0 +1,211 @@
+{
+  "artifact_digests": {
+    "authoritative_normalized_fixture": {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
+      "sha256": "3308f683ce4a6dec5ddca1cdec3c130a1a742a7b7922f3e8cea43c30b57a9714"
+    },
+    "authoritative_renderer_values": {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json",
+      "sha256": "9f97d625bfb10317f9520292d975068788f225edd9554fdc09b4d8c1a29163c4"
+    },
+    "goal_source": {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
+      "sha256": "d3f7d8bc9fe43dbaea4a692736d3c7d6a3d60c71554c1d110d20e9fd1fdea9f0"
+    },
+    "renderer_bundle": {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",
+      "sha256": "297e284d782f5c01d481d9ff966015f1d4e8fadbc66f688dfc3a9c1140d89ddb"
+    },
+    "renderer_fixture_resolution": {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-fixture-resolution.json",
+      "sha256": "63e579c7a9b91a7fb7a545755b7025ee842f1f067a51667f061772ecb2cf0ba0"
+    }
+  },
+  "authoritative_normalized_fixture": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
+  "authoritative_renderer_values": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json",
+  "battle_id": "battle-004",
+  "canonical_scenario": {
+    "battle_id": "battle-004",
+    "cwe": "CWE-22",
+    "hidden_vulnerability_family": "Zip Slip path traversal",
+    "public_entrypoint": "/api/import-zip"
+  },
+  "current_agent_scope": "backend_json_contract_only",
+  "live_source": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "proof_generation_contract": {
+    "battle_id": "battle-004",
+    "blue_workers": 2,
+    "canonical_command": "cd skills/battle && ./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2",
+    "cwe": "CWE-22",
+    "expected_child_spawn_count_min": 1,
+    "expected_lineage_mode": "receipt_backed",
+    "hidden_vulnerability_family": "Zip Slip path traversal",
+    "live": true,
+    "mocked": false,
+    "output_dir_is_example": true,
+    "proof_mode": "receipt_backed_fixture",
+    "public_entrypoint": "/api/import-zip",
+    "purpose": "Canonical backend command for generating fresh BATTLE-004 parent-spawn receipts before regenerating UX JSON.",
+    "red_workers": 2,
+    "schema": "battle.proof_generation_contract.v1",
+    "spawn_red_child_on_blue_success": true
+  },
+  "purpose": "Backend-owned Battle-004 JSON source index for UX renderers; no React layout or visual parity claims.",
+  "receipt_backed_values": {
+    "activity_segment_count_for_timing": 12,
+    "blue_blocked_lane_ids": [
+      "payload-857-receipt",
+      "payload-857-red-1"
+    ],
+    "child_lane_ids": [
+      "payload-857-red-1"
+    ],
+    "child_spawn_count": 1,
+    "child_spawn_request_status": "PASS",
+    "child_spawn_requested": true,
+    "complete_elapsed_activity_segment_count": 12,
+    "elapsed_axis_current_elapsed_seconds": 149.77601,
+    "elapsed_axis_current_x": 12.481334,
+    "elapsed_axis_keyframe_count": 12,
+    "elapsed_axis_keyframes_are_monotonic": true,
+    "elapsed_axis_x_axis_mode": "elapsed_seconds",
+    "elapsed_axis_x_position_is_elapsed_time": true,
+    "event_count": 12,
+    "judge_pair_count": 4,
+    "lane_activity_segment_count": 12,
+    "lane_count": 2,
+    "lane_event_count_for_timing": 12,
+    "lane_phase_coverage_count": 2,
+    "lane_start_model_count": 2,
+    "lanes_with_research_count": 2,
+    "lanes_with_spawn_handoff_count": 2,
+    "lineage_group_count": 1,
+    "parent_lane_ids": [
+      "payload-857-receipt"
+    ],
+    "playhead_current_x": 98,
+    "playhead_elapsed_monotonic_by_x": false,
+    "proof_blocker_count": 0,
+    "round_allotted_seconds": 1200.0,
+    "round_elapsed_seconds": 110.502136,
+    "round_remaining_seconds": 1089.497864,
+    "spawn_receipt_ids": [
+      "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+    ],
+    "timed_lane_event_count": 12,
+    "timed_playhead_keyframe_count": 12,
+    "timeline_label_collision_group_count": 7,
+    "timeline_label_count": 12,
+    "timeline_playhead_keyframe_count": 12,
+    "timeline_viewport_initial_max_x": 100,
+    "timeline_viewport_initial_min_x": 45,
+    "timeline_viewport_max_zoom": 4.0,
+    "timeline_viewport_min_zoom": 0.75,
+    "timeline_x_axis_mode": "receipt_order_percent",
+    "timeline_x_position_is_elapsed_time": false
+  },
+  "render_boundary": {
+    "project_agent_must_not_provide": [
+      "React layout",
+      "visual mockup parity",
+      "CDP screenshot acceptance",
+      "UI-only density"
+    ],
+    "ux_may_render": [
+      "values from authoritative_renderer_values",
+      "receipt replay playhead from timeline.playhead",
+      "parent-child collapse from lineage.groups and lane parentId/children fields",
+      "Docker replay CTA state from lanes[].replay.cta"
+    ],
+    "ux_must_not_infer": [
+      "Blue kill attribution",
+      "Fastest crash",
+      "Survivor promotion",
+      "Unbounded swarm execution",
+      "Live stream execution",
+      "Child lineage without lineage receipt"
+    ]
+  },
+  "renderer_value_paths": {
+    "battle_clock": "/battle_clock",
+    "blue_patch_actions": "/bluePatchActions",
+    "events": "/events",
+    "lane_activity_timeline_model": "/lane_activity_timeline_model",
+    "lane_phase_coverage": "/lane_phase_coverage",
+    "lanes": "/lanes",
+    "leaderboard": "/leaderboard",
+    "lineage": "/lineage",
+    "lineage_render_model": "/lineage_render_model",
+    "outcome_truth_constraints_model": "/outcome_truth_constraints_model",
+    "proof_generation_contract": "/proof_generation_contract",
+    "receipt_backed_values": "/receipt_backed_values",
+    "replay_cta_values": "/selected_lane_model/replay_cta",
+    "scoreboard": "/scoreboard",
+    "selected_lane_cockpit": "/selected_lane_model/cockpit",
+    "selected_lane_model": "/selected_lane_model",
+    "shell": "/shell",
+    "spawn_gate_model": "/spawn_gate_model",
+    "spectator_shell": "/spectator_shell",
+    "timeline": "/timeline",
+    "timeline_elapsed_axis_model": "/timeline_elapsed_axis_model",
+    "timeline_label_layout_model": "/timeline_label_layout_model",
+    "timeline_lane_start_model": "/timeline_lane_start_model",
+    "timeline_time_model": "/timeline_time_model",
+    "timeline_viewport_model": "/timeline_viewport_model"
+  },
+  "required_validation_commands": [
+    "cd skills/battle && ./run.sh resolve-ux-renderer-fixture local/battle-004-ux-json-contract-summary.json",
+    "cd skills/battle && ./run.sh validate-ux-contract local/battle-004-parent-spawn.normalized.json",
+    "cd skills/battle && ./run.sh validate-ux-contract local/battle-004-sparse.normalized.json",
+    "cd skills/battle && ./run.sh validate-ux-data-contract-index local/battle-004-ux-data-contract-index.json",
+    "cd skills/battle && ./run.sh validate-ux-handoff-summary local/battle-004-ux-json-contract-summary.json",
+    "cd skills/battle && ./run.sh validate-ux-renderer-bundle local/battle-004-renderer-bundle.json",
+    "cd skills/battle && ./run.sh validate-ux-renderer-fixture-resolution local/battle-004-renderer-fixture-resolution.json",
+    "cd skills/battle && ./run.sh validate-ux-renderer-values local/battle-004-ux-renderer-values.json"
+  ],
+  "schema": "battle.ux_data_contract_index.v1",
+  "status": "PASS",
+  "supporting_artifacts": {
+    "goal_source": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
+    "handoff_summary": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-json-contract-summary.json",
+    "renderer_bundle": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",
+    "renderer_fixture_resolution": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-fixture-resolution.json",
+    "renderer_values": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json"
+  },
+  "timing_contract": {
+    "activity_segment_count_for_timing": 12,
+    "complete_elapsed_activity_segment_count": 12,
+    "elapsed_axis_current_elapsed_seconds": 149.77601,
+    "elapsed_axis_current_x": 12.481334,
+    "elapsed_axis_keyframe_count": 12,
+    "elapsed_axis_keyframes_are_monotonic": true,
+    "elapsed_axis_mode": "receipt_elapsed_axis",
+    "elapsed_axis_source": "/timeline_elapsed_axis_model",
+    "elapsed_axis_x_axis_mode": "elapsed_seconds",
+    "elapsed_axis_x_position_is_elapsed_time": true,
+    "elapsed_time_axis_requirements": [
+      "Every lane event must include a numeric elapsed_seconds value from the source receipt.",
+      "Every lane activity segment must include numeric start_elapsed_seconds and end_elapsed_seconds values.",
+      "Lineage spawn receipts must include numeric spawn_elapsed_seconds and child_start_elapsed_seconds values.",
+      "Judge attempts must include numeric started_elapsed_seconds and ended_elapsed_seconds values.",
+      "The adapter must validate monotonic elapsed timestamps before setting x_position_is_elapsed_time=true."
+    ],
+    "lane_event_count_for_timing": 12,
+    "mode": "receipt_order_with_round_clock",
+    "playhead_elapsed_monotonic_by_x": false,
+    "receipt_elapsed_keyframe_count": 12,
+    "receipt_elapsed_keyframes_are_monotonic_by_x": false,
+    "render_rules": [
+      "Render x positions as receipt-order positions, not wall-clock seconds.",
+      "Render round elapsed/allotted/remaining time from round_clock.",
+      "Animate the playhead as receipt replay only; do not present it as a live timer."
+    ],
+    "schema": "battle.ux_timing_contract.v1",
+    "source": "/timeline_time_model",
+    "timed_lane_event_count": 12,
+    "timed_playhead_keyframe_count": 12,
+    "x_axis_mode": "receipt_order_percent",
+    "x_position_is_elapsed_time": false
+  }
+}

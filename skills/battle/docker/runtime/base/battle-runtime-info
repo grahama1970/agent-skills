@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+tool_output() {
+  "$@" 2>&1 | head -n 1 || true
+}
+
+jq -n \
+  --arg image_id "${BATTLE_RUNTIME_IMAGE_ID:-battle-base}" \
+  --arg runtime_version "${BATTLE_RUNTIME_VERSION:-unknown}" \
+  --arg user "$(id -u):$(id -g)" \
+  --arg uname "$(uname -a)" \
+  --arg os_release "$(tr '\n' ' ' </etc/os-release)" \
+  --arg bash_version "${BASH_VERSION}" \
+  --arg jq_version "$(jq --version)" \
+  --arg file_version "$(file --version | head -n 1)" \
+  --arg curl_version "$(curl --version | head -n 1)" \
+  --arg ab_version "$(tool_output ab -V)" \
+  --arg nc_path "$(command -v nc || true)" \
+  --arg socat_version "$(tool_output socat -V)" \
+  --arg ip_version "$(tool_output ip -Version)" \
+  --arg dig_version "$(tool_output dig -v)" \
+  --arg dnsmasq_version "$(tool_output dnsmasq --version)" \
+  --arg nmap_version "$(tool_output nmap --version)" \
+  --arg hping3_version "$(tool_output hping3 --version)" \
+  --arg tcpdump_version "$(tool_output tcpdump --version)" \
+  --arg nft_version "$(tool_output nft --version)" \
+  --arg iptables_version "$(tool_output iptables --version)" \
+  --arg traceroute_version "$(tool_output traceroute --version)" \
+  --arg lsusb_version "$(tool_output lsusb --version)" \
+  --arg iw_version "$(tool_output iw --version)" \
+  --arg iwconfig_version "$(tool_output iwconfig --version)" \
+  --arg hostapd_version "$(tool_output hostapd -v)" \
+  --arg wpa_supplicant_version "$(tool_output wpa_supplicant -v)" \
+  --arg rfkill_version "$(tool_output rfkill --version)" \
+  --arg udevadm_version "$(tool_output udevadm --version)" \
+  --arg mkfs_vfat_version "$(tool_output mkfs.vfat -V)" \
+  --arg fsck_exfat_version "$(tool_output fsck.exfat -V)" \
+  --arg mtools_version "$(tool_output mtools -V)" \
+  --arg parted_version "$(tool_output parted --version)" \
+  --arg tini_version "$(tini --version)" \
+  '{
+    schema: "battle.runtime_info.v1",
+    image_id: $image_id,
+    runtime_version: $runtime_version,
+    user: $user,
+    uname: $uname,
+    os_release: $os_release,
+    tools: {
+      bash: $bash_version,
+      jq: $jq_version,
+      file: $file_version,
+      curl: $curl_version,
+      ab: $ab_version,
+      nc: $nc_path,
+      socat: $socat_version,
+      ip: $ip_version,
+      dig: $dig_version,
+      dnsmasq: $dnsmasq_version,
+      nmap: $nmap_version,
+      hping3: $hping3_version,
+      tcpdump: $tcpdump_version,
+      nft: $nft_version,
+      iptables: $iptables_version,
+      traceroute: $traceroute_version,
+      lsusb: $lsusb_version,
+      iw: $iw_version,
+      iwconfig: $iwconfig_version,
+      hostapd: $hostapd_version,
+      wpa_supplicant: $wpa_supplicant_version,
+      rfkill: $rfkill_version,
+      udevadm: $udevadm_version,
+      mkfs_vfat: $mkfs_vfat_version,
+      fsck_exfat: $fsck_exfat_version,
+      mtools: $mtools_version,
+      parted: $parted_version,
+      tini: $tini_version
+    }
+  }'

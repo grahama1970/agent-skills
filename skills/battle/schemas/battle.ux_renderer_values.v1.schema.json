@@ -1,0 +1,1824 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.ux_renderer_values.v1.schema.json",
+  "title": "Battle UX Renderer Values",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "status",
+    "source_bundle",
+    "source_fixture",
+    "battle_id",
+    "scenario",
+    "proof_generation_contract",
+    "proof_mode",
+    "mocked",
+    "live_source",
+    "spectator_shell",
+    "shell",
+    "battle_clock",
+    "timeline",
+    "timeline_time_model",
+    "timeline_elapsed_axis_model",
+    "timeline_viewport_model",
+    "timeline_lane_start_model",
+    "lane_activity_timeline_model",
+    "timeline_label_layout_model",
+    "lineage_request",
+    "lineage",
+    "lineage_render_model",
+    "spawn_gate_model",
+    "selected_lane_model",
+    "outcome_truth_constraints_model",
+    "lanes",
+    "events",
+    "proof_blockers",
+    "bluePatchActions",
+    "scoreboard",
+    "leaderboard",
+    "lane_phase_coverage",
+    "renderer_binding_contract",
+    "required_render_guards",
+    "forbidden_inferences",
+    "receipt_backed_values"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.ux_renderer_values.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "source_bundle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_fixture": {
+      "type": "string",
+      "minLength": 1
+    },
+    "battle_id": {
+      "const": "battle-004"
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "public_entrypoint",
+        "cwe",
+        "hidden_vulnerability_family"
+      ],
+      "properties": {
+        "public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "cwe": {
+          "const": "CWE-22"
+        },
+        "hidden_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        }
+      },
+      "additionalProperties": true
+    },
+    "proof_generation_contract": {
+      "type": "object",
+      "required": [
+        "schema",
+        "canonical_command",
+        "battle_id",
+        "public_entrypoint",
+        "cwe",
+        "hidden_vulnerability_family",
+        "red_workers",
+        "blue_workers",
+        "spawn_red_child_on_blue_success",
+        "expected_lineage_mode",
+        "expected_child_spawn_count_min",
+        "mocked",
+        "live",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.proof_generation_contract.v1"
+        },
+        "canonical_command": {
+          "const": "cd skills/battle && ./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2"
+        },
+        "battle_id": {
+          "const": "battle-004"
+        },
+        "public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "cwe": {
+          "const": "CWE-22"
+        },
+        "hidden_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        },
+        "red_workers": {
+          "const": 2
+        },
+        "blue_workers": {
+          "const": 2
+        },
+        "spawn_red_child_on_blue_success": {
+          "const": true
+        },
+        "expected_lineage_mode": {
+          "const": "receipt_backed"
+        },
+        "expected_child_spawn_count_min": {
+          "const": 1
+        },
+        "mocked": {
+          "const": false
+        },
+        "live": {
+          "const": true
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      },
+      "additionalProperties": true
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "mocked": {
+      "const": false
+    },
+    "spectator_shell": {
+      "type": "object",
+      "required": [
+        "schema",
+        "battle_title",
+        "facts",
+        "score",
+        "event_ticker",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.spectator_shell.v1"
+        },
+        "battle_title": {
+          "const": "BATTLE-004 · POST /api/import-zip"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      },
+      "additionalProperties": true
+    },
+    "shell": {
+      "type": "object",
+      "required": [
+        "schema",
+        "battle_title",
+        "facts",
+        "score",
+        "event_ticker",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.spectator_shell.v1"
+        },
+        "battle_title": {
+          "const": "BATTLE-004 · POST /api/import-zip"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline": {
+      "type": "object",
+      "required": [
+        "scroll_axis",
+        "supports_pan",
+        "supports_zoom",
+        "playhead"
+      ],
+      "properties": {
+        "scroll_axis": {
+          "const": "horizontal"
+        },
+        "supports_pan": {
+          "const": true
+        },
+        "supports_zoom": {
+          "const": true
+        },
+        "playhead": {
+          "type": "object",
+          "required": [
+            "current_x",
+            "can_animate",
+            "animation_semantics",
+            "keyframes"
+          ],
+          "properties": {
+            "current_x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "can_animate": {
+              "const": true
+            },
+            "animation_semantics": {
+              "const": "receipt_replay_only"
+            },
+            "keyframes": {
+              "type": "array",
+              "minItems": 2
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline_time_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "x_axis_mode",
+        "x_position_is_elapsed_time",
+        "round_clock_source",
+        "round_clock",
+        "playhead",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.timeline_time_model.v1"
+        },
+        "mode": {
+          "const": "receipt_order_with_round_clock"
+        },
+        "x_axis_mode": {
+          "const": "receipt_order_percent"
+        },
+        "x_position_is_elapsed_time": {
+          "const": false
+        },
+        "round_clock_source": {
+          "const": "battle_clock"
+        },
+        "round_clock": {
+          "type": "object",
+          "required": [
+            "elapsed_seconds",
+            "allotted_seconds",
+            "remaining_seconds",
+            "source_receipt_id",
+            "proof_mode"
+          ],
+          "additionalProperties": true
+        },
+        "playhead": {
+          "type": "object",
+          "required": [
+            "current_x",
+            "receipt_elapsed_seconds",
+            "animation_semantics",
+            "source_receipt_id"
+          ],
+          "properties": {
+            "animation_semantics": {
+              "const": "receipt_replay_only"
+            }
+          },
+          "additionalProperties": true
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Render x positions as receipt-order positions, not wall-clock seconds."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline_elapsed_axis_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "x_axis_mode",
+        "x_position_is_elapsed_time",
+        "axis_min_elapsed_seconds",
+        "axis_max_elapsed_seconds",
+        "keyframe_count",
+        "keyframes_are_monotonic",
+        "playhead",
+        "keyframes",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.timeline_elapsed_axis_model.v1"
+        },
+        "mode": {
+          "const": "receipt_elapsed_axis"
+        },
+        "x_axis_mode": {
+          "const": "elapsed_seconds"
+        },
+        "x_position_is_elapsed_time": {
+          "const": true
+        },
+        "keyframe_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "keyframes_are_monotonic": {
+          "const": true
+        },
+        "playhead": {
+          "type": "object",
+          "required": [
+            "current_elapsed_seconds",
+            "current_x",
+            "source_event_id",
+            "animation_semantics"
+          ],
+          "properties": {
+            "animation_semantics": {
+              "const": "receipt_elapsed_replay"
+            }
+          },
+          "additionalProperties": true
+        },
+        "keyframes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "elapsed_seconds",
+              "x",
+              "receipt_order_x",
+              "lane_id",
+              "event_id",
+              "proof_mode"
+            ],
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "receipt_order_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Use timeline_elapsed_axis_model for DAW-style elapsed-time placement."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline_lane_start_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "start_count",
+        "starts",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.timeline_lane_start_model.v1"
+        },
+        "mode": {
+          "const": "receipt_order_lane_starts"
+        },
+        "start_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "starts": {
+          "type": "array",
+          "minItems": 2,
+          "contains": {
+            "type": "object",
+            "required": [
+              "start_kind",
+              "start_source",
+              "source_receipt_id",
+              "source_event_id"
+            ],
+            "properties": {
+              "start_kind": {
+                "const": "child_spawn_start"
+              },
+              "start_source": {
+                "const": "lineage.spawns[].child_x_start"
+              },
+              "source_receipt_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_event_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "items": {
+            "type": "object",
+            "required": [
+              "lane_id",
+              "lane_index",
+              "x_start",
+              "x_end",
+              "runner_x",
+              "start_kind",
+              "start_source",
+              "line_must_start_at_x",
+              "elapsed_start_seconds",
+              "elapsed_end_seconds",
+              "elapsed_line_must_start_at_x",
+              "elapsed_line_end_x",
+              "elapsed_axis_source",
+              "pre_start_render_policy"
+            ],
+            "properties": {
+              "lane_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lane_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "x_start": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "line_must_start_at_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "elapsed_start_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "elapsed_end_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "elapsed_line_must_start_at_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "elapsed_line_end_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "elapsed_axis_source": {
+                "const": "timeline_elapsed_axis_model"
+              },
+              "start_kind": {
+                "enum": [
+                  "parent_lane_start",
+                  "child_spawn_start"
+                ]
+              },
+              "pre_start_render_policy": {
+                "const": "do_not_draw_exploit_progress_before_x_start"
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Render child lanes from child_spawn_start/source_receipt_id, not from global time zero."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline_viewport_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "scroll_axis",
+        "supports_pan",
+        "supports_zoom",
+        "bounds",
+        "initial_window",
+        "zoom",
+        "playhead_follow",
+        "pan_policy",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.timeline_viewport_model.v1"
+        },
+        "mode": {
+          "const": "receipt_replay_scroll_viewport"
+        },
+        "scroll_axis": {
+          "const": "horizontal"
+        },
+        "supports_pan": {
+          "const": true
+        },
+        "supports_zoom": {
+          "const": true
+        },
+        "bounds": {
+          "type": "object",
+          "required": [
+            "min_x",
+            "max_x"
+          ],
+          "properties": {
+            "min_x": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max_x": {
+              "type": "number",
+              "maximum": 100
+            }
+          },
+          "additionalProperties": true
+        },
+        "initial_window": {
+          "type": "object",
+          "required": [
+            "min_x",
+            "max_x",
+            "width_x",
+            "source",
+            "proof_mode"
+          ],
+          "properties": {
+            "source": {
+              "const": "timeline.viewport"
+            },
+            "proof_mode": {
+              "const": "receipt_backed_fixture"
+            }
+          },
+          "additionalProperties": true
+        },
+        "zoom": {
+          "type": "object",
+          "required": [
+            "min_zoom",
+            "max_zoom",
+            "source",
+            "proof_mode"
+          ],
+          "properties": {
+            "source": {
+              "const": "timeline.viewport"
+            },
+            "proof_mode": {
+              "const": "receipt_backed_fixture"
+            }
+          },
+          "additionalProperties": true
+        },
+        "playhead_follow": {
+          "type": "object",
+          "required": [
+            "mode",
+            "current_x",
+            "keyframe_count",
+            "keyframe_x_values",
+            "source_receipt_id",
+            "animation_semantics",
+            "follow_policy",
+            "proof_mode"
+          ],
+          "properties": {
+            "mode": {
+              "const": "receipt_keyframe_follow"
+            },
+            "keyframe_count": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "keyframe_x_values": {
+              "type": "array",
+              "minItems": 2
+            },
+            "animation_semantics": {
+              "const": "receipt_replay_only"
+            },
+            "follow_policy": {
+              "const": "keep_current_keyframe_visible_without_claiming_live_time"
+            },
+            "proof_mode": {
+              "const": "receipt_backed_fixture"
+            }
+          },
+          "additionalProperties": true
+        },
+        "pan_policy": {
+          "type": "object",
+          "required": [
+            "clamp_to_bounds",
+            "initial_window_source",
+            "scroll_unit"
+          ],
+          "properties": {
+            "clamp_to_bounds": {
+              "const": true
+            },
+            "scroll_unit": {
+              "const": "receipt_order_x"
+            }
+          },
+          "additionalProperties": true
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Render the timeline as a horizontally scrollable receipt-order viewport."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "lane_activity_timeline_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "lane_count",
+        "segment_count",
+        "phases",
+        "lanes",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.lane_activity_timeline_model.v1"
+        },
+        "mode": {
+          "const": "receipt_backed_activity_segments"
+        },
+        "lane_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "segment_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "contains": {
+            "const": "research"
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "lane_id",
+              "lane_index",
+              "x_start",
+              "x_end",
+              "segment_count",
+              "segments"
+            ],
+            "properties": {
+              "lane_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lane_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "segment_count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "segments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "segment_id",
+                    "segment_index",
+                    "phase",
+                    "label",
+                    "start_x",
+                    "end_x",
+                    "start_elapsed_seconds",
+                    "end_elapsed_seconds",
+                    "elapsed_start_x",
+                    "elapsed_end_x",
+                    "elapsed_axis_source",
+                    "proof_mode"
+                  ],
+                  "properties": {
+                    "segment_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "segment_index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "phase": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "start_x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "end_x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "start_elapsed_seconds": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "end_elapsed_seconds": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "elapsed_start_x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "elapsed_end_x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "elapsed_axis_source": {
+                      "const": "timeline_elapsed_axis_model"
+                    },
+                    "proof_mode": {
+                      "const": "receipt_backed_fixture"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Do not invent research, payload, mutate, trigger, patch, crash, or terminal phases client-side."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "timeline_label_layout_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "label_count",
+        "collision_group_count",
+        "lanes",
+        "collision_groups",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.timeline_label_layout_model.v1"
+        },
+        "mode": {
+          "const": "receipt_event_label_slots"
+        },
+        "label_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "collision_group_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "lane_id",
+              "lane_index",
+              "label_count",
+              "labels"
+            ],
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "event_id",
+                    "kind",
+                    "label",
+                    "x",
+                    "order_index",
+                    "label_band",
+                    "collision_group",
+                    "marker_priority",
+                    "receipt_id",
+                    "slot_key",
+                    "suppress_when_colliding",
+                    "proof_mode"
+                  ],
+                  "properties": {
+                    "label_band": {
+                      "enum": [
+                        "upper",
+                        "lower",
+                        "auto"
+                      ]
+                    },
+                    "collision_group": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "marker_priority": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "proof_mode": {
+                      "const": "receipt_backed_fixture"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "collision_groups": {
+          "type": "array",
+          "minItems": 1,
+          "contains": {
+            "type": "object",
+            "required": [
+              "collision_group",
+              "event_count",
+              "event_ids",
+              "bands",
+              "priority_order",
+              "layout_policy",
+              "proof_mode"
+            ],
+            "properties": {
+              "event_count": {
+                "type": "integer",
+                "minimum": 2
+              },
+              "layout_policy": {
+                "const": "separate_by_label_band_then_priority"
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Use label_band and collision_group from this model; do not infer label stacking from pixel position alone."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "mode",
+        "spawn_count",
+        "groups",
+        "spawns"
+      ],
+      "properties": {
+        "mode": {
+          "const": "receipt_backed"
+        },
+        "spawn_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "groups": {
+          "type": "array",
+          "minItems": 1
+        },
+        "spawns": {
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "selected_lane_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "selection_strategy",
+        "lane_id",
+        "lane_index",
+        "lane_path",
+        "cockpit_path",
+        "replay_cta_path",
+        "cockpit",
+        "replay_cta",
+        "proof_mode",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.selected_lane_model.v1"
+        },
+        "selection_strategy": {
+          "const": "first_receipt_backed_child_lane"
+        },
+        "lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lane_path": {
+          "pattern": "^/lanes/[0-9]+$"
+        },
+        "cockpit_path": {
+          "pattern": "^/lanes/[0-9]+/cockpit$"
+        },
+        "replay_cta_path": {
+          "pattern": "^/lanes/[0-9]+/replay/cta$"
+        },
+        "cockpit": {
+          "type": "object"
+        },
+        "replay_cta": {
+          "type": "object",
+          "required": [
+            "label",
+            "state",
+            "visible",
+            "proof_mode"
+          ],
+          "properties": {
+            "label": {
+              "const": "REPLAY IN DOCKER"
+            },
+            "state": {
+              "enum": [
+                "receipt_only",
+                "executable"
+              ]
+            },
+            "visible": {
+              "const": true
+            },
+            "proof_mode": {
+              "const": "receipt_backed_fixture"
+            }
+          },
+          "additionalProperties": true
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Use lane_index and JSON pointers from this object; do not assume lane 0 is selected."
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "lineage_render_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "collapse_source",
+        "connector_source",
+        "group_count",
+        "connector_count",
+        "groups",
+        "connectors",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.lineage_render_model.v1"
+        },
+        "mode": {
+          "const": "receipt_backed_parent_child"
+        },
+        "collapse_source": {
+          "const": "lineage.groups"
+        },
+        "connector_source": {
+          "const": "lineage.spawns"
+        },
+        "group_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "connector_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "groups": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "group_id",
+              "parent_lane_id",
+              "child_lane_ids",
+              "collapsible",
+              "expanded_by_default",
+              "source_spawn_receipt_ids",
+              "proof_mode"
+            ],
+            "properties": {
+              "collapsible": {
+                "const": true
+              },
+              "expanded_by_default": {
+                "const": true
+              },
+              "source_spawn_receipt_ids": {
+                "type": "array",
+                "minItems": 1
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "connector_id",
+              "parent_lane_id",
+              "child_lane_id",
+              "parent_event_id",
+              "child_event_id",
+              "parent_spawn_x",
+              "child_x_start",
+              "parent_connector_x",
+              "child_connector_x",
+              "source_receipt_id",
+              "proof_mode"
+            ],
+            "properties": {
+              "parent_spawn_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "child_x_start": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "parent_connector_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "child_connector_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Render connector origin from parent_event_id/source_receipt_id, not from the graph left edge."
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "spawn_gate_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "gate_count",
+        "renderable_gate_count",
+        "gates",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.spawn_gate_model.v1"
+        },
+        "mode": {
+          "const": "receipt_backed_spawn_gates"
+        },
+        "gate_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "renderable_gate_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "gate_id",
+              "gate_index",
+              "renderable",
+              "parent_lane_id",
+              "child_lane_id",
+              "parent_event_id",
+              "child_event_id",
+              "spawn_receipt_id",
+              "spawn_x",
+              "child_x_start",
+              "blue_success_pairs",
+              "required_sources",
+              "render_policy",
+              "proof_mode"
+            ],
+            "properties": {
+              "renderable": {
+                "const": true
+              },
+              "spawn_x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "child_x_start": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "blue_success_pairs": {
+                "type": "array",
+                "minItems": 1
+              },
+              "required_sources": {
+                "type": "object",
+                "required": [
+                  "parent_lane_exists",
+                  "child_lane_exists",
+                  "lineage_receipt_present",
+                  "parent_spawn_event_present",
+                  "child_spawn_event_present",
+                  "blue_success_pair_count"
+                ],
+                "properties": {
+                  "parent_lane_exists": {
+                    "const": true
+                  },
+                  "child_lane_exists": {
+                    "const": true
+                  },
+                  "lineage_receipt_present": {
+                    "const": true
+                  },
+                  "parent_spawn_event_present": {
+                    "const": true
+                  },
+                  "child_spawn_event_present": {
+                    "const": true
+                  },
+                  "blue_success_pair_count": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": true
+              },
+              "render_policy": {
+                "const": "render_child_lane_only_when_renderable_true"
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Render parent-child lanes only from spawn_gate_model.gates where renderable is true."
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "outcome_truth_constraints_model": {
+      "type": "object",
+      "required": [
+        "schema",
+        "mode",
+        "allowed",
+        "forbidden",
+        "render_rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.outcome_truth_constraints_model.v1"
+        },
+        "mode": {
+          "const": "receipt_backed_outcome_gates"
+        },
+        "allowed": {
+          "type": "object",
+          "required": [
+            "child_lineage",
+            "blue_blocks",
+            "docker_replay_cta"
+          ],
+          "properties": {
+            "child_lineage": {
+              "type": "object",
+              "required": [
+                "allowed",
+                "count",
+                "source",
+                "lane_ids",
+                "render_policy"
+              ],
+              "properties": {
+                "allowed": {
+                  "const": true
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "const": "lineage.spawns"
+                }
+              },
+              "additionalProperties": true
+            },
+            "blue_blocks": {
+              "type": "object",
+              "required": [
+                "allowed",
+                "event_count",
+                "blue_success_pair_count",
+                "source",
+                "lane_ids",
+                "render_policy"
+              ],
+              "properties": {
+                "allowed": {
+                  "const": true
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "blue_success_pair_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "const": "scoreboard.per_pair + events[blue.blocked_red]"
+                }
+              },
+              "additionalProperties": true
+            },
+            "docker_replay_cta": {
+              "type": "object",
+              "required": [
+                "allowed",
+                "receipt_only_count",
+                "executable_count",
+                "source",
+                "render_policy"
+              ],
+              "properties": {
+                "allowed": {
+                  "const": true
+                },
+                "receipt_only_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "executable_count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "source": {
+                  "const": "lanes[].replay.cta"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "forbidden": {
+          "type": "object",
+          "required": [
+            "blue_kill",
+            "fastest_crash",
+            "survivor_promotion",
+            "live_replay_execution"
+          ],
+          "additionalProperties": true
+        },
+        "render_rules": {
+          "type": "array",
+          "contains": {
+            "const": "Read outcome permissions from this model before rendering dramatic states."
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 2
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1
+    },
+    "proof_blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "schema",
+          "team",
+          "worker_id",
+          "blocker",
+          "receipt_id",
+          "receipt_path",
+          "proof_mode"
+        ],
+        "properties": {
+          "schema": {
+            "const": "battle.proof_blocker.v1"
+          },
+          "team": {
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "worker_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocker": {
+            "type": "object",
+            "required": [
+              "schema",
+              "kind",
+              "message",
+              "receipt_path",
+              "proof_mode"
+            ],
+            "properties": {
+              "schema": {
+                "const": "battle.worker_blocker.v1"
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "receipt_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            },
+            "additionalProperties": true
+          },
+          "receipt_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "receipt_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "proof_mode": {
+            "const": "receipt_backed_fixture"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "scoreboard": {
+      "type": "object",
+      "required": [
+        "child_spawn_count"
+      ],
+      "properties": {
+        "child_spawn_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "lane_phase_coverage": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "lane_id",
+          "phases",
+          "has_research",
+          "has_spawn_handoff"
+        ],
+        "properties": {
+          "lane_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "child_lane_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phases": {
+            "type": "array",
+            "minItems": 1,
+            "contains": {
+              "const": "research"
+            },
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "has_research": {
+            "const": true
+          },
+          "has_spawn_handoff": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "renderer_binding_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "proof_mode",
+        "battle_shell",
+        "round_time",
+        "scrollable_timeline",
+        "moving_playhead",
+        "elapsed_timeline_axis",
+        "parent_spawn_and_collapse",
+        "lane_activity_and_label_layout",
+        "agent_detail_cockpit",
+        "docker_replay_cta"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.renderer_binding_contract.v1"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "elapsed_timeline_axis": {
+          "type": "object",
+          "required": [
+            "model",
+            "x_axis_mode",
+            "x_position_is_elapsed_time",
+            "keyframes",
+            "elapsed_x",
+            "legacy_receipt_order_x",
+            "playhead",
+            "lane_start_model",
+            "lane_start_elapsed_x",
+            "lane_end_elapsed_x",
+            "activity_model",
+            "activity_segment_elapsed_start_x",
+            "activity_segment_elapsed_end_x",
+            "render_rules",
+            "render_rule"
+          ],
+          "properties": {
+            "lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "lane_start_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_must_start_at_x"
+            },
+            "lane_end_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_end_x"
+            },
+            "activity_model": {
+              "const": "lane_activity_timeline_model"
+            },
+            "activity_segment_elapsed_start_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_start_x"
+            },
+            "activity_segment_elapsed_end_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_end_x"
+            }
+          },
+          "additionalProperties": true
+        },
+        "lane_activity_and_label_layout": {
+          "type": "object",
+          "required": [
+            "lane_start",
+            "lane_end",
+            "runner_position",
+            "between_marker_phases",
+            "event_markers",
+            "label_band",
+            "marker_priority",
+            "collision_group",
+            "timeline_lane_start_model",
+            "activity_timeline_model"
+          ],
+          "properties": {
+            "timeline_lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "activity_timeline_model": {
+              "const": "lane_activity_timeline_model"
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "required_render_guards": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_inferences": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "receipt_backed_values": {
+      "type": "object",
+      "required": [
+        "child_spawn_count",
+        "playhead_current_x",
+        "timeline_x_axis_mode",
+        "timeline_x_position_is_elapsed_time",
+        "round_elapsed_seconds",
+        "round_allotted_seconds",
+        "round_remaining_seconds",
+        "timeline_viewport_initial_min_x",
+        "timeline_viewport_initial_max_x",
+        "timeline_viewport_min_zoom",
+        "timeline_viewport_max_zoom",
+        "timeline_playhead_keyframe_count",
+        "lane_phase_coverage_count",
+        "lane_start_model_count",
+        "lane_activity_segment_count",
+        "timeline_label_count",
+        "timeline_label_collision_group_count",
+        "lanes_with_research_count",
+        "lanes_with_spawn_handoff_count",
+        "parent_lane_ids",
+        "child_lane_ids",
+        "spawn_receipt_ids"
+      ],
+      "properties": {
+        "child_spawn_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "playhead_current_x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "timeline_x_axis_mode": {
+          "const": "receipt_order_percent"
+        },
+        "timeline_x_position_is_elapsed_time": {
+          "const": false
+        },
+        "round_elapsed_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "round_allotted_seconds": {
+          "type": "number",
+          "minimum": 1
+        },
+        "round_remaining_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timeline_viewport_initial_min_x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timeline_viewport_initial_max_x": {
+          "type": "number",
+          "maximum": 100
+        },
+        "timeline_viewport_min_zoom": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timeline_viewport_max_zoom": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timeline_playhead_keyframe_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "lane_phase_coverage_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "lane_start_model_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "lane_activity_segment_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "timeline_label_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timeline_label_collision_group_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lanes_with_research_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "lanes_with_spawn_handoff_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "parent_lane_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "child_lane_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "spawn_receipt_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

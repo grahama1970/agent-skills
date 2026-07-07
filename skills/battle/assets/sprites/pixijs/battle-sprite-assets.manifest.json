@@ -1,0 +1,203 @@
+{
+  "assets": [
+    {
+      "alias": "battle-sprite-blue-lizard",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "blue_lizard.json",
+      "pixijs_loader": "spritesheet",
+      "png": "blue_lizard.png",
+      "rows": 14,
+      "sprite_id": "blue_lizard",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-crimson-chainsaw-demon",
+      "sprite_id": "crimson_chainsaw_demon",
+      "json": "crimson_chainsaw_demon.json",
+      "png": "crimson_chainsaw_demon.png",
+      "pixijs_loader": "spritesheet",
+      "frame_width": 64,
+      "frame_height": 64,
+      "columns": 8,
+      "rows": 14,
+      "dimensions": {
+        "width": 512,
+        "height": 896
+      },
+      "texture_scale_mode": "nearest",
+      "source": "contact_sheet_conversion"
+    },
+    {
+      "alias": "battle-sprite-crimson-chainsword-berserker",
+      "sprite_id": "crimson_chainsword_berserker",
+      "json": "crimson_chainsword_berserker.json",
+      "png": "crimson_chainsword_berserker.png",
+      "pixijs_loader": "spritesheet",
+      "frame_width": 64,
+      "frame_height": 64,
+      "columns": 8,
+      "rows": 14,
+      "dimensions": {
+        "width": 512,
+        "height": 896
+      },
+      "texture_scale_mode": "nearest",
+      "source": "contact_sheet_conversion"
+    },
+    {
+      "alias": "battle-sprite-crimson-hornbreaker",
+      "sprite_id": "crimson_hornbreaker",
+      "json": "crimson_hornbreaker.json",
+      "png": "crimson_hornbreaker.png",
+      "pixijs_loader": "spritesheet",
+      "frame_width": 64,
+      "frame_height": 64,
+      "columns": 8,
+      "rows": 14,
+      "dimensions": {
+        "width": 512,
+        "height": 896
+      },
+      "texture_scale_mode": "nearest",
+      "source": "contact_sheet_conversion"
+    },
+    {
+      "alias": "battle-sprite-green-horn",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "green_horn.json",
+      "pixijs_loader": "spritesheet",
+      "png": "green_horn.png",
+      "rows": 14,
+      "sprite_id": "green_horn",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-nurgling",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "nurgling.json",
+      "pixijs_loader": "spritesheet",
+      "png": "nurgling.png",
+      "rows": 14,
+      "sprite_id": "nurgling",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-plague-nurgling",
+      "sprite_id": "plague_nurgling",
+      "json": "plague_nurgling.json",
+      "png": "plague_nurgling.png",
+      "pixijs_loader": "spritesheet",
+      "frame_width": 64,
+      "frame_height": 64,
+      "columns": 8,
+      "rows": 14,
+      "dimensions": {
+        "width": 512,
+        "height": 896
+      },
+      "texture_scale_mode": "nearest",
+      "source": "contact_sheet_conversion"
+    },
+    {
+      "alias": "battle-sprite-purple-horn-imp",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "purple_horn_imp.json",
+      "pixijs_loader": "spritesheet",
+      "png": "purple_horn_imp.png",
+      "rows": 14,
+      "sprite_id": "purple_horn_imp",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-red-human",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "red_human.json",
+      "pixijs_loader": "spritesheet",
+      "png": "red_human.png",
+      "rows": 14,
+      "sprite_id": "red_human",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-skull-horn",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "skull_horn.json",
+      "pixijs_loader": "spritesheet",
+      "png": "skull_horn.png",
+      "rows": 14,
+      "sprite_id": "skull_horn",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-slug-demon",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "slug_demon.json",
+      "pixijs_loader": "spritesheet",
+      "png": "slug_demon.png",
+      "rows": 14,
+      "sprite_id": "slug_demon",
+      "texture_scale_mode": "nearest"
+    },
+    {
+      "alias": "battle-sprite-typhus",
+      "columns": 8,
+      "dimensions": {
+        "height": 896,
+        "width": 512
+      },
+      "frame_height": 64,
+      "frame_width": 64,
+      "json": "typhus.json",
+      "pixijs_loader": "spritesheet",
+      "png": "typhus.png",
+      "rows": 14,
+      "sprite_id": "typhus",
+      "texture_scale_mode": "nearest"
+    }
+  ],
+  "contract": "8 columns x 14 rows, 64x64 frames, transparent RGBA PNG plus PixiJS spritesheet JSON",
+  "runtime": "pixijs-v8",
+  "schema": "battle.sprite_assets.v1"
+}

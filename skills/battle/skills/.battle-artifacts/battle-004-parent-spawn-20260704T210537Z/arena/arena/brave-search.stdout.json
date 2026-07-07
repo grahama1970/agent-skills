@@ -1,0 +1,32 @@
+{
+  "query": "OWASP file upload zip slip path traversal vulnerability",
+  "count": 5,
+  "offset": 0,
+  "results": [
+    {
+      "title": "Arbitrary File Write via Archive Extraction (Zip Slip)- OWASP Juiceshop #1 | by DebianHat | Medium",
+      "description": "Zip Slip is an another path traversal vulnerability that <strong>occurs when extracting ZIP (or other archive) files without properly validating</strong>\u2026",
+      "url": "https://debianhat.medium.com/arbitrary-file-write-via-archive-extraction-zip-slip-owasp-juiceshop-1-a79164b291b2"
+    },
+    {
+      "title": "Path Traversal | OWASP Foundation",
+      "description": "If forced to use user input for file operations, normalize the input before using in file io API\u2019s, such as normalize(). See the OWASP Testing Guide article on how to test for path traversal vulnerabilities.",
+      "url": "https://owasp.org/www-community/attacks/Path_Traversal"
+    },
+    {
+      "title": "WSTG - Latest | OWASP Foundation",
+      "description": "A malicious path will contain many levels of ../ (i.e. ../../../../../../../../tmp/traversed) to stand a better chance of reaching the root directory. Once the attack is successful, the tester can find /tmp/traversed to be created on the webserver through the ZIP slip attack. Logic that extracts compressed files either using custom code or a library. Archive Directory Traversal vulnerabilities exist when the extraction functionality doesn\u2019t validate file paths in the archive.",
+      "url": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files"
+    },
+    {
+      "title": "wstg/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md at master \u00b7 OWASP/wstg",
+      "description": "Once the attack is successful, the tester can find /tmp/traversed to be created on the webserver through the ZIP slip attack. Logic that extracts compressed files either using custom code or a library. Archive Directory Traversal vulnerabilities exist when the extraction functionality doesn\u2019t validate file paths in the archive.",
+      "url": "https://github.com/OWASP/wstg/blob/master/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md"
+    },
+    {
+      "title": "Zip Path Traversal | Security | Android Developers",
+      "description": "OWASP category: MASVS-STORAGE: Storage \u00b7 The Zip Path Traversal vulnerability, also known as ZipSlip, is <strong>related to handling compressed archives</strong>. On this page, we demonstrate this vulnerability using the ZIP format as an example, but similar ...",
+      "url": "https://developer.android.com/privacy-and-security/risks/zip-path-traversal"
+    }
+  ]
+}

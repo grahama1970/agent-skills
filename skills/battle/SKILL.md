@@ -219,6 +219,9 @@ For non-git directories. Creates simple file copies for each team.
 
 # Run the deterministic Battle v0 fixture proof
 ./run.sh battle-fixture battle-001 --out /tmp/battle-001
+
+# Run canonical BATTLE-004 with parent-spawn lineage requested
+./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2
 ```
 
 ## Battle v0 Fixture Proof

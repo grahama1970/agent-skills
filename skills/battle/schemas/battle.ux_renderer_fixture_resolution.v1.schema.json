@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.ux_renderer_fixture_resolution.v1.schema.json",
+  "title": "Battle UX Renderer Fixture Resolution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "summary",
+    "battle_id",
+    "canonical_scenario",
+    "fixture_key",
+    "normalized_json",
+    "selection_reason",
+    "proof_mode",
+    "fixture_status",
+    "fixture_lineage_mode",
+    "fixture_child_spawn_count",
+    "fixture_playhead_current_x",
+    "fixture_playhead_keyframe_x_values",
+    "mocked",
+    "live_source"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.ux_renderer_fixture_resolution.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "battle_id": {
+      "const": "battle-004"
+    },
+    "canonical_scenario": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "public_entrypoint",
+        "cwe",
+        "hidden_vulnerability_family"
+      ],
+      "properties": {
+        "public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "cwe": {
+          "const": "CWE-22"
+        },
+        "hidden_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        }
+      }
+    },
+    "fixture_key": {
+      "const": "authoritative_parent_spawn_fixture"
+    },
+    "normalized_json": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selection_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "fixture_status": {
+      "const": "PASS"
+    },
+    "fixture_lineage_mode": {
+      "const": "receipt_backed"
+    },
+    "fixture_child_spawn_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixture_playhead_current_x": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "fixture_playhead_keyframe_x_values": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+      }
+    },
+    "mocked": {
+      "const": false
+    },
+    "live_source": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

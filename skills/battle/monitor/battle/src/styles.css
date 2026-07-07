@@ -26,7 +26,7 @@ body {
 .monitorShell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
+  grid-template-columns: 310px minmax(0, 1fr) 390px;
 }
 
 .appShell {
@@ -34,6 +34,151 @@ body {
   padding: 32px;
   max-width: 1320px;
   margin: 0 auto;
+}
+
+.arenaRail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  border-right: 1px solid var(--border);
+  background: #0d1014;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.railSection {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 14px;
+}
+
+.railSection p {
+  margin: 10px 0 0;
+  color: #c9d4df;
+  line-height: 1.4;
+}
+
+.railHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.railHeader.compact {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.railHeader h2 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.railKv {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.railKv div {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.railKv dt,
+.railList,
+.hiddenSlotList span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.railKv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.railReplayButton {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 174, 54, 0.5);
+  background: rgba(242, 174, 54, 0.13);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.railReplayButton:hover,
+.railReplayButton:focus-visible {
+  outline: 2px solid rgba(242, 174, 54, 0.45);
+  outline-offset: 2px;
+}
+
+.railList {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.hiddenSlotList,
+.challengeList {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.hiddenSlotList article {
+  display: grid;
+  gap: 4px;
+  background: #0b0f13;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.hiddenSlotList strong,
+.hiddenSlotList code {
+  overflow-wrap: anywhere;
+}
+
+.challengeList button {
+  min-height: 48px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.045);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  text-align: left;
+  font: inherit;
+}
+
+.challengeList span {
+  overflow-wrap: anywhere;
+}
+
+.challengeList code {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .hero {
@@ -64,6 +209,29 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 18px 60px var(--shadow);
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 18px 60px var(--shadow);
+  padding: 18px;
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.panelHeader h2 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .heroStatus {
@@ -128,6 +296,51 @@ body {
   margin-bottom: 18px;
 }
 
+.metricGrid,
+.roundGrid,
+.analysisGrid {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.metricGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.roundGrid,
+.analysisGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.62fr);
+}
+
+.metricTile {
+  min-height: 94px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  background: #13171b;
+}
+
+.metricTile strong {
+  font-size: 23px;
+  line-height: 1.15;
+}
+
+.metricTile.red {
+  border-color: rgba(255, 90, 84, 0.34);
+}
+
+.metricTile.blue {
+  border-color: rgba(90, 167, 255, 0.34);
+}
+
+.metricTile.pass {
+  border-color: rgba(25, 210, 127, 0.34);
+}
+
 .playersGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -171,6 +384,227 @@ body {
 
 .timelineCard {
   margin-bottom: 18px;
+}
+
+.graphPanel {
+  margin-bottom: 18px;
+}
+
+.forceGraph,
+.sankeyChart {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #0d1115;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.graphLinks line {
+  stroke: rgba(177, 190, 205, 0.46);
+  stroke-width: 2;
+}
+
+.graphLinks text {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.graphNode {
+  cursor: pointer;
+  outline: none;
+}
+
+.graphNode circle {
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 2;
+  fill: #1a2026;
+}
+
+.graphNode.node-red circle {
+  fill: rgba(128, 36, 42, 0.72);
+}
+
+.graphNode.node-blue circle {
+  fill: rgba(36, 78, 128, 0.72);
+}
+
+.graphNode.node-judge circle {
+  fill: rgba(35, 111, 79, 0.72);
+}
+
+.graphNode.node-arena circle {
+  fill: rgba(121, 86, 31, 0.72);
+}
+
+.graphNode.node-scoreboard circle {
+  fill: rgba(76, 79, 96, 0.82);
+}
+
+.graphNode.selected circle,
+.graphNode:focus-visible circle {
+  stroke: #f2ae36;
+  stroke-width: 4;
+}
+
+.nodeLabel,
+.nodeStatus {
+  pointer-events: none;
+  text-anchor: middle;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.nodeLabel {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nodeStatus {
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sankeyLinks path {
+  fill: none;
+  stroke: rgba(90, 167, 255, 0.34);
+  stroke-opacity: 0.76;
+}
+
+.sankeyNode rect {
+  fill: #222a31;
+  stroke: rgba(255, 255, 255, 0.18);
+}
+
+.sankeyNode text {
+  dominant-baseline: middle;
+  fill: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sankeyLegend {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 22px;
+  color: #c9d4df;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.detailPanel pre {
+  margin: 0;
+  max-height: 430px;
+  overflow: auto;
+  background: #0d1115;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #c9d4df;
+  padding: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.artifactRows,
+.vulnerabilityList {
+  display: grid;
+  gap: 10px;
+}
+
+.artifactRows div,
+.vulnerabilityList article {
+  display: grid;
+  grid-template-columns: auto minmax(90px, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  background: #0d1115;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.artifactRows code,
+.vulnerabilityList code,
+.replayStage code,
+.heroStatus code {
+  color: #c9d4df;
+  overflow-wrap: anywhere;
+}
+
+.vulnerabilityList article {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.vulnerabilityList article strong,
+.vulnerabilityList article code {
+  overflow-wrap: anywhere;
+}
+
+.replayPanel {
+  display: grid;
+}
+
+.replayStage {
+  min-height: 164px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #0d1115;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.replayStage strong {
+  font-size: 20px;
+}
+
+.replayStage p {
+  margin: 0;
+  color: var(--text);
+}
+
+.replayButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.replayButtons button {
+  min-width: 112px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+}
+
+.replayButtons button:hover,
+.replayButtons button:focus-visible {
+  outline: 2px solid rgba(242, 174, 54, 0.44);
+  outline-offset: 2px;
+  border-color: rgba(242, 174, 54, 0.54);
+}
+
+.srTable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .timeline {
@@ -408,9 +842,9 @@ body {
 }
 
 .chatChips button {
-  min-height: 32px;
+  min-height: 44px;
   border-radius: 8px;
-  padding: 7px 10px;
+  padding: 9px 12px;
   display: inline-flex;
   gap: 6px;
   align-items: center;
@@ -533,7 +967,7 @@ body {
 .chatComposer textarea {
   flex: 1;
   min-width: 0;
-  min-height: 38px;
+  min-height: 44px;
   max-height: 120px;
   resize: vertical;
   border-radius: 8px;
@@ -552,8 +986,8 @@ body {
 }
 
 .chatComposer button {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -576,6 +1010,13 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .arenaRail {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
   .chatSidebar {
     position: static;
     height: min(760px, 100vh);
@@ -589,6 +1030,9 @@ body {
   .summaryGrid,
   .lowerGrid,
   .playersGrid,
+  .metricGrid,
+  .roundGrid,
+  .analysisGrid,
   .timeline {
     grid-template-columns: 1fr;
   }

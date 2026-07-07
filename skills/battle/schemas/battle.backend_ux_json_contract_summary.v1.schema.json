@@ -1,0 +1,677 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.backend_ux_json_contract_summary.v1.schema.json",
+  "title": "Battle Backend UX JSON Contract Summary",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "battle_id",
+    "canonical_scenario",
+    "proof_generation_contract",
+    "goal_source_contract",
+    "current_agent_boundary",
+    "renderer_binding_contract",
+    "recommended_renderer_fixture",
+    "renderer_fixture_resolution",
+    "renderer_bundle",
+    "renderer_values",
+    "data_contract_index",
+    "authoritative_parent_spawn_fixture",
+    "authoritative_sparse_fixture",
+    "required_render_guards",
+    "required_backend_validation_commands"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.backend_ux_json_contract_summary.v1"
+    },
+    "battle_id": {
+      "const": "battle-004"
+    },
+    "canonical_scenario": {
+      "$ref": "#/$defs/canonical_scenario"
+    },
+    "proof_generation_contract": {
+      "$ref": "#/$defs/proof_generation_contract"
+    },
+    "goal_source_contract": {
+      "$ref": "#/$defs/goal_source_contract"
+    },
+    "current_agent_boundary": {
+      "$ref": "#/$defs/agent_boundary"
+    },
+    "renderer_binding_contract": {
+      "$ref": "#/$defs/renderer_binding_contract"
+    },
+    "recommended_renderer_fixture": {
+      "$ref": "#/$defs/recommended_renderer_fixture"
+    },
+    "renderer_fixture_resolution": {
+      "$ref": "#/$defs/renderer_fixture_resolution"
+    },
+    "renderer_bundle": {
+      "$ref": "#/$defs/renderer_bundle"
+    },
+    "renderer_values": {
+      "$ref": "#/$defs/renderer_values"
+    },
+    "data_contract_index": {
+      "$ref": "#/$defs/data_contract_index"
+    },
+    "authoritative_parent_spawn_fixture": {
+      "$ref": "#/$defs/fixture_summary"
+    },
+    "authoritative_sparse_fixture": {
+      "$ref": "#/$defs/fixture_summary"
+    },
+    "required_render_guards": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required_backend_validation_commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "canonical_scenario": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "public_entrypoint",
+        "cwe",
+        "hidden_vulnerability_family"
+      ],
+      "properties": {
+        "public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "cwe": {
+          "const": "CWE-22"
+        },
+        "hidden_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        },
+        "runtime_image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_language": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "proof_generation_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "canonical_command",
+        "battle_id",
+        "public_entrypoint",
+        "cwe",
+        "hidden_vulnerability_family",
+        "red_workers",
+        "blue_workers",
+        "spawn_red_child_on_blue_success",
+        "expected_lineage_mode",
+        "expected_child_spawn_count_min",
+        "mocked",
+        "live",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.proof_generation_contract.v1"
+        },
+        "canonical_command": {
+          "const": "cd skills/battle && ./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2"
+        },
+        "battle_id": {
+          "const": "battle-004"
+        },
+        "public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "cwe": {
+          "const": "CWE-22"
+        },
+        "hidden_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        },
+        "red_workers": {
+          "const": 2
+        },
+        "blue_workers": {
+          "const": 2
+        },
+        "spawn_red_child_on_blue_success": {
+          "const": true
+        },
+        "expected_lineage_mode": {
+          "const": "receipt_backed"
+        },
+        "expected_child_spawn_count_min": {
+          "const": 1
+        },
+        "mocked": {
+          "const": false
+        },
+        "live": {
+          "const": true
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "goal_source_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source",
+        "canonical_battle_id",
+        "canonical_public_entrypoint",
+        "canonical_cwe",
+        "canonical_vulnerability_family",
+        "current_agent_scope",
+        "must_provide",
+        "must_not_provide"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_battle_id": {
+          "const": "battle-004"
+        },
+        "canonical_public_entrypoint": {
+          "const": "/api/import-zip"
+        },
+        "canonical_cwe": {
+          "const": "CWE-22"
+        },
+        "canonical_vulnerability_family": {
+          "const": "Zip Slip path traversal"
+        },
+        "current_agent_scope": {
+          "const": "backend_json_contract_only"
+        },
+        "must_provide": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "must_not_provide": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "agent_boundary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "owner",
+        "owns",
+        "does_not_own",
+        "handoff_rule"
+      ],
+      "properties": {
+        "owner": {
+          "const": "battle_backend_json_contract"
+        },
+        "owns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "does_not_own": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "handoff_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "renderer_binding_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "proof_mode",
+        "battle_shell",
+        "round_time",
+        "scrollable_timeline",
+        "moving_playhead",
+        "elapsed_timeline_axis",
+        "parent_spawn_and_collapse",
+        "lane_activity_and_label_layout",
+        "agent_detail_cockpit",
+        "docker_replay_cta"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.renderer_binding_contract.v1"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "elapsed_timeline_axis": {
+          "type": "object",
+          "required": [
+            "model",
+            "x_axis_mode",
+            "x_position_is_elapsed_time",
+            "keyframes",
+            "elapsed_x",
+            "legacy_receipt_order_x",
+            "playhead",
+            "lane_start_model",
+            "lane_start_elapsed_x",
+            "lane_end_elapsed_x",
+            "activity_model",
+            "activity_segment_elapsed_start_x",
+            "activity_segment_elapsed_end_x",
+            "render_rules",
+            "render_rule"
+          ],
+          "properties": {
+            "lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "lane_start_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_must_start_at_x"
+            },
+            "lane_end_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_end_x"
+            },
+            "activity_model": {
+              "const": "lane_activity_timeline_model"
+            },
+            "activity_segment_elapsed_start_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_start_x"
+            },
+            "activity_segment_elapsed_end_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_end_x"
+            }
+          },
+          "additionalProperties": true
+        },
+        "lane_activity_and_label_layout": {
+          "type": "object",
+          "required": [
+            "lane_start",
+            "lane_end",
+            "runner_position",
+            "between_marker_phases",
+            "event_markers",
+            "label_band",
+            "marker_priority",
+            "collision_group",
+            "timeline_lane_start_model",
+            "activity_timeline_model"
+          ],
+          "properties": {
+            "timeline_lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "activity_timeline_model": {
+              "const": "lane_activity_timeline_model"
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "recommended_renderer_fixture": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "fixture_key",
+        "normalized_json",
+        "selection_reason",
+        "required_status",
+        "required_lineage_mode",
+        "required_child_spawn_count_min",
+        "proof_mode"
+      ],
+      "properties": {
+        "fixture_key": {
+          "enum": [
+            "authoritative_parent_spawn_fixture",
+            "authoritative_sparse_fixture"
+          ]
+        },
+        "normalized_json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selection_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_status": {
+          "const": "PASS"
+        },
+        "required_lineage_mode": {
+          "const": "receipt_backed"
+        },
+        "required_child_spawn_count_min": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "renderer_fixture_resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "json",
+        "validation_command",
+        "purpose"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_renderer_fixture_resolution.v1"
+        },
+        "json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validation_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "renderer_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "json",
+        "validation_command",
+        "purpose"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_renderer_bundle.v1"
+        },
+        "json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validation_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "renderer_values": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "json",
+        "validation_command",
+        "purpose"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_renderer_values.v1"
+        },
+        "json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validation_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "data_contract_index": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "json",
+        "validation_command",
+        "purpose"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_data_contract_index.v1"
+        },
+        "json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validation_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "fixture_summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "normalized_json",
+        "mocked",
+        "live_source",
+        "status",
+        "lineage_request",
+        "lineage",
+        "scoreboard",
+        "timeline",
+        "replay_cta"
+      ],
+      "properties": {
+        "normalized_json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mocked": {
+          "type": "boolean"
+        },
+        "live_source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lineage_request": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "requested",
+            "mode",
+            "status"
+          ]
+        },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "mode",
+            "spawn_count",
+            "parent_lane_ids",
+            "child_lane_ids"
+          ]
+        },
+        "scoreboard": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "child_spawn_count"
+          ]
+        },
+        "timeline": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "mode",
+            "lane_count",
+            "event_count",
+            "supports_pan",
+            "supports_zoom",
+            "playhead",
+            "viewport"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "receipt_order",
+                "elapsed_seconds"
+              ]
+            },
+            "lane_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "event_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "supports_pan": {
+              "type": "boolean"
+            },
+            "supports_zoom": {
+              "type": "boolean"
+            },
+            "playhead": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "mode",
+                "current_x",
+                "elapsed_seconds",
+                "source_receipt_id",
+                "animation_semantics",
+                "keyframe_count",
+                "keyframe_x_values"
+              ],
+              "properties": {
+                "mode": {
+                  "const": "receipt_elapsed"
+                },
+                "current_x": {
+                  "type": "number"
+                },
+                "elapsed_seconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "source_receipt_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "animation_semantics": {
+                  "const": "receipt_replay_only"
+                },
+                "keyframe_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "keyframe_x_values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "viewport": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "initial_min_x",
+                "initial_max_x",
+                "min_zoom",
+                "max_zoom",
+                "proof_mode"
+              ],
+              "properties": {
+                "initial_min_x": {
+                  "type": "number"
+                },
+                "initial_max_x": {
+                  "type": "number"
+                },
+                "min_zoom": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "max_zoom": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "proof_mode": {
+                  "const": "receipt_backed_fixture"
+                }
+              }
+            }
+          }
+        },
+        "replay_cta": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

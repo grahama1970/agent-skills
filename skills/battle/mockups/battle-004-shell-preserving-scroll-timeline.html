@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battle-004 Shell-Preserving Scroll Timeline</title>
+  <!-- Lucide icon map: Bug, Rocket, Skull, Shield, ShieldX, Lightbulb, GitBranch, Dna, RefreshCw, Terminal, FileJson, Box, Search, Clock, ZoomIn, ZoomOut -->
+  <style>
+    :root{
+      --bg:#020408; --panel:#050a12; --panel2:#070e18; --ink:#f0f5fa; --muted:#6a7d94; --line:#0c1520;
+      --green:#3cf07a; --green2:#2ad46a; --red:#ff4d5c; --red2:#ff2a3a; --blue:#5aadff; --yellow:#ffd24d; --purple:#c47aff; --cyan:#5ee6ff;
+      --radius:20px;
+      --rail-w:260px; --detail-w:360px; --label-w:290px;
+      --row-h-root:92px; --row-h-child:86px;
+      --blue-strip-h:72px; --footer-h:64px; --meta-h:36px;
+      --timeline-w:1680px;
+      font-family:"Inter","SF Pro Display",ui-sans-serif,system-ui,sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(ellipse 80% 60% at 25% -10%,#0a1e35 0%,#03060a 45%,#010205 100%);color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.01) 1px,transparent 1px);background-size:64px 64px;mask:linear-gradient(#000,transparent 88%)}
+
+    .app{height:100%;display:flex;flex-direction:column;padding:16px;gap:10px;min-width:1180px}
+
+    /* Header */
+    .topbar{height:auto;min-height:118px;flex-shrink:0;display:grid;grid-template-columns:minmax(340px,1fr) 250px minmax(360px,1fr);align-items:center;gap:16px;padding:12px 18px;border:1px solid rgba(90,173,255,.1);border-radius:var(--radius);background:linear-gradient(180deg,rgba(10,22,38,.7),rgba(4,10,18,.76));backdrop-filter:blur(28px);box-shadow:0 24px 60px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.06);position:relative;overflow:hidden;flex-shrink:0}
+    .topbar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(90,173,255,.2),transparent)}
+    .title h1{margin:0;font-size:24px;letter-spacing:-.025em;line-height:1.1;font-weight:700;background:linear-gradient(180deg,#fff,#b4d0ec);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .title p{margin:6px 0 0;color:#7a8fa8;font-size:12.5px;font-weight:500}
+    .dim{color:var(--muted);font-weight:400}
+
+    .score{height:58px;display:grid;grid-template-columns:1fr 46px 1fr;background:rgba(4,10,18,.65);border:1px solid rgba(90,173,255,.16);clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);position:relative}
+    .score::before{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.04);clip-path:inherit;pointer-events:none}
+    .scoreSide{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 10px;min-width:0}
+    .scoreSide.red{background:linear-gradient(180deg,rgba(255,77,92,.16),rgba(255,77,92,.04));color:#ff6b7a}
+    .scoreSide.blue{background:linear-gradient(180deg,rgba(90,173,255,.14),rgba(90,173,255,.04));color:#7ec0ff}
+    .scoreLabel{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;color:inherit;opacity:.9}
+    .scoreValueRow{display:flex;align-items:center;gap:8px;line-height:1}
+    .scoreIcon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid currentColor;flex-shrink:0}
+    .scoreIcon svg{width:14px;height:14px}
+    .scoreNum{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+    .score .vs{display:flex;align-items:center;justify-content:center;color:#4a5e75;font-size:11px;font-weight:800;letter-spacing:.08em;background:rgba(0,0,0,.15)}
+
+    .eventsTop{position:relative;display:flex;justify-content:flex-end;align-items:center;gap:10px;min-width:0}
+    .eventRail{width:min(280px,100%);border:1px solid rgba(60,240,122,.22);border-radius:12px;background:linear-gradient(180deg,rgba(16,55,32,.3),rgba(5,12,22,.6));padding:9px 12px;cursor:pointer;overflow:hidden;flex-shrink:1;min-width:180px}
+    .eventRail .label{display:flex;align-items:center;gap:7px;color:#7affa5;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(60,240,122,.55);animation:pulse-dot 2.5s ease-in-out infinite}
+    .eventRail .ticker{margin-top:4px;color:#b8c8dc;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .eventRail .ticker2{margin-top:2px;color:#6a7d94;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.55}}
+
+    .notifyCluster{display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .iconBtn{width:38px;height:38px;border:1px solid rgba(90,173,255,.12);border-radius:10px;background:rgba(8,18,32,.65);display:grid;place-items:center;color:#c0d4ec;cursor:pointer;position:relative;transition:all .15s ease}
+    .iconBtn:hover{border-color:rgba(90,173,255,.28);color:#fff;background:rgba(14,30,52,.75)}
+    .iconBtn.active{border-color:rgba(60,240,122,.35);color:#a0ffc0;background:rgba(60,240,122,.08)}
+    .badge{position:absolute;right:-4px;top:-5px;min-width:16px;height:16px;padding:0 4px;background:linear-gradient(135deg,#ff4d5c,#ff2a3a);color:#fff;border-radius:99px;font-size:9px;font-weight:800;display:grid;place-items:center;line-height:1;box-shadow:0 2px 8px rgba(255,45,58,.35)}
+    .badge.blue{background:linear-gradient(135deg,#5aadff,#3d8fe6)}
+    .notifyPanel{position:absolute;right:0;top:58px;width:320px;border:1px solid rgba(90,173,255,.12);border-radius:14px;background:rgba(3,8,15,.97);backdrop-filter:blur(28px);box-shadow:0 28px 80px rgba(0,0,0,.55);padding:10px;z-index:24;display:none}
+    .eventsTop.open .notifyPanel{display:block}
+    .notifyHead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;border-bottom:1px solid rgba(90,173,255,.08);margin-bottom:8px}
+    .notifyHead strong{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9ab0c8}
+    .notifyTabs{display:flex;gap:6px;margin-bottom:8px}
+    .notifyTab{height:26px;border:1px solid rgba(90,173,255,.1);border-radius:7px;padding:0 10px;background:rgba(4,10,18,.55);color:#8a9eb8;font-size:10px;font-weight:700;cursor:pointer}
+    .notifyTab.active{border-color:rgba(60,240,122,.35);color:#a0ffc0}
+    .notifyList{max-height:240px;overflow:auto;display:grid;gap:4px}
+    .qItem{display:grid;grid-template-columns:52px 18px 1fr auto;gap:6px;align-items:center;padding:8px 10px;border-radius:8px;color:#9ab0c8;font-size:12px;border:1px solid transparent}
+    .qItem:hover{background:rgba(255,255,255,.03)}
+    .qItem.unread{background:rgba(90,173,255,.06);border-color:rgba(90,173,255,.08)}
+    .qItem:first-child{background:rgba(60,240,122,.1);color:#d0ffe6;border-color:rgba(60,240,122,.12)}
+    .qWhen{font-size:10px;color:#5a6e85}
+    .toast{position:absolute;right:0;top:58px;width:300px;border:1px solid rgba(60,240,122,.3);border-radius:12px;background:linear-gradient(135deg,rgba(10,40,24,.97),rgba(3,10,18,.96));padding:12px 14px;z-index:22;display:grid;grid-template-columns:40px 1fr 16px;gap:10px;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+    .toast.hidden{display:none}
+
+    /* Metadata strip */
+    .metaStrip{height:var(--meta-h);display:flex;align-items:center;gap:22px;padding:0 16px;border:1px solid rgba(90,173,255,.07);border-radius:12px;background:rgba(4,10,18,.5);font-size:11.5px;color:#6a7d94;flex-shrink:0}
+    .metaStrip b{color:#9ab0c8;font-weight:700;margin-right:5px}
+    .metaStrip span{display:flex;align-items:center;gap:5px}
+
+    /* Blue Team Control Strip */
+    .blueStrip{height:var(--blue-strip-h);display:flex;align-items:center;gap:14px;padding:0 16px;border:1px solid rgba(90,173,255,.14);border-radius:14px;background:linear-gradient(90deg,rgba(8,24,48,.85),rgba(4,12,24,.9));flex-shrink:0;overflow:hidden}
+    .blueStrip .stripLabel{display:flex;align-items:center;gap:8px;color:#7ec0ff;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;padding-right:14px;border-right:1px solid rgba(90,173,255,.12)}
+    .blueCards{display:none}
+    .blueStripInner{display:flex;align-items:center;flex:1;min-width:0;padding-right:8px}
+    .blueCards::-webkit-scrollbar{height:4px}
+    .blueCard{min-width:180px;height:46px;border:1px solid rgba(90,173,255,.15);border-radius:10px;background:rgba(4,10,18,.55);padding:8px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .blueCard .shieldIcon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(90,173,255,.1);color:var(--blue);border:1px solid rgba(90,173,255,.25)}
+    .blueCard strong{display:block;font-size:12px;color:#dce8f5}
+    .blueCard small{font-size:10.5px;color:#6a7d94}
+    .blueStat{margin-left:auto;display:flex;gap:18px;font-size:11px;color:#6a7d94;white-space:nowrap;flex-shrink:0}
+    .blueStat strong{color:#7ec0ff;font-size:13px;margin-left:4px}
+
+    /* Main shell: rail | graph | detail */
+    .main{min-height:0;flex:1;display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr) var(--detail-w);gap:10px}
+
+    .leftRail,.center,.right{border:1px solid rgba(90,173,255,.1);border-radius:var(--radius);background:linear-gradient(180deg,rgba(8,18,32,.8),rgba(4,10,18,.86));backdrop-filter:blur(22px);min-height:0;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:14px 14px 12px}
+    .leftRail{display:flex;flex-direction:column;padding:12px;gap:12px;overflow:auto}
+    .railBlock{border:1px solid rgba(90,173,255,.08);border-radius:10px;background:rgba(3,8,15,.45);padding:10px}
+    .railHead{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#4a5e75;margin-bottom:8px}
+    .leaderItem{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:7px 6px;border-radius:7px;cursor:pointer;font-size:12px;color:#9ab0c8;margin-bottom:3px}
+    .leaderItem:hover,.leaderItem.selected{background:rgba(60,240,122,.08);color:#d0ffe6}
+    .leaderItem .rank{color:#5a6e85;font-weight:800;font-size:11px}
+    .leaderItem .liName{font-weight:700;color:#dce8f5}
+    .leaderItem .liTime{font-size:10px;color:#6a7d94}
+    .standings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .standBox{border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px;text-align:center}
+    .standBox.red{border-color:rgba(255,77,92,.2);background:rgba(255,77,92,.05)}
+    .standBox.blue{border-color:rgba(90,173,255,.2);background:rgba(90,173,255,.05)}
+    .standBox small{display:block;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6a7d94;margin-bottom:4px}
+    .standBox strong{font-size:20px}
+    .statusGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .statusCell{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border:1px solid rgba(90,173,255,.06);border-radius:7px;font-size:11px;color:#8a9eb8;background:rgba(4,10,18,.35)}
+    .statusCell b{color:#dce8f5;font-size:13px}
+    .chip{height:28px;border:1px solid rgba(90,173,255,.1);background:rgba(8,18,32,.5);border-radius:7px;padding:0 10px;color:#a8b8cc;font-weight:600;font-size:10.5px;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+    .chip.active{border-color:rgba(60,240,122,.45);color:#a0ffc0;background:rgba(60,240,122,.09)}
+    .roundClock{font-variant-numeric:tabular-nums;color:#7ec0ff}
+    .blueTimeline{position:relative;flex:1;height:36px;margin:0 12px;border-top:1px solid rgba(90,173,255,.15)}
+    .blueMarker{position:absolute;top:-5px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9px;color:#7ec0ff;font-weight:700;white-space:nowrap}
+    .blueMarker::before{content:"";width:10px;height:10px;border-radius:50%;background:rgba(90,173,255,.15);border:1.5px solid var(--blue);box-shadow:0 0 10px rgba(90,173,255,.35)}
+    .footerControls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .playback,.focusChips{display:flex;gap:4px;align-items:center}
+    .footChip{height:30px;border:1px solid rgba(90,173,255,.1);border-radius:7px;padding:0 10px;background:rgba(4,10,18,.55);color:#8a9eb8;font-size:11px;font-weight:600;display:inline-flex;align-items:center;cursor:pointer}
+    .footChip.active{border-color:rgba(60,240,122,.35);color:#a0ffc0}
+    .liveBadge{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:800;font-size:11px}
+    .runningStatus{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:800;font-size:12px;margin-bottom:10px}
+    .loopGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+    .loopGrid div{border:1px solid rgba(90,173,255,.08);border-radius:8px;padding:8px;background:rgba(4,10,18,.35)}
+    .loopGrid small{display:block;font-size:9px;color:#5a6e85;text-transform:uppercase;margin-bottom:4px}
+    .loopGrid strong{font-size:13px;color:#dce8f5}
+    .receiptBlock{border:1px solid rgba(90,173,255,.1);border-radius:10px;background:rgba(2,6,12,.9);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.6;color:#8a9eb8;position:relative}
+    .receiptBlock .copy{position:absolute;top:8px;right:8px;font-size:10px;color:#6a7d94;cursor:pointer}
+
+    .center{display:flex;flex-direction:column;overflow:hidden}
+    .graphToolbar{height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid rgba(90,173,255,.07);background:rgba(3,8,15,.35);flex-shrink:0}
+    .graphToolbar .gtLabel{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4a5e75}
+    .zoomBtns{display:flex;gap:4px;margin-left:8px}
+    .zoomBtn{width:30px;height:30px;border:1px solid rgba(90,173,255,.12);border-radius:7px;background:rgba(4,10,18,.55);color:#b8c8dc;display:grid;place-items:center;cursor:pointer;font-size:14px;font-weight:700}
+    .zoomBtn:hover{border-color:rgba(90,173,255,.25)}
+    .zoomState{font-size:11px;color:#6a7d94;margin-left:4px}
+    .playheadLabel{margin-left:auto;font-size:11px;color:#7ec0ff;font-weight:700;display:flex;align-items:center;gap:6px}
+    .playheadLabel::before{content:"";width:2px;height:14px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+
+    
+    .timelineOverview{display:grid;grid-template-columns:var(--label-w) 1fr auto;align-items:center;gap:0;border-bottom:1px solid rgba(90,173,255,.06);background:rgba(3,8,15,.5);flex-shrink:0;padding:4px 0}
+    .overviewSpacer{}
+    .overviewTrackWrap{position:relative;height:22px;margin:0 10px 0 0}
+    .overviewTrack{position:relative;height:6px;top:8px;border-radius:99px;background:rgba(90,173,255,.08);border:1px solid rgba(90,173,255,.1)}
+    .overviewViewport{position:absolute;top:-3px;height:12px;border:1px solid rgba(94,230,255,.45);background:rgba(94,230,255,.08);border-radius:4px;pointer-events:none}
+    .overviewMark{position:absolute;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;box-shadow:0 0 8px currentColor}
+    .overviewMark.crash{background:var(--green);color:var(--green)}
+    .overviewMark.promoted{background:var(--blue);color:var(--blue)}
+    .scrollHint{font-size:10px;font-weight:700;letter-spacing:.04em;color:#7ec0ff;padding:0 12px 0 4px;white-space:nowrap;opacity:1;transition:opacity .2s}
+    .scrollHint.hidden{opacity:0;pointer-events:none}
+    .graphWrapHost{position:relative;min-height:0;flex:1;display:flex;flex-direction:column}
+    .graphScrollHint{position:absolute;right:0;top:0;bottom:0;width:72px;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(4,10,18,.82));display:flex;align-items:center;justify-content:flex-end;padding-right:10px;z-index:12;opacity:1;transition:opacity .2s}
+    .graphScrollHint.hidden{opacity:0}
+    .graphScrollHint span{font-size:10px;font-weight:800;color:#7ec0ff;letter-spacing:.03em;text-shadow:0 0 12px rgba(94,230,255,.35)}
+
+    .graphWrap{min-height:0;flex:1;overflow:auto;position:relative}
+    .graphWrap::-webkit-scrollbar{height:6px;width:6px}
+    .graphWrap::-webkit-scrollbar-thumb{background:rgba(90,173,255,.15);border-radius:99px}
+    .graph{min-width:var(--timeline-w);padding:0 0 8px}
+    .timelineShell{position:relative}
+
+    .axis{height:72px;position:sticky;top:0;z-index:15;background:linear-gradient(180deg,rgba(8,18,32,.98),rgba(8,18,32,.92));border-bottom:1px solid rgba(90,173,255,.08);display:grid;grid-template-columns:var(--label-w) 1fr}
+    .axisCorner{position:sticky;left:0;z-index:16;background:linear-gradient(180deg,rgba(8,18,32,.98),rgba(8,18,32,.92));border-right:1px solid rgba(90,173,255,.08);display:flex;align-items:flex-end;padding:0 0 8px 14px;font-size:10px;font-weight:700;color:#4a5e75;letter-spacing:.06em;text-transform:uppercase}
+    .axisTrack{position:relative;padding-top:6px}
+    .ticks{height:28px;position:relative}
+    .tick{position:absolute;top:0;transform:translateX(-50%);font-size:11.5px;color:#7a8fa8;font-weight:600}
+    .stage{display:grid;grid-template-columns:repeat(5,1fr);height:34px;border-top:1px solid rgba(90,173,255,.05)}
+    .stage div{border-left:1px solid rgba(90,173,255,.06);display:flex;align-items:center;gap:6px;padding-left:10px;color:#5a6e85;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+    .playheadOverlay{position:absolute;inset:0;display:grid;grid-template-columns:var(--label-w) 1fr;pointer-events:none;z-index:17}
+    .playheadTrack{position:relative;height:100%}
+    .playhead{position:absolute;top:0;bottom:0;width:2px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(94,230,255,.25),var(--cyan),rgba(94,230,255,.25));box-shadow:0 0 14px rgba(94,230,255,.75),0 0 2px var(--cyan);pointer-events:none}
+    .playhead::before{content:"";position:absolute;top:0;left:50%;transform:translate(-50%,-1px);width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 16px rgba(94,230,255,.9)}
+
+    .rows{position:relative}
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr;position:relative;border-bottom:1px solid rgba(90,173,255,.05);transition:background .15s}
+    .row.root{height:var(--row-h-root)}
+    .row.child{height:var(--row-h-child)}
+    .row.hiddenRow{display:none}
+    .row:hover,.row.lineageHot{background:rgba(90,173,255,.03)}
+    .row.selected{background:linear-gradient(90deg,rgba(60,240,122,.07),rgba(60,240,122,.015));box-shadow:inset 3px 0 0 rgba(60,240,122,.4)}
+
+    /* Sticky lane labels — visible at all scroll positions */
+    .labelCell{position:sticky;left:0;z-index:8;display:grid;grid-template-columns:20px 30px minmax(0,1fr) auto;align-items:center;gap:6px 8px;padding:0 10px 0 10px;background:linear-gradient(90deg,rgba(8,18,32,.98) 85%,rgba(8,18,32,.85));border-right:1px solid rgba(90,173,255,.08);box-shadow:4px 0 12px rgba(0,0,0,.25);height:100%}
+    .row.selected .labelCell{background:linear-gradient(90deg,rgba(12,32,22,.98) 85%,rgba(12,32,22,.85))}
+    .chev{color:#8a9eb8;cursor:pointer;width:20px;text-align:center;font-size:15px}
+    .laneIcon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.03);border:1.5px solid currentColor}
+    .root .laneIcon{color:var(--red)}
+    .child .laneIcon{color:var(--green)}
+    .purple .laneIcon{color:var(--purple)}
+    .labelText{min-width:0}.name{font-weight:700;font-size:13px;letter-spacing:.03em;color:#e6eef8;line-height:1.2;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .payload{font-size:10px;color:#5a6e85;font-weight:500;margin-top:2px;font-family:ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gen{font-size:8.5px;color:#7ec0ff;border:1px solid rgba(90,173,255,.22);border-radius:99px;padding:2px 8px;font-weight:800;white-space:nowrap;flex-shrink:0;align-self:center;line-height:1.2}
+    .gen.g2{color:#7affa5;border-color:rgba(60,240,122,.18)}
+
+    .track{position:relative;height:100%;overflow:visible}
+    .trackGrid{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(90,173,255,.06) 0 1px,transparent 1px 5.555%),linear-gradient(90deg,transparent 0,transparent 19.95%,rgba(90,173,255,.08) 20%,transparent 20.05%,transparent 39.95%,rgba(90,173,255,.08) 40%,transparent 40.05%,transparent 59.95%,rgba(90,173,255,.08) 60%,transparent 60.05%,transparent 79.95%,rgba(90,173,255,.08) 80%,transparent 80.05%);opacity:.4;pointer-events:none}
+    .laneTop,.laneBottom,.laneMidAbove{position:absolute;left:0;right:0;height:20px;pointer-events:none}
+    .laneTop{top:4px;z-index:2}
+    .laneMidAbove{top:22px;height:16px;z-index:3}
+    .laneBottom{bottom:4px;height:18px;z-index:2}
+    .phaseLabel,.markerLabel{position:absolute;transform:translateX(-50%);font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;white-space:nowrap;background:rgba(4,10,18,.94);border:1px solid rgba(255,255,255,.08);line-height:1.1;max-width:92px;overflow:hidden;text-overflow:ellipsis}
+    .phaseLabel.top{color:#8a9eb8}
+    .phaseLabel.bottom{color:#ff8a92}
+    .phaseLabel.bottom.green{color:#8fffb0}
+    .phaseLabel.bottom.blue{color:#7ec0ff}
+    .phaseLabel.bottom.yellow{color:#ffe070}
+
+    .laneCenter{position:absolute;left:0;right:0;top:44%;transform:translateY(-50%);height:24px;z-index:4}
+    .line{position:absolute;height:4px;border-radius:99px;top:50%;transform:translateY(-50%);z-index:1}
+    .line.red{background:linear-gradient(90deg,#ff4d5c,#ff7a85);box-shadow:0 0 14px rgba(255,77,92,.3)}
+    .line.green{background:linear-gradient(90deg,#3cf07a,#7affa5);box-shadow:0 0 14px rgba(60,240,122,.3)}
+    .line.purple{background:linear-gradient(90deg,#c47aff,#e0aaff);box-shadow:0 0 14px rgba(196,122,255,.3)}
+
+    .token{position:absolute;z-index:4;top:50%;transform:translate(-50%,-50%);height:22px;border-radius:6px;background:rgba(4,10,18,.95);border:1px solid currentColor;display:inline-flex;align-items:center;gap:4px;padding:0 6px;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+    .token.labelOnly{height:18px;padding:0 5px;font-size:7.5px;top:auto;transform:translateX(-50%)}
+    .token.labelOnly.above{top:0}
+    .track .markerIcon{position:absolute;top:44%;transform:translate(-50%,-50%);z-index:5;display:grid;place-items:center}
+    .tokYellow{color:var(--yellow)} .tokRed{color:var(--red)} .tokBlue{color:var(--blue)} .tokGreen{color:var(--green)} .tokPurple{color:var(--purple)}
+    .terminal,.markerIcon.terminal{width:28px;height:28px;border-radius:50%;padding:0;justify-content:center}
+    .terminal.big,.markerIcon.terminal.big{width:34px;height:34px}
+
+    /* Blue intervention markers */
+    .blueIntervention{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(180deg,rgba(90,173,255,.1),rgba(90,173,255,.7),rgba(90,173,255,.1));z-index:3;box-shadow:0 0 10px rgba(90,173,255,.4)}
+    .blueIntervention::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:rgba(90,173,255,.12);border:1.5px solid var(--blue)}
+
+    .branchRail{position:absolute;left:calc(var(--label-w) + 38px);border-left:2px solid rgba(60,240,122,.55);width:2px;z-index:2;pointer-events:none}
+    .branchRail::after{content:"";position:absolute;left:0;bottom:0;width:34px;border-bottom:2px solid rgba(60,240,122,.55);border-radius:0 0 0 6px}
+    .spawnConnector{position:absolute;top:50%;height:2px;background:linear-gradient(90deg,rgba(60,240,122,.7),rgba(60,240,122,.25));z-index:3;pointer-events:none;transform:translateY(-50%)}
+    .rows{position:relative}
+    .childIndent .labelCell{padding-left:28px}
+    .childIndent .labelCell::before{content:"";position:absolute;left:38px;top:50%;width:24px;border-top:1.5px solid rgba(60,240,122,.35)}
+
+    .graphLegend{height:52px;display:flex;align-items:center;gap:18px;padding:0 14px;border-top:1px solid rgba(90,173,255,.06);background:rgba(3,8,15,.45);font-size:11px;color:#6a7d94;flex-shrink:0}
+    .graphLegend span{display:flex;gap:6px;align-items:center}
+    .fit{margin-left:auto;border:1px solid rgba(90,173,255,.12);border-radius:8px;padding:6px 12px;background:rgba(4,10,18,.55);font-weight:600;cursor:pointer;font-size:11px}
+
+    .footer{flex-shrink:0;height:var(--footer-h);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-size:11.5px;color:#4a5e75;padding:0 12px;border:1px solid rgba(90,173,255,.07);border-radius:12px;background:rgba(4,10,18,.45);flex-shrink:0}
+    .footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .footer .footerControls{flex:1;justify-content:center}
+
+    /* Right pane — AGENT DETAIL hierarchy */
+    .paneLabel{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6a8098;margin-bottom:0}
+    .agentName{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 6px;color:#f0f5fa}
+    .agentMeta{font-size:12.5px;color:#8a9eb8;font-weight:600;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(90,173,255,.08)}
+    .agentMeta .statusTag{color:var(--green);font-weight:800}
+    .dockerReplay{display:flex;align-items:center;justify-content:center;gap:8px;height:40px;border:1px solid rgba(90,173,255,.2);border-radius:10px;background:linear-gradient(90deg,rgba(90,173,255,.08),rgba(60,240,122,.06));color:#7ec0ff;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:16px;letter-spacing:.02em}
+    .dockerReplay:hover{border-color:rgba(90,173,255,.35);background:rgba(90,173,255,.12)}
+    .field{margin:12px 0}
+    .field label{display:block;color:#5a6e85;font-size:11px;margin-bottom:5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+    .field strong,.field .val{font-size:13.5px;font-weight:600;color:#dce8f5}
+    .crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .miniChip{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(90,173,255,.1);background:rgba(4,10,18,.55);border-radius:6px;padding:5px 9px;font-size:11.5px;color:#aec0d8}
+    .log{border:1px solid rgba(90,173,255,.08);border-radius:10px;background:rgba(2,6,12,.85);padding:10px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.85;white-space:pre-wrap;color:#7a8fa8}
+    .live{float:right;color:var(--green);font-family:Inter,sans-serif;font-size:10px;font-weight:800}
+    .log .ok{color:#8fffb0;font-weight:600}
+    .log .bad{color:#ff7a85;font-weight:600}
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+    .stats small{display:block;color:#4a5e75;margin-bottom:4px;font-size:10px;font-weight:600;text-transform:uppercase}
+    .stats strong{font-size:15px;color:#dce8f5}
+
+    .proofBanner{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid rgba(255,210,77,.22);border-radius:8px;background:rgba(255,210,77,.06);padding:7px 10px;margin-bottom:12px;font-size:10px;color:#ffe070;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+    .proofPill{border:1px solid currentColor;border-radius:99px;padding:2px 8px;font-size:9px;color:#ffd24d;background:rgba(255,210,77,.08)}
+    .tauMeta{font-size:11px;color:#5a6e85;margin-top:4px;font-weight:500}
+    .skillRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid rgba(90,173,255,.08);border-radius:7px;background:rgba(4,10,18,.35);margin-bottom:6px;font-size:11.5px;color:#aec0d8}
+    .skillRow small{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a8fa8}
+    .timeRemain{margin-left:auto;color:#7ec0ff;font-weight:700}
+
+
+    /* Original mockup-aligned shell */
+    .headerBlock{display:flex;flex-direction:column;gap:10px;min-width:0}
+    .metaInline{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:#5a6e85}
+    .metaInline b{color:#8a9eb8;font-weight:700;margin-right:4px}
+    .roundClock{color:#7ec0ff;font-weight:700}
+
+    .liveEvents{width:min(360px,100%);border:1px solid rgba(90,173,255,.12);border-radius:12px;background:rgba(3,8,15,.75);padding:10px 12px;flex-shrink:0}
+    .liveEventsHead{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9ab0c8;margin-bottom:8px}
+    .dot.red{background:#ff5a68;box-shadow:0 0 10px rgba(255,90,104,.6)}
+    .liveEventRow{display:grid;grid-template-columns:58px 18px 1fr;gap:8px;align-items:start;padding:5px 0;border-top:1px solid rgba(90,173,255,.06);font-size:11.5px;color:#9ab0c8;line-height:1.35}
+    .liveEventRow:first-of-type{border-top:0;padding-top:0}
+    .leTime{font-family:ui-monospace,Menlo,monospace;color:#6a7d94;font-size:11px}
+    .leText b.green{color:var(--green)} .leText b.blue{color:var(--blue)}
+
+    .blueStripRail{padding:12px!important;background:linear-gradient(180deg,rgba(8,24,48,.55),rgba(4,10,18,.45))!important}
+    .stripLabelRow{display:flex;gap:10px;align-items:flex-start}
+    .stripIconBox{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(90,173,255,.12);border:1px solid rgba(90,173,255,.25);color:var(--blue);flex-shrink:0}
+    .stripTitle{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7ec0ff;line-height:1.2}
+    .stripSub{font-size:10px;color:#5a6e85;margin-top:2px}
+
+    .leaderItem{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(90,173,255,.06);cursor:pointer}
+    .leaderItem:last-child{border-bottom:0}
+    .leaderItem.selected{background:rgba(60,240,122,.06);margin:0 -8px;padding:8px;border-radius:8px}
+    .leaderItem .rank{font-weight:800;font-size:12px}
+    .leaderItem .rank.r1{color:#ff6b7a}.leaderItem .rank.r2{color:var(--green)}.leaderItem .rank.r3{color:var(--blue)}
+    .leaderItem .liName{font-weight:700;color:#dce8f5;font-size:12.5px}
+    .leaderItem .liGen{font-size:10px;color:#5a6e85}
+    .leaderItem .liRight{display:flex;align-items:center;gap:6px;color:var(--green);font-family:ui-monospace,Menlo,monospace;font-size:10.5px}
+
+    .standRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(90,173,255,.06)}
+    .standRow:last-child{border-bottom:0}
+    .standIcon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;border:1px solid currentColor;background:rgba(255,255,255,.03);flex-shrink:0}
+    .standRow.red .standIcon{color:#ff6b7a}.standRow.blue .standIcon{color:#7ec0ff}
+    .standName{font-weight:700;font-size:13px}.standRow.red .standName{color:#ff8a92}.standRow.blue .standName{color:#9ec5ff}
+    .standSub{font-size:10px;color:#5a6e85;margin-top:1px}
+    .standScore{margin-left:auto;font-size:24px;font-weight:800;line-height:1}
+    .standRow.red .standScore{color:#ff6b7a}.standRow.blue .standScore{color:#7ec0ff}
+
+    .statusRow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(90,173,255,.05);font-size:11px;color:#8a9eb8;text-transform:uppercase;font-weight:700;letter-spacing:.04em}
+    .statusRow:last-child{border-bottom:0}
+    .statusRow b{margin-left:auto;font-size:14px;color:#dce8f5}
+    .statusRow svg{width:14px;height:14px}
+
+    
+    .blueStripCenter{flex-shrink:0;border-bottom:1px solid rgba(90,173,255,.1);background:linear-gradient(90deg,rgba(8,24,48,.85),rgba(4,12,24,.75))}
+    .blueStripLabel{display:grid;grid-template-columns:var(--label-w) 1fr auto;align-items:center;padding:8px 12px;gap:10px}
+    .blueStripLabel .stripIconBox{width:32px;height:32px}
+    .blueStat{font-size:11px;color:#5a6e85;white-space:nowrap;padding-right:8px}
+    .blueStat strong{color:#7ec0ff}
+
+    .graphTitleBar{height:36px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(90,173,255,.07);background:rgba(3,8,15,.35);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5a6e85}
+    .bluePatchRow{height:34px;position:relative;border-bottom:1px solid rgba(90,173,255,.06);background:rgba(4,10,18,.35);margin-left:var(--label-w)}
+    .bluePatch{position:absolute;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:8.5px;color:#7ec0ff;font-weight:700;white-space:nowrap}
+    .bluePatch svg{width:14px;height:14px;color:var(--blue)}
+
+    .name{text-transform:uppercase;font-size:13px;letter-spacing:.03em}
+    .footerLegend{height:34px;display:flex;align-items:center;gap:16px;padding:0 14px;border-top:1px solid rgba(90,173,255,.07);background:rgba(3,8,15,.45);font-size:10.5px;color:#6a7d94;flex-shrink:0}
+    .footerLegend b{color:#5a6e85;margin-right:8px;font-size:10px;letter-spacing:.08em}
+    .footerLegend span{display:inline-flex;align-items:center;gap:6px;margin-right:8px}
+
+    
+    .detailHead{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,rgba(8,18,32,.98) 70%,rgba(8,18,32,.85));padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(90,173,255,.08)}
+    .agentPayload{font-size:11px;color:#6a7d94;font-family:ui-monospace,Menlo,monospace;margin:2px 0 8px}
+    .agentHeroBadges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .dockerReplayTop{margin:0 0 14px}
+    .detailScroll{overflow:auto;min-height:0;flex:1;padding-right:2px}
+    .right{display:flex;flex-direction:column;padding:14px 14px 12px;overflow:hidden}
+    .detailBody{flex:1;overflow:auto;min-height:0}
+
+    .detailHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .detailClose{color:#5a6e85;cursor:pointer;font-size:18px;line-height:1}
+    .agentTitleRow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .agentBug{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1.5px solid #ff6b7a;color:#ff6b7a;background:rgba(255,77,92,.08)}
+    .statusPill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:rgba(60,240,122,.1);border:1px solid rgba(60,240,122,.25);color:var(--green);font-size:11px;font-weight:800;margin-bottom:12px}
+    .kvGrid{display:grid;gap:8px;font-size:12px;color:#9ab0c8}
+    .kvGrid div{display:grid;grid-template-columns:110px 1fr;gap:8px}
+    .kvGrid b{color:#5a6e85;font-weight:600;font-size:11px}
+    .mutBox{border:1px solid rgba(90,173,255,.08);border-radius:10px;background:rgba(2,6,12,.85);padding:10px;font-size:12px;line-height:1.55;color:#9ab0c8}
+    .dockerReplay{margin-top:14px;background:linear-gradient(90deg,rgba(90,173,255,.15),rgba(90,173,255,.08));border-color:rgba(90,173,255,.35);color:#dce8f5}
+
+    svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    @media(max-width:1440px){
+      :root{--detail-w:330px;--rail-w:250px;--label-w:280px}
+      .topbar{grid-template-columns:1fr 240px 300px}
+      .eventRail{width:220px}
+      .title h1{font-size:21px}
+      .blueCard{min-width:160px}
+    }
+  </style>
+</head>
+<body>
+<!-- visual-only sample density; production lanes/events require receipt-backed data -->
+<div class="app">
+  <header class="topbar">
+    <div class="headerBlock">
+      <div class="title">
+        <h1>BATTLE-004 · POST /api/import-zip</h1>
+        <p>CWE-22 Zip Slip <span class="dim">·</span> autonomous exploit agents evolve under pressure <span class="dim">·</span> fastest proven crash wins</p>
+      </div>
+      <div class="metaInline">
+        <span><b>Arena</b> ZIP_SLIP_LAB</span>
+        <span><b>Objective</b> Prevent archive path traversal</span>
+        <span><b>Target</b> POST /api/import-zip</span>
+        <span><b>Difficulty</b> HIGH</span>
+        <span class="roundClock"><b>Round Time</b> 10:14 / 20:00</span>
+      </div>
+    </div>
+    <div class="score">
+      <div class="scoreSide red">
+        <div class="scoreLabel">RED TEAM</div>
+        <div class="scoreValueRow">
+          <div class="scoreIcon"><svg viewBox="0 0 24 24"><path d="M14 4c-1 2-3 2-4 3-1 1-1 3-2 4-1 1-3 1-4 2 2 0 4-1 5-2 1-1 2-3 3-4 1-1 3-1 4-2-1-1-3-1-4-1z"/></svg></div>
+          <div class="scoreNum">8.4</div>
+        </div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="scoreSide blue">
+        <div class="scoreLabel">BLUE TEAM</div>
+        <div class="scoreValueRow">
+          <div class="scoreNum">7.2</div>
+          <div class="scoreIcon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <div class="liveEvents" id="eventsTop">
+      <div class="liveEventsHead"><span class="dot red"></span> LIVE EVENTS</div>
+      <div class="liveEventRow"><span class="leTime">10:14:32</span><span style="color:var(--green)"><svg><path d="M4.5 16.5c-1 1-1.5 3-1.5 4.5 1.5 0 3.5-.5 4.5-1.5"/><path d="M9 15l-3-3s3-6 8-8c3-1 6 0 6 0s1 3 0 6c-2 5-8 8-8 8l-3-3z"/></svg></span><span class="leText">Replay Fork reaches <b class="green">FASTEST CRASH</b></span></div>
+      <div class="liveEventRow"><span class="leTime">10:14:18</span><span style="color:var(--green)"><svg><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></span><span class="leText">Boundary Fray D promoted to <b class="green">SURVIVOR</b></span></div>
+      <div class="liveEventRow"><span class="leTime">10:13:55</span><span style="color:var(--blue)"><svg><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></span><span class="leText">Blue deployed <b class="blue">CanonGuard patch</b></span></div>
+    </div>
+  </header>
+
+
+  <main class="main">
+    <aside class="leftRail">
+<div class="railBlock">
+        <div class="railHead">Race Leaders</div>
+        <div id="raceLeaders"></div>
+      </div>
+      <div class="railBlock">
+        <div class="railHead">Team Standings</div>
+        <div class="standRow red"><div class="standIcon"><svg><path d="M8 2v4M16 2v4M9 9h6"/></svg></div><div><div class="standName">Red Team</div><div class="standSub">Exploit Agents</div></div><div class="standScore">8.4</div></div>
+        <div class="standRow blue"><div class="standIcon"><svg><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div><div><div class="standName">Blue Team</div><div class="standSub">Patch Agents</div></div><div class="standScore">7.2</div></div>
+      </div>
+      <div class="railBlock">
+        <div class="railHead">Agent Status</div>
+        <div class="statusRow"><svg style="color:var(--blue)"><path d="M13 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path d="M6 19a6 6 0 0 1 12 0"/></svg> Running <b>7</b></div>
+        <div class="statusRow"><svg style="color:var(--blue)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> Blocked <b>5</b></div>
+        <div class="statusRow"><svg style="color:var(--red)"><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8 16h8"/></svg> Killed <b>3</b></div>
+        <div class="statusRow"><svg style="color:var(--yellow)"><path d="M9 18h6"/><path d="M12 2a7 7 0 0 0-4 12c.7.7 1 1.5 1 2h6c0-.5.3-1.3 1-2a7 7 0 0 0-4-12z"/></svg> Useful <b>2</b></div>
+        <div class="statusRow"><svg style="color:var(--green)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> Promoted <b>1</b></div>
+        <div class="statusRow"><svg style="color:var(--green)"><path d="M4.5 16.5c-1 1-1.5 3-1.5 4.5 1.5 0 3.5-.5 4.5-1.5"/><path d="M9 15l-3-3s3-6 8-8c3-1 6 0 6 0s1 3 0 6c-2 5-8 8-8 8l-3-3z"/></svg> Fastest Crash <b>1</b></div>
+      </div>
+    </aside>
+
+    <section class="center">
+      <div class="blueStripCenter">
+        <div class="blueStripLabel">
+          <div class="stripIconBox"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div>
+          <div><div class="stripTitle">Blue Team Control Strip</div><div class="stripSub">Active Patches &amp; Defensive Actions</div></div>
+          <div class="blueStat">Interventions <strong>4</strong> · Blocks <strong>2</strong></div>
+        </div>
+        <div style="display:grid;grid-template-columns:var(--label-w) 1fr"><div></div><div class="bluePatchRow" id="bluePatchRow"></div></div>
+      </div>
+      <div class="graphTitleBar">Evolution &amp; Progress Graph<span style="color:#4a5e75;font-weight:600;margin-left:8px">· Zoom <span id="zoomState">100%</span></span><div class="zoomBtns"><button class="zoomBtn" id="zoomOut" title="Zoom out">−</button><button class="zoomBtn" id="zoomIn" title="Zoom in">+</button></div><span class="playheadLabel">PLAYHEAD 10:14:32</span></div>
+
+      <div class="timelineOverview">
+        <div class="overviewSpacer"></div>
+        <div class="overviewTrackWrap">
+          <div class="overviewTrack" id="overviewTrack">
+            <div class="overviewViewport" id="overviewViewport"></div>
+            <div class="overviewMark crash" style="left:77%" title="Replay Fork · fastest crash"></div>
+            <div class="overviewMark promoted" style="left:88%" title="Boundary Fray D · promoted"></div>
+          </div>
+        </div>
+        <div class="scrollHint" id="scrollHint">More outcomes →</div>
+      </div>
+      <div class="graphWrapHost">
+      <div class="graphWrap" id="graphWrap">
+        <div class="graph" id="graph">
+          <div class="timelineShell">
+            <div class="axis">
+              <div class="axisCorner">TIME</div>
+              <div class="axisTrack">
+                <div class="ticks" id="ticks"></div>
+                <div class="stage">
+                  <div><svg><!-- Search --><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg> Research</div>
+                  <div><svg><!-- Bug --><path d="M8 2v4M16 2v4M9 9h6M12 12v5M8 12H6a2 2 0 0 0-2 2v1M18 12h2a2 2 0 0 1 2 2v1M9 19h6"/></svg> Payload</div>
+                  <div><svg><!-- Dna --><path d="M2 15c6.667-6 13.333 0 20-6M2 9c6.667 6 13.333 0 20 6"/></svg> Mutate</div>
+                  <div><svg><!-- RefreshCw --><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Retry</div>
+                  <div><svg><!-- Terminal --><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg> Terminal</div>
+                </div>
+              </div>
+            </div>
+            <div class="rows" id="rows"></div>
+            <div class="playheadOverlay" aria-hidden="true">
+              <div></div>
+              <div class="playheadTrack">
+                <div class="playhead" id="playhead"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        <div class="graphScrollHint" id="graphScrollHint"><span>More outcomes →</span></div>
+      </div>
+    </section>
+
+    <aside class="right" id="detail"></aside>
+  </main>
+
+  <div class="footerLegend"><b>LEGEND:</b><span style="color:var(--red)">— Exploit Progress</span><span style="color:var(--blue)"><svg style="width:12px;height:12px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> Blue Intervention</span><span><svg style="width:12px;height:12px;color:var(--blue)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> Blocked (Handoff)</span><span style="color:var(--red)"><svg style="width:12px;height:12px"><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg> Killed</span><span style="color:var(--yellow)"><svg style="width:12px;height:12px"><path d="M12 2a7 7 0 0 0-4 12c.7.7 1 1.5 1 2h6c0-.5.3-1.3 1-2a7 7 0 0 0-4-12z"/></svg> Useful Signal</span><span style="color:var(--green)"><svg style="width:12px;height:12px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> Promoted / Survivor</span><span style="color:var(--green)"><svg style="width:12px;height:12px"><path d="M4.5 16.5c-1 1-1.5 3-1.5 4.5 1.5 0 3.5-.5 4.5-1.5"/><path d="M9 15l-3-3s3-6 8-8c3-1 6 0 6 0s1 3 0 6c-2 5-8 8-8 8l-3-3z"/></svg> Fastest Crash</span></div>
+  <div class="footer">
+    <div class="liveBadge"><svg style="width:14px;height:14px"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg> Spectator Mode · <span class="dot"></span> LIVE</div>
+    <div class="footerControls">
+      <div class="playback"><span style="color:#5a6e85;font-size:10px;font-weight:700;margin-right:6px">SPEED</span><span class="footChip active">1x</span><span class="footChip">2x</span><span class="footChip">4x</span><span class="footChip">8x</span></div>
+      <div class="focusChips" id="chips"><span style="color:#5a6e85;font-size:10px;font-weight:700;margin-right:6px">FOCUS</span><span class="footChip active" data-filter="all">All Lanes</span><span class="footChip" data-filter="root">Red Team</span><span class="footChip" data-filter="gen2">Blue Team</span></div>
+      <div class="playback"><span style="color:#5a6e85;font-size:10px;font-weight:700;margin-right:6px">VIEW</span><span class="footChip">☰</span><span class="footChip">▥</span><span class="footChip active">▦</span></div>
+    </div>
+    <button class="fit" id="fitBtn" style="margin:0">⛶</button>
+  </div>
+  </div>
+</div>
+
+<script>
+  /* visual-only sample density — production renders receipt-backed data only */
+  const icon = {
+    root:'<svg><!-- Bug --><path d="M8 2v4M16 2v4M9 9h6M12 12v5"/></svg>',
+    branch:'<svg><!-- GitBranch --><path d="M6 3v12"/><path d="M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M15.5 7.5 8.5 16.5"/></svg>',
+    bulb:'<svg><!-- Lightbulb --><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12c.7.7 1 1.5 1 2h6c0-.5.3-1.3 1-2a7 7 0 0 0-4-12z"/></svg>',
+    skull:'<svg><!-- Skull --><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8 16h8"/></svg>',
+    shield:'<svg><!-- Shield --><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>',
+    shieldx:'<svg><!-- ShieldX --><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 9 6 6M15 9l-6 6"/></svg>',
+    rocket:'<svg><!-- Rocket --><path d="M4.5 16.5c-1 1-1.5 3-1.5 4.5 1.5 0 3.5-.5 4.5-1.5"/><path d="M9 15l-3-3s3-6 8-8c3-1 6 0 6 0s1 3 0 6c-2 5-8 8-8 8l-3-3z"/></svg>',
+    receipt:'<svg><!-- FileJson --><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
+  };
+
+  const MAX_T = 30;
+  let zoom = 1;
+  let selected = 'payload-857-A';
+  let collapsed = new Set();
+  let filter = 'all';
+
+  const PLAYHEAD_T = 23.1;
+  const CLOCK_START_MIN = 10, CLOCK_START_SEC = 4;
+  const WALL_SPAN_SEC = 12; // 10:04 → 10:16 on axis
+
+  function tToWallSec(t){ return (t / MAX_T) * WALL_SPAN_SEC; }
+
+  function fmtClock(t){
+    const total = CLOCK_START_SEC + tToWallSec(t);
+    const min = CLOCK_START_MIN + Math.floor(total / 60);
+    const sec = total % 60;
+    const whole = Math.floor(sec);
+    const frac = Math.round((sec - whole) * 100);
+    return `${min}:${String(whole).padStart(2,'0')}${frac ? '.' + String(frac).padStart(2,'0') : ''}`;
+  }
+
+  function fmtClockLong(t){
+    if (Math.abs(t - PLAYHEAD_T) < 0.05) return '10:14:32';
+    const total = CLOCK_START_SEC + tToWallSec(t);
+    const min = CLOCK_START_MIN + Math.floor(total / 60);
+    const sec = total % 60;
+    const whole = Math.floor(sec);
+    const centi = Math.round((sec - whole) * 100);
+    return `${min}:${String(whole).padStart(2,'0')}:${String(centi).padStart(2,'0')}`;
+  }
+
+  const exploits = [
+    {id:'payload-857', name:'Archive Escape', gen:1, type:'root', parent:null, group:'archive', status:'useful_killed', start:2, end:20.4, line:'red',
+      tags:['root','gen1','useful','killed','receipts'],
+      topPhases:[{x:3,label:'RESEARCH'},{x:8,label:'PAYLOAD'},{x:12,label:'TRIGGER'}],
+      bottomPhases:[{x:20.4,label:'KILLED',cls:'bottom'},{x:22.2,label:'RECEIPT',cls:'bottom yellow'}],
+      events:[{x:10.8,layer:'above',c:'tokYellow',label:'USEFUL'},{x:20.4,layer:'icon',c:'tokBlue terminal',icon:'shield'}],
+      blueAt:[20.4], desc:'Root Zip Slip probe found useful traversal signal but was killed after Blue replay pressure.', context:'ZIP_SLIP_CONFIRMED', research:'project knowledge, prior receipts',
+      log:'T+10.8  200 extract path accepted\nT+12.7  ZIP_SLIP_CONFIRMED\nT+20.4  killed by replay gate', hasReplay:true},
+    {id:'payload-857-A', name:'Replay Fork', gen:2, type:'child', parent:'payload-857', group:'archive', status:'fastest_crash', start:21, end:23.1, line:'green', selected:true,
+      tags:['gen2','promoted','crashed','receipts'],
+      topPhases:[{x:21.2,label:'MUTATE'},{x:22.0,label:'INHERIT'},{x:22.8,label:'SEND'}],
+      bottomPhases:[{x:24.5,label:'FASTEST CRASH · 10:14.32',cls:'bottom green'}],
+      events:[{x:23.1,layer:'icon',c:'tokGreen terminal big',icon:'rocket'}],
+      desc:'Trimmed path normalization bypass inherited from Archive Escape after ZIP_SLIP_CONFIRMED handoff.', context:'ZIP_SLIP_CONFIRMED', research:'brave-search, project knowledge, prior receipts',
+      log:'T+22.1  ▶  SEND POST /api/import-zip payload-857-A\nT+22.4  ◀  200 OK {"stage":"extract"}\nT+23.1  ◀  500 CRASH SIGSEGV @ ZipUtil::Write()', hasReplay:true},
+    {id:'payload-231', name:'Tar Tunnel', gen:1, type:'root', parent:null, group:'tar', status:'killed', start:1, end:5.8, line:'red', tags:['root','gen1','killed'],
+      topPhases:[{x:1.5,label:'RESEARCH'},{x:3,label:'PAYLOAD'}],
+      bottomPhases:[{x:5.8,label:'KILLED',cls:'bottom'}],
+      events:[{x:5.8,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      desc:'Early archive traversal variant killed before useful signal.', context:'None proven.', research:'baseline path traversal probe', log:'T+5.8 killed: no useful signal', hasReplay:false},
+    {id:'payload-404', name:'DotDot Drip', gen:1, type:'root', parent:null, group:'dotdot', status:'killed', start:3, end:14.8, line:'red', tags:['root','gen1','killed'],
+      topPhases:[{x:4,label:'RESEARCH'},{x:8,label:'PAYLOAD'},{x:11,label:'TRIGGER'}],
+      bottomPhases:[{x:12.5,label:'PATCH GATE',cls:'bottom blue'},{x:15.5,label:'KILLED',cls:'bottom'}],
+      events:[{x:13,layer:'icon',c:'tokBlue terminal',icon:'shieldx'},{x:14.8,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      blueAt:[13], desc:'Dot-dot encoding attempt reached patch gate and died.', context:'No child-spawn receipt.', research:'encoding variants', log:'T+13.0 patch gate\nT+14.8 killed', hasReplay:false},
+    {id:'payload-118', name:'Symlink Shuffle', gen:1, type:'root', parent:null, group:'symlink', status:'killed', start:5, end:21.2, line:'red', tags:['root','gen1','killed'],
+      topPhases:[{x:6,label:'RESEARCH'},{x:12,label:'PAYLOAD'},{x:16,label:'OBSERVE'}],
+      bottomPhases:[{x:18.9,label:'BLOCKED',cls:'bottom blue'},{x:21.2,label:'KILLED',cls:'bottom'}],
+      events:[{x:18.9,layer:'icon',c:'tokBlue terminal',icon:'shieldx'},{x:21.2,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      blueAt:[18.9], desc:'Symlink archive route blocked then killed.', context:'No receipt-backed learning retained.', research:'symlink traversal path', log:'T+18.9 blocked\nT+21.2 killed', hasReplay:false},
+    {id:'payload-620', name:'Boundary Nudge', gen:1, type:'root', parent:null, group:'nudge', status:'killed', start:6, end:27, line:'red', tags:['root','gen1','killed'],
+      topPhases:[{x:8,label:'RESEARCH'},{x:14,label:'PAYLOAD'},{x:20,label:'RETRY'}],
+      bottomPhases:[{x:24.6,label:'REPLAY GATE',cls:'bottom blue'},{x:27,label:'KILLED',cls:'bottom'}],
+      events:[{x:24.6,layer:'icon',c:'tokBlue terminal',icon:'shield'},{x:27,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      blueAt:[24.6], desc:'Long-running boundary probe killed later in timeline.', context:'No child-spawn receipt.', research:'boundary checks', log:'T+24.6 replay gate\nT+27.0 killed', hasReplay:false},
+    {id:'payload-912', name:'Boundary Fray', gen:1, type:'root', parent:null, group:'fray', status:'useful_killed', start:2, end:18.7, line:'red', expanded:true, tags:['root','gen1','useful','killed','receipts'],
+      topPhases:[{x:4,label:'RESEARCH'},{x:9,label:'PAYLOAD'},{x:14,label:'TRIGGER'}],
+      bottomPhases:[{x:18.7,label:'KILLED',cls:'bottom'},{x:19.8,label:'SPAWN x4',cls:'bottom yellow'}],
+      events:[{x:11.4,layer:'above',c:'tokYellow',label:'LEAK'},{x:18.7,layer:'icon',c:'tokRed terminal',icon:'skull'},{x:19.8,layer:'above',c:'tokGreen',label:'SPAWN'}],
+      desc:'Useful boundary leak found, then killed. Spawned four researched child mutations.', context:'BOUNDARY_LEAK', research:'project knowledge, prior receipts', log:'T+11.4 BOUNDARY_LEAK\nT+18.7 killed\nT+19.0 spawned 4 children', hasReplay:false},
+    {id:'payload-912-A', name:'Boundary Fray A', gen:2, type:'child', parent:'payload-912', group:'fray', status:'killed', start:19, end:20.6, line:'purple', tags:['gen2','killed'],
+      topPhases:[{x:19.2,label:'MUTATE'},{x:20.4,label:'RETRY'}], bottomPhases:[{x:20.6,label:'KILLED',cls:'bottom'}],
+      events:[{x:20.6,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      desc:'First Boundary Fray child killed quickly.', context:'BOUNDARY_LEAK', research:'mutation A', log:'T+15.6 killed', hasReplay:false},
+    {id:'payload-912-B', name:'Boundary Fray B', gen:2, type:'child', parent:'payload-912', group:'fray', status:'blocked', start:19, end:19.5, line:'purple', tags:['gen2','killed'],
+      topPhases:[{x:19.2,label:'MUTATE'},{x:20.5,label:'TRIGGER'}], bottomPhases:[{x:19.5,label:'BLUE BLOCK',cls:'bottom blue'}],
+      events:[{x:19.5,layer:'icon',c:'tokBlue terminal',icon:'shieldx'}], blueAt:[19.5],
+      desc:'Second child blocked by Blue patch gate.', context:'BOUNDARY_LEAK', research:'mutation B', log:'T+19.5 blocked by defense', hasReplay:false},
+    {id:'payload-912-C', name:'Boundary Fray C', gen:2, type:'child', parent:'payload-912', group:'fray', status:'killed', start:19, end:24.1, line:'purple', tags:['gen2','killed'],
+      topPhases:[{x:19.5,label:'MUTATE'},{x:21.2,label:'RETRY'}], bottomPhases:[{x:24.1,label:'KILLED',cls:'bottom'}],
+      events:[{x:24.1,layer:'icon',c:'tokRed terminal',icon:'skull'}],
+      desc:'Third child survived longer but was killed before crash.', context:'BOUNDARY_LEAK', research:'mutation C', log:'T+24.1 killed', hasReplay:false},
+    {id:'payload-912-D', name:'Boundary Fray D', gen:2, type:'child', parent:'payload-912', group:'fray', status:'promoted', start:19, end:28.4, line:'purple', tags:['gen2','promoted','receipts'],
+      topPhases:[{x:19.5,label:'MUTATE'},{x:22.2,label:'RETRY'},{x:25.5,label:'OBSERVE'}], bottomPhases:[{x:28.4,label:'PROMOTED',cls:'bottom green'}],
+      events:[{x:28.4,layer:'icon',c:'tokGreen terminal',icon:'rocket'}],
+      desc:'Fourth child succeeds as promoted descendant, slower than Replay Fork.', context:'BOUNDARY_LEAK', research:'mutation D based on failed siblings', log:'T+28.4 promoted / survivor', hasReplay:true}
+  ];
+
+  const rowsEl = document.getElementById('rows');
+  const graph = document.getElementById('graph');
+  const graphWrap = document.getElementById('graphWrap');
+  const pct = t => ((t / MAX_T) * 100).toFixed(2) + '%';
+  const span = (a, b) => Math.max(0.5, ((b - a) / MAX_T) * 100).toFixed(2) + '%';
+
+  function applyZoom(){
+    const w = Math.round(1680 * zoom);
+    document.documentElement.style.setProperty('--timeline-w', w + 'px');
+    document.getElementById('zoomState').textContent = Math.round(zoom * 100) + '%';
+    renderTicks();
+  
+  function updateScrollHints(){
+    const gw = graphWrap;
+    if (!gw) return;
+    const max = Math.max(0, gw.scrollWidth - gw.clientWidth);
+    const atEnd = gw.scrollLeft >= max - 8;
+    const hint = document.getElementById('scrollHint');
+    const edge = document.getElementById('graphScrollHint');
+    if (hint) hint.classList.toggle('hidden', atEnd || max < 8);
+    if (edge) edge.classList.toggle('hidden', atEnd || max < 8);
+    const vp = document.getElementById('overviewViewport');
+    if (vp && max > 0) {
+      const track = document.getElementById('overviewTrack');
+      const tw = track?.clientWidth || 1;
+      const vw = Math.max(18, (gw.clientWidth / gw.scrollWidth) * tw);
+      const left = (gw.scrollLeft / gw.scrollWidth) * tw;
+      vp.style.width = vw + 'px';
+      vp.style.left = left + 'px';
+    }
+  }
+  graphWrap.addEventListener('scroll', updateScrollHints);
+  window.addEventListener('resize', updateScrollHints);
+
+  scrollToPlayhead();
+  updateScrollHints();
+  }
+
+  function renderTicks(){
+    const ticksEl = document.getElementById('ticks');
+    ticksEl.innerHTML = '';
+    for (let s = 0; s <= MAX_T; s += 5) {
+      const sp = document.createElement('span');
+      sp.className = 'tick';
+      sp.style.left = pct(s);
+      sp.textContent = fmtClock(s);
+      ticksEl.appendChild(sp);
+    }
+    document.getElementById('playhead').style.left = pct(PLAYHEAD_T);
+    const phLabel = document.querySelector('.playheadLabel');
+    if (phLabel) phLabel.textContent = 'PLAYHEAD ' + fmtClockLong(PLAYHEAD_T);
+    const patchRow = document.getElementById('bluePatchRow');
+    if (patchRow) {
+      const patches = [
+        {t: 5, label:'CanonGuard v1', sub:'10:06:12'},
+        {t: 12, label:'PathSanity Patch', sub:'10:08:47'},
+        {t: 22, label:'Boundary Shield', sub:'10:11:23'},
+      ];
+      patchRow.innerHTML = patches.map(p => `<div class="bluePatch" style="left:${pct(p.t)}"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg><span>${p.label}</span><span class="bpSub">${p.sub}</span></div>`).join('');
+    }
+  }
+
+  const MIN_GAP_T = 1.55;
+
+  function spreadX(items){
+    const out = items.map(it => ({...it}));
+    out.sort((a,b) => a.x - b.x);
+    for (let i = 1; i < out.length; i++) {
+      if (out[i].x - out[i-1].x < MIN_GAP_T) out[i].x = +(out[i-1].x + MIN_GAP_T).toFixed(2);
+    }
+    return out;
+  }
+
+  function phaseHtml(phases, band, icons=[]){
+    const src = band === 'bottom' ? layoutBottom(phases, icons) : spreadX(phases || []);
+    return src.map(p => `<span class="phaseLabel ${band} ${p.cls||''}" style="left:${pct(p.x)}">${p.label}</span>`).join('');
+  }
+
+  function iconXs(events){
+    return (events||[]).filter(ev => ev.layer === 'icon' || (ev.icon && String(ev.c||'').includes('terminal'))).map(ev => ev.x);
+  }
+
+  function awayFromIcons(items, icons, gap = 1.75){
+    let out = items.map(it => ({...it}));
+    out.forEach(it => {
+      icons.forEach(ix => { if (Math.abs(it.x - ix) < gap) it.x = +(ix - gap).toFixed(2); });
+    });
+    out = spreadX(out);
+    out.forEach(it => {
+      icons.forEach(ix => { if (Math.abs(it.x - ix) < gap) it.x = +(ix - gap).toFixed(2); });
+    });
+    return spreadX(out);
+  }
+
+  function layoutBottom(phases, icons){
+    const shifted = (phases||[]).map(p => {
+      let x = p.x;
+      icons.forEach(ix => { if (Math.abs(x - ix) < 0.8) x = ix + 1.55; });
+      return {...p, x: +x.toFixed(2)};
+    });
+    return spreadX(shifted);
+  }
+
+  function layoutEvents(events){
+    const above = [];
+    const icons = [];
+    (events || []).forEach(ev => {
+      if (ev.layer === 'icon' || (ev.icon && String(ev.c||'').includes('terminal'))) icons.push(ev);
+      else if (ev.layer === 'above' || ev.label) above.push(ev);
+    });
+    const ix = icons.map(i => i.x);
+    return {
+      aboveHtml: awayFromIcons(above, ix).map(ev => `<span class="token labelOnly above ${ev.c||''}" style="left:${pct(ev.x)}">${ev.label||''}</span>`).join(''),
+      iconHtml: icons.map(ev => `<span class="markerIcon ${ev.c||''}" style="left:${pct(ev.x)}">${icon[ev.icon]||''}</span>`).join(''),
+      iconXs: ix
+    };
+  }
+
+  function renderRows(){
+    rowsEl.innerHTML = '';
+    exploits.forEach(e => {
+      const hiddenByCollapse = e.parent && collapsed.has(e.parent);
+      const matchesFilter = filter==='all' || e.tags.includes(filter) || (filter==='root' && e.type==='root') || (filter==='gen2' && e.gen>=2) || (filter==='crashed' && e.status==='fastest_crash');
+      if (hiddenByCollapse || !matchesFilter) return;
+
+      const row = document.createElement('div');
+      const hasKids = exploits.some(k => k.parent === e.id);
+      const chev = hasKids ? (collapsed.has(e.id) ? '›' : '⌄') : (e.type === 'root' ? '›' : '');
+      row.className = `row ${e.type} ${e.line==='purple'?'purple':''} ${e.parent?'childIndent':''} ${selected===e.id?'selected':''}`;
+      row.dataset.id = e.id;
+      row.dataset.group = e.group;
+
+      const {aboveHtml, iconHtml, iconXs: ix} = layoutEvents(e.events);
+      const blues = (e.blueAt||[]).map(t => `<div class="blueIntervention" style="left:${pct(t)}" title="Blue intervention T+${t}"></div>`).join('');
+
+      row.innerHTML = `
+        <div class="labelCell">
+          <div class="chev" data-toggle="${e.id}">${chev}</div>
+          <div class="laneIcon">${e.type==='root'?icon.root:icon.branch}</div>
+          <div class="labelText">
+            <div class="name">${e.name}</div>
+            <div class="payload">${e.id}</div>
+          </div>
+          <span class="gen ${e.gen>1?'g2':''}">GEN ${e.gen}</span>
+        </div>
+        <div class="track">
+          <div class="trackGrid"></div>
+          <div class="laneTop">${phaseHtml(e.topPhases,'top')}</div>
+          <div class="laneMidAbove">${aboveHtml}</div>
+          <div class="laneCenter">
+            <div class="line ${e.line}" style="left:${pct(e.start)};width:${span(e.start,e.end)}"></div>
+            ${iconHtml}
+            ${blues}
+          </div>
+          <div class="laneBottom">${phaseHtml(e.bottomPhases,'bottom', ix)}</div>
+        </div>`;
+
+      row.addEventListener('click', ev => {
+        if (ev.target.dataset.toggle) { toggle(ev.target.dataset.toggle); ev.stopPropagation(); return; }
+        selected = e.id; renderRows(); renderRaceLeaders(); renderDetail();
+      });
+      row.addEventListener('mouseenter', () => highlight(e.group, true));
+      row.addEventListener('mouseleave', () => highlight(e.group, false));
+      rowsEl.appendChild(row);
+    });
+    layoutBranchRails();
+    verifyMarkerLayout();
+  }
+
+  function layoutBranchRails(){
+    rowsEl.querySelectorAll('.branchRail,.spawnConnector').forEach(n => n.remove());
+    const visible = [...rowsEl.querySelectorAll('.row')];
+    const rowById = Object.fromEntries(visible.map(r => [r.dataset.id, r]));
+    exploits.forEach(parent => {
+      const childIds = exploits.filter(e => e.parent === parent.id).map(e => e.id);
+      if (!childIds.length || collapsed.has(parent.id)) return;
+      const childRows = childIds.map(id => rowById[id]).filter(Boolean);
+      if (!childRows.length) return;
+      const parentRow = rowById[parent.id];
+      if (!parentRow) return;
+      const pr = parentRow.getBoundingClientRect();
+      const rowsBox = rowsEl.getBoundingClientRect();
+      const top = pr.top - rowsBox.top + pr.height * 0.5;
+      const last = childRows[childRows.length - 1].getBoundingClientRect();
+      const bottom = last.top - rowsBox.top + last.height * 0.5;
+      const rail = document.createElement('div');
+      rail.className = 'branchRail';
+      rail.style.top = top + 'px';
+      rail.style.height = Math.max(8, bottom - top) + 'px';
+      rowsEl.appendChild(rail);
+      const spawnX = exploits.find(e => e.id === parent.id)?.events?.find(ev => ev.icon === 'shield' || ev.label?.includes('HANDOFF'));
+      const handoffT = parent.end * 0.72;
+      childRows.forEach((cr, idx) => {
+        const child = exploits.find(e => e.id === cr.dataset.id);
+        if (!child) return;
+        const conn = document.createElement('div');
+        conn.className = 'spawnConnector';
+        const fromX = pct(handoffT);
+        const toX = pct(child.start + 1.5);
+        conn.style.left = fromX;
+        conn.style.width = `calc(${toX} - ${fromX})`;
+        conn.style.top = (cr.getBoundingClientRect().top - rowsBox.top + cr.getBoundingClientRect().height * 0.5) + 'px';
+        cr.querySelector('.track').appendChild(conn);
+      });
+    });
+  }
+
+  function verifyMarkerLayout(){
+    if (location.search.includes('debug=0')) return;
+    let overlaps = 0;
+    rowsEl.querySelectorAll('.row').forEach(row => {
+      const markers = [...row.querySelectorAll('.phaseLabel,.markerLabel,.token,.markerIcon')];
+      for (let i=0;i<markers.length;i++) for (let j=i+1;j<markers.length;j++) {
+        const a=markers[i].getBoundingClientRect(), b=markers[j].getBoundingClientRect();
+        if (Math.abs(a.left-b.left)<10 && Math.abs(a.top-b.top)<14) overlaps++;
+      }
+    });
+    if (overlaps) console.warn('[battle-004 mockup] marker overlaps:', overlaps);
+  }
+
+  const leaders = [
+    {id:'payload-857-A', name:'Replay Fork', gen:2, time:'10:14.32', rank:1, rc:'r1', icon:'rocket', ic:'green'},
+    {id:'payload-912-D', name:'Boundary Fray D', gen:2, time:'10:12.18', rank:2, rc:'r2', icon:'shield', ic:'green'},
+    {id:'payload-912-B', name:'Boundary Fray B', gen:2, time:'10:11.02', rank:3, rc:'r3', icon:'shield', ic:'blue'},
+  ];
+  const leaderIcons = {rocket:'<svg><path d="M4.5 16.5c-1 1-1.5 3-1.5 4.5 1.5 0 3.5-.5 4.5-1.5"/><path d="M9 15l-3-3s3-6 8-8c3-1 6 0 6 0s1 3 0 6c-2 5-8 8-8 8l-3-3z"/></svg>', shield:'<svg><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>'};
+
+  function renderRaceLeaders(){
+    const list = document.getElementById('raceLeaders');
+    list.innerHTML = '';
+    leaders.forEach(l => {
+      const item = document.createElement('div');
+      item.className = `leaderItem ${selected===l.id?'selected':''}`;
+      item.innerHTML = `<span class="rank ${l.rc}">${l.rank}</span><div><div class="liName">${l.name}</div><div class="liGen">Gen ${l.gen}</div></div><div class="liRight" style="color:var(--${l.ic})">${leaderIcons[l.icon]||''}${l.time}</div>`;
+      item.addEventListener('click', () => { selected = l.id; renderRows(); renderRaceLeaders(); renderDetail(); });
+      list.appendChild(item);
+    });
+  }
+
+  function highlight(group, on){
+    document.querySelectorAll(`.row[data-group="${group}"]`).forEach(r => r.classList.toggle('lineageHot', on));
+  }
+
+  function toggle(id){
+    collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id);
+    renderRows(); renderRaceLeaders();
+  }
+
+  function statusLabel(s){
+    if (s === 'fastest_crash') return 'FASTEST CRASH';
+    return s.replace(/_/g,' ').toUpperCase();
+  }
+
+  function tauId(id){ return 'fixture-tau-' + id; }
+
+  function renderDetail(){
+    const e = exploits.find(x => x.id === selected);
+    if (!e) return;
+    const parent = e.parent ? exploits.find(p => p.id === e.parent) : null;
+    const crashBadge = e.status==='fastest_crash' ? '<span class="statusPill">FASTEST CRASH</span>' : '';
+    const dockerBtn = e.hasReplay ? `<button class="dockerReplay dockerReplayTop"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> REPLAY IN DOCKER · Reproduce this run locally</button>` : '';
+    document.getElementById('detail').innerHTML = `
+      <div class="detailHead"><div class="paneLabel">Agent Detail</div><span class="detailClose">×</span></div>
+      <div class="agentTitleRow"><div class="agentBug"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M9 9h6"/></svg></div><div><h2 class="agentName" style="margin:0">${e.name}</h2><div class="agentMeta" style="border:0;padding:0;margin:0">Gen ${e.gen}</div></div></div>
+      <div class="agentPayload">${e.id}</div>
+      <div class="agentHeroBadges">${crashBadge}</div>
+      ${dockerBtn}
+      <div class="detailBody">
+      <div class="field"><label>Status</label><div class="statusPill" style="display:inline-flex;margin:0"><span class="dot"></span> ${e.status==='fastest_crash'?'RUNNING':'TERMINAL'} · ${fmtClock(e.end)}</div></div>
+      <div class="field"><label>Current Loop</label>
+        <div class="loopGrid">
+          <div><small>Stage</small><strong>${e.status==='fastest_crash'?'TRIGGER':'RESEARCH'}</strong></div>
+          <div><small>Attempts</small><strong>1</strong></div>
+          <div><small>Last Update</small><strong>${fmtClock(e.end)}</strong></div>
+        </div>
+      </div>
+      <div class="field"><label>Inherited Context</label>
+        <div class="kvGrid">
+          <div><b>Parent</b><span>${parent ? parent.name + ' (Gen ' + parent.gen + ')' : 'None'}</span></div>
+          <div><b>Handoff Reason</b><span>${e.context}</span></div>
+          <div><b>Inherited At</b><span>${fmtClock(e.start)}</span></div>
+        </div>
+      </div>
+      <div class="field"><label>Mutation Rationale</label><div class="mutBox">${e.desc}</div></div>
+      <div class="field"><label>Latest Receipt</label>
+        <div class="receiptBlock"><span class="copy">⧉</span>${e.id}-replay\nStatus: ${e.status==='fastest_crash'?'FASTEST_CRASH_CONFIRMED':e.status.toUpperCase()}\nCrash: SIGSEGV @ validate_path()\nTime: ${fmtClock(e.end)}.118</div>
+      </div>
+      </div>`;
+  }
+
+  document.getElementById('chips').addEventListener('click', ev => {
+    const b = ev.target.closest('.footChip');
+    if (!b || !b.dataset.filter) return;
+    document.querySelectorAll('#chips .footChip').forEach(c => c.classList.remove('active'));
+    b.classList.add('active');
+    filter = b.dataset.filter;
+    renderRows();
+  });
+  document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(2, +(zoom + 0.15).toFixed(2)); applyZoom(); });
+  document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(0.6, +(zoom - 0.15).toFixed(2)); applyZoom(); });
+  document.getElementById('fitBtn').addEventListener('click', () => { graphWrap.scrollLeft = 0; graphWrap.scrollTop = 0; zoom = 1; applyZoom(); });
+
+  applyZoom();
+  renderRows();
+  renderRaceLeaders();
+  renderDetail();
+  function scrollToPlayhead(){
+    const ph = document.getElementById('playhead');
+    if (!ph || !graphWrap) return;
+    const target = ph.offsetLeft - graphWrap.clientWidth * 0.62;
+    graphWrap.scrollLeft = Math.max(0, target);
+  }
+
+  function updateScrollHints(){
+    const gw = graphWrap;
+    if (!gw) return;
+    const max = Math.max(0, gw.scrollWidth - gw.clientWidth);
+    const atEnd = gw.scrollLeft >= max - 8;
+    const hint = document.getElementById('scrollHint');
+    const edge = document.getElementById('graphScrollHint');
+    if (hint) hint.classList.toggle('hidden', atEnd || max < 8);
+    if (edge) edge.classList.toggle('hidden', atEnd || max < 8);
+    const vp = document.getElementById('overviewViewport');
+    if (vp && max > 0) {
+      const track = document.getElementById('overviewTrack');
+      const tw = track?.clientWidth || 1;
+      const vw = Math.max(18, (gw.clientWidth / gw.scrollWidth) * tw);
+      const left = (gw.scrollLeft / gw.scrollWidth) * tw;
+      vp.style.width = vw + 'px';
+      vp.style.left = left + 'px';
+    }
+  }
+  graphWrap.addEventListener('scroll', updateScrollHints);
+  window.addEventListener('resize', updateScrollHints);
+
+  scrollToPlayhead();
+  updateScrollHints();
+</script>
+</body>
+</html>

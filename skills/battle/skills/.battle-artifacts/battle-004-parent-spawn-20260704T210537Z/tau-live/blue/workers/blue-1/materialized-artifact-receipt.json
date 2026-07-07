@@ -1,0 +1,12 @@
+{
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/app.py",
+  "rationale": "Patched Zip Slip vulnerability by ensuring all extracted files are written within the designated destination directory using `Path.resolve()` and `Path.is_relative_to()` to prevent path traversal.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "status": "PASS"
+}

@@ -255,6 +255,143 @@ This proves only the deterministic fixture contract. It does not prove real Red
 agent behavior, real Blue agent behavior, scillm, OpenCode, anvil, code-runner,
 memory learning, Docker, QEMU, or multi-round campaign readiness.
 
+## Normalized UX JSON Contract
+
+Battle can emit a normalized JSON fixture for the spectator UX. The UX must
+render this contract as data; it must not infer child lanes, Blue kills, fastest
+crashes, survivor promotions, or live replay actions from sparse receipts.
+
+Generate a canonical BATTLE-004 parent-spawn proof when fresh receipt-backed
+lineage data is needed:
+
+```bash
+./run.sh arena-tau-public-only-proof battle-004 \
+  --spawn-red-child-on-blue-success \
+  --red-workers 1 \
+  --blue-workers 1 \
+  --out /tmp/battle-004-parent-spawn-proof
+```
+
+The parent-spawn flag is fail-closed: Battle first requests one parent Red lane,
+Judge-replays the parent against Blue, and requests one child Red lane only when
+the parent lane has a `BLUE_SUCCESS` handoff. The emitted
+`run-receipt.json#lineage_request` records whether lineage was requested and
+whether `lineage-receipts.json` was produced.
+
+Generate normalized JSON from a Battle proof directory:
+
+```bash
+./run.sh generate-ux-fixture \
+  --input /path/to/battle-proof \
+  --battle-id battle-004 \
+  --out /tmp/battle-004.normalized.json
+```
+
+Validate the backend values, portable JSON Schema, and fail-closed render
+guards:
+
+```bash
+./run.sh validate-ux-contract /tmp/battle-004.normalized.json
+```
+
+Validate the checked-in backend handoff bundle before a renderer consumes it:
+
+```bash
+./run.sh validate-ux-handoff-summary local/battle-004-ux-json-contract-summary.json
+```
+
+Stable local JSON handoff artifacts are checked into the Battle skill for UI
+implementers and reviewers:
+
+```text
+local/battle-004-parent-spawn.normalized.json
+local/battle-004-sparse.normalized.json
+local/battle-004-ux-json-contract-summary.json
+```
+
+The parent-spawn artifact is receipt-backed with `mocked=false`,
+`lineage.mode=receipt_backed`, and `child_spawn_count=1`. The sparse artifact is
+receipt-backed with `mocked=false`, `lineage.mode=missing`, and
+`child_spawn_count=0`. The summary file names both artifacts and is covered by
+`tests/test_battle_event_adapter_contract.py`, which validates that the summary
+matches the actual local normalized JSON values.
+
+The local handoff summary locks the canonical BATTLE-004 source contract to
+`/api/import-zip`, `CWE-22`, and Zip Slip path traversal. The validator compares
+both local normalized fixtures against that lock and fails closed if a fixture
+drifts to another route, CWE, vulnerability family, or shell title.
+
+The portable JSON Schema enforced by `validate-ux-contract` is:
+
+```text
+schemas/battle.normalized_ux_fixture.v1.schema.json
+```
+
+The validator checks that:
+
+- `scenario.public_entrypoint` is a path such as `/api/import-zip`, not a
+  method-prefixed label.
+- `spectator_shell` provides receipt-backed header, fact chip, score, round
+  time, and receipt ticker values for the shell. The UX should render these
+  values instead of hard-coding mockup copy or labeling receipt playback as
+  live execution.
+- `renderer_binding_contract` provides exact JSON path bindings for the shell,
+  round time, scrollable timeline, moving playhead, parent spawn/collapse,
+  lane label/activity layout, Agent Detail cockpit, and Docker replay CTA.
+  This is a data contract for renderer implementers, not visual design authority. Optional Pixi race renderer: `docs/BATTLE_RACE_ENGINE_PIXI_SPIKE.md` (Phase 1 spike; DOM remains default)
+  direction.
+- `lineage_request` records requested/not-requested/proven parent-spawn state.
+  It is explanatory state only; the UX must not render child lanes from
+  `lineage_request` without matching `lineage.spawns[]` receipt records.
+- `lineage.spawn_count`, `scoreboard.child_spawn_count`, and
+  `ux_contract.receipt_backed_values.child_spawn_count` agree.
+- Parent/child lane relationships exist only when a lineage receipt names both
+  lanes.
+- `tau.spawned_child` is absent when lineage is missing.
+- `lineage.groups[]` and lane `lineageGroupId`/`collapsible` fields agree so
+  the UX can render parent/child collapse state without inferring it.
+- `blue.blocked_red` targets are backed by `scoreboard.per_pair`
+  `BLUE_SUCCESS` verdicts.
+- Replay buttons remain receipt-only unless replay metadata provides an
+  executable endpoint or command receipt.
+- `timeline.playhead` and `timeline.viewport` are present as receipt replay
+  values; they must not be treated as live stream proof.
+- `timeline.playhead.keyframes[]` lists receipt-backed lane event positions
+  sorted by `x`, so the renderer can animate a moving playhead as receipt
+  replay rather than live stream execution.
+- Lane event markers include `label_band`, `marker_priority`, and
+  `collision_group` so the renderer can avoid overlapping labels/icons without
+  inventing placement rules.
+- Lane `activitySegments[]` provides between-marker action phases such as
+  research, payload, useful signal, handoff, patch gate, and Judge replay.
+  The UX should render these values instead of inventing exploit activity.
+- Lane `cockpit` is the authoritative Agent Detail/right-pane payload. It
+  contains Tau identity, current turn, six public-trace fields, stdout/stderr,
+  skill/tool proof labels, learned/next move, Blue outcome, latest receipt, and
+  replay CTA state. The UX should not infer these values from lane labels.
+  Use these exact field paths:
+  `lane.cockpit.selected_tau_exploit_subagent`,
+  `lane.cockpit.current_turn`, `lane.cockpit.public_trace`,
+  `lane.cockpit.output.stdout`, `lane.cockpit.output.stderr`,
+  `lane.cockpit.skills_tools`, `lane.cockpit.blue_outcome`,
+  `lane.cockpit.latest_receipt_id`, and `lane.cockpit.replay`.
+  `lane.cockpit.replay` must mirror `lane.replay` so the Agent Detail pane and
+  lane-level Docker replay CTA cannot drift.
+- Child lane event x-positions are rebased to the child lane `xStart`; a child
+  lane must not show research, payload, patch, or Judge events before its
+  receipt-backed spawn point.
+- `lane.replay.cta` is present when a Judge replay receipt exists. The CTA
+  label is `REPLAY IN DOCKER`, but it must stay `state=receipt_only` with a
+  `disabled_reason` unless `lane.replay.can_execute_now=true` and an executable
+  replay endpoint or command receipt is attached.
+
+The skill sanity gate validates the stable local UX fixtures by default and can
+also validate an extra generated UX fixture:
+
+```bash
+BATTLE_UX_CONTRACT_FIXTURE=/tmp/battle-004.normalized.json ./sanity.sh
+```
+
 ## Battle Monitor
 
 The Battle monitor is artifact-backed. It must load generated JSON from:

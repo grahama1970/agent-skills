@@ -1,0 +1,161 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 37.973064,
+  "handoff_topology": "bounded_worker_matrix",
+  "live": true,
+  "materialized_counts": {
+    "blue": 2,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gemini-flash",
+  "requested_workers": {
+    "blue": 2,
+    "red": 1
+  },
+  "run_id": "arena-tau-public-only-20260704T210537Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_base_url": "http://localhost:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/red_exploit_submission.py",
+        "rationale": "The `app.py`'s `import_zip` function is vulnerable to a zip slip (path traversal) attack. It constructs the target file path by directly concatenating the destination directory with the entry name from the zip archive (`dest / name`) without sanitizing the entry name. This allows an attacker to craft a zip file containing entries like `../arena_escape.txt`, causing files to be written outside the intended extraction directory. The exploit script demonstrates this by creating such a zip file, calling `import_zip`, and verifying the creation of `arena_escape.txt` in the parent directory of the specified destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/red_exploit_submission.py",
+        "rationale": "The `app.py`'s `import_zip` function is vulnerable to a zip slip (path traversal) attack. It constructs the target file path by directly concatenating the destination directory with the entry name from the zip archive (`dest / name`) without sanitizing the entry name. This allows an attacker to craft a zip file containing entries like `../arena_escape.txt`, causing files to be written outside the intended extraction directory. The exploit script demonstrates this by creating such a zip file, calling `import_zip`, and verifying the creation of `arena_escape.txt` in the parent directory of the specified destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gemini-flash",
+      "persona": "battle-red-public-auditor",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/app.py",
+        "rationale": "The original `import_zip` function was vulnerable to a 'zip slip' or path traversal attack. An attacker could craft a zip file containing entries with names like `../../../../tmp/malicious_file.txt`. When extracted, `target = dest / name` would construct a path outside the intended `destination` directory. The patch addresses this by resolving the full path of each entry (`target.resolve()`) and then verifying that the resolved path remains a child of the `destination` directory using `is_relative_to()`. If an entry attempts to write outside the `destination`, it is skipped, preventing arbitrary file writes.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/app.py",
+        "rationale": "The original `import_zip` function was vulnerable to a 'zip slip' or path traversal attack. An attacker could craft a zip file containing entries with names like `../../../../tmp/malicious_file.txt`. When extracted, `target = dest / name` would construct a path outside the intended `destination` directory. The patch addresses this by resolving the full path of each entry (`target.resolve()`) and then verifying that the resolved path remains a child of the `destination` directory using `is_relative_to()`. If an entry attempts to write outside the `destination`, it is skipped, preventing arbitrary file writes.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gemini-flash",
+      "persona": "battle-blue-public-hardener",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/app.py",
+        "rationale": "Patched Zip Slip vulnerability by ensuring all extracted files are written within the designated destination directory using `Path.resolve()` and `Path.is_relative_to()` to prevent path traversal.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/app.py",
+        "rationale": "Patched Zip Slip vulnerability by ensuring all extracted files are written within the designated destination directory using `Path.resolve()` and `Path.is_relative_to()` to prevent path traversal.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gemini-flash",
+      "persona": "battle-blue-public-hardener-variant-1",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/skills/.battle-artifacts/battle-004-parent-spawn-20260704T210537Z/tau-live/blue/workers/blue-1/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-1",
+      "worker_index": 1
+    }
+  ]
+}

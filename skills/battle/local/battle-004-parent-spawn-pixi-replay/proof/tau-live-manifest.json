@@ -1,0 +1,250 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 110.502136,
+  "handoff_topology": "bounded_worker_matrix",
+  "lineage_spawns": [
+    {
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-red-1",
+      "child_payload_id": "payload-857-red-1",
+      "child_start_elapsed_seconds": 146.686852,
+      "child_subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "child_tau_subagent_id": "red-1",
+      "child_worker_id": "red-1",
+      "child_x_start": 62,
+      "generation": 2,
+      "goal": "Spawn child Red lane from receipt-backed parent handoff.",
+      "inherited_context": [
+        "parent_worker=red-0",
+        "parent_lane=payload-857-receipt",
+        "ZIP_SLIP_CONFIRMED"
+      ],
+      "label": "SPAWN CHILD",
+      "leased_task": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
+      "parent_tau_subagent_id": "red-0",
+      "parent_worker_id": "red-0",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+      "run_id": "arena-parent-spawn-20260706T134722Z",
+      "schema": "battle.lineage_spawn_receipt.v1",
+      "spawn_duration_elapsed_seconds": 29.713403,
+      "spawn_elapsed_seconds": 116.973449,
+      "status": "PASS",
+      "time_label": "handoff",
+      "timing_source": "battle_control_plane_perf_counter",
+      "x": 58
+    }
+  ],
+  "live": true,
+  "materialized_counts": {
+    "blue": 2,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gpt-5.5",
+  "requested_workers": {
+    "blue": 2,
+    "red": 1
+  },
+  "run_id": "arena-parent-spawn-20260706T134722Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_auth_preflight": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/scillm-auth-preflight.json",
+  "scillm_base_url": "http://localhost:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/red_exploit_submission.py",
+        "rationale": "Demonstrates the public Zip Slip flaw by writing ../arena_escape.txt outside the import destination via import_zip and confirms it with RED_EXPLOIT_CONFIRMED.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/red_exploit_submission.py",
+        "rationale": "Demonstrates the public Zip Slip flaw by writing ../arena_escape.txt outside the import destination via import_zip and confirms it with RED_EXPLOIT_CONFIRMED.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-red-public-auditor",
+      "scillm_call": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/app.py",
+        "rationale": "Replaces direct dest/name writes with full path validation before extraction. The patch rejects absolute paths and ../ traversal by resolving each member under the destination, preventing Zip Slip while preserving the import_zip contract.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/app.py",
+        "rationale": "Replaces direct dest/name writes with full path validation before extraction. The patch rejects absolute paths and ../ traversal by resolving each member under the destination, preventing Zip Slip while preserving the import_zip contract.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-public-hardener",
+      "scillm_call": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/app.py",
+        "rationale": "Replaces unsafe direct zip extraction with per-member validation that rejects traversal, absolute paths, Windows-style paths, symlinks, and special files before writing inside the destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/app.py",
+        "rationale": "Replaces unsafe direct zip extraction with per-member validation that rejects traversal, absolute paths, Windows-style paths, symlinks, and special files before writing inside the destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-public-hardener-variant-1",
+      "scillm_call": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/blue/workers/blue-1/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-1",
+      "worker_index": 1
+    },
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/handoff.json",
+      "http_status": 200,
+      "inherited_context": [
+        "parent_worker=red-0",
+        "parent_lane=payload-857-receipt",
+        "ZIP_SLIP_CONFIRMED"
+      ],
+      "lane_id": "payload-857-red-1",
+      "materialized": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination before writing. This exploit creates a zip containing ../arena_escape.txt, calls import_zip directly, and confirms the file is written outside the extraction destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "materialized_artifact": {
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale"
+        ],
+        "path": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination before writing. This exploit creates a zip containing ../arena_escape.txt, calls import_zip directly, and confirms the file is written outside the extraction destination.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "status": "PASS"
+      },
+      "model": "gpt-5.5",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_worker_id": "red-0",
+      "persona": "battle-red-public-auditor-variant-1",
+      "scillm_call": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-1",
+      "worker_index": 1
+    }
+  ],
+  "timing": {
+    "initial_tau_ended_elapsed_seconds": 114.671919,
+    "initial_tau_started_elapsed_seconds": 2.324156,
+    "source": "battle_control_plane_perf_counter"
+  }
+}

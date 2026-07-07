@@ -1,0 +1,2 @@
+Negative prompt:
+labels, row labels, title, metadata panel, JSON text, visible grid, checkerboard background, gray presentation background, inconsistent spacing, uneven cells, overlapping frames, cropped frames, character changing identity, different character per row, front view, three-quarter view, back view, realistic painting, soft blur, antialiasing, motion blur, oversized effects crossing cells, projectiles outside frame, weapons crossing neighboring frames, decorative border, poster layout

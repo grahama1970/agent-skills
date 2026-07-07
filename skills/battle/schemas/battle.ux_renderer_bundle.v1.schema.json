@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.ux_renderer_bundle.v1.schema.json",
+  "title": "Battle UX Renderer Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "resolution_source",
+    "normalized_fixture_source",
+    "resolution",
+    "fixture"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.ux_renderer_bundle.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "resolution_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "normalized_fixture_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resolution": {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "fixture_key",
+        "normalized_json",
+        "fixture_status",
+        "fixture_lineage_mode",
+        "fixture_child_spawn_count",
+        "fixture_playhead_current_x",
+        "mocked"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_renderer_fixture_resolution.v1"
+        },
+        "status": {
+          "const": "PASS"
+        },
+        "fixture_key": {
+          "const": "authoritative_parent_spawn_fixture"
+        },
+        "normalized_json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fixture_status": {
+          "const": "PASS"
+        },
+        "fixture_lineage_mode": {
+          "const": "receipt_backed"
+        },
+        "fixture_child_spawn_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fixture_playhead_current_x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "mocked": {
+          "const": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "fixture": {
+      "type": "object",
+      "required": [
+        "schema",
+        "battle_id",
+        "scenario",
+        "timeline",
+        "lineage",
+        "lanes",
+        "events",
+        "scoreboard",
+        "ux_contract"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.normalized_ux_fixture.v1"
+        },
+        "battle_id": {
+          "const": "battle-004"
+        },
+        "scenario": {
+          "type": "object",
+          "required": [
+            "public_entrypoint",
+            "cwe",
+            "hidden_vulnerability_family"
+          ],
+          "properties": {
+            "public_entrypoint": {
+              "const": "/api/import-zip"
+            },
+            "cwe": {
+              "const": "CWE-22"
+            },
+            "hidden_vulnerability_family": {
+              "const": "Zip Slip path traversal"
+            }
+          },
+          "additionalProperties": true
+        },
+        "timeline": {
+          "type": "object",
+          "required": [
+            "scroll_axis",
+            "supports_pan",
+            "supports_zoom",
+            "playhead"
+          ],
+          "properties": {
+            "scroll_axis": {
+              "const": "horizontal"
+            },
+            "supports_pan": {
+              "const": true
+            },
+            "supports_zoom": {
+              "const": true
+            },
+            "playhead": {
+              "type": "object",
+              "required": [
+                "current_x",
+                "can_animate",
+                "animation_semantics",
+                "keyframes"
+              ],
+              "properties": {
+                "current_x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "can_animate": {
+                  "const": true
+                },
+                "animation_semantics": {
+                  "const": "receipt_replay_only"
+                },
+                "keyframes": {
+                  "type": "array",
+                  "minItems": 2
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "lineage": {
+          "type": "object",
+          "required": [
+            "mode",
+            "spawn_count",
+            "groups",
+            "spawns"
+          ],
+          "properties": {
+            "mode": {
+              "const": "receipt_backed"
+            },
+            "spawn_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "groups": {
+              "type": "array",
+              "minItems": 1
+            },
+            "spawns": {
+              "type": "array",
+              "minItems": 1
+            }
+          },
+          "additionalProperties": true
+        },
+        "scoreboard": {
+          "type": "object",
+          "required": [
+            "child_spawn_count"
+          ],
+          "properties": {
+            "child_spawn_count": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": true
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 2
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

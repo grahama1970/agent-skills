@@ -1,0 +1,1554 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.normalized_ux_fixture.v1.schema.json",
+  "title": "Battle Normalized UX Fixture",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "battle_id",
+    "source_proof_dir",
+    "proof_mode",
+    "generated_at",
+    "mocked",
+    "live_source",
+    "status",
+    "scenario",
+    "battle_clock",
+    "timeline",
+    "lineage_request",
+    "lineage",
+    "spectator_shell",
+    "renderer_binding_contract",
+    "ux_contract",
+    "claims",
+    "lanes",
+    "events",
+    "proof_blockers",
+    "leaderboard",
+    "receipts",
+    "bluePatchActions",
+    "scoreboard"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.normalized_ux_fixture.v1"
+    },
+    "battle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_proof_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario": {
+      "$ref": "#/$defs/scenario"
+    },
+    "battle_clock": {
+      "$ref": "#/$defs/battle_clock"
+    },
+    "timeline": {
+      "$ref": "#/$defs/timeline"
+    },
+    "lineage_request": {
+      "$ref": "#/$defs/lineage_request"
+    },
+    "lineage": {
+      "$ref": "#/$defs/lineage"
+    },
+    "spectator_shell": {
+      "$ref": "#/$defs/spectator_shell"
+    },
+    "renderer_binding_contract": {
+      "$ref": "#/$defs/renderer_binding_contract"
+    },
+    "ux_contract": {
+      "$ref": "#/$defs/ux_contract"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/lane"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "proof_blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/proof_blocker"
+      }
+    },
+    "leaderboard": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/receipt"
+      }
+    },
+    "bluePatchActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "scoreboard": {
+      "$ref": "#/$defs/scoreboard"
+    }
+  },
+  "$defs": {
+    "scenario": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "title",
+        "public_entrypoint",
+        "hidden_vulnerability_family",
+        "cwe"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "public_entrypoint": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "hidden_vulnerability_family": {
+          "type": "string"
+        },
+        "cwe": {
+          "type": "string"
+        },
+        "runtime_image": {
+          "type": "string"
+        }
+      }
+    },
+    "battle_clock": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "elapsed_seconds",
+        "allotted_seconds",
+        "remaining_seconds",
+        "source_receipt_id",
+        "proof_mode"
+      ],
+      "properties": {
+        "mode": {
+          "const": "receipt_elapsed"
+        },
+        "elapsed_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "allotted_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "remaining_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source_receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "min_x",
+        "max_x",
+        "event_count",
+        "lane_count",
+        "supports_zoom",
+        "supports_pan",
+        "scroll_axis",
+        "playhead",
+        "viewport"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "receipt_order",
+            "elapsed_seconds"
+          ]
+        },
+        "min_x": {
+          "type": "number"
+        },
+        "max_x": {
+          "type": "number"
+        },
+        "event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lane_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supports_zoom": {
+          "type": "boolean"
+        },
+        "supports_pan": {
+          "type": "boolean"
+        },
+        "scroll_axis": {
+          "const": "horizontal"
+        },
+        "playhead": {
+          "$ref": "#/$defs/playhead"
+        },
+        "viewport": {
+          "$ref": "#/$defs/viewport"
+        }
+      }
+    },
+    "playhead": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "current_x",
+        "elapsed_seconds",
+        "source_receipt_id",
+        "can_animate",
+        "animation_semantics",
+        "keyframes",
+        "proof_mode"
+      ],
+      "properties": {
+        "mode": {
+          "const": "receipt_elapsed"
+        },
+        "current_x": {
+          "type": "number"
+        },
+        "elapsed_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source_receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "can_animate": {
+          "const": true
+        },
+        "animation_semantics": {
+          "const": "receipt_replay_only"
+        },
+        "keyframes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/playhead_keyframe"
+          }
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "playhead_keyframe": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "x",
+        "lane_id",
+        "event_id",
+        "kind",
+        "label",
+        "proof_mode"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "initial_min_x",
+        "initial_max_x",
+        "min_zoom",
+        "max_zoom",
+        "proof_mode"
+      ],
+      "properties": {
+        "initial_min_x": {
+          "type": "number"
+        },
+        "initial_max_x": {
+          "type": "number"
+        },
+        "min_zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "lineage_request": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "requested",
+        "mode",
+        "condition",
+        "status",
+        "receipt",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.lineage_request.v1"
+        },
+        "requested": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "condition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "NOT_REQUESTED",
+            "NOT_PROVEN",
+            "PASS"
+          ]
+        },
+        "receipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "spawn_count",
+        "parent_lane_ids",
+        "child_lane_ids",
+        "groups",
+        "spawns",
+        "proof_mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "receipt_backed",
+            "missing"
+          ]
+        },
+        "spawn_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parent_lane_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "child_lane_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lineage_group"
+          }
+        },
+        "spawns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lineage_spawn"
+          }
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "lineage_group": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "group_id",
+        "parent_lane_id",
+        "child_lane_ids",
+        "lane_ids",
+        "collapsible",
+        "expanded_by_default",
+        "lane_count",
+        "proof_mode"
+      ],
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "child_lane_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lane_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "collapsible": {
+          "const": true
+        },
+        "expanded_by_default": {
+          "const": true
+        },
+        "lane_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "lineage_spawn": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "receipt_id",
+        "parent_lane_id",
+        "child_lane_id",
+        "spawn_x",
+        "child_x_start",
+        "proof_mode"
+      ],
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "child_lane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spawn_x": {
+          "type": "number"
+        },
+        "child_x_start": {
+          "type": "number"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "spectator_shell": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "proof_mode",
+        "battle_title",
+        "subtitle",
+        "mode_badge",
+        "truth_label",
+        "facts",
+        "score",
+        "event_ticker",
+        "render_guards"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.spectator_shell.v1"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "battle_title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode_badge": {
+          "type": "string",
+          "minLength": 1
+        },
+        "truth_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "value"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "score": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "red",
+            "blue",
+            "verdict"
+          ]
+        },
+        "event_ticker": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "label",
+            "count",
+            "latest_text",
+            "live",
+            "source"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "live": {
+              "const": false
+            },
+            "source": {
+              "const": "events"
+            }
+          }
+        },
+        "render_guards": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ux_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "mode",
+        "proof_mode",
+        "authoritative_fields",
+        "required_render_guards",
+        "receipt_backed_values",
+        "forbidden_inferences"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.ux_contract.v1"
+        },
+        "mode": {
+          "const": "receipt_backed"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "authoritative_fields": {
+          "type": "object"
+        },
+        "required_render_guards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "receipt_backed_values": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "forbidden_inferences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "renderer_binding_contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "proof_mode",
+        "purpose",
+        "battle_shell",
+        "round_time",
+        "scrollable_timeline",
+        "moving_playhead",
+        "elapsed_timeline_axis",
+        "parent_spawn_and_collapse",
+        "lane_activity_and_label_layout",
+        "agent_detail_cockpit",
+        "docker_replay_cta"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.renderer_binding_contract.v1"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "battle_shell": {
+          "type": "object",
+          "required": [
+            "title",
+            "subtitle",
+            "fact_chips",
+            "red_score",
+            "blue_score",
+            "receipt_ticker"
+          ]
+        },
+        "round_time": {
+          "type": "object",
+          "required": [
+            "display_value",
+            "clock_source",
+            "elapsed_seconds",
+            "allotted_seconds",
+            "remaining_seconds"
+          ]
+        },
+        "scrollable_timeline": {
+          "type": "object",
+          "required": [
+            "mode",
+            "supports_pan",
+            "supports_zoom",
+            "viewport",
+            "lane_count",
+            "event_count"
+          ]
+        },
+        "moving_playhead": {
+          "type": "object",
+          "required": [
+            "current_x",
+            "elapsed_seconds",
+            "keyframes",
+            "animation_semantics",
+            "render_rule"
+          ]
+        },
+        "elapsed_timeline_axis": {
+          "type": "object",
+          "required": [
+            "model",
+            "x_axis_mode",
+            "x_position_is_elapsed_time",
+            "keyframes",
+            "elapsed_x",
+            "legacy_receipt_order_x",
+            "playhead",
+            "lane_start_model",
+            "lane_start_elapsed_x",
+            "lane_end_elapsed_x",
+            "activity_model",
+            "activity_segment_elapsed_start_x",
+            "activity_segment_elapsed_end_x",
+            "render_rules",
+            "render_rule"
+          ],
+          "properties": {
+            "lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "lane_start_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_must_start_at_x"
+            },
+            "lane_end_elapsed_x": {
+              "const": "timeline_lane_start_model.starts[].elapsed_line_end_x"
+            },
+            "activity_model": {
+              "const": "lane_activity_timeline_model"
+            },
+            "activity_segment_elapsed_start_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_start_x"
+            },
+            "activity_segment_elapsed_end_x": {
+              "const": "lane_activity_timeline_model.lanes[].segments[].elapsed_end_x"
+            }
+          }
+        },
+        "parent_spawn_and_collapse": {
+          "type": "object",
+          "required": [
+            "request",
+            "request_status",
+            "request_condition",
+            "lineage_mode",
+            "spawn_count",
+            "groups",
+            "parent_lane_children",
+            "child_parent_id"
+          ]
+        },
+        "lane_activity_and_label_layout": {
+          "type": "object",
+          "required": [
+            "lane_start",
+            "lane_end",
+            "runner_position",
+            "between_marker_phases",
+            "event_markers",
+            "label_band",
+            "marker_priority",
+            "collision_group",
+            "timeline_lane_start_model",
+            "activity_timeline_model"
+          ],
+          "properties": {
+            "timeline_lane_start_model": {
+              "const": "timeline_lane_start_model"
+            },
+            "activity_timeline_model": {
+              "const": "lane_activity_timeline_model"
+            }
+          }
+        },
+        "agent_detail_cockpit": {
+          "type": "object",
+          "required": [
+            "selected_tau_identity",
+            "current_turn",
+            "public_trace",
+            "stdout",
+            "stderr",
+            "skills_tools",
+            "blue_outcome",
+            "latest_receipt_id",
+            "replay"
+          ]
+        },
+        "docker_replay_cta": {
+          "type": "object",
+          "required": [
+            "lane_replay",
+            "cta",
+            "label",
+            "visible",
+            "state",
+            "can_execute_now",
+            "disabled_reason"
+          ]
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "proves",
+        "does_not_prove"
+      ],
+      "properties": {
+        "proves": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "does_not_prove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lane": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "name",
+        "payloadId",
+        "generation",
+        "team",
+        "xStart",
+        "xEnd",
+        "runnerX",
+        "runnerState",
+        "events",
+        "activitySegments",
+        "cockpit",
+        "receipts",
+        "proofMode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "payloadId": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "team": {
+          "const": "red"
+        },
+        "xStart": {
+          "type": "number"
+        },
+        "xEnd": {
+          "type": "number"
+        },
+        "runnerX": {
+          "type": "number"
+        },
+        "runnerState": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/lane_event"
+          }
+        },
+        "activitySegments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/activity_segment"
+          }
+        },
+        "cockpit": {
+          "$ref": "#/$defs/lane_cockpit"
+        },
+        "replay": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/replay"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proofMode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "lane_cockpit": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "proof_mode",
+        "proof_label",
+        "selected_tau_exploit_subagent",
+        "current_turn",
+        "public_trace",
+        "output",
+        "skills_tools",
+        "memory_project_knowledge_events",
+        "learned",
+        "next_move",
+        "blue_outcome",
+        "latest_receipt_id",
+        "replay"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.lane_cockpit.v1"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "proof_label": {
+          "enum": [
+            "LIVE PROOF",
+            "FIXTURE TRACE",
+            "FIXTURE SKILL TRACE",
+            "MOCKED SKILL",
+            "PROOF PENDING",
+            "MISSING PROOF"
+          ]
+        },
+        "selected_tau_exploit_subagent": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "actor_id",
+            "payload_id",
+            "tau_subagent_id",
+            "tau_run_id",
+            "tau_turn_id",
+            "worker_id",
+            "generation",
+            "missing_tau_id"
+          ]
+        },
+        "current_turn": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "loop_index",
+            "phase",
+            "current_action",
+            "status"
+          ]
+        },
+        "public_trace": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "observation",
+            "hypothesis",
+            "action",
+            "result",
+            "learned",
+            "next_move"
+          ]
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "stdout",
+            "stderr"
+          ],
+          "properties": {
+            "stdout": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "stderr": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "skills_tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "name",
+              "kind",
+              "status",
+              "proof_label",
+              "receipt_id",
+              "proof_mode"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "skill",
+                  "tool",
+                  "unregistered"
+                ]
+              },
+              "proof_label": {
+                "enum": [
+                  "LIVE PROOF",
+                  "FIXTURE SKILL TRACE",
+                  "MOCKED SKILL",
+                  "PROOF PENDING",
+                  "MISSING PROOF"
+                ]
+              },
+              "proof_mode": {
+                "const": "receipt_backed_fixture"
+              }
+            }
+          }
+        },
+        "memory_project_knowledge_events": {
+          "type": "array"
+        },
+        "blue_outcome": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "detected",
+            "blocked",
+            "killed",
+            "forced_handoff",
+            "status",
+            "proof_mode"
+          ]
+        },
+        "latest_receipt_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "lane_event": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "kind",
+        "x",
+        "label",
+        "label_band",
+        "marker_priority",
+        "collision_group"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "label_band": {
+          "enum": [
+            "upper",
+            "lower",
+            "auto"
+          ]
+        },
+        "marker_priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "collision_group": {
+          "type": "string",
+          "pattern": "^x"
+        }
+      }
+    },
+    "activity_segment": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "phase",
+        "label",
+        "start_x",
+        "end_x",
+        "proof_mode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start_x": {
+          "type": "number"
+        },
+        "end_x": {
+          "type": "number"
+        },
+        "source_event_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "label",
+        "kind",
+        "receipt_id",
+        "attempt_id",
+        "pair_id",
+        "red_worker_id",
+        "red_lane_id",
+        "blue_worker_id",
+        "blue_action_id",
+        "can_execute_now",
+        "endpoint",
+        "command_receipt_id",
+        "cta",
+        "proof_mode"
+      ],
+      "properties": {
+        "label": {
+          "const": "REPLAY IN DOCKER"
+        },
+        "kind": {
+          "enum": [
+            "receipt_only",
+            "executable_endpoint"
+          ]
+        },
+        "can_execute_now": {
+          "type": "boolean"
+        },
+        "endpoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command_receipt_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cta": {
+          "$ref": "#/$defs/replay_cta"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "replay_cta": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "visible",
+        "label",
+        "state",
+        "icon",
+        "disabled_reason",
+        "tooltip",
+        "proof_mode"
+      ],
+      "properties": {
+        "visible": {
+          "const": true
+        },
+        "label": {
+          "const": "REPLAY IN DOCKER"
+        },
+        "state": {
+          "enum": [
+            "receipt_only",
+            "executable"
+          ]
+        },
+        "icon": {
+          "const": "container"
+        },
+        "disabled_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "ts",
+        "battle_id",
+        "team",
+        "actor_id",
+        "actor_kind",
+        "event_type",
+        "summary",
+        "proof_mode",
+        "order_index",
+        "elapsed_seconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "order_index": {
+          "type": "integer"
+        },
+        "elapsed_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "receipt_id",
+        "receipt_path",
+        "artifact_ref",
+        "proof_mode"
+      ],
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocker": {
+          "$ref": "#/$defs/worker_blocker"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "proof_blocker": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "team",
+        "worker_id",
+        "status",
+        "reason",
+        "blocker",
+        "receipt_id",
+        "receipt_path",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.proof_blocker.v1"
+        },
+        "team": {
+          "enum": [
+            "red",
+            "blue"
+          ]
+        },
+        "worker_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocker": {
+          "$ref": "#/$defs/worker_blocker"
+        },
+        "receipt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "worker_blocker": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "kind",
+        "message",
+        "receipt_path",
+        "proof_mode"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.worker_blocker.v1"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "http_status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider_auth_status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_requested": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_agent_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receipt_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "receipt_id",
+        "receipt_type",
+        "proof_mode"
+      ],
+      "properties": {
+        "receipt_id": {
+          "type": "string"
+        },
+        "receipt_type": {
+          "type": "string"
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    },
+    "scoreboard": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "verdict",
+        "child_spawn_count",
+        "judged_pair_count",
+        "blue_success_count",
+        "per_pair"
+      ],
+      "properties": {
+        "verdict": {
+          "type": "string"
+        },
+        "child_spawn_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "judged_pair_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blue_success_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "per_pair": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.live_event.v1.schema.json",
+  "title": "Battle Live Event",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "run_id",
+    "battle_id",
+    "seq",
+    "event_id",
+    "at_seconds",
+    "observed_at",
+    "event_type",
+    "payload"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.live_event.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "battle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "at_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "proof_mode"
+      ],
+      "properties": {
+        "lane_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actor_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "team": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status_after": {
+          "type": "string"
+        },
+        "receipt_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "proof_mode": {
+          "const": "receipt_backed_fixture"
+        }
+      }
+    }
+  }
+}

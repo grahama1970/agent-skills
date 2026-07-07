@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: battle-http-junk --url URL [--requests N] [--concurrency N] [--allow-nonlocal]
+
+Generates bounded HTTP junk requests against an entry point and writes a JSON receipt.
+Defaults are local-only, 100 requests, concurrency 5.
+USAGE
+}
+
+url=""
+requests=100
+concurrency=5
+allow_nonlocal=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --url)
+      url="${2:-}"
+      shift 2
+      ;;
+    --requests)
+      requests="${2:-}"
+      shift 2
+      ;;
+    --concurrency)
+      concurrency="${2:-}"
+      shift 2
+      ;;
+    --allow-nonlocal)
+      allow_nonlocal=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage
+      exit 2
+      ;;
+  esac
+done
+
+if [[ -z "$url" ]]; then
+  usage
+  exit 2
+fi
+
+if ! [[ "$requests" =~ ^[0-9]+$ ]] || (( requests < 1 || requests > 10000 )); then
+  echo "requests must be an integer from 1 to 10000" >&2
+  exit 2
+fi
+
+if ! [[ "$concurrency" =~ ^[0-9]+$ ]] || (( concurrency < 1 || concurrency > 100 )); then
+  echo "concurrency must be an integer from 1 to 100" >&2
+  exit 2
+fi
+
+host="$(sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://([^/:]+).*$#\1#' <<<"$url")"
+if [[ "$host" == "$url" ]]; then
+  echo "url must include a scheme and host" >&2
+  exit 2
+fi
+
+if (( allow_nonlocal == 0 )); then
+  case "$host" in
+    localhost|127.*|0.0.0.0|"[::1]"|"::1")
+      ;;
+    *)
+      echo "refusing non-local target without --allow-nonlocal: $host" >&2
+      exit 2
+      ;;
+  esac
+fi
+
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+seq 1 "$requests" |
+  xargs -P "$concurrency" -I {} sh -c \
+    'status="$(curl --silent --output /dev/null --max-time 5 --write-out "%{http_code}" "$1?battle_junk=$2" || true)"; if [ -n "$status" ]; then echo "$status"; else echo curl_error; fi' \
+    sh "$url" {} \
+    >"$tmpdir/statuses"
+ended_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+jq -Rn \
+  --arg schema "battle.http_junk_receipt.v1" \
+  --arg url "$url" \
+  --arg host "$host" \
+  --arg started_at "$started_at" \
+  --arg ended_at "$ended_at" \
+  --argjson requests "$requests" \
+  --argjson concurrency "$concurrency" \
+  --argjson local_only "$((1 - allow_nonlocal))" '
+    [inputs] as $codes
+    | {
+        schema: $schema,
+        url: $url,
+        host: $host,
+        started_at: $started_at,
+        ended_at: $ended_at,
+        requested_count: $requests,
+        observed_count: ($codes | length),
+        concurrency: $concurrency,
+        local_only: ($local_only == 1),
+        status_code_histogram: (
+          $codes
+          | group_by(.)
+          | map({key: .[0], value: length})
+          | from_entries
+        )
+      }
+  ' <"$tmpdir/statuses"

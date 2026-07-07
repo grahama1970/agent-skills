@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.sprite_sheet_manifest.v1.schema.json",
+  "title": "Battle Sprite Sheet Manifest",
+  "description": "Authoring manifest for one original BATTLE side-view 16-bit sprite sheet before conversion to PixiJS spritesheet JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sprite_id",
+    "display_name",
+    "team",
+    "archetype",
+    "image",
+    "frame_width",
+    "frame_height",
+    "columns",
+    "rows",
+    "margin",
+    "spacing",
+    "view",
+    "style",
+    "background",
+    "runtime_atlas_constraints",
+    "anchor",
+    "animations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.sprite_sheet_manifest.v1"
+    },
+    "sprite_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "team": {
+      "enum": [
+        "red",
+        "blue",
+        "neutral"
+      ]
+    },
+    "archetype": {
+      "enum": [
+        "light",
+        "heavy",
+        "support",
+        "child",
+        "defender",
+        "survivor"
+      ]
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^.*\\.png$"
+    },
+    "frame_width": {
+      "enum": [
+        48,
+        64
+      ]
+    },
+    "frame_height": {
+      "enum": [
+        48,
+        64
+      ]
+    },
+    "columns": {
+      "const": 8
+    },
+    "rows": {
+      "const": 14
+    },
+    "margin": {
+      "const": 0
+    },
+    "spacing": {
+      "const": 0
+    },
+    "view": {
+      "const": "side_profile_facing_right"
+    },
+    "style": {
+      "const": "original_16bit_grimdark_scifi_pixel_art"
+    },
+    "background": {
+      "const": "transparent"
+    },
+    "scale_mode": {
+      "const": "nearest_neighbor"
+    },
+    "runtime_atlas_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frames_only",
+        "no_labels",
+        "no_text",
+        "no_side_panel",
+        "no_grid_lines",
+        "unused_cells_transparent"
+      ],
+      "properties": {
+        "frames_only": { "const": true },
+        "no_labels": { "const": true },
+        "no_text": { "const": true },
+        "no_side_panel": { "const": true },
+        "no_grid_lines": { "const": true },
+        "unused_cells_transparent": { "const": true }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "animations": {
+      "type": "object",
+      "required": [
+        "idle",
+        "run",
+        "research",
+        "payload",
+        "spawn",
+        "blocked",
+        "killed"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/animation"
+      },
+      "properties": {
+        "idle": { "$ref": "#/$defs/animation" },
+        "walk": { "$ref": "#/$defs/animation" },
+        "run": { "$ref": "#/$defs/animation" },
+        "research": { "$ref": "#/$defs/animation" },
+        "payload": { "$ref": "#/$defs/animation" },
+        "mutate": { "$ref": "#/$defs/animation" },
+        "handoff": { "$ref": "#/$defs/animation" },
+        "spawn": { "$ref": "#/$defs/animation" },
+        "hit": { "$ref": "#/$defs/animation" },
+        "blocked": { "$ref": "#/$defs/animation" },
+        "killed": { "$ref": "#/$defs/animation" },
+        "promoted": { "$ref": "#/$defs/animation" },
+        "fastest_crash": { "$ref": "#/$defs/animation" }
+      }
+    }
+  },
+  "$defs": {
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "frames",
+        "fps",
+        "loop"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 60
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "next": {
+          "enum": [
+            "idle",
+            "walk",
+            "run",
+            "research",
+            "payload",
+            "mutate",
+            "handoff",
+            "spawn",
+            "hit",
+            "blocked",
+            "killed",
+            "promoted",
+            "fastest_crash"
+          ]
+        }
+      }
+    }
+  }
+}
