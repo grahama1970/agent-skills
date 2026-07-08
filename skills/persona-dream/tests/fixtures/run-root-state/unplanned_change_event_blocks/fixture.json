@@ -1,0 +1,18 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "dream_revision_manifest.v1.json": {
+      "active_revision_id": "rev_0002",
+      "last_change_event_seq": 2,
+      "last_planned_event_seq": 1,
+      "run_id": "unplanned_change_event_blocks",
+      "schema": "persona_dream.revision_state.v1"
+    }
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_UNPLANNED_CHANGE_EVENTS"
+    ],
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  }
+}

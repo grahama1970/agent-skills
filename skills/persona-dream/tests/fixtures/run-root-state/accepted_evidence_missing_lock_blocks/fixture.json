@@ -1,0 +1,35 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "accepted_evidence_index.v1.json": {
+      "accepted_artifacts": [
+        {
+          "artifact_id": "sb_004.start_frame",
+          "promotion_receipt_path": "receipts/promotion.json",
+          "reviewer_receipt_path": "receipts/reviewer.json",
+          "revision_id": "rev_0001"
+        }
+      ],
+      "revision_id": "rev_0001"
+    },
+    "artifact_lock_index.v1.json": {
+      "artifacts": [],
+      "revision_id": "rev_0001"
+    },
+    "receipts/promotion.json": {
+      "status": "PASS_PROMOTION"
+    },
+    "receipts/reviewer.json": {
+      "status": "PASS_PANEL_REVIEWED"
+    },
+    "storyboard_packet.json": {
+      "status": "PASS_PANEL_REVIEWED"
+    }
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_ACCEPTED_EVIDENCE_LOCK_MISSING"
+    ],
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  }
+}

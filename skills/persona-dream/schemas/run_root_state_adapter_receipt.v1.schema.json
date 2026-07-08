@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.run_root_state_adapter_receipt.v1",
+  "title": "Persona Dream run-root state adapter receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_root",
+    "dream_run_state_path",
+    "global_progress_sources_path",
+    "runtime_state",
+    "blockers",
+    "provider_live",
+    "paid_call_authorized",
+    "provider_accessible_url_created",
+    "submitted",
+    "manual_acceptance_claimed",
+    "provider_ready",
+    "live_submit_ready",
+    "actual_provider_call_attempts",
+    "mocked",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.run_root_state_adapter_receipt.v1"
+    },
+    "status": {
+      "enum": [
+        "PASS_RUN_ROOT_STATE_ADAPTER",
+        "BLOCKED_RUN_ROOT_STATE_ADAPTER"
+      ]
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "provider_accessible_url_created": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "manual_acceptance_claimed": {
+      "const": false
+    },
+    "provider_ready": {
+      "const": false
+    },
+    "live_submit_ready": {
+      "const": false
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "mocked": {
+      "const": false
+    }
+  }
+}

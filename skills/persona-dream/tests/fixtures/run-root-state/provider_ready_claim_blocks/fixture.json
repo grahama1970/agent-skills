@@ -1,0 +1,18 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "provider_final_gate_state.v1.json": {
+      "dry_run_treated_as_live_ready": true,
+      "live_submit_ready": true,
+      "provider_ready": true,
+      "receipt_path": null,
+      "schema": "persona_dream.provider_final_gate_state.v1"
+    }
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_PROVIDER_READY_CLAIM"
+    ],
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  }
+}

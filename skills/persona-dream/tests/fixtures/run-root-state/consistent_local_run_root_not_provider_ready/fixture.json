@@ -1,0 +1,138 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "accepted_evidence_index.v1.json": {
+      "accepted_artifacts": [
+        {
+          "artifact_id": "storyboard_packet",
+          "promotion_receipt_path": "receipts/promotion_storyboard.json",
+          "reviewer_receipt_path": "receipts/reviewer_storyboard.json",
+          "revision_id": "rev_0001"
+        }
+      ],
+      "revision_id": "rev_0001",
+      "schema": "persona_dream.accepted_evidence_index.v1"
+    },
+    "active_work_queue.v1.json": {
+      "items": [],
+      "revision_id": "rev_0001",
+      "schema": "persona_dream.active_work_queue.v1"
+    },
+    "artifact_lock_index.v1.json": {
+      "artifacts": [
+        {
+          "artifact_id": "storyboard_packet",
+          "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ],
+      "revision_id": "rev_0001",
+      "schema": "persona_dream.artifact_lock_index.v1"
+    },
+    "crew_contract.json": {
+      "status": "PASS_CREW_CONTRACT"
+    },
+    "dream_revision_manifest.v1.json": {
+      "active_revision_id": "rev_0001",
+      "last_change_event_seq": 1,
+      "last_planned_event_seq": 1,
+      "run_id": "consistent_local_run_root_not_provider_ready",
+      "schema": "persona_dream.revision_state.v1"
+    },
+    "dream_run_state.v1.json": {
+      "status": "LOCAL_PRIOR_STATE_PLACEHOLDER"
+    },
+    "dynamic_change_events.v1.json": {
+      "events": [],
+      "schema": "persona_dream.dynamic_change_events.v1"
+    },
+    "entity_environment_contract.json": {
+      "status": "PASS_ENTITY_ENVIRONMENT_CONTRACT"
+    },
+    "phase08_kling_scene_packet/kling_scene_packet.json": {
+      "paid_call_authorized": false,
+      "status": "GENERATED_UNREVIEWED",
+      "submitted": false
+    },
+    "prompt_contracts/index.v1.json": {
+      "contracts": [],
+      "schema": "persona_dream.prompt_contract_index.v1"
+    },
+    "provider_final_gate_state.v1.json": {
+      "dry_run_treated_as_live_ready": false,
+      "live_submit_ready": false,
+      "provider_ready": false,
+      "receipt_path": null,
+      "schema": "persona_dream.provider_final_gate_state.v1"
+    },
+    "receipts/creator_reviewer_respawn_loop_receipt.v1.json": {
+      "status": "PASS_CREATOR_REVIEWER_RESPAWN_LOOP"
+    },
+    "receipts/phase05_contact_sheet_gate.json": {
+      "status": "PASS_PHASE05_CONTACT_SHEET_GATE"
+    },
+    "receipts/promotion_storyboard.json": {
+      "status": "PASS_PROMOTION"
+    },
+    "receipts/reviewer_index.v1.json": {
+      "receipts": [],
+      "schema": "persona_dream.reviewer_index.v1"
+    },
+    "receipts/reviewer_storyboard.json": {
+      "status": "PASS_PANEL_REVIEWED"
+    },
+    "receipts/stale_write_fence_receipt.v1.json": {
+      "status": "PASS_STALE_WRITE_FENCE"
+    },
+    "receipts/validator_index.v1.json": {
+      "receipts": [],
+      "schema": "persona_dream.validator_index.v1"
+    },
+    "reference_assets.v1.json": {
+      "assets": [],
+      "schema": "persona_dream.reference_assets.v1"
+    },
+    "residue_links.json": {
+      "items": [],
+      "source": "fixture"
+    },
+    "respawn_plan.v1.json": {
+      "decisions": [],
+      "revision_id": "rev_0001",
+      "schema": "persona_dream.respawn_plan.v1"
+    },
+    "run_policy.v1.json": {
+      "manual_acceptance_claimed": false,
+      "paid_call_authorized": false,
+      "provider_accessible_url_created": false,
+      "provider_live": false,
+      "schema": "persona_dream.run_policy.v1",
+      "submitted": false
+    },
+    "script_contract.json": {
+      "status": "PASS_SCRIPT_CONTRACT"
+    },
+    "story_contract.json": {
+      "status": "PASS_STORY_CONTRACT"
+    },
+    "storyboard_packet.json": {
+      "accepted": true,
+      "status": "PASS_PANEL_REVIEWED"
+    },
+    "tau_contract_state.v1.json": {
+      "command_loop_receipt_path": null,
+      "contract_claimed_executed": false,
+      "contract_generated": true,
+      "live_tau_dag_execution_started": false,
+      "schema": "persona_dream.tau_contract_state.v1"
+    },
+    "work_lease_index.v1.json": {
+      "leases": [],
+      "revision_id": "rev_0001",
+      "schema": "persona_dream.work_lease_index.v1"
+    }
+  },
+  "expected": {
+    "blockers": [],
+    "runtime_state": "LOCAL_DRY_RUN_COMPLETE_NOT_PROVIDER_READY"
+  }
+}

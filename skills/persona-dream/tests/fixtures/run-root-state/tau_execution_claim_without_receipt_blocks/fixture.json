@@ -1,0 +1,18 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "tau_contract_state.v1.json": {
+      "command_loop_receipt_path": null,
+      "contract_claimed_executed": true,
+      "contract_generated": true,
+      "live_tau_dag_execution_started": true,
+      "schema": "persona_dream.tau_contract_state.v1"
+    }
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_TAU_CONTRACT_WITHOUT_EXECUTION_RECEIPT"
+    ],
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  }
+}

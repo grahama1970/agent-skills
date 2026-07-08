@@ -1,0 +1,15 @@
+{
+  "schema": "persona_dream.run_root_state_fixture.v1",
+  "run_root_files": {
+    "run_policy.v1.json": {
+      "paid_call_authorized": false,
+      "provider_live": false
+    }
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_RUN_ROOT_REQUIRED_ARTIFACT_MISSING"
+    ],
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  }
+}
