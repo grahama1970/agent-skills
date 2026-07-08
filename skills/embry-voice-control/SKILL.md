@@ -155,6 +155,23 @@ Required response fields:
 `POST /listen/start` and `POST /listen/stop` control listener state only. They
 do not directly answer the user.
 
+The required wake word is exactly:
+
+```text
+Embry
+```
+
+The visible standby affordance should say `SAY "EMBRY"`. When the local listener
+detects the wake word, it must emit a wake event and transition:
+
+```text
+idle -> wake_detected -> listening
+```
+
+The UI should dim the `SAY "EMBRY"` instruction and show `LISTENING...` as soon
+as the wake event is accepted. The listener should reject low-confidence,
+non-primary-speaker, cooldown, and while-Embry-is-speaking wake attempts.
+
 Listener output must become structured turn evidence:
 
 - `audio_turn_started`
@@ -208,6 +225,17 @@ complete dependencies, functions first, files under 800 lines, and non-mocked
 sanity tests.
 
 ## Live Sanity
+
+Run the deterministic wake-word contract sanity before live listener work:
+
+```bash
+./run.sh wake-sanity
+```
+
+This writes a receipt under
+`/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/wake-word/`. It proves
+only the local wake-word state contract and does not prove hot mic capture,
+RealtimeSTT wake detection, Chatterbox, Chat UX, or orb sync.
 
 Run the opt-in live harness before claiming the voice front-end works:
 

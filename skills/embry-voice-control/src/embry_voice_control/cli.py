@@ -24,6 +24,9 @@ from loguru import logger
 import typer
 from websockets.sync.client import connect as websocket_connect
 
+from embry_voice_control.wake_word import WAKE_WORD
+from embry_voice_control.wake_word import run_wake_word_sanity
+
 
 app = typer.Typer(help="Embry voice control live sanity harness.")
 
@@ -644,6 +647,37 @@ def build_report(
             ],
         },
     }
+
+
+@app.command()
+def wake_sanity(
+    output_root: Path = typer.Option(DEFAULT_OUTPUT_ROOT, help="12TB output root for receipts"),
+) -> None:
+    """Run deterministic wake-word contract checks and write a receipt."""
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-wake-" + uuid4().hex[:8]
+    output_dir = output_root / "wake-word" / run_id
+    receipt = run_wake_word_sanity(run_id)
+    receipt_path = output_dir / "receipt.json"
+    receipt["receipt_path"] = str(receipt_path)
+    write_json(receipt_path, receipt)
+    latest_path = output_root / "wake-word" / "latest.json"
+    write_json(
+        latest_path,
+        {
+            "run_id": run_id,
+            "receipt_path": str(receipt_path),
+            "pass": receipt["acceptance"]["pass"],
+            "wake_word": WAKE_WORD,
+        },
+    )
+    typer.echo(json.dumps({
+        "run_id": run_id,
+        "pass": receipt["acceptance"]["pass"],
+        "wake_word": WAKE_WORD,
+        "receipt_path": str(receipt_path),
+    }, indent=2))
+    if not receipt["acceptance"]["pass"]:
+        raise typer.Exit(code=1)
 
 
 @app.command()

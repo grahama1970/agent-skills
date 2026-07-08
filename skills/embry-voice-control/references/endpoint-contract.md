@@ -110,6 +110,37 @@ Required response fields:
 The service must state whether browser/WebRTC capture, local file/loopback, or
 physical microphone input is being used.
 
+## Wake Word Event
+
+The wake word is exactly `Embry`. Do not require `Hey Embry`.
+
+The listener service owns wake detection. React only renders state from the
+event stream. Chatterbox does not detect wake words.
+
+Accepted wake event shape:
+
+```json
+{
+  "schema": "embry_voice_control.wake_detected.v1",
+  "type": "voice.wake_detected",
+  "wake_phrase": "embry",
+  "session_id": "...",
+  "source": "embry-voice-control",
+  "confidence": 0.91,
+  "state_transition": ["idle", "wake_detected", "listening"],
+  "ui_feedback": {
+    "standby_instruction": "SAY \"EMBRY\"",
+    "instruction_opacity": 0.2,
+    "subtitle": "LISTENING...",
+    "orb_state": "listening"
+  }
+}
+```
+
+Wake attempts must fail closed when confidence is below threshold, the speaker is
+not the resolved primary speaker, the wake cooldown is active, or Embry is
+currently speaking and self-audio suppression is active.
+
 ## POST /turn/cancel
 
 Purpose: cancel or stale-mark the active turn.

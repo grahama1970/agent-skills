@@ -23,6 +23,7 @@ responses or fake receipts.
 | `barge-in` | User interruption cancels old speech. | Old turn cancel, stale chunks skipped, zero old bytes after cancel. |
 | `replay` | Chat, audio, trace, and orb replay together. | Timeline offsets, user+Embry turns, audio artifacts, orb authority. |
 | `browser-chat` | Shared Chat UX displays the same turn authority. | CDP/screenshot evidence for `#embry-voice`. |
+| `wake-capital-france` | Human says `Embry`, Embry enters listening, human asks "what is the capital of France", and Embry answers. | Wake event, `idle -> wake_detected -> listening`, RealtimeSTT final transcript, memory/Tau answer route, Chatterbox spoken answer, Chat UX turn, audio/orb receipt. |
 
 ## Pass Rules
 
@@ -45,3 +46,21 @@ Every report must include:
   including barge-in action, stale chunk behavior, ducking behavior, and whether
   the new turn wins
 - what remains unverified
+
+## Required Human-Audible Wake Scenario
+
+The core live wake-word acceptance test is:
+
+```text
+1. Human says: "Embry"
+2. Embry state changes from idle to wake_detected to listening.
+3. Human asks: "What is the capital of France?"
+4. RealtimeSTT emits a final transcript for that question.
+5. The turn routes through memory/Tau as a general answer.
+6. Embry answers audibly through Chatterbox: "Paris" or a semantically equivalent answer.
+7. The shared Chat UX shows the same user question and Embry answer.
+8. The receipt includes wake event, transcript event, answer event, Chatterbox audio authority, orb state, and replayable turn IDs.
+```
+
+Passing `wake-sanity` alone does not satisfy this scenario. It only proves the
+local deterministic wake contract before live listener integration.
