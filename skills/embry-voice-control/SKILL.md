@@ -258,6 +258,20 @@ This writes a receipt under
 only the local wake-word state contract and does not prove hot mic capture,
 RealtimeSTT wake detection, Chatterbox, Chat UX, or orb sync.
 
+Run the Unix/PipeWire RealtimeSTT listener rung before claiming live listener
+readiness:
+
+```bash
+./run.sh unix-listener-sanity
+```
+
+This wraps the local RealtimeSTT PipeWire proof runner and writes receipts under
+`/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/`. Pass
+requires real PipeWire playback/capture, non-silent captured audio, RealtimeSTT
+realtime and final transcript callbacks, final transcript match, and wake word
+detection from the transcript. It does not prove browser mic, speaker identity,
+Tau/memory, Chatterbox, Chat UX, orb, replay, or interruption.
+
 Run the live wake/control-plane runner when the UI already exists but Embry does
 not wake into a turn yet:
 

@@ -28,7 +28,7 @@ responses or fake receipts.
 | `barge-in` | User interruption cancels old speech. | Old turn cancel, stale chunks skipped, zero old bytes after cancel. |
 | `replay` | Chat, audio, trace, and orb replay together. | Timeline offsets, user+Embry turns, audio artifacts, orb authority. |
 | `browser-chat` | Shared Chat UX displays the same turn authority. | CDP/screenshot evidence for `#embry-voice`. |
-| `unix-listener-ingress` | Local audio capture is the listener authority. | PipeWire/Jabra or loopback capture, non-silent PCM, RealtimeSTT realtime/final transcript, receipt path. |
+| `unix-listener-ingress` | Local audio capture is the listener authority. | `./run.sh unix-listener-sanity`, PipeWire/Jabra or loopback capture, non-silent PCM, RealtimeSTT realtime/final transcript, wake word in transcript, receipt path. |
 | `wake-capital-france` | Human says `Embry`, Embry enters listening, human asks "what is the capital of France", and Embry answers. | Wake event, `idle -> wake_detected -> listening`, RealtimeSTT final transcript, memory/Tau answer route, Chatterbox spoken answer, Chat UX turn, audio/orb receipt. |
 
 ## Browser Mic Policy
@@ -49,6 +49,51 @@ Jabra/PipeWire or controlled loopback audio
   -> /turn or local /live-turn adapter
   -> Chat UX subscribes to events
 ```
+
+## Unix/PipeWire RealtimeSTT Listener Runner
+
+Run the first authoritative listener rung with:
+
+```bash
+./run.sh unix-listener-sanity
+```
+
+Default expected phrase:
+
+```text
+embry the capital of france is paris
+```
+
+The runner writes:
+
+```text
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/voice-control-wrapper/<run_id>/embry_voice_control_unix_listener_receipt.json
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/voice-control-wrapper/<run_id>/listener_events.jsonl
+```
+
+It wraps the existing RealtimeSTT proof runner, which writes:
+
+```text
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/<run_id>/receipt.json
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/<run_id>/captured.wav
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/unix-listener/<run_id>/realtime_stt_callbacks.jsonl
+```
+
+Pass requires:
+
+- `used_ui=false`
+- `used_browser_mic=false`
+- `used_mock_transcript=false`
+- PipeWire playback and capture exercised
+- captured audio is non-silent
+- captured PCM fed to RealtimeSTT
+- RealtimeSTT realtime events seen
+- RealtimeSTT final transcript seen
+- final transcript matches the expected phrase within the configured WER
+- the wake word `Embry` is detected from realtime or final transcript text
+
+This runner does not prove speaker identity, Tau/memory routing, Chatterbox,
+Chat UX sync, orb sync, replay, interruption, or browser mic/WebRTC.
 
 ## Focused Wake Control-Plane Runner
 

@@ -25,6 +25,12 @@ import typer
 from websockets.sync.client import connect as websocket_connect
 
 from embry_voice_control.live_wake import run_wake_capital_france
+from embry_voice_control.unix_listener import DEFAULT_EXPECTED_PHRASE as UNIX_LISTENER_EXPECTED_PHRASE
+from embry_voice_control.unix_listener import DEFAULT_OUTPUT_ROOT as UNIX_LISTENER_OUTPUT_ROOT
+from embry_voice_control.unix_listener import DEFAULT_PROOF_SCRIPT
+from embry_voice_control.unix_listener import DEFAULT_REALTIMESTT_PYTHON
+from embry_voice_control.unix_listener import DEFAULT_REALTIMESTT_REPO
+from embry_voice_control.unix_listener import run_unix_listener_sanity
 from embry_voice_control.wake_word import WAKE_WORD
 from embry_voice_control.wake_word import run_wake_word_sanity
 
@@ -696,6 +702,54 @@ def wake_capital_france_live(
         "status_code": acceptance["status_code"],
         "answer_text": acceptance["answer_text"],
         "receipt_path": receipt["receipt_path"],
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not acceptance["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("unix-listener-sanity")
+def unix_listener_sanity(
+    realtimestt_repo: Path = typer.Option(DEFAULT_REALTIMESTT_REPO, help="Local RealtimeSTT checkout"),
+    python_executable: Path = typer.Option(DEFAULT_REALTIMESTT_PYTHON, help="Python executable for the RealtimeSTT proof runner"),
+    proof_script: Path = typer.Option(DEFAULT_PROOF_SCRIPT, help="RealtimeSTT PipeWire proof runner"),
+    expected_phrase: str = typer.Option(UNIX_LISTENER_EXPECTED_PHRASE, help="Spoken phrase expected from RealtimeSTT"),
+    playback_target: str = typer.Option("64", help="PipeWire playback target"),
+    capture_target: str = typer.Option("67", help="PipeWire capture target"),
+    output_root: Path = typer.Option(UNIX_LISTENER_OUTPUT_ROOT, help="Output root for listener proof receipts"),
+    capture_seconds: float = typer.Option(6.0, help="PipeWire capture duration in seconds"),
+    model: str = typer.Option("tiny.en", help="RealtimeSTT final transcription model"),
+    realtime_model: str = typer.Option("tiny.en", help="RealtimeSTT realtime transcription model"),
+    max_wer: float = typer.Option(0.5, help="Maximum WER for expected phrase match"),
+    timeout: float = typer.Option(180.0, help="Subprocess timeout in seconds"),
+    skip_speaker_gate: bool = typer.Option(True, help="Skip pyannote speaker gate for this rung"),
+    source_wav: Path | None = typer.Option(None, help="Optional source WAV instead of generated espeak speech"),
+) -> None:
+    """Run the Unix/PipeWire -> RealtimeSTT listener rung and write receipts."""
+    receipt = run_unix_listener_sanity(
+        realtimestt_repo=realtimestt_repo,
+        python_executable=python_executable,
+        proof_script=proof_script,
+        expected_phrase=expected_phrase,
+        playback_target=playback_target,
+        capture_target=capture_target,
+        output_root=output_root,
+        capture_seconds=capture_seconds,
+        model=model,
+        realtime_model=realtime_model,
+        max_wer=max_wer,
+        timeout=timeout,
+        skip_speaker_gate=skip_speaker_gate,
+        source_wav=source_wav,
+    )
+    acceptance = receipt["acceptance"]
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": acceptance["pass"],
+        "receipt_path": receipt["receipt_path"],
+        "underlying_receipt_path": receipt["underlying_receipt_path"],
+        "final_transcript": receipt["listener_events"].get("final_transcript"),
+        "wake_detected": receipt["listener_events"].get("wake_detected"),
         "not_proven": receipt["claims"]["does_not_prove"],
     }, indent=2))
     if not acceptance["pass"]:
