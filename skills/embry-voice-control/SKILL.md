@@ -237,6 +237,21 @@ This writes a receipt under
 only the local wake-word state contract and does not prove hot mic capture,
 RealtimeSTT wake detection, Chatterbox, Chat UX, or orb sync.
 
+Run the live wake/control-plane runner when the UI already exists but Embry does
+not wake into a turn yet:
+
+```bash
+./run.sh wake-capital-france-live --base-url http://127.0.0.1:3001/api/projects/embry-voice
+```
+
+This writes a receipt under
+`/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/wake-capital-france/`.
+It proves a controlled wake event is produced and fed to the live `/live-turn`
+control endpoint with the spoken-style question "What is the capital of
+France?". It must fail if the endpoint does not return live non-mocked
+turn/audio authority or if the answer does not mention Paris. It does not prove
+hot microphone wake detection or browser WebRTC capture.
+
 Run the opt-in live harness before claiming the voice front-end works:
 
 ```bash

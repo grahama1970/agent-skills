@@ -141,6 +141,28 @@ Wake attempts must fail closed when confidence is below threshold, the speaker i
 not the resolved primary speaker, the wake cooldown is active, or Embry is
 currently speaking and self-audio suppression is active.
 
+## Controlled Wake-To-Turn Runner
+
+When the UI/control plane exists but live hot-mic wake is not established, use a
+controlled wake event to exercise the real turn endpoint:
+
+```bash
+./run.sh wake-capital-france-live --base-url http://127.0.0.1:3001/api/projects/embry-voice
+```
+
+The runner must include the wake event in the `/turn` or local adapter
+`/live-turn` request. It must write a receipt and fail when the control plane
+does not return live non-mocked turn authority, audio authority, voice policy,
+pause policy, interrupt policy, and an answer mentioning Paris for:
+
+```text
+What is the capital of France?
+```
+
+This is not a substitute for `/listen/start`; the receipt must state
+`hot_mic_wake_proven=false` until a RealtimeSTT or browser microphone wake event
+produces the same request.
+
 ## POST /turn/cancel
 
 Purpose: cancel or stale-mark the active turn.

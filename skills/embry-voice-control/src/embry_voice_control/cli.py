@@ -24,6 +24,7 @@ from loguru import logger
 import typer
 from websockets.sync.client import connect as websocket_connect
 
+from embry_voice_control.live_wake import run_wake_capital_france
 from embry_voice_control.wake_word import WAKE_WORD
 from embry_voice_control.wake_word import run_wake_word_sanity
 
@@ -677,6 +678,27 @@ def wake_sanity(
         "receipt_path": str(receipt_path),
     }, indent=2))
     if not receipt["acceptance"]["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("wake-capital-france-live")
+def wake_capital_france_live(
+    base_url: str = typer.Option(DEFAULT_BASE_URL, help="Embry voice control or current adapter base URL"),
+    output_root: Path = typer.Option(DEFAULT_OUTPUT_ROOT, help="12TB output root for receipts"),
+    timeout: float = typer.Option(120.0, help="HTTP timeout in seconds"),
+) -> None:
+    """Produce a wake event and feed a voice-mode France question to /live-turn."""
+    receipt = run_wake_capital_france(base_url=base_url, output_root=output_root, timeout=timeout)
+    acceptance = receipt["acceptance"]
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": acceptance["pass"],
+        "status_code": acceptance["status_code"],
+        "answer_text": acceptance["answer_text"],
+        "receipt_path": receipt["receipt_path"],
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not acceptance["pass"]:
         raise typer.Exit(code=1)
 
 
