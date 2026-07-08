@@ -1,0 +1,37 @@
+{
+  "schema": "tau.local_dag_route.v1",
+  "dag_id": "persona-dream-kling-scene-packet-dry-run",
+  "status": "LOCAL_DRY_RUN_ONLY",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "route": [
+    {
+      "node_id": "review-checker",
+      "agent": "review-checker",
+      "required_evidence": "accepted storyboard packet path and dry-run-only constraints"
+    },
+    {
+      "node_id": "kling-dry-run-converter",
+      "agent": "persona-dream",
+      "required_evidence": "kling_scene_packet.json plus media lock, reference audit, token linter, provider mapping, and final gate receipts"
+    },
+    {
+      "node_id": "kling-scene-packet-validator",
+      "agent": "persona-dream",
+      "required_evidence": "scene packet validation receipt with PASS_KLING_SCENE_PACKET_DRY_RUN"
+    },
+    {
+      "node_id": "human",
+      "agent": "human",
+      "required_evidence": "manual acceptance receipt before GENERATED_UNREVIEWED can advance to ACCEPTED_MANUAL"
+    }
+  ],
+  "forbidden": [
+    "do not call Kling",
+    "do not create provider-accessible URLs",
+    "do not authorize paid calls",
+    "do not mark provider ready",
+    "do not claim manual acceptance"
+  ]
+}

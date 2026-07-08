@@ -26,7 +26,7 @@ TOKEN_RE = re.compile(r"<<<(?:image_[0-9]+|element_[a-z0-9_]+)>>>")
 
 
 def validate_scene_packet(scene_packet: dict[str, Any]) -> str:
-    if jsonschema is not None:
+    if jsonschema is not None and SCHEMA_PATH.exists():
         jsonschema.Draft202012Validator(read_json(SCHEMA_PATH)).validate(scene_packet)
         return "jsonschema"
     blockers: list[str] = []
@@ -265,13 +265,17 @@ def build_scene_packet(
     image_list = []
     for index, panel in enumerate(panels, start=1):
         frame = accepted_frame(panel, "start_frame")
+        panel_id = panel["panel_id"]
         image_list.append(
             {
                 "token": f"<<<image_{index}>>>",
+                "asset_id": f"{panel_id}.start_frame",
+                "panel_id": panel_id,
                 "path": frame["path"],
                 "role": "storyboard_visual_anchor",
                 "status": "LOCKED_LOCAL_ONLY",
                 "hash": frame["sha256"],
+                "sha256": frame["sha256"],
             }
         )
     multi_prompt = []
@@ -346,6 +350,24 @@ def build_scene_packet(
         "callback_url": None,
         "external_task_id": None,
     }
+    voice_status = {
+        "status": "VOICE_TEXT_ONLY" if any(item.get("dialogue") for item in multi_prompt) else "NO_DIALOGUE",
+        "ambience_and_foley": "ON",
+        "spoken_dialogue_live_ready": False,
+        "provider_voice_ids_locked": False,
+        "provider_voice_ids": [],
+        "live_blockers": ["BLOCKED_PROVIDER_VOICE_IDS_MISSING"],
+    }
+    live_call_blockers = [
+        "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED",
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+        "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING",
+        "BLOCKED_PROVIDER_VOICE_IDS_MISSING",
+        "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+        "BLOCKED_PAID_CALL_NOT_AUTHORIZED",
+    ]
     return {
         "schema": "kling.scene_packet.v1",
         "run_id": "persona-dream-kahaluu-10s-dryrun-001",
@@ -356,6 +378,9 @@ def build_scene_packet(
         "aspect_ratio": "16:9",
         "duration_s": 10.0,
         "paid_call_authorized": False,
+        "submitted": False,
+        "external_task_id": None,
+        "live_submit_status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
         "cost_estimate": {
             "status": "DRY_RUN_ESTIMATE_UNVERIFIED",
             "currency": "credits",
@@ -376,6 +401,8 @@ def build_scene_packet(
         },
         "retry_policy": "No live provider attempts in this round. Allow at most two dry-run packet revisions after review.",
         "audio_strategy": "Ambience and foley are on. Kai cue is VOICE_TEXT_ONLY because no provider voice IDs are locked.",
+        "voice_status": voice_status,
+        "element_list": reference_audit["elements"],
         "image_list": image_list,
         "voice_list": [],
         "voice_examples": [
@@ -392,7 +419,28 @@ def build_scene_packet(
             "storyboard_packet": media_lock["storyboard_packet"],
             "media_lock_manifest": "storyboard_media_lock_manifest.json",
             "reference_pack_audit": "kling_reference_pack_audit.json",
+            "token_binding_linter": "token_binding_linter_receipt.json",
             "provider_payload_mapping_receipt": "provider_payload_mapping_receipt.json",
+            "provider_final_gate": "provider_final_gate_receipt.json",
+        },
+        "live_call_blockers": live_call_blockers,
+        "claims": {
+            "proves": [
+                "accepted storyboard evidence was distilled into a local dry-run Kling scene packet",
+                "all provider prompt tokens are declared",
+                "paid_call_authorized is false",
+                "submitted is false",
+                "no provider request was submitted",
+            ],
+            "does_not_prove": [
+                "current Kling provider schema compatibility",
+                "provider-accessible media URLs",
+                "reference upload readiness",
+                "voice readiness",
+                "cost approval",
+                "manual acceptance",
+                "live Kling generation",
+            ],
         },
         "live_call_block_reason": (
             "GENERATED_UNREVIEWED dry-run only: manual review missing, provider schema unverified, "
@@ -558,22 +606,15 @@ def main() -> int:
             ],
         },
     }
+    final_gate_live_blockers = sorted(set(scene_packet["live_call_blockers"]))
     final_gate = {
         "schema": "persona_dream.kling.provider_final_gate_receipt.v1",
         "status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
         "submitted": False,
         "paid_call_authorized": False,
         "manual_acceptance_status": "BLOCKED_MANUAL_REVIEW_MISSING",
-        "live_blockers": [
-            "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
-            "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED",
-            "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
-            "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
-            "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING",
-            "BLOCKED_PROVIDER_VOICE_IDS_MISSING",
-            "BLOCKED_COST_ESTIMATE_UNVERIFIED",
-            "BLOCKED_PAID_CALL_NOT_AUTHORIZED",
-        ],
+        "live_call_blockers": final_gate_live_blockers,
+        "live_blockers": final_gate_live_blockers,
     }
 
     paths = {
