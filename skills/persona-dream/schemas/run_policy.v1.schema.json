@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.run_policy.v1",
+  "type": "object",
+  "required": ["schema", "provider_live", "paid_call_authorized", "provider_accessible_url_created", "submitted"],
+  "properties": {
+    "schema": { "const": "persona_dream.run_policy.v1" },
+    "provider_live": { "const": false },
+    "paid_call_authorized": { "const": false },
+    "provider_accessible_url_created": { "const": false },
+    "submitted": { "const": false }
+  }
+}

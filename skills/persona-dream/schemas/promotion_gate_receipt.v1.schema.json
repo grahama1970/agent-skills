@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.promotion_gate_receipt.v1",
+  "type": "object",
+  "required": ["schema", "status", "provider_live", "paid_call_authorized", "submitted"],
+  "properties": {
+    "schema": { "const": "persona_dream.promotion_gate_receipt.v1" },
+    "status": { "type": "string" },
+    "provider_live": { "const": false },
+    "paid_call_authorized": { "const": false },
+    "submitted": { "const": false }
+  }
+}

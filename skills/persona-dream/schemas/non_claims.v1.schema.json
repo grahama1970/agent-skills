@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.non_claims.v1",
+  "type": "object",
+  "required": ["kling_called", "paid_call_authorized", "provider_accessible_url_created", "provider_ready", "live_submit_ready", "manual_acceptance_claimed"],
+  "properties": {
+    "kling_called": { "const": false },
+    "paid_call_authorized": { "const": false },
+    "provider_accessible_url_created": { "const": false },
+    "provider_ready": { "const": false },
+    "live_submit_ready": { "const": false },
+    "manual_acceptance_claimed": { "const": false }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.global_progress.v1",
+  "type": "object",
+  "required": ["schema_version", "derived", "owner_artifact", "progress", "separate_readiness", "policy", "non_claims"],
+  "properties": {
+    "schema_version": { "const": "persona-dream.global-progress.v1" },
+    "derived": { "const": true },
+    "owner_artifact": { "const": false },
+    "progress": {
+      "type": "object",
+      "required": ["global_state", "numerator_weight", "denominator_weight", "progress_bps"]
+    },
+    "separate_readiness": { "type": "object" },
+    "policy": { "type": "object" },
+    "non_claims": { "type": "object" }
+  }
+}

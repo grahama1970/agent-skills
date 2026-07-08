@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.artifact_lock_index.v1",
+  "type": "object",
+  "required": ["schema", "locks"],
+  "properties": {
+    "schema": { "const": "persona_dream.artifact_lock_index.v1" },
+    "locks": { "type": "array" }
+  }
+}

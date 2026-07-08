@@ -1,0 +1,58 @@
+{
+  "run_policy": {
+    "provider_live": false,
+    "paid_call_authorized": false,
+    "provider_accessible_url_created": false,
+    "submitted": false,
+    "manual_acceptance_claimed": false
+  },
+  "dream_revision_manifest": {
+    "revision_id": "rev_001"
+  },
+  "work_item": {
+    "artifact_id": "storyboard.sb_001.start_frame",
+    "revision_id": "rev_001",
+    "write_scope": "staging",
+    "promotion_target": "accepted/sb_001_start.txt",
+    "input_hashes": {}
+  },
+  "work_lease": {
+    "state": "ACTIVE",
+    "artifact_id": "storyboard.sb_001.start_frame",
+    "promotion_target": "accepted/sb_001_start.txt",
+    "fencing_token": "lease-current"
+  },
+  "creator_receipt": {
+    "revision_id": "rev_001",
+    "fencing_token": "lease-current",
+    "output_path": "staging/candidate.txt",
+    "output_sha256": "sha256:file:staging/candidate.txt"
+  },
+  "reviewer_receipt": {
+    "revision_id": "rev_001",
+    "fencing_token": "lease-current",
+    "accepted": true,
+    "reviewed_path": "staging/candidate.txt",
+    "reviewed_sha256": "sha256:file:staging/candidate.txt"
+  },
+  "artifact_lock_index_before": {
+    "locks": [
+      {
+        "artifact_id": "storyboard.sb_001.start_frame",
+        "accepted": true,
+        "reviewer_receipt_path": "receipts/reviewer.json",
+        "accepted_path": "accepted/existing.txt",
+        "sha256": "sha256:file:accepted/existing.txt"
+      }
+    ]
+  },
+  "media_lock_before": {
+    "status": "CURRENT"
+  },
+  "expected": {
+    "result": "PROMOTION_BLOCKED",
+    "blockers": [
+      "BLOCKED_MEDIA_LOCK_NOT_STALED_AFTER_ACCEPTED_FRAME_REPLACEMENT"
+    ]
+  }
+}

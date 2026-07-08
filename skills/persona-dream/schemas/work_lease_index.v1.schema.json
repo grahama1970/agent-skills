@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.work_lease_index.v1",
+  "type": "object",
+  "required": ["schema", "leases"],
+  "properties": {
+    "schema": { "const": "persona_dream.work_lease_index.v1" },
+    "leases": { "type": "array" }
+  }
+}
