@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/watch/docs/architecture/generated/webgpt_requests/20260707_watch_streaming_world_model_architecture_request.md",
+  "submitted_output": "skills/watch/docs/architecture/generated/webgpt_requests/20260707_watch_streaming_world_model_architecture_response.md.submitted.md",
+  "output": "skills/watch/docs/architecture/generated/webgpt_requests/20260707_watch_streaming_world_model_architecture_response.md",
+  "raw_output": "skills/watch/docs/architecture/generated/webgpt_requests/20260707_watch_streaming_world_model_architecture_response.raw.md",
+  "meta_output": "skills/watch/docs/architecture/generated/webgpt_requests/20260707_watch_streaming_world_model_architecture_response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260708T022434Z:f5da28cd>>>",
+  "requested_tab_id": "837357102",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": null,
+  "receipt_at": "2026-07-08T02:26:37Z"
+}

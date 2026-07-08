@@ -1,0 +1,188 @@
+name: Watch streaming world model over YOLOAnalytics and Memory
+components:
+  - id: source_session_controller
+    label: Source / Session Controller
+    tech: Watch Node/TypeScript plus Python stream adapters
+    latency: control-plane seconds
+    color: "#64748b"
+    files:
+      - skills/watch/ui/server/index.ts
+      - skills/watch/scripts/live_ultralytics_tracking.py
+  - id: frame_ingest_clock
+    label: Frame Ingest + Clock Normalizer
+    tech: Python/OpenCV/GStreamer/RTSP adapters
+    latency: per-frame 10-100ms target
+    color: "#94a3b8"
+    files:
+      - skills/watch/scripts/live_ultralytics_tracking.py
+  - id: yoloanalytics_tracker
+    label: YOLOAnalytics / Ultralytics Detector + Tracker
+    tech: Ultralytics YOLO plus ByteTrack or BoT-SORT
+    latency: realtime or near-realtime
+    color: "#2563eb"
+    files:
+      - skills/watch/scripts/track_yolo_bytetrack.py
+      - skills/watch/scripts/live_ultralytics_tracking.py
+  - id: detector_event_bus
+    label: Detector Observation Bus
+    tech: JSONL now; Redis, NATS, or Kafka later
+    latency: sub-second
+    color: "#0ea5e9"
+    files:
+      - skills/watch/scripts/live_ultralytics_tracking.py
+  - id: detector_event_store
+    label: Immutable Detector Event Store
+    tech: JSONL/SQLite/Postgres/Object storage
+    latency: write-through and replayable
+    color: "#0284c7"
+    files:
+      - skills/watch/docs/architecture/generated/watch_yolo_bytetrack_rows/
+  - id: watch_observation_normalizer
+    label: Watch Observation Normalizer
+    tech: Python/TypeScript schema adapter
+    latency: sub-second
+    color: "#38bdf8"
+    files:
+      - skills/watch/ui/server/index.ts
+  - id: identity_sequence_ledger
+    label: Identity/Object Sequence Ledger
+    tech: append-only JSON/SQLite/Postgres
+    latency: interactive replay under 100ms
+    color: "#7c3aed"
+    files:
+      - skills/watch/ui/components/WatchReportView.tsx
+  - id: annotation_review_ui
+    label: Watch Annotation + Human Review UI
+    tech: React/TypeScript
+    latency: interactive
+    color: "#a855f7"
+    files:
+      - skills/watch/ui/components/WatchReportView.tsx
+  - id: label_decision_store
+    label: Accepted / Rejected Label Decision Store
+    tech: append-only decisions plus audit receipts
+    latency: durable before Memory ingest
+    color: "#9333ea"
+    files:
+      - skills/watch/ui/components/WatchReportView.tsx
+      - skills/watch/scripts/build_watch_identity_gate_receipt.py
+  - id: crop_quality_pipeline
+    label: Crop Generation + Quality Gate
+    tech: Python image cropper plus quality metrics
+    latency: async seconds
+    color: "#16a34a"
+    files:
+      - skills/watch/scripts/build_watch_identity_gate_receipt.py
+  - id: embedding_worker
+    label: Multimodal Crop Embedding Worker
+    tech: Memory embedding proxy
+    latency: async seconds
+    color: "#22c55e"
+    files:
+      - skills/watch/scripts/build_watch_identity_gate_receipt.py
+  - id: qdrant_memory
+    label: Memory / Qdrant Recall Store
+    tech: Qdrant vectors plus payload filters
+    latency: online suggestion under 500ms target
+    color: "#059669"
+    files:
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/
+  - id: suggestion_service
+    label: Tentative Suggestion Service
+    tech: Watch identity suggestion proxy
+    latency: interactive under 500ms target
+    color: "#10b981"
+    files:
+      - skills/watch/ui/server/index.ts
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/browser_tentative_suggestion_live_check.png
+  - id: transcript_context_fusion
+    label: Transcript / Scene Context Fusion
+    tech: SRT/Whisper plus scene metadata confidence adjuster
+    latency: async or interactive
+    color: "#f59e0b"
+    files:
+      - skills/watch/README.md
+  - id: evidence_case_builder
+    label: Evidence Case Builder
+    tech: bounded frame/crop/transcript/event packager
+    latency: async bounded budget
+    color: "#f97316"
+    files:
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/
+  - id: project_agent_tau
+    label: Project Agent / Tau-Style Analysis
+    tech: agentic reasoning over bounded evidence cases
+    latency: async cost/depth limited
+    color: "#ea580c"
+    files:
+      - skills/watch/README.md
+  - id: proof_gate_runner
+    label: Proof Gate + Readiness Receipts
+    tech: Python/TypeScript deterministic tests plus JSON receipts
+    latency: CI or local proof run
+    color: "#dc2626"
+    files:
+      - skills/watch/scripts/build_watch_identity_gate_receipt.py
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_heldout_eval_24.json
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_handoff_stop_proof.json
+      - skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260705T155850Z_unfinished_goal_proof/identity_readiness_include_eval.json
+  - id: edge_jetson_runtime
+    label: Edge Jetson Runtime
+    tech: Jetson containers for decode, detect, track, crop, local cache
+    latency: realtime edge loop
+    color: "#475569"
+    files:
+      - skills/watch/scripts/live_ultralytics_tracking.py
+  - id: central_watch_services
+    label: Central Watch Services
+    tech: Watch API plus canonical store, Memory, UI, and agent escalation
+    latency: mixed realtime and async
+    color: "#111827"
+    files:
+      - skills/watch/ui/server/index.ts
+      - skills/watch/ui/components/WatchReportView.tsx
+connections:
+  - from: source_session_controller
+    to: frame_ingest_clock
+  - from: frame_ingest_clock
+    to: yoloanalytics_tracker
+  - from: yoloanalytics_tracker
+    to: detector_event_bus
+  - from: detector_event_bus
+    to: detector_event_store
+  - from: detector_event_store
+    to: watch_observation_normalizer
+  - from: watch_observation_normalizer
+    to: annotation_review_ui
+  - from: annotation_review_ui
+    to: identity_sequence_ledger
+  - from: annotation_review_ui
+    to: label_decision_store
+  - from: label_decision_store
+    to: crop_quality_pipeline
+  - from: crop_quality_pipeline
+    to: embedding_worker
+  - from: embedding_worker
+    to: qdrant_memory
+  - from: annotation_review_ui
+    to: suggestion_service
+  - from: qdrant_memory
+    to: suggestion_service
+  - from: suggestion_service
+    to: annotation_review_ui
+  - from: transcript_context_fusion
+    to: suggestion_service
+  - from: suggestion_service
+    to: evidence_case_builder
+  - from: evidence_case_builder
+    to: project_agent_tau
+  - from: project_agent_tau
+    to: annotation_review_ui
+  - from: detector_event_store
+    to: proof_gate_runner
+  - from: identity_sequence_ledger
+    to: proof_gate_runner
+  - from: edge_jetson_runtime
+    to: central_watch_services
+  - from: central_watch_services
+    to: edge_jetson_runtime
