@@ -1,0 +1,12 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-08T00:00:00Z",
+  "contract_path": "phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+  "contract_sha256": "sha256:6253f25f143a66ed976cb4b63c0fe9eac35abca579d4f2737dabd9fb8a142d0b",
+  "live": false,
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.phase07.prompt_contract_validation_receipt.v1",
+  "status": "PASS_PROMPT_CONTRACT"
+}

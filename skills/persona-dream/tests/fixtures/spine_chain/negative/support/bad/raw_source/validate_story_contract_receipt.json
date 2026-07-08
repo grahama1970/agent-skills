@@ -1,0 +1,12 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-08T00:00:00Z",
+  "contract_path": "good_story_contract_prompt.json",
+  "contract_sha256": "sha256:15d7555a22406c130c42ca499d6511eec7334513274a174f23dc98b68bebb895",
+  "live": false,
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.phase02.prompt_contract_validation_receipt.v1",
+  "status": "PASS_STORY_CONTRACT"
+}

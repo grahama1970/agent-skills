@@ -1,0 +1,84 @@
+{
+  "downstream_contract": {
+    "may_feed_phase06": true,
+    "serialized_json_as_prompt_text_allowed": false
+  },
+  "input_contracts": {
+    "memory_residue_contract_path": "phase01/good_memory_residue_contract.json",
+    "phase01_memory_residue_contract": {
+      "path": "phase01/good_memory_residue_contract.json",
+      "required_validator_status": "PASS_MEMORY_RESIDUE_CONTRACT",
+      "sha256": "sha256:d68eb8d134de06b383af8f765acdc5389bb33696f346777ded5c066b49e7ee4d",
+      "validator_receipt_path": "phase01/validate_memory_residue_receipt.json",
+      "validator_receipt_sha256": "sha256:5594bb983ef8cc217fe33626e3c089d2019ca64788007221e6302cb4b592a491"
+    }
+  },
+  "interaction_matrix": {
+    "edges": [
+      {
+        "from": "Kai",
+        "interaction": "message interrupts surf focus",
+        "required_visual_seed": "phone notification tied to Kai",
+        "to": "Embry"
+      }
+    ],
+    "entities": [
+      "Embry",
+      "Kai",
+      "phone"
+    ]
+  },
+  "phase": "02_story",
+  "run_id": "spine-chain-fixture-run",
+  "schema": "persona_dream.phase02.story_contract_prompt.v1",
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_consumption_policy": {
+    "raw_source_content_used_as_prompt_text": true,
+    "serialized_json_as_prompt_text_allowed": true,
+    "uses_typed_fields_from_phase01": [
+      "typed_idea_fields",
+      "media_references",
+      "prompt_safe_text"
+    ]
+  },
+  "story_contract": {
+    "beats": [
+      {
+        "beat_id": "beat_001",
+        "function": "Embry enters the clean line.",
+        "required_entities": [
+          "Embry"
+        ]
+      },
+      {
+        "beat_id": "beat_002",
+        "function": "Kai message becomes the interruption.",
+        "required_entities": [
+          "Embry",
+          "Kai"
+        ]
+      }
+    ],
+    "logline": "Embry tries to hold a clean surf line while a message from Kai turns obligation into visible pressure.",
+    "story": "Embry rides a glassy line and chooses whether to answer the buzzing phone waiting on the beach.",
+    "title": "Clean Line"
+  },
+  "typed_source_context": {
+    "premise": "A beach notification interrupts a hard-won moment of focus.",
+    "setting": "Big Island surf break",
+    "source_context": "{\"story\":\"Embry chooses the safe channel\"}",
+    "source_ids": [
+      "memory:embry:surf-2024-001"
+    ]
+  },
+  "visual_continuity_seeds": {
+    "Embry": {
+      "environment": "surf break",
+      "identity_reference_required": true
+    },
+    "Kai": {
+      "identity_reference_required": true,
+      "presence_rule": "must be explicit if required by a panel"
+    }
+  }
+}

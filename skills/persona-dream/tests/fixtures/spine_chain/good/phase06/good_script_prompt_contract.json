@@ -1,0 +1,143 @@
+{
+  "action_blocks": [
+    {
+      "block_id": "action_001",
+      "rows": [
+        "script_001"
+      ]
+    }
+  ],
+  "asset_usage": {
+    "Embry": {
+      "asset_ids": [
+        "embry_surfing_big_island_2024"
+      ],
+      "required": true,
+      "usage": "hard_identity_reference"
+    },
+    "phone": {
+      "asset_ids": [],
+      "required": true,
+      "usage": "required_prop_reference"
+    }
+  },
+  "dialogue_blocks": [],
+  "downstream_contract": {
+    "may_feed_phase07": true,
+    "serialized_json_as_prompt_text_allowed": false
+  },
+  "entity_environment_script_table": [
+    {
+      "asset_refs": [
+        "embry_surfing_big_island_2024"
+      ],
+      "entity": "Embry",
+      "required_in_rows": [
+        "script_001"
+      ],
+      "visual_requirement": "visible and identity-verifiable"
+    }
+  ],
+  "input_contracts": {
+    "phase02_story_contract_prompt": {
+      "path": "phase02/good_story_contract_prompt.json",
+      "required_validator_status": "PASS_STORY_CONTRACT",
+      "sha256": "sha256:0e6dedb0bb45ef85ab59d48bee44e402aca2db925ca8c85b202bae611475dcae",
+      "validator_receipt_path": "phase02/validate_story_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:1b1b3f267f9c5bb6aae42fcfb1439c8e586dfc597e8e29d015541721f720f545"
+    },
+    "story_contract_path": "phase02/good_story_contract_prompt.json"
+  },
+  "interaction_matrix_coverage": {
+    "covered_edges": [
+      "Kai->Embry:message interrupts surf focus"
+    ],
+    "uncovered_edges": []
+  },
+  "phase": "06_script",
+  "realism_contract": {
+    "environment_constraints": [
+      "spray and lava reef remain spatially consistent"
+    ],
+    "must_not_show": [
+      "Kai as merely implied if required by panel"
+    ],
+    "physical_constraints": [
+      "board rail bites into wave face"
+    ]
+  },
+  "run_id": "spine-chain-fixture-run",
+  "schema": "persona_dream.phase06.script_prompt_contract.v1",
+  "script": {
+    "rows": [
+      {
+        "action": "Embry carves across the clean wave while the beach bag phone flashes with Kai message.",
+        "dialogue": null,
+        "environment_requirements": [
+          "Big Island surf break",
+          "dark lava reef"
+        ],
+        "required_assets": [
+          "embry_surfing_big_island_2024"
+        ],
+        "required_entities": [
+          "Embry",
+          "phone"
+        ],
+        "row_id": "script_001",
+        "speaker": null,
+        "time_end_s": 2.5,
+        "time_start_s": 0.0
+      }
+    ]
+  },
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_consumption_policy": {
+    "raw_source_context_used_as_prompt_text": false,
+    "serialized_json_as_prompt_text_allowed": false,
+    "uses_typed_fields_from_phase02": [
+      "story_contract",
+      "interaction_matrix",
+      "visual_continuity_seeds"
+    ]
+  },
+  "storyboard_constraints": {
+    "duration_s": 10,
+    "panel_count": 4,
+    "per_panel_required_entities": {
+      "sb_001": [
+        "Embry"
+      ],
+      "sb_002": [
+        "Embry",
+        "Kai"
+      ],
+      "sb_003": [
+        "Embry"
+      ],
+      "sb_004": [
+        "Embry",
+        "Kai"
+      ]
+    }
+  },
+  "timed_beats": [
+    {
+      "beat_id": "beat_001",
+      "required_entities": [
+        "Embry"
+      ],
+      "story_function": "Surf focus is established before the interruption.",
+      "time_end_s": 2.5,
+      "time_start_s": 0.0
+    }
+  ],
+  "timed_transcript": [
+    {
+      "line": null,
+      "speaker": null,
+      "time_end_s": 2.5,
+      "time_start_s": 0.0
+    }
+  ]
+}

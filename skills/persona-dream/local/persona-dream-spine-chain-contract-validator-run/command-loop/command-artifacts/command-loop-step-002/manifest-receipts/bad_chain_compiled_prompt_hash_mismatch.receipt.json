@@ -1,0 +1,117 @@
+{
+  "blockers": [
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[0].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "sha256:f688707fccc0a122c7c17bf20f9a04c6c4d72760ea8648c112ee91441ed2b8cb",
+      "expected": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "field": "stages.phase07.panel_prompt_contracts[0].compiled_prompt.sha256",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/support/good/phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "status": "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[1].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[2].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[3].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[4].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[5].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[6].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase06/good_script_prompt_contract.json",
+      "edge": "phase06->phase07",
+      "expected": "support/good/phase06/good_script_prompt_contract.json",
+      "field": "stages.phase07.panel_prompt_contracts[7].input_contracts.phase06_script_prompt_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "actual": "phase01/good_memory_residue_contract.json",
+      "edge": "phase01->phase02",
+      "expected": "support/good/phase01/good_memory_residue_contract.json",
+      "field": "input_contracts.phase01_memory_residue_contract.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "field": "input_contracts.phase01_memory_residue_contract.validator_receipt.path",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/phase01/validate_memory_residue_receipt.json",
+      "status": "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+    },
+    {
+      "actual": "phase02/good_story_contract_prompt.json",
+      "edge": "phase02->phase06",
+      "expected": "support/good/phase02/good_story_contract_prompt.json",
+      "field": "input_contracts.phase02_story_contract_prompt.path",
+      "status": "BLOCKED_INTER_CONTRACT_HASH_MISMATCH"
+    },
+    {
+      "field": "input_contracts.phase02_story_contract_prompt.validator_receipt.path",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/phase02/validate_story_contract_receipt.json",
+      "status": "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+    }
+  ],
+  "checked_at": "2026-07-08T02:11:16.630718+00:00",
+  "claims": {
+    "does_not_prove": [
+      "provider reference attachment",
+      "image generation",
+      "visual identity pass",
+      "story/script creative quality",
+      "runtime performance"
+    ],
+    "proves": [
+      "inter-contract path/SHA binding",
+      "validator receipt binding",
+      "compiled prompt hash binding",
+      "raw-source-safe downstream consumption",
+      "reviewer PASS precondition policy where acceptance is claimed",
+      "local non-provider chain gate"
+    ]
+  },
+  "live_image_call_started": false,
+  "manifest_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_hash_mismatch.json",
+  "manifest_sha256": "sha256:6664cc3d552cdf33af7b1c06671c64829927d38ff1d99ad103b5c6824a27e544",
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.spine.chain_contract_validator_receipt.v1",
+  "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+  "verdict": "FAIL_CLOSED"
+}

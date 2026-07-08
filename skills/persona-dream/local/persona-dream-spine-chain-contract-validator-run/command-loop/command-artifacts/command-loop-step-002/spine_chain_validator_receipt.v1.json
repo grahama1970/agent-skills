@@ -1,0 +1,431 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-08T02:11:17.073229+00:00",
+  "claims": {
+    "does_not_prove": [
+      "provider reference attachment",
+      "image generation",
+      "visual identity pass",
+      "story/script creative quality",
+      "runtime performance"
+    ],
+    "proves": [
+      "positive single-manifest chain fixture passes path/SHA and receipt binding",
+      "mandatory negative chain fixtures fail closed with expected normalized blockers",
+      "Phase 07 compiled prompt proofs are manifest-level raw-byte hash bindings"
+    ]
+  },
+  "live_image_call_started": false,
+  "manifest_results": [
+    {
+      "blocker_statuses": [],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/good.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 0,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/good.receipt.json",
+      "status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+      "stderr": "",
+      "stdout": "PASS_SPINE_CHAIN_CONTRACT_GATE"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_COMPILED_PROMPT_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_contract_hash_mismatch.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_contract_hash_mismatch.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_contract_hash_mismatch.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_contract_hash_mismatch.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_COMPILED_PROMPT_CONTRACT_PATH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_contract_path_mismatch.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_contract_path_mismatch.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_contract_path_mismatch.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_contract_path_mismatch.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_COMPILED_PROMPT_PROOF_EMBEDDED_IN_CONTRACT",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_embedded_in_contract.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_embedded_in_contract.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_embedded_in_contract.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_embedded_in_contract.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_hash_mismatch.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_hash_mismatch.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_hash_mismatch.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_hash_mismatch.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_COMPILED_PROMPT_HASH_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_hash_missing.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_hash_missing.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_compiled_prompt_hash_missing.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_compiled_prompt_hash_missing.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_DOWNSTREAM_USED_RAW_SOURCE_TEXT",
+        "BLOCKED_SERIALIZED_JSON_PROMPT_TEXT",
+        "BLOCKED_SERIALIZED_JSON_PROMPT_TEXT",
+        "BLOCKED_SERIALIZED_JSON_PROMPT_TEXT",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_downstream_raw_source_text_used.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_downstream_raw_source_text_used.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_downstream_raw_source_text_used.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_downstream_raw_source_text_used.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase02_phase01_hash_mismatch.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase02_phase01_hash_mismatch.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase02_phase01_hash_mismatch.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase02_phase01_hash_mismatch.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_MISSING_UPSTREAM_CONTRACT"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase06_missing_phase02_contract.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase06_missing_phase02_contract.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase06_missing_phase02_contract.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase06_missing_phase02_contract.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase07_wrong_phase06_hash.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase07_wrong_phase06_hash.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_phase07_wrong_phase06_hash.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_phase07_wrong_phase06_hash.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_PROVIDER_LIVE_IN_LOCAL_CHAIN_GATE",
+        "BLOCKED_LIVE_CALL_STARTED_IN_LOCAL_CHAIN_GATE",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_provider_live_true.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_provider_live_true.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_provider_live_true.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_provider_live_true.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_REVIEWER_PASS_WITH_INVALID_CONTRACT"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_reviewer_pass_with_blocked_validator.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_reviewer_pass_with_blocked_validator.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_reviewer_pass_with_blocked_validator.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_reviewer_pass_with_blocked_validator.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "blocker_statuses": [
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+        "BLOCKED_UPSTREAM_VALIDATOR_RECEIPT_MISSING",
+        "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "--manifest",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_reviewer_pass_without_validator_receipt.json",
+        "--receipt-out",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_reviewer_pass_without_validator_receipt.receipt.json"
+      ],
+      "errors": [],
+      "exit_code": 1,
+      "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/tests/fixtures/spine_chain/negative/bad_chain_reviewer_pass_without_validator_receipt.json",
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/command-loop/command-artifacts/command-loop-step-002/manifest-receipts/bad_chain_reviewer_pass_without_validator_receipt.receipt.json",
+      "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+      "stderr": "",
+      "stdout": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    }
+  ],
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.spine.chain_contract_validator_receipt.v1",
+  "status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+  "verdict": "PASS"
+}

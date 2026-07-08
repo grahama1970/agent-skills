@@ -1,0 +1,111 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-spine-chain-contract-validator",
+  "goal": {
+    "goal_id": "persona-dream-spine-chain-contract-validator",
+    "goal_version": 1,
+    "goal_hash": "sha256:3df4d7875d50b0b81c30ac57b55eaf18800d97e6c15add11f040ea69da975147",
+    "summary": "Gate the Persona Dream 01->02->06->07 spine chain through one manifest."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream",
+    "allowed_paths": [
+      "skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+      "skills/persona-dream/scripts/check_persona_dream_spine_chain.py",
+      "skills/persona-dream/tests/fixtures/spine_chain/**"
+    ]
+  },
+  "context": {
+    "provider_live": false,
+    "mocked": false,
+    "live_image_call_started": false,
+    "phase_scope": [
+      "01_memory_residue",
+      "02_story",
+      "06_script",
+      "07_storyboard_prompt"
+    ],
+    "manifest": "skills/persona-dream/tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json",
+    "expected_pass_status": "PASS_SPINE_CHAIN_CONTRACT_GATE"
+  },
+  "entry_node": "review-checker",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 2
+  },
+  "nodes": [
+    {
+      "id": "review-checker",
+      "agent": "review-checker",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_chain_contract_validator_tau_command.json",
+      "required_evidence": [
+        "spine_chain_manifest.v1.json"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "spine-chain-contract-validator",
+      "agent": "spine-chain-contract-validator",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_chain_contract_validator_tau_command.json",
+      "required_evidence": [
+        "spine_chain_validator_receipt.v1.json"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "review-checker",
+      "to": "spine-chain-contract-validator"
+    },
+    {
+      "from": "spine-chain-contract-validator",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "spine_chain_validator_receipt.v1.json",
+    "PASS_SPINE_CHAIN_CONTRACT_GATE",
+    "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+    "BLOCKED_MISSING_UPSTREAM_CONTRACT",
+    "BLOCKED_COMPILED_PROMPT_HASH_MISSING",
+    "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_CONTRACT_HASH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_CONTRACT_PATH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_PROOF_EMBEDDED_IN_CONTRACT",
+    "BLOCKED_DOWNSTREAM_USED_RAW_SOURCE_TEXT",
+    "BLOCKED_SERIALIZED_JSON_PROMPT_TEXT",
+    "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT",
+    "BLOCKED_REVIEWER_PASS_WITH_INVALID_CONTRACT",
+    "BLOCKED_PROVIDER_LIVE_IN_LOCAL_CHAIN_GATE",
+    "BLOCKED_LIVE_CALL_STARTED_IN_LOCAL_CHAIN_GATE"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "context": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_chain_contract_validator_tau_dag.json"
+    ],
+    "dag_agent_role": "review-checker",
+    "dag_node_id": "review-checker",
+    "expected_pass_status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+    "live_image_call_started": false,
+    "manifest": "skills/persona-dream/tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json",
+    "mocked": false,
+    "phase_scope": [
+      "01_memory_residue",
+      "02_story",
+      "06_script",
+      "07_storyboard_prompt"
+    ],
+    "provider_live": false,
+    "summary": "Dispatch DAG contract persona-dream-spine-chain-contract-validator.",
+    "tau_dag_node": {
+      "agent": "review-checker",
+      "context": {},
+      "dag_id": "persona-dream-spine-chain-contract-validator",
+      "executor": "local",
+      "goal": {
+        "goal_hash": "sha256:3df4d7875d50b0b81c30ac57b55eaf18800d97e6c15add11f040ea69da975147",
+        "goal_id": "persona-dream-spine-chain-contract-validator",
+        "goal_version": 1,
+        "summary": "Gate the Persona Dream 01->02->06->07 spine chain through one manifest."
+      },
+      "node_id": "review-checker",
+      "required_evidence": [
+        "spine_chain_manifest.v1.json"
+      ],
+      "target": {
+        "allowed_paths": [
+          "skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+          "skills/persona-dream/scripts/check_persona_dream_spine_chain.py",
+          "skills/persona-dream/tests/fixtures/spine_chain/**"
+        ],
+        "repo": "grahama1970/agent-skills",
+        "target": "skills/persona-dream"
+      }
+    }
+  },
+  "github": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream"
+  },
+  "goal": {
+    "goal_hash": "sha256:3df4d7875d50b0b81c30ac57b55eaf18800d97e6c15add11f040ea69da975147",
+    "goal_id": "persona-dream-spine-chain-contract-validator",
+    "goal_version": 1,
+    "summary": "Gate the Persona Dream 01->02->06->07 spine chain through one manifest."
+  },
+  "next_agent": {
+    "executor": "local",
+    "name": "review-checker",
+    "reason": "Entry node for DAG persona-dream-spine-chain-contract-validator using role review-checker."
+  },
+  "previous_subagent": "human",
+  "rationale": "The DAG contract is the authoritative workflow and immutable goal boundary.",
+  "required_evidence": [
+    "dag-receipt.json",
+    "spine_chain_validator_receipt.v1.json",
+    "PASS_SPINE_CHAIN_CONTRACT_GATE",
+    "BLOCKED_INTER_CONTRACT_HASH_MISMATCH",
+    "BLOCKED_MISSING_UPSTREAM_CONTRACT",
+    "BLOCKED_COMPILED_PROMPT_HASH_MISSING",
+    "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_CONTRACT_HASH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_CONTRACT_PATH_MISMATCH",
+    "BLOCKED_COMPILED_PROMPT_PROOF_EMBEDDED_IN_CONTRACT",
+    "BLOCKED_DOWNSTREAM_USED_RAW_SOURCE_TEXT",
+    "BLOCKED_SERIALIZED_JSON_PROMPT_TEXT",
+    "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT",
+    "BLOCKED_REVIEWER_PASS_WITH_INVALID_CONTRACT",
+    "BLOCKED_PROVIDER_LIVE_IN_LOCAL_CHAIN_GATE",
+    "BLOCKED_LIVE_CALL_STARTED_IN_LOCAL_CHAIN_GATE"
+  ],
+  "result": {
+    "evidence": [
+      {
+        "kind": "dag_contract",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_chain_contract_validator_tau_dag.json",
+        "schema": "tau.dag_contract.v1",
+        "sha256": "sha256:b32f7e693abb30a6bf2512beb7ad97c5cd74057530b78f6ceb19118509961baa"
+      }
+    ],
+    "status": "DAG_DISPATCH_REQUESTED",
+    "summary": "Tau is dispatching entry node review-checker."
+  },
+  "schema": "tau.agent_handoff.v1",
+  "stop_condition": "Stop at a terminal DAG node or any fail-closed invariant violation."
+}

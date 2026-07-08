@@ -1,0 +1,31 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_persona_dream_spine_chain.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "tau_dag_node": {
+    "agent": "review-checker",
+    "dag_id": "persona-dream-spine-chain-contract-validator",
+    "executor": "local",
+    "goal": {
+      "goal_hash": "sha256:3df4d7875d50b0b81c30ac57b55eaf18800d97e6c15add11f040ea69da975147",
+      "goal_id": "persona-dream-spine-chain-contract-validator",
+      "goal_version": 1,
+      "summary": "Gate the Persona Dream 01->02->06->07 spine chain through one manifest."
+    },
+    "node_id": "review-checker",
+    "required_evidence": [
+      "spine_chain_manifest.v1.json"
+    ],
+    "target": {
+      "allowed_paths": [
+        "skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+        "skills/persona-dream/scripts/check_persona_dream_spine_chain.py",
+        "skills/persona-dream/tests/fixtures/spine_chain/**"
+      ],
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream"
+    }
+  }
+}

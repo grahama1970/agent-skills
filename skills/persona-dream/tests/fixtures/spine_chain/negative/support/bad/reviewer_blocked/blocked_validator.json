@@ -1,0 +1,8 @@
+{
+  "blockers": [
+    "fixture"
+  ],
+  "contract_sha256": "sha256:c3e9688c05d7323e22c1ba0a014d4a0ec086e07f34c1d440c43106fdc9a53488",
+  "schema": "persona_dream.phase07.prompt_contract_validation_receipt.v1",
+  "status": "BLOCKED_PROMPT_CONTRACT"
+}

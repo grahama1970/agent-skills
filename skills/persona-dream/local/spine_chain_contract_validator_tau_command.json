@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_persona_dream_spine_chain.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills"
+}

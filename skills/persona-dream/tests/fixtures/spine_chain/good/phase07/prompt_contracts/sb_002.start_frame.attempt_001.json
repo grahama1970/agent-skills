@@ -1,0 +1,123 @@
+{
+  "attempt": 1,
+  "camera_contract": {
+    "identity_priority": "required faces readable",
+    "lens": "35mm",
+    "shot_type": "medium two-shot"
+  },
+  "compiled_from": "phase06/good_script_prompt_contract.json",
+  "environment_requirements": [
+    "beach edge",
+    "dawn surf",
+    "wet board",
+    "phone on beach bag"
+  ],
+  "frame_id": "sb_002.start_frame",
+  "generation_scope": {
+    "live_image_call_started": false,
+    "provider_live": false,
+    "purpose": "prompt contract validation only"
+  },
+  "identity_reference_assets": {
+    "Embry": {
+      "asset_id": "embry_reference_sheet_2024",
+      "attached_to_provider_request": true,
+      "path": "phase01/media/embry_reference_sheet_2024.txt",
+      "sha256": "sha256:26f430d35ca4ea1e11cf9a3389c2aac2d6278950db8ba6fa5517ca728b81ad2c"
+    },
+    "Kai": {
+      "asset_id": "kai_reference_sheet_2024",
+      "attached_to_provider_request": true,
+      "path": "phase01/media/kai_reference_sheet_2024.txt",
+      "sha256": "sha256:ba61234224aed48d886a8eeef953db94c1f2b07c7b6fb71f3c02c24013e9422e"
+    }
+  },
+  "identity_requirements": {
+    "Embry": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    },
+    "Kai": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    }
+  },
+  "input_contracts": {
+    "phase06_script_prompt_contract": {
+      "path": "phase06/good_script_prompt_contract.json",
+      "required_validator_status": "PASS_SCRIPT_CONTRACT",
+      "sha256": "sha256:e345fcd167e4c768214c8bf6f9ba737c022573f0ef99017170b41c63322bc36e",
+      "validator_receipt_path": "phase06/validate_script_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:1ae087304a7ae2948b2bb54cb40cff855ff4bbd7c92028754b2b1c2caf4703c9"
+    }
+  },
+  "model_policy": {
+    "provider": "gpt-image-2",
+    "reference_attachment_required": true,
+    "text_only_not_provider_eligible": true
+  },
+  "panel_id": "sb_002",
+  "prompt_sections": {
+    "CHARACTERS": "Required identities are visible and identity-verifiable.",
+    "MUST_INCLUDE": "Attached reference identities and visible story action.",
+    "MUST_NOT_INCLUDE": "Do not imply required characters offscreen; do not hide faces.",
+    "SCENE": "Wet sand, surf line, reef, and phone interruption remain spatially coherent.",
+    "SUBJECT": "sb_002 start frame from the interrupted surf story."
+  },
+  "provider_request_shape": {
+    "image_reference_inputs": [
+      "embry_reference_sheet_2024",
+      "kai_reference_sheet_2024",
+      "sb003_accepted_frame"
+    ]
+  },
+  "required_identities": [
+    "Embry",
+    "Kai"
+  ],
+  "run_id": "spine-chain-fixture-run",
+  "schema": "persona_dream.phase07.panel_prompt_contract.v2",
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_consumption_policy": {
+    "raw_script_text_used_as_prompt_text": false,
+    "serialized_json_as_prompt_text_allowed": false,
+    "uses_typed_fields_from_phase06": [
+      "script.rows",
+      "timed_beats",
+      "entity_environment_script_table",
+      "asset_usage",
+      "interaction_matrix_coverage",
+      "storyboard_constraints"
+    ]
+  },
+  "state_contract": {
+    "creator_may_write": [
+      "candidate_frame",
+      "candidate_prompt"
+    ],
+    "creator_must_not_write": [
+      "accepted_frame",
+      "reviewer_verdict"
+    ],
+    "reviewer_may_write": [
+      "accepted_frame",
+      "reviewer_verdict"
+    ]
+  },
+  "story_action": "sb_002 start frame shows typed script action without raw source text.",
+  "tau_run_id": "tau-spine-chain-fixture",
+  "temporal_continuity_reference_assets": {
+    "previous_frame": {
+      "asset_id": "sb003_accepted_frame",
+      "path": "phase01/media/sb003_accepted_frame.txt",
+      "sha256": "sha256:36aabaf1b1754b6b6308df34a426aaf6ca1259a5822604fff7d545701b4e6be5"
+    }
+  },
+  "time_range": "2.5-5.0s"
+}

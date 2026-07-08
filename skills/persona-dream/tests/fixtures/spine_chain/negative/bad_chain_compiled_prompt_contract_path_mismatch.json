@@ -1,0 +1,275 @@
+{
+  "chain_id": "persona-dream-spine-chain-fixture-good-001",
+  "created_at": "2026-07-08T00:00:00Z",
+  "edge_bindings": [
+    {
+      "binding_type": "path_sha256",
+      "from_contract_path": "support/good/phase01/good_memory_residue_contract.json",
+      "from_contract_sha256": "sha256:d68eb8d134de06b383af8f765acdc5389bb33696f346777ded5c066b49e7ee4d",
+      "from_stage": "phase01",
+      "schema": "persona_dream.spine.chain_edge_binding.v1",
+      "to_contract_path": "support/good/phase02/good_story_contract_prompt.json",
+      "to_field": "input_contracts.phase01_memory_residue_contract",
+      "to_stage": "phase02"
+    },
+    {
+      "binding_type": "path_sha256",
+      "from_contract_path": "support/good/phase02/good_story_contract_prompt.json",
+      "from_contract_sha256": "sha256:0e6dedb0bb45ef85ab59d48bee44e402aca2db925ca8c85b202bae611475dcae",
+      "from_stage": "phase02",
+      "schema": "persona_dream.spine.chain_edge_binding.v1",
+      "to_contract_path": "support/good/phase06/good_script_prompt_contract.json",
+      "to_field": "input_contracts.phase02_story_contract_prompt",
+      "to_stage": "phase06"
+    },
+    {
+      "binding_type": "path_sha256",
+      "from_contract_path": "support/good/phase06/good_script_prompt_contract.json",
+      "from_contract_sha256": "sha256:e345fcd167e4c768214c8bf6f9ba737c022573f0ef99017170b41c63322bc36e",
+      "from_stage": "phase06",
+      "schema": "persona_dream.spine.chain_edge_binding.v1",
+      "to_contract_path": "phase07/prompt_contracts/*.json",
+      "to_field": "input_contracts.phase06_script_prompt_contract",
+      "to_stage": "phase07"
+    }
+  ],
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "raw_source_policy": {
+    "raw_source_text_may_display_directly": false,
+    "raw_source_text_may_feed_downstream": false,
+    "serialized_json_as_prompt_text_allowed": false
+  },
+  "reviewer_preconditions": {
+    "acceptance_claims": [],
+    "mode": "validator_receipt_required_for_pass_claims",
+    "rules": [
+      "reviewer PASS requires corresponding validator receipt status PASS_*",
+      "reviewer PASS artifact sha256 must match validated artifact sha256",
+      "reviewer PASS is not required when acceptance_claimed is false"
+    ],
+    "schema": "persona_dream.spine.reviewer_pass_precondition.v1"
+  },
+  "run_id": "fixture-run",
+  "schema": "persona_dream.spine.chain_contract_manifest.v1",
+  "stages": {
+    "phase01": {
+      "contract_path": "support/good/phase01/good_memory_residue_contract.json",
+      "contract_schema": "persona_dream.phase01.memory_residue_contract.v1",
+      "contract_sha256": "sha256:d68eb8d134de06b383af8f765acdc5389bb33696f346777ded5c066b49e7ee4d",
+      "required_validator_status": "PASS_MEMORY_RESIDUE_CONTRACT",
+      "stage": "01_idea_memory_residue",
+      "validator_receipt_path": "support/good/phase01/validate_memory_residue_receipt.json",
+      "validator_receipt_sha256": "sha256:5594bb983ef8cc217fe33626e3c089d2019ca64788007221e6302cb4b592a491"
+    },
+    "phase02": {
+      "contract_path": "support/good/phase02/good_story_contract_prompt.json",
+      "contract_schema": "persona_dream.phase02.story_contract_prompt.v1",
+      "contract_sha256": "sha256:0e6dedb0bb45ef85ab59d48bee44e402aca2db925ca8c85b202bae611475dcae",
+      "required_validator_status": "PASS_STORY_CONTRACT",
+      "stage": "02_story",
+      "validator_receipt_path": "support/good/phase02/validate_story_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:1b1b3f267f9c5bb6aae42fcfb1439c8e586dfc597e8e29d015541721f720f545"
+    },
+    "phase06": {
+      "contract_path": "support/good/phase06/good_script_prompt_contract.json",
+      "contract_schema": "persona_dream.phase06.script_prompt_contract.v1",
+      "contract_sha256": "sha256:e345fcd167e4c768214c8bf6f9ba737c022573f0ef99017170b41c63322bc36e",
+      "required_validator_status": "PASS_SCRIPT_CONTRACT",
+      "stage": "06_script",
+      "validator_receipt_path": "support/good/phase06/validate_script_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:1ae087304a7ae2948b2bb54cb40cff855ff4bbd7c92028754b2b1c2caf4703c9"
+    },
+    "phase07": {
+      "contract_schema": "persona_dream.phase07.panel_prompt_contract.v2",
+      "panel_prompt_contracts": [
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_999.start_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:c3e9688c05d7323e22c1ba0a014d4a0ec086e07f34c1d440c43106fdc9a53488",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_001.start_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:f688707fccc0a122c7c17bf20f9a04c6c4d72760ea8648c112ee91441ed2b8cb"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_001.start_frame.attempt_001.json",
+          "contract_sha256": "sha256:c3e9688c05d7323e22c1ba0a014d4a0ec086e07f34c1d440c43106fdc9a53488",
+          "frame_id": "sb_001.start_frame",
+          "panel_id": "sb_001",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_001.start_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:6cda57023a9f2362b7e2b531584f4260b6bb5e86d484bc3265f86027c191b850"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:b766cd0a87df1ad8a7dd34fa2e42491b37d3f7206e2bab49b61b078fa528d476",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_001.end_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:6cebfb68d4d53c3f6d6657521dc54bbeda2bc0d9a02235170f68efc102c67242"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+          "contract_sha256": "sha256:b766cd0a87df1ad8a7dd34fa2e42491b37d3f7206e2bab49b61b078fa528d476",
+          "frame_id": "sb_001.end_frame",
+          "panel_id": "sb_001",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_001.end_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:ef7599bf8fc5c8773facac45d47ddb7ecb6ad53dcd12a42c43135467d6b4e69b"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_002.start_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:5e33e3d981453a5ca1965e9fe118a01bb2e0bd4f21daf5277ccd23ee1646442c",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_002.start_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:3bfc28b9a5c7a24529c8c16401e29a169284d0a3353a65fb136f9a7d2e8eda83"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_002.start_frame.attempt_001.json",
+          "contract_sha256": "sha256:5e33e3d981453a5ca1965e9fe118a01bb2e0bd4f21daf5277ccd23ee1646442c",
+          "frame_id": "sb_002.start_frame",
+          "panel_id": "sb_002",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_002.start_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:ae6bf17e2d5d0e06ffe19151e052fb19293c4c3accaaededa2e69c83d17cf109"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_002.end_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:81b79f0aece2c244169abf47307c3735b744b503109bfaff95ca05c991c6d11b",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_002.end_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:0c1aa611788f61eaedd2b871cff9379e46e9006c77911c61d7cc9bd8ceeb860b"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_002.end_frame.attempt_001.json",
+          "contract_sha256": "sha256:81b79f0aece2c244169abf47307c3735b744b503109bfaff95ca05c991c6d11b",
+          "frame_id": "sb_002.end_frame",
+          "panel_id": "sb_002",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_002.end_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:9070baa4516ae913f87010aaa8913b738d38c9c59680296513fb439634a88573"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_003.start_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:34b5293126fd4eb92bdbf70f03cf5c22b9746f68247a4e6cf68b1e6ab147cb52",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_003.start_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:8f5d269c4ec3d9d12243796a62dde94e4b3f652feffee445a56cd298a4d56660"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_003.start_frame.attempt_001.json",
+          "contract_sha256": "sha256:34b5293126fd4eb92bdbf70f03cf5c22b9746f68247a4e6cf68b1e6ab147cb52",
+          "frame_id": "sb_003.start_frame",
+          "panel_id": "sb_003",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_003.start_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:a002e69c246ae9d20d72d447f9443df0a69d90c3df390ba36fb1ba38602aeeea"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:6253f25f143a66ed976cb4b63c0fe9eac35abca579d4f2737dabd9fb8a142d0b",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_003.end_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:5445932cc9bc974cb3e70e65c49a5f5192ba7736b1d6bf8e0c101c728b3866b1"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+          "contract_sha256": "sha256:6253f25f143a66ed976cb4b63c0fe9eac35abca579d4f2737dabd9fb8a142d0b",
+          "frame_id": "sb_003.end_frame",
+          "panel_id": "sb_003",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_003.end_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:24ee9fd8ad0ef3a6075086fa633e9d0f0ddbf6bbf23cebd31e919d4a7787e6a9"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_004.start_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:cc07b5510da7fe1dd3023be81460a8229696161005b26bcb205edd1b9c939a4e",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_004.start_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:519fa433c2e66eb143219934765befae24c9ff18790b0b33ef4d31a9be54dc76"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_004.start_frame.attempt_001.json",
+          "contract_sha256": "sha256:cc07b5510da7fe1dd3023be81460a8229696161005b26bcb205edd1b9c939a4e",
+          "frame_id": "sb_004.start_frame",
+          "panel_id": "sb_004",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_004.start_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:2286c8a976db0fccf09a8925596e5bd74f85aefddefca71d77fbdeddbf520ee5"
+        },
+        {
+          "compiled_prompt": {
+            "derived_from_contract_path": "support/good/phase07/prompt_contracts/sb_004.end_frame.attempt_001.json",
+            "derived_from_contract_sha256": "sha256:a9b033f561eefc980fd5c4d9dcad3b8d2efdaeb39c3f778afce3528a082d2fe5",
+            "may_be_hand_edited": false,
+            "path": "support/good/phase07/prompts/sb_004.end_frame.attempt_001.md",
+            "render_mode": "deterministic",
+            "renderer": {
+              "deterministic": true,
+              "name": "phase07_prompt_renderer",
+              "version": "v1"
+            },
+            "schema": "persona_dream.phase07.compiled_prompt_proof.v1",
+            "sha256": "sha256:d5d4c16c71c79f23b934524b035e6e872cd4711f200debc40781d47da461669c"
+          },
+          "contract_path": "support/good/phase07/prompt_contracts/sb_004.end_frame.attempt_001.json",
+          "contract_sha256": "sha256:a9b033f561eefc980fd5c4d9dcad3b8d2efdaeb39c3f778afce3528a082d2fe5",
+          "frame_id": "sb_004.end_frame",
+          "panel_id": "sb_004",
+          "required_validator_status": "PASS_PROMPT_CONTRACT",
+          "validator_receipt_path": "support/good/phase07/receipts/prompt_validation/sb_004.end_frame.attempt_001.json",
+          "validator_receipt_sha256": "sha256:7e2cbbf127f7adfcdba881f653e4d56cb012347e15360148c1cb48a8dbb1c5f4"
+        }
+      ],
+      "stage": "07_storyboard"
+    }
+  }
+}
