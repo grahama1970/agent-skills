@@ -1,0 +1,7 @@
+interface:
+  display_name: "Create Status Surface"
+  short_description: "Render receipt-backed progress surfaces"
+  default_prompt: "Use $create-status-surface to render a receipt-backed progress surface and Tau DAG handoff contract."
+
+policy:
+  allow_implicit_invocation: true

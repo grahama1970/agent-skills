@@ -1,0 +1,10 @@
+[project]
+name = "create-status-surface-skill"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+]
+
+[tool.uv]
+package = false

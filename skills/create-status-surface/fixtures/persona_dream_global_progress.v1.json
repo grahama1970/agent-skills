@@ -1,0 +1,73 @@
+{
+  "schema": "persona_dream.global_progress.v1",
+  "status": "PASS_GLOBAL_PROGRESS_ROLLUP",
+  "label": "LOCAL_REVISION_EVIDENCE_PROGRESS",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "provider_ready": false,
+  "live_submit_ready": false,
+  "manual_acceptance_claimed": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0,
+  "live_image_call_started": false,
+  "live_kling_call_started": false,
+  "unit_count": 4,
+  "expected_unit_count": 4,
+  "pass_count": 3,
+  "blocked_count": 1,
+  "stale_count": 0,
+  "progress_percent": 75.0,
+  "units": [
+    {
+      "unit_id": "07_storyboard_packet",
+      "phase": "07",
+      "label": "Storyboard packet",
+      "status": "PASS",
+      "evidence_state": "CURRENT",
+      "receipt_path": "receipts/storyboard.json",
+      "receipt_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "live_blockers": []
+    },
+    {
+      "unit_id": "08_kling_validator",
+      "phase": "08",
+      "label": "Kling validator",
+      "status": "PASS_WITH_LIVE_BLOCKERS",
+      "evidence_state": "CURRENT",
+      "receipt_path": "receipts/kling-validator.json",
+      "receipt_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "live_blockers": ["BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"]
+    },
+    {
+      "unit_id": "09_respawn_plan",
+      "phase": "09",
+      "label": "Respawn plan",
+      "status": "PASS",
+      "evidence_state": "CURRENT",
+      "receipt_path": "receipts/respawn.json",
+      "receipt_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "live_blockers": []
+    },
+    {
+      "unit_id": "10_manual_acceptance",
+      "phase": "10",
+      "label": "Manual acceptance",
+      "status": "BLOCKED",
+      "evidence_state": "CURRENT",
+      "receipt_path": null,
+      "receipt_sha256": null,
+      "live_blockers": ["BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"]
+    }
+  ],
+  "blockers": [],
+  "claims": {
+    "proves": [
+      "local evidence units were counted"
+    ],
+    "does_not_prove": [
+      "manual acceptance",
+      "provider readiness",
+      "live Kling generation"
+    ]
+  }
+}
