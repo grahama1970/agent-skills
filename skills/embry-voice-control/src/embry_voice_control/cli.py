@@ -108,6 +108,57 @@ def read_pcm16_wav(path: Path) -> tuple[int, int, bytes]:
         return sample_rate, channels, wav.readframes(frames)
 
 
+def pcm16_audio_stats(sample_rate: int, channels: int, pcm: bytes, *, frame_ms: int = 20) -> dict[str, Any]:
+    """Return basic audio level stats for a PCM16 mono/stereo buffer."""
+    samples = struct.unpack(f"<{len(pcm) // 2}h", pcm) if pcm else ()
+    if channels > 1:
+        usable = len(samples) - (len(samples) % channels)
+        mono = [
+            sum(samples[index:index + channels]) / float(channels)
+            for index in range(0, usable, channels)
+        ]
+    else:
+        mono = [float(sample) for sample in samples]
+    if not mono:
+        return {
+            "sample_rate": sample_rate,
+            "channels": channels,
+            "duration_seconds": 0.0,
+            "peak_abs": 0,
+            "rms": 0.0,
+            "rms_dbfs": None,
+            "non_silent_frame_ratio_250_rms": 0.0,
+            "non_silent_frame_ratio_5_rms": 0.0,
+        }
+    peak = max(abs(sample) for sample in mono)
+    rms = (sum(sample * sample for sample in mono) / len(mono)) ** 0.5
+    frame_samples = max(1, int(sample_rate * frame_ms / 1000.0))
+    frame_rms_values = []
+    for offset in range(0, len(mono), frame_samples):
+        frame = mono[offset:offset + frame_samples]
+        if frame:
+            frame_rms_values.append((sum(sample * sample for sample in frame) / len(frame)) ** 0.5)
+    def ratio(threshold: float) -> float:
+        if not frame_rms_values:
+            return 0.0
+        return sum(1 for value in frame_rms_values if value >= threshold) / float(len(frame_rms_values))
+    dbfs = None
+    if rms > 0:
+        import math
+
+        dbfs = 20.0 * math.log10(rms / 32768.0)
+    return {
+        "sample_rate": sample_rate,
+        "channels": channels,
+        "duration_seconds": round(len(mono) / float(sample_rate), 3),
+        "peak_abs": int(round(peak)),
+        "rms": round(float(rms), 3),
+        "rms_dbfs": round(float(dbfs), 2) if dbfs is not None else None,
+        "non_silent_frame_ratio_250_rms": round(ratio(250.0), 4),
+        "non_silent_frame_ratio_5_rms": round(ratio(5.0), 4),
+    }
+
+
 def encode_realtimestt_packet(metadata: dict[str, Any], audio: bytes) -> bytes:
     """Encode a RealtimeSTT browser audio packet."""
     metadata_bytes = json.dumps(metadata, separators=(",", ":")).encode("utf-8")
@@ -203,12 +254,18 @@ def run_realtimestt_listener_case(
         frames_total = len(pcm) // bytes_per_frame
         chunk_frames = max(1, sample_rate // 50)
         chunk_bytes = chunk_frames * bytes_per_frame
+        stats = pcm16_audio_stats(sample_rate, channels, pcm)
         data["audio"] = {
             "sample_rate": sample_rate,
             "channels": channels,
             "frames": frames_total,
             "duration_seconds": frames_total / float(sample_rate),
             "bytes": len(pcm),
+            "stats": stats,
+            "quality_notes": [
+                "WebRTC VAD may reject quiet files even when energy VAD would pass.",
+                "Compare failed runs against peak_abs, rms, and non_silent_frame_ratio_250_rms.",
+            ],
         }
         with websocket_connect(ws_url, open_timeout=min(5.0, timeout)) as ws:
             data["websocket_connected"] = True
