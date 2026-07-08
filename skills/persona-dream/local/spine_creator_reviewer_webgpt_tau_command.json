@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_spine_creator_reviewer_webgpt.py",
+    "--request",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_creator_reviewer_webgpt_request.md",
+    "--response",
+    "/mnt/storage12tb/persona-dream/spine-webgpt-review-20260708T0015/webgpt_response.md",
+    "--meta",
+    "/mnt/storage12tb/persona-dream/spine-webgpt-review-20260708T0015/webgpt_response.meta.json"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills"
+}

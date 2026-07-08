@@ -1,0 +1,98 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-spine-creator-reviewer-webgpt-check",
+  "goal": {
+    "goal_id": "persona-dream-spine-creator-reviewer-webgpt",
+    "goal_version": 1,
+    "goal_hash": "sha256:persona-dream-spine-creator-reviewer-webgpt-20260708",
+    "summary": "Check that WebGPT closed reusable creator-reviewer prompt contract decisions for 01, 02, 06, and 07 before implementation."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/local/spine_creator_reviewer_webgpt_request.md",
+    "allowed_paths": [
+      "skills/persona-dream/local/spine_creator_reviewer_webgpt_request.md",
+      "skills/persona-dream/local/spine_creator_reviewer_webgpt_tau_command.json",
+      "skills/persona-dream/local/spine_creator_reviewer_webgpt_tau_dag.json",
+      "skills/persona-dream/scripts/check_spine_creator_reviewer_webgpt.py",
+      "/mnt/storage12tb/persona-dream/spine-webgpt-review-20260708T0015/webgpt_response.md",
+      "/mnt/storage12tb/persona-dream/spine-webgpt-review-20260708T0015/webgpt_response.meta.json"
+    ]
+  },
+  "context": {
+    "review_tab": {
+      "name": "dreams",
+      "tab_id": "837358015",
+      "url": "https://chatgpt.com/c/6a4c25f5-1460-83ea-83cc-e63ce7a497d9",
+      "desktop": 2
+    },
+    "expected_order": [
+      "07 first proof rung",
+      "01 memory residue contract",
+      "02 story contract",
+      "06 script contract",
+      "07 integration rerun"
+    ],
+    "expected_first_tau_rung": "phase07_prompt_contract_validator_local_only",
+    "expected_non_claims": [
+      "does not prove prompt validator implementation",
+      "does not prove image provider reference attachment",
+      "does not prove visual identity pass",
+      "does not prove five-minute live performance",
+      "does not prove final storyboard approval"
+    ]
+  },
+  "entry_node": "spine-webgpt-review-checker",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 1
+  },
+  "nodes": [
+    {
+      "id": "spine-webgpt-review-checker",
+      "agent": "spine-webgpt-review-checker",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_creator_reviewer_webgpt_tau_command.json",
+      "required_evidence": [
+        "spine_creator_reviewer_webgpt_check_receipt.json"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "spine-webgpt-review-checker",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "spine_creator_reviewer_webgpt_check_receipt.json",
+    "requested_tab_id=837358015",
+    "controlled_tab_id=837358015",
+    "tab_was_created=false",
+    "recommended_order=07_then_01_then_02_then_06_then_07_integration",
+    "first_tau_rung=phase07_prompt_contract_validator_local_only"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}
