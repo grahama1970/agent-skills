@@ -1,0 +1,12 @@
+{
+  "schema": "persona_dream.video_provider_registry_refresh_fixture.v1",
+  "expected": {
+    "status": "BLOCKED_PROVIDER_REGISTRY_REFRESH",
+    "discovered_provider_ids": [
+      "kling"
+    ],
+    "blockers": [
+      "BLOCKED_FAL_MODEL_CATALOG_NOT_FOUND"
+    ]
+  }
+}

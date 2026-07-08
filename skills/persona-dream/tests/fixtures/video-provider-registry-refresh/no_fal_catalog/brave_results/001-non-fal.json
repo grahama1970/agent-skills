@@ -1,0 +1,17 @@
+{
+  "query": "video generation Kling Seedance comparison",
+  "count": 2,
+  "offset": 0,
+  "results": [
+    {
+      "title": "Kling Video Models - The Essentials",
+      "description": "Kling image-to-video can provide first and last frame conditioning for structured scenes.",
+      "url": "https://help.scenario.com/articles/8534375995-kling-video-models-the-essentials"
+    },
+    {
+      "title": "Video model comparison",
+      "description": "Runway, Luma, Pika, and Sora are compared for video generation.",
+      "url": "https://example.invalid/video-model-comparison"
+    }
+  ]
+}

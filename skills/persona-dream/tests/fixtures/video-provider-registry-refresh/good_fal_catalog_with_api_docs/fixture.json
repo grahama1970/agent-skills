@@ -1,0 +1,20 @@
+{
+  "schema": "persona_dream.video_provider_registry_refresh_fixture.v1",
+  "expected": {
+    "status": "PASS_PROVIDER_REGISTRY_REFRESH",
+    "discovered_provider_ids": [
+      "kling",
+      "bytedance-seedance",
+      "veo"
+    ],
+    "fal_hosted_provider_ids": [
+      "kling",
+      "bytedance-seedance"
+    ],
+    "fal_api_doc_provider_ids": [
+      "kling",
+      "bytedance-seedance"
+    ],
+    "blockers": []
+  }
+}

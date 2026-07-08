@@ -137,7 +137,14 @@ def score_provider(provider: dict[str, Any], scene: dict[str, Any]) -> dict[str,
     }
 
 
-def select_provider(scene: dict[str, Any], registry: dict[str, Any], scene_path: Path, registry_path: Path, output: Path) -> dict[str, Any]:
+def select_provider(
+    scene: dict[str, Any],
+    registry: dict[str, Any],
+    scene_path: Path,
+    registry_path: Path,
+    output: Path,
+    registry_refresh_receipt_path: Path | None = None,
+) -> dict[str, Any]:
     blockers: list[str] = []
     if scene.get("schema_version") != SCENE_SCHEMA:
         add_blocker(blockers, "BLOCKED_VIDEO_SCENE_CONTRACT_SCHEMA")
@@ -166,6 +173,12 @@ def select_provider(scene: dict[str, Any], registry: dict[str, Any], scene_path:
     if registry.get("status") != "CURRENT":
         selection_status = BLOCKED_POLICY
 
+    registry_refresh: dict[str, Any] = {}
+    if registry_refresh_receipt_path:
+        registry_refresh = read_json(registry_refresh_receipt_path)
+        if registry_refresh.get("status") != "PASS_PROVIDER_REGISTRY_REFRESH":
+            add_blocker(blockers, "BLOCKED_PROVIDER_REGISTRY_REFRESH_NOT_PASS")
+
     scorecard = {
         "schema_version": SCORECARD_SCHEMA,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -176,6 +189,12 @@ def select_provider(scene: dict[str, Any], registry: dict[str, Any], scene_path:
         "scene_contract_hash": sha256_file(scene_path),
         "provider_registry_path": str(registry_path),
         "provider_registry_hash": sha256_file(registry_path),
+        "provider_registry_refresh_receipt_path": str(registry_refresh_receipt_path) if registry_refresh_receipt_path else None,
+        "provider_registry_refresh_receipt_hash": sha256_file(registry_refresh_receipt_path) if registry_refresh_receipt_path else None,
+        "provider_registry_refresh_status": registry_refresh.get("status") if registry_refresh else "NOT_PROVIDED",
+        "provider_registry_refresh_discovered_provider_ids": registry_refresh.get("discovered_provider_ids", []) if registry_refresh else [],
+        "provider_registry_refresh_fal_hosted_provider_ids": registry_refresh.get("fal_hosted_provider_ids", []) if registry_refresh else [],
+        "provider_registry_refresh_fal_api_doc_provider_ids": registry_refresh.get("fal_api_doc_provider_ids", []) if registry_refresh else [],
         "actual_provider_call_attempts": 0,
         "providers": provider_scores,
         "recommended_provider_id": recommended,
@@ -209,11 +228,19 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene-contract", required=True, type=Path)
     parser.add_argument("--registry", type=Path)
+    parser.add_argument("--registry-refresh-receipt", type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     registry_path = args.registry or Path(__file__).resolve().parents[1] / "provider_registry" / "video_provider_registry.v1.json"
-    scorecard = select_provider(read_json(args.scene_contract), read_json(registry_path), args.scene_contract.resolve(), registry_path.resolve(), args.output.resolve())
+    scorecard = select_provider(
+        read_json(args.scene_contract),
+        read_json(registry_path),
+        args.scene_contract.resolve(),
+        registry_path.resolve(),
+        args.output.resolve(),
+        args.registry_refresh_receipt.resolve() if args.registry_refresh_receipt else None,
+    )
     if args.json:
         print(json.dumps(scorecard, indent=2, sort_keys=True))
     else:

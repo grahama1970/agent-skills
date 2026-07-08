@@ -1,0 +1,17 @@
+{
+  "query": "fal ai video models",
+  "count": 2,
+  "offset": 0,
+  "results": [
+    {
+      "title": "Explore Kling AI Models on fal",
+      "description": "Creators of the Kling family. State of the art video generation models from Kuaishou.",
+      "url": "https://fal.ai/explore/kling"
+    },
+    {
+      "title": "Seedance 2.0 | fal",
+      "description": "The new video model by Bytedance.",
+      "url": "https://fal.ai/explore/seedance-2.0"
+    }
+  ]
+}

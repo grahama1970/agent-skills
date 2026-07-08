@@ -1,0 +1,18 @@
+{
+  "schema": "persona_dream.video_provider_registry_refresh_fixture.v1",
+  "expected": {
+    "status": "BLOCKED_PROVIDER_REGISTRY_REFRESH",
+    "discovered_provider_ids": [
+      "kling",
+      "bytedance-seedance"
+    ],
+    "fal_hosted_provider_ids": [
+      "kling",
+      "bytedance-seedance"
+    ],
+    "blockers": [
+      "BLOCKED_FAL_API_DOCS_NOT_OBSERVED:kling",
+      "BLOCKED_FAL_API_DOCS_NOT_OBSERVED:bytedance-seedance"
+    ]
+  }
+}
