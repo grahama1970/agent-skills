@@ -98,6 +98,11 @@ only proves Chatterbox render/control wiring, not memory-driven tone steering.
 
 Purpose: start listener capture for a session.
 
+The default implementation must start or attach to the Unix/PipeWire
+RealtimeSTT listener service. Browser microphone capture may be exposed as a
+diagnostic client source, but it must not be required for the main listener to
+work.
+
 Required response fields:
 
 - `listener_state`
@@ -107,8 +112,25 @@ Required response fields:
 - `diarization_enabled`
 - `receipt_path`
 
-The service must state whether browser/WebRTC capture, local file/loopback, or
-physical microphone input is being used.
+The service must state whether PipeWire physical microphone, PipeWire loopback,
+local file injection, or browser/WebRTC diagnostic input is being used. If the
+source is browser/WebRTC, the response must label the proof as diagnostic and
+must not mark listener readiness as release-ready.
+
+Preferred listener event transport:
+
+```text
+Unix socket or localhost SSE/WebSocket
+```
+
+Required event types:
+
+- `listener.state`
+- `listener.wake_detected`
+- `listener.partial_transcript`
+- `listener.final_transcript`
+- `listener.error`
+- `listener.receipt_written`
 
 ## Wake Word Event
 

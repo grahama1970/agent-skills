@@ -9,7 +9,10 @@ responses or fake receipts.
 - `controlled-live`: controlled local text/audio handoff into the live stack.
 - `wake-capital-france-live`: controlled wake event into the live control-plane
   `/live-turn` adapter for the "capital of France" human scenario.
-- `listener-live`: physical or loopback listener input through RealtimeSTT.
+- `listener-live`: Unix/PipeWire physical or loopback listener input through
+  RealtimeSTT. This is the authoritative listener acceptance path.
+- `browser-mic-diagnostic`: optional Chrome/WebRTC input diagnostic only; not a
+  release gate.
 - `release`: all controlled and listener checks plus replay and interruption.
 
 ## Required Cases
@@ -25,7 +28,27 @@ responses or fake receipts.
 | `barge-in` | User interruption cancels old speech. | Old turn cancel, stale chunks skipped, zero old bytes after cancel. |
 | `replay` | Chat, audio, trace, and orb replay together. | Timeline offsets, user+Embry turns, audio artifacts, orb authority. |
 | `browser-chat` | Shared Chat UX displays the same turn authority. | CDP/screenshot evidence for `#embry-voice`. |
+| `unix-listener-ingress` | Local audio capture is the listener authority. | PipeWire/Jabra or loopback capture, non-silent PCM, RealtimeSTT realtime/final transcript, receipt path. |
 | `wake-capital-france` | Human says `Embry`, Embry enters listening, human asks "what is the capital of France", and Embry answers. | Wake event, `idle -> wake_detected -> listening`, RealtimeSTT final transcript, memory/Tau answer route, Chatterbox spoken answer, Chat UX turn, audio/orb receipt. |
+
+## Browser Mic Policy
+
+Do not use Chrome microphone permission as the primary proof path. The
+`localhost:3002` browser mic path is a diagnostic convenience only. Prior local
+evidence showed the OS/Jabra mic can capture sound while Chrome still had no
+stored mic grant for `localhost:3002` and the page remained at `listener error`
+with `pcm 0`. Therefore browser mic failures should create diagnostic receipts,
+not block the Unix listener service.
+
+The authoritative live listener proof is:
+
+```text
+Jabra/PipeWire or controlled loopback audio
+  -> RealtimeSTT listener service
+  -> wake_detected / partial_transcript / final_transcript events
+  -> /turn or local /live-turn adapter
+  -> Chat UX subscribes to events
+```
 
 ## Focused Wake Control-Plane Runner
 

@@ -155,6 +155,17 @@ Required response fields:
 `POST /listen/start` and `POST /listen/stop` control listener state only. They
 do not directly answer the user.
 
+The authoritative listener path is Unix/PipeWire audio capture feeding
+RealtimeSTT from a local service or runner. Browser microphone/WebRTC capture is
+optional client input only. It must not be the primary acceptance path because
+Chrome site permissions, tab activation, and device binding have proven brittle
+for `localhost:3002`.
+
+The shared Chat UX should subscribe to listener state and transcript events from
+the Unix listener service. React should not own wake-word recognition. A browser
+mic button may request permission and forward audio when it works, but a failed
+browser permission prompt must not block the system-level listener.
+
 The required wake word is exactly:
 
 ```text
@@ -171,6 +182,16 @@ idle -> wake_detected -> listening
 The UI should dim the `SAY "EMBRY"` instruction and show `LISTENING...` as soon
 as the wake event is accepted. The listener should reject low-confidence,
 non-primary-speaker, cooldown, and while-Embry-is-speaking wake attempts.
+
+The listener service should emit events through an explicit local transport,
+preferably a Unix socket or localhost HTTP/SSE/WebSocket adapter:
+
+- `listener.state`: idle, listening, transcribing, processing, error
+- `listener.wake_detected`
+- `listener.partial_transcript`
+- `listener.final_transcript`
+- `listener.error`
+- `listener.receipt_written`
 
 Listener output must become structured turn evidence:
 
