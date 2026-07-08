@@ -33,6 +33,9 @@ DEFAULT_SEMANTIC_OUTCOME_MATRIX_SCHEMA_PATH = (
 DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH = (
     Path(__file__).resolve().parents[2] / "schemas" / "battle.exploit_lifecycle_dag.v1.schema.json"
 )
+DEFAULT_EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA_PATH = (
+    Path(__file__).resolve().parents[2] / "schemas" / "battle.exploit_lifecycle_receipt.v1.schema.json"
+)
 BATTLE_SKILL_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_SCHEMA = "battle.normalized_ux_fixture.v1"
 EXPECTED_UX_CONTRACT_SCHEMA = "battle.ux_contract.v1"
@@ -47,6 +50,7 @@ EXPECTED_LIVE_EVENT_SCHEMA = "battle.live_event.v1"
 EXPECTED_SNAPSHOT_SCHEMA = "battle.snapshot.v1"
 EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA = "battle.semantic_outcome_matrix.v1"
 EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA = "battle.exploit_lifecycle_dag.v1"
+EXPECTED_EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA = "battle.exploit_lifecycle_receipts.v1"
 EXPECTED_CANONICAL_SCENARIO = {
     "battle_id": "battle-004",
     "public_entrypoint": "/api/import-zip",
@@ -419,6 +423,101 @@ def validate_exploit_lifecycle_dag_schema(
     schema_path: Path = DEFAULT_EXPLOIT_LIFECYCLE_DAG_SCHEMA_PATH,
 ) -> None:
     _validate_json_schema_payload(payload=dag, schema_path=schema_path)
+
+
+def validate_exploit_lifecycle_receipts_schema(
+    bundle: dict[str, Any],
+    *,
+    schema_path: Path = DEFAULT_EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA_PATH,
+) -> None:
+    _validate_json_schema_payload(payload=bundle, schema_path=schema_path)
+
+
+def validate_exploit_lifecycle_receipts_path(
+    receipts_path: Path,
+    *,
+    schema_path: Path = DEFAULT_EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA_PATH,
+) -> dict[str, Any]:
+    bundle = json.loads(receipts_path.read_text(encoding="utf-8"))
+    validate_exploit_lifecycle_receipts_schema(bundle, schema_path=schema_path)
+    validate_exploit_lifecycle_receipts(bundle)
+    receipts = bundle.get("receipts") if isinstance(bundle.get("receipts"), list) else []
+    summary = bundle.get("summary") if isinstance(bundle.get("summary"), dict) else {}
+    return {
+        "status": "PASS",
+        "schema": EXPECTED_EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA,
+        "receipts": str(receipts_path),
+        "receipt_count": len(receipts),
+        "pressure_receipt_count": summary.get("pressure_receipt_count"),
+        "lineage_receipt_count": summary.get("lineage_receipt_count"),
+        "spawn_decisions": summary.get("spawn_decisions"),
+        "outcome_classes": summary.get("outcome_classes"),
+        "mocked": bundle.get("mocked"),
+        "live": bundle.get("live"),
+        "proof_mode": bundle.get("proof_mode"),
+    }
+
+
+def validate_exploit_lifecycle_receipts(bundle: dict[str, Any]) -> None:
+    errors: list[str] = []
+    _check(bundle.get("schema") == EXPECTED_EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA, "exploit lifecycle receipts schema is invalid", errors)
+    _check(bundle.get("mocked") is False, "exploit lifecycle receipts must be mocked=false", errors)
+    _check(bundle.get("live") is True, "exploit lifecycle receipts must be live=true", errors)
+    _check(bundle.get("proof_mode") == "live_tau", "exploit lifecycle receipts proof_mode must be live_tau", errors)
+    receipts = bundle.get("receipts") if isinstance(bundle.get("receipts"), list) else []
+    _check(bool(receipts), "exploit lifecycle receipts bundle must contain receipts", errors)
+    ids = [str(receipt.get("receipt_id")) for receipt in receipts if isinstance(receipt, dict)]
+    _check(len(ids) == len(set(ids)), "exploit lifecycle receipt ids must be unique", errors)
+    event_types = {str(receipt.get("event_type")) for receipt in receipts if isinstance(receipt, dict)}
+    _check("scenario_authorized" in event_types, "lifecycle receipts must include scenario_authorized", errors)
+    _check("runtime_provisioned" in event_types, "lifecycle receipts must include runtime_provisioned", errors)
+    _check(
+        "pressure_assessed" in event_types or "spawn_decision_recorded" in event_types or "lifecycle_unresolved" in event_types,
+        "lifecycle receipts must include pressure, spawn, or unresolved learning evidence",
+        errors,
+    )
+    for receipt in receipts:
+        if not isinstance(receipt, dict):
+            errors.append("exploit lifecycle receipt must be an object")
+            continue
+        _check(receipt.get("schema") == "battle.exploit_lifecycle_receipt.v1", f"receipt {receipt.get('receipt_id')} schema invalid", errors)
+        validation = receipt.get("validation") if isinstance(receipt.get("validation"), dict) else {}
+        _check(validation.get("mocked") is False, f"receipt {receipt.get('receipt_id')} mocked must be false", errors)
+        _check(validation.get("live") is True, f"receipt {receipt.get('receipt_id')} live must be true", errors)
+        pressure = receipt.get("pressure_observation") if isinstance(receipt.get("pressure_observation"), dict) else {}
+        if pressure.get("present") is True:
+            _check(
+                pressure.get("overclaim_guard") == "observation_only_unless_blue_or_judge_receipt_present",
+                f"receipt {receipt.get('receipt_id')} pressure overclaim guard missing",
+                errors,
+            )
+            signals = {str(signal) for signal in pressure.get("signals", [])}
+            if pressure.get("confirmed_blue_action") is False:
+                forbidden = {"blue_patch_receipt", "blue_scan_receipt", "judge_block_receipt"}
+                _check(not (signals & forbidden), f"receipt {receipt.get('receipt_id')} drift-only pressure must not include authority receipts", errors)
+            outcome = receipt.get("outcome") if isinstance(receipt.get("outcome"), dict) else {}
+            _check(
+                outcome.get("candidate_class") not in {"confirmed_blue_kill_no_child", "confirmed_blue_kill_with_child"},
+                f"receipt {receipt.get('receipt_id')} pressure observation must not claim confirmed kill",
+                errors,
+            )
+        spawn = receipt.get("spawn_decision") if isinstance(receipt.get("spawn_decision"), dict) else {}
+        if spawn.get("decision") in {"strategic_pre_kill", "panic_spawn"}:
+            _check(
+                spawn.get("confirmed_kill_receipt_before_spawn") is False,
+                f"receipt {receipt.get('receipt_id')} pre-kill spawn cannot follow confirmed kill",
+                errors,
+            )
+        if spawn.get("decision") == "post_block_handoff":
+            _check(
+                spawn.get("parent_state") == "blocked",
+                f"receipt {receipt.get('receipt_id')} post_block_handoff parent_state must be blocked",
+                errors,
+            )
+    summary = bundle.get("summary") if isinstance(bundle.get("summary"), dict) else {}
+    _check(summary.get("receipt_count") == len(receipts), "summary.receipt_count must match receipts length", errors)
+    if errors:
+        raise ContractError("\n".join(errors))
 
 
 def validate_exploit_lifecycle_dag_path(

@@ -18,20 +18,23 @@ echo "battle_dir=$BATTLE_DIR"
 echo "artifact_dir=$ARTIFACT_DIR"
 echo "host=$HOST"
 
-echo "1/7 Backend contract pytest"
+echo "1/8 Backend contract pytest"
 (cd "$BATTLE_DIR" && uv run pytest tests/test_battle_event_adapter_contract.py -q)
 
-echo "2/7 Semantic outcome matrix export/validate"
+echo "2/8 Live lifecycle receipt contract pytest"
+(cd "$BATTLE_DIR" && uv run pytest tests/test_arena_live_battle_proof_contract.py -q)
+
+echo "3/8 Semantic outcome matrix export/validate"
 SEMANTIC_MATRIX="$ARTIFACT_DIR/battle-semantic-outcome-matrix.json"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli export-semantic-outcome-matrix --out "$SEMANTIC_MATRIX"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-semantic-outcome-matrix "$SEMANTIC_MATRIX"
 
-echo "3/7 Exploit lifecycle DAG export/validate"
+echo "4/8 Exploit lifecycle DAG export/validate"
 LIFECYCLE_DAG="$ARTIFACT_DIR/battle-exploit-lifecycle-dag.json"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli export-exploit-lifecycle-dag --out "$LIFECYCLE_DAG"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-exploit-lifecycle-dag "$LIFECYCLE_DAG"
 
-echo "4/7 Normalized UX fixture validation"
+echo "5/8 Normalized UX fixture validation"
 for fixture in \
   "$BATTLE_DIR/local/battle-004-parent-spawn.normalized.json" \
   "$BATTLE_DIR/local/battle-004-sparse.normalized.json" \
@@ -42,7 +45,7 @@ for fixture in \
   uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-ux-contract "$fixture"
 done
 
-echo "5/7 Phase 2 transport stream validation"
+echo "6/8 Phase 2 transport stream validation"
 for stream_dir in \
   "$BATTLE_DIR/local/battle-004-parent-spawn-pixi-replay/stream" \
   "$BATTLE_DIR/local/battle-005-ssrf-metadata-stream" \
@@ -55,10 +58,10 @@ for stream_dir in \
   uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-ux-transport "$stream_dir"
 done
 
-echo "6/7 Spectator replay proof"
+echo "7/8 Spectator replay proof"
 "$BATTLE_DIR/scripts/prove-spectator-local.sh"
 
-echo "7/7 Mock evidence claim guard"
+echo "8/8 Mock evidence claim guard"
 (cd "$(cd "$BATTLE_DIR/../.." && pwd)" && python3 scripts/check_mock_evidence_claims.py)
 
 echo "BATTLE_PROVE_BACKEND_GOAL_PASS"

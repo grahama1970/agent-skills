@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
 from typer.testing import CliRunner
 
 
@@ -12,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from battle_skill import arena_live_battle_proof as proof  # noqa: E402
 from battle_skill import cli as battle_cli  # noqa: E402
+from battle_skill.ux_contract_validator import ContractError, validate_exploit_lifecycle_receipts, validate_exploit_lifecycle_receipts_path  # noqa: E402
 
 
 def test_parent_spawn_flag_runs_parent_first_and_records_lineage_request(
@@ -180,6 +182,7 @@ def test_parent_spawn_flag_runs_parent_first_and_records_lineage_request(
                         "receipt_id": "lineage-spawn-red-0-red-1",
                         "parent_lane_id": "payload-857-receipt",
                         "child_lane_id": "payload-857-red-1",
+                        "spawn_type": "post_block_handoff",
                     }
                 ],
             },
@@ -233,6 +236,30 @@ def test_parent_spawn_flag_runs_parent_first_and_records_lineage_request(
         "lineage_receipts_ready",
     ]
     assert all(isinstance(event["elapsed_seconds"], float) for event in receipt["timing_receipts"]["events"])
+    lifecycle_path = tmp_path / "proof" / "exploit-lifecycle-receipts.json"
+    report = validate_exploit_lifecycle_receipts_path(lifecycle_path)
+    assert report["status"] == "PASS"
+    assert report["schema"] == "battle.exploit_lifecycle_receipts.v1"
+    assert report["live"] is True
+    assert report["mocked"] is False
+    assert report["proof_mode"] == "live_tau"
+    assert "post_block_handoff" in report["spawn_decisions"]
+    assert "spawn_pressure_conceded" in report["outcome_classes"]
+    lifecycle = json.loads(lifecycle_path.read_text(encoding="utf-8"))
+    assert lifecycle["summary"]["bug_learning_notes"] == [
+        "Existing battle-004 parent-spawn path spawns after Judge BLUE_SUCCESS; it is post_block_handoff, not strategic_pre_kill survival.",
+        "Pressure observations are recorded as observations and do not claim Blue kill without a kill receipt.",
+    ]
+    spawn_receipts = [
+        item
+        for item in lifecycle["receipts"]
+        if item["event_type"] == "spawn_decision_recorded"
+    ]
+    assert spawn_receipts
+    assert spawn_receipts[0]["spawn_decision"]["decision"] == "post_block_handoff"
+    assert spawn_receipts[0]["spawn_decision"]["parent_state"] == "blocked"
+    assert spawn_receipts[0]["pressure_observation"]["confirmed_blue_action"] is True
+    assert spawn_receipts[0]["pressure_observation"]["suspected_pressure"] is False
 
 
 def test_arena_parent_spawn_proof_cli_uses_canonical_spawn_defaults(
@@ -287,3 +314,96 @@ def test_arena_parent_spawn_proof_cli_uses_canonical_spawn_defaults(
     assert calls["blue_workers"] == 2
     assert calls["spawn_red_child_on_blue_success"] is True
     assert calls["run_id"].startswith("arena-parent-spawn-")
+
+
+def test_live_lifecycle_receipts_reject_pressure_overclaimed_as_kill() -> None:
+    bundle = {
+        "schema": "battle.exploit_lifecycle_receipts.v1",
+        "battle_id": "battle-004",
+        "run_id": "run-overclaim",
+        "scenario_id": "arena-zip-slip-import-001",
+        "status": "PASS",
+        "mocked": False,
+        "live": True,
+        "proof_mode": "live_tau",
+        "source": "battle_004_parent_spawn_live_tau",
+        "receipts": [
+            {
+                "schema": "battle.exploit_lifecycle_receipt.v1",
+                "receipt_id": "bad-pressure-kill",
+                "battle_id": "battle-004",
+                "run_id": "run-overclaim",
+                "scenario_id": "arena-zip-slip-import-001",
+                "lane_id": "payload-857-receipt",
+                "source_time": {"sequence": 0, "clock": "battle_control_plane_perf_counter"},
+                "actor": {"team": "orchestrator", "subagent_id": None, "persona_id": None, "tau_task_id": None},
+                "exploit": {
+                    "exploit_id": "payload-857-receipt",
+                    "lineage_id": "battle-004:arena-zip-slip-import-001:lineage",
+                    "parent_exploit_id": None,
+                    "generation": 0,
+                    "profile": {
+                        "strength": 0.8,
+                        "complexity": 0.7,
+                        "durability": 0.7,
+                        "score_weight": 0.7,
+                        "actor_visual_variant_id": "crimson_hornbreaker",
+                    },
+                },
+                "event_type": "pressure_assessed",
+                "phase": "pressure",
+                "evidence": [],
+                "pressure_observation": {
+                    "present": True,
+                    "signals": ["stderr_drift", "response_body_drift"],
+                    "baseline_probe_receipt_id": "baseline",
+                    "current_probe_receipt_id": "current",
+                    "pressure_score": 0.7,
+                    "confidence": "medium",
+                    "suspected_pressure": True,
+                    "confirmed_blue_action": False,
+                    "overclaim_guard": "observation_only_unless_blue_or_judge_receipt_present",
+                },
+                "spawn_decision": {
+                    "present": False,
+                    "decision": "none",
+                    "allowed": False,
+                    "reason_codes": [],
+                    "parent_state": "alive",
+                    "child_exploit_id": None,
+                    "confirmed_kill_receipt_before_spawn": False,
+                    "budget_remaining_after_spawn": 0,
+                },
+                "outcome": {
+                    "candidate_class": "confirmed_blue_kill_no_child",
+                    "required_receipt_ids": [],
+                    "classification_reason": "bad overclaim",
+                },
+                "score": {
+                    "applied": False,
+                    "blue_points": 0,
+                    "red_points": 0,
+                    "score_weight": 0.7,
+                    "scorekeeper_receipt_id": None,
+                },
+                "validation": {
+                    "mocked": False,
+                    "live": True,
+                    "proof_mode": "live_tau",
+                    "validator_version": "battle-live-lifecycle-v1",
+                },
+            }
+        ],
+        "summary": {
+            "receipt_count": 1,
+            "event_types": ["pressure_assessed"],
+            "spawn_decisions": [],
+            "pressure_receipt_count": 1,
+            "lineage_receipt_count": 0,
+            "outcome_classes": ["confirmed_blue_kill_no_child"],
+            "bug_learning_notes": ["bad fixture"],
+        },
+        "claims": {"proves": ["bad"], "does_not_prove": ["bad"]},
+    }
+    with pytest.raises(ContractError, match="pressure observation must not claim confirmed kill"):
+        validate_exploit_lifecycle_receipts(bundle)

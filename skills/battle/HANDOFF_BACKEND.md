@@ -185,6 +185,8 @@ The backend now exports deterministic contract artifacts for exploit scoring and
 ./run.sh validate-semantic-outcome-matrix /tmp/battle-semantic-outcome-matrix.json
 ./run.sh export-exploit-lifecycle-dag --out /tmp/battle-exploit-lifecycle-dag.json
 ./run.sh validate-exploit-lifecycle-dag /tmp/battle-exploit-lifecycle-dag.json
+./run.sh validate-exploit-lifecycle-receipts /tmp/battle-004-live-first-lifecycle-20260707T221844/exploit-lifecycle-receipts.json
+./run.sh export-exploit-lifecycle-receipts /tmp/battle-004-live-first-lifecycle-20260707T221844 --out /tmp/battle-004-live-first-lifecycle.receipts.export.json
 ```
 
 Key policies:
@@ -198,6 +200,47 @@ pressure_signals_are_observations_not_authority = true
 ```
 
 Subagents may suspect Blue pressure from observation signals such as stderr/stdout drift, response-body drift, timing shifts, probe failures, or explicit Blue/Judge receipts. Suspicion may justify a `strategic_pre_kill` spawn, but it must not become a confirmed Blue scan, kill, or block without corroborating Blue/Judge receipt evidence.
+
+## Live Tau Exploit Lifecycle Receipt Slice
+
+The first live-first lifecycle artifact now targets existing BATTLE-004 parent-spawn Zip Slip:
+
+```bash
+./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-live-first-lifecycle-20260707T221844 --red-workers 2 --blue-workers 2
+./run.sh validate-exploit-lifecycle-receipts /tmp/battle-004-live-first-lifecycle-20260707T221844/exploit-lifecycle-receipts.json
+```
+
+Live receipt bundle:
+
+```text
+/tmp/battle-004-live-first-lifecycle-20260707T221844/exploit-lifecycle-receipts.json
+schema = battle.exploit_lifecycle_receipts.v1
+mocked = false
+live = true
+proof_mode = live_tau
+receipt_count = 17
+pressure_receipt_count = 5
+lineage_receipt_count = 1
+spawn_decisions = [post_block_handoff]
+outcome_classes = [post_spawn_child_contained, spawn_pressure_conceded]
+```
+
+Source-derived bug/learning from the live run:
+
+```text
+Existing BATTLE-004 parent-spawn path spawns after Judge BLUE_SUCCESS.
+That means the current live path is post_block_handoff, not strategic_pre_kill survival.
+It does not yet prove that an exploit predicted likely kill and replicated before confirmed death.
+```
+
+The lifecycle receipt validator enforces:
+
+```text
+drift-only pressure cannot claim confirmed Blue scan, block, or kill
+confirmed kill requires a kill receipt
+post_block_handoff requires parent_state = blocked
+strategic_pre_kill / panic_spawn cannot follow an earlier confirmed kill receipt
+```
 
 ## Playhead Authority
 
@@ -255,8 +298,12 @@ Backend/schema files touched:
 
 ```text
 skills/battle/src/battle_skill/battle_event_adapter.py
+skills/battle/src/battle_skill/arena_live_battle_proof.py
+skills/battle/src/battle_skill/cli.py
 skills/battle/src/battle_skill/ux_contract_validator.py
 skills/battle/schemas/battle.normalized_ux_fixture.v1.schema.json
+skills/battle/schemas/battle.exploit_lifecycle_receipt.v1.schema.json
+skills/battle/tests/test_arena_live_battle_proof_contract.py
 ```
 
 Generated/data files touched:
@@ -296,10 +343,12 @@ npm test
 node scripts/prove-battle-sparse-negative.mjs
 BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator
 uv run pytest tests/test_battle_event_adapter_contract.py -q
+uv run pytest tests/test_arena_live_battle_proof_contract.py -q
 uv run python -m battle_skill.cli export-semantic-outcome-matrix --out /tmp/battle-semantic-outcome-matrix-pressure.json
 uv run python -m battle_skill.cli validate-semantic-outcome-matrix /tmp/battle-semantic-outcome-matrix-pressure.json
 uv run python -m battle_skill.cli export-exploit-lifecycle-dag --out /tmp/battle-exploit-lifecycle-dag-pressure.json
 uv run python -m battle_skill.cli validate-exploit-lifecycle-dag /tmp/battle-exploit-lifecycle-dag-pressure.json
+uv run python -m battle_skill.cli validate-exploit-lifecycle-receipts /tmp/battle-004-live-first-lifecycle-20260707T221844/exploit-lifecycle-receipts.json
 ```
 
 Observed results from the prior run:
@@ -313,8 +362,11 @@ Vitest: 44/44 tests in the full spectator gate
 Sparse negative proof: PASS
 BATTLE_PROVE_SPECTATOR_PASS
 Battle event adapter contract tests: 98/98 tests
+Arena live lifecycle receipt contract tests: 3/3 tests
 Semantic outcome matrix export/validate: PASS, 8 outcome cases, 5 profile cases
 Exploit lifecycle DAG export/validate: PASS, 10 nodes, 9 edges, 8 outcome classes
+Live lifecycle receipts validate: PASS, 17 receipts, 5 pressure receipts, 1 lineage receipt, post_block_handoff
+BATTLE_PROVE_BACKEND_GOAL_PASS after adding the live lifecycle receipt contract tests
 ```
 
 Evidence classification:
@@ -323,6 +375,7 @@ Evidence classification:
 mocked: no for generated Battle fixture artifacts marked mocked=false
 live: yes for local file/public route proof checks that exercised the spectator package
 deterministic_contract: yes for semantic outcome matrix and exploit lifecycle DAG export/validate
+live_tau_receipts: yes for BATTLE-004 parent-spawn lifecycle receipt bundle
 ```
 
 Do not treat actor visual consumption as outcome proof. It proves sprite identity resolution only; Judge/receipt events still own block, kill, spawn, and score truth.
@@ -349,12 +402,15 @@ lane.actor_visual.variant_id -> fixture.sprite_theme.variants[variant_id]
 
 5. Fresh Arena runs exist for BATTLE-005, BATTLE-006, and BATTLE-007. The BATTLE-004 parent-spawn fixture remains generated from its existing receipt-backed parent-spawn artifact set.
 
+6. Do not infer pre-kill survival from the current BATTLE-004 lifecycle receipt. It proves live receipt collection around a post-block handoff spawn only.
+
 ## Next Backend Actions
 
 1. Keep `lineage.spawns[]` as the fail-closed source even though lane parent fields are now redundant.
 2. Continue broadening exploit classes when new scenario kinds are added; update `battle.semantic_outcome_matrix.v1` and `battle.exploit_lifecycle_dag.v1` together.
 3. Do not make stream sidecars Phase 1 authority. Phase 2 stream consumption should validate `battle.transport_manifest.v1`, `battle.live_event.v1`, and `battle.snapshot.v1` against the normalized fixture first.
 4. If UX adds stream playback, rerun `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` and inspect screenshots for BATTLE-004/005/006/007.
+5. Next live backend slice: change Tau/Battle spawn policy so Red can emit `strategic_pre_kill` or `panic_spawn` from suspected pressure before Judge BLUE_SUCCESS, then validate the resulting lifecycle receipts.
 
 ## Next UX Agent Contract
 

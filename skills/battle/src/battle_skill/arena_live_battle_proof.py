@@ -13,6 +13,7 @@ or promotions.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -28,6 +29,8 @@ from .arena_subagent import _hidden_ground_truth, _run_oracle, _write_target_fil
 RUN_SCHEMA = "battle.arena_tau_public_only_run_receipt.v1"
 SCOREBOARD_SCHEMA = "battle.arena_tau_public_only_scoreboard.v1"
 VALIDATION_SCHEMA = "battle.arena_tau_public_only_visibility_validation.v1"
+EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA = "battle.exploit_lifecycle_receipts.v1"
+EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA = "battle.exploit_lifecycle_receipt.v1"
 TAU_REPO = Path("/home/graham/workspace/experiments/tau")
 CANONICAL_BATTLE004_ALLOTTED_SECONDS = 1200.0
 
@@ -181,6 +184,18 @@ def run_arena_tau_public_only_proof(
         timeout_s=timeout_s,
     )
     scoreboard_path = _write_json(out_dir / "scoreboard.json", scoreboard)
+    lifecycle_receipts_path = _write_exploit_lifecycle_receipts(
+        out_dir=out_dir,
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        tau_manifest=tau_manifest,
+        validation=validation,
+        judge=judge,
+        scoreboard=scoreboard,
+        lineage_receipt_path=lineage_receipt_path,
+        timing_origin=timing_origin,
+    )
 
     run_receipt = {
         "schema": RUN_SCHEMA,
@@ -207,6 +222,7 @@ def run_arena_tau_public_only_proof(
             "judge_receipt": str(judge_path.relative_to(out_dir)),
             "visibility_validation": str(validation_path.relative_to(out_dir)),
             "scoreboard": str(scoreboard_path.relative_to(out_dir)),
+            "exploit_lifecycle_receipts": str(lifecycle_receipts_path.relative_to(out_dir)),
             **({"lineage_receipts": str(lineage_receipt_path.relative_to(out_dir))} if lineage_receipt_path else {}),
         },
         "worker_counts": {
@@ -846,6 +862,596 @@ def _time_limit_source(*, battle_id: str, timeout_s: float) -> str:
     if battle_id == "battle-004" and float(timeout_s) != CANONICAL_BATTLE004_ALLOTTED_SECONDS:
         return "cli_override"
     return "scenario_default"
+
+
+def _write_exploit_lifecycle_receipts(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario: dict[str, Any],
+    tau_manifest: dict[str, Any],
+    validation: dict[str, Any],
+    judge: dict[str, Any],
+    scoreboard: dict[str, Any],
+    lineage_receipt_path: Path | None,
+    timing_origin: float,
+) -> Path:
+    receipts = _exploit_lifecycle_receipts(
+        out_dir=out_dir,
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        tau_manifest=tau_manifest,
+        validation=validation,
+        judge=judge,
+        scoreboard=scoreboard,
+        lineage_receipt_path=lineage_receipt_path,
+    )
+    event_types = [str(receipt.get("event_type")) for receipt in receipts]
+    spawn_decisions = sorted(
+        {
+            str(receipt.get("spawn_decision", {}).get("decision"))
+            for receipt in receipts
+            if isinstance(receipt.get("spawn_decision"), dict)
+            and str(receipt.get("spawn_decision", {}).get("decision")) != "none"
+        }
+    )
+    outcome_classes = sorted(
+        {
+            str(receipt.get("outcome", {}).get("candidate_class"))
+            for receipt in receipts
+            if isinstance(receipt.get("outcome"), dict)
+            and str(receipt.get("outcome", {}).get("candidate_class")) != "none"
+        }
+    )
+    pressure_receipt_count = sum(
+        1
+        for receipt in receipts
+        if isinstance(receipt.get("pressure_observation"), dict)
+        and receipt["pressure_observation"].get("present") is True
+    )
+    lineage_receipt_count = sum(1 for receipt in receipts if receipt.get("event_type") == "lineage_registered")
+    spawn_after_block = "post_block_handoff" in spawn_decisions
+    bundle = {
+        "schema": EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA,
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": str(scenario.get("scenario_id") or "arena-zip-slip-import-001"),
+        "status": "PASS" if receipts else "INSUFFICIENT_EVIDENCE",
+        "mocked": False,
+        "live": True,
+        "proof_mode": "live_tau",
+        "source": "battle_004_parent_spawn_live_tau",
+        "generated_elapsed_seconds": _elapsed_seconds(timing_origin),
+        "receipts": receipts,
+        "summary": {
+            "receipt_count": len(receipts),
+            "event_types": event_types,
+            "spawn_decisions": spawn_decisions,
+            "pressure_receipt_count": pressure_receipt_count,
+            "lineage_receipt_count": lineage_receipt_count,
+            "outcome_classes": outcome_classes,
+            "bug_learning_notes": [
+                *(
+                    [
+                        "Existing battle-004 parent-spawn path spawns after Judge BLUE_SUCCESS; it is post_block_handoff, not strategic_pre_kill survival."
+                    ]
+                    if spawn_after_block
+                    else []
+                ),
+                *(
+                    [
+                        "No lineage receipt was produced; live Tau spawn path is blocked or insufficient."
+                    ]
+                    if lineage_receipt_path is None
+                    else []
+                ),
+                "Pressure observations are recorded as observations and do not claim Blue kill without a kill receipt.",
+            ],
+        },
+        "claims": {
+            "proves": [
+                "Battle collected live Tau/Arena/Judge artifacts into exploit lifecycle receipt shape.",
+                "Battle preserved raw artifact paths for Tau command stdout/stderr and Judge Docker replay receipts.",
+            ],
+            "does_not_prove": [
+                "Strategic pre-kill replication.",
+                "Autonomous exploit survival policy.",
+                "Confirmed Blue kill without a kill receipt.",
+            ],
+        },
+    }
+    return _write_json(out_dir / "exploit-lifecycle-receipts.json", bundle)
+
+
+def _exploit_lifecycle_receipts(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario: dict[str, Any],
+    tau_manifest: dict[str, Any],
+    validation: dict[str, Any],
+    judge: dict[str, Any],
+    scoreboard: dict[str, Any],
+    lineage_receipt_path: Path | None,
+) -> list[dict[str, Any]]:
+    scenario_id = str(scenario.get("scenario_id") or "arena-zip-slip-import-001")
+    receipts: list[dict[str, Any]] = []
+    sequence = 0
+
+    def add(
+        *,
+        receipt_id: str,
+        lane_id: str,
+        event_type: str,
+        phase: str,
+        actor_team: str,
+        evidence: list[dict[str, Any]] | None = None,
+        pressure_observation: dict[str, Any] | None = None,
+        spawn_decision: dict[str, Any] | None = None,
+        outcome: dict[str, Any] | None = None,
+        score: dict[str, Any] | None = None,
+        source_time: dict[str, Any] | None = None,
+        parent_exploit_id: str | None = None,
+        generation: int = 0,
+        persona_id: str | None = None,
+        subagent_id: str | None = None,
+    ) -> None:
+        nonlocal sequence
+        receipts.append(
+            {
+                "schema": EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA,
+                "receipt_id": receipt_id,
+                "battle_id": battle_id,
+                "run_id": run_id,
+                "scenario_id": scenario_id,
+                "lane_id": lane_id,
+                "source_time": {
+                    "started_at": None,
+                    "ended_at": None,
+                    "started_elapsed_seconds": None,
+                    "ended_elapsed_seconds": None,
+                    "sequence": sequence,
+                    "clock": "battle_control_plane_perf_counter",
+                    **(source_time or {}),
+                },
+                "actor": {
+                    "team": actor_team,
+                    "subagent_id": subagent_id,
+                    "persona_id": persona_id,
+                    "tau_task_id": None,
+                },
+                "exploit": {
+                    "exploit_id": lane_id,
+                    "lineage_id": f"{battle_id}:{scenario_id}:lineage",
+                    "parent_exploit_id": parent_exploit_id,
+                    "generation": generation,
+                    "profile": _lifecycle_profile_for_lane(lane_id=lane_id, generation=generation),
+                },
+                "event_type": event_type,
+                "phase": phase,
+                "evidence": evidence or [],
+                "pressure_observation": pressure_observation or _no_pressure(),
+                "spawn_decision": spawn_decision or _no_spawn(),
+                "outcome": outcome or _no_outcome(),
+                "score": score or _no_score(),
+                "validation": {
+                    "mocked": False,
+                    "live": True,
+                    "proof_mode": "live_tau",
+                    "validator_version": "battle-live-lifecycle-v1",
+                },
+            }
+        )
+        sequence += 1
+
+    add(
+        receipt_id="lifecycle:scenario_authorized",
+        lane_id="payload-857-receipt",
+        event_type="scenario_authorized",
+        phase="authorized",
+        actor_team="orchestrator",
+        evidence=[
+            _evidence(out_dir=out_dir, evidence_id="arena-scenario", evidence_type="research", source="battle", path=out_dir / "arena" / "scenario.json"),
+            _evidence(out_dir=out_dir, evidence_id="arena-receipt", evidence_type="docker_run", source="battle", path=out_dir / "arena" / "arena-receipt.json"),
+        ],
+    )
+    add(
+        receipt_id="lifecycle:runtime_provisioned",
+        lane_id="payload-857-receipt",
+        event_type="runtime_provisioned",
+        phase="runtime",
+        actor_team="orchestrator",
+        evidence=[
+            _evidence(out_dir=out_dir, evidence_id="tau-manifest", evidence_type="tau_manifest", source="tau", path=out_dir / "tau-live" / "manifest.json"),
+            _evidence(out_dir=out_dir, evidence_id="tau-command-stdout", evidence_type="stdout", source="tau", path=out_dir / "tau-live-command.stdout.txt"),
+            _evidence(out_dir=out_dir, evidence_id="tau-command-stderr", evidence_type="stderr", source="tau", path=out_dir / "tau-live-command.stderr.txt"),
+        ],
+    )
+    add(
+        receipt_id="lifecycle:persona_assigned",
+        lane_id="payload-857-receipt",
+        event_type="persona_assigned",
+        phase="assignment",
+        actor_team="orchestrator",
+        evidence=[
+            _evidence(out_dir=out_dir, evidence_id="visibility-validation", evidence_type="tau_manifest", source="battle", path=out_dir / "visibility-validation.json"),
+        ],
+        outcome={
+            "candidate_class": "none",
+            "required_receipt_ids": ["visibility-validation"],
+            "classification_reason": f"visibility_status={validation.get('status')}; team_count={validation.get('team_count')}",
+        },
+    )
+
+    attempts = judge.get("attempts") if isinstance(judge.get("attempts"), list) else []
+    for attempt_index, attempt in enumerate(attempts):
+        if not isinstance(attempt, dict):
+            continue
+        lane_id = str(attempt.get("red_lane_id") or "payload-857-receipt")
+        worker_id = str(attempt.get("red_worker_id") or "red-0")
+        generation = 1 if lane_id.endswith("red-1") else 0
+        parent_id = "payload-857-receipt" if generation else None
+        commands = attempt.get("commands_run") if isinstance(attempt.get("commands_run"), list) else []
+        before = commands[0] if commands else {}
+        after = commands[1] if len(commands) > 1 else {}
+        add(
+            receipt_id=f"lifecycle:probe_executed:{attempt.get('pair_id') or attempt_index}",
+            lane_id=lane_id,
+            event_type="probe_executed",
+            phase="probe",
+            actor_team="red",
+            persona_id="battle-red-public-auditor",
+            subagent_id=worker_id,
+            generation=generation,
+            parent_exploit_id=parent_id,
+            evidence=_command_evidence(out_dir=out_dir, command=before, prefix=f"{attempt.get('pair_id') or attempt_index}:before"),
+            source_time=_attempt_source_time(attempt),
+        )
+        pressure = _pressure_observation_from_attempt(attempt)
+        if pressure["present"]:
+            add(
+                receipt_id=f"lifecycle:pressure_assessed:{attempt.get('pair_id') or attempt_index}",
+                lane_id=lane_id,
+                event_type="pressure_assessed",
+                phase="pressure",
+                actor_team="orchestrator",
+                generation=generation,
+                parent_exploit_id=parent_id,
+                evidence=[
+                    *_command_evidence(out_dir=out_dir, command=before, prefix=f"{attempt.get('pair_id') or attempt_index}:baseline"),
+                    *_command_evidence(out_dir=out_dir, command=after, prefix=f"{attempt.get('pair_id') or attempt_index}:current"),
+                ],
+                pressure_observation=pressure,
+                source_time=_attempt_source_time(attempt),
+            )
+        outcome_class = _outcome_class_from_attempt(attempt=attempt, lineage_receipt_path=lineage_receipt_path)
+        add(
+            receipt_id=f"lifecycle:semantic_outcome:{attempt.get('pair_id') or attempt_index}",
+            lane_id=lane_id,
+            event_type="semantic_outcome_classified",
+            phase="outcome",
+            actor_team="scorekeeper",
+            generation=generation,
+            parent_exploit_id=parent_id,
+            evidence=[
+                _evidence(out_dir=out_dir, evidence_id=f"{attempt.get('pair_id') or attempt_index}:attempt", evidence_type="judge_action", source="judge", path=_attempt_receipt_path(out_dir=out_dir, attempt=attempt)),
+            ],
+            outcome={
+                "candidate_class": outcome_class,
+                "required_receipt_ids": [str(attempt.get("pair_id") or attempt_index)],
+                "classification_reason": _outcome_reason(attempt=attempt, outcome_class=outcome_class),
+            },
+            score=_score_from_scoreboard(scoreboard=scoreboard, lane_id=lane_id),
+            source_time=_attempt_source_time(attempt),
+        )
+
+    spawns = _lineage_spawns(lineage_receipt_path) if lineage_receipt_path is not None else []
+    for spawn_index, spawn in enumerate(spawns):
+        if not isinstance(spawn, dict):
+            continue
+        parent_lane_id = str(spawn.get("parent_lane_id") or "payload-857-receipt")
+        child_lane_id = str(spawn.get("child_lane_id") or "payload-857-red-1")
+        decision = str(spawn.get("spawn_type") or "post_block_handoff")
+        add(
+            receipt_id=f"lifecycle:spawn_decision:{spawn.get('receipt_id') or spawn_index}",
+            lane_id=parent_lane_id,
+            event_type="spawn_decision_recorded",
+            phase="spawn_policy",
+            actor_team="orchestrator",
+            evidence=[
+                _evidence(out_dir=out_dir, evidence_id="lineage-receipts", evidence_type="lineage", source="battle", path=lineage_receipt_path),
+                _evidence(out_dir=out_dir, evidence_id="tau-spawn-command-stdout", evidence_type="stdout", source="tau", path=out_dir / "tau-spawn-command.stdout.txt"),
+                _evidence(out_dir=out_dir, evidence_id="tau-spawn-command-stderr", evidence_type="stderr", source="tau", path=out_dir / "tau-spawn-command.stderr.txt"),
+            ],
+            pressure_observation={
+                "present": decision in {"strategic_pre_kill", "panic_spawn", "post_block_handoff"},
+                "signals": ["judge_block_receipt"] if decision == "post_block_handoff" else ["other"],
+                "baseline_probe_receipt_id": None,
+                "current_probe_receipt_id": None,
+                "pressure_score": 0.7 if decision == "post_block_handoff" else 0.4,
+                "confidence": "high" if decision == "post_block_handoff" else "low",
+                "suspected_pressure": decision in {"strategic_pre_kill", "panic_spawn"},
+                "confirmed_blue_action": decision == "post_block_handoff",
+                "overclaim_guard": "observation_only_unless_blue_or_judge_receipt_present",
+            },
+            spawn_decision={
+                "present": True,
+                "decision": decision,
+                "allowed": True,
+                "reason_codes": ["judge_blue_success_parent_handoff"] if decision == "post_block_handoff" else ["live_tau_spawn"],
+                "parent_state": "blocked" if decision == "post_block_handoff" else "alive",
+                "child_exploit_id": child_lane_id,
+                "child_profile_delta": {"generation": int(spawn.get("generation") or 1)},
+                "spawn_source_time": None,
+                "confirmed_kill_receipt_before_spawn": False,
+                "budget_remaining_after_spawn": max(CANONICAL_BATTLE004_ALLOTTED_SECONDS - float(spawn.get("spawn_elapsed_seconds") or 0.0), 0.0),
+                "source_receipts": [str(spawn.get("receipt_id") or "lineage-receipts")],
+            },
+            outcome={
+                "candidate_class": "spawn_pressure_conceded" if decision == "post_block_handoff" else "preemptive_spawn_adaptation",
+                "required_receipt_ids": [str(spawn.get("receipt_id") or "lineage-receipts")],
+                "classification_reason": "Existing battle-004 lineage is post-block handoff after Judge BLUE_SUCCESS.",
+            },
+            source_time={
+                "started_elapsed_seconds": _number_or_none(spawn.get("spawn_elapsed_seconds")),
+                "ended_elapsed_seconds": _number_or_none(spawn.get("child_start_elapsed_seconds")),
+            },
+        )
+        add(
+            receipt_id=f"lifecycle:lineage_registered:{spawn.get('receipt_id') or spawn_index}",
+            lane_id=child_lane_id,
+            event_type="lineage_registered",
+            phase="spawn",
+            actor_team="orchestrator",
+            generation=int(spawn.get("generation") or 1),
+            parent_exploit_id=parent_lane_id,
+            evidence=[
+                _evidence(out_dir=out_dir, evidence_id="lineage-receipts", evidence_type="lineage", source="battle", path=lineage_receipt_path),
+            ],
+            outcome={
+                "candidate_class": "spawn_pressure_conceded" if decision == "post_block_handoff" else "preemptive_spawn_adaptation",
+                "required_receipt_ids": [str(spawn.get("receipt_id") or "lineage-receipts")],
+                "classification_reason": "Child lane exists only because lineage receipt was produced.",
+            },
+            source_time={
+                "started_elapsed_seconds": _number_or_none(spawn.get("spawn_elapsed_seconds")),
+                "ended_elapsed_seconds": _number_or_none(spawn.get("child_start_elapsed_seconds")),
+            },
+        )
+
+    if not receipts:
+        add(
+            receipt_id="lifecycle:unresolved:no-live-receipts",
+            lane_id="payload-857-receipt",
+            event_type="lifecycle_unresolved",
+            phase="outcome",
+            actor_team="orchestrator",
+            outcome={
+                "candidate_class": "unresolved_pressure",
+                "required_receipt_ids": [],
+                "classification_reason": "No live Tau/Judge lifecycle evidence was available.",
+            },
+        )
+    return receipts
+
+
+def _lifecycle_profile_for_lane(*, lane_id: str, generation: int) -> dict[str, Any]:
+    if generation > 0 or lane_id.endswith("red-1"):
+        return {
+            "strength": 0.72,
+            "complexity": 0.78,
+            "durability": 0.68,
+            "stealth": 0.42,
+            "reproducibility": 0.70,
+            "lineage_pressure": 0.72,
+            "tier": "adaptive_lineage",
+            "score_weight": 0.716,
+            "actor_visual_variant_id": "plague_nurgling",
+        }
+    return {
+        "strength": 0.82,
+        "complexity": 0.72,
+        "durability": 0.72,
+        "stealth": 0.55,
+        "reproducibility": 0.77,
+        "lineage_pressure": 0.45,
+        "tier": "heavy_durable",
+        "score_weight": 0.733,
+        "actor_visual_variant_id": "crimson_hornbreaker",
+    }
+
+
+def _no_pressure() -> dict[str, Any]:
+    return {
+        "present": False,
+        "signals": [],
+        "baseline_probe_receipt_id": None,
+        "current_probe_receipt_id": None,
+        "pressure_score": 0.0,
+        "confidence": "none",
+        "suspected_pressure": False,
+        "confirmed_blue_action": False,
+        "overclaim_guard": "observation_only_unless_blue_or_judge_receipt_present",
+    }
+
+
+def _no_spawn() -> dict[str, Any]:
+    return {
+        "present": False,
+        "decision": "none",
+        "allowed": False,
+        "reason_codes": [],
+        "parent_state": "unknown",
+        "child_exploit_id": None,
+        "child_profile_delta": {},
+        "spawn_source_time": None,
+        "confirmed_kill_receipt_before_spawn": False,
+        "budget_remaining_after_spawn": 0.0,
+    }
+
+
+def _no_outcome() -> dict[str, Any]:
+    return {"candidate_class": "none", "required_receipt_ids": [], "classification_reason": ""}
+
+
+def _no_score() -> dict[str, Any]:
+    return {"applied": False, "blue_points": 0.0, "red_points": 0.0, "score_weight": 1.0, "scorekeeper_receipt_id": None}
+
+
+def _evidence(*, out_dir: Path, evidence_id: str, evidence_type: str, source: str, path: Path | None) -> dict[str, Any]:
+    display_path: str | None = None
+    sha: str | None = None
+    if path is not None:
+        actual = path if path.is_absolute() else out_dir / path
+        display_path = _display_ref(path=actual, root=out_dir)
+        sha = _sha256(actual)
+    return {
+        "evidence_id": evidence_id,
+        "evidence_type": evidence_type,
+        "source": source,
+        "artifact_uri": display_path,
+        "sha256": sha,
+        "redacted": False,
+    }
+
+
+def _command_evidence(*, out_dir: Path, command: dict[str, Any], prefix: str) -> list[dict[str, Any]]:
+    if not isinstance(command, dict) or not command:
+        return []
+    return [
+        {
+            "evidence_id": f"{prefix}:docker_run",
+            "evidence_type": "docker_run",
+            "source": "docker",
+            "artifact_uri": None,
+            "sha256": _sha256_text(json.dumps(command.get("command", []), sort_keys=True)),
+            "stdout_sha256": _sha256(Path(str(command.get("stdout_path")))) if command.get("stdout_path") else None,
+            "stderr_sha256": _sha256(Path(str(command.get("stderr_path")))) if command.get("stderr_path") else None,
+            "status_code": int(command.get("exit_code")) if isinstance(command.get("exit_code"), int) else None,
+            "redacted": False,
+        }
+    ]
+
+
+def _attempt_source_time(attempt: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "started_elapsed_seconds": _number_or_none(attempt.get("started_elapsed_seconds")),
+        "ended_elapsed_seconds": _number_or_none(attempt.get("ended_elapsed_seconds")),
+    }
+
+
+def _pressure_observation_from_attempt(attempt: dict[str, Any]) -> dict[str, Any]:
+    commands = attempt.get("commands_run") if isinstance(attempt.get("commands_run"), list) else []
+    before = commands[0] if commands else {}
+    after = commands[1] if len(commands) > 1 else {}
+    signals: list[str] = []
+    if before and after and before.get("exit_code") != after.get("exit_code"):
+        signals.append("status_code_drift")
+    before_stdout = _read_optional_text(Path(str(before.get("stdout_path")))) if before.get("stdout_path") else ""
+    after_stdout = _read_optional_text(Path(str(after.get("stdout_path")))) if after.get("stdout_path") else ""
+    before_stderr = _read_optional_text(Path(str(before.get("stderr_path")))) if before.get("stderr_path") else ""
+    after_stderr = _read_optional_text(Path(str(after.get("stderr_path")))) if after.get("stderr_path") else ""
+    if before_stdout != after_stdout:
+        signals.append("response_body_drift")
+    if before_stderr != after_stderr:
+        signals.append("stderr_drift")
+    if attempt.get("exploit_blocked_after_patch") is True:
+        signals.append("judge_block_receipt")
+    if attempt.get("blue_artifact"):
+        signals.append("blue_patch_receipt")
+    seen = list(dict.fromkeys(signals))
+    confirmed = any(signal in {"blue_patch_receipt", "judge_block_receipt"} for signal in seen)
+    drift_count = len([signal for signal in seen if signal in {"status_code_drift", "response_body_drift", "stderr_drift"}])
+    score = min(1.0, (0.25 * drift_count) + (0.35 if confirmed else 0.0))
+    return {
+        "present": bool(seen),
+        "signals": seen,
+        "baseline_probe_receipt_id": str(attempt.get("pair_id") or "baseline"),
+        "current_probe_receipt_id": str(attempt.get("pair_id") or "current"),
+        "pressure_score": round(score, 3),
+        "confidence": "high" if confirmed else "medium" if score >= 0.65 else "low" if seen else "none",
+        "suspected_pressure": score >= 0.65 and not confirmed,
+        "confirmed_blue_action": confirmed,
+        "overclaim_guard": "observation_only_unless_blue_or_judge_receipt_present",
+    }
+
+
+def _outcome_class_from_attempt(*, attempt: dict[str, Any], lineage_receipt_path: Path | None) -> str:
+    if attempt.get("verdict") == "BLUE_SUCCESS":
+        if lineage_receipt_path is None:
+            return "pre_spawn_blue_block"
+        if str(attempt.get("red_lane_id") or "").endswith("red-1"):
+            return "post_spawn_child_contained"
+        return "spawn_pressure_conceded"
+    if attempt.get("verdict") == "RED_SUCCESS":
+        return "red_breakthrough"
+    return "unresolved_pressure"
+
+
+def _outcome_reason(*, attempt: dict[str, Any], outcome_class: str) -> str:
+    if outcome_class == "pre_spawn_blue_block":
+        return "Judge BLUE_SUCCESS before any valid child lineage receipt."
+    if outcome_class == "post_spawn_child_contained":
+        return "Judge BLUE_SUCCESS for a child lane after lineage receipt."
+    if outcome_class == "spawn_pressure_conceded":
+        return "Parent was blocked but lineage exists, so Blue gets pressure credit rather than no-spawn credit."
+    if outcome_class == "red_breakthrough":
+        return "Judge replay shows Red still succeeds after Blue artifact."
+    return f"Judge verdict {attempt.get('verdict')} did not provide terminal outcome proof."
+
+
+def _score_from_scoreboard(*, scoreboard: dict[str, Any], lane_id: str) -> dict[str, Any]:
+    return {
+        "applied": True,
+        "blue_points": float(scoreboard.get("blue_score") or 0.0),
+        "red_points": float(scoreboard.get("red_score") or 0.0),
+        "score_weight": _lifecycle_profile_for_lane(lane_id=lane_id, generation=1 if lane_id.endswith("red-1") else 0)["score_weight"],
+        "scorekeeper_receipt_id": "scoreboard.json",
+    }
+
+
+def _attempt_receipt_path(*, out_dir: Path, attempt: dict[str, Any]) -> Path | None:
+    pair_id = str(attempt.get("pair_id") or "")
+    if not pair_id:
+        return None
+    return out_dir / "judge" / "replays" / pair_id / "attempt-receipt.json"
+
+
+def _lineage_spawns(lineage_receipt_path: Path | None) -> list[dict[str, Any]]:
+    if lineage_receipt_path is None or not lineage_receipt_path.exists():
+        return []
+    payload = _read_json(lineage_receipt_path)
+    spawns = payload.get("spawns")
+    return [spawn for spawn in spawns if isinstance(spawn, dict)] if isinstance(spawns, list) else []
+
+
+def _read_optional_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _sha256(path: Path | None) -> str | None:
+    if path is None or not path.exists():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _number_or_none(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 

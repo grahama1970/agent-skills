@@ -595,6 +595,80 @@ def validate_exploit_lifecycle_dag_command(
     console.print_json(data=report)
 
 
+@app.command("export-exploit-lifecycle-receipts")
+def export_exploit_lifecycle_receipts(
+    proof_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Live BATTLE-004 proof directory containing exploit-lifecycle-receipts.json.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output Battle exploit lifecycle receipts JSON path."),
+):
+    """Export live Tau exploit lifecycle receipts from an existing proof directory."""
+    import json as _json
+
+    from .ux_contract_validator import (
+        ContractError,
+        validate_exploit_lifecycle_receipts,
+        validate_exploit_lifecycle_receipts_schema,
+    )
+
+    source = proof_dir / "exploit-lifecycle-receipts.json"
+    if not source.exists():
+        console.print(f"[red]Battle exploit lifecycle receipts missing:[/red] {source}")
+        raise typer.Exit(1)
+    payload = _json.loads(source.read_text(encoding="utf-8"))
+    try:
+        validate_exploit_lifecycle_receipts_schema(payload)
+        validate_exploit_lifecycle_receipts(payload)
+    except ContractError as exc:
+        console.print(f"[red]Battle exploit lifecycle receipts invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    console.print_json(
+        data={
+            "status": "PASS",
+            "out": str(out),
+            "schema": payload.get("schema"),
+            "receipt_count": summary.get("receipt_count"),
+            "pressure_receipt_count": summary.get("pressure_receipt_count"),
+            "lineage_receipt_count": summary.get("lineage_receipt_count"),
+            "spawn_decisions": summary.get("spawn_decisions"),
+            "outcome_classes": summary.get("outcome_classes"),
+            "mocked": payload.get("mocked"),
+            "live": payload.get("live"),
+            "proof_mode": payload.get("proof_mode"),
+        }
+    )
+
+
+@app.command("validate-exploit-lifecycle-receipts")
+def validate_exploit_lifecycle_receipts_command(
+    receipts: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Battle exploit lifecycle receipts JSON.",
+    ),
+):
+    """Validate live Tau exploit lifecycle receipt bundle."""
+    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_receipts_path
+
+    try:
+        report = validate_exploit_lifecycle_receipts_path(receipts)
+    except ContractError as exc:
+        console.print(f"[red]Battle exploit lifecycle receipts invalid:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(
