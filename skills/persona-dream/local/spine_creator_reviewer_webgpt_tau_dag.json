@@ -4,7 +4,7 @@
   "goal": {
     "goal_id": "persona-dream-spine-creator-reviewer-webgpt",
     "goal_version": 1,
-    "goal_hash": "sha256:persona-dream-spine-creator-reviewer-webgpt-20260708",
+    "goal_hash": "sha256:579bdb18760122f5c6072345ee251908ecbfd6706da70ae3371ccfaa00d6fb98",
     "summary": "Check that WebGPT closed reusable creator-reviewer prompt contract decisions for 01, 02, 06, and 07 before implementation."
   },
   "target": {

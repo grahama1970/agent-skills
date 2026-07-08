@@ -1,0 +1,45 @@
+{
+  "schema": "persona_dream.phase01.memory_residue_contract.v1",
+  "run_id": "pd-spine-fixture-01-good",
+  "phase": "01_memory_residue",
+  "source_residue": [
+    {
+      "source_id": "memory:embry:surf-2024-001",
+      "source_path": "skills/persona-dream/tests/fixtures/assets/memory_embry_surf_2024.txt",
+      "source_hash": "sha256:52bb8b78a2d4083a135892fddb707bb6658100df770d1772ccfc21ed2c4264d7",
+      "scope": "episodic",
+      "text": "Embry remembers the phone buzz interrupting a clean surf line."
+    }
+  ],
+  "typed_idea_fields": {
+    "premise": "A beach notification interrupts a hard-won moment of focus.",
+    "characters": ["Embry", "Kai"],
+    "setting": "Big Island surf break",
+    "conflict": "obligation versus present-tense attention"
+  },
+  "media_references": [
+    {
+      "asset_id": "embry_surfing_big_island_2024",
+      "role": "identity_environment_reference",
+      "path": "skills/persona-dream/tests/fixtures/assets/embry_surfing_big_island_2024.txt",
+      "sha256": "sha256:97ea91f548ad49b112076d62558f50c911828296fbf30da18badcebda93d44dd",
+      "source_phase": "01_memory_residue",
+      "allowed_downstream_use": ["phase02", "phase06", "phase07"]
+    }
+  ],
+  "prompt_safe_text": [
+    "Embry is low on the surfboard, half in shadow, trying to stay inside the cleanest line.",
+    "Kai is connected to the interruption rather than used as a vague offscreen presence."
+  ],
+  "serialized_json_as_prompt_text_allowed": false,
+  "downstream_contract": {
+    "may_feed_phase02": true,
+    "raw_source_may_feed_prompt": false
+  },
+  "raw_source": {
+    "content": "{\"story\":\"raw archived source only\"}",
+    "content_hash": "sha256:2ea21b1dc8e30e516c04afc0842b4b20dfc3d1de552a6c5ed2b9063465a93ee0",
+    "may_feed_prompt": false,
+    "may_display_directly": false
+  }
+}

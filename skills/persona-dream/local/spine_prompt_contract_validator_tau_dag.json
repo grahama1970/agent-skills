@@ -1,0 +1,94 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-spine-prompt-contract-validator",
+  "goal": {
+    "goal_id": "persona-dream-spine-prompt-contract-validator",
+    "goal_version": 1,
+    "goal_hash": "sha256:74d9bfb73afb36ef935f7b14975dc5d2fa0f751e0f8f756069ee609ec6434dfc",
+    "summary": "Gate hardened Persona Dream creator-reviewer prompt contracts for 01, 02, 06, and 07."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream",
+    "allowed_paths": [
+      "skills/persona-dream/scripts/spine_prompt_contract_validation.py",
+      "skills/persona-dream/scripts/validate_phase01_memory_residue_contract.py",
+      "skills/persona-dream/scripts/validate_phase02_story_contract_prompt.py",
+      "skills/persona-dream/scripts/validate_phase06_script_prompt_contract.py",
+      "skills/persona-dream/scripts/validate_phase07_prompt_contract.py",
+      "skills/persona-dream/scripts/check_spine_prompt_contract_validators.py",
+      "skills/persona-dream/tests/fixtures/assets/**",
+      "skills/persona-dream/tests/fixtures/phase01/**",
+      "skills/persona-dream/tests/fixtures/phase02/**",
+      "skills/persona-dream/tests/fixtures/phase06/**",
+      "skills/persona-dream/tests/fixtures/phase07/**"
+    ]
+  },
+  "context": {
+    "provider_live": false,
+    "mocked": false,
+    "phase_scope": ["01_memory_residue", "02_story", "06_script", "07_storyboard_prompt"],
+    "expected_pass_statuses": [
+      "PASS_MEMORY_RESIDUE_CONTRACT",
+      "PASS_STORY_CONTRACT",
+      "PASS_SCRIPT_CONTRACT",
+      "PASS_PROMPT_CONTRACT"
+    ],
+    "expected_blockers": [
+      "serialized_json_blob_in_prompt_text:source_residue[0].text",
+      "serialized_json_blob_in_prompt_text:typed_source_context.source_context",
+      "loose_asset_usage:Embry",
+      "required_identity_spatially_implied:Kai"
+    ]
+  },
+  "entry_node": "spine-prompt-contract-validator",
+  "terminal_nodes": ["human"],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 1
+  },
+  "nodes": [
+    {
+      "id": "spine-prompt-contract-validator",
+      "agent": "spine-prompt-contract-validator",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/spine_prompt_contract_validator_tau_command.json",
+      "required_evidence": ["spine_prompt_contract_validator_receipt.json"],
+      "emits": ["tau.agent_handoff.v1"]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "spine-prompt-contract-validator",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "spine_prompt_contract_validator_receipt.json",
+    "PASS_MEMORY_RESIDUE_CONTRACT",
+    "PASS_STORY_CONTRACT",
+    "PASS_SCRIPT_CONTRACT",
+    "PASS_PROMPT_CONTRACT",
+    "BLOCKED_SERIALIZED_MEMORY_TEXT",
+    "BLOCKED_STORY_CONTRACT",
+    "BLOCKED_SCRIPT_CONTRACT",
+    "BLOCKED_PROMPT_CONTRACT"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}

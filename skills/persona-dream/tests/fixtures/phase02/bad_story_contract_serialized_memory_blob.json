@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.phase02.story_contract_prompt.v1",
+  "run_id": "pd-spine-fixture-02-bad",
+  "phase": "02_story",
+  "input_contracts": {
+    "memory_residue_contract_path": "skills/persona-dream/tests/fixtures/phase01/bad_memory_residue_serialized_json_text.json"
+  },
+  "typed_source_context": {
+    "source_context": "{\"story\":\"Embry surfs while Kai watches\",\"asset_usage\":{\"Kai\":\"maybe visible\"}}"
+  },
+  "story_contract": {
+    "title": "Loose Surf Story",
+    "logline": "Embry surfs.",
+    "story": "{\"story\":\"Embry surfs while Kai watches\"}",
+    "beats": [
+      {
+        "beat_id": "beat_001",
+        "function": "Something happens."
+      }
+    ]
+  },
+  "visual_continuity_seeds": {},
+  "downstream_contract": {
+    "may_feed_phase06": true
+  },
+  "serialized_json_as_prompt_text_allowed": false
+}

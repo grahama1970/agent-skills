@@ -1,0 +1,88 @@
+{
+  "schema": "persona_dream.phase06.script_prompt_contract.v1",
+  "run_id": "pd-spine-fixture-06-good",
+  "phase": "06_script",
+  "input_contracts": {
+    "story_contract_path": "skills/persona-dream/tests/fixtures/phase02/good_story_contract_prompt.json"
+  },
+  "script": {
+    "rows": [
+      {
+        "row_id": "script_001",
+        "time_start_s": 0.0,
+        "time_end_s": 2.5,
+        "speaker": null,
+        "dialogue": null,
+        "action": "Embry carves across the clean wave while the beach bag phone flashes with Kai's message.",
+        "required_entities": ["Embry", "phone"],
+        "required_assets": ["embry_surfing_big_island_2024"],
+        "environment_requirements": ["Big Island surf break", "dark lava reef"]
+      }
+    ]
+  },
+  "timed_beats": [
+    {
+      "beat_id": "beat_001",
+      "time_start_s": 0.0,
+      "time_end_s": 2.5,
+      "story_function": "Surf focus is established before the interruption.",
+      "required_entities": ["Embry"]
+    }
+  ],
+  "timed_transcript": [
+    {
+      "time_start_s": 0.0,
+      "time_end_s": 2.5,
+      "speaker": null,
+      "line": null
+    }
+  ],
+  "action_blocks": [
+    {
+      "block_id": "action_001",
+      "rows": ["script_001"]
+    }
+  ],
+  "dialogue_blocks": [],
+  "entity_environment_script_table": [
+    {
+      "entity": "Embry",
+      "required_in_rows": ["script_001"],
+      "visual_requirement": "visible and identity-verifiable",
+      "asset_refs": ["embry_surfing_big_island_2024"]
+    }
+  ],
+  "asset_usage": {
+    "Embry": {
+      "required": true,
+      "asset_ids": ["embry_surfing_big_island_2024"],
+      "usage": "hard_identity_reference"
+    },
+    "phone": {
+      "required": true,
+      "asset_ids": [],
+      "usage": "required_prop_reference"
+    }
+  },
+  "interaction_matrix_coverage": {
+    "covered_edges": ["Kai->Embry:message interrupts surf focus"],
+    "uncovered_edges": []
+  },
+  "realism_contract": {
+    "physical_constraints": ["board rail bites into wave face"],
+    "environment_constraints": ["spray and lava reef remain spatially consistent"],
+    "must_not_show": ["Kai as merely implied if required by panel"]
+  },
+  "storyboard_constraints": {
+    "panel_count": 4,
+    "duration_s": 10,
+    "per_panel_required_entities": {
+      "sb004": ["Embry", "Kai"]
+    }
+  },
+  "downstream_contract": {
+    "may_feed_phase07": true,
+    "serialized_json_as_prompt_text_allowed": false
+  },
+  "serialized_json_as_prompt_text_allowed": false
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "persona_dream.phase02.story_contract_prompt.v1",
+  "run_id": "pd-spine-fixture-02-good",
+  "phase": "02_story",
+  "input_contracts": {
+    "memory_residue_contract_path": "skills/persona-dream/tests/fixtures/phase01/good_memory_residue_contract.json"
+  },
+  "typed_source_context": {
+    "premise": "A beach notification interrupts a hard-won moment of focus.",
+    "setting": "Big Island surf break",
+    "source_ids": ["memory:embry:surf-2024-001"]
+  },
+  "story_contract": {
+    "title": "Clean Line",
+    "logline": "Embry tries to hold a clean surf line while a message from Kai turns obligation into a visible pressure.",
+    "story": "Embry rides a glassy line and chooses whether to answer the buzzing phone waiting on the beach.",
+    "beats": [
+      {
+        "beat_id": "beat_001",
+        "function": "Embry enters the clean line.",
+        "required_entities": ["Embry"]
+      },
+      {
+        "beat_id": "beat_002",
+        "function": "Kai's message becomes the interruption.",
+        "required_entities": ["Embry", "Kai"]
+      }
+    ]
+  },
+  "interaction_matrix": {
+    "entities": ["Embry", "Kai", "phone"],
+    "edges": [
+      {
+        "from": "Kai",
+        "to": "Embry",
+        "interaction": "message interrupts surf focus",
+        "required_visual_seed": "phone notification tied to Kai"
+      }
+    ]
+  },
+  "visual_continuity_seeds": {
+    "Embry": {
+      "identity_reference_required": true,
+      "environment": "surf break"
+    },
+    "Kai": {
+      "identity_reference_required": true,
+      "presence_rule": "must be explicit if required by a panel"
+    }
+  },
+  "downstream_contract": {
+    "may_feed_phase06": true,
+    "serialized_json_as_prompt_text_allowed": false
+  },
+  "serialized_json_as_prompt_text_allowed": false
+}

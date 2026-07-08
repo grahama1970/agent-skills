@@ -1,0 +1,67 @@
+{
+  "schema": "persona_dream.phase07.panel_prompt_contract.v2",
+  "run_id": "pd-spine-fixture-07-bad",
+  "tau_run_id": "tau-phase07-prompt-contract-fixture",
+  "panel_id": "sb004",
+  "frame_id": "sb004_start_frame",
+  "attempt": 1,
+  "time_range": "7.5-10.0s",
+  "compiled_from": "skills/persona-dream/tests/fixtures/phase06/good_script_prompt_contract.json",
+  "state_contract": {
+    "creator_may_write": ["candidate_frame"],
+    "creator_must_not_write": ["accepted_frame"]
+  },
+  "generation_scope": {
+    "live_image_call_started": false,
+    "provider_live": false
+  },
+  "model_policy": {
+    "provider": "gpt-image-2",
+    "reference_attachment_required": true
+  },
+  "required_identities": ["Embry", "Kai"],
+  "identity_requirements": {
+    "Embry": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    },
+    "Kai": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": true
+      }
+    }
+  },
+  "identity_reference_assets": {
+    "Embry": {
+      "asset_id": "embry_reference_sheet_2024",
+      "path": "skills/persona-dream/tests/fixtures/assets/embry_reference_sheet_2024.txt",
+      "sha256": "sha256:f7805c672ae4ea0d11917234a9b343f8a99bef2b70e81174bf95ee4d3362e836"
+    },
+    "Kai": {
+      "asset_id": "kai_reference_sheet_2024",
+      "path": "skills/persona-dream/tests/fixtures/assets/kai_reference_sheet_2024.txt",
+      "sha256": "sha256:d7b2e02858537b1669b57eb25b203583ab50e963ab13629eef045228269424ee"
+    }
+  },
+  "temporal_continuity_reference_assets": {},
+  "camera_contract": {
+    "shot_type": "medium two-shot"
+  },
+  "environment_requirements": ["beach edge"],
+  "story_action": "Kai is treated as present without being required on camera.",
+  "prompt_sections": {
+    "SUBJECT": "Embry at the beach.",
+    "CHARACTERS": "Kai is present or spatially implied without becoming the focus.",
+    "SCENE": "Wet sand and surf.",
+    "MUST_INCLUDE": "Embry identity.",
+    "MUST_NOT_INCLUDE": "Do not crowd the scene."
+  },
+  "provider_request_shape": {
+    "image_reference_inputs": ["embry_reference_sheet_2024"]
+  }
+}

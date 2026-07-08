@@ -56,7 +56,7 @@ def _read_stdin_handoff() -> dict[str, Any]:
             "goal": {
                 "goal_id": "persona-dream-spine-creator-reviewer-webgpt",
                 "goal_version": 1,
-                "goal_hash": "sha256:persona-dream-spine-creator-reviewer-webgpt-20260708",
+                "goal_hash": "sha256:579bdb18760122f5c6072345ee251908ecbfd6706da70ae3371ccfaa00d6fb98",
             },
             "context": {},
         }

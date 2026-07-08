@@ -1,0 +1,1 @@
+Fixture reference asset for Embry surfing on the Big Island, used for deterministic contract hashing only.

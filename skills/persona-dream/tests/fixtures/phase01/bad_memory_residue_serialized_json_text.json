@@ -1,0 +1,34 @@
+{
+  "schema": "persona_dream.phase01.memory_residue_contract.v1",
+  "run_id": "pd-spine-fixture-01-bad",
+  "phase": "01_memory_residue",
+  "source_residue": [
+    {
+      "source_id": "memory:embry:bad-json-text",
+      "source_path": "skills/persona-dream/tests/fixtures/assets/memory_embry_surf_2024.txt",
+      "source_hash": "sha256:52bb8b78a2d4083a135892fddb707bb6658100df770d1772ccfc21ed2c4264d7",
+      "scope": "episodic",
+      "text": "{\"story\":\"Embry surfs while Kai watches\",\"asset_usage\":{\"Embry\":\"use reference\"},\"visual_consistency_note\":\"make it cinematic\"}"
+    }
+  ],
+  "typed_idea_fields": {
+    "premise": "Serialized memory leaked into display text."
+  },
+  "media_references": [
+    {
+      "asset_id": "embry_surfing_big_island_2024",
+      "role": "identity_environment_reference",
+      "path": "skills/persona-dream/tests/fixtures/assets/embry_surfing_big_island_2024.txt",
+      "sha256": "sha256:97ea91f548ad49b112076d62558f50c911828296fbf30da18badcebda93d44dd",
+      "source_phase": "01_memory_residue",
+      "allowed_downstream_use": ["phase02"]
+    }
+  ],
+  "prompt_safe_text": [
+    "{\"story\":\"Embry's phone buzzes\",\"asset_usage\":{\"Embry\":\"reference\"}}"
+  ],
+  "serialized_json_as_prompt_text_allowed": false,
+  "downstream_contract": {
+    "may_feed_phase02": true
+  }
+}

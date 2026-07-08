@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_spine_prompt_contract_validators.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills"
+}

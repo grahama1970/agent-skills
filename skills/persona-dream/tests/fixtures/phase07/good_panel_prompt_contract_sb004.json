@@ -1,0 +1,84 @@
+{
+  "schema": "persona_dream.phase07.panel_prompt_contract.v2",
+  "run_id": "pd-spine-fixture-07-good",
+  "tau_run_id": "tau-phase07-prompt-contract-fixture",
+  "panel_id": "sb004",
+  "frame_id": "sb004_start_frame",
+  "attempt": 1,
+  "time_range": "7.5-10.0s",
+  "compiled_from": "skills/persona-dream/tests/fixtures/phase06/good_script_prompt_contract.json",
+  "state_contract": {
+    "creator_may_write": ["candidate_frame", "candidate_prompt"],
+    "creator_must_not_write": ["accepted_frame", "reviewer_verdict"],
+    "reviewer_may_write": ["accepted_frame", "reviewer_verdict"]
+  },
+  "generation_scope": {
+    "live_image_call_started": false,
+    "provider_live": false,
+    "purpose": "prompt contract validation only"
+  },
+  "model_policy": {
+    "provider": "gpt-image-2",
+    "reference_attachment_required": true,
+    "text_only_not_provider_eligible": true
+  },
+  "required_identities": ["Embry", "Kai"],
+  "identity_requirements": {
+    "Embry": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    },
+    "Kai": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    }
+  },
+  "identity_reference_assets": {
+    "Embry": {
+      "asset_id": "embry_reference_sheet_2024",
+      "path": "skills/persona-dream/tests/fixtures/assets/embry_reference_sheet_2024.txt",
+      "sha256": "sha256:f7805c672ae4ea0d11917234a9b343f8a99bef2b70e81174bf95ee4d3362e836",
+      "attached_to_provider_request": true
+    },
+    "Kai": {
+      "asset_id": "kai_reference_sheet_2024",
+      "path": "skills/persona-dream/tests/fixtures/assets/kai_reference_sheet_2024.txt",
+      "sha256": "sha256:d7b2e02858537b1669b57eb25b203583ab50e963ab13629eef045228269424ee",
+      "attached_to_provider_request": true
+    }
+  },
+  "temporal_continuity_reference_assets": {
+    "previous_frame": {
+      "asset_id": "sb003_accepted_frame",
+      "path": "skills/persona-dream/tests/fixtures/assets/sb003_accepted_frame.txt",
+      "sha256": "sha256:793482da1c7bc8bf21333e1d9300b47715eb97ced99158117f2c594ecd126c04"
+    }
+  },
+  "camera_contract": {
+    "shot_type": "medium two-shot",
+    "lens": "35mm",
+    "identity_priority": "both faces readable"
+  },
+  "environment_requirements": ["beach edge", "dawn surf", "wet board", "phone on beach bag"],
+  "story_action": "Embry reaches the beach while Kai is visibly present and the phone interruption becomes explicit.",
+  "prompt_sections": {
+    "SUBJECT": "Embry and Kai at the beach after the interrupted surf line.",
+    "CHARACTERS": "Embry and Kai are both visible with identity-verifiable faces.",
+    "SCENE": "Wet sand, surf line behind them, phone on the beach bag in the foreground.",
+    "MUST_INCLUDE": "Both Embry and Kai attached reference identities; visible phone notification.",
+    "MUST_NOT_INCLUDE": "Do not imply Kai offscreen; do not hide either face."
+  },
+  "provider_request_shape": {
+    "image_reference_inputs": [
+      "embry_reference_sheet_2024",
+      "kai_reference_sheet_2024",
+      "sb003_accepted_frame"
+    ]
+  }
+}

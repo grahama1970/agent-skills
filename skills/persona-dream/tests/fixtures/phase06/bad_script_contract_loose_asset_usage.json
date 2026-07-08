@@ -1,0 +1,31 @@
+{
+  "schema": "persona_dream.phase06.script_prompt_contract.v1",
+  "run_id": "pd-spine-fixture-06-bad",
+  "phase": "06_script",
+  "input_contracts": {
+    "story_contract_path": "skills/persona-dream/tests/fixtures/phase02/good_story_contract_prompt.json"
+  },
+  "script": "{\"rows\":[{\"text\":\"Embry surfs while Kai watches\"}]}",
+  "timed_beats": [
+    {
+      "beat": "Embry does something in the water"
+    }
+  ],
+  "timed_transcript": [],
+  "action_blocks": [],
+  "dialogue_blocks": [],
+  "entity_environment_script_table": [],
+  "asset_usage": {
+    "Embry": "use reference",
+    "Kai": {
+      "required": false,
+      "asset_ids": [],
+      "usage": "maybe visible"
+    }
+  },
+  "interaction_matrix_coverage": {},
+  "downstream_contract": {
+    "may_feed_phase07": true
+  },
+  "serialized_json_as_prompt_text_allowed": false
+}
