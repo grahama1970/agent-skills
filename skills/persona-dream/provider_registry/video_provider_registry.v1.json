@@ -1,14 +1,38 @@
 {
   "schema_version": "persona-dream.video-provider-registry.v1",
-  "registry_id": "persona-dream-video-provider-registry-20260708",
+  "registry_id": "persona-dream-video-provider-registry-20260708-brave-evidence",
   "status": "CURRENT",
   "provider_live": false,
   "paid_call_authorized": false,
+  "evidence_basis": {
+    "source": "brave-search",
+    "generated_by": "project-agent",
+    "notes": [
+      "Provider capability entries are dry-run routing evidence, not live schema proof.",
+      "fal.ai is represented as a possible hosting route for model families, not as provider readiness."
+    ]
+  },
   "providers": [
     {
       "provider_id": "kling",
       "display_name": "Kling",
       "priority": 10,
+      "recommended_for": [
+        "first_last_frame_transition",
+        "identity_locked_character_scene",
+        "short_cinematic_i2v",
+        "surf_sports_motion_scene"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "kling-native",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        },
+        {
+          "route_id": "fal-kling",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
       "capabilities": {
         "image_to_video": true,
         "text_to_video": true,
@@ -18,8 +42,17 @@
         "motion_quality": true,
         "cinematic_camera_control": true,
         "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
         "audio_video_sync": false,
         "multi_reference_inputs": true,
+        "reference_video_motion_control": true,
+        "world_consistency": false,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
         "local_low_cost_preview": false,
         "duration_max_seconds": 10
       },
@@ -27,12 +60,45 @@
         "heightened_copyright_review_required": false,
         "live_schema_verified": false,
         "provider_accessible_urls_required": true
-      }
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_product_page",
+          "url": "https://kling.ai/feature/ai-video-generator",
+          "claim": "Kling advertises text/image video generation, character consistency, cinematic output, and audio-related features."
+        },
+        {
+          "source_type": "official_api_docs",
+          "url": "https://kling.ai/document-api/apiReference/updateNotice",
+          "claim": "Kling API docs describe text-to-video and image-to-video model routes."
+        },
+        {
+          "source_type": "hosting_catalog",
+          "url": "https://fal.ai/explore/kling",
+          "claim": "fal lists hosted Kling model family endpoints."
+        }
+      ]
     },
     {
       "provider_id": "bytedance-seedance",
       "display_name": "ByteDance / Seedance",
       "priority": 20,
+      "recommended_for": [
+        "multimodal_reference_scene",
+        "audio_synchronized_scene",
+        "multi_shot_storyboard_scene",
+        "dialogue_or_lip_sync_scene"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "seedance-native",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        },
+        {
+          "route_id": "fal-seedance",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
       "capabilities": {
         "image_to_video": true,
         "text_to_video": true,
@@ -42,9 +108,17 @@
         "motion_quality": true,
         "cinematic_camera_control": true,
         "native_audio": true,
+        "dialogue_audio": false,
+        "sound_effects": true,
         "audio_video_sync": true,
         "multi_reference_inputs": true,
         "reference_video_motion_control": true,
+        "world_consistency": true,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
         "local_low_cost_preview": false,
         "duration_max_seconds": 15
       },
@@ -52,12 +126,326 @@
         "heightened_copyright_review_required": true,
         "live_schema_verified": false,
         "provider_accessible_urls_required": true
-      }
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_product_page",
+          "url": "https://seed.bytedance.com/en/seedance2_0",
+          "claim": "Seedance 2.0 is described as a multimodal audio-video generation system using text, image, audio, and video inputs."
+        },
+        {
+          "source_type": "official_product_page",
+          "url": "https://seed.bytedance.com/en/seedance",
+          "claim": "Seedance is described for text/image video generation, multi-shot generation, motion, and semantic understanding."
+        },
+        {
+          "source_type": "news_policy_risk",
+          "url": "https://www.reuters.com/technology/bytedance-suspends-launch-video-ai-model-after-copyright-disputes-information-2026-03-14/",
+          "claim": "Reuters reported copyright/IP disputes affecting Seedance 2.0 launch plans; keep heightened copyright review as a live blocker."
+        },
+        {
+          "source_type": "hosting_catalog",
+          "url": "https://fal.ai/explore",
+          "claim": "fal lists ByteDance Seed model-family endpoints such as Seedance and Seedream."
+        }
+      ]
+    },
+    {
+      "provider_id": "sora",
+      "display_name": "Sora",
+      "priority": 30,
+      "recommended_for": [
+        "reusable_character_asset_scene",
+        "identity_locked_character_scene",
+        "physics_coherent_scene",
+        "cinematic_camera_move"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "openai-sora",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
+      "capabilities": {
+        "image_to_video": true,
+        "text_to_video": true,
+        "first_last_frame_control": false,
+        "identity_reference_support": true,
+        "multi_character_consistency": true,
+        "motion_quality": true,
+        "cinematic_camera_control": true,
+        "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
+        "audio_video_sync": false,
+        "multi_reference_inputs": true,
+        "reference_video_motion_control": true,
+        "world_consistency": true,
+        "object_location_consistency": false,
+        "reusable_character_assets": true,
+        "natural_motion": false,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
+        "local_low_cost_preview": false,
+        "duration_max_seconds": 10
+      },
+      "policy": {
+        "heightened_copyright_review_required": false,
+        "live_schema_verified": false,
+        "provider_accessible_urls_required": true
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_api_docs",
+          "url": "https://developers.openai.com/api/docs/guides/video-generation",
+          "claim": "OpenAI video generation docs describe image references and reusable character assets for consistency."
+        },
+        {
+          "source_type": "official_research_page",
+          "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+          "claim": "Sora research material emphasizes dynamic camera motion, 3D consistency, long-range coherence, and object permanence."
+        }
+      ]
+    },
+    {
+      "provider_id": "veo",
+      "display_name": "Veo",
+      "priority": 35,
+      "recommended_for": [
+        "dialogue_or_lip_sync_scene",
+        "audio_synchronized_scene",
+        "sound_effects_scene",
+        "cinematic_camera_move"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "google-veo",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
+      "capabilities": {
+        "image_to_video": true,
+        "text_to_video": true,
+        "first_last_frame_control": true,
+        "identity_reference_support": true,
+        "multi_character_consistency": true,
+        "motion_quality": true,
+        "cinematic_camera_control": true,
+        "native_audio": true,
+        "dialogue_audio": true,
+        "sound_effects": true,
+        "audio_video_sync": true,
+        "multi_reference_inputs": true,
+        "reference_video_motion_control": true,
+        "world_consistency": true,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
+        "local_low_cost_preview": false,
+        "duration_max_seconds": 10
+      },
+      "policy": {
+        "heightened_copyright_review_required": false,
+        "live_schema_verified": false,
+        "provider_accessible_urls_required": true
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_product_page",
+          "url": "https://deepmind.google/models/veo/",
+          "claim": "Google describes Veo as generating video with native audio such as dialogue, ambient noise, and sound effects."
+        },
+        {
+          "source_type": "official_cloud_guide",
+          "url": "https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-veo-3-1",
+          "claim": "Google Cloud guidance describes synchronized sound, multi-person conversations, and timed effects."
+        }
+      ]
+    },
+    {
+      "provider_id": "runway",
+      "display_name": "Runway",
+      "priority": 40,
+      "recommended_for": [
+        "world_consistency_scene",
+        "character_location_object_continuity",
+        "multi_scene_short"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "runway-native",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
+      "capabilities": {
+        "image_to_video": true,
+        "text_to_video": true,
+        "first_last_frame_control": true,
+        "identity_reference_support": true,
+        "multi_character_consistency": true,
+        "motion_quality": true,
+        "cinematic_camera_control": true,
+        "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
+        "audio_video_sync": false,
+        "multi_reference_inputs": true,
+        "reference_video_motion_control": true,
+        "world_consistency": true,
+        "object_location_consistency": true,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
+        "local_low_cost_preview": false,
+        "duration_max_seconds": 10
+      },
+      "policy": {
+        "heightened_copyright_review_required": false,
+        "live_schema_verified": false,
+        "provider_accessible_urls_required": true
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_research_page",
+          "url": "https://runwayml.com/research/introducing-runway-gen-4",
+          "claim": "Runway Gen-4 is described around consistency of characters, locations, and objects across scenes."
+        },
+        {
+          "source_type": "official_help_docs",
+          "url": "https://help.runwayml.com/hc/en-us/articles/37327109429011-Creating-with-Gen-4-Video",
+          "claim": "Runway help docs describe creating with Gen-4 video."
+        }
+      ]
+    },
+    {
+      "provider_id": "luma",
+      "display_name": "Luma",
+      "priority": 50,
+      "recommended_for": [
+        "environment_establishing_shot",
+        "natural_motion_scene",
+        "camera_environment_motion"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "luma-native",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
+      "capabilities": {
+        "image_to_video": true,
+        "text_to_video": true,
+        "first_last_frame_control": false,
+        "identity_reference_support": false,
+        "multi_character_consistency": true,
+        "motion_quality": true,
+        "cinematic_camera_control": true,
+        "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
+        "audio_video_sync": false,
+        "multi_reference_inputs": true,
+        "reference_video_motion_control": true,
+        "world_consistency": false,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": true,
+        "environment_establishing_shot": true,
+        "stylized_effects": false,
+        "local_low_cost_preview": false,
+        "duration_max_seconds": 10
+      },
+      "policy": {
+        "heightened_copyright_review_required": false,
+        "live_schema_verified": false,
+        "provider_accessible_urls_required": true
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_product_page",
+          "url": "https://lumalabs.ai/ray2",
+          "claim": "Luma Ray2 material emphasizes realistic visuals, natural coherent motion, and image/video inputs."
+        }
+      ]
+    },
+    {
+      "provider_id": "pika",
+      "display_name": "Pika",
+      "priority": 60,
+      "recommended_for": [
+        "stylized_effects_scene",
+        "first_last_frame_transition",
+        "social_short_preview"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "pika-native",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        },
+        {
+          "route_id": "fal-pika",
+          "status": "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"
+        }
+      ],
+      "capabilities": {
+        "image_to_video": true,
+        "text_to_video": true,
+        "first_last_frame_control": true,
+        "identity_reference_support": false,
+        "multi_character_consistency": false,
+        "motion_quality": true,
+        "cinematic_camera_control": false,
+        "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
+        "audio_video_sync": false,
+        "multi_reference_inputs": true,
+        "reference_video_motion_control": false,
+        "world_consistency": false,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": false,
+        "stylized_effects": true,
+        "local_low_cost_preview": false,
+        "duration_max_seconds": 10
+      },
+      "policy": {
+        "heightened_copyright_review_required": false,
+        "live_schema_verified": false,
+        "provider_accessible_urls_required": true
+      },
+      "evidence_sources": [
+        {
+          "source_type": "official_faq",
+          "url": "https://pika.art/faq",
+          "claim": "Pika FAQ describes first and last frame image-to-video behavior."
+        },
+        {
+          "source_type": "hosting_catalog",
+          "url": "https://fal.ai/models/fal-ai/pika/v2.2/image-to-video",
+          "claim": "fal lists Pika image-to-video hosting routes."
+        }
+      ]
     },
     {
       "provider_id": "local-preview",
       "display_name": "Local / Open Preview",
       "priority": 90,
+      "recommended_for": [
+        "low_cost_preview",
+        "local_dry_run",
+        "prompt_shape_probe"
+      ],
+      "hosting_routes": [
+        {
+          "route_id": "local-open-preview",
+          "status": "DRY_RUN_LOCAL_ONLY"
+        }
+      ],
       "capabilities": {
         "image_to_video": false,
         "text_to_video": true,
@@ -67,8 +455,17 @@
         "motion_quality": false,
         "cinematic_camera_control": false,
         "native_audio": false,
+        "dialogue_audio": false,
+        "sound_effects": false,
         "audio_video_sync": false,
         "multi_reference_inputs": false,
+        "reference_video_motion_control": false,
+        "world_consistency": false,
+        "object_location_consistency": false,
+        "reusable_character_assets": false,
+        "natural_motion": false,
+        "environment_establishing_shot": false,
+        "stylized_effects": false,
         "local_low_cost_preview": true,
         "duration_max_seconds": 5
       },
@@ -76,79 +473,14 @@
         "heightened_copyright_review_required": false,
         "live_schema_verified": false,
         "provider_accessible_urls_required": false
-      }
-    },
-    {
-      "provider_id": "runway",
-      "display_name": "Runway",
-      "priority": 40,
-      "capabilities": {
-        "image_to_video": true,
-        "text_to_video": true,
-        "first_last_frame_control": true,
-        "identity_reference_support": true,
-        "multi_character_consistency": true,
-        "motion_quality": true,
-        "cinematic_camera_control": true,
-        "native_audio": false,
-        "audio_video_sync": false,
-        "multi_reference_inputs": true,
-        "local_low_cost_preview": false,
-        "duration_max_seconds": 10
       },
-      "policy": {
-        "heightened_copyright_review_required": false,
-        "live_schema_verified": false,
-        "provider_accessible_urls_required": true
-      }
-    },
-    {
-      "provider_id": "luma",
-      "display_name": "Luma",
-      "priority": 50,
-      "capabilities": {
-        "image_to_video": true,
-        "text_to_video": true,
-        "first_last_frame_control": false,
-        "identity_reference_support": false,
-        "multi_character_consistency": true,
-        "motion_quality": true,
-        "cinematic_camera_control": true,
-        "native_audio": false,
-        "audio_video_sync": false,
-        "multi_reference_inputs": true,
-        "local_low_cost_preview": false,
-        "duration_max_seconds": 10
-      },
-      "policy": {
-        "heightened_copyright_review_required": false,
-        "live_schema_verified": false,
-        "provider_accessible_urls_required": true
-      }
-    },
-    {
-      "provider_id": "veo-style-provider",
-      "display_name": "Veo-style Provider",
-      "priority": 30,
-      "capabilities": {
-        "image_to_video": true,
-        "text_to_video": true,
-        "first_last_frame_control": true,
-        "identity_reference_support": true,
-        "multi_character_consistency": true,
-        "motion_quality": true,
-        "cinematic_camera_control": true,
-        "native_audio": true,
-        "audio_video_sync": true,
-        "multi_reference_inputs": true,
-        "local_low_cost_preview": false,
-        "duration_max_seconds": 10
-      },
-      "policy": {
-        "heightened_copyright_review_required": false,
-        "live_schema_verified": false,
-        "provider_accessible_urls_required": true
-      }
+      "evidence_sources": [
+        {
+          "source_type": "local_policy",
+          "url": "skills/persona-dream/SKILL.md",
+          "claim": "Persona Dream allows local/open preview planning but keeps provider readiness blocked without live gate proof."
+        }
+      ]
     }
   ]
 }

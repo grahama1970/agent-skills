@@ -66,8 +66,8 @@ def run_fixtures(fixtures_root: Path, receipt_out: Path) -> dict[str, Any]:
         "BLOCKED_PROVIDER_CAPABILITY_MISSING",
         "BLOCKED_HEIGHTENED_COPYRIGHT_REVIEW_REQUIRED",
     }
-    if len(results) != 8:
-        errors.append(f"fixture_count_mismatch:{len(results)}:expected:8")
+    if len(results) != 13:
+        errors.append(f"fixture_count_mismatch:{len(results)}:expected:13")
     for blocker in sorted(expected_blockers - set(observed_blockers)):
         errors.append(f"missing_expected_observed_blocker:{blocker}")
     receipt = {

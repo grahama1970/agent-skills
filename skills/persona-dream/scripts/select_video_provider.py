@@ -30,6 +30,14 @@ CAPABILITY_WEIGHTS = {
     "multi_reference_inputs": 20,
     "reference_video_motion_control": 12,
     "local_low_cost_preview": 25,
+    "dialogue_audio": 18,
+    "sound_effects": 12,
+    "world_consistency": 16,
+    "object_location_consistency": 16,
+    "reusable_character_assets": 18,
+    "natural_motion": 18,
+    "environment_establishing_shot": 12,
+    "stylized_effects": 18,
 }
 
 
@@ -123,6 +131,9 @@ def score_provider(provider: dict[str, Any], scene: dict[str, Any]) -> dict[str,
         "fit": fit,
         "blockers": blockers,
         "policy_blocked": bool(policy_blockers),
+        "recommended_for": provider.get("recommended_for") if isinstance(provider.get("recommended_for"), list) else [],
+        "hosting_routes": provider.get("hosting_routes") if isinstance(provider.get("hosting_routes"), list) else [],
+        "evidence_sources": provider.get("evidence_sources") if isinstance(provider.get("evidence_sources"), list) else [],
     }
 
 
