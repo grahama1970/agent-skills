@@ -1,0 +1,10 @@
+{
+  "blockers": [
+    "BLOCKED_REVIEWER_RECEIPT_MISSING_FOR_ACCEPTED_ARTIFACT"
+  ],
+  "decisions": [
+    "CURRENT",
+    "REUSE_ALLOWED"
+  ],
+  "status": "BLOCKED_RESPAWN_PLAN"
+}

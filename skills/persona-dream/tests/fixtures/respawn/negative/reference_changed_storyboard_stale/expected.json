@@ -1,0 +1,11 @@
+{
+  "blockers": [
+    "BLOCKED_STALE_MEDIA_LOCK",
+    "BLOCKED_STALE_KLING_SCENE_PACKET"
+  ],
+  "decisions": [
+    "REVALIDATE_REQUIRED",
+    "REGENERATE_REQUIRED"
+  ],
+  "status": "RESPAWN_PLAN_GENERATED"
+}

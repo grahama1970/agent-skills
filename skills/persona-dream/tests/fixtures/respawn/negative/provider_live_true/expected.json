@@ -1,0 +1,10 @@
+{
+  "blockers": [
+    "BLOCKED_PROVIDER_LIVE_IN_RESPAWN_CHECK"
+  ],
+  "decisions": [
+    "CURRENT",
+    "REUSE_ALLOWED"
+  ],
+  "status": "BLOCKED_RESPAWN_PLAN"
+}

@@ -1,0 +1,10 @@
+{
+  "blockers": [
+    "BLOCKED_UPSTREAM_HASH_CHANGED"
+  ],
+  "decisions": [
+    "REUSE_ALLOWED",
+    "REGENERATE_REQUIRED"
+  ],
+  "status": "RESPAWN_PLAN_GENERATED"
+}

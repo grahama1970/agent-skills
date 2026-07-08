@@ -58,6 +58,7 @@ Commands:
   convert-accepted-storyboard-to-kling  Convert accepted storyboard packet into fail-closed Kling dry-run artifacts
   validate-kling-scene-packet  Validate a fail-closed Kling dry-run scene packet
   check-kling-scene-packet-dry-run-gate  Convert then validate accepted storyboard as local dry-run Tau gate
+  check-respawn-plan   Compare revision lineage and write a local respawn plan
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -115,6 +116,7 @@ Examples:
   ./run.sh convert-accepted-storyboard-to-kling --storyboard-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/storyboard_packet.json --output-root /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet --json
   ./run.sh validate-kling-scene-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet/kling_scene_packet.json --receipt-out /tmp/kling_scene_packet_validation_receipt.json --json
   ./run.sh check-kling-scene-packet-dry-run-gate --storyboard-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/storyboard_packet.json --output-root /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet --receipt-out /tmp/kling_scene_packet_dry_run_gate_receipt.json --json
+  ./run.sh check-respawn-plan --fixtures-root tests/fixtures/respawn --receipt-out /tmp/persona-dream-respawn/check_receipt.json --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
@@ -277,6 +279,9 @@ case "$COMMAND" in
     ;;
   check-kling-scene-packet-dry-run-gate)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_kling_scene_packet_dry_run_gate.py" "$@"
+    ;;
+  check-respawn-plan)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_respawn_plan.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

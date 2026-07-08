@@ -1,0 +1,10 @@
+{
+  "blockers": [
+    "BLOCKED_STALE_ACCEPTED_ARTIFACT",
+    "BLOCKED_STALE_KLING_SCENE_PACKET"
+  ],
+  "decisions": [
+    "REGENERATE_REQUIRED"
+  ],
+  "status": "RESPAWN_PLAN_GENERATED"
+}

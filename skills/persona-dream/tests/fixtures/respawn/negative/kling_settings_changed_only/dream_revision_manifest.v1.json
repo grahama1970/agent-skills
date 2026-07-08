@@ -1,0 +1,167 @@
+{
+  "change_event": {
+    "change_id": "change_001",
+    "change_type": "KLING_SETTINGS_CHANGED",
+    "changed_by": "project_agent",
+    "description": "kling_settings_changed",
+    "human_decision_required": false
+  },
+  "created_at": "2026-07-08T00:00:00Z",
+  "current_sources": {
+    "phase01_memory_residue_contract": {
+      "path": "artifacts/phase01.json",
+      "phase": "01_memory_residue",
+      "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "status": "PASS_MEMORY_RESIDUE_CONTRACT"
+    },
+    "phase02_story_contract": {
+      "path": "artifacts/phase02.json",
+      "phase": "02_story_contract",
+      "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "status": "PASS_STORY_CONTRACT"
+    },
+    "phase06_script_contract": {
+      "path": "artifacts/phase06.json",
+      "phase": "06_script_contract",
+      "sha256": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "status": "PASS_SCRIPT_CONTRACT"
+    },
+    "phase07_storyboard_packet": {
+      "path": "artifacts/phase07.json",
+      "phase": "07_storyboard",
+      "sha256": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "status": "PASS_PANEL_REVIEWED"
+    },
+    "phase08_kling_scene_packet": {
+      "path": "artifacts/phase08.json",
+      "phase": "08_kling_scene_packet",
+      "sha256": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "status": "GENERATED_UNREVIEWED"
+    }
+  },
+  "derivation_graph": {
+    "edges": [
+      {
+        "dependency_type": "SOURCE_IDEA_MEMORY",
+        "from_artifact_id": "phase01_memory_residue_contract",
+        "from_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "to_artifact_id": "phase02_story_contract"
+      },
+      {
+        "dependency_type": "SOURCE_STORY",
+        "from_artifact_id": "phase02_story_contract",
+        "from_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "to_artifact_id": "phase06_script_contract"
+      },
+      {
+        "dependency_type": "SOURCE_SCRIPT",
+        "from_artifact_id": "phase06_script_contract",
+        "from_sha256": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "to_artifact_id": "phase07_storyboard_packet"
+      },
+      {
+        "dependency_type": "REFERENCE_ASSET",
+        "from_artifact_id": "reference.embry_character_sheet",
+        "from_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "to_artifact_id": "phase07_storyboard_packet"
+      },
+      {
+        "dependency_type": "SOURCE_STORYBOARD",
+        "from_artifact_id": "phase07_storyboard_packet",
+        "from_sha256": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "to_artifact_id": "phase08_kling_scene_packet"
+      },
+      {
+        "dependency_type": "KLING_DISTILLATION_SETTINGS",
+        "from_artifact_id": "kling_settings.distillation_v1",
+        "from_sha256": "sha256:kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+        "to_artifact_id": "phase08_kling_scene_packet"
+      }
+    ],
+    "nodes": [
+      {
+        "artifact_id": "phase02_story_contract",
+        "path": "artifacts/phase02_story_contract.json",
+        "phase": "02_story_contract",
+        "reviewer_receipt_paths": [
+          "receipts/phase02_story_contract.review.json"
+        ],
+        "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "status": "PASS_STORY_CONTRACT",
+        "validator_receipt_paths": [
+          "receipts/phase02_story_contract.validator.json"
+        ]
+      },
+      {
+        "artifact_id": "phase06_script_contract",
+        "path": "artifacts/phase06_script_contract.json",
+        "phase": "06_script_contract",
+        "reviewer_receipt_paths": [
+          "receipts/phase06_script_contract.review.json"
+        ],
+        "sha256": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "status": "PASS_SCRIPT_CONTRACT",
+        "validator_receipt_paths": [
+          "receipts/phase06_script_contract.validator.json"
+        ]
+      },
+      {
+        "accepted": true,
+        "artifact_id": "phase07_storyboard_packet",
+        "path": "artifacts/phase07_storyboard_packet.json",
+        "phase": "07_storyboard",
+        "reviewer_receipt_paths": [
+          "receipts/phase07_storyboard_packet.review.json"
+        ],
+        "sha256": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "status": "PASS_PANEL_REVIEWED",
+        "validator_receipt_paths": [
+          "receipts/phase07_storyboard_packet.validator.json"
+        ]
+      },
+      {
+        "accepted": true,
+        "artifact_id": "phase08_kling_scene_packet",
+        "path": "artifacts/phase08_kling_scene_packet.json",
+        "phase": "08_kling_scene_packet",
+        "reviewer_receipt_paths": [
+          "receipts/phase08_kling_scene_packet.review.json"
+        ],
+        "sha256": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "status": "GENERATED_UNREVIEWED",
+        "validator_receipt_paths": [
+          "receipts/phase08_kling_scene_packet.validator.json"
+        ]
+      }
+    ]
+  },
+  "kling_settings": [
+    {
+      "path": "artifacts/kling_settings.json",
+      "phase": "kling_settings",
+      "settings_id": "distillation_v1",
+      "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ],
+  "parent_revision_id": "rev_0001",
+  "policy": {
+    "allow_partial_reuse": true,
+    "manual_acceptance_claimed": false,
+    "paid_call_authorized": false,
+    "provider_live": false,
+    "require_reviewer_receipts_for_acceptance": true,
+    "require_validator_receipts": true
+  },
+  "reference_assets": [
+    {
+      "asset_id": "embry_character_sheet",
+      "path": "artifacts/embry_ref.png",
+      "phase": "reference_asset",
+      "role": "character_reference",
+      "sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  ],
+  "revision_id": "rev_0002",
+  "run_id": "respawn-fixture",
+  "schema": "persona_dream.dream_revision_manifest.v1"
+}
