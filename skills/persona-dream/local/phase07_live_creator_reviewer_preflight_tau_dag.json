@@ -1,0 +1,105 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-phase07-live-creator-reviewer-preflight",
+  "goal": {
+    "goal_id": "persona-dream-phase07-live-preflight",
+    "goal_version": 1,
+    "goal_hash": "sha256:51dc0e18732f90516891cb53f478dfe40c7a4ef592a4ca8e0a6c4031a5e3be11",
+    "summary": "Gate Phase 07 live creator/reviewer preflight enforcement before provider generation."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream",
+    "allowed_paths": [
+      "skills/persona-dream/scripts/phase07_storyboard_tau_node.py",
+      "skills/persona-dream/scripts/check_phase07_live_creator_reviewer_preflight.py",
+      "skills/persona-dream/tests/fixtures/phase07_live_preflight/**",
+      "skills/persona-dream/tests/fixtures/spine_chain/**"
+    ]
+  },
+  "context": {
+    "provider_live": false,
+    "mocked": false,
+    "live_image_call_started": false,
+    "checker": "skills/persona-dream/scripts/check_phase07_live_creator_reviewer_preflight.py",
+    "fixtures_root": "skills/persona-dream/tests/fixtures/phase07_live_preflight",
+    "required_observed_blockers": [
+      "BLOCKED_CHAIN_MANIFEST_MISSING",
+      "BLOCKED_STALE_COMPILED_PROMPT_HASH",
+      "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST",
+      "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT"
+    ]
+  },
+  "entry_node": "review-checker",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 2
+  },
+  "nodes": [
+    {
+      "id": "review-checker",
+      "agent": "review-checker",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/phase07_live_creator_reviewer_preflight_tau_command.json",
+      "required_evidence": [
+        "phase07_live_creator_reviewer_preflight_tau_dag.json"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "phase07-live-creator-reviewer-preflight-checker",
+      "agent": "phase07-live-creator-reviewer-preflight-checker",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/phase07_live_creator_reviewer_preflight_tau_command.json",
+      "required_evidence": [
+        "phase07_live_creator_reviewer_preflight_checker_receipt.json",
+        "PASS_LIVE_CREATOR_REVIEWER_PREFLIGHT_GATE",
+        "BLOCKED_CHAIN_MANIFEST_MISSING",
+        "BLOCKED_STALE_COMPILED_PROMPT_HASH",
+        "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST",
+        "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT"
+      ],
+      "emits": [
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "review-checker",
+      "to": "phase07-live-creator-reviewer-preflight-checker"
+    },
+    {
+      "from": "phase07-live-creator-reviewer-preflight-checker",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "dag-receipt.json",
+    "phase07_live_creator_reviewer_preflight_checker_receipt.json",
+    "PASS_LIVE_CREATOR_REVIEWER_PREFLIGHT_GATE",
+    "provider_call_attempts:0"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}

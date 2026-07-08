@@ -1,0 +1,128 @@
+name: "Persona Dream Live Creator-Reviewer Hardening"
+components:
+  - id: upstream_contracts
+    label: "01/02/06 Typed Contracts"
+    tech: "validated JSON"
+    latency: "local"
+    color: green
+    row: 0
+    col: 0
+    files:
+      - skills/persona-dream/scripts/spine_prompt_contract_validation.py
+      - skills/persona-dream/scripts/validate_phase01_memory_residue_contract.py
+      - skills/persona-dream/scripts/validate_phase02_story_contract_prompt.py
+      - skills/persona-dream/scripts/validate_phase06_script_prompt_contract.py
+
+  - id: chain_manifest
+    label: "Spine Chain Manifest"
+    tech: "path/SHA gate"
+    latency: "local"
+    color: green
+    row: 1
+    col: 0
+    files:
+      - skills/persona-dream/scripts/validate_persona_dream_spine_chain.py
+      - skills/persona-dream/tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json
+
+  - id: phase07_prompt_contracts
+    label: "Phase 07 Prompt Contracts"
+    tech: "8 frame contracts"
+    latency: "local"
+    color: green
+    row: 2
+    col: 0
+    files:
+      - skills/persona-dream/scripts/validate_phase07_prompt_contract.py
+      - skills/persona-dream/tests/fixtures/spine_chain/good/phase07/prompt_contracts/sb_001.start_frame.attempt_001.json
+
+  - id: compiled_prompt_proofs
+    label: "Compiled Prompt Proofs"
+    tech: "raw-byte SHA"
+    latency: "local"
+    color: green
+    row: 3
+    col: 0
+    files:
+      - skills/persona-dream/local/spine_chain_hash_convention_webgpt_response.md
+      - skills/persona-dream/tests/fixtures/spine_chain/good/phase07/prompts/sb_001.start_frame.attempt_001.md
+
+  - id: live_preflight_gap
+    label: "◇ Missing Live Preflight"
+    tech: "must block provider"
+    latency: "0ms"
+    color: red
+    row: 3
+    col: 1
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: panel_creator
+    label: "Panel Creator"
+    tech: "Tau local node"
+    latency: "live image"
+    color: amber
+    row: 4
+    col: 1
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: provider_image
+    label: "Provider Image Call"
+    tech: "image generation"
+    latency: "minutes"
+    color: amber
+    row: 5
+    col: 1
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: panel_reviewer
+    label: "Panel Reviewer"
+    tech: "acceptance owner"
+    latency: "live review"
+    color: amber
+    row: 6
+    col: 1
+    files:
+      - skills/persona-dream/scripts/phase07_storyboard_tau_node.py
+
+  - id: reviewer_precondition_gate
+    label: "Reviewer PASS Gate"
+    tech: "validator receipt required"
+    latency: "local"
+    color: green
+    row: 6
+    col: 0
+    files:
+      - skills/persona-dream/scripts/validate_persona_dream_spine_chain.py
+
+  - id: tau_receipts
+    label: "Tau Evidence Boundary"
+    tech: "DAG receipts"
+    latency: "local"
+    color: blue
+    row: 7
+    col: 0
+    files:
+      - skills/persona-dream/local/spine_chain_contract_validator_tau_dag.json
+      - skills/persona-dream/local/persona-dream-spine-chain-contract-validator-run/dag-receipt.json
+
+connections:
+  - from: upstream_contracts
+    to: chain_manifest
+  - from: chain_manifest
+    to: phase07_prompt_contracts
+  - from: phase07_prompt_contracts
+    to: compiled_prompt_proofs
+  - from: compiled_prompt_proofs
+    to: live_preflight_gap
+  - from: live_preflight_gap
+    to: panel_creator
+  - from: panel_creator
+    to: provider_image
+  - from: provider_image
+    to: panel_reviewer
+  - from: panel_reviewer
+    to: reviewer_precondition_gate
+  - from: reviewer_precondition_gate
+    to: tau_receipts

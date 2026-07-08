@@ -1,0 +1,89 @@
+{
+  "active_goal_hash": "sha256:51dc0e18732f90516891cb53f478dfe40c7a4ef592a4ca8e0a6c4031a5e3be11",
+  "alerts": [],
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/start-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/command-loop/command-loop-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/compiled-command-specs/phase07-live-creator-reviewer-preflight-checker/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/compiled-command-specs/review-checker/tau-dispatch-command.json"
+  ],
+  "command_loop_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/command-loop/command-loop-receipt.json",
+  "containment_gate_receipts": {},
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/phase07_live_creator_reviewer_preflight_tau_dag.json",
+  "contract_sha256": "sha256:bf8c3a279e4634d8d4fea341a0872d3543a15b198bc6f137bcbe72dde716113f",
+  "dag_id": "persona-dream-phase07-live-creator-reviewer-preflight",
+  "edge_count": 2,
+  "entry_node": "review-checker",
+  "errors": [],
+  "evidence_case_gate_receipt": null,
+  "evidence_validation_receipt": null,
+  "execution": "project_agent_dag_via_handoff_command_loop",
+  "live": true,
+  "max_steps": 2,
+  "memory_intent_gate_receipt": null,
+  "mocked": false,
+  "node_attempts": {
+    "phase07-live-creator-reviewer-preflight-checker": 1,
+    "review-checker": 1
+  },
+  "node_count": 3,
+  "observed_edges": [
+    {
+      "from_agent": "review-checker",
+      "from_node": "review-checker",
+      "to_agent": "phase07-live-creator-reviewer-preflight-checker",
+      "to_node": "phase07-live-creator-reviewer-preflight-checker"
+    },
+    {
+      "from_agent": "phase07-live-creator-reviewer-preflight-checker",
+      "from_node": "phase07-live-creator-reviewer-preflight-checker",
+      "to_agent": "human",
+      "to_node": "human"
+    }
+  ],
+  "ok": true,
+  "progress_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/dag-progress.json",
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "Parallel DAG scheduling.",
+      "GitHub mutation or ticket closure.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Entry node was compiled into a tau.agent_handoff.v1 start handoff.",
+      "Node routing was executed by the real local command-loop subprocess runner.",
+      "Observed edges and retry counts were checked against the DAG contract.",
+      "Reviewer verdict evidence was checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [
+    "review-checker",
+    "phase07-live-creator-reviewer-preflight-checker"
+  ],
+  "status": "PASS",
+  "target": {
+    "allowed_paths": [
+      "skills/persona-dream/scripts/phase07_storyboard_tau_node.py",
+      "skills/persona-dream/scripts/check_phase07_live_creator_reviewer_preflight.py",
+      "skills/persona-dream/tests/fixtures/phase07_live_preflight/**",
+      "skills/persona-dream/tests/fixtures/spine_chain/**"
+    ],
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-08T02:34:10Z",
+  "verdict": "PASS",
+  "zero_trust_preflight_receipt": null
+}

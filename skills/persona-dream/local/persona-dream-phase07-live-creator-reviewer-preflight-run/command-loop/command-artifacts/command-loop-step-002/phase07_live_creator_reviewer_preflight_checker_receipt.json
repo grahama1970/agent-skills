@@ -1,0 +1,113 @@
+{
+  "blockers": [],
+  "case_results": [
+    {
+      "case": "missing_manifest",
+      "errors": [],
+      "expected_blocker": "BLOCKED_CHAIN_MANIFEST_MISSING",
+      "observed_blockers": [
+        "BLOCKED_CHAIN_MANIFEST_MISSING",
+        "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE",
+        "BLOCKED_TARGET_PANEL_SCOPE_NOT_IN_MANIFEST",
+        "BLOCKED_TARGET_FRAME_SCOPE_NOT_IN_MANIFEST",
+        "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST"
+      ],
+      "preflight_receipt": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/missing_manifest/receipts/live_preflight/panel-creator_phase07_live_preflight_receipt.json",
+      "provider_guard": {
+        "error": "BLOCKED_PROVIDER_CALL_BEFORE_PREFLIGHT_PASS",
+        "provider_call_started": false,
+        "status": "FAIL"
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "stale_compiled_prompt_hash",
+      "errors": [],
+      "expected_blocker": "BLOCKED_STALE_COMPILED_PROMPT_HASH",
+      "observed_blockers": [
+        "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED",
+        "BLOCKED_STALE_COMPILED_PROMPT_HASH",
+        "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE"
+      ],
+      "preflight_receipt": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/receipts/live_preflight/panel-creator_phase07_live_preflight_receipt.json",
+      "provider_guard": {
+        "error": "BLOCKED_PROVIDER_CALL_BEFORE_PREFLIGHT_PASS",
+        "provider_call_started": false,
+        "status": "FAIL"
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "target_scope_missing",
+      "errors": [],
+      "expected_blocker": "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST",
+      "observed_blockers": [
+        "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED",
+        "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE",
+        "BLOCKED_TARGET_PANEL_SCOPE_NOT_IN_MANIFEST",
+        "BLOCKED_TARGET_FRAME_SCOPE_NOT_IN_MANIFEST",
+        "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST"
+      ],
+      "preflight_receipt": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/target_scope_missing/receipts/live_preflight/panel-creator_phase07_live_preflight_receipt.json",
+      "provider_guard": {
+        "error": "BLOCKED_PROVIDER_CALL_BEFORE_PREFLIGHT_PASS",
+        "provider_call_started": false,
+        "status": "FAIL"
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "reviewer_pass_without_validator_receipt",
+      "errors": [],
+      "expected_blocker": "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT",
+      "observed_blockers": [
+        "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT"
+      ],
+      "preflight_receipt": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt/receipts/live_preflight/panel-reviewer_phase07_live_preflight_receipt.json",
+      "provider_guard": {
+        "error": "BLOCKED_PROVIDER_CALL_BEFORE_PREFLIGHT_PASS",
+        "provider_call_started": false,
+        "status": "FAIL"
+      },
+      "status": "PASS"
+    }
+  ],
+  "checked_at": "2026-07-08T02:34:10.390076+00:00",
+  "claims": {
+    "does_not_prove": [
+      "live provider image generation works",
+      "reference images are attached to the provider request",
+      "Embry/Kai visually pass identity review",
+      "final storyboard approval"
+    ],
+    "proves": [
+      "local Phase 07 live preflight blocks missing run manifest",
+      "local Phase 07 live preflight blocks stale compiled prompt hash",
+      "local Phase 07 live preflight blocks target scope absent from manifest",
+      "local Phase 07 reviewer preflight blocks PASS without validator receipt precondition",
+      "defensive _generate_image guard blocks when preflight status is not PASS_LIVE_CREATOR_PREFLIGHT"
+    ]
+  },
+  "live_image_call_started": false,
+  "mocked": false,
+  "observed_blockers": [
+    "BLOCKED_CHAIN_MANIFEST_MISSING",
+    "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED",
+    "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE",
+    "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT",
+    "BLOCKED_STALE_COMPILED_PROMPT_HASH",
+    "BLOCKED_TARGET_FRAME_SCOPE_NOT_IN_MANIFEST",
+    "BLOCKED_TARGET_PANEL_SCOPE_NOT_IN_MANIFEST",
+    "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST"
+  ],
+  "provider_call_attempts": 0,
+  "provider_live": false,
+  "schema": "persona_dream.phase07.live_creator_reviewer_preflight_checker_receipt.v1",
+  "status": "PASS_LIVE_CREATOR_REVIEWER_PREFLIGHT_GATE",
+  "tests": {
+    "missing_manifest": "PASS",
+    "reviewer_pass_without_validator_receipt": "PASS",
+    "stale_compiled_prompt_hash": "PASS",
+    "target_scope_missing": "PASS"
+  }
+}

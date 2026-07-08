@@ -1,0 +1,25 @@
+{
+  "duration_seconds": 10,
+  "generation_scope": {
+    "mode": "targeted_panel_proof",
+    "target_frame_ids": [
+      "sb_001.start_frame"
+    ],
+    "target_panel_ids": [
+      "sb_001"
+    ]
+  },
+  "panel_count": 1,
+  "panels": [
+    {
+      "end_frame": {},
+      "panel_id": "sb_001",
+      "start_frame": {
+        "candidate_frame": {
+          "status": "GENERATED_CANDIDATE_FRAME"
+        }
+      }
+    }
+  ],
+  "schema": "persona_dream.storyboard_packet.v1"
+}

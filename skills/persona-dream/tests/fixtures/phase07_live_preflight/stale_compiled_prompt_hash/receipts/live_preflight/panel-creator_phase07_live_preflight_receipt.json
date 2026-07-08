@@ -1,0 +1,72 @@
+{
+  "blockers": [
+    {
+      "status": "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED",
+      "stderr": "",
+      "validator_status": "BLOCKED_SPINE_CHAIN_CONTRACT"
+    },
+    {
+      "child_status": "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH",
+      "status": "BLOCKED_STALE_COMPILED_PROMPT_HASH"
+    },
+    {
+      "field": "provider_live",
+      "status": "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "provider reference images were attached",
+      "image generation succeeded",
+      "visual identity review passed",
+      "storyboard was accepted",
+      "panel generation stayed under five minutes"
+    ],
+    "proves": [
+      "provider image call was blocked before generation",
+      "fail-closed live preflight ran before provider/reviewer mutation"
+    ]
+  },
+  "created_at": "2026-07-08T02:34:10.258548+00:00",
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_call_authorized": false,
+  "provider_live": false,
+  "reviewer_pass_preconditions": {
+    "required": false,
+    "satisfied": null
+  },
+  "role": "panel-creator",
+  "run_root": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash",
+  "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
+  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_sha256": "sha256:36f12e9ecb77b8b3f0dd9ddb7500970c236a85e23ee1405a9e4dc9a005714d75",
+  "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:e4e808230ee01d23519cf3106f75999f8faf2e4072660f098789ddd4b93b236c",
+  "spine_chain_validator_status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+  "status": "BLOCKED_LIVE_PREFLIGHT",
+  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:a8eab1ba2eacd857808b92f0b6b6eba211587d3898f595958e28ef942e1885b7",
+  "target_manifest_entries": [
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:f688707fccc0a122c7c17bf20f9a04c6c4d72760ea8648c112ee91441ed2b8cb",
+      "contract_path": "phase07/prompt_contracts/sb_001.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:c3e9688c05d7323e22c1ba0a014d4a0ec086e07f34c1d440c43106fdc9a53488",
+      "frame_id": "sb_001.start_frame",
+      "panel_id": "sb_001",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    }
+  ],
+  "target_scope": {
+    "target_frame_ids": [
+      "sb_001.start_frame"
+    ],
+    "target_panel_ids": [
+      "sb_001"
+    ]
+  },
+  "target_scope_represented_in_manifest": true,
+  "verdict": "FAIL_CLOSED"
+}

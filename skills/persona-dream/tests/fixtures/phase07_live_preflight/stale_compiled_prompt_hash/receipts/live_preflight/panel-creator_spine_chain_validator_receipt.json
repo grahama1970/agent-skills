@@ -1,0 +1,37 @@
+{
+  "blockers": [
+    {
+      "actual": "sha256:b2933756abd47afc6fce37f7dcb99a5ef22bf4cde8af9b896d4ceb56cf2bfa86",
+      "expected": "sha256:f688707fccc0a122c7c17bf20f9a04c6c4d72760ea8648c112ee91441ed2b8cb",
+      "field": "stages.phase07.panel_prompt_contracts[0].compiled_prompt.sha256",
+      "path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "status": "BLOCKED_COMPILED_PROMPT_HASH_MISMATCH"
+    }
+  ],
+  "checked_at": "2026-07-08T02:34:10.250822+00:00",
+  "claims": {
+    "does_not_prove": [
+      "provider reference attachment",
+      "image generation",
+      "visual identity pass",
+      "story/script creative quality",
+      "runtime performance"
+    ],
+    "proves": [
+      "inter-contract path/SHA binding",
+      "validator receipt binding",
+      "compiled prompt hash binding",
+      "raw-source-safe downstream consumption",
+      "reviewer PASS precondition policy where acceptance is claimed",
+      "local non-provider chain gate"
+    ]
+  },
+  "live_image_call_started": false,
+  "manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/spine_chain_manifest.v1.json",
+  "manifest_sha256": "sha256:36f12e9ecb77b8b3f0dd9ddb7500970c236a85e23ee1405a9e4dc9a005714d75",
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.spine.chain_contract_validator_receipt.v1",
+  "status": "BLOCKED_SPINE_CHAIN_CONTRACT",
+  "verdict": "FAIL_CLOSED"
+}

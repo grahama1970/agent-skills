@@ -87,6 +87,7 @@ SCILLM_SKILL_RUN = Path("/home/graham/workspace/experiments/agent-skills/skills/
 IMAGEMAGICK_BIN = Path("/usr/local/bin/magick")
 SCILLM_CHAT_COMPLETIONS_URL = os.environ.get("SCILLM_CHAT_COMPLETIONS_URL", "http://localhost:4001/v1/chat/completions")
 SCILLM_ENV_PATH = Path(os.environ.get("SCILLM_ENV_PATH", "/home/graham/workspace/experiments/scillm/.env"))
+SPINE_CHAIN_VALIDATOR = Path(__file__).resolve().parent / "validate_persona_dream_spine_chain.py"
 IDENTITY_REFERENCE_ASSETS = {
     "Embry": {
         "id": "embry_character_sheet",
@@ -875,6 +876,26 @@ def _ensure_storyboard_frame_artifacts(
         receipt["blockers"] = blockers
         return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
 
+    live_preflight = _run_phase07_live_preflight(
+        role="panel-creator",
+        run_root=run_root,
+        packet=packet,
+        packet_path=packet_path,
+        start_payload=start_payload,
+        require_provider_live=True,
+        require_target_scope=True,
+    )
+    receipt["live_preflight_receipt"] = live_preflight["receipt_path"]
+    receipt["live_preflight_status"] = live_preflight["status"]
+    if live_preflight["status"] != "PASS_LIVE_CREATOR_PREFLIGHT":
+        blockers.extend(live_preflight["blockers"])
+        receipt["status"] = "BLOCKED_LIVE_PREFLIGHT"
+        receipt["blockers"] = blockers
+        receipt["provider_calls"] = []
+        receipt["live_image_call_started"] = False
+        _write_json(run_root / "receipts" / "storyboard_frame_generation_receipt.json", receipt)
+        return {"packet_updated": False, "provider_called": False, "blockers": blockers, "receipt": receipt}
+
     backend = str(receipt["backend"])
     model = str(receipt["model"])
     output_dir = run_root / "generated_storyboard_frames"
@@ -971,6 +992,7 @@ def _ensure_storyboard_frame_artifacts(
                 receipts_dir=run_root / "receipts" / "storyboard_frame_generation",
                 panel_id=panel_id,
                 frame_key=frame_key,
+                live_preflight_status=live_preflight["status"],
             )
             call.update({"panel_id": panel_id, "frame": frame_key, "output_path": str(output_path)})
             receipt["provider_calls"].append(call)
@@ -1014,6 +1036,22 @@ def _promote_reviewer_accepted_frames(
     start_payload: Mapping[str, Any],
 ) -> dict[str, Any]:
     identity_review_policy = _resolve_identity_review_policy(start_payload)
+    reviewer_preflight = _run_phase07_live_preflight(
+        role="panel-reviewer",
+        run_root=run_root,
+        packet=packet,
+        packet_path=packet_path,
+        start_payload=start_payload,
+        require_provider_live=False,
+        require_target_scope=True,
+        require_reviewer_pass_preconditions=True,
+    )
+    if reviewer_preflight["status"] != "PASS_LIVE_REVIEWER_PREFLIGHT":
+        return {
+            "packet_updated": False,
+            "blockers": reviewer_preflight["blockers"],
+            "live_preflight_receipt": reviewer_preflight["receipt_path"],
+        }
     blockers: list[str] = []
     if identity_review_policy["source"] != "dag_identity_review_model_policy":
         return {
@@ -1335,7 +1373,14 @@ def _generate_image(
     receipts_dir: Path,
     panel_id: str,
     frame_key: str,
+    live_preflight_status: str | None = None,
 ) -> dict[str, Any]:
+    if live_preflight_status != "PASS_LIVE_CREATOR_PREFLIGHT":
+        return {
+            "status": "FAIL",
+            "error": "BLOCKED_PROVIDER_CALL_BEFORE_PREFLIGHT_PASS",
+            "provider_call_started": False,
+        }
     if image_policy.get("source") == "dag_model_policy":
         return _generate_image_with_scillm_policy(
             prompt,
@@ -1351,6 +1396,219 @@ def _generate_image(
         "image_policy": dict(image_policy),
         "fallback_performed": False,
     }
+
+
+def _run_phase07_live_preflight(
+    *,
+    role: str,
+    run_root: Path,
+    packet: Mapping[str, Any],
+    packet_path: Path,
+    start_payload: Mapping[str, Any],
+    require_provider_live: bool,
+    require_target_scope: bool,
+    require_reviewer_pass_preconditions: bool = False,
+) -> dict[str, Any]:
+    receipts_dir = run_root / "receipts" / "live_preflight"
+    receipts_dir.mkdir(parents=True, exist_ok=True)
+    receipt_path = receipts_dir / f"{role}_phase07_live_preflight_receipt.json"
+    blockers: list[dict[str, Any]] = []
+    context = start_payload.get("context") if isinstance(start_payload.get("context"), Mapping) else {}
+    manifest_path = _resolve_spine_chain_manifest(run_root=run_root, context=context)
+    validator_receipt_path = receipts_dir / f"{role}_spine_chain_validator_receipt.json"
+    manifest: Mapping[str, Any] = {}
+    validator_receipt: Mapping[str, Any] = {}
+    if manifest_path is None or not manifest_path.exists():
+        blockers.append({"status": "BLOCKED_CHAIN_MANIFEST_MISSING", "message": "No run-specific spine_chain_manifest.v1.json was found."})
+    else:
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(SPINE_CHAIN_VALIDATOR),
+                "--manifest",
+                str(manifest_path),
+                "--receipt-out",
+                str(validator_receipt_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        try:
+            validator_receipt = _read_json(validator_receipt_path)
+        except Exception as exc:
+            validator_receipt = {"status": "BLOCKED_SPINE_CHAIN_CONTRACT", "receipt_parse_error": str(exc)}
+        if proc.returncode != 0 or validator_receipt.get("status") != "PASS_SPINE_CHAIN_CONTRACT_GATE":
+            blockers.append(
+                {
+                    "status": "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED",
+                    "validator_status": validator_receipt.get("status"),
+                    "stderr": proc.stderr[-1200:],
+                }
+            )
+            for blocker in validator_receipt.get("blockers", []) if isinstance(validator_receipt.get("blockers"), list) else []:
+                status = blocker.get("status") if isinstance(blocker, Mapping) else str(blocker)
+                if status in {"BLOCKED_COMPILED_PROMPT_HASH_MISMATCH", "BLOCKED_COMPILED_PROMPT_CONTRACT_HASH_MISMATCH"}:
+                    blockers.append({"status": "BLOCKED_STALE_COMPILED_PROMPT_HASH", "child_status": status})
+        try:
+            manifest = _read_json(manifest_path)
+        except Exception as exc:
+            blockers.append({"status": "BLOCKED_CHAIN_MANIFEST_VALIDATOR_FAILED", "message": f"manifest_parse_failed:{exc}"})
+
+    provider_live = _context_bool(context, "provider_live")
+    mocked = _context_bool(context, "mocked")
+    live_image_call_started = _context_bool(context, "live_image_call_started")
+    if mocked:
+        blockers.append({"status": "BLOCKED_MOCKED_LIVE_PREFLIGHT", "field": "mocked"})
+    if live_image_call_started:
+        blockers.append({"status": "BLOCKED_LIVE_CALL_STARTED_IN_LOCAL_GATE", "field": "live_image_call_started"})
+    if require_provider_live and not provider_live:
+        blockers.append({"status": "BLOCKED_PROVIDER_LIVE_DISABLED_FOR_LOCAL_GATE", "field": "provider_live"})
+
+    target_scope = _target_scope(packet)
+    target_entries = _manifest_target_entries(manifest, target_scope)
+    if require_target_scope:
+        if not target_scope["target_panel_ids"] or not target_scope["target_frame_ids"]:
+            blockers.append({"status": "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST", "field": "generation_scope"})
+        missing_panels = sorted(set(target_scope["target_panel_ids"]) - {entry.get("panel_id") for entry in target_entries})
+        missing_frames = sorted(set(target_scope["target_frame_ids"]) - {entry.get("frame_id") for entry in target_entries})
+        if missing_panels:
+            blockers.append({"status": "BLOCKED_TARGET_PANEL_SCOPE_NOT_IN_MANIFEST", "missing": missing_panels})
+        if missing_frames:
+            blockers.append({"status": "BLOCKED_TARGET_FRAME_SCOPE_NOT_IN_MANIFEST", "missing": missing_frames})
+        if missing_panels or missing_frames:
+            blockers.append({"status": "BLOCKED_TARGET_SCOPE_NOT_IN_CHAIN_MANIFEST"})
+
+    if require_reviewer_pass_preconditions:
+        preconditions = manifest.get("reviewer_preconditions") if isinstance(manifest, Mapping) else None
+        claims = preconditions.get("acceptance_claims") if isinstance(preconditions, Mapping) else None
+        if not isinstance(claims, list) or not claims:
+            blockers.append({"status": "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT", "field": "reviewer_preconditions.acceptance_claims"})
+        else:
+            for index, claim in enumerate(claims):
+                if not isinstance(claim, Mapping) or claim.get("validator_receipt_required") is not True:
+                    blockers.append({"status": "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT", "field": f"reviewer_preconditions.acceptance_claims[{index}]"})
+                if isinstance(claim, Mapping) and str(claim.get("reviewer_status") or "").startswith("PASS") and not str(claim.get("validated_artifact_sha256") or "").startswith("sha256:"):
+                    blockers.append({"status": "BLOCKED_REVIEWER_PASS_WITH_INVALID_CONTRACT", "field": f"reviewer_preconditions.acceptance_claims[{index}].validated_artifact_sha256"})
+
+    pass_status = "PASS_LIVE_CREATOR_PREFLIGHT" if role == "panel-creator" else "PASS_LIVE_REVIEWER_PREFLIGHT"
+    status = pass_status if not blockers else "BLOCKED_LIVE_PREFLIGHT"
+    receipt = {
+        "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
+        "created_at": _now_iso(),
+        "role": role,
+        "status": status,
+        "verdict": "PASS" if status == pass_status else "FAIL_CLOSED",
+        "run_root": str(run_root),
+        "storyboard_packet": str(packet_path),
+        "storyboard_packet_sha256": _sha256(packet_path) if packet_path.exists() else None,
+        "spine_chain_manifest_path": str(manifest_path) if manifest_path else None,
+        "spine_chain_manifest_sha256": _sha256(manifest_path) if manifest_path and manifest_path.exists() else None,
+        "spine_chain_validator": str(SPINE_CHAIN_VALIDATOR),
+        "spine_chain_validator_receipt_path": str(validator_receipt_path) if validator_receipt_path.exists() else None,
+        "spine_chain_validator_receipt_sha256": _sha256(validator_receipt_path) if validator_receipt_path.exists() else None,
+        "spine_chain_validator_status": validator_receipt.get("status"),
+        "provider_live": provider_live,
+        "mocked": mocked,
+        "live_image_call_started": live_image_call_started,
+        "provider_call_authorized": status == "PASS_LIVE_CREATOR_PREFLIGHT",
+        "target_scope": target_scope,
+        "target_scope_represented_in_manifest": bool(target_entries) and not any(str(item.get("status", "")).startswith("BLOCKED_TARGET") for item in blockers),
+        "target_manifest_entries": target_entries,
+        "reviewer_pass_preconditions": {
+            "required": require_reviewer_pass_preconditions,
+            "satisfied": None if not require_reviewer_pass_preconditions else not any(item["status"].startswith("BLOCKED_REVIEWER_PASS") for item in blockers),
+        },
+        "blockers": blockers,
+        "claims": {
+            "proves": [
+                "provider image call was blocked before generation" if blockers else "run-specific spine chain manifest passed",
+                "targeted panel/frame scope is represented in the chain manifest" if not blockers else "fail-closed live preflight ran before provider/reviewer mutation",
+            ],
+            "does_not_prove": [
+                "provider reference images were attached",
+                "image generation succeeded",
+                "visual identity review passed",
+                "storyboard was accepted",
+                "panel generation stayed under five minutes",
+            ],
+        },
+    }
+    _write_json(receipt_path, receipt)
+    return {
+        "status": status,
+        "blockers": [item["status"] for item in blockers],
+        "receipt_path": str(receipt_path),
+        "receipt": receipt,
+    }
+
+
+def _resolve_spine_chain_manifest(*, run_root: Path, context: Mapping[str, Any]) -> Path | None:
+    nested = context.get("persona_dream_phase07_storyboard")
+    candidates: list[Any] = []
+    if isinstance(nested, Mapping):
+        candidates.append(nested.get("spine_chain_manifest"))
+    candidates.append(context.get("persona_dream_spine_chain_manifest"))
+    candidates.append(os.environ.get("PERSONA_DREAM_SPINE_CHAIN_MANIFEST"))
+    candidates.append(run_root / "spine_chain_manifest.v1.json")
+    for candidate in candidates:
+        if isinstance(candidate, Path):
+            return candidate.expanduser().resolve()
+        if isinstance(candidate, str) and candidate.strip():
+            return Path(candidate).expanduser().resolve()
+    return None
+
+
+def _context_bool(context: Mapping[str, Any], key: str) -> bool:
+    value = context.get(key)
+    nested = context.get("persona_dream_phase07_storyboard")
+    if value is None and isinstance(nested, Mapping):
+        value = nested.get(key)
+    return value is True
+
+
+def _target_scope(packet: Mapping[str, Any]) -> dict[str, list[str]]:
+    scope = packet.get("generation_scope")
+    panel_ids: list[str] = []
+    frame_ids: list[str] = []
+    if isinstance(scope, Mapping):
+        panel_ids = [str(item) for item in scope.get("target_panel_ids", []) if isinstance(item, str) and item.strip()]
+        frame_ids = [str(item) for item in scope.get("target_frame_ids", []) if isinstance(item, str) and item.strip()]
+    if panel_ids and not frame_ids:
+        frame_ids = [f"{panel_id}.start_frame" for panel_id in panel_ids] + [f"{panel_id}.end_frame" for panel_id in panel_ids]
+    return {"target_panel_ids": panel_ids, "target_frame_ids": frame_ids}
+
+
+def _manifest_target_entries(manifest: Mapping[str, Any], target_scope: Mapping[str, list[str]]) -> list[dict[str, Any]]:
+    phase07 = manifest.get("stages", {}).get("phase07") if isinstance(manifest.get("stages"), Mapping) else None
+    entries = phase07.get("panel_prompt_contracts", []) if isinstance(phase07, Mapping) else []
+    if not isinstance(entries, list):
+        return []
+    target_panels = set(target_scope.get("target_panel_ids", []))
+    target_frames = set(target_scope.get("target_frame_ids", []))
+    found: list[dict[str, Any]] = []
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            continue
+        panel_id = str(entry.get("panel_id") or "")
+        frame_id = str(entry.get("frame_id") or "")
+        if target_panels and panel_id not in target_panels:
+            continue
+        if target_frames and frame_id not in target_frames:
+            continue
+        compiled = entry.get("compiled_prompt") if isinstance(entry.get("compiled_prompt"), Mapping) else {}
+        found.append(
+            {
+                "panel_id": panel_id,
+                "frame_id": frame_id,
+                "contract_path": entry.get("contract_path"),
+                "contract_sha256": entry.get("contract_sha256"),
+                "validator_receipt_status": entry.get("required_validator_status"),
+                "compiled_prompt_path": compiled.get("path"),
+                "compiled_prompt_sha256": compiled.get("sha256"),
+            }
+        )
+    return found
 
 
 def _generate_image_with_scillm_policy(

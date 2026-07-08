@@ -1,0 +1,52 @@
+{
+  "downstream_contract": {
+    "may_feed_phase02": true,
+    "raw_source_may_feed_prompt": false
+  },
+  "media_references": [
+    {
+      "allowed_downstream_use": [
+        "phase02",
+        "phase06",
+        "phase07"
+      ],
+      "asset_id": "embry_surfing_big_island_2024",
+      "path": "phase01/media/source_image_fixture.png",
+      "role": "identity_environment_reference",
+      "sha256": "sha256:bb5db5eb2e9cf0085c80f6de35a431e8d6c44c48bd76120b7e6e0f89995bceca",
+      "source_phase": "01_memory_residue"
+    }
+  ],
+  "phase": "01_memory_residue",
+  "prompt_safe_text": [
+    "Embry is low on the surfboard and trying to hold the cleanest line.",
+    "Kai is connected to the interruption rather than a vague offscreen presence."
+  ],
+  "raw_source": {
+    "content": "{\"story\":\"raw archived source only\"}",
+    "content_hash": "sha256:2ea21b1dc8e30e516c04afc0842b4b20dfc3d1de552a6c5ed2b9063465a93ee0",
+    "may_display_directly": false,
+    "may_feed_prompt": false
+  },
+  "run_id": "spine-chain-fixture-run",
+  "schema": "persona_dream.phase01.memory_residue_contract.v1",
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_residue": [
+    {
+      "scope": "episodic",
+      "source_hash": "sha256:bb5db5eb2e9cf0085c80f6de35a431e8d6c44c48bd76120b7e6e0f89995bceca",
+      "source_id": "memory:embry:surf-2024-001",
+      "source_path": "phase01/media/source_image_fixture.png",
+      "text": "Embry remembers a phone buzz interrupting a clean surf line."
+    }
+  ],
+  "typed_idea_fields": {
+    "characters": [
+      "Embry",
+      "Kai"
+    ],
+    "conflict": "obligation versus present-tense attention",
+    "premise": "A beach notification interrupts a hard-won moment of focus.",
+    "setting": "Big Island surf break"
+  }
+}

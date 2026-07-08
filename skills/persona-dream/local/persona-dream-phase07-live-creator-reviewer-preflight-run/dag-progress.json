@@ -1,0 +1,110 @@
+{
+  "active_goal_hash": "sha256:51dc0e18732f90516891cb53f478dfe40c7a4ef592a4ca8e0a6c4031a5e3be11",
+  "active_subagents": [],
+  "completed_subagents": [
+    {
+      "agent": "phase07-live-creator-reviewer-preflight-checker",
+      "node_id": "phase07-live-creator-reviewer-preflight-checker"
+    },
+    {
+      "agent": "review-checker",
+      "node_id": "review-checker"
+    }
+  ],
+  "dag_id": "persona-dream-phase07-live-creator-reviewer-preflight",
+  "entry_node": "review-checker",
+  "event_count": 5,
+  "events": [
+    {
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/compiled-command-specs/review-checker/tau-dispatch-command.json",
+      "event": "step_started",
+      "loop_step": 1,
+      "selected_agent": "review-checker",
+      "status": "RUNNING",
+      "ts": "2026-07-08T02:34:10Z"
+    },
+    {
+      "event": "step_completed",
+      "loop_step": 1,
+      "ok": true,
+      "selected_agent": "review-checker",
+      "status": "COMPLETED",
+      "stop_reason": "response_consumed",
+      "ts": "2026-07-08T02:34:10Z"
+    },
+    {
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run/compiled-command-specs/phase07-live-creator-reviewer-preflight-checker/tau-dispatch-command.json",
+      "event": "step_started",
+      "loop_step": 2,
+      "selected_agent": "phase07-live-creator-reviewer-preflight-checker",
+      "status": "RUNNING",
+      "ts": "2026-07-08T02:34:10Z"
+    },
+    {
+      "event": "step_completed",
+      "loop_step": 2,
+      "ok": true,
+      "selected_agent": "phase07-live-creator-reviewer-preflight-checker",
+      "status": "COMPLETED",
+      "stop_reason": "response_consumed",
+      "ts": "2026-07-08T02:34:10Z"
+    },
+    {
+      "event": "loop_waiting",
+      "loop_step": 2,
+      "selected_agent": "human",
+      "status": "WAITING",
+      "stop_reason": "next_agent_is_human",
+      "ts": "2026-07-08T02:34:10Z"
+    }
+  ],
+  "last_event": {
+    "event": "loop_waiting",
+    "loop_step": 2,
+    "selected_agent": "human",
+    "status": "WAITING",
+    "stop_reason": "next_agent_is_human",
+    "ts": "2026-07-08T02:34:10Z"
+  },
+  "live": true,
+  "mocked": false,
+  "node_count": 3,
+  "node_progress": [
+    {
+      "agent": "phase07-live-creator-reviewer-preflight-checker",
+      "attempt": 1,
+      "last_event_at": "2026-07-08T02:34:10Z",
+      "node_id": "phase07-live-creator-reviewer-preflight-checker",
+      "status": "COMPLETED"
+    },
+    {
+      "agent": "review-checker",
+      "attempt": 1,
+      "last_event_at": "2026-07-08T02:34:10Z",
+      "node_id": "review-checker",
+      "status": "COMPLETED"
+    }
+  ],
+  "ok": true,
+  "proof_scope": {
+    "does_not_prove": [
+      "The active subprocess will finish successfully.",
+      "Provider/model semantic quality.",
+      "Final DAG acceptance before dag-receipt.json is written."
+    ],
+    "proves": [
+      "Tau has written a durable local progress artifact for this DAG run.",
+      "Operators can inspect active and completed subagents before the final DAG receipt exists."
+    ]
+  },
+  "provider_live": false,
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/persona-dream-phase07-live-creator-reviewer-preflight-run",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_progress.v1",
+  "status": "PASS",
+  "terminal_nodes": [
+    "human"
+  ],
+  "updated_at": "2026-07-08T02:34:10Z",
+  "verdict": "PASS"
+}

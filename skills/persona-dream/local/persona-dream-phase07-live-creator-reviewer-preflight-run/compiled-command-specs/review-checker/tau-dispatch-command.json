@@ -1,0 +1,32 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/check_phase07_live_creator_reviewer_preflight.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "tau_dag_node": {
+    "agent": "review-checker",
+    "dag_id": "persona-dream-phase07-live-creator-reviewer-preflight",
+    "executor": "local",
+    "goal": {
+      "goal_hash": "sha256:51dc0e18732f90516891cb53f478dfe40c7a4ef592a4ca8e0a6c4031a5e3be11",
+      "goal_id": "persona-dream-phase07-live-preflight",
+      "goal_version": 1,
+      "summary": "Gate Phase 07 live creator/reviewer preflight enforcement before provider generation."
+    },
+    "node_id": "review-checker",
+    "required_evidence": [
+      "phase07_live_creator_reviewer_preflight_tau_dag.json"
+    ],
+    "target": {
+      "allowed_paths": [
+        "skills/persona-dream/scripts/phase07_storyboard_tau_node.py",
+        "skills/persona-dream/scripts/check_phase07_live_creator_reviewer_preflight.py",
+        "skills/persona-dream/tests/fixtures/phase07_live_preflight/**",
+        "skills/persona-dream/tests/fixtures/spine_chain/**"
+      ],
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream"
+    }
+  }
+}
