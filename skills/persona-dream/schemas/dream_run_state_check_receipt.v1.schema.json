@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona-dream.dream-run-state-check-receipt.v1",
+  "title": "Persona Dream local run state check receipt",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "mode",
+    "provider_live",
+    "paid_call_authorized",
+    "provider_accessible_url_created",
+    "submitted",
+    "manual_acceptance_claimed",
+    "actual_provider_call_attempts",
+    "fixture_count",
+    "valid_fixture_count",
+    "blocked_fixture_count",
+    "respawn_required_fixture_count",
+    "observed_runtime_states",
+    "observed_artifact_decisions",
+    "observed_blockers",
+    "claims"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "persona-dream.dream-run-state-check-receipt.v1"
+    },
+    "status": {
+      "enum": [
+        "PASS_PERSONA_DREAM_RUN_STATE",
+        "BLOCKED_PERSONA_DREAM_RUN_STATE"
+      ]
+    },
+    "mode": {
+      "const": "LOCAL_DETERMINISTIC"
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "provider_accessible_url_created": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "manual_acceptance_claimed": {
+      "const": false
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "fixture_count": {
+      "const": 10
+    },
+    "observed_runtime_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "observed_artifact_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "observed_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "does_not_prove": {
+          "type": "array",
+          "contains": {
+            "const": "live Kling generation"
+          },
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

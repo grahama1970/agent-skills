@@ -1,0 +1,225 @@
+{
+  "documents": {
+    "accepted_evidence_index": {
+      "accepted_artifacts": [
+        {
+          "artifact_id": "sb_001.start_frame",
+          "revision_id": "rev_0007"
+        },
+        {
+          "artifact_id": "kling_scene_packet",
+          "revision_id": "rev_0007"
+        }
+      ],
+      "revision_id": "rev_0007",
+      "schema": "persona_dream.accepted_evidence_index.v1"
+    },
+    "active_work_queue": {
+      "items": [],
+      "respawn_plan_hash": "sha256:83763ef34f8dc66dae4309cba2a067de9fa533452f4ca1e68f44c0b771175de0",
+      "revision_id": "rev_0007",
+      "schema": "persona_dream.active_work_queue.v1"
+    },
+    "artifact_lock_index": {
+      "artifacts": [
+        {
+          "artifact_id": "sb_001.start_frame",
+          "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        {
+          "artifact_id": "kling_scene_packet",
+          "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      "revision_id": "rev_0007",
+      "schema": "persona_dream.artifact_lock_index.v1"
+    },
+    "global_progress": {
+      "derived": true,
+      "live_submit_ready": false,
+      "manual_acceptance_claimed": false,
+      "owner_artifact": false,
+      "progress_percent": 62.5,
+      "provider_ready": false,
+      "schema": "persona_dream.global_progress.v1",
+      "submitted": false
+    },
+    "policy": {
+      "manual_acceptance_claimed": false,
+      "paid_call_authorized": false,
+      "provider_accessible_url_created": false,
+      "provider_live": false,
+      "schema": "persona_dream.run_policy.v1",
+      "submitted": false
+    },
+    "provider_final_gate": {
+      "dry_run_treated_as_live_ready": true,
+      "live_submit_ready": true,
+      "provider_ready": true,
+      "receipt_path": null,
+      "schema": "persona_dream.provider_final_gate_state.v1"
+    },
+    "respawn_plan": {
+      "blockers": [],
+      "decisions": [
+        {
+          "artifact_id": "artifact_1",
+          "decision": "CURRENT"
+        },
+        {
+          "artifact_id": "artifact_2",
+          "decision": "REUSE_ALLOWED"
+        },
+        {
+          "artifact_id": "artifact_3",
+          "decision": "REVALIDATE_REQUIRED"
+        },
+        {
+          "artifact_id": "artifact_4",
+          "decision": "REGENERATE_REQUIRED"
+        },
+        {
+          "artifact_id": "artifact_5",
+          "decision": "REVIEW_REQUIRED"
+        },
+        {
+          "artifact_id": "artifact_6",
+          "decision": "BLOCKED_HUMAN_DECISION_REQUIRED"
+        },
+        {
+          "artifact_id": "artifact_7",
+          "decision": "SUPERSEDED"
+        }
+      ],
+      "revision_id": "rev_0007",
+      "schema": "persona_dream.respawn_plan.v1"
+    },
+    "revision": {
+      "active_revision_id": "rev_0007",
+      "effective_policy_hash": "sha256:51e9b576c0285ae8baf07632ad2ec608008c158c6bf85f8b017079d70f24d6ea",
+      "last_change_event_seq": 42,
+      "last_planned_event_seq": 42,
+      "run_id": "run_state_fixture",
+      "schema": "persona_dream.revision_state.v1"
+    },
+    "status_surface": {
+      "authority": false,
+      "claims_progress": true,
+      "schema": "persona_dream.status_surface.v1",
+      "source_global_progress_sha256": "sha256:b216803f65266ec468910f65adf82e6995dfecddd91939436157e2c0a62d742c",
+      "view_only": true
+    },
+    "tau": {
+      "command_loop_receipt_path": null,
+      "contract_claimed_executed": false,
+      "contract_generated": true,
+      "live_tau_dag_execution_started": false,
+      "schema": "persona_dream.tau_contract_state.v1"
+    },
+    "work_lease_index": {
+      "leases": [],
+      "revision_id": "rev_0007",
+      "schema": "persona_dream.work_lease_index.v1"
+    }
+  },
+  "dream_run_state": {
+    "active_revision_id_at_state": "rev_0007",
+    "actual_provider_call_attempts": 0,
+    "artifact_decision_counts": {
+      "BLOCKED_HUMAN_DECISION_REQUIRED": 1,
+      "CURRENT": 1,
+      "REGENERATE_REQUIRED": 1,
+      "REUSE_ALLOWED": 1,
+      "REVALIDATE_REQUIRED": 1,
+      "REVIEW_REQUIRED": 1,
+      "SUPERSEDED": 1
+    },
+    "blockers": [],
+    "effective_policy_hash": "sha256:51e9b576c0285ae8baf07632ad2ec608008c158c6bf85f8b017079d70f24d6ea",
+    "manual_acceptance_claimed": false,
+    "mode": "LOCAL_DETERMINISTIC",
+    "non_claims": [
+      "does_not_call_kling",
+      "does_not_authorize_paid_calls",
+      "does_not_create_provider_accessible_urls",
+      "does_not_claim_manual_acceptance",
+      "does_not_claim_provider_readiness",
+      "does_not_claim_tau_execution"
+    ],
+    "paid_call_authorized": false,
+    "provider_accessible_url_created": false,
+    "provider_live": false,
+    "references": {
+      "accepted_evidence_index": {
+        "document_id": "accepted_evidence_index",
+        "path": "accepted_evidence_index.json",
+        "sha256": "sha256:fixture:accepted_evidence_index"
+      },
+      "active_work_queue": {
+        "document_id": "active_work_queue",
+        "path": "active_work_queue.json",
+        "sha256": "sha256:fixture:active_work_queue"
+      },
+      "artifact_lock_index": {
+        "document_id": "artifact_lock_index",
+        "path": "artifact_lock_index.json",
+        "sha256": "sha256:fixture:artifact_lock_index"
+      },
+      "global_progress": {
+        "document_id": "global_progress",
+        "path": "global_progress.json",
+        "sha256": "sha256:fixture:global_progress"
+      },
+      "policy": {
+        "document_id": "policy",
+        "path": "policy.json",
+        "sha256": "sha256:fixture:policy"
+      },
+      "provider_final_gate": {
+        "document_id": "provider_final_gate",
+        "path": "provider_final_gate.json",
+        "sha256": "sha256:fixture:provider_final_gate"
+      },
+      "respawn_plan": {
+        "document_id": "respawn_plan",
+        "path": "respawn_plan.json",
+        "sha256": "sha256:fixture:respawn_plan"
+      },
+      "revision": {
+        "document_id": "revision",
+        "path": "revision.json",
+        "sha256": "sha256:fixture:revision"
+      },
+      "status_surface": {
+        "document_id": "status_surface",
+        "path": "status_surface.json",
+        "sha256": "sha256:fixture:status_surface"
+      },
+      "tau": {
+        "document_id": "tau",
+        "path": "tau.json",
+        "sha256": "sha256:fixture:tau"
+      },
+      "work_lease_index": {
+        "document_id": "work_lease_index",
+        "path": "work_lease_index.json",
+        "sha256": "sha256:fixture:work_lease_index"
+      }
+    },
+    "run_id": "run_state_fixture",
+    "runtime_state": "LOCAL_DRY_RUN_COMPLETE_NOT_PROVIDER_READY",
+    "schema_version": "persona-dream.dream-run-state.v1",
+    "state_id": "provider_final_gate_claim_without_receipt_blocks",
+    "state_seq": 7,
+    "submitted": false
+  },
+  "expected": {
+    "blockers": [
+      "BLOCKED_PROVIDER_FINAL_GATE_CLAIM_WITHOUT_RECEIPT",
+      "BLOCKED_DRY_RUN_TREATED_AS_LIVE_READY"
+    ],
+    "exact_blockers": true,
+    "runtime_state": "LOCAL_BLOCKED_RUN_STATE"
+  },
+  "schema": "persona_dream.run_state_fixture.v1"
+}

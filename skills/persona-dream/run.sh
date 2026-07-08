@@ -63,6 +63,7 @@ Commands:
   check-global-progress-rollup  Derive local revision evidence progress from receipts
   check-dynamic-respawn-events  Classify user/project-agent change events into respawn actions
   check-creator-reviewer-respawn-loop  Prove creator/reviewer loops honor respawn and stale-write gates
+  check-persona-dream-run-state  Prove local run-state consistency across revision, queue, Tau, progress, and provider gates
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -125,6 +126,7 @@ Examples:
   ./run.sh check-global-progress-rollup --fixtures-root tests/fixtures/global-progress-rollup --receipt-out /tmp/persona-dream-global-progress/check_receipt.json --json
   ./run.sh check-dynamic-respawn-events --fixtures-root tests/fixtures/dynamic-respawn-events --receipt-out /tmp/persona-dream-dynamic-respawn/check_receipt.json --json
   ./run.sh check-creator-reviewer-respawn-loop --fixtures-root tests/fixtures/creator-reviewer-respawn-loop --receipt-out /tmp/persona-dream-creator-reviewer-loop/check_receipt.json --json
+  ./run.sh check-persona-dream-run-state --fixtures-root tests/fixtures/run-state --receipt-out /tmp/persona-dream-run-state/check_receipt.json --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
@@ -302,6 +304,9 @@ case "$COMMAND" in
     ;;
   check-creator-reviewer-respawn-loop)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_creator_reviewer_respawn_loop.py" "$@"
+    ;;
+  check-persona-dream-run-state)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_run_state.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

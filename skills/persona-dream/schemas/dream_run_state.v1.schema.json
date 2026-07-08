@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona-dream.dream-run-state.v1",
+  "title": "Persona Dream local run state",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "state_id",
+    "state_seq",
+    "mode",
+    "active_revision_id_at_state",
+    "runtime_state",
+    "references",
+    "artifact_decision_counts",
+    "blockers",
+    "non_claims",
+    "provider_live",
+    "paid_call_authorized",
+    "provider_accessible_url_created",
+    "submitted",
+    "manual_acceptance_claimed",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "persona-dream.dream-run-state.v1"
+    },
+    "mode": {
+      "const": "LOCAL_DETERMINISTIC"
+    },
+    "runtime_state": {
+      "enum": [
+        "LOCAL_RUN_STATE_CONSISTENT",
+        "LOCAL_RESPAWN_REQUIRED",
+        "LOCAL_WORK_QUEUE_READY",
+        "LOCAL_WORK_IN_PROGRESS",
+        "LOCAL_TAU_CONTRACT_GENERATED_NOT_EXECUTED",
+        "LOCAL_DRY_RUN_COMPLETE_NOT_PROVIDER_READY",
+        "LOCAL_BLOCKED_RUN_STATE",
+        "LOCAL_BLOCKED_PROVIDER_POLICY",
+        "LOCAL_BLOCKED_HUMAN_DECISION_REQUIRED",
+        "LOCAL_SUPERSEDED_REVISION_PRESENT"
+      ]
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "provider_accessible_url_created": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "manual_acceptance_claimed": {
+      "const": false
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "references": {
+      "type": "object",
+      "required": [
+        "revision",
+        "policy",
+        "respawn_plan",
+        "active_work_queue",
+        "work_lease_index",
+        "artifact_lock_index",
+        "accepted_evidence_index",
+        "global_progress",
+        "status_surface",
+        "tau",
+        "provider_final_gate"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["document_id", "sha256"],
+        "properties": {
+          "document_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:"
+          }
+        }
+      }
+    },
+    "artifact_decision_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_claims": {
+      "type": "array",
+      "contains": {
+        "const": "does_not_claim_provider_readiness"
+      },
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
