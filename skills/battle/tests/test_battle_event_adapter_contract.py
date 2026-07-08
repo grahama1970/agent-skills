@@ -413,7 +413,7 @@ def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_out
     report = validate_exploit_lifecycle_dag_path(out)
     assert report["status"] == "PASS"
     assert report["schema"] == EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA
-    assert report["node_count"] == 7
+    assert report["node_count"] == 10
 
     coverage = {item["battle_id"]: item["exploit_class"] for item in dag["scenario_coverage"]}
     assert coverage == {
@@ -447,6 +447,20 @@ def test_exploit_lifecycle_dag_contract_covers_research_spawn_pivot_and_blue_out
     assert nodes["pivot:ssrf"]["actor_visual"]["variant_id"] == "purple_horn_imp"
     assert nodes["blue:pre-spawn-block"]["score_semantics"]["outcome_class"] == "pre_spawn_blue_block"
     assert nodes["blue:kill-confirmed"]["score_semantics"]["outcome_class"] == "confirmed_blue_kill_no_child"
+    assert nodes["blue:kill-confirmed-after-spawn"]["score_semantics"]["outcome_class"] == "confirmed_blue_kill_with_child"
+    assert nodes["blue:post-spawn-child-contained"]["score_semantics"]["outcome_class"] == "post_spawn_child_contained"
+    assert nodes["research:unresolved-pressure"]["score_semantics"]["outcome_class"] == "unresolved_pressure"
+    assert set(dag["required_outcome_classes"]) == {
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+        "unresolved_pressure",
+    }
+    assert set(dag["outcome_classes"]) == set(dag["required_outcome_classes"])
     assert dag["replay_contract"]["ux_may_speed_up_replay"] is True
     assert "cinematic_speed" in dag["replay_contract"]["backend_must_not_emit"]
 

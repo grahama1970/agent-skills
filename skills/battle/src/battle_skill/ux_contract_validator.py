@@ -479,8 +479,21 @@ def validate_exploit_lifecycle_dag(dag: dict[str, Any]) -> None:
     _check(kinds >= required_kinds, "exploit lifecycle DAG must cover research, proof, pressure, spawn, pivot, block, and kill nodes", errors)
 
     outcome_classes = {str(node.get("score_semantics", {}).get("outcome_class")) for node in nodes if isinstance(node, dict)}
-    required_outcomes = set(dag.get("required_outcome_classes") or [])
-    _check(outcome_classes >= required_outcomes, "exploit lifecycle DAG must cover every required outcome class", errors)
+    required_outcome_items = dag.get("required_outcome_classes") if isinstance(dag.get("required_outcome_classes"), list) else []
+    required_outcomes = {str(item) for item in required_outcome_items}
+    canonical_outcomes = {
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "confirmed_blue_kill_with_child",
+        "post_spawn_child_contained",
+        "preemptive_spawn_adaptation",
+        "spawn_pressure_conceded",
+        "red_breakthrough",
+        "unresolved_pressure",
+    }
+    _check(required_outcomes == canonical_outcomes, "exploit lifecycle DAG must require the canonical eight semantic outcome classes", errors)
+    _check(len(required_outcome_items) == len(required_outcomes), "exploit lifecycle DAG required outcome classes must be unique", errors)
+    _check(outcome_classes >= canonical_outcomes, "exploit lifecycle DAG must cover every semantic outcome class", errors)
 
     for node in nodes:
         if not isinstance(node, dict):

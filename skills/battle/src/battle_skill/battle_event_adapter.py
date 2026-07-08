@@ -418,6 +418,42 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
             outcome_class="confirmed_blue_kill_no_child",
             variant_id="crimson_hornbreaker",
         ),
+        _lifecycle_node(
+            node_id="blue:kill-confirmed-after-spawn",
+            kind="blue_kill_confirmed",
+            team="blue",
+            lane_id="dag-deser-gadget-child",
+            cwe="CWE-502",
+            exploit_class="deserialization_gadget",
+            summary="Blue confirms a kill receipt after the exploit already produced a valid child lane.",
+            profile=_profile_for_contract_lane("dag-deser-gadget-child", strength=0.78, complexity=0.76, durability=0.62, lineage_pressure=0.72, tier="adaptive_lineage"),
+            outcome_class="confirmed_blue_kill_with_child",
+            variant_id="plague_nurgling",
+        ),
+        _lifecycle_node(
+            node_id="blue:post-spawn-child-contained",
+            kind="blue_block",
+            team="blue",
+            lane_id="dag-zip-slip-child-contained",
+            cwe="CWE-22",
+            exploit_class="archive_path_traversal",
+            summary="Blue contains a spawned child lane after lineage already exists.",
+            profile=_profile_for_contract_lane("dag-zip-slip-child-contained", strength=0.72, complexity=0.70, durability=0.64, lineage_pressure=0.60, tier="adaptive_lineage"),
+            outcome_class="post_spawn_child_contained",
+            variant_id="plague_nurgling",
+        ),
+        _lifecycle_node(
+            node_id="research:unresolved-pressure",
+            kind="payload_proof",
+            team="red",
+            lane_id="dag-unresolved-probe",
+            cwe="CWE-79",
+            exploit_class="xss_probe",
+            summary="Red produces pressure but no receipt-backed spawn, block, kill, or breakthrough exists yet.",
+            profile=_profile_for_contract_lane("dag-unresolved-probe", strength=0.46, complexity=0.50, durability=0.44, lineage_pressure=0.0, tier="fragile_probe"),
+            outcome_class="unresolved_pressure",
+            variant_id="blue_lizard",
+        ),
     ]
     edges = [
         _lifecycle_edge("research:zip-slip", "payload:zip-slip", "research_informs_payload"),
@@ -425,7 +461,10 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
         _lifecycle_edge("observe:defender-pressure", "spawn:preemptive-child", "suspected_pressure_triggers_preemptive_spawn"),
         _lifecycle_edge("spawn:preemptive-child", "pivot:ssrf", "child_course_corrects_to_parallel_pivot"),
         _lifecycle_edge("payload:zip-slip", "blue:kill-confirmed", "alternative_blue_kill_branch"),
+        _lifecycle_edge("spawn:preemptive-child", "blue:kill-confirmed-after-spawn", "alternative_blue_kill_after_spawn_branch"),
+        _lifecycle_edge("spawn:preemptive-child", "blue:post-spawn-child-contained", "alternative_child_containment_branch"),
         _lifecycle_edge("research:zip-slip", "blue:pre-spawn-block", "alternative_pre_spawn_block_branch"),
+        _lifecycle_edge("research:zip-slip", "research:unresolved-pressure", "alternative_unresolved_pressure_branch"),
     ]
     outcome_classes = sorted({str(node["score_semantics"]["outcome_class"]) for node in nodes})
     return {
@@ -483,9 +522,12 @@ def exploit_lifecycle_dag() -> dict[str, Any]:
         "required_outcome_classes": [
             "pre_spawn_blue_block",
             "confirmed_blue_kill_no_child",
+            "confirmed_blue_kill_with_child",
+            "post_spawn_child_contained",
             "preemptive_spawn_adaptation",
             "spawn_pressure_conceded",
             "red_breakthrough",
+            "unresolved_pressure",
         ],
         "replay_contract": {
             "time_authority": "receipt_elapsed_seconds",

@@ -309,12 +309,12 @@ Parent fixture validation: PASS
 Sparse fixture validation: PASS
 Renderer values/index validation: PASS
 Spectator typecheck: PASS
-Vitest: 43/43 tests in the full spectator gate
+Vitest: 44/44 tests in the full spectator gate
 Sparse negative proof: PASS
 BATTLE_PROVE_SPECTATOR_PASS
-Battle event adapter contract tests: 97/97 tests
-Semantic outcome matrix export/validate: PASS
-Exploit lifecycle DAG export/validate: PASS
+Battle event adapter contract tests: 98/98 tests
+Semantic outcome matrix export/validate: PASS, 8 outcome cases, 5 profile cases
+Exploit lifecycle DAG export/validate: PASS, 10 nodes, 9 edges, 8 outcome classes
 ```
 
 Evidence classification:
