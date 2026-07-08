@@ -30,6 +30,9 @@ from embry_voice_control.listener_turn import DEFAULT_EXPECTED_ANSWER
 from embry_voice_control.listener_turn import DEFAULT_OUTPUT_ROOT as LISTENER_TURN_OUTPUT_ROOT
 from embry_voice_control.listener_turn import DEFAULT_UNIX_LISTENER_ROOT
 from embry_voice_control.listener_turn import run_listener_turn_live
+from embry_voice_control.research_turn import DEFAULT_MEMORY_URL as RESEARCH_TURN_MEMORY_URL
+from embry_voice_control.research_turn import DEFAULT_QUERY as RESEARCH_TURN_QUERY
+from embry_voice_control.research_turn import run_research_turn_live
 from embry_voice_control.unix_listener import DEFAULT_EXPECTED_PHRASE as UNIX_LISTENER_EXPECTED_PHRASE
 from embry_voice_control.unix_listener import DEFAULT_OUTPUT_ROOT as UNIX_LISTENER_OUTPUT_ROOT
 from embry_voice_control.unix_listener import DEFAULT_PROOF_SCRIPT
@@ -798,6 +801,40 @@ def listener_turn_live(
             key for key, value in acceptance["checks"].items()
             if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
         ],
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not acceptance["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("research-turn-live")
+def research_turn_live(
+    base_url: str = typer.Option(LISTENER_TURN_BASE_URL, help="Embry voice control or current adapter base URL"),
+    memory_url: str = typer.Option(RESEARCH_TURN_MEMORY_URL, help="Memory daemon HTTP base URL for /intent preflight"),
+    output_root: Path = typer.Option(LISTENER_TURN_OUTPUT_ROOT, help="12TB output root for receipts"),
+    query: str = typer.Option(RESEARCH_TURN_QUERY, help="Controlled non-compliance research query"),
+    timeout: float = typer.Option(120.0, help="HTTP timeout in seconds"),
+) -> None:
+    """Prove Embry live-turn consumes /intent RESEARCH and invokes brave-search."""
+    receipt = run_research_turn_live(
+        base_url=base_url,
+        memory_url=memory_url,
+        output_root=output_root,
+        query=query,
+        timeout=timeout,
+    )
+    acceptance = receipt["acceptance"]
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": acceptance["pass"],
+        "receipt_path": receipt["receipt_path"],
+        "query": receipt["query"],
+        "answer_text": acceptance["answer_text"],
+        "failed_checks": [
+            key for key, value in acceptance["checks"].items()
+            if value is not True
+        ],
+        "brave_search": acceptance["brave_search"],
         "not_proven": receipt["claims"]["does_not_prove"],
     }, indent=2))
     if not acceptance["pass"]:

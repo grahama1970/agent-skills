@@ -295,6 +295,20 @@ The receipt must record the `pw-play` command and whether local PipeWire
 playback returned successfully. Audible playback does not override semantic
 answer failure.
 
+Run the research routing rung before claiming Embry can answer current-world
+non-compliance questions through the voice front-end:
+
+```bash
+./run.sh research-turn-live
+```
+
+This first calls `$memory /intent` for an explicit research query and requires
+`action=RESEARCH` plus `brave-search` in the intent tooling. It then sends the
+same query to the configured Embry `/live-turn` adapter and fails unless the
+live response records a non-mocked `research.brave_search` call with web results
+and Chatterbox audio authority. It does not prove browser mic, RealtimeSTT
+input, speaker identity, Chat UX rendering, orb sync, replay, or interruption.
+
 Run the live wake/control-plane runner when the UI already exists but Embry does
 not wake into a turn yet:
 
