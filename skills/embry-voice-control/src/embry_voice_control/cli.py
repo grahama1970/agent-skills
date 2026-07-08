@@ -769,6 +769,9 @@ def listener_turn_live(
     unix_listener_root: Path = typer.Option(DEFAULT_UNIX_LISTENER_ROOT, help="Unix listener output root with latest_unix_listener.json"),
     expected_answer: str = typer.Option(DEFAULT_EXPECTED_ANSWER, help="Expected semantic answer substring"),
     timeout: float = typer.Option(120.0, help="HTTP timeout in seconds"),
+    play_local: bool = typer.Option(False, help="Play returned Chatterbox WAV through local PipeWire"),
+    local_playback_target: str = typer.Option("64", help="PipeWire playback target for --play-local"),
+    local_playback_timeout: float = typer.Option(30.0, help="Local playback timeout in seconds"),
 ) -> None:
     """Route the latest Unix listener transcript into /live-turn and require Chatterbox audio."""
     receipt = run_listener_turn_live(
@@ -778,6 +781,9 @@ def listener_turn_live(
         unix_listener_root=unix_listener_root,
         expected_answer=expected_answer,
         timeout=timeout,
+        play_local=play_local,
+        local_playback_target=local_playback_target,
+        local_playback_timeout=local_playback_timeout,
     )
     acceptance = receipt["acceptance"]
     typer.echo(json.dumps({
@@ -787,6 +793,7 @@ def listener_turn_live(
         "listener_receipt_path": receipt["listener_receipt_path"],
         "turn_text": receipt["turn_text"],
         "answer_text": acceptance["answer_text"],
+        "local_playback": receipt.get("local_playback"),
         "failed_checks": [
             key for key, value in acceptance["checks"].items()
             if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}

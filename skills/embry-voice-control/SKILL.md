@@ -285,6 +285,16 @@ semantic check expects the answer to mention `Paris` for the current
 capital-of-France sanity phrase. A failed semantic answer is a failed rung even
 when Chatterbox renders fallback audio.
 
+To make the Chatterbox artifact audible during this rung, run:
+
+```bash
+./run.sh listener-turn-live --play-local --local-playback-target 64
+```
+
+The receipt must record the `pw-play` command and whether local PipeWire
+playback returned successfully. Audible playback does not override semantic
+answer failure.
+
 Run the live wake/control-plane runner when the UI already exists but Embry does
 not wake into a turn yet:
 

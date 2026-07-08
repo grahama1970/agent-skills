@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+import subprocess
 from typing import Any
 from uuid import uuid4
 
@@ -172,6 +173,41 @@ def post_live_turn(base_url: str, payload: dict[str, Any], timeout: float) -> tu
         return None, {}, str(exc)
 
 
+def play_audio_local(audio_path: str, playback_target: str, timeout: float) -> dict[str, Any]:
+    """Play a generated WAV through PipeWire and return playback receipt data."""
+    if not audio_path:
+        return {"requested": True, "played": False, "error": "audio_path was empty"}
+    path = Path(audio_path)
+    if not path.exists():
+        return {"requested": True, "played": False, "path": audio_path, "error": "audio_path does not exist"}
+    command = ["pw-play"]
+    target_arg_used = bool(playback_target and playback_target not in {"auto", "default"})
+    if target_arg_used:
+        command.extend(["--target", playback_target])
+    command.append(str(path))
+    logger.info("playing Chatterbox audio locally: {}", " ".join(command))
+    completed = subprocess.run(
+        command,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout,
+        check=False,
+    )
+    return {
+        "requested": True,
+        "played": completed.returncode == 0,
+        "driver": "pipewire-pw-play",
+        "command": command,
+        "target": playback_target if target_arg_used else "auto",
+        "targetArgUsed": target_arg_used,
+        "path": str(path),
+        "returncode": completed.returncode,
+        "stdout": completed.stdout[-2000:],
+        "stderr": completed.stderr[-2000:],
+    }
+
+
 def evaluate_acceptance(
     *,
     listener_receipt: dict[str, Any],
@@ -180,6 +216,8 @@ def evaluate_acceptance(
     response: dict[str, Any],
     expected_answer: str,
     error: str | None,
+    local_playback: dict[str, Any],
+    require_local_playback: bool,
 ) -> dict[str, Any]:
     """Return deterministic pass/fail checks for the listener-to-turn rung."""
     answer_text = str(response.get("answerText") or nested_value(response, "turnAuthority.assistantText") or "")
@@ -210,6 +248,9 @@ def evaluate_acceptance(
         "receipt_path_returned": isinstance(receipt_path, str) and bool(receipt_path),
         "answer_mentions_expected": normalize_text(expected_answer) in normalized_answer,
     }
+    if require_local_playback:
+        checks["local_playback_requested"] = bool(local_playback.get("requested"))
+        checks["local_playback_played"] = bool(local_playback.get("played"))
     checks["pass"] = all(
         value for key, value in checks.items()
         if key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
@@ -233,6 +274,9 @@ def run_listener_turn_live(
     unix_listener_root: Path = DEFAULT_UNIX_LISTENER_ROOT,
     expected_answer: str = DEFAULT_EXPECTED_ANSWER,
     timeout: float = 120.0,
+    play_local: bool = False,
+    local_playback_target: str = "64",
+    local_playback_timeout: float = 30.0,
 ) -> dict[str, Any]:
     """Run listener transcript -> live-turn -> Chatterbox artifact sanity."""
     run_id = new_run_id()
@@ -249,6 +293,16 @@ def run_listener_turn_live(
         turn_text=turn_text,
     )
     response_status_code, response, error = post_live_turn(base_url, payload, timeout)
+    audio_path = str(response.get("audioPath") or nested_value(response, "audioAuthority.path") or "")
+    local_playback = play_audio_local(
+        audio_path=audio_path,
+        playback_target=local_playback_target,
+        timeout=local_playback_timeout,
+    ) if play_local else {
+        "requested": False,
+        "played": False,
+        "reason": "play_local was false",
+    }
     acceptance = evaluate_acceptance(
         listener_receipt=listener_receipt,
         turn_text=turn_text,
@@ -256,6 +310,8 @@ def run_listener_turn_live(
         response=response,
         expected_answer=expected_answer,
         error=error,
+        local_playback=local_playback,
+        require_local_playback=play_local,
     )
     receipt = {
         "schema": "embry_voice_control.listener_turn_live_receipt.v1",
@@ -275,6 +331,7 @@ def run_listener_turn_live(
         "request_payload": payload,
         "response_status_code": response_status_code,
         "response_excerpt": compact_value(response),
+        "local_playback": local_playback,
         "acceptance": acceptance,
         "receipt_path": str(receipt_path),
         "claims": {
@@ -303,6 +360,7 @@ def run_listener_turn_live(
             "listener_receipt_path": str(listener_path),
             "turn_text": turn_text,
             "answer_text": acceptance["answer_text"],
+            "local_playback": local_playback,
         },
     )
     return receipt

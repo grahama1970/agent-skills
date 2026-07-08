@@ -104,6 +104,12 @@ Run the next rung with:
 ./run.sh listener-turn-live
 ```
 
+To also play the generated Chatterbox WAV through local PipeWire speakers:
+
+```bash
+./run.sh listener-turn-live --play-local --local-playback-target 64
+```
+
 The runner consumes `latest_unix_listener.json`, reads the final transcript,
 strips the leading `Embry` wake word, and posts the remaining voice-mode text to
 the configured `/live-turn` endpoint. It writes:
@@ -123,6 +129,7 @@ Pass requires:
 - Tau boundary or trace is present
 - reasoning steps are present
 - Chatterbox audio authority and audio path are returned
+- when `--play-local` is used, `pw-play` returns successfully
 - answer text contains the configured expected answer, default `Paris`
 
 A response that renders Chatterbox fallback audio but does not answer the
