@@ -29,6 +29,7 @@ responses or fake receipts.
 | `replay` | Chat, audio, trace, and orb replay together. | Timeline offsets, user+Embry turns, audio artifacts, orb authority. |
 | `browser-chat` | Shared Chat UX displays the same turn authority. | CDP/screenshot evidence for `#embry-voice`. |
 | `unix-listener-ingress` | Local audio capture is the listener authority. | `./run.sh unix-listener-sanity`, PipeWire/Jabra or loopback capture, non-silent PCM, RealtimeSTT realtime/final transcript, wake word in transcript, receipt path. |
+| `listener-turn-live` | Unix listener transcript routes into the live Embry turn. | `./run.sh listener-turn-live`, listener receipt, `/live-turn` response, memory/Tau evidence, Chatterbox audio authority, semantic answer check. |
 | `wake-capital-france` | Human says `Embry`, Embry enters listening, human asks "what is the capital of France", and Embry answers. | Wake event, `idle -> wake_detected -> listening`, RealtimeSTT final transcript, memory/Tau answer route, Chatterbox spoken answer, Chat UX turn, audio/orb receipt. |
 
 ## Browser Mic Policy
@@ -94,6 +95,38 @@ Pass requires:
 
 This runner does not prove speaker identity, Tau/memory routing, Chatterbox,
 Chat UX sync, orb sync, replay, interruption, or browser mic/WebRTC.
+
+## Listener Transcript To Live Turn Runner
+
+Run the next rung with:
+
+```bash
+./run.sh listener-turn-live
+```
+
+The runner consumes `latest_unix_listener.json`, reads the final transcript,
+strips the leading `Embry` wake word, and posts the remaining voice-mode text to
+the configured `/live-turn` endpoint. It writes:
+
+```text
+/mnt/storage12tb/skills/embry-voice-control/outputs/e2e/listener-turn-live/<run_id>/receipt.json
+```
+
+Pass requires:
+
+- the Unix listener receipt passed
+- wake word detected
+- final transcript available
+- `/live-turn` returns HTTP 2xx and `status=ok`
+- response is `mocked=false`, `live=true`
+- memory intent evidence is present
+- Tau boundary or trace is present
+- reasoning steps are present
+- Chatterbox audio authority and audio path are returned
+- answer text contains the configured expected answer, default `Paris`
+
+A response that renders Chatterbox fallback audio but does not answer the
+question is a failed semantic rung, not a pass.
 
 ## Focused Wake Control-Plane Runner
 

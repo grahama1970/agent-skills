@@ -272,6 +272,19 @@ realtime and final transcript callbacks, final transcript match, and wake word
 detection from the transcript. It does not prove browser mic, speaker identity,
 Tau/memory, Chatterbox, Chat UX, orb, replay, or interruption.
 
+Run the listener-to-turn rung after `unix-listener-sanity`:
+
+```bash
+./run.sh listener-turn-live
+```
+
+This consumes the latest Unix listener receipt, strips the leading `Embry` wake
+word from the final transcript, sends the voice-mode turn to `/live-turn`, and
+requires memory/Tau evidence plus Chatterbox audio authority. The default
+semantic check expects the answer to mention `Paris` for the current
+capital-of-France sanity phrase. A failed semantic answer is a failed rung even
+when Chatterbox renders fallback audio.
+
 Run the live wake/control-plane runner when the UI already exists but Embry does
 not wake into a turn yet:
 

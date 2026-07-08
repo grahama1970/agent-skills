@@ -25,6 +25,11 @@ import typer
 from websockets.sync.client import connect as websocket_connect
 
 from embry_voice_control.live_wake import run_wake_capital_france
+from embry_voice_control.listener_turn import DEFAULT_BASE_URL as LISTENER_TURN_BASE_URL
+from embry_voice_control.listener_turn import DEFAULT_EXPECTED_ANSWER
+from embry_voice_control.listener_turn import DEFAULT_OUTPUT_ROOT as LISTENER_TURN_OUTPUT_ROOT
+from embry_voice_control.listener_turn import DEFAULT_UNIX_LISTENER_ROOT
+from embry_voice_control.listener_turn import run_listener_turn_live
 from embry_voice_control.unix_listener import DEFAULT_EXPECTED_PHRASE as UNIX_LISTENER_EXPECTED_PHRASE
 from embry_voice_control.unix_listener import DEFAULT_OUTPUT_ROOT as UNIX_LISTENER_OUTPUT_ROOT
 from embry_voice_control.unix_listener import DEFAULT_PROOF_SCRIPT
@@ -750,6 +755,42 @@ def unix_listener_sanity(
         "underlying_receipt_path": receipt["underlying_receipt_path"],
         "final_transcript": receipt["listener_events"].get("final_transcript"),
         "wake_detected": receipt["listener_events"].get("wake_detected"),
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not acceptance["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("listener-turn-live")
+def listener_turn_live(
+    base_url: str = typer.Option(LISTENER_TURN_BASE_URL, help="Embry voice control or current adapter base URL"),
+    output_root: Path = typer.Option(LISTENER_TURN_OUTPUT_ROOT, help="12TB output root for receipts"),
+    listener_receipt_path: Path | None = typer.Option(None, help="Specific Unix listener wrapper receipt to consume"),
+    unix_listener_root: Path = typer.Option(DEFAULT_UNIX_LISTENER_ROOT, help="Unix listener output root with latest_unix_listener.json"),
+    expected_answer: str = typer.Option(DEFAULT_EXPECTED_ANSWER, help="Expected semantic answer substring"),
+    timeout: float = typer.Option(120.0, help="HTTP timeout in seconds"),
+) -> None:
+    """Route the latest Unix listener transcript into /live-turn and require Chatterbox audio."""
+    receipt = run_listener_turn_live(
+        base_url=base_url,
+        output_root=output_root,
+        listener_receipt_path=listener_receipt_path,
+        unix_listener_root=unix_listener_root,
+        expected_answer=expected_answer,
+        timeout=timeout,
+    )
+    acceptance = receipt["acceptance"]
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": acceptance["pass"],
+        "receipt_path": receipt["receipt_path"],
+        "listener_receipt_path": receipt["listener_receipt_path"],
+        "turn_text": receipt["turn_text"],
+        "answer_text": acceptance["answer_text"],
+        "failed_checks": [
+            key for key, value in acceptance["checks"].items()
+            if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
+        ],
         "not_proven": receipt["claims"]["does_not_prove"],
     }, indent=2))
     if not acceptance["pass"]:
