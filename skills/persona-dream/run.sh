@@ -70,6 +70,8 @@ Commands:
   check-video-provider-selection  Prove video provider routing stays dry-run and fail-closed
   refresh-video-provider-registry  Refresh Brave/fal provider discovery evidence without provider calls
   check-video-provider-registry-refresh  Prove provider refresh parsing stays dry-run and fail-closed
+  write-video-provider-packet  Write a provider-specific dry-run video packet from a scorecard
+  check-video-provider-packet-routing  Prove provider packet routing stays dry-run and fail-closed
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -139,6 +141,8 @@ Examples:
   ./run.sh check-video-provider-selection --fixtures-root tests/fixtures/video-provider-selection --receipt-out /tmp/persona-dream-video-provider-selection/check_receipt.json --json
   ./run.sh refresh-video-provider-registry --live-brave-search --receipt-out /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/provider_registry_refresh_receipt.v1.json --json
   ./run.sh check-video-provider-registry-refresh --fixtures-root tests/fixtures/video-provider-registry-refresh --receipt-out /tmp/persona-dream-video-provider-refresh/check_receipt.json --json
+  ./run.sh write-video-provider-packet --scene-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_scene_contract.v1.json --scorecard /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_scorecard.v1.json --media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/media_lock_manifest.v1.json --output-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_packet --json
+  ./run.sh check-video-provider-packet-routing --fixtures-root tests/fixtures/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
@@ -337,6 +341,12 @@ case "$COMMAND" in
     ;;
   check-video-provider-registry-refresh)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_video_provider_registry_refresh.py" "$@"
+    ;;
+  write-video-provider-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_video_provider_packet.py" "$@"
+    ;;
+  check-video-provider-packet-routing)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_video_provider_packet_routing.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

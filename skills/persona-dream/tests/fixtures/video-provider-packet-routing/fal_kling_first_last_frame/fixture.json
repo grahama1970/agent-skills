@@ -1,0 +1,59 @@
+{
+  "schema": "persona_dream.video_provider_packet_fixture.v1",
+  "scene_contract": {
+    "schema_version": "persona-dream.video-scene-classifier.v1",
+    "run_id": "run_provider_packet_fixture",
+    "revision_id": "rev_0001",
+    "scene_id": "scene_fal_kling",
+    "classified_scene_types": [
+      "identity_locked_character_scene",
+      "first_last_frame_transition",
+      "surf_sports_motion_scene"
+    ],
+    "required_capabilities": {
+      "image_to_video": true,
+      "first_last_frame_control": true,
+      "identity_reference_support": true,
+      "motion_quality": true,
+      "duration_seconds": 10,
+      "aspect_ratio": "16:9",
+      "provider_accessible_urls_required": true
+    }
+  },
+  "scorecard": {
+    "schema_version": "persona-dream.video-provider-scorecard.v1",
+    "selection_status": "PASS_PROVIDER_SELECTION_DRY_RUN_ONLY",
+    "recommended_provider_id": "kling",
+    "provider_registry_refresh_status": "PASS_PROVIDER_REGISTRY_REFRESH",
+    "provider_registry_refresh_fal_api_doc_provider_ids": [
+      "kling",
+      "bytedance-seedance"
+    ],
+    "provider_live": false,
+    "paid_call_authorized": false,
+    "submitted": false,
+    "provider_ready": false,
+    "live_submit_ready": false
+  },
+  "media_lock": {
+    "schema": "persona_dream.kling.media_lock_manifest.v1",
+    "status": "PASS_MEDIA_LOCK",
+    "assets": [
+      {
+        "asset_id": "sb_001.start_frame",
+        "frame_role": "start_frame",
+        "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "asset_id": "sb_001.end_frame",
+        "frame_role": "end_frame",
+        "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    ]
+  },
+  "expected": {
+    "status": "PASS_VIDEO_PROVIDER_PACKET_DRY_RUN",
+    "provider_route": "fal-kling",
+    "blockers": []
+  }
+}
