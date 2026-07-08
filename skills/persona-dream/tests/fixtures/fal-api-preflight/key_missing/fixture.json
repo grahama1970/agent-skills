@@ -1,0 +1,11 @@
+{
+  "schema": "persona_dream.fal_api_preflight_fixture.v1",
+  "zshrc_text": "# no fal key here\n",
+  "expected": {
+    "status": "BLOCKED_FAL_API_PREFLIGHT",
+    "fal_api_key_present": false,
+    "blockers": [
+      "BLOCKED_FAL_API_KEY_MISSING"
+    ]
+  }
+}

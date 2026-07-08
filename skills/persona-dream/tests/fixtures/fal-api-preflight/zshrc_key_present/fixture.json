@@ -1,0 +1,9 @@
+{
+  "schema": "persona_dream.fal_api_preflight_fixture.v1",
+  "zshrc_text": "export FAL_API_KEY=\"fake-fal-key-for-fixture-only\"\n",
+  "expected": {
+    "status": "PASS_FAL_API_PREFLIGHT",
+    "fal_api_key_present": true,
+    "blockers": []
+  }
+}
