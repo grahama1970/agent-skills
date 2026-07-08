@@ -113,6 +113,147 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value)
 }
 
+function parseJsonishText(text: string): unknown | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  const candidates = [trimmed]
+  const firstBrace = trimmed.indexOf('{')
+  const lastBrace = trimmed.lastIndexOf('}')
+  if (firstBrace >= 0 && lastBrace > firstBrace) candidates.push(trimmed.slice(firstBrace, lastBrace + 1))
+  for (const candidate of candidates) {
+    try {
+      let parsed: unknown = JSON.parse(candidate)
+      for (let i = 0; i < 2 && typeof parsed === 'string' && /^[\s{[]/.test(parsed); i += 1) {
+        parsed = JSON.parse(parsed)
+      }
+      return parsed
+    } catch {
+      // Keep trying alternate slices; malformed memory text falls back to cleanup.
+    }
+  }
+  return null
+}
+
+function compactDisplayText(text: string, max = 420): string {
+  const cleaned = text
+    .replace(/Persona media asset key:\s*\S+\.?\s*/gi, '')
+    .replace(/\\n/g, ' ')
+    .replace(/\\/g, ' ')
+    .replace(/["{}[\]]/g, ' ')
+    .replace(/[_:]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^(?:(?:story|asset usage|asset id|description|summary|text|title)\s+){1,4}/i, '')
+    .trim()
+  if (cleaned.length <= max) return cleaned
+  return `${cleaned.slice(0, max - 1).trim()}…`
+}
+
+function stripLeadingMemoryFieldLabels(text: string): string {
+  return text
+    .replace(/^[\s\\'"{}[\]:,]*(?:(?:story|asset\s+usage|asset\s+id|description|summary|text|title)[\s\\'"{}[\]:,]+){1,6}/i, '')
+    .trim()
+}
+
+function decodeJsonStringLiteral(value: string): string {
+  try {
+    return JSON.parse(`"${value.replace(/"/g, '\\"')}"`)
+  } catch {
+    return value.replace(/\\"/g, '"').replace(/\\n/g, ' ')
+  }
+}
+
+function extractKnownMemoryFieldText(text: string): string {
+  const preferredFields = [
+    'visual_consistency_note',
+    'use_in_story',
+    'used_for',
+    'media_description',
+    'vlm_description',
+    'video_description',
+    'audio_caption',
+    'text_summary',
+    'story_prompt_summary',
+    'description',
+    'summary',
+    'story',
+    'title',
+  ]
+  for (const field of preferredFields) {
+    const pattern = new RegExp(`"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\]){12,})"`, 'i')
+    const match = text.match(pattern)
+    if (!match?.[1]) continue
+    const decoded = decodeJsonStringLiteral(match[1])
+    const parsed = parseJsonishText(decoded)
+    const readable = parsed ? readableMemoryValue(parsed) : compactDisplayText(decoded)
+    if (readable) return readable
+  }
+  return ''
+}
+
+function readableMemoryValue(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') {
+    const parsed = parseJsonishText(value)
+    if (parsed && parsed !== value) return readableMemoryValue(parsed)
+    return compactDisplayText(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(readableMemoryValue).filter(Boolean).join(' ')
+  }
+  if (typeof value !== 'object') return compactDisplayText(String(value))
+
+  const obj = value as Record<string, unknown>
+  const assetUsage = obj.asset_usage
+  if (Array.isArray(assetUsage) && assetUsage.length > 0) {
+    const rows = assetUsage
+      .map((item) => {
+        if (!item || typeof item !== 'object') return ''
+        const row = item as Record<string, unknown>
+        return readableMemoryValue(row.visual_consistency_note || row.use_in_story || row.used_for || row.title)
+      })
+      .filter(Boolean)
+    if (rows.length > 0) return compactDisplayText(rows.join(' '))
+  }
+
+  const story = obj.story
+  if (story) {
+    const parsedStory = typeof story === 'string' ? parseJsonishText(story) : null
+    const storyText = parsedStory ? readableMemoryValue(parsedStory) : readableMemoryValue(story)
+    if (storyText) return storyText
+  }
+
+  for (const key of [
+    'visual_consistency_note',
+    'use_in_story',
+    'used_for',
+    'media_description',
+    'vlm_description',
+    'video_description',
+    'audio_caption',
+    'text_summary',
+    'story_prompt_summary',
+    'description',
+    'summary',
+    'title',
+    'name',
+    'label',
+    'text',
+    'content',
+  ]) {
+    const text = readableMemoryValue(obj[key])
+    if (text) return text
+  }
+  return ''
+}
+
+function readableMemoryText(text: string): string {
+  const extracted = extractKnownMemoryFieldText(text)
+  if (extracted) return stripLeadingMemoryFieldLabels(extracted)
+  const parsed = parseJsonishText(text)
+  const fromJson = parsed ? readableMemoryValue(parsed) : ''
+  return stripLeadingMemoryFieldLabels(fromJson || compactDisplayText(text))
+}
+
 function fnv1a32(input: string): string {
   let hash = 0x811c9dc5
   for (let i = 0; i < input.length; i += 1) {
@@ -222,6 +363,8 @@ type StatusTone = 'pass' | 'blocked' | 'dry' | 'unknown'
 
 function humanMemoryCaption(result: ResearchMemoryResult): string {
   const text = [result.snippet, result.title].filter(Boolean).join('\n')
+  const readable = readableMemoryText(text)
+  if (readable && !/^\s*[{\[]/.test(readable)) return readable
   const titleMatch = text.match(/\bTitle\s*:?\s*([^\n]+?)(?:\s+(?:Aliases|Description|Persona|Source|Tags|Path|Record)\b|$)/i)
   if (titleMatch?.[1]) return titleMatch[1].trim()
   const descriptionMatch = text.match(/\bDescription\s*:?\s*([^\n]+?)(?:\s+(?:Aliases|Title|Persona|Source|Tags|Path|Record)\b|$)/i)
@@ -237,6 +380,8 @@ function humanMemoryCaption(result: ResearchMemoryResult): string {
 function storyAssetDescriptionFromResult(result: ResearchMemoryResult): string {
   const snippet = (result.snippet || '').replace(/\s+/g, ' ').trim()
   if (!snippet) return ''
+  const readable = readableMemoryText(snippet)
+  if (readable && !/^\s*[{\[]/.test(readable)) return readable
   const descriptionMatch = snippet.match(/\bDescription\s*:?\s*(.+?)(?:\s+(?:Aliases|Title|Persona|Source|Tags|Path|Record|Theory of mind|Live story summary)\b|$)/i)
   if (descriptionMatch?.[1]) return descriptionMatch[1].trim()
   return snippet
@@ -4687,8 +4832,8 @@ function ResearchPane({ research, ideaSeed }: { research: ResearchMemoryResult[]
       <div style={nvis.researchList}>
         {research.map((r, i) => (
           <div key={i} style={nvis.researchCard}>
-            <a href={r.url} target="_blank" rel="noreferrer" style={nvis.researchLink}>{r.title}</a>
-            <p style={nvis.researchSnippet}>{r.snippet}</p>
+            <a href={r.url} target="_blank" rel="noreferrer" style={nvis.researchLink}>{readableMemoryText(r.title || r.memoryKey || 'Memory residue')}</a>
+            <p style={nvis.researchSnippet}>{readableMemoryText(r.snippet || r.title || '')}</p>
           </div>
         ))}
       </div>
