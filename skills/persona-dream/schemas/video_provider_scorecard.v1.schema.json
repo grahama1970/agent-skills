@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona-dream.video-provider-scorecard.v1",
+  "title": "Persona Dream video provider scorecard",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "selection_status",
+    "recommended_provider_id",
+    "providers",
+    "actual_provider_call_attempts",
+    "provider_live",
+    "paid_call_authorized",
+    "provider_accessible_url_created",
+    "submitted",
+    "provider_ready",
+    "live_submit_ready",
+    "claims"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "persona-dream.video-provider-scorecard.v1"
+    },
+    "selection_status": {
+      "enum": [
+        "PASS_PROVIDER_SELECTION_DRY_RUN_ONLY",
+        "BLOCKED_NO_ELIGIBLE_PROVIDER",
+        "BLOCKED_PROVIDER_POLICY"
+      ]
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "provider_accessible_url_created": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "provider_ready": {
+      "const": false
+    },
+    "live_submit_ready": {
+      "const": false
+    }
+  }
+}

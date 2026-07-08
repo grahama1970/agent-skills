@@ -1,0 +1,50 @@
+{
+  "schema": "persona_dream.video_provider_selection_fixture.v1",
+  "registry": {
+    "schema_version": "persona-dream.video-provider-registry.v1",
+    "registry_id": "stale_registry",
+    "status": "STALE",
+    "providers": [
+      {
+        "provider_id": "kling",
+        "priority": 1,
+        "capabilities": {
+          "image_to_video": true,
+          "duration_max_seconds": 10
+        },
+        "policy": {
+          "heightened_copyright_review_required": false,
+          "live_schema_verified": false,
+          "provider_accessible_urls_required": true
+        }
+      }
+    ]
+  },
+  "scene_contract": {
+    "schema_version": "persona-dream.video-scene-classifier.v1",
+    "run_id": "run_provider_fixture",
+    "revision_id": "rev_0001",
+    "scene_id": "scene_stale_registry",
+    "classified_scene_types": [
+      "first_last_frame_transition"
+    ],
+    "required_capabilities": {
+      "image_to_video": true,
+      "duration_seconds": 10,
+      "provider_accessible_urls_required": true
+    },
+    "policy_constraints": {
+      "provider_live": false,
+      "paid_call_authorized": false,
+      "manual_acceptance_required": true,
+      "ip_risk_review_required": false
+    }
+  },
+  "expected": {
+    "recommended_provider_id": "kling",
+    "selection_status": "BLOCKED_PROVIDER_POLICY",
+    "blockers": [
+      "BLOCKED_PROVIDER_REGISTRY_STALE"
+    ]
+  }
+}

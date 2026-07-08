@@ -1,0 +1,33 @@
+{
+  "schema": "persona_dream.video_provider_selection_fixture.v1",
+  "scene_contract": {
+    "schema_version": "persona-dream.video-scene-classifier.v1",
+    "run_id": "run_provider_fixture",
+    "revision_id": "rev_0001",
+    "scene_id": "scene_no_provider",
+    "classified_scene_types": [
+      "provider-final production render"
+    ],
+    "required_capabilities": {
+      "native_audio": true,
+      "audio_video_sync": true,
+      "local_low_cost_preview": true,
+      "first_last_frame_control": true,
+      "duration_seconds": 20,
+      "provider_accessible_urls_required": true
+    },
+    "policy_constraints": {
+      "provider_live": false,
+      "paid_call_authorized": false,
+      "manual_acceptance_required": true,
+      "ip_risk_review_required": true
+    }
+  },
+  "expected": {
+    "recommended_provider_id": "NO_PROVIDER_SELECTED",
+    "selection_status": "BLOCKED_NO_ELIGIBLE_PROVIDER",
+    "blockers": [
+      "BLOCKED_PROVIDER_CAPABILITY_MISSING"
+    ]
+  }
+}

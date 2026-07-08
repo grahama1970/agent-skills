@@ -66,6 +66,8 @@ Commands:
   check-persona-dream-run-state  Prove local run-state consistency across revision, queue, Tau, progress, and provider gates
   write-run-state-from-run-root  Project a real run root into dream_run_state.v1 and global_progress_sources.v1
   check-run-root-state  Validate run-root projection fixtures or one real run root
+  select-video-provider  Score and select a dry-run video provider from a scene contract
+  check-video-provider-selection  Prove video provider routing stays dry-run and fail-closed
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -131,6 +133,8 @@ Examples:
   ./run.sh check-persona-dream-run-state --fixtures-root tests/fixtures/run-state --receipt-out /tmp/persona-dream-run-state/check_receipt.json --json
   ./run.sh write-run-state-from-run-root --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/dream_run_state.v1.json --progress-source-out /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/global_progress_sources.v1.json --json
   ./run.sh check-run-root-state --fixtures-root tests/fixtures/run-root-state --receipt-out /tmp/persona-dream-run-root-state/check_receipt.json --json
+  ./run.sh select-video-provider --scene-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_scene_contract.v1.json --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_scorecard.v1.json --json
+  ./run.sh check-video-provider-selection --fixtures-root tests/fixtures/video-provider-selection --receipt-out /tmp/persona-dream-video-provider-selection/check_receipt.json --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
@@ -317,6 +321,12 @@ case "$COMMAND" in
     ;;
   check-run-root-state)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_run_root_state.py" "$@"
+    ;;
+  select-video-provider)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/select_video_provider.py" "$@"
+    ;;
+  check-video-provider-selection)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_video_provider_selection.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

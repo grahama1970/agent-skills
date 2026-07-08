@@ -1,0 +1,52 @@
+{
+  "schema": "persona_dream.video_provider_selection_fixture.v1",
+  "registry": {
+    "schema_version": "persona-dream.video-provider-registry.v1",
+    "registry_id": "identity_reference_negative_registry",
+    "status": "CURRENT",
+    "providers": [
+      {
+        "provider_id": "local-preview",
+        "priority": 1,
+        "capabilities": {
+          "text_to_video": true,
+          "identity_reference_support": false,
+          "duration_max_seconds": 5
+        },
+        "policy": {
+          "heightened_copyright_review_required": false,
+          "live_schema_verified": false,
+          "provider_accessible_urls_required": false
+        }
+      }
+    ]
+  },
+  "scene_contract": {
+    "schema_version": "persona-dream.video-scene-classifier.v1",
+    "run_id": "run_provider_fixture",
+    "revision_id": "rev_0001",
+    "scene_id": "scene_identity_block",
+    "classified_scene_types": [
+      "identity_locked_character_scene"
+    ],
+    "required_capabilities": {
+      "text_to_video": true,
+      "identity_reference_support": true,
+      "duration_seconds": 5,
+      "provider_accessible_urls_required": false
+    },
+    "policy_constraints": {
+      "provider_live": false,
+      "paid_call_authorized": false,
+      "manual_acceptance_required": true,
+      "ip_risk_review_required": false
+    }
+  },
+  "expected": {
+    "recommended_provider_id": "NO_PROVIDER_SELECTED",
+    "selection_status": "BLOCKED_NO_ELIGIBLE_PROVIDER",
+    "blockers": [
+      "BLOCKED_PROVIDER_CAPABILITY_MISSING"
+    ]
+  }
+}

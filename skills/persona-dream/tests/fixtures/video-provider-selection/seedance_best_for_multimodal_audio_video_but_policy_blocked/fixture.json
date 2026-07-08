@@ -1,0 +1,37 @@
+{
+  "schema": "persona_dream.video_provider_selection_fixture.v1",
+  "scene_contract": {
+    "schema_version": "persona-dream.video-scene-classifier.v1",
+    "run_id": "run_provider_fixture",
+    "revision_id": "rev_0001",
+    "scene_id": "scene_seedance",
+    "classified_scene_types": [
+      "audio_synchronized_scene",
+      "multi_character_interaction",
+      "cinematic_camera_move"
+    ],
+    "required_capabilities": {
+      "text_to_video": true,
+      "native_audio": true,
+      "audio_video_sync": true,
+      "multi_reference_inputs": true,
+      "duration_seconds": 15,
+      "provider_accessible_urls_required": true
+    },
+    "policy_constraints": {
+      "provider_live": false,
+      "paid_call_authorized": false,
+      "manual_acceptance_required": true,
+      "ip_risk_review_required": false
+    }
+  },
+  "expected": {
+    "recommended_provider_id": "bytedance-seedance",
+    "selection_status": "PASS_PROVIDER_SELECTION_DRY_RUN_ONLY",
+    "blockers": [
+      "BLOCKED_HEIGHTENED_COPYRIGHT_REVIEW_REQUIRED",
+      "BLOCKED_PROVIDER_LIVE_NOT_ENABLED",
+      "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING"
+    ]
+  }
+}
