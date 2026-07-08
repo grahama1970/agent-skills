@@ -1,0 +1,7 @@
+{
+  "result": "OUTPUT_QUARANTINED",
+  "blockers": [
+    "BLOCKED_CREATOR_USED_STALE_RESPAWN_INPUT",
+    "BLOCKED_STALE_CREATOR_OUTPUT"
+  ]
+}

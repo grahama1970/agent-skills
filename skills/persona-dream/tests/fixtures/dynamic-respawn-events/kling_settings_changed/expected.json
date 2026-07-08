@@ -1,0 +1,6 @@
+{
+  "status": "PASS_DYNAMIC_RESPAWN_EVENTS",
+  "decisions": ["REGENERATE_REQUIRED"],
+  "reason_codes": ["KLING_DISTILLATION_SETTINGS_CHANGED"],
+  "blockers": []
+}

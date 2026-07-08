@@ -1,0 +1,31 @@
+{
+  "schema": "persona_dream.global_progress_sources.v1",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "provider_ready": false,
+  "live_submit_ready": false,
+  "manual_acceptance_claimed": false,
+  "submitted": false,
+  "units": [
+    {"unit_id": "01_memory_residue", "phase": "01", "label": "Memory residue", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/01.json", "receipt_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"unit_id": "02_story_contract", "phase": "02", "label": "Story contract", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/02.json", "receipt_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    {"unit_id": "03_crew_contract", "phase": "03", "label": "Crew contract", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/03.json", "receipt_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    {"unit_id": "04_reference_contact_sheets", "phase": "04", "label": "Reference contact sheets", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/04.json", "receipt_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "live_blockers": ["BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"]},
+    {"unit_id": "05_look_lock", "phase": "05", "label": "Look lock", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/05.json", "receipt_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+    {"unit_id": "06_script_contract", "phase": "06", "label": "Script contract", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/06.json", "receipt_sha256": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+    {"unit_id": "07_storyboard_packet", "phase": "07", "label": "Storyboard packet", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/07.json", "receipt_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+    {"unit_id": "07_live_preflight", "phase": "07", "label": "Live preflight", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/07_preflight.json", "receipt_sha256": "sha256:1212121212121212121212121212121212121212121212121212121212121212"},
+    {"unit_id": "07_stale_write_fence", "phase": "07", "label": "Stale write fence", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/stale_write_fence.json", "receipt_sha256": "sha256:1313131313131313131313131313131313131313131313131313131313131313"},
+    {"unit_id": "07_media_lock", "phase": "07", "label": "Media lock", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/media_lock.json", "receipt_sha256": "sha256:1414141414141414141414141414141414141414141414141414141414141414"},
+    {"unit_id": "08_kling_converter", "phase": "08", "label": "Kling converter", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/kling_convert.json", "receipt_sha256": "sha256:1515151515151515151515151515151515151515151515151515151515151515", "live_blockers": ["BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"]},
+    {"unit_id": "08_kling_validator", "phase": "08", "label": "Kling validator", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/kling_validate.json", "receipt_sha256": "sha256:1616161616161616161616161616161616161616161616161616161616161616", "live_blockers": ["BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"]},
+    {"unit_id": "08_token_linter", "phase": "08", "label": "Token linter", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/token_linter.json", "receipt_sha256": "sha256:1717171717171717171717171717171717171717171717171717171717171717"},
+    {"unit_id": "08_reference_pack_audit", "phase": "08", "label": "Reference pack audit", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/reference_pack_audit.json", "receipt_sha256": "sha256:1818181818181818181818181818181818181818181818181818181818181818", "live_blockers": ["BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING"]},
+    {"unit_id": "08_provider_mapping", "phase": "08", "label": "Provider mapping", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/provider_mapping.json", "receipt_sha256": "sha256:1919191919191919191919191919191919191919191919191919191919191919", "live_blockers": ["BLOCKED_PROVIDER_SCHEMA_UNVERIFIED"]},
+    {"unit_id": "08_final_gate", "phase": "08", "label": "Final gate", "status": "PASS_WITH_LIVE_BLOCKERS", "evidence_state": "CURRENT", "receipt_path": "receipts/final_gate.json", "receipt_sha256": "sha256:2020202020202020202020202020202020202020202020202020202020202020", "live_blockers": ["BLOCKED_PAID_CALL_NOT_AUTHORIZED"]},
+    {"unit_id": "09_respawn_plan", "phase": "09", "label": "Respawn plan", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/respawn.json", "receipt_sha256": "sha256:2121212121212121212121212121212121212121212121212121212121212121"},
+    {"unit_id": "09_dynamic_respawn_events", "phase": "09", "label": "Dynamic respawn events", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/dynamic_respawn.json", "receipt_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"},
+    {"unit_id": "09_creator_reviewer_loop", "phase": "09", "label": "Creator reviewer loop", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/creator_reviewer_loop.json", "receipt_sha256": "sha256:2323232323232323232323232323232323232323232323232323232323232323"},
+    {"unit_id": "10_global_progress_rollup", "phase": "10", "label": "Global progress rollup", "status": "PASS", "evidence_state": "CURRENT", "receipt_path": "receipts/global_progress.json", "receipt_sha256": "sha256:2424242424242424242424242424242424242424242424242424242424242424"}
+  ]
+}

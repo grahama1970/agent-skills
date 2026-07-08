@@ -1,0 +1,8 @@
+{
+  "status": "BLOCKED_GLOBAL_PROGRESS_ROLLUP",
+  "unit_count": 0,
+  "blockers": [
+    "BLOCKED_PROVIDER_READY_CLAIM_IN_PROGRESS_ROLLUP",
+    "BLOCKED_GLOBAL_PROGRESS_UNIT_COUNT"
+  ]
+}

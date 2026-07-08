@@ -1,0 +1,34 @@
+{
+  "schema": "persona_dream.creator_reviewer_respawn_loop_fixture.v1",
+  "active_revision_id": "rev_0002",
+  "policy": {
+    "provider_live": false,
+    "paid_call_authorized": false
+  },
+  "work_item": {
+    "artifact_id": "sb_001.start_frame",
+    "revision_id": "rev_0002"
+  },
+  "respawn_decision": {
+    "decision": "REUSE_ALLOWED",
+    "reason_code": "DEPENDENCY_HASHES_MATCH"
+  },
+  "creator_receipt": {
+    "revision_id": "rev_0002",
+    "input_revision_id": "rev_0002",
+    "provider_called": true
+  },
+  "validator_receipt": {
+    "status": "PASS_PROMPT_CONTRACT",
+    "artifact_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "reviewer_receipt": {
+    "revision_id": "rev_0002",
+    "accepted": true,
+    "reviewed_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "stale_write_fence": {
+    "status": "PASS_STALE_WRITE_FENCE",
+    "promotion_allowed": true
+  }
+}

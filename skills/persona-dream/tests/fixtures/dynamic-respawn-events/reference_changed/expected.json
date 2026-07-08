@@ -1,0 +1,6 @@
+{
+  "status": "PASS_DYNAMIC_RESPAWN_EVENTS",
+  "decisions": ["REVALIDATE_REQUIRED", "REGENERATE_REQUIRED"],
+  "reason_codes": ["REFERENCE_HASH_CHANGED"],
+  "blockers": []
+}

@@ -1,0 +1,6 @@
+{
+  "result": "REUSE_ALLOWED_NO_PROVIDER_CALL",
+  "blockers": [
+    "BLOCKED_REUSE_SCOPE_REGENERATED"
+  ]
+}

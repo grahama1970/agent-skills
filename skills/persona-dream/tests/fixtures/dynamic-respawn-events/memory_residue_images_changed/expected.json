@@ -1,0 +1,6 @@
+{
+  "status": "PASS_DYNAMIC_RESPAWN_EVENTS",
+  "decisions": ["REGENERATE_REQUIRED"],
+  "reason_codes": ["UPSTREAM_MEMORY_RESIDUE_CHANGED"],
+  "blockers": []
+}

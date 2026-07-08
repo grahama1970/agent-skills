@@ -1,0 +1,6 @@
+{
+  "result": "PROMOTION_BLOCKED",
+  "blockers": [
+    "BLOCKED_REVIEWER_PASS_WITHOUT_VALIDATOR_RECEIPT"
+  ]
+}

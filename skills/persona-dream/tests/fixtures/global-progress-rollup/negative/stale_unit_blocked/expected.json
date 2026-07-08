@@ -1,0 +1,8 @@
+{
+  "status": "BLOCKED_GLOBAL_PROGRESS_ROLLUP",
+  "unit_count": 1,
+  "blockers": [
+    "BLOCKED_GLOBAL_PROGRESS_UNIT_COUNT",
+    "BLOCKED_PROGRESS_UNIT_STALE"
+  ]
+}

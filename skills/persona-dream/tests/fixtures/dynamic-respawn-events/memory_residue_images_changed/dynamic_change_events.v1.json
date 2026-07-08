@@ -1,0 +1,14 @@
+{
+  "schema": "persona_dream.dynamic_change_events.v1",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "events": [
+    {
+      "change_id": "change_memory_001",
+      "changed_by": "project_agent",
+      "change_type": "MEMORY_SET_CHANGED",
+      "description": "different memory residue images selected",
+      "human_decision_required": false
+    }
+  ]
+}

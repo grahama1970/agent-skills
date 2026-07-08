@@ -1,0 +1,35 @@
+{
+  "schema": "persona_dream.creator_reviewer_respawn_loop_fixture.v1",
+  "active_revision_id": "rev_0002",
+  "policy": {
+    "provider_live": false,
+    "paid_call_authorized": false
+  },
+  "work_item": {
+    "artifact_id": "sb_004.start_frame",
+    "revision_id": "rev_0002",
+    "force_regenerate": true
+  },
+  "respawn_decision": {
+    "decision": "REGENERATE_REQUIRED",
+    "reason_code": "UPSTREAM_STORY_CHANGED"
+  },
+  "creator_receipt": {
+    "revision_id": "rev_0002",
+    "input_revision_id": "rev_0002",
+    "provider_called": true
+  },
+  "validator_receipt": {
+    "status": "PASS_PROMPT_CONTRACT",
+    "artifact_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "reviewer_receipt": {
+    "revision_id": "rev_0002",
+    "accepted": true,
+    "reviewed_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "stale_write_fence": {
+    "status": "PASS_STALE_WRITE_FENCE",
+    "promotion_allowed": true
+  }
+}

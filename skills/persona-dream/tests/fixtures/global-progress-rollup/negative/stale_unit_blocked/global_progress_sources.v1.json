@@ -1,0 +1,12 @@
+{
+  "schema": "persona_dream.global_progress_sources.v1",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "provider_ready": false,
+  "live_submit_ready": false,
+  "manual_acceptance_claimed": false,
+  "submitted": false,
+  "units": [
+    {"unit_id": "07_storyboard_packet", "phase": "07", "label": "Storyboard packet", "status": "STALE", "evidence_state": "STALE"}
+  ]
+}

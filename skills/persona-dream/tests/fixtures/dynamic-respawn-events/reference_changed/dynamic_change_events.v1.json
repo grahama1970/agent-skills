@@ -1,0 +1,14 @@
+{
+  "schema": "persona_dream.dynamic_change_events.v1",
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "events": [
+    {
+      "change_id": "change_ref_001",
+      "changed_by": "project_agent",
+      "change_type": "REFERENCE_CHANGED",
+      "description": "Embry reference image hash changed",
+      "human_decision_required": false
+    }
+  ]
+}

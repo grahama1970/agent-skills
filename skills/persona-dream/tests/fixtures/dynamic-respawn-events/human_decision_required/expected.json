@@ -1,0 +1,6 @@
+{
+  "status": "PASS_DYNAMIC_RESPAWN_EVENTS",
+  "decisions": ["BLOCKED_HUMAN_DECISION_REQUIRED"],
+  "reason_codes": ["BLOCKED_MANUAL_DECISION_REQUIRED"],
+  "blockers": []
+}

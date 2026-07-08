@@ -1,0 +1,6 @@
+{
+  "status": "BLOCKED_DYNAMIC_RESPAWN_EVENTS",
+  "decisions": ["REGENERATE_REQUIRED"],
+  "reason_codes": ["UPSTREAM_IDEA_CHANGED"],
+  "blockers": ["BLOCKED_PROVIDER_LIVE_IN_RESPAWN_EVENT"]
+}
