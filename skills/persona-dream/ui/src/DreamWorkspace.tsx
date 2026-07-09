@@ -8341,7 +8341,6 @@ const nvis: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     padding: '0 8px',
     background: '#111111',
-    borderBottom: '1px solid rgba(255,255,255,0.13)',
     flexShrink: 0,
     position: 'sticky',
     top: 0,
