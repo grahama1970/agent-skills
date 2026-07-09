@@ -13,6 +13,47 @@ tracks rounds, scores, termination conditions, and reports.
 Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
 the human/operator guide.
 
+## How Battle Works
+
+Battle is a stochastic exploit-code evolution system wrapped in deterministic
+proof gates.
+
+Red subagents may write exploit-shaped code by combining high-level, low-level,
+obscure, inherited, researched, or randomly paired methods. Many generated
+specimens are expected to be bad: they may fail to compile, fail at runtime,
+contact the target without useful effect, or combine irrelevant ideas.
+
+Battle does not treat generated code as proof. Battle treats it as genetic
+material.
+
+The control plane owns:
+
+- method menus;
+- Docker execution;
+- stdout/stderr/HTTP/packet/timing observations;
+- specimen run receipts;
+- spawn policy;
+- scoreboards;
+- normalized UX truth.
+
+Tau owns:
+
+- research nodes;
+- method recombination;
+- exploit-code authoring;
+- compile-repair loops;
+- child DAG execution.
+
+Judge owns:
+
+- exploit success;
+- Blue block;
+- regression preservation;
+- terminal outcome.
+
+Runnable code is not exploit success. Target contact is not exploit success.
+Judge replay is required before any exploit-success claim.
+
 ## Use It For
 
 | Need | Start here |
@@ -150,17 +191,78 @@ not whether an idea sounds elegant; the gate is whether Docker evidence shows
 that it brought the system down or kept it up. Successful mutations are
 promoted; failed mutations remain searchable negative evidence.
 
-## Current Surfaces
+## Current Proof Rungs
 
-Battle currently exposes two useful surfaces:
+| Rung | Command | What it proves | What it does not prove |
+|---|---|---|---|
+| Battle v0 fixture | `./run.sh battle-fixture battle-001 --out /tmp/battle-001` | Local Red -> Blue -> Judge receipt contract | Live Red/Blue agents, Tau, memory learning |
+| BATTLE-004 Tau public-only | `./run.sh arena-tau-public-only-proof ...` | Arena public/private split, Tau handoff, Judge replay of materialized artifacts | Full genetic spawning or pre-kill child survival |
+| Exploit combiner proof | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` | Generated/bad/runnable specimen lifecycle, Docker receipts, target contact, no exploit-success overclaim | Live Tau code generation, child materialization, Judge exploit success |
+| Spawn Architect proof | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` | Child knowledge packet and Tau child DAG birth contract | Live Tau DAG execution, child exploit code, target execution |
+| Live child Tau DAG | planned next PR | Tau researches, combines methods, writes/repairs code, hands compiled specimen to Battle | Exploit success unless Judge proves it |
 
-1. **Battle orchestrator** for multi-round Red vs Blue runs over source,
-   container, or firmware targets.
-2. **Battle v0** for a deterministic one-round fixture proof with Red, Blue, and
-independent Judge receipts.
+Battle v0 remains the safer first rung to run when checking the artifact
+contract. The combiner and Spawn Architect rungs are the current backend proof
+path for genetic exploit synthesis.
 
-Battle v0 is the safer first rung to run when checking the artifact contract. It
-does not exercise live Red or Blue agents.
+## Genetic Exploit Flow
+
+```text
+Scan + Arena public bundle
+   ↓
+Exploit method menu
+   ↓
+Parent Red subagent writes exploit specimen code
+   ↓
+Battle runs specimen in Docker
+   ↓
+stdout/stderr/http/packet/timing receipts
+   ↓
+Runnable? Target contact? Stalled? Pressure suspected?
+   ↓
+Spawn policy decision
+   ↓
+Spawn Architect creates child knowledge packet + Tau DAG
+   ↓
+Tau child DAG:
+  research → method-combine → code-author → compile-repair → Battle handoff
+   ↓
+Battle runs child specimen in Docker
+   ↓
+Judge proves or rejects exploit success
+   ↓
+Memory promotes replayable wins and retains failures
+```
+
+## Claim Boundaries
+
+Battle uses strict proof language:
+
+- Generated exploit code is not proof.
+- Compiled exploit code is not proof.
+- Runnable exploit code is not proof.
+- Target contact is not proof.
+- Research citations are not proof.
+- Spawn intent is not child execution.
+- Pressure suspicion is not Blue detection.
+- Blue patch presence is not Blue success.
+- Judge replay is required for exploit success or Blue block.
+
+## UX Screenshots
+
+Screenshots in this README are generated from receipt-backed fixtures or
+explicit local preview receipts. They are visual evidence only; battle truth
+still comes from JSON receipts, Judge receipts, scoreboards, and normalized UX
+fixtures.
+
+| View | Fixture/source | Screenshot | Validation |
+|---|---|---|---|
+| BATTLE-004 spectator replay | `spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-spectator-replay.webp` | `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` |
+| Battle monitor v0 | `/tmp/battle-001` copied into `monitor/battle/public/artifacts/battle-001` | planned | `cd monitor/battle && npm run test:e2e` |
+| Future combiner loop | `/tmp/battle-004-combiner/normalized/battle-004-combiner.normalized.json` | planned | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` |
+| Future Spawn Architect DAG | `/tmp/battle-004-spawn-architect/normalized/battle-004-spawn-architect.normalized.json` | planned | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` |
+
+![BATTLE-004 spectator replay](docs/assets/screenshots/battle-004-spectator-replay.webp)
 
 ## Quickstart
 
@@ -491,6 +593,12 @@ src/battle_skill/state.py BattleState and round data classes
 src/battle_skill/memory.py team-isolated memory
 src/battle_skill/memory_integration.py shared memory and taxonomy hooks
 src/battle_skill/report.py Markdown report generation
+src/battle_skill/exploit_combiner.py fixture/live specimen lifecycle proof
+src/battle_skill/exploit_specimens.py specimen schemas and receipt helpers
+src/battle_skill/spawn_policy.py strategic pre-kill / stalled spawn decisions
+src/battle_skill/spawn_architect.py child knowledge packet + Tau DAG authoring
+src/battle_skill/child_knowledge_packet.py inheritance packet builder
+src/battle_skill/tau_child_dag.py Tau DAG birth contract writer/validator
 ```
 
 Battle v0 modules:
@@ -589,4 +697,3 @@ Self-contained BATTLE-004 spectator UI + Pixi race engine. Host apps (e.g. `ux-l
 cd skills/battle/spectator
 UX_LAB_UI_PORT=3012 node scripts/prove-battle-receipt-replay-6.mjs
 ```
-
