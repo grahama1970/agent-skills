@@ -422,6 +422,20 @@ private-artifact exclusions, and records that Tau execution is deferred to PR3.
 It does not run Tau, materialize a child exploit, generate live exploit code,
 compile child code, contact the target, or claim exploit success.
 
+The current live Tau child DAG canary is `live-tau-child-dag-canary`. It is
+non-mocked and invokes the existing local Tau DAG runtime without fixture
+fallback. The PR3b boundary is:
+
+```text
+lineage-summarizer PASS
+research-scout PASS with Tau-validated source-bearing design-input receipts
+method-combiner PASS with a deterministic exploit genome candidate
+exploit-code-author BLOCKED unless a real Tau/provider code-authoring adapter exists
+```
+
+The PR3b canary does not generate child exploit code, compile child code, run a
+child specimen in Docker, or claim exploit success.
+
 ## File Structure
 
 ```

@@ -515,6 +515,51 @@ source-bearing research adapter is configured. That is progress over
 MISSING_AGENT_COMMAND_SPEC, but still not live child exploit synthesis.
 ```
 
+Current PR3b command-spec target:
+
+```text
+lineage-summarizer PASS
+research-scout PASS
+method-combiner PASS
+exploit-code-author BLOCKED
+```
+
+`research-scout` must produce:
+
+```text
+research-source-packet.json
+research-source-receipt.json
+research_receipts.json
+candidate_methods.json
+research-scout-node-receipt.json
+```
+
+The source receipt is Tau-owned:
+
+```text
+schema = tau.research_source_receipt.v1
+status = PASS
+review_required = true
+```
+
+`method-combiner` must produce:
+
+```text
+exploit_genome.json
+combination_rationale.md
+method-combiner-node-receipt.json
+```
+
+PR3b claim boundary:
+
+```text
+research citations are design input, not proof
+exploit_genome.json is not exploit code
+fixture child code fallback is forbidden
+exploit-code-author remains BLOCKED until a real Tau/provider code-authoring adapter exists
+Judge remains the only authority for exploit success
+```
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

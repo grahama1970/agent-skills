@@ -9,6 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .child_dag_method_combiner import run_method_combiner
+from .child_dag_research import run_research_scout
+
 
 NODE_RECEIPT_SCHEMA = "battle.child_dag_node_receipt.v1"
 
@@ -52,6 +55,12 @@ def run_node(*, node_id: str, start_payload: dict[str, Any], artifact_dir: Path)
 
     if node_id == "lineage-summarizer":
         return _run_lineage_summarizer(start_payload=start_payload, artifact_dir=artifact_dir), 0
+    if node_id == "research-scout":
+        response = _run_research_scout(start_payload=start_payload, artifact_dir=artifact_dir)
+        return response, 0 if response is not None else 1
+    if node_id == "method-combiner":
+        response = _run_method_combiner(start_payload=start_payload, artifact_dir=artifact_dir)
+        return response, 0 if response is not None else 1
 
     return _blocked_missing_adapter(node_id=node_id, start_payload=start_payload, artifact_dir=artifact_dir), 1
 
@@ -120,6 +129,99 @@ def _blocked_missing_adapter(*, node_id: str, start_payload: dict[str, Any], art
     }
     _write_json(artifact_dir / f"{node_id}-node-receipt.json", receipt)
     return None
+
+
+def _run_research_scout(*, start_payload: dict[str, Any], artifact_dir: Path) -> dict[str, Any] | None:
+    lineage_path = _find_named_artifact(start_payload, "lineage_summary.json")
+    if lineage_path is None:
+        receipt = _node_receipt(node_id="research-scout", status="BLOCKED", verdict="RESEARCH_SOURCE_INPUT_MISSING", evidence=[])
+        receipt["reason"] = "research-scout requires lineage_summary.json from the live Tau command loop."
+        receipt["claims"] = {
+            "proves": ["Battle reached the research-scout command-spec boundary."],
+            "does_not_prove": ["Research Scout produced source-bearing receipts.", "Exploit success."],
+        }
+        _write_json(artifact_dir / "research-scout-node-receipt.json", receipt)
+        return None
+
+    result = run_research_scout(artifact_dir=artifact_dir, lineage_summary_path=lineage_path)
+    evidence = [
+        _evidence("lineage_summary.json", lineage_path),
+        _evidence("research-source-packet.json", result["source_packet_path"]),
+        _evidence("research-source-receipt.json", result["source_receipt_path"]),
+        _evidence("research_receipts.json", result["research_receipts_path"]),
+        _evidence("candidate_methods.json", result["candidate_methods_path"]),
+    ]
+    receipt = _node_receipt(
+        node_id="research-scout",
+        status=result["status"],
+        verdict=result["status"],
+        evidence=evidence,
+    )
+    receipt["tau_research_source_receipt"] = str(result["source_receipt_path"])
+    receipt["claims"] = result["research_receipts"]["claims"]
+    receipt_path = artifact_dir / "research-scout-node-receipt.json"
+    _write_json(receipt_path, receipt)
+    if result["status"] != "PASS":
+        return None
+    evidence.append(_evidence("research-scout-node-receipt.json", receipt_path))
+    return _handoff(
+        start_payload=start_payload,
+        previous_subagent="research-scout",
+        status="PASS",
+        summary="Research Scout produced Tau-validated source-bearing design-input receipts.",
+        evidence=evidence,
+        next_agent="method-combiner",
+        artifacts=[str(result["research_receipts_path"]), str(result["candidate_methods_path"]), str(receipt_path)],
+    )
+
+
+def _run_method_combiner(*, start_payload: dict[str, Any], artifact_dir: Path) -> dict[str, Any] | None:
+    research_path = _find_named_artifact(start_payload, "research_receipts.json")
+    candidates_path = _find_named_artifact(start_payload, "candidate_methods.json")
+    missing = [name for name, path in {"research_receipts.json": research_path, "candidate_methods.json": candidates_path}.items() if path is None]
+    if missing:
+        receipt = _node_receipt(node_id="method-combiner", status="BLOCKED", verdict="UPSTREAM_RESEARCH_ARTIFACT_MISSING", evidence=[])
+        receipt["reason"] = f"method-combiner missing upstream artifacts: {', '.join(missing)}"
+        receipt["claims"] = {
+            "proves": ["Battle reached the method-combiner command-spec boundary."],
+            "does_not_prove": ["A source-backed exploit genome was produced.", "Exploit success."],
+        }
+        _write_json(artifact_dir / "method-combiner-node-receipt.json", receipt)
+        return None
+
+    result = run_method_combiner(
+        artifact_dir=artifact_dir,
+        research_receipts_path=research_path,
+        candidate_methods_path=candidates_path,
+    )
+    evidence = [
+        _evidence("research_receipts.json", research_path),
+        _evidence("candidate_methods.json", candidates_path),
+        _evidence("exploit_genome.json", result["genome_path"]),
+        _evidence("combination_rationale.md", result["rationale_path"]),
+    ]
+    receipt = _node_receipt(
+        node_id="method-combiner",
+        status=result["status"],
+        verdict=result["status"],
+        evidence=evidence,
+    )
+    receipt["claims"] = result["genome"]["claims"]
+    receipt["errors"] = result["errors"]
+    receipt_path = artifact_dir / "method-combiner-node-receipt.json"
+    _write_json(receipt_path, receipt)
+    if result["status"] != "PASS":
+        return None
+    evidence.append(_evidence("method-combiner-node-receipt.json", receipt_path))
+    return _handoff(
+        start_payload=start_payload,
+        previous_subagent="method-combiner",
+        status="PASS",
+        summary="Method Combiner produced a deterministic source-backed exploit genome candidate.",
+        evidence=evidence,
+        next_agent="exploit-code-author",
+        artifacts=[str(result["genome_path"]), str(result["rationale_path"]), str(receipt_path)],
+    )
 
 
 def _blocked_verdict(node_id: str) -> str:
@@ -219,6 +321,19 @@ def _result_evidence(payload: dict[str, Any]) -> list[Any]:
         return []
     evidence = result.get("evidence")
     return evidence if isinstance(evidence, list) else []
+
+
+def _find_named_artifact(payload: dict[str, Any], name: str) -> Path | None:
+    candidates: list[str] = []
+    candidates.extend(_context_artifacts(payload))
+    for item in _result_evidence(payload):
+        if isinstance(item, dict) and isinstance(item.get("path"), str):
+            candidates.append(item["path"])
+    for candidate in candidates:
+        path = Path(candidate)
+        if path.name == name and path.exists():
+            return path.resolve()
+    return None
 
 
 def _target_value(payload: dict[str, Any], key: str) -> Any:

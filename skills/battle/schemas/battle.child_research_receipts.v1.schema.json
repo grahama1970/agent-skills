@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.child_research_receipts.v1.schema.json",
+  "title": "Battle Child Research Receipts",
+  "type": "object",
+  "required": [
+    "schema",
+    "battle_id",
+    "child_lane_id",
+    "status",
+    "mocked",
+    "live",
+    "research_scout_live",
+    "provider_live",
+    "fixture_fallback_used",
+    "query",
+    "source_receipts",
+    "sources",
+    "claims"
+  ],
+  "properties": {
+    "schema": { "const": "battle.child_research_receipts.v1" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "child_lane_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["PASS", "BLOCKED"] },
+    "mocked": { "const": false },
+    "live": { "const": "tau_command_spec_node" },
+    "research_scout_live": { "const": true },
+    "provider_live": { "const": false },
+    "fixture_fallback_used": { "const": false },
+    "query": {
+      "type": "object",
+      "required": ["value", "method", "external_tool_called"],
+      "properties": {
+        "value": { "type": "string", "minLength": 1 },
+        "method": { "enum": ["manual", "dogpile", "brave", "github", "arxiv", "webgpt"] },
+        "safety_receipt": { "type": ["string", "null"] },
+        "external_tool_called": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "source_receipts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["schema", "path", "status", "source_count", "review_required"],
+        "properties": {
+          "schema": { "const": "tau.research_source_receipt.v1" },
+          "path": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["PASS", "BLOCKED"] },
+          "source_type": { "type": ["string", "null"] },
+          "method": { "type": ["string", "null"] },
+          "source_count": { "type": ["integer", "null"], "minimum": 0 },
+          "review_required": { "type": ["boolean", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "title", "url", "classification", "limitations"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "classification": { "type": "string", "minLength": 1 },
+          "limitations": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": { "type": "array", "items": { "type": "string" } },
+        "does_not_prove": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -3,9 +3,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import jsonschema
+
 from battle_skill.child_dag_node_adapter import run_node
 from battle_skill.exploit_combiner import run_exploit_combiner_proof
 from battle_skill.spawn_architect import run_spawn_architect_proof
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+
+def _schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
 
 
 def _start_payload(dag_path: Path) -> dict:
@@ -71,6 +79,91 @@ def test_research_scout_adapter_blocks_without_fake_research(tmp_path: Path, mon
     assert exit_code == 1
     receipt = json.loads((artifact_dir / "research-scout-node-receipt.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "BLOCKED"
-    assert receipt["verdict"] == "RESEARCH_ADAPTER_MISSING"
+    assert receipt["verdict"] == "RESEARCH_SOURCE_INPUT_MISSING"
     assert receipt["fixture_fallback_used"] is False
     assert not (artifact_dir / "research_receipts.json").exists()
+
+
+def test_research_scout_adapter_writes_tau_validated_source_receipts(tmp_path: Path, monkeypatch) -> None:
+    spawn = _spawn_architect_dir(tmp_path)
+    lineage_dir = tmp_path / "artifacts" / "lineage-summarizer"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "lineage-summarizer")
+    lineage_response, lineage_exit = run_node(
+        node_id="lineage-summarizer",
+        start_payload=_start_payload(spawn / "child-exploit-dag.yaml"),
+        artifact_dir=lineage_dir,
+    )
+    assert lineage_exit == 0
+    assert lineage_response is not None
+
+    research_dir = tmp_path / "artifacts" / "research-scout"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "research-scout")
+    response, exit_code = run_node(
+        node_id="research-scout",
+        start_payload=lineage_response,
+        artifact_dir=research_dir,
+    )
+
+    assert exit_code == 0
+    assert response is not None
+    assert response["next_agent"]["name"] == "method-combiner"
+    research = json.loads((research_dir / "research_receipts.json").read_text(encoding="utf-8"))
+    tau_receipt = json.loads((research_dir / "research-source-receipt.json").read_text(encoding="utf-8"))
+    methods = json.loads((research_dir / "candidate_methods.json").read_text(encoding="utf-8"))
+    assert research["schema"] == "battle.child_research_receipts.v1"
+    jsonschema.validate(research, _schema("battle.child_research_receipts.v1.schema.json"))
+    assert research["status"] == "PASS"
+    assert research["fixture_fallback_used"] is False
+    assert research["provider_live"] is False
+    assert research["query"]["external_tool_called"] is False
+    assert tau_receipt["schema"] == "tau.research_source_receipt.v1"
+    assert tau_receipt["status"] == "PASS"
+    assert tau_receipt["review_required"] is True
+    assert methods["schema"] == "battle.child_candidate_methods.v1"
+    jsonschema.validate(methods, _schema("battle.child_candidate_methods.v1.schema.json"))
+    assert methods["status"] == "PASS"
+    proves = " ".join(research["claims"]["proves"]).lower()
+    assert "exploit success" not in proves
+
+
+def test_method_combiner_writes_source_backed_genome_without_code(tmp_path: Path, monkeypatch) -> None:
+    spawn = _spawn_architect_dir(tmp_path)
+    lineage_dir = tmp_path / "artifacts" / "lineage-summarizer"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "lineage-summarizer")
+    lineage_response, lineage_exit = run_node(
+        node_id="lineage-summarizer",
+        start_payload=_start_payload(spawn / "child-exploit-dag.yaml"),
+        artifact_dir=lineage_dir,
+    )
+    assert lineage_exit == 0
+    assert lineage_response is not None
+
+    research_dir = tmp_path / "artifacts" / "research-scout"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "research-scout")
+    research_response, research_exit = run_node(
+        node_id="research-scout",
+        start_payload=lineage_response,
+        artifact_dir=research_dir,
+    )
+    assert research_exit == 0
+    assert research_response is not None
+
+    combiner_dir = tmp_path / "artifacts" / "method-combiner"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "method-combiner")
+    response, exit_code = run_node(
+        node_id="method-combiner",
+        start_payload=research_response,
+        artifact_dir=combiner_dir,
+    )
+
+    assert exit_code == 0
+    assert response is not None
+    assert response["next_agent"]["name"] == "exploit-code-author"
+    genome = json.loads((combiner_dir / "exploit_genome.json").read_text(encoding="utf-8"))
+    assert genome["schema"] == "battle.child_exploit_genome.v1"
+    jsonschema.validate(genome, _schema("battle.child_exploit_genome.v1.schema.json"))
+    assert genome["status"] == "PASS"
+    assert genome["agentic"] is False
+    assert "child_archive_traversal_baseline" in genome["selected_method_ids"]
+    assert not (combiner_dir / "exploit_specimen.py").exists()
+    assert "Any exploit code was generated." in genome["claims"]["does_not_prove"]
