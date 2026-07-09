@@ -54,6 +54,12 @@ def test_spawn_architect_proof_emits_dag_birth_contract_without_tau_execution(tm
     assert (out_dir / "validation.json").exists()
     assert (out_dir / "events.jsonl").exists()
     assert (out_dir / "normalized" / "battle-004-spawn-architect.normalized.json").exists()
+    command_spec = out_dir / "command-specs" / "child-exploit-dag" / "lineage-summarizer" / "tau-dispatch-command.json"
+    assert command_spec.exists()
+    command_payload = json.loads(command_spec.read_text(encoding="utf-8"))
+    assert command_payload["command"][-2:] == ["battle_skill.child_dag_node_adapter", "lineage-summarizer"]
+    assert command_payload["requires_network"] is False
+    assert receipt["artifacts"]["child_tau_command_specs"] == "command-specs/child-exploit-dag"
 
     event_types = [json.loads(line)["event_type"] for line in (out_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()]
     assert {

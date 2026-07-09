@@ -239,6 +239,13 @@ DAG, rejects the DAG, omits required receipts, or fails to produce
 `battle_exploit_runner_handoff.json`, Battle records `BLOCKED` with
 `fixture_fallback_used:false`.
 
+The current PR3a canary materializes Tau command specs beside the Spawn
+Architect DAG and invokes `battle_skill.child_dag_node_adapter` through the real
+Tau command loop. The expected first live boundary is
+`lineage-summarizer` producing a receipt-backed lineage summary, then
+`research-scout` blocking unless a real source-bearing research adapter is
+configured.
+
 ## Claim Boundaries
 
 Battle uses strict proof language:

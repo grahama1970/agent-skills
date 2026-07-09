@@ -502,6 +502,19 @@ Compile-repair exhaustion or missing Battle handoff is BLOCKED.
 Private Arena references or exploit-success claims without Judge are FAIL.
 ```
 
+Current PR3a command-spec target:
+
+```text
+Spawn Architect materializes command-specs/child-exploit-dag/*/tau-dispatch-command.json
+beside child-exploit-dag.yaml. Tau should compile those specs and invoke
+battle_skill.child_dag_node_adapter through the real local command loop.
+
+The first expected non-fixture result is:
+lineage-summarizer PASS -> research-scout BLOCKED because no real
+source-bearing research adapter is configured. That is progress over
+MISSING_AGENT_COMMAND_SPEC, but still not live child exploit synthesis.
+```
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

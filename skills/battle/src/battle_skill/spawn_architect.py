@@ -8,7 +8,7 @@ from typing import Any
 
 from .arena_battle_proof import _write_json
 from .child_knowledge_packet import build_child_knowledge_packet, load_parent_combiner_receipt
-from .tau_child_dag import build_child_exploit_tau_dag, validate_child_exploit_tau_dag, write_dag_yaml
+from .tau_child_dag import COMMAND_SPEC_ROOT, build_child_exploit_tau_dag, validate_child_exploit_tau_dag, write_child_dag_command_specs, write_dag_yaml
 
 
 SPAWN_ARCHITECT_RECEIPT_SCHEMA = "battle.spawn_architect_receipt.v1"
@@ -31,8 +31,15 @@ def run_spawn_architect_proof(*, battle_id: str, out_dir: Path, parent_combiner_
     events.append(_event("child_knowledge_packet_created", artifact="child-knowledge-packet.json", detail={"failed_specimens": len(child_packet["parent_specimens"])}))
 
     dag = build_child_exploit_tau_dag(battle_id=battle_id, child_knowledge_packet=child_packet, spawn_policy_decision=spawn_policy)
+    command_spec_paths = write_child_dag_command_specs(out_dir / COMMAND_SPEC_ROOT)
     dag_path = write_dag_yaml(out_dir / "child-exploit-dag.yaml", dag)
-    events.append(_event("child_tau_dag_authored", artifact="child-exploit-dag.yaml", detail={"dag_id": dag["dag_id"]}))
+    events.append(
+        _event(
+            "child_tau_dag_authored",
+            artifact="child-exploit-dag.yaml",
+            detail={"dag_id": dag["dag_id"], "command_specs": len(command_spec_paths)},
+        )
+    )
 
     validation = validate_child_exploit_tau_dag(dag)
     summary_path = _write_json(out_dir / "child-exploit-dag.summary.json", validation)
@@ -72,6 +79,7 @@ def run_spawn_architect_proof(*, battle_id: str, out_dir: Path, parent_combiner_
             "child_knowledge_packet": _rel(out_dir, child_packet_path),
             "child_exploit_dag": _rel(out_dir, dag_path),
             "child_exploit_dag_summary": _rel(out_dir, summary_path),
+            "child_tau_command_specs": COMMAND_SPEC_ROOT,
             "validation": _rel(out_dir, validation_path),
             "events": "events.jsonl",
             "normalized": _rel(out_dir, normalized_path),

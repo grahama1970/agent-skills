@@ -50,6 +50,13 @@ def test_child_tau_dag_validates_required_route_and_claim_boundary(tmp_path: Pat
     assert summary["tau_execution"] == "deferred_to_pr3"
     assert "compile_failed_twice_requires_new_research" in {edge.get("condition") for edge in dag["edges"]}
     assert "exploit success" not in " ".join(dag["claims"]["proves"]).lower()
+    for node in dag["nodes"]:
+        if node["id"] == "blocked":
+            continue
+        assert node["agent"] == node["id"]
+        assert node["executor"] == "local"
+        assert node["command_spec"] == f"command-specs/child-exploit-dag/{node['id']}"
+        assert node["required_evidence"] == node["required_outputs"]
 
 
 def test_child_tau_dag_rejects_private_artifact_reference(tmp_path: Path) -> None:
@@ -61,4 +68,3 @@ def test_child_tau_dag_rejects_private_artifact_reference(tmp_path: Path) -> Non
     assert summary["valid"] is False
     assert summary["private_boundary_passed"] is False
     assert any("private artifact" in error for error in summary["errors"])
-

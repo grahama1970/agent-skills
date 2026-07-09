@@ -45,6 +45,8 @@ REQUIRED_ROUTE = [
     "artifact-reviewer",
     "battle-handoff-writer",
 ]
+COMMAND_SPEC_ROOT = "command-specs/child-exploit-dag"
+COMMAND_SPEC_FILENAME = "tau-dispatch-command.json"
 
 
 def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[str, Any], spawn_policy_decision: dict[str, Any]) -> dict[str, Any]:
@@ -84,7 +86,7 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             _node("compile-repair", "compiler-repairer", "compile-and-repair", ["compile_receipt.json", "repaired_exploit_specimen.py"], max_attempts=3),
             _node("artifact-reviewer", "reviewer", "claim-boundary-review", ["review_receipt.json"]),
             _node("battle-handoff-writer", "handoff-writer", "battle-exploit-runner-handoff", ["battle_exploit_handoff.json"]),
-            _node("blocked", "blocked", "terminal-blocked-report", ["blocked_report.json"]),
+            _node("blocked", "blocked", "terminal-blocked-report", ["blocked_report.json"], command_spec=False),
         ],
         "edges": [
             {"from": "lineage-summarizer", "to": "research-scout"},
@@ -165,6 +167,13 @@ def validate_child_exploit_tau_dag(dag: dict[str, Any]) -> dict[str, Any]:
     compile_node = _node_by_id(dag, "compile-repair")
     if compile_node.get("max_attempts") != 3:
         errors.append("child DAG missing compile repair retry limit")
+    for node_id in REQUIRED_ROUTE:
+        node = _node_by_id(dag, node_id)
+        if node.get("agent") != node_id:
+            errors.append(f"child DAG node {node_id} agent must match node id for Tau command dispatch")
+        command_spec = node.get("command_spec")
+        if command_spec != f"{COMMAND_SPEC_ROOT}/{node_id}":
+            errors.append(f"child DAG node {node_id} missing command_spec")
     if not any(edge.get("condition") == "compile_failed_twice_requires_new_research" for edge in dag.get("edges", []) if isinstance(edge, dict)):
         errors.append("child DAG missing research refresh after repeated compile failure")
 
@@ -192,8 +201,61 @@ def write_dag_yaml(path: Path, dag: dict[str, Any]) -> Path:
     return path
 
 
-def _node(node_id: str, role: str, work_type: str, required_outputs: list[str], *, max_attempts: int | None = None) -> dict[str, Any]:
-    node = {"id": node_id, "agent": role, "role": role, "work_type": work_type, "required_outputs": required_outputs}
+def write_child_dag_command_specs(root: Path) -> list[Path]:
+    """Write materialized Tau command specs for the Battle child DAG nodes."""
+
+    battle_root = Path(__file__).resolve().parents[2]
+    written: list[Path] = []
+    for node_id in REQUIRED_ROUTE:
+        spec_path = root / node_id / COMMAND_SPEC_FILENAME
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path.write_text(
+            json.dumps(
+                {
+                    "command": [
+                        "uv",
+                        "run",
+                        "python",
+                        "-m",
+                        "battle_skill.child_dag_node_adapter",
+                        node_id,
+                    ],
+                    "cwd": str(battle_root),
+                    "timeout_s": 240,
+                    "requires_network": False,
+                    "mutates": False,
+                    "requires_clean_worktree": False,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        written.append(spec_path)
+    return written
+
+
+def _node(
+    node_id: str,
+    role: str,
+    work_type: str,
+    required_outputs: list[str],
+    *,
+    max_attempts: int | None = None,
+    command_spec: bool = True,
+) -> dict[str, Any]:
+    node = {
+        "id": node_id,
+        "agent": node_id,
+        "role": role,
+        "executor": "local",
+        "work_type": work_type,
+        "required_outputs": required_outputs,
+        "required_evidence": required_outputs,
+    }
+    if command_spec:
+        node["command_spec"] = f"{COMMAND_SPEC_ROOT}/{node_id}"
     if max_attempts is not None:
         node["max_attempts"] = max_attempts
     return node
