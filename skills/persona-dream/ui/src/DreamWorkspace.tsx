@@ -1013,6 +1013,13 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
 }
 
 function StageEvidence({ stage }: { stage: DreamStage }) {
+  const executionReceipts = stage.id === '08'
+    ? stage.artifacts.filter(isExecutionReceiptArtifact)
+    : []
+  const visibleArtifacts = stage.id === '08'
+    ? stage.artifacts.filter((artifact) => !isExecutionReceiptArtifact(artifact))
+    : stage.artifacts
+
   return (
     <>
       {stage.images.length > 0 && (
@@ -1026,24 +1033,60 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
         </div>
       )}
 
-      {stage.artifacts.length > 0 && (
+      {visibleArtifacts.length > 0 && (
         <div style={styles.artifactChips}>
-          {stage.artifacts.map((artifact) => (
-            <a
-              key={artifact.path}
-              href={`/api/projects/dream/asset?path=${encodeURIComponent(artifact.path)}`}
-              target="_blank"
-              rel="noreferrer"
-              title={`Open ${artifact.label}`}
-              style={styles.artifactChip}
-            >
-              <FileJson size={13} />
-              {artifact.label}
-            </a>
+          {visibleArtifacts.map((artifact) => (
+            <ArtifactChip key={artifact.path} artifact={artifact} />
           ))}
         </div>
       )}
+
+      {executionReceipts.length > 0 && (
+        <details style={styles.receiptAccordion}>
+          <summary style={styles.receiptAccordionSummary}>
+            <span>View Execution Receipts ({executionReceipts.length})</span>
+          </summary>
+          <div style={styles.receiptGrid}>
+            {executionReceipts.map((artifact) => (
+              <ArtifactChip
+                key={artifact.path}
+                artifact={artifact}
+                style={styles.receiptPill}
+                iconSize={12}
+              />
+            ))}
+          </div>
+        </details>
+      )}
     </>
+  )
+}
+
+function isExecutionReceiptArtifact(artifact: DreamStage['artifacts'][number]): boolean {
+  const text = `${artifact.label} ${artifact.path}`.toLowerCase()
+  return /\.json($|\?)/.test(text) || /receipt|verdict|manifest|packet|contract|gate|ledger|mapping|audit|linter/.test(text)
+}
+
+function ArtifactChip({
+  artifact,
+  style = styles.artifactChip,
+  iconSize = 13,
+}: {
+  artifact: DreamStage['artifacts'][number]
+  style?: CSSProperties
+  iconSize?: number
+}) {
+  return (
+    <a
+      href={`/api/projects/dream/asset?path=${encodeURIComponent(artifact.path)}`}
+      target="_blank"
+      rel="noreferrer"
+      title={artifact.label}
+      style={style}
+    >
+      <FileJson size={iconSize} />
+      <span style={styles.receiptPillLabel}>{artifact.label}</span>
+    </a>
   )
 }
 
@@ -12085,6 +12128,50 @@ const styles: Record<string, CSSProperties> = {
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     fontSize: 11,
     overflowWrap: 'anywhere',
+  },
+  receiptAccordion: {
+    borderRadius: 8,
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'rgba(0, 0, 0, 0.28)',
+    padding: 0,
+  },
+  receiptAccordionSummary: {
+    cursor: 'pointer',
+    padding: '12px 14px',
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+    userSelect: 'none',
+  },
+  receiptGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: 8,
+    padding: '0 14px 14px',
+  },
+  receiptPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    minWidth: 0,
+    borderRadius: 4,
+    border: '1px solid rgba(75, 85, 99, 0.9)',
+    background: 'rgba(255, 255, 255, 0.03)',
+    padding: '7px 9px',
+    color: '#9ca3af',
+    textDecoration: 'none',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 11,
+    transition: 'background 160ms ease, border-color 160ms ease, color 160ms ease',
+    overflow: 'hidden',
+  },
+  receiptPillLabel: {
+    minWidth: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   stageActionBox: {
     borderTop: '1px solid rgba(255, 255, 255, 0.06)',
