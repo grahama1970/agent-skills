@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.live_tau_child_dag_canary_receipt.v1.schema.json",
+  "title": "Battle Live Tau Child DAG Canary Receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "battle_id",
+    "status",
+    "reason",
+    "mocked",
+    "live",
+    "agentic",
+    "fixture_fallback_used",
+    "tau_execution",
+    "proof_mode",
+    "artifacts",
+    "scoreboard",
+    "claims"
+  ],
+  "properties": {
+    "schema": { "const": "battle.live_tau_child_dag_canary_receipt.v1" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "reason": { "type": "string", "minLength": 1 },
+    "mocked": { "const": false },
+    "live": { "const": "tau_dag_runtime" },
+    "agentic": { "const": true },
+    "fixture_fallback_used": { "const": false },
+    "tau_execution": { "enum": ["attempted", "not_attempted"] },
+    "proof_mode": { "const": "live_tau_child_dag_canary" },
+    "artifacts": { "type": "object" },
+    "missing_tau_artifacts": { "type": "array", "items": { "type": "string" } },
+    "scoreboard": {
+      "type": "object",
+      "required": [
+        "tau_preflight_passed",
+        "tau_execution_attempted",
+        "tau_receipt_present",
+        "judge_verified_exploits",
+        "verdict"
+      ],
+      "properties": {
+        "tau_preflight_passed": { "type": "boolean" },
+        "tau_execution_attempted": { "type": "boolean" },
+        "tau_receipt_present": { "type": "boolean" },
+        "judge_verified_exploits": { "const": 0 },
+        "verdict": { "enum": ["PASS", "BLOCKED", "FAIL"] }
+      },
+      "additionalProperties": true
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": { "type": "array", "items": { "type": "string" } },
+        "does_not_prove": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": true
+}

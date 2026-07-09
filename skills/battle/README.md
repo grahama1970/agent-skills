@@ -199,7 +199,7 @@ promoted; failed mutations remain searchable negative evidence.
 | BATTLE-004 Tau public-only | `./run.sh arena-tau-public-only-proof ...` | Arena public/private split, Tau handoff, Judge replay of materialized artifacts | Full genetic spawning or pre-kill child survival |
 | Exploit combiner proof | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` | Generated/bad/runnable specimen lifecycle, Docker receipts, target contact, no exploit-success overclaim | Live Tau code generation, child materialization, Judge exploit success |
 | Spawn Architect proof | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` | Child knowledge packet and Tau child DAG birth contract | Live Tau DAG execution, child exploit code, target execution |
-| Live child Tau DAG | planned next PR | Tau researches, combines methods, writes/repairs code, hands compiled specimen to Battle | Exploit success unless Judge proves it |
+| Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, then consume receipts/artifacts if Tau produces them | Exploit success unless Judge proves it; missing Tau/runtime/artifact gaps are `BLOCKED`, not fixture-substituted |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -233,6 +233,11 @@ Judge proves or rejects exploit success
    ↓
 Memory promotes replayable wins and retains failures
 ```
+
+The first live Tau rung is a canary, not a success claim. If Tau cannot run the
+DAG, rejects the DAG, omits required receipts, or fails to produce
+`battle_exploit_runner_handoff.json`, Battle records `BLOCKED` with
+`fixture_fallback_used:false`.
 
 ## Claim Boundaries
 

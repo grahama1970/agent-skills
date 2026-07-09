@@ -471,6 +471,37 @@ It does not prove exploit success.
 It does not prove Blue detection, kill, or block.
 ```
 
+## Live Tau Child DAG Canary Rung
+
+Next backend rung after `spawn-architect-proof`:
+
+```text
+./run.sh live-tau-child-dag-canary battle-004 \
+  --out /tmp/battle-004-live-tau-child-dag \
+  --spawn-architect-proof /tmp/battle-004-spawn-architect
+```
+
+Purpose:
+
+```text
+Attempt the existing local Tau runtime against the child DAG contract without
+fixture fallback. Battle records tau-preflight-receipt.json, invokes
+uv run tau dag-run, captures stdout/stderr, consumes Tau's dag-receipt.json
+when present, and only runs a child specimen in Docker if Tau produces a
+battle_exploit_runner_handoff.json and code artifact.
+```
+
+Current non-claims:
+
+```text
+This canary does not prove exploit success.
+It does not prove Blue detection, child survival, or packet-level behavior.
+Failure to invoke Tau is BLOCKED, not a passed fixture substitute.
+Missing Tau receipts or child artifacts are BLOCKED.
+Compile-repair exhaustion or missing Battle handoff is BLOCKED.
+Private Arena references or exploit-success claims without Judge are FAIL.
+```
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

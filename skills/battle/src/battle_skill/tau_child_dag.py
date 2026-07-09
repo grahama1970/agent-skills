@@ -18,6 +18,24 @@ FORBIDDEN_INPUTS = [
     "judge/oracle/**",
 ]
 
+TAU_FAIL_CLOSED_ON = [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "malformed_handoff",
+    "max_attempts_exceeded",
+    "brave_search_required_after_two_attempts",
+]
+BATTLE_FAIL_CLOSED_ON = [
+    "private_arena_artifact_reference",
+    "hidden_ground_truth_reference",
+    "missing_compile_receipt",
+    "exploit_success_claim_without_judge_receipt",
+    "child_spawn_without_spawn_policy_receipt",
+    "third_compile_attempt_without_research_refresh",
+]
 REQUIRED_ROUTE = [
     "lineage-summarizer",
     "research-scout",
@@ -87,12 +105,10 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             "claim_boundary_review",
         ],
         "fail_closed_on": [
-            "private_arena_artifact_reference",
-            "hidden_ground_truth_reference",
-            "missing_compile_receipt",
-            "exploit_success_claim_without_judge_receipt",
-            "child_spawn_without_spawn_policy_receipt",
-            "third_compile_attempt_without_research_refresh",
+            *TAU_FAIL_CLOSED_ON,
+        ],
+        "battle_fail_closed_on": [
+            *BATTLE_FAIL_CLOSED_ON,
         ],
         "claims": {
             "proves": ["Spawn Architect authored a Tau child exploit-synthesis DAG contract."],
@@ -125,6 +141,12 @@ def validate_child_exploit_tau_dag(dag: dict[str, Any]) -> dict[str, Any]:
     for key in ("required_evidence", "fail_closed_on"):
         if not dag.get(key):
             errors.append(f"child DAG missing {key}")
+    for invariant in BATTLE_FAIL_CLOSED_ON:
+        if invariant not in (dag.get("battle_fail_closed_on") or []):
+            errors.append(f"child DAG missing Battle invariant {invariant}")
+    for invariant in TAU_FAIL_CLOSED_ON:
+        if invariant not in (dag.get("fail_closed_on") or []):
+            errors.append(f"child DAG missing Tau invariant {invariant}")
     forbidden_inputs = (((dag.get("target") or {}).get("forbidden_inputs")) if isinstance(dag.get("target"), dict) else []) or []
     for forbidden in FORBIDDEN_INPUTS:
         if forbidden not in forbidden_inputs:
@@ -171,7 +193,7 @@ def write_dag_yaml(path: Path, dag: dict[str, Any]) -> Path:
 
 
 def _node(node_id: str, role: str, work_type: str, required_outputs: list[str], *, max_attempts: int | None = None) -> dict[str, Any]:
-    node = {"id": node_id, "role": role, "work_type": work_type, "required_outputs": required_outputs}
+    node = {"id": node_id, "agent": role, "role": role, "work_type": work_type, "required_outputs": required_outputs}
     if max_attempts is not None:
         node["max_attempts"] = max_attempts
     return node

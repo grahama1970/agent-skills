@@ -552,8 +552,6 @@ def export_semantic_outcome_matrix(
     out: Path = typer.Option(..., "--out", help="Output Battle semantic outcome matrix JSON path."),
 ):
     """Export deterministic Battle outcome scoring and sprite-profile calibration."""
-    import json as _json
-
     from .battle_event_adapter import write_semantic_outcome_matrix
     from .ux_contract_validator import ContractError, validate_semantic_outcome_matrix, validate_semantic_outcome_matrix_schema
 
@@ -805,6 +803,61 @@ def spawn_architect_proof(
             "verdict": scoreboard.get("verdict"),
         }
     )
+
+
+@app.command("live-tau-child-dag-canary")
+def live_tau_child_dag_canary(
+    battle_id: str = typer.Argument("battle-004", help="Battle id for the live Tau child DAG canary."),
+    out: Path = typer.Option(..., "--out", help="Output directory for live Tau canary artifacts."),
+    spawn_architect_proof: Path = typer.Option(
+        ...,
+        "--spawn-architect-proof",
+        exists=True,
+        readable=True,
+        help="Spawn Architect proof directory or spawn-architect-receipt.json.",
+    ),
+    tau_root: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/tau"),
+        "--tau-root",
+        help="Existing local Tau runtime checkout.",
+    ),
+    timeout_seconds: int = typer.Option(900, "--timeout-seconds", min=30, help="Timeout for the real Tau DAG invocation."),
+):
+    """Attempt PR3 live Tau child DAG execution without fixture fallback."""
+    import json as _json
+
+    from .live_tau_child_dag_canary import run_live_tau_child_dag_canary
+
+    receipt = run_live_tau_child_dag_canary(
+        battle_id=battle_id,
+        out_dir=out,
+        spawn_architect_proof=spawn_architect_proof,
+        tau_root=tau_root,
+        timeout_seconds=timeout_seconds,
+    )
+    print(
+        _json.dumps(
+            {
+                "status": receipt.get("status"),
+                "schema": receipt.get("schema"),
+                "battle_id": battle_id,
+                "out": str(out),
+                "proof_mode": receipt.get("proof_mode"),
+                "live": receipt.get("live"),
+                "agentic": receipt.get("agentic"),
+                "fixture_fallback_used": receipt.get("fixture_fallback_used"),
+                "tau_execution": receipt.get("tau_execution"),
+                "tau_receipt_status": receipt.get("tau_receipt_status"),
+                "reason": receipt.get("reason"),
+                "missing_tau_artifacts": receipt.get("missing_tau_artifacts"),
+                "judge_verified_exploits": (receipt.get("scoreboard") or {}).get("judge_verified_exploits"),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    if receipt.get("status") == "FAIL":
+        raise typer.Exit(1)
 
 
 @app.command("validate-ux-handoff-summary")
@@ -1276,7 +1329,7 @@ def resume(
         raise typer.Exit(1)
 
     if state.status == "completed":
-        console.print(f"[yellow]Battle already completed[/yellow]")
+        console.print("[yellow]Battle already completed[/yellow]")
         return
 
     console.print(f"[green]Resuming battle from round {state.current_round}[/green]")
