@@ -441,6 +441,36 @@ Child spawn materialization is future work.
 Judge replay is required for exploit-success claims.
 ```
 
+## Spawn Architect Proof Rung
+
+Next backend rung after `exploit-combiner-proof`:
+
+```text
+./run.sh spawn-architect-proof battle-004 \
+  --out /tmp/battle-004-spawn-architect \
+  --parent-combiner-proof /tmp/battle-004-combiner
+```
+
+Purpose:
+
+```text
+Prove the DAG birth contract:
+spawn-policy decision -> child knowledge packet -> tau.dag_contract.v1 child
+exploit-synthesis DAG -> private-boundary validation -> no Tau execution.
+```
+
+Current non-claims:
+
+```text
+The proof is fixture-backed and agentic:false.
+Tau execution is deferred to PR3.
+It does not prove a child exploit subagent ran.
+It does not prove a child exploit specimen was generated.
+It does not prove any exploit code compiled or contacted the target.
+It does not prove exploit success.
+It does not prove Blue detection, kill, or block.
+```
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

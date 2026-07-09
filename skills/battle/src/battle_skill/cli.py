@@ -709,6 +709,49 @@ def exploit_combiner_proof(
     )
 
 
+@app.command("spawn-architect-proof")
+def spawn_architect_proof(
+    battle_id: str = typer.Argument("battle-004", help="Battle id for the fixture-backed Spawn Architect proof."),
+    out: Path = typer.Option(..., "--out", help="Output directory for Spawn Architect artifacts."),
+    parent_combiner_proof: Path = typer.Option(
+        ...,
+        "--parent-combiner-proof",
+        exists=True,
+        readable=True,
+        help="Parent combiner proof directory or run-receipt.json.",
+    ),
+):
+    """Run fixture-backed Spawn Architect DAG birth proof without executing Tau."""
+    from .spawn_architect import run_spawn_architect_proof
+
+    receipt = run_spawn_architect_proof(
+        battle_id=battle_id,
+        out_dir=out,
+        parent_combiner_proof=parent_combiner_proof,
+    )
+    scoreboard = receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
+    validation = receipt.get("validation") if isinstance(receipt.get("validation"), dict) else {}
+    console.print_json(
+        data={
+            "status": receipt.get("status"),
+            "schema": receipt.get("schema"),
+            "battle_id": battle_id,
+            "out": str(out),
+            "proof_mode": receipt.get("proof_mode"),
+            "agentic": receipt.get("agentic"),
+            "tau_execution": receipt.get("tau_execution"),
+            "spawn_policy_decision": (receipt.get("spawn_policy") or {}).get("decision") if isinstance(receipt.get("spawn_policy"), dict) else None,
+            "dag_id": validation.get("dag_id"),
+            "private_boundary_passed": validation.get("private_boundary_passed"),
+            "child_tau_dags_validated": scoreboard.get("child_tau_dags_validated"),
+            "live_tau_executions": scoreboard.get("live_tau_executions"),
+            "child_exploits_materialized": scoreboard.get("child_exploits_materialized"),
+            "judge_verified_exploits": scoreboard.get("judge_verified_exploits"),
+            "verdict": scoreboard.get("verdict"),
+        }
+    )
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

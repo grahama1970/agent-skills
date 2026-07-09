@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.spawn_architect_receipt.v1.schema.json",
+  "title": "Battle Spawn Architect Receipt",
+  "type": "object",
+  "required": ["schema", "battle_id", "status", "mocked", "live", "agentic", "tau_execution", "proof_mode", "artifacts", "spawn_policy", "validation", "scoreboard", "claims"],
+  "properties": {
+    "schema": { "const": "battle.spawn_architect_receipt.v1" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["PASS", "FAIL"] },
+    "mocked": { "const": false },
+    "live": { "const": "local_fixture_dag_authoring_and_validation" },
+    "agentic": { "const": false },
+    "tau_execution": { "const": "deferred_to_pr3" },
+    "proof_mode": { "const": "spawn_architect_fixture_dag_birth" },
+    "artifacts": { "type": "object" },
+    "spawn_policy": { "type": "object" },
+    "validation": { "type": "object" },
+    "scoreboard": { "type": "object" },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": { "type": "array", "items": { "type": "string" } },
+        "does_not_prove": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": true
+}

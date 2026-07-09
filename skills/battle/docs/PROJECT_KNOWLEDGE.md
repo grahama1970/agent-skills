@@ -182,6 +182,7 @@
 | 2026-07-07 | Canonical spectator package + receipt replay on :3002 | Self-contained skills/battle/spectator replaces ux-lab dual-agent; backend fixture is authoritative for Phase 1 Pixi replay. |
 | 2026-07-07 | Backend chooses runner variant_id; UX maps via sprite_theme | Exploit visual identity must be receipt-backed roster choice, not hardcoded lane-id map on receipt routes. |
 | 2026-07-09 | Add exploit combiner proof before full genetic Battle engine. | The next backend rung should prove generated exploit specimens, bad-code capture, Docker run receipts, target-contact observations, and runnable-unproven scoring before live Tau generation, child materialization, packet capture, or exploit-success claims. |
+| 2026-07-09 | Add fixture-backed Spawn Architect proof before live Tau child execution. | PR2 should prove only the DAG birth contract: spawn-policy decision, child knowledge packet, `tau.dag_contract.v1` child exploit-synthesis DAG, private-artifact exclusions, conservative normalized events, and explicit `tau_execution=deferred_to_pr3`. It must not claim child execution, live exploit generation, compilation, target contact, Blue detection, or exploit success. |
 
 ## Open Questions
 
