@@ -1,0 +1,38 @@
+{
+  "schema": "embry.voice.goal_packet.v1",
+  "goal_id": "embry-chat-static-query-live",
+  "goal_version": 1,
+  "objective": "Wrap the already-passing Embry Chat static query live proof in a Tau DAG with a persistent Embry voice subagent declaration.",
+  "scope": {
+    "in": [
+      "Consume latest Unix/PipeWire RealtimeSTT listener receipt",
+      "Run embry-voice-control embry-chat-static-query-live",
+      "Require memory /intent before /answer",
+      "Require irrelevant memory answer to be treated as memory miss",
+      "Require Tau static answer for capital of France",
+      "Require Chatterbox WAV artifact",
+      "Require PipeWire playback receipt when local playback is requested",
+      "Declare persistent Embry voice surface for bounded Tau DAG ticks"
+    ],
+    "out": [
+      "Browser microphone or WebRTC capture",
+      "Speaker identity or diarization",
+      "Shared Chat UX rendering",
+      "Orb sync",
+      "Replay",
+      "Interruption or barge-in",
+      "The 200+ stress suite"
+    ]
+  },
+  "acceptance": {
+    "required_receipts": [
+      "persistent_subagent_receipt",
+      "embry_chat_turn_receipt.v1",
+      "chatterbox_audio_receipt",
+      "pipewire_playback_receipt"
+    ],
+    "required_tau_route": "static_answer",
+    "required_answer_contains": "Paris",
+    "required_fail_closed_invariant": "memory_answer_irrelevant_to_query -> memory_miss -> Tau static/research/fallback route"
+  }
+}

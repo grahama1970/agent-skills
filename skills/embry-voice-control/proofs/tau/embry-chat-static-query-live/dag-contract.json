@@ -1,0 +1,98 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "embry-chat-static-query-live",
+  "goal": {
+    "goal_id": "embry-chat-static-query-live",
+    "goal_version": 1,
+    "goal_hash": "sha256:5a8f653194dea0e1f31b4d44264d1361dee5231fd15791259ac747758f668918"
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/embry-voice-control/proofs/tau/embry-chat-static-query-live",
+    "allowed_paths": [
+      "skills/embry-voice-control/proofs/tau/embry-chat-static-query-live/**",
+      "skills/embry-voice-control/src/embry_voice_control/**",
+      "skills/embry-voice-control/SKILL.md"
+    ]
+  },
+  "context": {
+    "summary": "First operational Embry voice DAG: wrap the already-passing static query live proof only.",
+    "artifacts": [
+      "goal-packet.json",
+      "command-specs/embry-chatterbox/tau-dispatch-command.json"
+    ],
+    "goal_packet": "goal-packet.json",
+    "goal_packet_hash_algorithm": "json.dumps(sort_keys=True,separators=(',', ':')) then sha256",
+    "does_not_require_surface_reachability": true,
+    "semantic_fail_closed_invariant": "memory_answer_irrelevant_to_query -> memory_miss -> Tau static/research/fallback route"
+  },
+  "entry_node": "embry-chatterbox",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 180,
+    "max_total_attempts": 1
+  },
+  "nodes": [
+    {
+      "id": "embry-chatterbox",
+      "agent": "embry-chatterbox-voice",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/embry-chatterbox/tau-dispatch-command.json",
+      "required_evidence": [
+        "persistent_subagent_receipt",
+        "embry_chat_turn_receipt.v1",
+        "chatterbox_audio_receipt",
+        "pipewire_playback_receipt"
+      ],
+      "persistent_subagent": {
+        "schema": "tau.persistent_subagent.v1",
+        "surface_id": "embry-voice",
+        "surface_url": "http://localhost:3002/#embry-voice",
+        "session_mode": "persistent",
+        "tau_control": "bounded_receipt_gated_ticks",
+        "dag_parameter": "embry_voice_surface",
+        "required_receipts": [
+          "embry.chatterbox_voice_receipt.v1"
+        ],
+        "unbounded_autonomy_allowed": false,
+        "memory_write_requires_receipt": true,
+        "notes": [
+          "The UX route may remain open across Tau DAG ticks.",
+          "This first operational DAG declares the surface but does not require reachability.",
+          "Tau accepts only receipt-backed bounded outputs."
+        ]
+      }
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "embry-chatterbox",
+      "to": "human",
+      "condition": "static_query_receipts_emitted_or_blocked"
+    }
+  ],
+  "required_evidence": [
+    "persistent_subagent_receipt",
+    "embry_chat_turn_receipt.v1",
+    "chatterbox_audio_receipt",
+    "pipewire_playback_receipt"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control/proofs/tau/embry-chat-static-query-live/scripts/run_embry_chat_static_query_handoff.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control",
+  "timeout_s": 180,
+  "requires_network": true,
+  "mutates": false,
+  "requires_clean_worktree": false
+}

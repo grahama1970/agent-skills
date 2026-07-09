@@ -323,6 +323,18 @@ The receipt schema is `embry_chat_turn_receipt.v1`. Required evidence includes
 browser mic, speaker identity, Chat UX rendering, orb sync, replay,
 interruption, or the 200+ stress suite.
 
+The first operational Tau DAG wrapper for this rung lives at:
+
+```text
+proofs/tau/embry-chat-static-query-live/dag-contract.json
+```
+
+It declares the persistent Embry voice surface in `nodes[].persistent_subagent`,
+uses `embry-chatterbox-voice` as the bounded persistent surface node, calls this
+skill through a Tau command spec, and emits `tau.agent_handoff.v1` with
+`persistent_subagent_receipt`, `embry_chat_turn_receipt.v1`,
+`chatterbox_audio_receipt`, and `pipewire_playback_receipt`.
+
 Run the research routing rung before claiming Embry can answer current-world
 non-compliance questions through the voice front-end:
 
