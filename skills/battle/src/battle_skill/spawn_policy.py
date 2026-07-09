@@ -23,4 +23,3 @@ def combiner_pr1_spawn_policy_decision(*, evidence_refs: list[str] | None = None
             "does_not_prove": ["A child exploit spawned.", "Strategic pre-kill replication occurred."],
         },
     }
-
