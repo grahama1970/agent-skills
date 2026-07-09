@@ -53,14 +53,17 @@ export function spriteIdForLane(lane: Lane, spriteTheme?: BattleSpriteThemeV1): 
 		if (resolved) return resolved;
 	}
 
-	const fallbackVariant = LANE_VARIANT_OVERRIDES[lane.id];
-	if (fallbackVariant) {
-		const resolved = asRunnerSpriteId(spriteThemeSpriteId(fallbackVariant, spriteTheme));
-		if (resolved) return resolved;
+	if (!actorVariantId) {
+		const fallbackVariant = LANE_VARIANT_OVERRIDES[lane.id];
+		if (fallbackVariant) {
+			const resolved = asRunnerSpriteId(spriteThemeSpriteId(fallbackVariant, spriteTheme));
+			if (resolved) return resolved;
+		}
+		const hashed = BATTLE_RUNNER_SPRITE_IDS[hashLaneId(lane.id) % BATTLE_RUNNER_SPRITE_IDS.length];
+		return asRunnerSpriteId(spriteThemeSpriteId(hashed, spriteTheme)) ?? hashed;
 	}
 
-	const hashed = BATTLE_RUNNER_SPRITE_IDS[hashLaneId(lane.id) % BATTLE_RUNNER_SPRITE_IDS.length];
-	return asRunnerSpriteId(spriteThemeSpriteId(hashed, spriteTheme)) ?? hashed;
+	return BATTLE_RUNNER_SPRITE_IDS[0];
 }
 
 /** @deprecated use spriteIdForLane */

@@ -62,6 +62,7 @@ export function buildRaceEngineInput(args: {
 	onSelectLane(id: string): void;
 	onSelectEvent(id: string): void;
 	onEffectCue?: BattleRaceEngineInput["onEffectCue"];
+	activeReceiptBeat?: BattleRaceEngineInput["activeReceiptBeat"];
 	fixture?: BattleNormalizedUxFixture;
 }): BattleRaceEngineInput {
 	const fixture = args.fixture ?? activeBattleFixture();
@@ -77,6 +78,7 @@ export function buildRaceEngineInput(args: {
 		onSelectLane: args.onSelectLane,
 		onSelectEvent: args.onSelectEvent,
 		onEffectCue: args.onEffectCue,
+		activeReceiptBeat: args.activeReceiptBeat ?? null,
 		testMode,
 	};
 }

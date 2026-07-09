@@ -337,8 +337,6 @@ def arena_tau_public_only_proof(
     )
     import json as _json
 
-    if result.get("status") != "FAIL":
-        result["ux_transport_artifacts"] = _write_ux_transport_artifacts(out=out, battle_id=battle_id)
     print(_json.dumps(result, indent=2, sort_keys=True))
     if result.get("status") == "FAIL":
         raise typer.Exit(1)
@@ -399,6 +397,63 @@ def arena_parent_spawn_proof(
     )
     if result.get("status") != "FAIL":
         result["ux_transport_artifacts"] = _write_ux_transport_artifacts(out=out, battle_id=battle_id)
+    print(_json.dumps(result, indent=2, sort_keys=True))
+    if result.get("status") == "FAIL":
+        raise typer.Exit(1)
+
+
+@app.command("arena-prekill-survival-proof")
+def arena_prekill_survival_proof(
+    battle_id: str = typer.Argument("battle-004", help="Canonical Battle ID for the pre-kill survival proof."),
+    out: Path = typer.Option(..., help="Artifact output directory."),
+    query: str = typer.Option(
+        "OWASP file upload zip slip path traversal vulnerability",
+        help="Brave Search query for canonical BATTLE-004 scenario selection.",
+    ),
+    docker_image: str = typer.Option(
+        "python:3.12-slim",
+        help="Docker image used for Arena hidden oracle and Judge replay.",
+    ),
+    model: str = typer.Option(
+        "gpt-5.5",
+        help="Model Tau should request through its Scillm handoff bridge.",
+    ),
+    scillm_base_url: str = typer.Option(
+        "http://localhost:4001",
+        help="Scillm base URL used by Tau, not directly by Battle.",
+    ),
+    timeout_s: float = typer.Option(
+        1200.0,
+        help="Resolved round time in seconds. BATTLE-004 defaults to 1200s; pass an override for dev smoke runs.",
+    ),
+    red_workers: int = typer.Option(
+        2,
+        help="Requested Red worker count. Pre-kill survival requires at least one parent and one child lane.",
+    ),
+    blue_workers: int = typer.Option(
+        2,
+        help="Requested Blue Tau worker count.",
+    ),
+):
+    """Run canonical BATTLE-004 Tau proof for pre-kill child survival lifecycle semantics."""
+    from .arena_live_battle_proof import run_arena_prekill_survival_proof
+
+    import datetime as _dt
+    import json as _json
+
+    run_id = f"arena-prekill-survival-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    result = run_arena_prekill_survival_proof(
+        out_dir=out,
+        battle_id=battle_id,
+        run_id=run_id,
+        query=query,
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+        red_workers=red_workers,
+        blue_workers=blue_workers,
+    )
     print(_json.dumps(result, indent=2, sort_keys=True))
     if result.get("status") == "FAIL":
         raise typer.Exit(1)

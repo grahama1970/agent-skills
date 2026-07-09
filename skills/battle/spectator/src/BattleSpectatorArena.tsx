@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Toaster, toast } from "sonner";
 import { Button } from "./ui/button";
@@ -9,14 +9,18 @@ import { battleBluePatchActionsForView, battleEventsForView, battleLanesForView,
 import { replayTickerEventsForPlayhead } from "./lib/battle-replay-cues";
 import { battleTimelineDomain } from "./lib/battle-timeline-domain";
 import type { BattleEffectCue } from "./lib/battle-types";
+import { collectReceiptBeats, receiptBeatsVisibleAtPlayhead, type ReceiptBeat } from "./lib/battle-receipt-beats";
 import { isBattleDesignView, mockupDefaultSelectedLaneId } from "./lib/battle-mockup-lanes";
 import { isBattleReceiptReplayView } from "./lib/battle-receipt-replay";
+import { battleHungerGamesDeathDemoFromUrl } from "./lib/is-battle-hg-death-demo";
 import { useReceiptReplayFixture } from "./hooks/useReceiptReplayFixture";
 import { BATTLE_MOCKUP_AGENT_PANE_PX, BATTLE_MOCKUP_FOOTER_PX, BATTLE_MOCKUP_LEFT_RAIL_PX, BATTLE_MOCKUP_LEGEND_PX } from "./lib/layout-constants";
 import { BattleMockupFooter } from "./BattleMockupFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
 import { BattleHeader } from "./BattleHeader";
+import { BattleHungerGamesDeathAnnouncement } from "./BattleHungerGamesDeathAnnouncement";
+import { hungerGamesDeathCard, type HungerGamesDeathCard } from "./lib/battle-hunger-games-notifications";
 import { RaceViewport } from "./RaceViewport";
 import { SpectatorRail } from "./SpectatorRail";
 import { AgentDetailPane } from "./AgentDetailPane";
@@ -58,20 +62,69 @@ export function BattleSpectatorArena() {
   const [filter, setFilter] = useState<BattleFilter>("all");
   const [jsonlOpen, setJsonlOpen] = useState(false);
   const [playheadSeconds, setPlayheadSeconds] = useState(0);
+  const [deathAnnouncement, setDeathAnnouncement] = useState<HungerGamesDeathCard | null>(null);
+  const [highlightReel, setHighlightReel] = useState(false);
+  const [highlightJumpToken, setHighlightJumpToken] = useState(0);
+  const deathBeatRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!typedReceiptFixture) return;
     setPlayheadSeconds(battleTimelineDomain(typedReceiptFixture, false).currentSeconds);
   }, [typedReceiptFixture]);
+
+  useEffect(() => {
+    if (!receiptReplay || !receiptReady || !battleHungerGamesDeathDemoFromUrl()) return;
+    const lane = initialLanes.find((item) => item.team === "red") ?? initialLanes[0];
+    if (!lane) return;
+    setDeathAnnouncement(hungerGamesDeathCard(lane, typedReceiptFixture ?? undefined));
+  }, [initialLanes, receiptReady, receiptReplay, typedReceiptFixture]);
   const { enabled, arm, play } = useBattleSound();
 
-  const selectedLane = useMemo(() => initialLanes.find((lane) => lane.id === selectedId) ?? initialLanes[0], [selectedId]);
+  const selectedLane = useMemo(
+    () => initialLanes.find((lane) => lane.id === selectedId) ?? initialLanes[0] ?? null,
+    [initialLanes, selectedId],
+  );
+
+  useEffect(() => {
+    if (!initialLanes.length) return;
+    const exists = initialLanes.some((lane) => lane.id === selectedId);
+    if (exists) return;
+    const firstReplayLane = initialLanes.find((lane) => lane.replay)?.id;
+    setSelectedId(firstReplayLane ?? initialLanes[0]?.id ?? "");
+  }, [initialLanes, selectedId]);
 
   function playCue(cue: string) {
     if (!cue || cue === "none") return;
     arm();
     play(cue as never);
   }
+
+  const receiptBeats = useMemo(
+    () => (receiptReplay && typedReceiptFixture ? collectReceiptBeats(typedReceiptFixture, initialLanes) : []),
+    [initialLanes, receiptReplay, typedReceiptFixture],
+  );
+
+  useEffect(() => {
+    if (!receiptReplay || !typedReceiptFixture) return;
+    const beat = receiptBeatsVisibleAtPlayhead(receiptBeats, playheadSeconds, 1).at(-1) ?? null;
+    const showDeath = Boolean(beat?.react.deathCard && playheadSeconds + 0.05 >= beat.atSeconds);
+    if (!showDeath) {
+      if (deathBeatRef.current !== null) {
+        deathBeatRef.current = null;
+        setDeathAnnouncement(null);
+      }
+      return;
+    }
+    if (deathBeatRef.current === beat!.id) return;
+    deathBeatRef.current = beat!.id;
+    const lane = initialLanes.find((item) => item.id === beat!.laneId);
+    if (!lane) return;
+    setDeathAnnouncement(hungerGamesDeathCard(lane, typedReceiptFixture));
+  }, [initialLanes, playheadSeconds, receiptBeats, receiptReplay, typedReceiptFixture]);
+
+  const handleReceiptBeat = useCallback((beat: ReceiptBeat) => {
+    if (beat.react.soundCue && beat.react.soundCue !== "none") playCue(beat.react.soundCue);
+  }, []);
 
   const handleReplayCue = useCallback((cue: BattleEffectCue) => {
     if (cue.soundCue && cue.soundCue !== "none") playCue(cue.soundCue);
@@ -123,7 +176,7 @@ export function BattleSpectatorArena() {
             : undefined
         }
       >
-        <BattleHeader receiptFixture={typedReceiptFixture} events={tickerEvents} onTestSound={playCue} onSelectActor={selectActor} onOpenJsonl={() => setJsonlOpen(true)} />
+        <BattleHeader receiptFixture={typedReceiptFixture} events={tickerEvents} onTestSound={playCue} onSelectActor={selectActor} onOpenJsonl={() => setJsonlOpen(true)} deathAnnouncement={deathAnnouncement} onDismissDeathAnnouncement={() => setDeathAnnouncement(null)} />
 
         <div
           className={cn(
@@ -142,14 +195,14 @@ export function BattleSpectatorArena() {
           }
         >
           <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
-          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onPlayheadSeconds={setPlayheadSeconds} />
+          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={setPlayheadSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           {selectedLane ? <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} /> : null}
         </div>
 
         {mockupShell ? (
           <>
             <BattleMockupLegend />
-            <BattleMockupFooter playing={playing} setPlaying={setPlaying} speed={speed} setSpeed={setSpeed} filter={filter} setFilter={setFilter} enabled={enabled} arm={arm} />
+            <BattleMockupFooter playing={playing} setPlaying={setPlaying} speed={speed} setSpeed={setSpeed} filter={filter} setFilter={setFilter} enabled={enabled} arm={arm} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} onJumpToNextHighlight={() => setHighlightJumpToken((value) => value + 1)} />
           </>
         ) : (
           <>
@@ -159,6 +212,8 @@ export function BattleSpectatorArena() {
             <Button data-qid="battle:control:playhead" data-qs-action="BATTLE_REPLAY_PLAYHEAD_TOGGLE" title={playing ? "Pause receipt replay playhead" : "Play receipt replay playhead"} variant={playing ? "green" : "outline"} size="icon" className="min-h-11 min-w-11" onClick={() => setPlaying((value) => !value)}>
               {playing ? <Icons.Pause className="h-4 w-4" /> : <Icons.Play className="h-4 w-4" />}
             </Button>
+            <Button data-qid="battle:control:highlight-next" data-qs-action="BATTLE_HIGHLIGHT_NEXT" title="Jump playhead to next receipt-backed highlight" variant="outline" size="sm" className="min-h-11" onClick={() => setHighlightJumpToken((value) => value + 1)}>Next highlight</Button>
+            <Button data-qid="battle:control:highlight-reel" data-qs-action="BATTLE_HIGHLIGHT_REEL_TOGGLE" title={highlightReel ? "Disable highlight-reel transport" : "Play highlight reel (jump between proven terminal beats)"} variant={highlightReel ? "green" : "outline"} size="sm" className="min-h-11" onClick={() => setHighlightReel((value) => !value)}>{highlightReel ? "Highlights on" : "Highlights"}</Button>
             <span className="battle-label mr-2 hidden sm:inline">Spectator mode</span><Button data-qid="battle:control:sound-arm" data-qs-action="BATTLE_SOUND_ARM" title="Arm sound for receipt-backed events with explicit cues" variant="outline" size="sm" className="min-h-11" onClick={arm}>
               <Icons.Eye className="h-4 w-4" /> Spectator mode <span className={enabled ? "text-battle-green" : "text-slate-500"}>{enabled ? "LIVE" : "click to arm"}</span>
             </Button>

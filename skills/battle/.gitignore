@@ -24,3 +24,4 @@ monitor/**/test-results/
 
 spectator/node_modules/
 spectator/dist/
+docs/assets/screenshots/raw/

@@ -20,13 +20,23 @@ import {
 } from "../lib/battle-elapsed-axis";
 import { staticTracksSignature } from "./battle-pixi-scene-signature";
 import {
+	KILL_SHOT_IMPACT_SECONDS,
+	KILL_SHOT_TRAVEL_SECONDS,
 	createKillShotLayer,
 	killShotVisualForEvent,
 	syncKillShots,
+	resolveKillShotImpact,
 	teardownKillShotLayer,
 	type KillShotLayer,
 	type KillShotVisual,
 } from "./battle-pixi-kill-shot";
+import { createPixiLineageLayer, syncPixiLineage, teardownPixiLineageLayer, type PixiLineageLayer } from "./battle-pixi-lineage";
+import {
+	createBeatVfxLayer,
+	syncBeatEmphasisVfx,
+	teardownBeatVfxLayer,
+	type BeatVfxLayer,
+} from "./battle-pixi-beat-vfx";
 
 export type RunnerActor = {
 	sprite: AnimatedSprite;
@@ -39,7 +49,9 @@ export type BattlePixiSceneLayers = {
 	tracksStatic: Graphics;
 	tracksPlayhead: Graphics;
 	markers: Container;
+	lineage: PixiLineageLayer;
 	killShots: KillShotLayer;
+	beatVfx: BeatVfxLayer;
 	runners: Container;
 	markerPool: Sprite[];
 };
@@ -72,14 +84,18 @@ export function createBattlePixiSceneLayers(): BattlePixiSceneRuntime {
 	configureBattleSceneLayer(tracksStatic, { label: "battle-tracks-static", cullable: true });
 	configureBattleSceneLayer(tracksPlayhead, { label: "battle-tracks-playhead", cullable: true });
 	const markers = configureBattleSceneLayer(new Container(), { label: "battle-markers", cullable: true });
+	const lineage = createPixiLineageLayer();
 	const killShots = createKillShotLayer();
+	const beatVfx = createBeatVfxLayer();
 	const runners = configureBattleSceneLayer(new Container(), { label: "battle-runners", cullable: true });
 	world.addChild(tracksStatic);
 	world.addChild(tracksPlayhead);
 	world.addChild(markers);
+	world.addChild(lineage.container);
 	world.addChild(killShots.container);
+	world.addChild(beatVfx.container);
 	world.addChild(runners);
-	return { world, tracksStatic, tracksPlayhead, markers, killShots, runners, markerPool: [], tracksSignature: "" };
+	return { world, tracksStatic, tracksPlayhead, markers, lineage, killShots, beatVfx, runners, markerPool: [], tracksSignature: "" };
 }
 
 function drawDashedSegment(graphics: Graphics, x0: number, x1: number, y: number, dash = 8, gap = 6) {
@@ -261,7 +277,15 @@ function upsertRunnerActor(args: {
 		actor.animation = animation;
 	}
 	sprite.animationSpeed = animationSpeedFor(animation);
-	if (!sprite.playing) sprite.play();
+	if (animation === "killed" || animation === "hit") {
+		if (!sprite.playing && sprite.currentFrame >= Math.max(0, textures.length - 1)) {
+			sprite.gotoAndStop(Math.max(0, textures.length - 1));
+		} else if (!sprite.playing) {
+			sprite.gotoAndPlay(0);
+		}
+	} else if (!sprite.playing) {
+		sprite.play();
+	}
 	sprite.x = x;
 	sprite.y = y;
 	sprite.scale.set(scale);
@@ -296,14 +320,13 @@ function activeKillShotForLane(args: {
 	return active;
 }
 
-function runnerAnimationForKillShotImpact(
+function runnerAnimationForKillShot(
 	lane: Lane,
 	rowY: number,
 	currentSeconds: number,
 	allottedSeconds: number,
 	contentWidth: number,
 	useElapsed: boolean,
-	receiptSafe: boolean,
 	allowEvent: (event: LaneEvent) => boolean,
 ): BattleRunnerAnimation | null {
 	const killShot = activeKillShotForLane({
@@ -315,10 +338,82 @@ function runnerAnimationForKillShotImpact(
 		useElapsed,
 		allowEvent,
 	});
-	if (!killShot || killShot.phase !== "impact") return null;
-	if (killShot.impactKind === "killed") return "killed";
-	if (killShot.impactKind === "blocked") return "blocked";
+	if (killShot?.phase === "travel") {
+		return lane.parentId ? "walk" : "run";
+	}
+	if (killShot?.phase === "impact") {
+		if (killShot.impactKind === "killed") return "killed";
+		if (killShot.impactKind === "blocked") return "blocked";
+	}
+
+	for (const event of lane.events) {
+		if (event.kind !== "blue_blast" || !event.proven || !allowEvent(event)) continue;
+		const blastSeconds = eventElapsedSeconds(event, allottedSeconds, useElapsed);
+		const travelEnd = blastSeconds + KILL_SHOT_TRAVEL_SECONDS;
+		if (currentSeconds < travelEnd) continue;
+		const impactKind = resolveKillShotImpact(lane, event, allottedSeconds, useElapsed);
+		if (impactKind !== "killed" && impactKind !== "blocked") continue;
+		const terminalEvent = lane.events.find((item) => item.proven && (item.kind === "killed" || item.kind === "blocked"));
+		const terminalAt = terminalEvent
+			? eventElapsedSeconds(terminalEvent, allottedSeconds, useElapsed)
+			: travelEnd + KILL_SHOT_IMPACT_SECONDS;
+		if (currentSeconds <= terminalAt + 0.05) {
+			return impactKind === "killed" ? "killed" : "blocked";
+		}
+	}
 	return null;
+}
+
+export type BattlePixiReplayProbe = {
+	killShot: KillShotVisual | null;
+	runnerAnimations: Record<string, BattleRunnerAnimation>;
+};
+
+export function battlePixiReplayProbe(args: {
+	lanes: Lane[];
+	rowLayout: BattleRaceEngineRowLayout[];
+	fixture: BattleRaceEngineInput["fixture"];
+	mode: BattleRaceEngineInput["mode"];
+	currentSeconds: number;
+	allottedSeconds: number;
+	contentWidth: number;
+}): BattlePixiReplayProbe {
+	const { lanes, rowLayout, fixture, mode, currentSeconds, allottedSeconds, contentWidth } = args;
+	const validationGate = pixiReceiptValidationGate(fixture, mode);
+	const useElapsed = fixtureUsesElapsedAxis(fixture);
+	const allowEvent = (event: LaneEvent) => pixiAllowsTerminalEffect(event, validationGate, mode);
+	let killShot: KillShotVisual | null = null;
+	const runnerAnimations: Record<string, BattleRunnerAnimation> = {};
+
+	for (const lane of lanes) {
+		const row = rowLayout.find((item) => item.laneId === lane.id);
+		if (!row) continue;
+		const y = row.topPx + row.heightPx / 2;
+		const shot = activeKillShotForLane({
+			lane,
+			rowY: y,
+			currentSeconds,
+			allottedSeconds,
+			contentWidth,
+			useElapsed,
+			allowEvent,
+		});
+		if (shot) killShot = shot;
+		const killAnimation = runnerAnimationForKillShot(
+			lane,
+			y,
+			currentSeconds,
+			allottedSeconds,
+			contentWidth,
+			useElapsed,
+			allowEvent,
+		);
+		const animation =
+			killAnimation ??
+			runnerAnimationWithReceiptGate(lane, currentSeconds, allottedSeconds, validationGate.receiptSafe, useElapsed);
+		runnerAnimations[lane.id] = animation;
+	}
+	return { killShot, runnerAnimations };
 }
 
 function syncEntities(
@@ -330,7 +425,9 @@ function syncEntities(
 	input: BattleRaceEngineInput,
 	contentWidth: number,
 	allottedSeconds: number,
-) {
+	tickerDeltaRatio = 1,
+	collapsedParentIds: Set<string> = new Set(),
+): { burstFrameIndex: number | null; beatVfx: import("./battle-pixi-beat-vfx").BeatVfxKind } {
 	const currentSeconds = input.testMode?.freezeTime ? input.testMode.currentSeconds : input.viewport.currentSeconds;
 	const disableParticles = input.testMode?.disableParticles ?? false;
 	const validationGate = pixiReceiptValidationGate(input.fixture, input.mode);
@@ -390,7 +487,18 @@ function syncEntities(
 		const variantId = spriteIdForLane(lane, spriteTheme);
 		const sheet = runnerSpritesheet(variantId);
 		if (!sheet) continue;
-		const animation = runnerAnimationWithReceiptGate(lane, currentSeconds, allottedSeconds, validationGate.receiptSafe, useElapsed);
+		const killShotAnimation = runnerAnimationForKillShot(
+			lane,
+			y,
+			currentSeconds,
+			allottedSeconds,
+			contentWidth,
+			useElapsed,
+			(event) => pixiAllowsTerminalEffect(event, validationGate, input.mode),
+		);
+		const animation =
+			killShotAnimation ??
+			runnerAnimationWithReceiptGate(lane, currentSeconds, allottedSeconds, validationGate.receiptSafe, useElapsed);
 		const activeSegment = activitySegmentAtPlayhead(lane, currentSeconds, allottedSeconds, useElapsed);
 		const runnerAlpha = activeSegment && isProvisionalSegment(activeSegment) ? 0.62 : 1;
 		upsertRunnerActor({
@@ -409,7 +517,29 @@ function syncEntities(
 
 	hideUnusedMarkers(layers.markerPool, markerWriteIndex);
 
-	syncKillShots({
+	syncPixiLineage({
+		layer: layers.lineage,
+		lanes,
+		rowLayout,
+		collapsedParentIds,
+		allottedSeconds,
+		contentWidth,
+		useElapsed,
+	});
+
+	const beatVfxResult = syncBeatEmphasisVfx({
+		layer: layers.beatVfx,
+		markerAtlas,
+		lanes,
+		rowLayout,
+		activeBeat: input.activeReceiptBeat,
+		currentSeconds,
+		allottedSeconds,
+		contentWidth,
+		useElapsed,
+	});
+
+	const killShotResult = syncKillShots({
 		layer: layers.killShots,
 		markerAtlas,
 		lanes,
@@ -418,9 +548,11 @@ function syncEntities(
 		allottedSeconds,
 		contentWidth,
 		useElapsed,
-		disableParticles,
 		allowEvent: (event) => pixiAllowsTerminalEffect(event, validationGate, input.mode),
+		tickerDeltaRatio,
 	});
+
+	return { burstFrameIndex: killShotResult.burstFrameIndex, beatVfx: beatVfxResult.vfx };
 }
 
 export function renderBattlePixiScene(args: {
@@ -435,8 +567,10 @@ export function renderBattlePixiScene(args: {
 	viewportScreenWidth: number;
 	viewportScreenHeight: number;
 	viewportScrollX: number;
-}): void {
-	const { layers, runnerMap, markerAtlas, lanes, rowLayout, input, contentWidth, allottedSeconds, viewportScreenWidth, viewportScreenHeight, viewportScrollX } = args;
+	tickerDeltaRatio?: number;
+	collapsedParentIds?: Set<string>;
+}): { burstFrameIndex: number | null; beatVfx: import("./battle-pixi-beat-vfx").BeatVfxKind } {
+	const { layers, runnerMap, markerAtlas, lanes, rowLayout, input, contentWidth, allottedSeconds, viewportScreenWidth, viewportScreenHeight, viewportScrollX, tickerDeltaRatio = 1, collapsedParentIds = new Set() } = args;
 	const currentSeconds = input.testMode?.freezeTime ? input.testMode.currentSeconds : input.viewport.currentSeconds;
 	const useElapsed = fixtureUsesElapsedAxis(input.fixture);
 	const nextSignature = staticTracksSignature(lanes, rowLayout, allottedSeconds, contentWidth, useElapsed);
@@ -447,8 +581,9 @@ export function renderBattlePixiScene(args: {
 		layers.tracksSignature = nextSignature;
 	}
 	drawPlayheadTracks(layers.tracksPlayhead, lanes, rowLayout, allottedSeconds, contentWidth, currentSeconds, useElapsed);
-	syncEntities(layers, runnerMap, markerAtlas, lanes, rowLayout, input, contentWidth, allottedSeconds);
+	const syncResult = syncEntities(layers, runnerMap, markerAtlas, lanes, rowLayout, input, contentWidth, allottedSeconds, tickerDeltaRatio, collapsedParentIds);
 	updateWorldCullArea(layers.world, viewportScreenWidth, viewportScreenHeight, viewportScrollX);
+	return syncResult;
 }
 
 export function destroyMarkerPool(pool: Sprite[]) {
@@ -468,5 +603,7 @@ export function destroyRunnerActors(runners: Map<string, RunnerActor>) {
 export function teardownBattlePixiSceneLayers(layers: BattlePixiSceneRuntime): void {
 	layers.tracksStatic.cacheAsTexture(false);
 	destroyMarkerPool(layers.markerPool);
+	teardownPixiLineageLayer(layers.lineage);
 	teardownKillShotLayer(layers.killShots);
+	teardownBeatVfxLayer(layers.beatVfx);
 }

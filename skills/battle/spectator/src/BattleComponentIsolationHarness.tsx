@@ -23,6 +23,8 @@ import {
 } from "./lib/mockup-design-fixture";
 import { battleEvents, bluePatchActions } from "./lib/battle-data";
 import { layoutLaneEvents } from "./lib/layout-lane-events";
+import { BattleHungerGamesDeathAnnouncement } from "./BattleHungerGamesDeathAnnouncement";
+import { hungerGamesDeathCard } from "./lib/battle-hunger-games-notifications";
 
 const ALLOTTED = mockupAllottedSeconds();
 const SAMPLE_LANE = mockupDesignLanes.find((lane) => lane.id === "payload-857-A") ?? mockupDesignLanes[0];
@@ -73,6 +75,23 @@ function TimelineShell({ children, width = 1100 }: { children: ReactNode; width?
     <BattleTimelineProvider allottedSeconds={ALLOTTED}>
       <TimelineCanvas width={width}>{children}</TimelineCanvas>
     </BattleTimelineProvider>
+  );
+}
+
+
+function HungerGamesDeathNotificationIsolation() {
+  const card = hungerGamesDeathCard(SAMPLE_LANE);
+  return (
+    <IsolationPanel id="hunger-games-death-notification" title="Hunger Games Death Notification (LIVE EVENTS)">
+      <div className="max-w-[420px]">
+        <div className="battle-live-events has-death-announcement">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+            <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> LIVE EVENTS
+          </div>
+          <BattleHungerGamesDeathAnnouncement card={card} onDismiss={() => undefined} durationMs={60_000} />
+        </div>
+      </div>
+    </IsolationPanel>
   );
 }
 
@@ -281,6 +300,7 @@ export function BattleComponentIsolationHarness() {
       </header>
       <div className="grid gap-4 xl:grid-cols-2">
         <HeaderIsolation />
+        <HungerGamesDeathNotificationIsolation />
         <SpectatorRailIsolation />
         <AgentDetailIsolation />
         <ToolbarIsolation />

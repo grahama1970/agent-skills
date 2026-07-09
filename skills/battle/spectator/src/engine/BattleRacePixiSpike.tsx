@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Application } from "pixi.js";
+import { Application, type Ticker } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import type { BattleRaceEngineInput, BattleRaceEngineRowLayout, Lane } from "../lib/battle-types";
-import { battleRaceAtlasTextures, loadBattleRaceAtlas, unloadBattleRaceAtlas } from "./battle-race-atlas";
-import { loadBattleRunnerSprites, unloadBattleRunnerSprites } from "./battle-runner-sprites";
+import { battleRaceAtlasTextures, loadBattleRaceAtlas } from "./battle-race-atlas";
+import { loadBattleRunnerSprites } from "./battle-runner-sprites";
 import { spriteIdForLane } from "./battle-lane-variant-map";
 import { PixiHitTargetMirrors } from "./PixiHitTargetMirrors";
 import { pixiReceiptValidationGate } from "./battle-pixi-validation";
@@ -16,6 +16,7 @@ import {
 	unbindBattlePixiTicker,
 } from "./battle-pixi-game-mechanics";
 import {
+	battlePixiReplayProbe,
 	createBattlePixiSceneLayers,
 	destroyRunnerActors,
 	renderBattlePixiScene,
@@ -34,6 +35,7 @@ type Props = {
 	onScrollLeftChange?: (scrollLeft: number) => void;
 	heightPx: number;
 	playing?: boolean;
+	collapsedParentIds?: Set<string>;
 };
 
 type PixiRaceRuntime = {
@@ -67,8 +69,10 @@ export function BattleRacePixiSpike({
 	onScrollLeftChange,
 	heightPx,
 	playing = false,
+	collapsedParentIds = new Set(),
 }: Props) {
 	const hostRef = useRef<HTMLDivElement>(null);
+	const stageHostRef = useRef<HTMLDivElement>(null);
 	const runtimeRef = useRef<PixiRaceRuntime | null>(null);
 	const runnersRef = useRef<Map<string, RunnerActor>>(new Map());
 	const syncingRef = useRef(false);
@@ -83,11 +87,13 @@ export function BattleRacePixiSpike({
 		playing,
 	});
 	const tickerBindingRef = useRef({
-		tick: () => {
+		tick: (ticker: Ticker) => {
 			const runtime = runtimeRef.current;
 			const state = frameStateRef.current;
 			if (!runtime || !state.markerAtlas || !atlasReadyRef.current) return;
-			renderBattlePixiScene({
+			const tickerDeltaRatio = ticker.deltaTime / (1000 / 60);
+			let beatVfx: string = "none";
+			const syncResult = renderBattlePixiScene({
 				layers: runtime.scene,
 				runnerMap: runnersRef.current,
 				markerAtlas: state.markerAtlas,
@@ -99,7 +105,50 @@ export function BattleRacePixiSpike({
 				viewportScreenWidth: Math.max(1, runtime.viewport.screenWidth),
 				viewportScreenHeight: Math.max(1, runtime.viewport.screenHeight),
 				viewportScrollX: Math.max(0, -runtime.viewport.position.x),
+				tickerDeltaRatio,
+				collapsedParentIds,
 			});
+			beatVfx = syncResult.beatVfx;
+			const probe = battlePixiReplayProbe({
+				lanes: state.lanes,
+				rowLayout: state.rowLayout,
+				fixture: state.input.fixture,
+				mode: state.input.mode,
+				currentSeconds: state.input.viewport.currentSeconds,
+				allottedSeconds: state.allottedSeconds,
+				contentWidth: state.contentWidth,
+			});
+			const stageHost = stageHostRef.current;
+			if (stageHost) {
+				if (probe.killShot) {
+					stageHost.dataset.battleKillShotPhase = probe.killShot.phase;
+					stageHost.dataset.battleKillShotImpact = probe.killShot.impactKind;
+					stageHost.dataset.battleKillShotLane = probe.killShot.laneId;
+					stageHost.dataset.battleKillShotProgress = String(Math.round(probe.killShot.progress * 100));
+					if (syncResult.burstFrameIndex != null) {
+						stageHost.dataset.battleKillShotBurstFrame = String(syncResult.burstFrameIndex);
+					} else {
+						delete stageHost.dataset.battleKillShotBurstFrame;
+					}
+				} else {
+					delete stageHost.dataset.battleKillShotPhase;
+					delete stageHost.dataset.battleKillShotImpact;
+					delete stageHost.dataset.battleKillShotLane;
+					delete stageHost.dataset.battleKillShotProgress;
+				}
+				stageHost.dataset.battleRunnerAnimations = JSON.stringify(probe.runnerAnimations);
+				if (state.input.activeReceiptBeat) {
+					stageHost.dataset.battleReceiptBeatId = state.input.activeReceiptBeat.id;
+					stageHost.dataset.battleReceiptBeatKind = state.input.activeReceiptBeat.kind;
+					stageHost.dataset.battleReceiptBeatEmphasis = state.input.activeReceiptBeat.pixi.emphasis;
+					stageHost.dataset.battleReceiptBeatVfx = beatVfx;
+				} else {
+					delete stageHost.dataset.battleReceiptBeatId;
+					delete stageHost.dataset.battleReceiptBeatKind;
+					delete stageHost.dataset.battleReceiptBeatEmphasis;
+					delete stageHost.dataset.battleReceiptBeatVfx;
+				}
+			}
 		},
 	});
 
@@ -193,7 +242,7 @@ export function BattleRacePixiSpike({
 			syncingRef.current = true;
 			viewport.position.x = -scrollLeft;
 			syncingRef.current = false;
-			tickerBindingRef.current.tick();
+			tickerBindingRef.current.tick(runtime.app.ticker);
 		};
 
 		void mount();
@@ -212,8 +261,6 @@ export function BattleRacePixiSpike({
 				runtimeRef.current = null;
 			}
 			host.replaceChildren();
-			void unloadBattleRaceAtlas();
-			void unloadBattleRunnerSprites();
 		};
 	}, [contentWidth, onScrollLeftChange, scrollLeft, spriteIds, totalHeight]);
 
@@ -230,7 +277,7 @@ export function BattleRacePixiSpike({
 	}, [scrollLeft]);
 
 	return (
-		<div className="battleRaceStageHost" style={{ height: heightPx }} data-battle-pixi-engine="animated-sprites" data-battle-viewport-seconds={input.viewport.currentSeconds}>
+		<div ref={stageHostRef} className="battleRaceStageHost" style={{ height: heightPx }} data-battle-pixi-engine="animated-sprites" data-battle-viewport-seconds={input.viewport.currentSeconds} data-qid="battle:pixi:stage">
 			{validationGate.warning ? (
 				<div className="battlePixiValidationWarning" role="status" data-qid="battle:pixi:validation-warning">
 					{validationGate.warning}

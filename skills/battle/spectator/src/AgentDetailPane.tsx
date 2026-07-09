@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import type { BattleEvent, BattleReceiptRef, BattleReplayRef, BlueFinisherState, Lane, ProofMode } from "./lib/battle-types";
+import { laneLifecycleEvidenceView } from "./lib/battle-lane-lifecycle-evidence";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { MockupAgentDetailPane } from "./MockupAgentDetailPane";
@@ -25,6 +26,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
   useRegisterAction("battle:agent-pane:tab:receipts", { action: "BATTLE_AGENT_PANE_TAB_RECEIPTS", label: "Show Battle Agent Receipts", description: "Show proof artifacts for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:proof:docker-replay", { action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Show Docker Replay Proof", description: "Show the receipt-backed Docker/Judge replay proof for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
 
+  const lifecycle = useMemo(() => laneLifecycleEvidenceView(lane), [lane]);
   const model = useMemo(() => buildModel(lane, events), [lane, events]);
   const replay = model.replay;
 
@@ -47,6 +49,8 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
         </header>
 
         {replay ? <ReplayPanel replay={replay} /> : <NoReplayPanel />}
+
+        <LifecycleEvidencePanel lifecycle={lifecycle} />
 
         <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="grid w-full grid-cols-5 rounded-none border-b border-white/10 bg-black/20">
@@ -80,6 +84,47 @@ function ReplayPanel({ replay }: { replay: BattleReplayRef }) {
       <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-400"><InfoLine label="red" value={replay.red_worker_id ?? "not emitted"} /><InfoLine label="blue" value={replay.blue_worker_id ?? "not emitted"} /></div>
       <Button data-qid={qid} data-qs-action="BATTLE_AGENT_PANE_DOCKER_REPLAY" title={replay.can_execute_now ? "Run Docker replay endpoint" : "Open receipt-backed Judge replay proof; this does not start live execution"} variant="green" className="mt-3 w-full min-h-11 justify-start text-left"><Play className="h-4 w-4" /> {replay.can_execute_now ? "RUN REPLAY IN DOCKER" : "OPEN REPLAY RECEIPT"}</Button>
     </section>
+  );
+}
+
+function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof laneLifecycleEvidenceView> }) {
+  const packet = lifecycle.knowledgePacket;
+  const promotion = lifecycle.memoryPromotion;
+  const network = lifecycle.networkSummary;
+  const calibration = lifecycle.scoreCalibration;
+  const parentAnalysis =
+    packet.present && packet.parent_analysis && Object.keys(packet.parent_analysis).length
+      ? "inherited parent analysis attached"
+      : "inherited parent analysis: not emitted";
+
+  return (
+    <section className="m-3 rounded-xl border border-white/10 bg-white/[.025] p-3" data-qid="battle:agent-pane:lifecycle-evidence">
+      <div className="battle-label">Lifecycle evidence</div>
+      <div className="mt-2 grid gap-2 text-xs">
+        <LifecycleLine field="knowledge_packet" value={packet.present ? `${packet.status}${packet.packet_id ? ` · ${packet.packet_id}` : ""}` : "not emitted"} />
+        <LifecycleLine field="child_ack" value={lifecycle.childAckLabel} />
+        <LifecycleLine field="inherited_parent_analysis" value={parentAnalysis} />
+        <LifecycleLine field="tau_branch_decision" value={lifecycle.tauBranchDecisionLabel} />
+        <LifecycleLine field="spawn_request" value={lifecycle.spawnRequestLabel} />
+        <LifecycleLine field="child_inherited_plan" value={lifecycle.childPlanLabel} />
+        <LifecycleLine field="child_inherited_probe" value={lifecycle.inheritedProbeLabel} />
+        <LifecycleLine field="memory_promotion" value={promotion.present ? `${promotion.durable_promoted ? "durable promoted" : "not promoted"} · ${promotion.reason ?? "receipt evaluated"}` : "not emitted"} />
+        <LifecycleLine field="network_summary.available" value={network.available ? "true" : "false"} />
+        <LifecycleLine field="network_summary.full_packet_capture_proven" value={network.full_packet_capture_proven ? "true" : "false"} />
+        <LifecycleLine field="network_summary.reason" value={network.reason ?? "not emitted"} />
+        <LifecycleLine field="packet capture" value={lifecycle.packetCaptureLabel} />
+        <LifecycleLine field="score_calibration" value={calibration ? (calibration.outcome_class ?? "receipt-backed calibration attached") : "not emitted"} />
+      </div>
+    </section>
+  );
+}
+
+function LifecycleLine({ field, value }: { field: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded border border-white/10 bg-black/20 px-2 py-1" data-battle-lifecycle-field={field}>
+      <span className="battle-label mr-1">{field}</span>
+      <span className="font-mono text-slate-300">{value}</span>
+    </div>
   );
 }
 
@@ -195,6 +240,19 @@ type AgentPaneModel = {
   replay?: BattleReplayRef | null;
 };
 
+function terminalStatusLabel(lane: Lane): string {
+  const semantics = lane.score_semantics ?? lane.cockpit?.score_semantics;
+  const blueOutcome = lane.cockpit?.blue_outcome;
+  if (semantics?.terminal_state && semantics.proof_mode === "receipt_backed_fixture") {
+    return `${semantics.outcome_tier ?? semantics.outcome_class ?? semantics.terminal_state} · receipt-backed`;
+  }
+  if (blueOutcome?.proof_mode === "receipt_backed_fixture" && blueOutcome.status) {
+    return `${blueOutcome.status} · receipt-backed`;
+  }
+  if (lane.terminal === "none") return "no receipt-backed terminal emitted";
+  return `${lane.terminal} · awaiting receipt proof`;
+}
+
 function buildModel(lane: Lane, events: BattleEvent[]): AgentPaneModel {
   const relatedEvents = events.filter((event) => isRelatedEvent(event, lane));
   const primary = relatedEvents.find((event) => event.event_type === "blue.blocked_red") ?? relatedEvents.find((event) => event.event_type === "judge.verdict") ?? relatedEvents.find((event) => event.turn) ?? relatedEvents[0];
@@ -210,7 +268,7 @@ function buildModel(lane: Lane, events: BattleEvent[]): AgentPaneModel {
     turnId: latestTurn?.tau_turn_id || replay?.pair_id || "judge replay",
     loopIndex: latestTurn?.turn?.loop_index ?? 0,
     phase: latestTurn?.turn?.phase || primary?.event_type || "not emitted",
-    status: lane.terminal === "blocked" ? "BLOCKED BY BLUE / BLUE_SUCCESS" : "RECEIPT-BACKED LANE",
+    status: terminalStatusLabel(lane),
     currentAction: latestTurn?.turn?.current_action || primary?.summary || "not emitted",
     trace: { observation: traceSource?.observation, hypothesis: traceSource?.hypothesis, action: traceSource?.action, result: traceSource?.result, learned: traceSource?.learned, next_move: traceSource?.next_move },
     stdout: latestNonEmpty([primary?.output?.stdout_excerpt, ...(lane.stdout ?? [])]) || "not emitted",

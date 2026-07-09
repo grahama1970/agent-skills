@@ -152,7 +152,8 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
         "relative grid min-h-[108px] border-b border-white/[.055] transition-colors",
         isSelected && "bg-battle-green/7 ring-1 ring-inset ring-battle-green/25",
         isActiveFinisherTarget && "bg-battle-blue/10",
-        isDimmed && "opacity-70"
+        isDimmed && "opacity-70",
+        hideTrack && "pixiTrackHidden"
       )}
     >
       <div
@@ -215,27 +216,31 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
           }
         }}
         data-lane-track
-        className="battle-track-grid relative block min-h-[108px] w-full cursor-pointer overflow-visible text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40"
+        className={cn("battle-track-grid relative block min-h-[108px] w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40", hideTrack ? "pointer-events-none" : "cursor-pointer overflow-visible")}
       >
-        <div className="battle-lane-band battle-lane-band-above pointer-events-none absolute inset-x-0 top-[14px] h-4">
-          {above.map((event) => (
-            <LaneEventLabel key={event.id} event={event} band="above" allottedSeconds={allottedSeconds} />
-          ))}
-        </div>
-        <div className="battle-lane-band battle-lane-band-center absolute inset-x-0 top-1/2 h-8 -translate-y-1/2">
-          <div className={cn("absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full", lineClass)} style={{ left: trackLeft, width: trackWidthPx }} />
-          {icons.map((event, index) => (
-            <LaneEventMarker key={event.id} event={event} laneId={lane.id} laneName={lane.name} index={index} allottedSeconds={allottedSeconds} onSelect={onSelect} />
-          ))}
-        </div>
-        <div className="battle-lane-band battle-lane-band-below pointer-events-none absolute inset-x-0 bottom-[14px] h-4">
-          {below.map((event) => (
-            <LaneEventLabel key={event.id} event={event} band="below" allottedSeconds={allottedSeconds} />
-          ))}
-        </div>
-        <div className={cn("absolute z-30 -translate-x-1/2", runnerCollides ? "top-[34%]" : "top-1/2 -translate-y-1/2")} style={{ left: leftPxFromLaneX(lane.runnerX) }}>
-          <RunnerHud state={lane.runnerState} verb={isSelected ? lane.runnerVerb : undefined} selected={isSelected} />
-        </div>
+        {!hideTrack ? (
+          <>
+            <div className="battle-lane-band battle-lane-band-above pointer-events-none absolute inset-x-0 top-[14px] h-4">
+              {above.map((event) => (
+                <LaneEventLabel key={event.id} event={event} band="above" allottedSeconds={allottedSeconds} />
+              ))}
+            </div>
+            <div className="battle-lane-band battle-lane-band-center absolute inset-x-0 top-1/2 h-8 -translate-y-1/2">
+              <div className={cn("absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full", lineClass)} style={{ left: trackLeft, width: trackWidthPx }} />
+              {icons.map((event, index) => (
+                <LaneEventMarker key={event.id} event={event} laneId={lane.id} laneName={lane.name} index={index} allottedSeconds={allottedSeconds} onSelect={onSelect} />
+              ))}
+            </div>
+            <div className="battle-lane-band battle-lane-band-below pointer-events-none absolute inset-x-0 bottom-[14px] h-4">
+              {below.map((event) => (
+                <LaneEventLabel key={event.id} event={event} band="below" allottedSeconds={allottedSeconds} />
+              ))}
+            </div>
+            <div className={cn("absolute z-30 -translate-x-1/2", runnerCollides ? "top-[34%]" : "top-1/2 -translate-y-1/2")} style={{ left: leftPxFromLaneX(lane.runnerX) }}>
+              <RunnerHud state={lane.runnerState} verb={isSelected ? lane.runnerVerb : undefined} selected={isSelected} />
+            </div>
+          </>
+        ) : null}
       </div>
     </motion.div>
   );

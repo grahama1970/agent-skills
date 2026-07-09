@@ -316,6 +316,261 @@ def test_arena_parent_spawn_proof_cli_uses_canonical_spawn_defaults(
     assert calls["run_id"].startswith("arena-parent-spawn-")
 
 
+def test_arena_prekill_survival_proof_cli_uses_prekill_defaults(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    calls: dict[str, Any] = {}
+
+    def fake_run_arena_prekill_survival_proof(**kwargs: Any) -> dict[str, Any]:
+        calls.update(kwargs)
+        return {
+            "status": "PASS",
+            "battle_id": kwargs["battle_id"],
+            "run_id": kwargs["run_id"],
+            "worker_counts": {
+                "red_requested": kwargs["red_workers"],
+                "blue_requested": kwargs["blue_workers"],
+                "red_prekill_survival_requested": True,
+            },
+            "prekill_survival_contract": {"status": "PASS"},
+        }
+
+    monkeypatch.setattr(proof, "run_arena_prekill_survival_proof", fake_run_arena_prekill_survival_proof)
+    monkeypatch.setattr(
+        battle_cli,
+        "_write_ux_transport_artifacts",
+        lambda *, out, battle_id: {"status": "PASS", "battle_id": battle_id, "out": str(out)},
+    )
+
+    result = CliRunner().invoke(
+        battle_cli.app,
+        [
+            "arena-prekill-survival-proof",
+            "--out",
+            str(tmp_path / "proof"),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert calls["battle_id"] == "battle-004"
+    assert str(calls["out_dir"]) == str(tmp_path / "proof")
+    assert calls["red_workers"] == 2
+    assert calls["blue_workers"] == 2
+    assert calls["run_id"].startswith("arena-prekill-survival-")
+
+
+def test_prekill_survival_proof_records_pre_terminal_child_and_validates(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    calls: dict[str, Any] = {}
+
+    def write_json(path: Path, payload: dict[str, Any]) -> Path:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return path
+
+    def fake_arena(*, out_dir: Path, battle_id: str, run_id: str, query: str, docker_image: str) -> dict[str, Any]:
+        return {"status": "PASS", "battle_id": battle_id, "run_id": run_id, "query": query}
+
+    def fake_canonical(*, arena_out: Path, battle_id: str, run_id: str, docker_image: str) -> Path:
+        write_json(
+            arena_out / "scenario.json",
+            {
+                "battle_id": battle_id,
+                "run_id": run_id,
+                "scenario_id": "arena-zip-slip-import-001",
+                "title": "Archive import path traversal",
+                "public_entrypoint": "/api/import-zip",
+                "cwe": "CWE-22",
+            },
+        )
+        return write_json(arena_out / "arena-receipt.json", {"status": "PASS"})
+
+    def fake_ledger(*, arena_out: Path, battle_id: str, scenario: dict[str, Any], oracle_receipt: Path) -> Path:
+        return write_json(arena_out / "private" / "ledger.json", {"battle_id": battle_id})
+
+    def fake_context(
+        *,
+        out_dir: Path,
+        battle_id: str,
+        run_id: str,
+        scenario: dict[str, Any],
+        red_workers: int,
+        blue_workers: int,
+    ) -> Path:
+        return write_json(out_dir / "tau-public-context.json", {"red_workers": red_workers, "blue_workers": blue_workers})
+
+    def fake_tau_harness(
+        *,
+        out_dir: Path,
+        battle_id: str,
+        run_id: str,
+        scenario_id: str,
+        context_path: Path,
+        red_persona: str,
+        blue_persona: str,
+        model: str,
+        scillm_base_url: str,
+        timeout_s: float,
+        red_workers: int,
+        blue_workers: int,
+    ) -> Path:
+        calls["initial_red_workers"] = red_workers
+        teams = [
+            {
+                "team": "red",
+                "worker_id": "red-0",
+                "lane_id": "payload-857-receipt",
+                "subagent_receipt": "tau-live/red/red-0/tau-subagent-receipt.json",
+                "materialized": {"path": "tau-live/red/red-0/exploit.py"},
+            },
+            {
+                "team": "red",
+                "worker_id": "red-1",
+                "lane_id": "payload-857-red-1",
+                "subagent_receipt": "tau-live/red/red-1/tau-subagent-receipt.json",
+                "materialized": {"path": "tau-live/red/red-1/exploit.py"},
+            },
+            {
+                "team": "blue",
+                "worker_id": "blue-0",
+                "lane_id": "blue-0",
+                "subagent_receipt": "tau-live/blue/blue-0/tau-subagent-receipt.json",
+                "materialized": {"path": "tau-live/blue/blue-0/patch.py"},
+            },
+        ]
+        write_json(out_dir / "tau-live" / "red" / "red-0" / "tau-subagent-receipt.json", {"status": "PASS"})
+        write_json(out_dir / "tau-live" / "red" / "red-1" / "tau-subagent-receipt.json", {"status": "PASS"})
+        return write_json(
+            out_dir / "tau-live" / "manifest.json",
+            {
+                "status": "PASS",
+                "duration_seconds": 3.0,
+                "started_at": "2026-07-04T00:00:00Z",
+                "ended_at": "2026-07-04T00:00:03Z",
+                "teams": teams,
+            },
+        )
+
+    def fake_validation(*, out_dir: Path, tau_manifest: dict[str, Any]) -> dict[str, Any]:
+        return {"status": "PASS"}
+
+    def fake_judge(
+        *,
+        out_dir: Path,
+        scenario: dict[str, Any],
+        docker_image: str,
+        tau_manifest: dict[str, Any],
+        timing_origin: float | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "status": "PASS",
+            "verdict": "BLUE_SUCCESS",
+            "judged_pair_count": 2,
+            "blue_success_count": 1,
+            "red_success_count": 1,
+            "attempts": [
+                {
+                    "pair_id": "red-0__blue-0",
+                    "red_worker_id": "red-0",
+                    "red_lane_id": "payload-857-receipt",
+                    "blue_worker_id": "blue-0",
+                    "verdict": "BLUE_SUCCESS",
+                    "exploit_confirmed_before_patch": True,
+                    "exploit_blocked_after_patch": True,
+                    "blue_artifact": "tau-live/blue/blue-0/patch.py",
+                    "started_elapsed_seconds": 8.0,
+                    "ended_elapsed_seconds": 8.2,
+                },
+                {
+                    "pair_id": "red-1__blue-0",
+                    "red_worker_id": "red-1",
+                    "red_lane_id": "payload-857-red-1",
+                    "blue_worker_id": "blue-0",
+                    "verdict": "RED_SUCCESS",
+                    "exploit_confirmed_before_patch": True,
+                    "exploit_blocked_after_patch": False,
+                    "blue_artifact": "tau-live/blue/blue-0/patch.py",
+                    "started_elapsed_seconds": 9.0,
+                    "ended_elapsed_seconds": 9.2,
+                },
+            ],
+        }
+
+    monkeypatch.setattr(proof, "run_arena_subagent_proof", fake_arena)
+    monkeypatch.setattr(proof, "_write_canonical_zip_slip_scenario", fake_canonical)
+    monkeypatch.setattr(proof, "_write_multi_vuln_ledger", fake_ledger)
+    monkeypatch.setattr(proof, "_write_tau_public_context", fake_context)
+    monkeypatch.setattr(proof, "_run_tau_harness", fake_tau_harness)
+    monkeypatch.setattr(proof, "_visibility_validation", fake_validation)
+    monkeypatch.setattr(proof, "_judge_tau_artifacts", fake_judge)
+
+    receipt = proof.run_arena_prekill_survival_proof(
+        out_dir=tmp_path / "proof",
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        red_workers=2,
+        blue_workers=1,
+    )
+
+    assert calls["initial_red_workers"] == 2
+    assert receipt["worker_counts"]["red_prekill_survival_requested"] is True
+    assert receipt["lineage_request"]["mode"] == "prekill_survival_initial_child"
+    assert receipt["prekill_survival_contract"]["status"] == "PASS"
+
+    lifecycle_path = tmp_path / "proof" / "exploit-lifecycle-receipts.json"
+    report = validate_exploit_lifecycle_receipts_path(lifecycle_path)
+    assert report["prekill_survival_status"] == "PASS"
+    assert "strategic_pre_kill" in report["spawn_decisions"]
+    assert "preemptive_spawn_adaptation" in report["outcome_classes"]
+    contract = report["prekill_survival_contract"]
+    assert contract["child_materialized"]["source_time"] < contract["earliest_confirmed_terminal"]["source_time"]
+    assert contract["post_terminal_child_lifecycle_receipt"]["source_time"] > contract["earliest_confirmed_terminal"]["source_time"]
+
+    payload = json.loads(lifecycle_path.read_text(encoding="utf-8"))
+    event_types = {receipt["event_type"] for receipt in payload["receipts"]}
+    assert {
+        "observation_drift_detected",
+        "threat_assessment_recorded",
+        "tau_branch_decision_recorded",
+        "spawn_request_recorded",
+        "spawn_decision_recorded",
+        "child_lifecycle_started",
+        "child_inherited_plan_recorded",
+        "child_inherited_probe_recorded",
+        "memory_promotion_evaluated",
+        "replay_event_emitted",
+    } <= event_types
+    spawn_request = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "spawn_request_recorded")
+    branch_decision = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "tau_branch_decision_recorded")
+    assert branch_decision["actor"]["team"] == "red"
+    assert branch_decision["tau_branch_decision"]["decision_authority"] == "tau_subagent"
+    assert branch_decision["tau_branch_decision"]["battle_policy_authority"] == "battle"
+    assert branch_decision["tau_branch_decision"]["observed_evidence_refs"]
+    assert spawn_request["actor"]["team"] == "red"
+    assert spawn_request["spawn_request"]["claim_authority"] == "tau_claim_only"
+    assert spawn_request["spawn_request"]["battle_allowed"] is False
+    spawn_decision = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "spawn_decision_recorded")
+    assert spawn_decision["actor"]["team"] == "orchestrator"
+    assert spawn_decision["spawn_policy"]["owner"] == "battle"
+    child_plan = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "child_inherited_plan_recorded")
+    assert child_plan["child_plan"]["used_before_first_probe"] is True
+    assert child_plan["child_plan"]["inherited_item_refs"]
+    child_probe = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "child_inherited_probe_recorded")
+    assert child_probe["inherited_probe"]["used_inherited_state"] is True
+    assert child_probe["observation"]["network_summary"]["full_packet_capture_proven"] is False
+    replay = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "replay_event_emitted")
+    assert replay["replay_event"]["presentation_owner"] == "ux"
+    assert "cinematic_speed" in replay["replay_event"]["backend_must_not_emit"]
+
+    payload["prekill_survival_contract"]["child_materialized"]["source_time"] = payload["prekill_survival_contract"]["earliest_confirmed_terminal"]["source_time"] + 1.0
+    payload["summary"]["prekill_survival_contract"] = payload["prekill_survival_contract"]
+    with pytest.raises(ContractError, match="child_materialized.source_time must be before"):
+        validate_exploit_lifecycle_receipts(payload)
+
+
 def test_live_lifecycle_receipts_reject_pressure_overclaimed_as_kill() -> None:
     bundle = {
         "schema": "battle.exploit_lifecycle_receipts.v1",
@@ -406,4 +661,304 @@ def test_live_lifecycle_receipts_reject_pressure_overclaimed_as_kill() -> None:
         "claims": {"proves": ["bad"], "does_not_prove": ["bad"]},
     }
     with pytest.raises(ContractError, match="pressure observation must not claim confirmed kill"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def _minimal_lifecycle_bundle(receipts: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "schema": "battle.exploit_lifecycle_receipts.v1",
+        "battle_id": "battle-004",
+        "run_id": "run-contract-negative",
+        "scenario_id": "arena-zip-slip-import-001",
+        "status": "PASS",
+        "mocked": False,
+        "live": True,
+        "proof_mode": "live_tau",
+        "source": "battle_004_parent_spawn_live_tau",
+        "receipts": receipts,
+        "summary": {
+            "receipt_count": len(receipts),
+            "event_types": [str(receipt.get("event_type")) for receipt in receipts],
+            "spawn_decisions": [
+                str(receipt.get("spawn_decision", {}).get("decision"))
+                for receipt in receipts
+                if isinstance(receipt.get("spawn_decision"), dict) and receipt.get("spawn_decision", {}).get("decision") != "none"
+            ],
+            "pressure_receipt_count": 0,
+            "lineage_receipt_count": 0,
+            "outcome_classes": [],
+            "bug_learning_notes": ["contract negative fixture"],
+        },
+        "claims": {"proves": ["contract negative fixture"], "does_not_prove": ["live execution"]},
+    }
+
+
+def _minimal_receipt(receipt_id: str, event_type: str, phase: str) -> dict[str, Any]:
+    return {
+        "schema": "battle.exploit_lifecycle_receipt.v1",
+        "receipt_id": receipt_id,
+        "event_type": event_type,
+        "phase": phase,
+        "validation": {"mocked": False, "live": True, "proof_mode": "live_tau", "validator_version": "test"},
+        "pressure_observation": {
+            "present": False,
+            "signals": [],
+            "pressure_score": 0,
+            "confidence": "none",
+            "suspected_pressure": False,
+            "confirmed_blue_action": False,
+            "overclaim_guard": "observation_only_unless_blue_or_judge_receipt_present",
+        },
+        "spawn_decision": {
+            "present": False,
+            "decision": "none",
+            "allowed": False,
+            "reason_codes": [],
+            "parent_state": "unknown",
+            "child_exploit_id": None,
+            "confirmed_kill_receipt_before_spawn": False,
+            "budget_remaining_after_spawn": 0,
+        },
+        "outcome": {"candidate_class": "none", "required_receipt_ids": [], "classification_reason": ""},
+        "score": {"applied": False, "blue_points": 0, "red_points": 0, "score_weight": 1, "scorekeeper_receipt_id": None},
+    }
+
+
+def _minimal_live_observation() -> dict[str, Any]:
+    return {
+        "present": True,
+        "stdout": {},
+        "stderr": {},
+        "http_response": {},
+        "timing": {},
+        "network_summary": {
+            "capture_requested": True,
+            "available": False,
+            "full_packet_capture_proven": False,
+            "reason": "packet_capture_artifact_missing",
+        },
+    }
+
+
+def test_lifecycle_validator_rejects_missing_packet_capture_diagnosis() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    probe = _minimal_receipt("probe", "probe_executed", "probe")
+    probe["observation"] = {
+        "present": True,
+        "stdout": {},
+        "stderr": {},
+        "http_response": {},
+        "timing": {},
+        "network_summary": {
+            "capture_requested": True,
+            "available": False,
+            "full_packet_capture_proven": False,
+        },
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, probe])
+
+    with pytest.raises(ContractError, match="unavailable network capture must include reason"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_spawn_without_parent_knowledge_packet() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    spawn = _minimal_receipt("spawn", "spawn_decision_recorded", "spawn_policy")
+    spawn["spawn_decision"] = {
+        "present": True,
+        "decision": "strategic_pre_kill",
+        "allowed": True,
+        "reason_codes": ["suspected_pressure"],
+        "parent_state": "alive",
+        "child_exploit_id": "payload-857-red-1",
+        "confirmed_kill_receipt_before_spawn": False,
+        "budget_remaining_after_spawn": 100,
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, spawn])
+
+    with pytest.raises(ContractError, match="spawn knowledge packet missing"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_uncalibrated_score_points() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    outcome = _minimal_receipt("outcome", "semantic_outcome_classified", "outcome")
+    outcome["outcome"] = {
+        "candidate_class": "pre_spawn_blue_block",
+        "required_receipt_ids": ["judge"],
+        "classification_reason": "fixture",
+    }
+    outcome["score"] = {
+        "applied": True,
+        "blue_points": 1,
+        "red_points": 0,
+        "score_weight": 0.5,
+        "scorekeeper_receipt_id": "scoreboard.json",
+        "score_calibration": {
+            "schema": "battle.semantic_score_calibration.v1",
+            "outcome_class": "pre_spawn_blue_block",
+            "blue_base_points": 100,
+            "red_base_points": 0,
+            "score_weight": 0.5,
+        },
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, outcome])
+
+    with pytest.raises(ContractError, match="blue score does not match calibration"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_threat_assessment_claiming_kill() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    threat = _minimal_receipt("threat", "threat_assessment_recorded", "pressure")
+    threat["observation"] = _minimal_live_observation()
+    threat["threat_assessment"] = {
+        "present": True,
+        "schema": "battle.parent_threat_assessment.v1",
+        "claim_authority": "tau_claim_only",
+        "confirmed_kill": True,
+        "cited_observation_receipt_ids": ["probe"],
+        "cited_drift_receipt_ids": ["drift"],
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, threat])
+
+    with pytest.raises(ContractError, match="threat assessment must not confirm kill"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_tau_spawn_request_with_battle_authority() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    request = _minimal_receipt("request", "spawn_request_recorded", "spawn_policy")
+    request["spawn_request"] = {
+        "present": True,
+        "schema": "battle.spawn_request.v1",
+        "claim_authority": "tau_claim_only",
+        "requested_decision": "strategic_pre_kill",
+        "child_exploit_id": "payload-857-red-1",
+        "battle_allowed": True,
+        "policy_owner": "battle",
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, request])
+
+    with pytest.raises(ContractError, match="spawn request must not approve itself"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_tau_branch_decision_without_observed_evidence() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    branch = _minimal_receipt("branch", "tau_branch_decision_recorded", "branch")
+    branch["tau_branch_decision"] = {
+        "present": True,
+        "schema": "battle.tau_branch_decision.v1",
+        "decision_authority": "tau_subagent",
+        "battle_policy_authority": "battle",
+        "decision": "keep_going",
+        "observed_evidence_refs": [],
+        "rationale": "continue probing",
+        "confidence": "medium",
+        "why_not_spawn": "spawn is not useful yet",
+        "battle_policy_result": "not_requested",
+        "overclaim_guard": "tau_reasoning_only_battle_validates_policy_and_outcomes",
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, branch])
+
+    with pytest.raises(ContractError, match="Tau branch decision must cite observed evidence refs"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_tau_branch_decision_overclaiming_kill() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    branch = _minimal_receipt("branch", "tau_branch_decision_recorded", "branch")
+    branch["tau_branch_decision"] = {
+        "present": True,
+        "schema": "battle.tau_branch_decision.v1",
+        "decision_authority": "tau_subagent",
+        "battle_policy_authority": "battle",
+        "decision": "spawn_requested",
+        "observed_evidence_refs": ["probe", "drift"],
+        "rationale": "claiming too much",
+        "confidence": "high",
+        "confirmed_kill": True,
+        "requested_child_profile": {"child_exploit_id": "payload-857-red-1"},
+        "inherited_goals": ["inherit parent context"],
+        "battle_policy_result": "pending",
+        "overclaim_guard": "tau_reasoning_only_battle_validates_policy_and_outcomes",
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, branch])
+
+    with pytest.raises(ContractError, match="Tau branch decision must not confirm kill"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_requires_decision_specific_tau_branch_fields() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    branch = _minimal_receipt("branch", "tau_branch_decision_recorded", "branch")
+    branch["tau_branch_decision"] = {
+        "present": True,
+        "schema": "battle.tau_branch_decision.v1",
+        "decision_authority": "tau_subagent",
+        "battle_policy_authority": "battle",
+        "decision": "research_more",
+        "observed_evidence_refs": ["probe", "drift"],
+        "rationale": "needs more source context",
+        "confidence": "low",
+        "research_questions": [],
+        "battle_policy_result": "not_requested",
+        "overclaim_guard": "tau_reasoning_only_battle_validates_policy_and_outcomes",
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, branch])
+
+    with pytest.raises(ContractError, match="research_more must include research questions"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_child_plan_without_inherited_refs() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    plan = _minimal_receipt("plan", "child_inherited_plan_recorded", "research")
+    plan["knowledge_packet"] = {
+        "present": True,
+        "packet_id": "knowledge:parent",
+        "research_goals": ["inherit parent analysis"],
+        "child_ack": {"required": True, "received": True, "used_before_first_probe": True},
+    }
+    plan["child_plan"] = {
+        "present": True,
+        "schema": "battle.child_inherited_plan.v1",
+        "plan_id": "child-plan",
+        "knowledge_packet_id": "knowledge:parent",
+        "inherited_item_refs": [],
+        "used_before_first_probe": True,
+        "scope_inherited": True,
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, plan])
+
+    with pytest.raises(ContractError, match="child inherited refs missing"):
+        validate_exploit_lifecycle_receipts(bundle)
+
+
+def test_lifecycle_validator_rejects_child_probe_without_inherited_state() -> None:
+    scenario = _minimal_receipt("scenario", "scenario_authorized", "authorized")
+    runtime = _minimal_receipt("runtime", "runtime_provisioned", "runtime")
+    probe = _minimal_receipt("probe", "child_inherited_probe_recorded", "probe")
+    probe["observation"] = _minimal_live_observation()
+    probe["inherited_probe"] = {
+        "present": True,
+        "schema": "battle.child_inherited_probe.v1",
+        "child_plan_id": "child-plan",
+        "knowledge_packet_id": "knowledge:parent",
+        "used_inherited_state": False,
+        "inherited_item_refs": ["knowledge:parent"],
+    }
+    bundle = _minimal_lifecycle_bundle([scenario, runtime, probe])
+
+    with pytest.raises(ContractError, match="child inherited probe must use inherited state"):
         validate_exploit_lifecycle_receipts(bundle)

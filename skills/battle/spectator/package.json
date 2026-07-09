@@ -16,7 +16,12 @@
     "prove:receipt-pixi": "node scripts/sanity-battle-receipt-pixi.mjs",
     "prove:receipt-replay": "node scripts/prove-battle-receipt-replay-6.mjs",
     "prove:fresh-fixture-replay": "node scripts/prove-battle-fresh-fixture-replay.mjs",
-    "prove:sparse-negative": "node scripts/prove-battle-sparse-negative.mjs"
+    "prove:sparse-negative": "node scripts/prove-battle-sparse-negative.mjs",
+    "prove:hg-death-notification": "node scripts/prove-battle-hunger-games-death-notification.mjs",
+    "prove:hg-kill-cue-replay": "node scripts/prove-battle-hunger-games-kill-cue-replay.mjs",
+    "prove:kill-shot-pixi": "node scripts/prove-battle-kill-shot-pixi.mjs",
+    "prove:receipt-director-killed": "node scripts/prove-battle-receipt-director-killed.mjs",
+    "prove:receipt-director-spawn-block": "node scripts/prove-battle-receipt-director-spawn-block.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

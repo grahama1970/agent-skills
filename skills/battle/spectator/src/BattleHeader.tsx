@@ -12,6 +12,8 @@ import {
 } from "./lib/mockup-design-fixture";
 import { Icons } from "./battle-icons";
 import { useRegisterAction } from "./hooks/useRegisterAction";
+import { BattleHungerGamesDeathAnnouncement } from "./BattleHungerGamesDeathAnnouncement";
+import type { HungerGamesDeathCard } from "./lib/battle-hunger-games-notifications";
 
 type Props = {
   receiptFixture?: import("./lib/battle-types").BattleNormalizedUxFixture | null;
@@ -19,9 +21,11 @@ type Props = {
   onTestSound: (cue: string) => void;
   onSelectActor: (id: string) => void;
   onOpenJsonl: () => void;
+  deathAnnouncement?: HungerGamesDeathCard | null;
+  onDismissDeathAnnouncement?: () => void;
 };
 
-export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJsonl }: Props) {
+export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJsonl, deathAnnouncement = null, onDismissDeathAnnouncement }: Props) {
   useRegisterAction("battle:events:rail", { action: "BATTLE_EVENTS_OPEN", label: "Open Battle Receipt Events", description: "Open the receipt-backed Battle event stream popover", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:events:item", { action: "BATTLE_EVENT_SELECT", label: "Select Battle Event Actor", description: "Select the lane associated with a receipt-backed Battle event", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:events:view-all", { action: "BATTLE_EVENTS_VIEW_ALL", label: "View All Battle Receipts", description: "Open the full receipt-backed Battle event list", tags: ["battle", "receipt-backed"] });
@@ -138,10 +142,11 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
       </div>
 
       <div className="flex min-w-0 items-start justify-end gap-2">
-        <div className="battle-live-events">
+        <div className={cn("battle-live-events", deathAnnouncement && "has-death-announcement")}>
           <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
             <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> LIVE EVENTS
           </div>
+          <BattleHungerGamesDeathAnnouncement card={deathAnnouncement} onDismiss={onDismissDeathAnnouncement ?? (() => undefined)} />
           {events.slice(-3).reverse().map((event, index) => (
             <button key={`${event.id}:${index}`} type="button" data-qid={`battle:events:item:${event.id}`} data-qs-action="BATTLE_EVENT_SELECT" title={`Select receipt event ${event.id}`} onClick={() => selectEvent(event)} className="battle-live-event-row w-full text-left transition-colors hover:bg-white/[.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40">
               <span className="battle-live-event-time">{new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>

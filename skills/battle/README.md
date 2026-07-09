@@ -257,12 +257,28 @@ fixtures.
 
 | View | Fixture/source | Screenshot | Validation |
 |---|---|---|---|
-| BATTLE-004 spectator replay | `spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-spectator-replay.webp` | `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` |
+| BATTLE-004 spectator replay (parent spawn) | `spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-spectator-replay.webp` | `cd spectator && npm run prove:receipt-replay` |
+| Lifecycle evidence cockpit (fail-closed) | same fixture; agent pane `data-qid="battle:agent-pane:lifecycle-evidence"` | `docs/assets/screenshots/battle-004-lifecycle-cockpit.webp` | `cd spectator && npm run prove:receipt-replay` (check 7) |
+| Kill-shot impact + HG death card | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-kill-shot-impact.webp` | `cd spectator && npm run prove:kill-shot-pixi` |
+| Spawn/block receipt beats (Pixi VFX) | parent-spawn fixture frozen at `pixiSeconds=99.4` | `docs/assets/screenshots/battle-004-spawn-block-vfx.webp` | `cd spectator && npm run prove:receipt-director-spawn-block` |
 | Battle monitor v0 | `/tmp/battle-001` copied into `monitor/battle/public/artifacts/battle-001` | planned | `cd monitor/battle && npm run test:e2e` |
 | Future combiner loop | `/tmp/battle-004-combiner/normalized/battle-004-combiner.normalized.json` | planned | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` |
 | Future Spawn Architect DAG | `/tmp/battle-004-spawn-architect/normalized/battle-004-spawn-architect.normalized.json` | planned | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` |
 
+Regenerate README screenshots (requires ux-lab on `:3002` or `BATTLE_HOST`):
+
+```bash
+cd spectator && node scripts/capture-readme-screenshots.mjs
+cd .. && python3 scripts/compress-readme-screenshots.py
+```
+
 ![BATTLE-004 spectator replay](docs/assets/screenshots/battle-004-spectator-replay.webp)
+
+![Lifecycle evidence cockpit](docs/assets/screenshots/battle-004-lifecycle-cockpit.webp)
+
+![Kill-shot impact replay](docs/assets/screenshots/battle-004-kill-shot-impact.webp)
+
+![Spawn/block receipt beats](docs/assets/screenshots/battle-004-spawn-block-vfx.webp)
 
 ## Quickstart
 

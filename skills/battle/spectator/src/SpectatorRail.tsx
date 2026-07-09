@@ -4,6 +4,7 @@ import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { mockupAgentStatus, mockupRaceLeaders, mockupScoreboard } from "./lib/mockup-design-fixture";
 import { Icons } from "./battle-icons";
 import { useRegisterAction } from "./hooks/useRegisterAction";
+import { leaderboardEntryForLane, terminalStatusCounts } from "./lib/battle-lane-lifecycle-evidence";
 import { cn } from "./lib/utils";
 
 type Props = {
@@ -26,18 +27,9 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
       }))
     : leaderboard.length > 0
       ? leaderboard
-      : activeLanes.map((lane, index) => ({
-          rank: index + 1,
-          laneId: lane.id,
-          name: lane.name,
-          status:
-            lane.terminal === "fastest_crash" || lane.terminal === "promoted" || lane.terminal === "blocked" || lane.terminal === "killed"
-              ? lane.terminal
-              : "blocked",
-          time: "judge",
-          proofMode: lane.proofMode,
-          summary: lane.mutationRationale,
-        } satisfies LeaderboardEntry));
+      : activeLanes
+          .map((lane, index) => leaderboardEntryForLane(lane, index + 1))
+          .filter((entry): entry is LeaderboardEntry => Boolean(entry));
 
   const scoreboard = activeBattleFixture(receiptFixture).scoreboard;
 
@@ -99,12 +91,20 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
             ))
           : (
             <>
-              <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(activeLanes.filter((lane) => lane.terminal === "none").length)} tone="text-battle-cyan" />
-              <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(activeLanes.filter((lane) => lane.terminal === "blocked").length)} tone="text-battle-blue" />
-              <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value="0" tone="text-battle-red" />
-              <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(activeLanes.reduce((n, lane) => n + lane.events.filter((event) => event.kind === "useful").length, 0))} tone="text-battle-yellow" />
-              <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Promoted" value="0" tone="text-battle-green" />
-              <ReceiptStatusLine icon={<Icons.Rocket className="h-4 w-4" />} label="Fastest crash" value="0" tone="text-slate-500" />
+              {(() => {
+                const counts = terminalStatusCounts(activeLanes);
+                const usefulCount = activeLanes.reduce((n, lane) => n + lane.events.filter((event) => event.proven && event.kind === "useful").length, 0);
+                return (
+                  <>
+                    <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(counts.running)} tone="text-battle-cyan" />
+                    <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(counts.blocked)} tone="text-battle-blue" />
+                    <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value={String(counts.killed)} tone="text-battle-red" />
+                    <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(usefulCount)} tone="text-battle-yellow" />
+                    <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Promoted" value={String(counts.promoted)} tone="text-battle-green" />
+                    <ReceiptStatusLine icon={<Icons.Rocket className="h-4 w-4" />} label="Fastest crash" value={String(counts.fastest_crash)} tone="text-slate-500" />
+                  </>
+                );
+              })()}
             </>
           )}
       </Panel>

@@ -40,3 +40,4 @@ def test_child_knowledge_packet_preserves_parent_failures_and_boundaries(tmp_pat
         "SPECIMEN_RUNTIME_FAILED",
     }
     assert any("Judge replay" in item for item in packet["blocked_ideas"])
+

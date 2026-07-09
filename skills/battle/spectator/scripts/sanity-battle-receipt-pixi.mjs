@@ -3,7 +3,9 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 
-const host = process.env.BATTLE_HOST ?? 'http://127.0.0.1:3012'
+import { resolveBattleProveHost } from './battle-prove-host.mjs'
+
+const host = await resolveBattleProveHost()
 const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
 const outDir = resolve(process.env.BATTLE_RECEIPT_CAPTURE_DIR ?? '/tmp/battle-receipt-pixi-sanity')
 const spawnAt = Number(process.env.BATTLE_RECEIPT_SPAWN_SECONDS ?? '116.973449')
@@ -45,7 +47,7 @@ async function main() {
   await page.screenshot({ path: resolve(outDir, 'after-spawn.png') })
 
   // scrub test on receipt route
-  await page.goto('http://127.0.0.1:3012/#battle/receipt?engine=pixi', { waitUntil: 'networkidle', timeout: 60_000 })
+  await page.goto(`${host}/#battle/receipt?engine=pixi`, { waitUntil: 'networkidle', timeout: 60_000 })
   await page.waitForTimeout(2000)
   const labelBefore = await page.textContent('.playheadLabel')
   const track = page.locator('.playheadTrack').first()

@@ -103,3 +103,24 @@
   padding: 6px 10px;
   pointer-events: none;
 }
+
+
+.battle-receipt-pixi-rows {
+  position: relative;
+}
+
+.battle-receipt-pixi-rows > .battleRaceStageHost {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.battle-receipt-pixi-rows > .battleRaceStageHost .battleRaceTrackPlane,
+.battle-receipt-pixi-rows > .battleRaceStageHost .pixiHitTargetLayer {
+  pointer-events: auto;
+}
+
+[data-lane-row].pixiTrackHidden .battle-track-grid {
+  visibility: hidden;
+}

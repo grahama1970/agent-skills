@@ -61,3 +61,4 @@ def test_child_tau_dag_rejects_private_artifact_reference(tmp_path: Path) -> Non
     assert summary["valid"] is False
     assert summary["private_boundary_passed"] is False
     assert any("private artifact" in error for error in summary["errors"])
+

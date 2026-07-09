@@ -2,8 +2,9 @@
 import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
+import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
-const host = process.env.BATTLE_HOST ?? 'http://127.0.0.1:3012'
+const host = await resolveBattleProveHost()
 const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
 const outDir = resolve(process.env.BATTLE_RECEIPT_PROOF_DIR ?? '/tmp/battle-receipt-replay-6-proof')
 
@@ -100,6 +101,24 @@ async function main() {
     viewport: document.querySelector('[data-battle-viewport-seconds]')?.getAttribute('data-battle-viewport-seconds'),
   }))
   record('6-child-after-spawn-visible', post.parent && post.child, JSON.stringify(post))
+
+  const lifecycle = await page.evaluate(() => {
+    const panel = document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')
+    const text = panel?.textContent ?? ''
+    return {
+      panel: Boolean(panel),
+      text,
+      hasKnowledge: text.includes('knowledge_packet'),
+      hasPromotion: text.includes('memory_promotion'),
+      hasPacketCapture: text.includes('packet capture'),
+      hasCalibration: text.includes('score_calibration'),
+    }
+  })
+  record(
+    '7-lifecycle-evidence',
+    lifecycle.panel && lifecycle.hasKnowledge && lifecycle.hasPromotion && lifecycle.hasPacketCapture && lifecycle.hasCalibration,
+    JSON.stringify(lifecycle),
+  )
 
   await page.screenshot({ path: resolve(outDir, 'receipt-replay-proof.png') })
   await browser.close()

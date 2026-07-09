@@ -31,6 +31,7 @@ const TERMINAL_EVENT_KINDS: Record<LaneTerminal, LaneEvent["kind"][]> = {
 	blocked_handoff: ["handoff", "blocked", "blue_blast"],
 	promoted: ["promoted"],
 	fastest_crash: ["fastest_crash"],
+	survivor: [],
 };
 
 function provenTerminalEvent(

@@ -3,6 +3,8 @@ import type { Lane, LaneEvent } from "../lib/battle-types";
 import {
 	KILL_SHOT_IMPACT_SECONDS,
 	KILL_SHOT_TRAVEL_SECONDS,
+	impactBurstFrameNames,
+	killShotImpactFrameIndex,
 	killShotVisualForEvent,
 	resolveKillShotImpact,
 } from "./battle-pixi-kill-shot";
@@ -98,5 +100,61 @@ describe("killShotVisualForEvent", () => {
 		expect(shot?.phase).toBe("impact");
 		expect(shot?.impactKind).toBe("blocked");
 		expect(shot?.impactAlpha).toBeGreaterThan(0.5);
+	});
+});
+
+describe("battlePixiReplayProbe", () => {
+	it("reports travel and killed impact on kill-shot fixture lane", async () => {
+		const { readFile } = await import("node:fs/promises");
+		const { resolve } = await import("node:path");
+		const { battleLanesForView } = await import("../lib/battle-data");
+		const { battlePixiReplayProbe } = await import("./battle-pixi-scene");
+		const { buildRaceEngineRowLayout } = await import("../lib/build-race-engine-input");
+		const fixture = JSON.parse(
+			await readFile(
+				resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json"),
+				"utf8",
+			),
+		);
+		const lanes = battleLanesForView(fixture.lanes, fixture);
+		const rowLayout = buildRaceEngineRowLayout(lanes);
+		const lane = lanes.find((item) => item.id === "payload-857-red-1");
+		const blastAt = lane!.events.find((event) => event.kind === "blue_blast")!.elapsed_seconds!;
+		const travel = battlePixiReplayProbe({
+			lanes,
+			rowLayout,
+			fixture,
+			mode: "receipt_replay",
+			currentSeconds: blastAt + KILL_SHOT_TRAVEL_SECONDS * 0.5,
+			allottedSeconds: 1200,
+			contentWidth: 1200,
+		});
+		expect(travel.killShot?.phase).toBe("travel");
+		expect(travel.runnerAnimations["payload-857-red-1"]).toBe("walk");
+		const impact = battlePixiReplayProbe({
+			lanes,
+			rowLayout,
+			fixture,
+			mode: "receipt_replay",
+			currentSeconds: blastAt + KILL_SHOT_TRAVEL_SECONDS + 0.1,
+			allottedSeconds: 1200,
+			contentWidth: 1200,
+		});
+		expect(impact.killShot?.phase).toBe("impact");
+		expect(impact.killShot?.impactKind).toBe("killed");
+		expect(impact.runnerAnimations["payload-857-red-1"]).toBe("killed");
+	});
+});
+
+
+describe("impact burst helpers", () => {
+	it("uses killed atlas frames for kill impact", () => {
+		expect(impactBurstFrameNames("killed")).toEqual(["fx-killed", "marker-killed", "fx-killed"]);
+	});
+
+	it("advances burst frame index with impact elapsed time", () => {
+		expect(killShotImpactFrameIndex(0, 3)).toBe(0);
+		expect(killShotImpactFrameIndex(KILL_SHOT_IMPACT_SECONDS * 0.5, 3)).toBe(1);
+		expect(killShotImpactFrameIndex(KILL_SHOT_IMPACT_SECONDS, 3)).toBe(2);
 	});
 });

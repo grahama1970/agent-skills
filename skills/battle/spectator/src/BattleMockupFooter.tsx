@@ -13,9 +13,12 @@ type Props = {
   setFilter: (value: BattleFilter) => void;
   enabled: boolean;
   arm: () => void;
+  highlightReel?: boolean;
+  onHighlightReelChange?: (enabled: boolean) => void;
+  onJumpToNextHighlight?: () => void;
 };
 
-export function BattleMockupFooter({ playing, setPlaying, speed, setSpeed, filter, setFilter, enabled, arm }: Props) {
+export function BattleMockupFooter({ playing, setPlaying, speed, setSpeed, filter, setFilter, enabled, arm, highlightReel = false, onHighlightReelChange, onJumpToNextHighlight }: Props) {
   useRegisterAction("battle:footer:spectator-arm", { action: "BATTLE_SOUND_ARM", label: "Arm Battle Spectator Sound", description: "Arm local sound cues for Battle spectator mode.", tags: ["battle", "design"] });
   useRegisterAction("battle:footer:speed", { action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Set Battle design-view replay speed.", tags: ["battle", "design"] });
   useRegisterAction("battle:footer:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Lane Focus", description: "Filter visible Battle lanes in design view.", tags: ["battle", "design"] });

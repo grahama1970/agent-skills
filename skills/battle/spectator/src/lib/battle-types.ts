@@ -521,7 +521,7 @@ export type BattleEvent = {
 	proof_mode?: ProofMode;
 };
 
-export type LaneTerminal = "none" | "killed" | "blocked" | "blocked_handoff" | "promoted" | "fastest_crash";
+export type LaneTerminal = "none" | "killed" | "blocked" | "blocked_handoff" | "promoted" | "fastest_crash" | "survivor";
 
 export type LaneEventKind =
 	| "research"
@@ -595,6 +595,123 @@ export type ActorVisual = {
 	}>;
 };
 
+
+export type BattleChildAck = {
+	required: boolean;
+	received: boolean;
+	ack_source?: string | null;
+};
+
+export type BattleKnowledgePacket = {
+	present: boolean;
+	status: string;
+	packet_id?: string | null;
+	parent_packet_id?: string | null;
+	research_goals?: string[];
+	parent_analysis?: Record<string, unknown>;
+	child_ack?: BattleChildAck;
+};
+
+export type BattleMemoryPromotion = {
+	present: boolean;
+	candidate_id?: string | null;
+	durable_promoted: boolean;
+	validator_required?: boolean;
+	promotion_scope?: string;
+	reason?: string;
+};
+
+export type BattleSpawnRequest = {
+	present: boolean;
+	schema?: string;
+	request_id?: string;
+	claim_authority?: string;
+	requested_decision?: string;
+	child_exploit_id?: string | null;
+	battle_allowed?: boolean;
+	policy_owner?: string;
+};
+
+export type BattleTauBranchDecision = {
+	present: boolean;
+	schema?: string;
+	decision_id?: string;
+	decision_authority?: string;
+	battle_policy_authority?: string;
+	decision?: "keep_going" | "spawn_requested" | "pivot_requested" | "research_more" | "abandon_branch" | "none" | string;
+	observed_evidence_refs?: string[];
+	pressure_assessment_refs?: string[];
+	opportunity_assessment_refs?: string[];
+	rationale?: string;
+	confidence?: "low" | "medium" | "high" | string;
+	why_not_spawn?: string | null;
+	requested_child_profile?: Record<string, unknown> | null;
+	inherited_goals?: string[];
+	pivot_target?: string | null;
+	research_questions?: string[];
+	abandon_reason?: string | null;
+	battle_policy_result?: "not_requested" | "pending" | "allowed" | "denied" | string;
+};
+
+export type BattleChildInheritedPlan = {
+	present: boolean;
+	schema?: string;
+	plan_id?: string;
+	knowledge_packet_id?: string;
+	inherited_item_refs?: string[];
+	first_probe_goal?: string;
+	used_before_first_probe?: boolean;
+	scope_inherited?: boolean;
+};
+
+export type BattleChildInheritedProbe = {
+	present: boolean;
+	schema?: string;
+	probe_id?: string;
+	child_plan_id?: string;
+	knowledge_packet_id?: string;
+	used_inherited_state?: boolean;
+	inherited_item_refs?: string[];
+};
+
+export type BattleNetworkSummary = {
+	capture_requested?: boolean;
+	available: boolean;
+	full_packet_capture_proven?: boolean;
+	reason?: string | null;
+	artifact_uri?: string | null;
+	sha256?: string | null;
+	format?: string;
+};
+
+export type BattleScoreCalibration = {
+	schema?: string;
+	outcome_class?: string;
+	blue_base_points?: number;
+	red_base_points?: number;
+	score_weight?: number;
+	formula?: string;
+	profile_inputs?: Record<string, unknown>;
+	ordering_invariant?: string[];
+	survival_credit?: Record<string, unknown>;
+};
+
+export type BattleLaneScoreSemantics = {
+	schema?: string;
+	lane_id?: string;
+	outcome_class?: string;
+	outcome_tier?: string;
+	terminal_state?: string;
+	spawn_state?: string;
+	score_basis?: string;
+	score_weight?: number;
+	score_delta?: { blue?: number; red?: number };
+	multipliers?: { blue?: number; red?: number };
+	proof_mode?: ProofMode;
+	rules?: Record<string, boolean>;
+	score_calibration?: BattleScoreCalibration;
+};
+
 export type LaneCockpit = {
 	schema: "battle.lane_cockpit.v1";
 	proof_mode: ProofMode;
@@ -644,6 +761,15 @@ export type LaneCockpit = {
 	};
 	latest_receipt_id: string;
 	replay?: BattleReplayRef | null;
+	knowledge_packet?: BattleKnowledgePacket;
+	memory_promotion?: BattleMemoryPromotion;
+	network_summary?: BattleNetworkSummary;
+	score_calibration?: BattleScoreCalibration;
+	score_semantics?: BattleLaneScoreSemantics;
+	tau_branch_decision?: BattleTauBranchDecision;
+	spawn_request?: BattleSpawnRequest;
+	child_plan?: BattleChildInheritedPlan;
+	inherited_probe?: BattleChildInheritedProbe;
 };
 
 export type Lane = {
@@ -690,6 +816,15 @@ export type Lane = {
 	};
 	replay?: BattleReplayRef | null;
 	cockpit?: LaneCockpit;
+	knowledge_packet?: BattleKnowledgePacket;
+	memory_promotion?: BattleMemoryPromotion;
+	network_summary?: BattleNetworkSummary;
+	score_calibration?: BattleScoreCalibration;
+	score_semantics?: BattleLaneScoreSemantics;
+	tau_branch_decision?: BattleTauBranchDecision;
+	spawn_request?: BattleSpawnRequest;
+	child_plan?: BattleChildInheritedPlan;
+	inherited_probe?: BattleChildInheritedProbe;
 };
 
 export type BluePatchAction = {
@@ -709,7 +844,7 @@ export type LeaderboardEntry = {
 	rank: number;
 	laneId: string;
 	name: string;
-	status: "fastest_crash" | "promoted" | "blocked" | "killed";
+	status: "fastest_crash" | "promoted" | "blocked" | "killed" | "survivor";
 	time: string;
 	proofMode?: ProofMode;
 	summary?: string;
@@ -935,6 +1070,7 @@ export type BattleRaceEngineInput = {
 	onSelectLane(id: string): void;
 	onSelectEvent(id: string): void;
 	onEffectCue?: (cue: BattleEffectCue) => void;
+	activeReceiptBeat?: import("./battle-receipt-beats").ReceiptBeat | null;
 	testMode?: BattleEngineRenderTestMode;
 };
 

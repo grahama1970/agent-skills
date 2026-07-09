@@ -1,7 +1,6 @@
-import { Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Sprite, type Texture } from "pixi.js";
 import type { BattleRaceEngineRowLayout, Lane, LaneEvent } from "../lib/battle-types";
 import { textureFromAtlas } from "./battle-race-atlas";
-import { effectAtlasFrame } from "./battle-race-icon-map";
 import { configureBattleSceneLayer } from "./battle-pixi-game-mechanics";
 import { eventElapsedSeconds, fixtureUsesElapsedAxis, laneElapsedRange } from "../lib/battle-elapsed-axis";
 
@@ -24,18 +23,42 @@ export type KillShotVisual = {
 	variant: "blue_sonic_blast" | "kill_cannon";
 };
 
+export type KillShotImpactBurstKind = "blocked" | "killed";
+
 export type KillShotLayer = {
 	container: Container;
 	beam: Graphics;
 	tipPool: Sprite[];
+	burstPool: AnimatedSprite[];
+	activeBurstKey: string | null;
 };
+
+export function impactBurstFrameNames(kind: KillShotImpactBurstKind): string[] {
+	if (kind === "killed") return ["fx-killed", "marker-killed", "fx-killed"];
+	return ["fx-blocked", "marker-blocked", "fx-blocked"];
+}
+
+export function impactBurstTextures(
+	markerAtlas: Record<string, Texture>,
+	kind: KillShotImpactBurstKind,
+): Texture[] {
+	return impactBurstFrameNames(kind)
+		.map((frame) => textureFromAtlas(frame, markerAtlas))
+		.filter((texture): texture is Texture => Boolean(texture));
+}
+
+export function killShotImpactFrameIndex(impactElapsed: number, frameCount: number): number {
+	if (frameCount <= 1) return 0;
+	const progress = Math.max(0, Math.min(1, impactElapsed / KILL_SHOT_IMPACT_SECONDS));
+	return Math.min(frameCount - 1, Math.floor(progress * frameCount));
+}
 
 export function createKillShotLayer(): KillShotLayer {
 	const container = configureBattleSceneLayer(new Container(), { label: "battle-kill-shots", cullable: true });
 	const beam = new Graphics();
 	beam.label = "battle-kill-shot-beam";
 	container.addChild(beam);
-	return { container, beam, tipPool: [] };
+	return { container, beam, tipPool: [], burstPool: [], activeBurstKey: null };
 }
 
 function secondsToWorldX(seconds: number, allottedSeconds: number, contentWidth: number): number {
@@ -175,6 +198,46 @@ function hideKillShotTips(pool: Sprite[], used: number) {
 	}
 }
 
+
+function hideKillShotBursts(pool: AnimatedSprite[], used: number) {
+	for (let index = used; index < pool.length; index += 1) {
+		pool[index].visible = false;
+		pool[index].stop();
+	}
+}
+
+function syncKillShotBurstSprite(args: {
+	sprite: AnimatedSprite;
+	textures: Texture[];
+	burstKey: string;
+	layer: KillShotLayer;
+	x: number;
+	y: number;
+	scale: number;
+	alpha: number;
+	frameIndex: number;
+	tickerDeltaRatio: number;
+}): number {
+	const { sprite, textures, burstKey, layer, x, y, scale, alpha, frameIndex, tickerDeltaRatio } = args;
+	if (layer.activeBurstKey !== burstKey || sprite.textures !== textures) {
+		sprite.textures = textures.length ? textures : sprite.textures;
+		sprite.loop = false;
+		layer.activeBurstKey = burstKey;
+	}
+
+	const frameCount = Math.max(1, textures.length);
+	const clampedFrame = Math.max(0, Math.min(frameCount - 1, frameIndex));
+	sprite.animationSpeed = 0.22 * tickerDeltaRatio;
+	sprite.gotoAndStop(clampedFrame);
+
+	sprite.x = x;
+	sprite.y = y;
+	sprite.scale.set(scale * (1 + clampedFrame * 0.12));
+	sprite.alpha = alpha;
+	sprite.visible = true;
+	return clampedFrame;
+}
+
 export function syncKillShots(args: {
 	layer: KillShotLayer;
 	markerAtlas: Record<string, Texture>;
@@ -184,9 +247,9 @@ export function syncKillShots(args: {
 	allottedSeconds: number;
 	contentWidth: number;
 	useElapsed: boolean;
-	disableParticles: boolean;
 	allowEvent: (event: LaneEvent) => boolean;
-}): void {
+	tickerDeltaRatio?: number;
+}): { burstFrameIndex: number | null } {
 	const {
 		layer,
 		markerAtlas,
@@ -196,15 +259,9 @@ export function syncKillShots(args: {
 		allottedSeconds,
 		contentWidth,
 		useElapsed,
-		disableParticles,
 		allowEvent,
+		tickerDeltaRatio = 1,
 	} = args;
-
-	if (disableParticles) {
-		layer.beam.clear();
-		hideKillShotTips(layer.tipPool, 0);
-		return;
-	}
 
 	const activeShots: KillShotVisual[] = [];
 	for (const lane of lanes) {
@@ -230,7 +287,9 @@ export function syncKillShots(args: {
 	if (activeShots.length === 0) {
 		layer.beam.clear();
 		hideKillShotTips(layer.tipPool, 0);
-		return;
+		hideKillShotBursts(layer.burstPool, 0);
+		layer.activeBurstKey = null;
+		return { burstFrameIndex: null };
 	}
 
 	const primary = activeShots[activeShots.length - 1];
@@ -242,28 +301,54 @@ export function syncKillShots(args: {
 		const headX = primary.sourceX + (primary.targetX - primary.sourceX) * primary.progress;
 		const tipScale = primary.variant === "kill_cannon" ? 1.15 : 0.95;
 		tipIndex = placeKillShotTip(layer.tipPool, layer.container, tipIndex, boltTexture, headX, primary.y, tipScale, 0.95);
-	} else {
-		const impactTextureName =
-			primary.impactKind === "killed" ? effectAtlasFrame("killed") : effectAtlasFrame("blocked");
-		const impactTexture = textureFromAtlas(impactTextureName, markerAtlas);
-		const impactScale = primary.variant === "kill_cannon" ? 1.35 : 1.15;
-		tipIndex = placeKillShotTip(
-			layer.tipPool,
-			layer.container,
-			tipIndex,
-			impactTexture,
-			primary.targetX,
-			primary.y,
-			impactScale,
-			primary.impactAlpha,
-		);
 	}
 
 	hideKillShotTips(layer.tipPool, tipIndex);
+
+	let burstFrameIndex: number | null = null;
+	if (primary.phase === "impact" && (primary.impactKind === "killed" || primary.impactKind === "blocked")) {
+		const burstTextures = impactBurstTextures(markerAtlas, primary.impactKind);
+		const impactElapsed = currentSeconds - (primary.blastSeconds + KILL_SHOT_TRAVEL_SECONDS);
+		const frameIndex = killShotImpactFrameIndex(impactElapsed, burstTextures.length);
+		const burstKey = `${primary.laneId}:${primary.eventId}:${primary.impactKind}`;
+		const impactScale = primary.variant === "kill_cannon" ? 1.35 : 1.15;
+		let burstSprite = layer.burstPool[0];
+		if (!burstSprite) {
+			burstSprite = new AnimatedSprite({ textures: burstTextures.length ? burstTextures : [markerAtlas[Object.keys(markerAtlas)[0]]], anchor: 0.5, eventMode: "none" });
+			burstSprite.cullable = true;
+			burstSprite.loop = false;
+			burstSprite.onComplete = () => {
+				if (burstSprite.textures.length > 0) burstSprite.gotoAndStop(burstSprite.textures.length - 1);
+			};
+			layer.container.addChild(burstSprite);
+			layer.burstPool[0] = burstSprite;
+		}
+		burstFrameIndex = syncKillShotBurstSprite({
+			sprite: burstSprite,
+			textures: burstTextures,
+			burstKey,
+			layer,
+			x: primary.targetX,
+			y: primary.y,
+			scale: impactScale,
+			alpha: primary.impactAlpha,
+			frameIndex,
+			tickerDeltaRatio,
+		});
+		hideKillShotBursts(layer.burstPool, 1);
+	} else {
+		hideKillShotBursts(layer.burstPool, 0);
+		layer.activeBurstKey = null;
+	}
+
+	return { burstFrameIndex };
 }
 
 export function teardownKillShotLayer(layer: KillShotLayer): void {
 	layer.beam.clear();
 	for (const sprite of layer.tipPool) sprite.destroy();
 	layer.tipPool.length = 0;
+	for (const sprite of layer.burstPool) sprite.destroy();
+	layer.burstPool.length = 0;
+	layer.activeBurstKey = null;
 }

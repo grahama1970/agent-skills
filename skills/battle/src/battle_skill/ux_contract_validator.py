@@ -51,6 +51,13 @@ EXPECTED_SNAPSHOT_SCHEMA = "battle.snapshot.v1"
 EXPECTED_SEMANTIC_OUTCOME_MATRIX_SCHEMA = "battle.semantic_outcome_matrix.v1"
 EXPECTED_EXPLOIT_LIFECYCLE_DAG_SCHEMA = "battle.exploit_lifecycle_dag.v1"
 EXPECTED_EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA = "battle.exploit_lifecycle_receipts.v1"
+PREKILL_SURVIVAL_SPAWN_DECISIONS = {"strategic_pre_kill", "panic_spawn", "parallel_pivot"}
+TERMINAL_BOUNDARY_EVENT_TYPES = {
+    "blue_block_confirmed",
+    "parent_kill_confirmed",
+    "judge_blue_success",
+    "runtime_parent_terminated_by_blue",
+}
 EXPECTED_CANONICAL_SCENARIO = {
     "battle_id": "battle-004",
     "public_entrypoint": "/api/import-zip",
@@ -443,6 +450,7 @@ def validate_exploit_lifecycle_receipts_path(
     validate_exploit_lifecycle_receipts(bundle)
     receipts = bundle.get("receipts") if isinstance(bundle.get("receipts"), list) else []
     summary = bundle.get("summary") if isinstance(bundle.get("summary"), dict) else {}
+    prekill_contract = bundle.get("prekill_survival_contract") if isinstance(bundle.get("prekill_survival_contract"), dict) else summary.get("prekill_survival_contract")
     return {
         "status": "PASS",
         "schema": EXPECTED_EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA,
@@ -455,6 +463,8 @@ def validate_exploit_lifecycle_receipts_path(
         "mocked": bundle.get("mocked"),
         "live": bundle.get("live"),
         "proof_mode": bundle.get("proof_mode"),
+        "prekill_survival_status": prekill_contract.get("status") if isinstance(prekill_contract, dict) else None,
+        "prekill_survival_contract": prekill_contract if isinstance(prekill_contract, dict) else None,
     }
 
 
@@ -472,7 +482,12 @@ def validate_exploit_lifecycle_receipts(bundle: dict[str, Any]) -> None:
     _check("scenario_authorized" in event_types, "lifecycle receipts must include scenario_authorized", errors)
     _check("runtime_provisioned" in event_types, "lifecycle receipts must include runtime_provisioned", errors)
     _check(
-        "pressure_assessed" in event_types or "spawn_decision_recorded" in event_types or "lifecycle_unresolved" in event_types,
+        "pressure_assessed" in event_types
+        or "observation_drift_detected" in event_types
+        or "tau_branch_decision_recorded" in event_types
+        or "spawn_request_recorded" in event_types
+        or "spawn_decision_recorded" in event_types
+        or "lifecycle_unresolved" in event_types,
         "lifecycle receipts must include pressure, spawn, or unresolved learning evidence",
         errors,
     )
@@ -484,6 +499,17 @@ def validate_exploit_lifecycle_receipts(bundle: dict[str, Any]) -> None:
         validation = receipt.get("validation") if isinstance(receipt.get("validation"), dict) else {}
         _check(validation.get("mocked") is False, f"receipt {receipt.get('receipt_id')} mocked must be false", errors)
         _check(validation.get("live") is True, f"receipt {receipt.get('receipt_id')} live must be true", errors)
+        event_type = str(receipt.get("event_type"))
+        if event_type in {"probe_executed", "pressure_assessed", "observation_drift_detected", "threat_assessment_recorded", "child_inherited_probe_recorded"}:
+            _validate_live_observation(receipt=receipt, errors=errors)
+        if event_type == "observation_drift_detected":
+            _validate_drift_analysis(receipt=receipt, errors=errors)
+        if event_type == "threat_assessment_recorded":
+            _validate_parent_threat_assessment(receipt=receipt, errors=errors)
+        if event_type == "tau_branch_decision_recorded":
+            _validate_tau_branch_decision(receipt=receipt, errors=errors)
+        if event_type == "spawn_request_recorded":
+            _validate_spawn_request(receipt=receipt, errors=errors)
         pressure = receipt.get("pressure_observation") if isinstance(receipt.get("pressure_observation"), dict) else {}
         if pressure.get("present") is True:
             _check(
@@ -493,7 +519,7 @@ def validate_exploit_lifecycle_receipts(bundle: dict[str, Any]) -> None:
             )
             signals = {str(signal) for signal in pressure.get("signals", [])}
             if pressure.get("confirmed_blue_action") is False:
-                forbidden = {"blue_patch_receipt", "blue_scan_receipt", "judge_block_receipt"}
+                forbidden = {"blue_patch_receipt", "blue_scan_receipt", "blue_block_receipt", "blue_block_confirmed", "judge_block_receipt", "parent_kill_confirmed", "runtime_parent_terminated_by_blue"}
                 _check(not (signals & forbidden), f"receipt {receipt.get('receipt_id')} drift-only pressure must not include authority receipts", errors)
             outcome = receipt.get("outcome") if isinstance(receipt.get("outcome"), dict) else {}
             _check(
@@ -502,22 +528,316 @@ def validate_exploit_lifecycle_receipts(bundle: dict[str, Any]) -> None:
                 errors,
             )
         spawn = receipt.get("spawn_decision") if isinstance(receipt.get("spawn_decision"), dict) else {}
-        if spawn.get("decision") in {"strategic_pre_kill", "panic_spawn"}:
+        if spawn.get("decision") in PREKILL_SURVIVAL_SPAWN_DECISIONS:
             _check(
                 spawn.get("confirmed_kill_receipt_before_spawn") is False,
                 f"receipt {receipt.get('receipt_id')} pre-kill spawn cannot follow confirmed kill",
                 errors,
             )
+            _validate_spawn_knowledge_handoff(receipt=receipt, errors=errors)
         if spawn.get("decision") == "post_block_handoff":
             _check(
                 spawn.get("parent_state") == "blocked",
                 f"receipt {receipt.get('receipt_id')} post_block_handoff parent_state must be blocked",
                 errors,
             )
+            _validate_spawn_knowledge_handoff(receipt=receipt, errors=errors)
+        if event_type == "child_lifecycle_started":
+            _validate_child_knowledge_ack(receipt=receipt, errors=errors)
+        if event_type == "child_inherited_plan_recorded":
+            _validate_child_inherited_plan(receipt=receipt, errors=errors)
+        if event_type == "child_inherited_probe_recorded":
+            _validate_child_inherited_probe(receipt=receipt, errors=errors)
+        if event_type == "memory_promotion_evaluated":
+            _validate_memory_promotion(receipt=receipt, errors=errors)
+        if event_type == "replay_event_emitted":
+            _validate_replay_event_boundary(receipt=receipt, errors=errors)
+        score = receipt.get("score") if isinstance(receipt.get("score"), dict) else {}
+        if score.get("applied") is True:
+            _validate_score_calibration(receipt=receipt, errors=errors)
     summary = bundle.get("summary") if isinstance(bundle.get("summary"), dict) else {}
     _check(summary.get("receipt_count") == len(receipts), "summary.receipt_count must match receipts length", errors)
+    _validate_score_ordering(receipts=receipts, errors=errors)
+    _validate_prekill_survival_contract(bundle=bundle, errors=errors)
     if errors:
         raise ContractError("\n".join(errors))
+
+
+def _validate_live_observation(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    observation = receipt.get("observation") if isinstance(receipt.get("observation"), dict) else {}
+    _check(observation.get("present") is True, f"receipt {receipt.get('receipt_id')} live observation missing", errors)
+    for key in ("stdout", "stderr", "http_response", "timing", "network_summary"):
+        _check(isinstance(observation.get(key), dict), f"receipt {receipt.get('receipt_id')} observation.{key} must be present", errors)
+    network = observation.get("network_summary") if isinstance(observation.get("network_summary"), dict) else {}
+    _check(network.get("capture_requested") is True, f"receipt {receipt.get('receipt_id')} network capture must be requested", errors)
+    if network.get("available") is True:
+        _check(network.get("full_packet_capture_proven") is True, f"receipt {receipt.get('receipt_id')} available network capture must prove full packet capture", errors)
+        _check(bool(network.get("artifact_uri")) and bool(network.get("sha256")), f"receipt {receipt.get('receipt_id')} available network capture must include artifact and sha256", errors)
+    else:
+        _check(network.get("full_packet_capture_proven") is False, f"receipt {receipt.get('receipt_id')} unavailable network capture must not claim proof", errors)
+        _check(bool(network.get("reason")), f"receipt {receipt.get('receipt_id')} unavailable network capture must include reason", errors)
+
+
+def _validate_drift_analysis(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    drift = receipt.get("drift_analysis") if isinstance(receipt.get("drift_analysis"), dict) else {}
+    _check(drift.get("present") is True, f"receipt {receipt.get('receipt_id')} drift analysis missing", errors)
+    _check(drift.get("schema") == "battle.environment_drift.v1", f"receipt {receipt.get('receipt_id')} drift analysis schema missing", errors)
+    _check(drift.get("authority") == "battle", f"receipt {receipt.get('receipt_id')} drift authority must be battle", errors)
+    _check(bool(drift.get("baseline_observation_receipt_id")), f"receipt {receipt.get('receipt_id')} drift baseline observation missing", errors)
+    _check(bool(drift.get("current_observation_receipt_id")), f"receipt {receipt.get('receipt_id')} drift current observation missing", errors)
+    _check(drift.get("confirmed_kill") is False, f"receipt {receipt.get('receipt_id')} drift must not confirm kill", errors)
+    _check(
+        drift.get("overclaim_guard") == "observation_only_unless_blue_or_judge_receipt_present",
+        f"receipt {receipt.get('receipt_id')} drift overclaim guard missing",
+        errors,
+    )
+
+
+def _validate_parent_threat_assessment(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    threat = receipt.get("threat_assessment") if isinstance(receipt.get("threat_assessment"), dict) else {}
+    _check(threat.get("present") is True, f"receipt {receipt.get('receipt_id')} threat assessment missing", errors)
+    _check(threat.get("schema") == "battle.parent_threat_assessment.v1", f"receipt {receipt.get('receipt_id')} threat assessment schema missing", errors)
+    _check(threat.get("claim_authority") == "tau_claim_only", f"receipt {receipt.get('receipt_id')} threat assessment must be tau_claim_only", errors)
+    _check(threat.get("confirmed_kill") is False, f"receipt {receipt.get('receipt_id')} threat assessment must not confirm kill", errors)
+    observations = threat.get("cited_observation_receipt_ids") if isinstance(threat.get("cited_observation_receipt_ids"), list) else []
+    drifts = threat.get("cited_drift_receipt_ids") if isinstance(threat.get("cited_drift_receipt_ids"), list) else []
+    _check(bool(observations), f"receipt {receipt.get('receipt_id')} threat assessment must cite observation receipts", errors)
+    _check(bool(drifts), f"receipt {receipt.get('receipt_id')} threat assessment must cite drift receipts", errors)
+
+
+def _validate_tau_branch_decision(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    branch = receipt.get("tau_branch_decision") if isinstance(receipt.get("tau_branch_decision"), dict) else {}
+    _check(branch.get("present") is True, f"receipt {receipt.get('receipt_id')} Tau branch decision missing", errors)
+    _check(branch.get("schema") == "battle.tau_branch_decision.v1", f"receipt {receipt.get('receipt_id')} Tau branch decision schema missing", errors)
+    _check(branch.get("decision_authority") == "tau_subagent", f"receipt {receipt.get('receipt_id')} Tau branch decision authority must be tau_subagent", errors)
+    _check(branch.get("battle_policy_authority") == "battle", f"receipt {receipt.get('receipt_id')} Tau branch policy authority must be battle", errors)
+    decision = str(branch.get("decision") or "")
+    _check(decision in {"keep_going", "spawn_requested", "pivot_requested", "research_more", "abandon_branch"}, f"receipt {receipt.get('receipt_id')} Tau branch decision invalid", errors)
+    observed_refs = branch.get("observed_evidence_refs") if isinstance(branch.get("observed_evidence_refs"), list) else []
+    _check(bool(observed_refs), f"receipt {receipt.get('receipt_id')} Tau branch decision must cite observed evidence refs", errors)
+    _check(bool(branch.get("rationale")), f"receipt {receipt.get('receipt_id')} Tau branch decision rationale missing", errors)
+    _check(branch.get("confidence") in {"low", "medium", "high"}, f"receipt {receipt.get('receipt_id')} Tau branch decision confidence invalid", errors)
+    _check(branch.get("overclaim_guard") == "tau_reasoning_only_battle_validates_policy_and_outcomes", f"receipt {receipt.get('receipt_id')} Tau branch overclaim guard missing", errors)
+    _check(branch.get("confirmed_kill") is not True, f"receipt {receipt.get('receipt_id')} Tau branch decision must not confirm kill", errors)
+    _check(branch.get("confirmed_block") is not True, f"receipt {receipt.get('receipt_id')} Tau branch decision must not confirm block", errors)
+    if decision == "keep_going":
+        _check(bool(branch.get("why_not_spawn")), f"receipt {receipt.get('receipt_id')} keep_going must explain why not spawn", errors)
+    if decision == "spawn_requested":
+        _check(isinstance(branch.get("requested_child_profile"), dict), f"receipt {receipt.get('receipt_id')} spawn_requested must include requested child profile", errors)
+        goals = branch.get("inherited_goals") if isinstance(branch.get("inherited_goals"), list) else []
+        _check(bool(goals), f"receipt {receipt.get('receipt_id')} spawn_requested must include inherited goals", errors)
+        _check(branch.get("battle_policy_result") in {"pending", "allowed", "denied"}, f"receipt {receipt.get('receipt_id')} spawn_requested must include Battle policy result", errors)
+    if decision == "pivot_requested":
+        _check(bool(branch.get("pivot_target")), f"receipt {receipt.get('receipt_id')} pivot_requested must include pivot target", errors)
+    if decision == "research_more":
+        questions = branch.get("research_questions") if isinstance(branch.get("research_questions"), list) else []
+        _check(bool(questions), f"receipt {receipt.get('receipt_id')} research_more must include research questions", errors)
+    if decision == "abandon_branch":
+        _check(bool(branch.get("abandon_reason")), f"receipt {receipt.get('receipt_id')} abandon_branch must include abandon reason", errors)
+        outcome = receipt.get("outcome") if isinstance(receipt.get("outcome"), dict) else {}
+        _check(
+            outcome.get("candidate_class") not in {"confirmed_blue_kill_no_child", "confirmed_blue_kill_with_child", "pre_spawn_blue_block", "post_spawn_child_contained"},
+            f"receipt {receipt.get('receipt_id')} abandon_branch cannot become Blue terminal outcome without terminal receipt",
+            errors,
+        )
+
+
+def _validate_spawn_request(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    request = receipt.get("spawn_request") if isinstance(receipt.get("spawn_request"), dict) else {}
+    _check(request.get("present") is True, f"receipt {receipt.get('receipt_id')} spawn request missing", errors)
+    _check(request.get("schema") == "battle.spawn_request.v1", f"receipt {receipt.get('receipt_id')} spawn request schema missing", errors)
+    _check(request.get("claim_authority") == "tau_claim_only", f"receipt {receipt.get('receipt_id')} spawn request must be tau_claim_only", errors)
+    _check(request.get("requested_decision") in PREKILL_SURVIVAL_SPAWN_DECISIONS or request.get("requested_decision") == "post_block_handoff", f"receipt {receipt.get('receipt_id')} spawn request decision invalid", errors)
+    _check(bool(request.get("child_exploit_id")), f"receipt {receipt.get('receipt_id')} spawn request child_exploit_id missing", errors)
+    _check(request.get("battle_allowed") is not True and request.get("allowed") is not True, f"receipt {receipt.get('receipt_id')} spawn request must not approve itself", errors)
+    _check(request.get("policy_owner") == "battle", f"receipt {receipt.get('receipt_id')} spawn request policy owner must be battle", errors)
+
+
+def _validate_spawn_knowledge_handoff(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    knowledge = receipt.get("knowledge_packet") if isinstance(receipt.get("knowledge_packet"), dict) else {}
+    _check(knowledge.get("present") is True, f"receipt {receipt.get('receipt_id')} spawn knowledge packet missing", errors)
+    _check(bool(knowledge.get("packet_id")), f"receipt {receipt.get('receipt_id')} spawn knowledge packet_id missing", errors)
+    goals = knowledge.get("research_goals") if isinstance(knowledge.get("research_goals"), list) else []
+    _check(bool(goals), f"receipt {receipt.get('receipt_id')} spawn knowledge research_goals missing", errors)
+    parent_analysis = knowledge.get("parent_analysis") if isinstance(knowledge.get("parent_analysis"), dict) else {}
+    _check(parent_analysis.get("stdout_stderr_response_drift_checked") is True, f"receipt {receipt.get('receipt_id')} parent drift analysis missing", errors)
+    _check(parent_analysis.get("packet_capture_requested") is True, f"receipt {receipt.get('receipt_id')} parent packet capture request missing", errors)
+    policy = receipt.get("spawn_policy") if isinstance(receipt.get("spawn_policy"), dict) else {}
+    _check(policy.get("owner") == "battle", f"receipt {receipt.get('receipt_id')} spawn policy owner must be battle", errors)
+    _check(policy.get("allowed") is True, f"receipt {receipt.get('receipt_id')} spawn policy must explicitly allow spawn", errors)
+
+
+def _validate_child_knowledge_ack(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    knowledge = receipt.get("knowledge_packet") if isinstance(receipt.get("knowledge_packet"), dict) else {}
+    ack = knowledge.get("child_ack") if isinstance(knowledge.get("child_ack"), dict) else {}
+    _check(knowledge.get("present") is True, f"receipt {receipt.get('receipt_id')} child knowledge packet missing", errors)
+    _check(ack.get("required") is True, f"receipt {receipt.get('receipt_id')} child ack must be required", errors)
+    _check(ack.get("received") is True, f"receipt {receipt.get('receipt_id')} child ack must be received", errors)
+    _check(ack.get("used_before_first_probe") is True, f"receipt {receipt.get('receipt_id')} child must ack inherited state before first probe", errors)
+
+
+def _validate_child_inherited_plan(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    _validate_child_knowledge_ack(receipt=receipt, errors=errors)
+    plan = receipt.get("child_plan") if isinstance(receipt.get("child_plan"), dict) else {}
+    _check(plan.get("present") is True, f"receipt {receipt.get('receipt_id')} child inherited plan missing", errors)
+    _check(plan.get("schema") == "battle.child_inherited_plan.v1", f"receipt {receipt.get('receipt_id')} child inherited plan schema missing", errors)
+    _check(bool(plan.get("plan_id")), f"receipt {receipt.get('receipt_id')} child inherited plan_id missing", errors)
+    _check(bool(plan.get("knowledge_packet_id")), f"receipt {receipt.get('receipt_id')} child inherited knowledge_packet_id missing", errors)
+    inherited_refs = plan.get("inherited_item_refs") if isinstance(plan.get("inherited_item_refs"), list) else []
+    _check(bool(inherited_refs), f"receipt {receipt.get('receipt_id')} child inherited refs missing", errors)
+    _check(plan.get("used_before_first_probe") is True, f"receipt {receipt.get('receipt_id')} child inherited plan must precede first probe", errors)
+    _check(plan.get("scope_inherited") is True, f"receipt {receipt.get('receipt_id')} child inherited scope missing", errors)
+
+
+def _validate_child_inherited_probe(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    probe = receipt.get("inherited_probe") if isinstance(receipt.get("inherited_probe"), dict) else {}
+    _check(probe.get("present") is True, f"receipt {receipt.get('receipt_id')} child inherited probe missing", errors)
+    _check(probe.get("schema") == "battle.child_inherited_probe.v1", f"receipt {receipt.get('receipt_id')} child inherited probe schema missing", errors)
+    _check(bool(probe.get("child_plan_id")), f"receipt {receipt.get('receipt_id')} child inherited probe child_plan_id missing", errors)
+    _check(bool(probe.get("knowledge_packet_id")), f"receipt {receipt.get('receipt_id')} child inherited probe knowledge_packet_id missing", errors)
+    _check(probe.get("used_inherited_state") is True, f"receipt {receipt.get('receipt_id')} child inherited probe must use inherited state", errors)
+    inherited_refs = probe.get("inherited_item_refs") if isinstance(probe.get("inherited_item_refs"), list) else []
+    _check(bool(inherited_refs), f"receipt {receipt.get('receipt_id')} child inherited probe refs missing", errors)
+
+
+def _validate_memory_promotion(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    promotion = receipt.get("memory_promotion") if isinstance(receipt.get("memory_promotion"), dict) else {}
+    _check(promotion.get("present") is True, f"receipt {receipt.get('receipt_id')} memory promotion record missing", errors)
+    _check(bool(promotion.get("candidate_id")), f"receipt {receipt.get('receipt_id')} memory promotion candidate_id missing", errors)
+    _check(promotion.get("validator_required") is True, f"receipt {receipt.get('receipt_id')} memory promotion must require validator", errors)
+    _check(bool(promotion.get("reason")), f"receipt {receipt.get('receipt_id')} memory promotion reason missing", errors)
+
+
+def _validate_score_calibration(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    score = receipt.get("score") if isinstance(receipt.get("score"), dict) else {}
+    calibration = score.get("score_calibration") if isinstance(score.get("score_calibration"), dict) else {}
+    outcome = receipt.get("outcome") if isinstance(receipt.get("outcome"), dict) else {}
+    _check(calibration.get("schema") == "battle.semantic_score_calibration.v1", f"receipt {receipt.get('receipt_id')} score calibration schema missing", errors)
+    _check(calibration.get("outcome_class") == outcome.get("candidate_class"), f"receipt {receipt.get('receipt_id')} score calibration outcome mismatch", errors)
+    for key in ("blue_base_points", "red_base_points", "score_weight"):
+        _check(isinstance(calibration.get(key), (int, float)), f"receipt {receipt.get('receipt_id')} score calibration {key} missing", errors)
+    weight = calibration.get("score_weight")
+    if isinstance(weight, (int, float)):
+        expected_blue = round(float(calibration.get("blue_base_points", 0)) * float(weight), 3)
+        expected_red = round(float(calibration.get("red_base_points", 0)) * float(weight), 3)
+        _check(abs(float(score.get("blue_points") or 0.0) - expected_blue) < 0.001, f"receipt {receipt.get('receipt_id')} blue score does not match calibration", errors)
+        _check(abs(float(score.get("red_points") or 0.0) - expected_red) < 0.001, f"receipt {receipt.get('receipt_id')} red score does not match calibration", errors)
+
+
+def _validate_replay_event_boundary(*, receipt: dict[str, Any], errors: list[str]) -> None:
+    replay = receipt.get("replay_event") if isinstance(receipt.get("replay_event"), dict) else {}
+    _check(replay.get("present") is True, f"receipt {receipt.get('receipt_id')} replay event missing", errors)
+    _check(replay.get("schema") == "battle.source_time_replay_event.v1", f"receipt {receipt.get('receipt_id')} replay event schema missing", errors)
+    _check(replay.get("time_authority") == "receipt_elapsed_seconds", f"receipt {receipt.get('receipt_id')} replay event must use source-time receipt authority", errors)
+    _check(replay.get("presentation_owner") == "ux", f"receipt {receipt.get('receipt_id')} replay event presentation owner must be ux", errors)
+    forbidden = {"pixi_path", "spritesheet_path", "frame_index", "easing", "camera_path", "cinematic_speed"}
+    _check(forbidden <= set(str(item) for item in replay.get("backend_must_not_emit", [])), f"receipt {receipt.get('receipt_id')} replay event must declare backend render boundary", errors)
+
+
+def _validate_score_ordering(*, receipts: list[Any], errors: list[str]) -> None:
+    base_by_outcome: dict[str, float] = {}
+    for receipt in receipts:
+        if not isinstance(receipt, dict):
+            continue
+        score = receipt.get("score") if isinstance(receipt.get("score"), dict) else {}
+        calibration = score.get("score_calibration") if isinstance(score.get("score_calibration"), dict) else {}
+        outcome = str(calibration.get("outcome_class") or "")
+        blue_base = calibration.get("blue_base_points")
+        if outcome and isinstance(blue_base, (int, float)):
+            base_by_outcome[outcome] = float(blue_base)
+    ordered = [
+        "pre_spawn_blue_block",
+        "confirmed_blue_kill_no_child",
+        "post_spawn_child_contained",
+        "confirmed_blue_kill_with_child",
+        "spawn_pressure_conceded",
+    ]
+    for earlier, later in zip(ordered, ordered[1:]):
+        if earlier in base_by_outcome and later in base_by_outcome:
+            _check(base_by_outcome[earlier] > base_by_outcome[later], f"score ordering must keep {earlier} > {later}", errors)
+
+
+def _contract_source_time(node: Any) -> float | None:
+    if isinstance(node, (int, float)):
+        return float(node)
+    if not isinstance(node, dict):
+        return None
+    for key in ("source_time", "started_elapsed_seconds", "ended_elapsed_seconds"):
+        value = node.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                continue
+    return None
+
+
+def _validate_prekill_survival_contract(*, bundle: dict[str, Any], errors: list[str]) -> None:
+    summary = bundle.get("summary") if isinstance(bundle.get("summary"), dict) else {}
+    contract = bundle.get("prekill_survival_contract")
+    if not isinstance(contract, dict):
+        contract = summary.get("prekill_survival_contract")
+    requested = bundle.get("source") == "battle_004_prekill_survival_live_tau" or isinstance(contract, dict)
+    if not requested:
+        return
+    if not isinstance(contract, dict):
+        errors.append("pre-kill survival contract missing")
+        return
+    receipts = bundle.get("receipts") if isinstance(bundle.get("receipts"), list) else []
+    event_types = {str(receipt.get("event_type")) for receipt in receipts if isinstance(receipt, dict)}
+    required_spine = {
+        "observation_drift_detected",
+        "threat_assessment_recorded",
+        "tau_branch_decision_recorded",
+        "spawn_request_recorded",
+        "spawn_decision_recorded",
+        "child_lifecycle_started",
+        "child_inherited_plan_recorded",
+        "child_inherited_probe_recorded",
+        "memory_promotion_evaluated",
+        "replay_event_emitted",
+    }
+    missing_spine = sorted(required_spine - event_types)
+    _check(not missing_spine, f"pre-kill survival lifecycle spine missing events: {', '.join(missing_spine)}", errors)
+
+    red_spawn_intent = contract.get("red_spawn_intent") if isinstance(contract.get("red_spawn_intent"), dict) else {}
+    policy = contract.get("battle_spawn_policy_decision") if isinstance(contract.get("battle_spawn_policy_decision"), dict) else {}
+    child_materialized = contract.get("child_materialized") if isinstance(contract.get("child_materialized"), dict) else {}
+    terminal = contract.get("earliest_confirmed_terminal") if isinstance(contract.get("earliest_confirmed_terminal"), dict) else {}
+    lineage = contract.get("lineage_registered") if isinstance(contract.get("lineage_registered"), dict) else {}
+    child_started = contract.get("child_lifecycle_started") if isinstance(contract.get("child_lifecycle_started"), dict) else {}
+    post_terminal = contract.get("post_terminal_child_lifecycle_receipt") if isinstance(contract.get("post_terminal_child_lifecycle_receipt"), dict) else {}
+
+    _check(
+        red_spawn_intent.get("decision") in PREKILL_SURVIVAL_SPAWN_DECISIONS,
+        "pre-kill survival red_spawn_intent.decision must be strategic_pre_kill, panic_spawn, or parallel_pivot",
+        errors,
+    )
+    _check(policy.get("status") == "allowed", "pre-kill survival battle_spawn_policy_decision.status must be allowed", errors)
+
+    child_time = _contract_source_time(child_materialized)
+    terminal_time = _contract_source_time(terminal)
+    post_terminal_time = _contract_source_time(post_terminal)
+    _check(child_time is not None, "pre-kill survival child_materialized.source_time missing", errors)
+    _check(terminal_time is not None, "pre-kill survival earliest_confirmed_terminal.source_time missing", errors)
+    if child_time is not None and terminal_time is not None:
+        _check(child_time < terminal_time, "pre-kill survival child_materialized.source_time must be before earliest_confirmed_terminal.source_time", errors)
+    _check(terminal.get("event_type") in TERMINAL_BOUNDARY_EVENT_TYPES, "pre-kill survival earliest_confirmed_terminal.event_type must be a recognized terminal boundary", errors)
+    _check(
+        bool(lineage.get("parent_exploit_id"))
+        and bool(lineage.get("child_exploit_id"))
+        and bool(lineage.get("lineage_id"))
+        and lineage.get("generation") is not None,
+        "pre-kill survival lineage_registered must identify parent, child, lineage_id, and generation",
+        errors,
+    )
+    _check(bool(child_started.get("receipt_id")), "pre-kill survival child_lifecycle_started missing", errors)
+    _check(post_terminal_time is not None, "pre-kill survival post-terminal child lifecycle receipt missing", errors)
+    if terminal_time is not None and post_terminal_time is not None:
+        _check(post_terminal_time > terminal_time, "pre-kill survival child post-terminal lifecycle receipt must be after earliest terminal", errors)
+    _check(contract.get("status") == "PASS", "pre-kill survival contract status must be PASS", errors)
 
 
 def validate_exploit_lifecycle_dag_path(

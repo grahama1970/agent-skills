@@ -28,10 +28,11 @@ import {
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { cn } from "./lib/utils";
 import { isBattlePixiEngine } from "./lib/is-battle-pixi-engine";
+import { activeReceiptBeatAtPlayhead, receiptBeatToEffectCue, type ReceiptBeat } from "./lib/battle-receipt-beats";
+import { useBattleReceiptDirector } from "./hooks/useBattleReceiptDirector";
 import { battlePixiTestModeFromUrl } from "./lib/is-battle-pixi-test-mode";
 import { buildRaceEngineInput, buildRaceEngineRowLayout } from "./lib/build-race-engine-input";
 import { battleTimelineDomain } from "./lib/battle-timeline-domain";
-import { useBattleReplayCues } from "./hooks/useBattleReplayCues";
 import type { BattleEffectCue, BattleEvent } from "./lib/battle-types";
 import { BattleRacePixiSpike } from "./engine/BattleRacePixiSpike";
 
@@ -50,10 +51,15 @@ type Props = {
   battleEvents?: BattleEvent[];
   soundEnabled?: boolean;
   onReplayCue?: (cue: BattleEffectCue) => void;
+  onReceiptBeat?: (beat: ReceiptBeat) => void;
   onPlayheadSeconds?: (seconds: number) => void;
+  highlightReel?: boolean;
+  onHighlightReelChange?: (enabled: boolean) => void;
+  highlightJumpToken?: number;
+  onPlayingChange?: (playing: boolean) => void;
 };
 
-export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onPlayheadSeconds }: Props) {
+export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onReceiptBeat, onPlayheadSeconds, highlightReel = false, onHighlightReelChange, highlightJumpToken = 0, onPlayingChange }: Props) {
   useRegisterAction("battle:timeline:scroll", { action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom:out", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
@@ -89,14 +95,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     onPlayheadSeconds?.(effectivePlayheadSeconds);
   }, [effectivePlayheadSeconds, onPlayheadSeconds]);
 
-  useBattleReplayCues({
-    playheadSeconds: effectivePlayheadSeconds,
-    fixture,
-    lanes,
-    battleEvents,
-    enabled: receiptReplay && Boolean(onReplayCue) && !testModeFromUrl?.freezeTime,
-    onCue: onReplayCue,
-  });
+
   const [scrollMetrics, setScrollMetrics] = useState({ scrollLeft: 0, scrollWidth: 0, viewportWidth: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
   const lanesContainerRef = useRef<HTMLDivElement>(null);
@@ -219,8 +218,100 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     [allotted, contentWidth, playheadSeconds, playing, syncScrollMetrics]
   );
 
+  const focusTimelineAtSeconds = useCallback(
+    (seconds: number, behavior: ScrollBehavior = "smooth") => {
+      const node = scrollRef.current;
+      if (!node) return;
+      const left = scrollLeftForPlayhead({
+        playheadLeft: playheadLeftPx(seconds, allotted, contentWidth),
+        viewportWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+      });
+      if (Math.abs(node.scrollLeft - left) > 1) node.scrollTo({ left, behavior });
+      syncScrollMetrics();
+    },
+    [allotted, contentWidth, syncScrollMetrics],
+  );
+
+  const director = useBattleReceiptDirector({
+    fixture,
+    lanes,
+    playheadSeconds: effectivePlayheadSeconds,
+    enabled: receiptReplay && !testModeFromUrl?.freezeTime,
+    handlers: {
+      onBeat: (beat) => {
+        onReceiptBeat?.(beat);
+        onReplayCue?.(receiptBeatToEffectCue(beat));
+      },
+      focusCamera: (beat, behavior = "smooth") => {
+        if (!pixiEngine || !receiptReplay) return;
+        focusTimelineAtSeconds(beat.camera.focusSeconds, behavior);
+        onSelect(beat.laneId);
+      },
+    },
+  });
+
+  const receiptBeatForPlayhead = useMemo(
+    () => activeReceiptBeatAtPlayhead(director.beats, effectivePlayheadSeconds, director.activeBeat),
+    [director.activeBeat, director.beats, effectivePlayheadSeconds],
+  );
+
   useEffect(() => {
-    if (!playing) return;
+    if (!highlightJumpToken) return;
+    const jump = director.jumpToNextHighlight(effectivePlayheadSeconds);
+    if (!jump) return;
+    const preSeconds = jump.beat.camera.focusSeconds - jump.preRollSeconds;
+    setPlayheadSeconds(preSeconds);
+    focusTimelineAtSeconds(preSeconds, "auto");
+    window.setTimeout(() => {
+      setPlayheadSeconds(jump.beat.camera.focusSeconds);
+      focusTimelineAtSeconds(jump.beat.camera.focusSeconds, "smooth");
+    }, jump.beat.camera.preRollMs);
+  }, [director, effectivePlayheadSeconds, focusTimelineAtSeconds, highlightJumpToken]);
+
+  useEffect(() => {
+    if (!playing || !highlightReel || !receiptReplay) return;
+    const beats = director.heroBeats;
+    if (!beats.length) return;
+    const multiplier = Number.parseFloat(speed) || 1;
+    let idx = beats.findIndex((beat) => beat.atSeconds >= effectivePlayheadSeconds - 0.15);
+    if (idx < 0) idx = 0;
+    let cancelled = false;
+    let timer: number | undefined;
+
+    const jumpTo = (beatIndex: number) => {
+      if (cancelled) return;
+      const beat = beats[beatIndex];
+      if (!beat) {
+        onPlayingChange?.(false);
+        return;
+      }
+      const preRollMs = beat.camera.preRollMs / multiplier;
+      const postRollMs = beat.camera.postRollMs / multiplier;
+      const preSeconds = beat.camera.focusSeconds - beat.camera.preRollMs / 1000;
+      setPlayheadSeconds(preSeconds);
+      focusTimelineAtSeconds(preSeconds, "auto");
+      onSelect(beat.laneId);
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        setPlayheadSeconds(beat.camera.focusSeconds);
+        focusTimelineAtSeconds(beat.camera.focusSeconds, "smooth");
+        timer = window.setTimeout(() => {
+          if (cancelled) return;
+          jumpTo(beatIndex + 1);
+        }, postRollMs);
+      }, preRollMs);
+    };
+
+    jumpTo(idx);
+    return () => {
+      cancelled = true;
+      if (timer != null) window.clearTimeout(timer);
+    };
+  }, [director.heroBeats, effectivePlayheadSeconds, focusTimelineAtSeconds, highlightReel, onPlayingChange, onSelect, playing, receiptReplay, speed]);
+
+  useEffect(() => {
+    if (!playing || highlightReel) return;
     const multiplier = Number.parseFloat(speed) || 1;
     let frame = 0;
     let last = performance.now();
@@ -245,7 +336,10 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     syncScrollMetrics();
     const node = scrollRef.current;
     if (!node) return;
-    const onScroll = () => syncScrollMetrics();
+    const onScroll = () => {
+      syncScrollMetrics();
+      if (receiptReplay && pixiEngine) director.pauseCameraFollow();
+    };
     node.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", syncScrollMetrics);
     followPlayhead("auto");
@@ -253,7 +347,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       node.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", syncScrollMetrics);
     };
-  }, [contentWidth, visibleLanes.length, followPlayhead, syncScrollMetrics]);
+  }, [contentWidth, director.pauseCameraFollow, pixiEngine, receiptReplay, visibleLanes.length, followPlayhead, syncScrollMetrics]);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -295,8 +389,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
           if (lane) onSelect(lane.id);
         },
         onEffectCue: onReplayCue,
+        activeReceiptBeat: receiptBeatForPlayhead,
       }),
-    [allotted, effectivePlayheadSeconds, fixture, onReplayCue, onSelect, selectedId, visibleLanes, zoom],
+    [allotted, effectivePlayheadSeconds, fixture, onReplayCue, onSelect, receiptBeatForPlayhead, selectedId, visibleLanes, zoom],
   );
   const pixiRowsHeight = useMemo(
     () => pixiRowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0),
@@ -311,7 +406,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const timelineBody = (
     <>
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
-      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : "relative min-h-[calc(100%-2.25rem)]"}>
+      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative min-h-[calc(100%-2.25rem)]", receiptReplay && pixiEngine && "battle-receipt-pixi-rows")}>
         {!designView ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
         {visibleLanes.map((lane) => (
           <LaneRow
@@ -337,7 +432,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             hideTrack={pixiEngine}
           />
         ))}
-        {!pixiEngine || receiptReplay ? (
+        {(!pixiEngine || designView) ? (
           <BattleLineageFlow
             lanes={lanes}
             visibleLaneIds={visibleLanes.map((lane) => lane.id)}
@@ -363,6 +458,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             }}
             heightPx={pixiRowsHeight}
             playing={playing}
+            collapsedParentIds={collapsed}
           />
         ) : null}
       </div>
@@ -401,7 +497,18 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             <button type="button" className="zoomBtn min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40" data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</button>
             <button type="button" className="zoomBtn min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40" data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</button>
           </div>
-          <span className="playheadLabel">PLAYHEAD {receiptReplay ? formatSeconds(playheadSeconds) : `${mockupClockFromTrackPct((playheadSeconds / Math.max(1, allotted)) * 100)}:32`}</span>
+                    <span className="playheadLabel">PLAYHEAD {receiptReplay ? formatSeconds(playheadSeconds) : `${mockupClockFromTrackPct((playheadSeconds / Math.max(1, allotted)) * 100)}:32`}</span>
+          {receiptReplay && pixiEngine && !director.cameraFollow ? (
+            <button
+              type="button"
+              className="ml-2 rounded-md border border-battle-cyan/30 bg-battle-cyan/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-battle-cyan"
+              data-qid="battle:timeline:resume-follow"
+              data-qs-action="BATTLE_CAMERA_RESUME_FOLLOW"
+              onClick={() => director.resumeCameraFollow()}
+            >
+              Resume follow
+            </button>
+          ) : null}
         </div>
       ) : (
         <div className="flex min-h-[36px] items-center justify-between gap-3 border-b border-battle-blue/[.07] bg-[rgba(3,8,15,.35)] px-4 py-1">
