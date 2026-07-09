@@ -543,7 +543,7 @@ const CANONICAL_PHASES = [
   { id: '05', label: 'Voices', icon: Mic, legacyIds: ['phase_05_orpheus_voices'] },
   { id: '06', label: 'Script', icon: FileText, legacyIds: ['phase_06_script'] },
   { id: '07', label: 'Storyboard', icon: Layout, legacyIds: ['phase_07_storyboard'] },
-  { id: '08', label: 'Panels', icon: Grid, legacyIds: ['phase_08_panels_environment'] },
+  { id: '08', label: 'Media Lock', icon: Grid, legacyIds: ['phase_08_panels_environment', 'media-lock', 'panels'] },
   { id: '09', label: 'Video Provider', icon: Package, legacyIds: ['phase_09_kling_optimized_packet', 'video-provider', 'kling-packet'] },
   { id: '10', label: 'Review Gate', icon: ShieldCheck, legacyIds: ['phase_10_creator_reviewer_gate'] },
   { id: '11', label: 'Provider Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
@@ -597,6 +597,10 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
       }
     } else {
       const stage = { ...matching[0], id: canonical.id, title: canonical.label }
+      if (canonical.id === '08') {
+        stage.summary = 'Accepted storyboard frame evidence, media locks, hashes, dimensions, and identity status before provider-facing distillation.'
+        stage.failureOrGap = stage.failureOrGap || 'Media lock evidence is required between Storyboard and Video Provider.'
+      }
       if (canonical.id === '09') {
         stage.summary = 'Provider-neutral video scene packet, selected provider routing, prompt, locks, and media staging receipts.'
       }
@@ -631,7 +635,7 @@ const phaseShortLabels: Record<string, string> = {
   '05': 'Voices',
   '06': 'Script',
   '07': 'Storyboard',
-  '08': 'Panels',
+  '08': 'Media Lock',
   '09': 'Video Provider',
   '10': 'Review Gate',
   '11': 'Provider Return',
@@ -646,6 +650,7 @@ const dreamPhaseHashAliases: Record<string, string> = {
   script: '06',
   storyboard: '07',
   panels: '08',
+  'media-lock': '08',
   'kling-packet': '09',
   'video-provider': '09',
   review: '10',
