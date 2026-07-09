@@ -53,7 +53,15 @@ DEFAULT_OUTPUT_ROOT = Path("/mnt/storage12tb/skills/embry-voice-control/outputs/
 DEFAULT_BASE_URL = "http://127.0.0.1:3001/api/projects/embry-voice"
 DEFAULT_CHAT_URL = "http://127.0.0.1:3002/#embry-voice"
 DEFAULT_REALTIMESTT_URL = "http://127.0.0.1:8010"
-DEFAULT_LISTENER_AUDIO = Path("/tmp/chatterbox-fork-agent-out/browser-webrtc-horus-loud-20260703T133629Z.wav")
+SKILL_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_LISTENER_AUDIO = SKILL_ROOT / "fixtures" / "listener-webrtc-capital-france.wav"
+LISTENER_NEW_SESSION_SETTINGS = {
+    "vad_filter": False,
+    "silero_sensitivity": 0.01,
+    "vad_energy_threshold": 1.0,
+    "post_speech_silence_duration": 0.35,
+    "early_transcription_on_silence": 0.1,
+}
 DEFAULT_INTERRUPT_POLICY = {
     "interruptible": True,
     "barge_in_action": "cancel_old_turn",
@@ -289,6 +297,27 @@ def run_realtimestt_listener_case(
                 "Compare failed runs against peak_abs, rms, and non_silent_frame_ratio_250_rms.",
             ],
         }
+        config_url = listener_url.rstrip("/") + "/api/config"
+        try:
+            with httpx.Client(timeout=httpx.Timeout(10.0, connect=2.0)) as client:
+                config_response = client.patch(
+                    config_url,
+                    json={"settings": LISTENER_NEW_SESSION_SETTINGS},
+                )
+            config_data = response_json(config_response)
+            data["listener_config_patch"] = {
+                "url": config_url,
+                "status_code": config_response.status_code,
+                "requested_settings": LISTENER_NEW_SESSION_SETTINGS,
+                "applied": config_data.get("applied", {}),
+                "rejected": config_data.get("rejected", {}),
+            }
+        except Exception as exc:
+            data["listener_config_patch"] = {
+                "url": config_url,
+                "requested_settings": LISTENER_NEW_SESSION_SETTINGS,
+                "error": str(exc),
+            }
         with websocket_connect(ws_url, open_timeout=min(5.0, timeout)) as ws:
             data["websocket_connected"] = True
             deadline = time.monotonic() + timeout
@@ -335,7 +364,13 @@ def run_realtimestt_listener_case(
                 if any(event.get("type") == "final" and event.get("text") for event in events):
                     break
             ws.send(json.dumps({"type": "stop"}))
-            drain_ws_events(ws, events, timeout=0.5)
+            # Recorder-backed RealtimeSTT sessions can publish the final
+            # transcript only after stop_streaming() flushes buffered audio.
+            stop_final_deadline = time.monotonic() + max(8.0, min(timeout, 45.0))
+            while time.monotonic() < stop_final_deadline:
+                drain_ws_events(ws, events, timeout=0.25)
+                if any(event.get("type") == "final" and event.get("text") for event in events):
+                    break
         final_texts = [
             str(event.get("text", "")).strip()
             for event in events
