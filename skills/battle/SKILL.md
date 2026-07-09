@@ -385,6 +385,35 @@ The skill integrates with the shared memory and taxonomy systems via
 
 Gracefully degrades if `common.memory_client` or `taxonomy/taxonomy.py` are unavailable.
 
+## Nondeterministic Exploit Specimen Synthesis
+
+Battle Red agents may behave as nondeterministic exploit-code authors. A Red
+exploit subagent may combine high-level web, protocol, MITM, packet, timing,
+source-level, binary, assembly, fuzzing, and obscure research-derived
+techniques into generated exploit specimens.
+
+Most generated specimens may be bad ideas: they may fail to compile, fail at
+runtime, combine irrelevant methods, or produce no useful target signal. Battle
+treats those outputs as genetic material, not proof.
+
+Battle owns deterministic selection and evidence:
+
+- generated code must be materialized as an artifact;
+- generated code must run only in Docker;
+- stdout, stderr, HTTP observations, timing, exit code, and optional packet
+  summaries must be captured;
+- runnable code is not exploit success;
+- target contact is not exploit success;
+- Judge replay is required before any exploit-success claim;
+- memory promotion requires replayable evidence.
+
+The first backend proof rung is `exploit-combiner-proof`. It is fixture-backed,
+`agentic:false`, and proves the specimen lifecycle only: bad generated code,
+Docker execution, captured failure observations, target contact, runnable
+unproven code, and fail-closed non-claims. Live Tau generation, child
+materialization, packet capture, Blue adaptation, memory promotion, and Judge
+exploit-success replay are later rungs.
+
 ## File Structure
 
 ```

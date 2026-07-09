@@ -18,23 +18,30 @@ echo "battle_dir=$BATTLE_DIR"
 echo "artifact_dir=$ARTIFACT_DIR"
 echo "host=$HOST"
 
-echo "1/8 Backend contract pytest"
+echo "1/9 Backend contract pytest"
 (cd "$BATTLE_DIR" && uv run pytest tests/test_battle_event_adapter_contract.py -q)
 
-echo "2/8 Live lifecycle receipt contract pytest"
+echo "2/9 Live lifecycle receipt contract pytest"
 (cd "$BATTLE_DIR" && uv run pytest tests/test_arena_live_battle_proof_contract.py -q)
 
-echo "3/8 Semantic outcome matrix export/validate"
+echo "3/9 Exploit combiner specimen proof"
+(cd "$BATTLE_DIR" && uv run pytest tests/test_exploit_combiner_contract.py tests/test_exploit_specimen_receipts.py -q)
+COMBINER_DIR="$ARTIFACT_DIR/battle-004-combiner"
+rm -rf "$COMBINER_DIR"
+uv run --project "$BATTLE_DIR" python -m battle_skill.cli exploit-combiner-proof battle-004 --out "$COMBINER_DIR" --max-attempts 4
+python3 -c 'import json, pathlib, sys; root = pathlib.Path(sys.argv[1]); receipt = json.loads((root / "run-receipt.json").read_text()); assert receipt["proof_mode"] == "local_docker_specimen_fixture"; assert receipt["agentic"] is False; assert receipt["scoreboard"]["verdict"] == "RUNNABLE_UNPROVEN"; assert receipt["scoreboard"]["judge_verified_exploits"] == 0; assert "Any specimen exploited the target." in receipt["claims"]["does_not_prove"]' "$COMBINER_DIR"
+
+echo "4/9 Semantic outcome matrix export/validate"
 SEMANTIC_MATRIX="$ARTIFACT_DIR/battle-semantic-outcome-matrix.json"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli export-semantic-outcome-matrix --out "$SEMANTIC_MATRIX"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-semantic-outcome-matrix "$SEMANTIC_MATRIX"
 
-echo "4/8 Exploit lifecycle DAG export/validate"
+echo "5/9 Exploit lifecycle DAG export/validate"
 LIFECYCLE_DAG="$ARTIFACT_DIR/battle-exploit-lifecycle-dag.json"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli export-exploit-lifecycle-dag --out "$LIFECYCLE_DAG"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-exploit-lifecycle-dag "$LIFECYCLE_DAG"
 
-echo "5/8 Normalized UX fixture validation"
+echo "6/9 Normalized UX fixture validation"
 for fixture in \
   "$BATTLE_DIR/local/battle-004-parent-spawn.normalized.json" \
   "$BATTLE_DIR/local/battle-004-sparse.normalized.json" \
@@ -45,7 +52,7 @@ for fixture in \
   uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-ux-contract "$fixture"
 done
 
-echo "6/8 Phase 2 transport stream validation"
+echo "7/9 Phase 2 transport stream validation"
 for stream_dir in \
   "$BATTLE_DIR/local/battle-004-parent-spawn-pixi-replay/stream" \
   "$BATTLE_DIR/local/battle-005-ssrf-metadata-stream" \
@@ -58,10 +65,10 @@ for stream_dir in \
   uv run --project "$BATTLE_DIR" python -m battle_skill.cli validate-ux-transport "$stream_dir"
 done
 
-echo "7/8 Spectator replay proof"
+echo "8/9 Spectator replay proof"
 "$BATTLE_DIR/scripts/prove-spectator-local.sh"
 
-echo "8/8 Mock evidence claim guard"
+echo "9/9 Mock evidence claim guard"
 (cd "$(cd "$BATTLE_DIR/../.." && pwd)" && python3 scripts/check_mock_evidence_claims.py)
 
 echo "BATTLE_PROVE_BACKEND_GOAL_PASS"

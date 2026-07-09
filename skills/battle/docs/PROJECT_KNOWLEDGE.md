@@ -1,6 +1,6 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-07-04 14:51 by agent
+**Last updated:** 2026-07-09 08:18 by agent
 **Status:** Active development, pending review/commit
 
 ## Current Understanding
@@ -34,6 +34,23 @@
   patch, hardening, configuration, test, detection, and mitigation combinations.
   Successful combinations are promoted in `$memory`; failures are retained as
   negative evidence.
+- Adaptive exploit lifecycle is more specific than parent/child lineage. An
+  exploit should behave like live genetic fuzzing: research, probe, observe
+  stdout/stderr/HTTP/timing/network drift, mutate, assess survival risk, and
+  spawn only when deterministic Battle policy allows it. A parent-spawn proof
+  that only proves source-time child materialization is temporal replication,
+  not adaptive exploit intelligence.
+- Parent-to-child continuity requires an explicit knowledge packet, not just a
+  lineage edge. The parent must pass concrete research goals, active
+  hypotheses, useful mutations, failed attempts, observed defenses or suspected
+  pressure, target constraints, supporting receipt ids, and open questions. The
+  child must acknowledge that packet and derive its first research/probe plan
+  from inherited goals, hypotheses, failed attempts, or observations before
+  Battle can claim adaptive continuation.
+- Parent detection analysis must stay receipt-backed and conservative. Drift in
+  stdout, stderr, response bodies/status codes, timing, or packet summaries may
+  support suspected pressure and a spawn request, but it must not confirm Blue
+  scan, block, containment, or kill without Blue/Judge/terminal receipts.
 - Red and Blue are subagent teams. The orchestrator/cron must attach an explicit
   persona to every dispatched subagent, and may run multiple personas per team
   concurrently for creative, less predictable strategies.
@@ -124,6 +141,9 @@
   It produced Tau handoff/receipt artifacts, `scenario.json`,
   `hidden-ground-truth.json`, `arena-receipt.json`, and generated target files.
 - Battle-004 standalone mockup mockups/battle-004-shell-preserving-scroll-timeline.html restores accepted shell proportions, sticky lane labels, global T+0 timeline, Blue intervention strip, and GOAL aligned Agent Detail proof labels (FIXTURE TRACE).
+- BATTLE-004 spectator UX lives in skills/battle/spectator/ (canonical); ux-lab is a thin host on :3002. Phase 1 receipt replay uses battle.normalized_ux_fixture.json only (not stream/events.jsonl yet). Full arena battle is replayed time-compressed at vintage tower-defense pace (Plants vs Zombies readability): lanes, speed-up, scrub, arcade combat feedback.
+- Backend owns actor_visual.variant_id per lane (complexity/strength/durability roster choice) plus sprite_theme; spectator resolves variant_id to Pixi sheets. Sprite look is cosmetic only (proof_scope.cosmetic_identity_only) — block/kill/promote outcomes remain receipt-gated. Block/kill = vintage points burst; Blue miss + exploit survive = evade animation (hit/duck/jump).
+- Playhead authority: timeline_elapsed_axis_model.playhead.current_elapsed_seconds. Child visibility: lineage.spawns[].visible_from_elapsed_seconds (spawn time). Phase 1 PASS = prove-spectator on BATTLE_HOST=http://127.0.0.1:3002 (6 receipt-replay checks + sparse negative + typecheck/vitest).
 
 ## Recent Decisions
 
@@ -159,6 +179,9 @@
 | 2026-06-30 | Correct the next live rung to Tau harness, not direct Scillm from Battle. | Battle owns Arena, Docker, Judge, scoreboard, and receipts; Tau owns Red/Blue subagent execution through `tau.agent_handoff.v1` and `tau.subagent_receipt.v1`; Scillm is downstream of Tau. The draft direct-Scillm runner must be replaced or rewritten before it is used as evidence. |
 | 2026-06-30 | Define fair mode as simultaneous public-only for the first live Tau rung. | Red and Blue receive the same `arena/team-public/` bundle concurrently. Blue does not receive Red's exploit before its first patch/hardening attempt, and Red does not receive Blue's patch. Reactive defense can be a later separate phase with different scoring. |
 | 2026-06-30 | Allow Arena scenarios to contain multiple hidden vulnerabilities. | Arena should write a private multi-vulnerability ledger and oracle suite, with difficulty-weighted per-vulnerability scoring. The first live Tau proof may execute one selected vulnerability, but schemas should not assume exactly one hidden bug. |
+| 2026-07-07 | Canonical spectator package + receipt replay on :3002 | Self-contained skills/battle/spectator replaces ux-lab dual-agent; backend fixture is authoritative for Phase 1 Pixi replay. |
+| 2026-07-07 | Backend chooses runner variant_id; UX maps via sprite_theme | Exploit visual identity must be receipt-backed roster choice, not hardcoded lane-id map on receipt routes. |
+| 2026-07-09 | Add exploit combiner proof before full genetic Battle engine. | The next backend rung should prove generated exploit specimens, bad-code capture, Docker run receipts, target-contact observations, and runnable-unproven scoring before live Tau generation, child materialization, packet capture, or exploit-success claims. |
 
 ## Open Questions
 
@@ -177,6 +200,23 @@
   shadcn / D3 surface or by replacing the current Vite proof monitor in place?
 - [ ] What backend endpoint should consume `battle.human_interjection.v1`:
   Battle directly, Tau route parser, or a shared human-interjection service?
+- [ ] When to enable stream/events.jsonl consumption in spectator (Phase 2 milestone)?
+- [ ] Wire sprite_theme.variants[variant_id].sprite_id explicitly when variant_id diverges from sprite_id?
+- [ ] Should parent Tau be allowed to decide spawn directly, or only request
+  spawn while deterministic Battle `spawn_policy` remains the sole allow/deny
+  authority?
+- [ ] For the first live Battle-004 adaptive slice, are packet/network summaries
+  mandatory, or may `network_summary.available=false` be accepted until packet
+  instrumentation exists?
+- [ ] Should a child be required to acknowledge and use at least one inherited
+  research goal/hypothesis/failed attempt before its first probe, or may it
+  immediately pivot if it records why?
+- [ ] Should parent-child knowledge packets be promoted into Red-only memory by
+  default, or only after validated success, validated negative evidence, or
+  explicit scorekeeper approval?
+- [ ] Should `preemptive_spawn_adaptation` award Red points for survival alone,
+  or only when the child later probes/adapts from the inherited knowledge
+  packet?
 
 ## Key Files
 
@@ -196,6 +236,10 @@
 | `src/battle_skill/arena_battle_proof.py` | Arena -> Red/Blue -> Judge proof rung with dynamic Red/Blue language-selection receipts, scoreboard consumption, and selectable scenario kinds. |
 | `src/battle_skill/arena_live_battle_proof.py` | Arena public-only Tau harness proof runner. It creates private/public Arena artifacts, writes a public-only Tau context bundle, invokes Tau's `tau_coding.battle_live_handoff` bridge, and records Red/Blue `tau.agent_handoff.v1` plus `tau.subagent_receipt.v1` artifacts. |
 - | `mockups/battle-004-shell-preserving-scroll-timeline.html` | Standalone Battle-004 shell-preserving race timeline mockup; visual-only FIXTURE TRACE density for Kimi/review loop. |
+- | skills/battle/spectator/ | Canonical BATTLE-004 spectator UI + Pixi engine |
+- | skills/battle/spectator/public/battle-fixtures/ | Host-served receipt replay fixtures |
+- | skills/battle/assets/sprites/pixijs/ | Pixi runner sheets + battle-race-atlas |
+- | skills/battle/scripts/prove-spectator-local.sh | Hard local proof gate (7 steps) |
 
 ## Evidence State
 
@@ -342,6 +386,7 @@ validation.checks=18/18
 artifact_count=56
 non_claim=Only the first private ledger vulnerability was replayed; the second slot remains schema coverage.
 ```
+- Phase 1 spectator: BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator → BATTLE_PROVE_SPECTATOR_PASS (mocked: no, live: yes). Fixture: battle-004-parent-spawn-pixi-replay. actor_visual + sprite_theme on lanes (commit 2a287f2f+).
 
 ## Non-Claims
 
