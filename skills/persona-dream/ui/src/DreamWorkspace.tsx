@@ -1052,6 +1052,8 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
                 artifact={artifact}
                 style={styles.receiptPill}
                 iconSize={12}
+                label={fileNameFromPath(artifact.label || artifact.path)}
+                title={artifact.path}
               />
             ))}
           </div>
@@ -1070,23 +1072,33 @@ function ArtifactChip({
   artifact,
   style = styles.artifactChip,
   iconSize = 13,
+  label,
+  title,
 }: {
   artifact: DreamStage['artifacts'][number]
   style?: CSSProperties
   iconSize?: number
+  label?: string
+  title?: string
 }) {
+  const displayLabel = label ?? artifact.label
   return (
     <a
       href={`/api/projects/dream/asset?path=${encodeURIComponent(artifact.path)}`}
       target="_blank"
       rel="noreferrer"
-      title={artifact.label}
+      title={title ?? artifact.label}
       style={style}
     >
       <FileJson size={iconSize} />
-      <span style={styles.receiptPillLabel}>{artifact.label}</span>
+      <span style={styles.receiptPillLabel}>{displayLabel}</span>
     </a>
   )
+}
+
+function fileNameFromPath(path: string): string {
+  const parts = path.split('/').filter(Boolean)
+  return parts[parts.length - 1] ?? path
 }
 
 type MediaLockFrame = {
@@ -1108,6 +1120,7 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
   const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
   const [frames, setFrames] = useState<MediaLockFrame[]>([])
   const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
+  const frameGroups = mediaLockFrameGroups(frames)
 
   useEffect(() => {
     let cancelled = false
@@ -1142,26 +1155,31 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
       </div>
       {frames.length > 0 ? (
         <div style={styles.mediaLockGrid}>
-          {frames.map((frame) => (
-            <article key={frame.id} style={styles.mediaLockFrame}>
-              <img src={frame.url} alt={`${frame.panelId} ${frame.role}`} style={styles.mediaLockThumb} />
-              <div style={styles.mediaLockFrameBody}>
-                <div style={styles.mediaLockFrameTitle}>
-                  <strong>{frame.panelId}</strong>
-                  <span>{frame.role.replace(/_/g, ' ')}</span>
-                </div>
-                <div style={styles.mediaLockFacts}>
-                  <span>Status</span>
-                  <strong>{frame.status}</strong>
-                  <span>Identity</span>
-                  <strong>{frame.identityStatus}</strong>
-                  <span>Time</span>
-                  <strong>{frame.timeLabel}</strong>
-                  <span>SHA</span>
-                  <strong title={frame.sha256}>{frame.sha256}</strong>
-                </div>
+          {frameGroups.map((group) => (
+            <section key={group.panelId} style={styles.mediaLockFrameGroup}>
+              <div style={styles.mediaLockGroupHeader}>
+                <strong>{group.panelId}</strong>
+                <span>{mediaLockGroupTimeRange(group.frames)} | {group.frames.length} locked frames</span>
               </div>
-            </article>
+              <div style={styles.mediaLockGroupFrames}>
+                {group.frames.map((frame) => (
+                  <article key={frame.id} style={styles.mediaLockFrame}>
+                    <img src={frame.url} alt={`${frame.panelId} ${frame.role}`} style={styles.mediaLockThumb} />
+                    <div style={styles.mediaLockFrameBody}>
+                      <div style={styles.mediaLockFrameTitle}>
+                        <strong>{frame.role.replace(/_/g, ' ')}</strong>
+                      </div>
+                      <div style={styles.mediaLockFacts}>
+                        <MediaLockFact label="Status" value={mediaLockStatusLabel(frame.status)} title={frame.status} tone="pass" />
+                        <MediaLockFact label="Identity" value={frame.identityStatus} tone="pass" />
+                        <MediaLockFact label="Time" value={frame.timeLabel} />
+                        <MediaLockFact label="SHA" value={frame.sha256} title={frame.sha256} hash />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       ) : (
@@ -1170,6 +1188,58 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
       <StageEvidence stage={{ ...stage, images: [] }} />
     </section>
   )
+}
+
+function MediaLockFact({
+  label,
+  value,
+  title,
+  tone,
+  hash = false,
+}: {
+  label: string
+  value: string
+  title?: string
+  tone?: 'pass'
+  hash?: boolean
+}) {
+  return (
+    <div style={styles.mediaLockFactRow}>
+      <span style={styles.mediaLockFactLabel}>{label}</span>
+      <strong
+        title={title ?? value}
+        style={hash ? styles.mediaLockHashValue : {
+          ...styles.mediaLockFactValue,
+          ...(tone === 'pass' ? styles.mediaLockPassValue : null),
+        }}
+      >
+        {value}
+      </strong>
+    </div>
+  )
+}
+
+function mediaLockStatusLabel(status: string): string {
+  return status.startsWith('ACCEPTED_') ? 'ACCEPTED' : status
+}
+
+function mediaLockGroupTimeRange(frames: MediaLockFrame[]): string {
+  const first = frames[0]?.timeLabel ?? 'n/a'
+  const last = frames[frames.length - 1]?.timeLabel ?? first
+  return first === last ? first : `${first} - ${last}`
+}
+
+function mediaLockFrameGroups(frames: MediaLockFrame[]): Array<{ panelId: string; frames: MediaLockFrame[] }> {
+  const groups = new Map<string, MediaLockFrame[]>()
+  for (const frame of frames) {
+    const group = groups.get(frame.panelId) ?? []
+    group.push(frame)
+    groups.set(frame.panelId, group)
+  }
+  return Array.from(groups.entries()).map(([panelId, groupFrames]) => ({
+    panelId,
+    frames: groupFrames,
+  }))
 }
 
 function mediaLockFramesFromPacket(packet: unknown): MediaLockFrame[] {
@@ -12270,6 +12340,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: 7,
     minWidth: 0,
+    maxWidth: '100%',
     borderRadius: 4,
     border: '1px solid rgba(75, 85, 99, 0.9)',
     background: 'rgba(255, 255, 255, 0.03)',
@@ -12309,8 +12380,37 @@ const styles: Record<string, CSSProperties> = {
   },
   mediaLockGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+    gap: 18,
+  },
+  mediaLockFrameGroup: {
+    display: 'grid',
+    gridTemplateRows: 'auto 1fr',
+    minWidth: 0,
+    borderRadius: 8,
+    border: '1px solid rgba(148, 163, 184, 0.18)',
+    background: 'rgba(15, 23, 42, 0.28)',
+    overflow: 'hidden',
+  },
+  mediaLockGroupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    background: '#050505',
+    padding: '9px 11px',
+    color: '#f8fafc',
+    fontSize: 12,
+    fontWeight: 850,
+    letterSpacing: '0.11em',
+    textTransform: 'uppercase',
+  },
+  mediaLockGroupFrames: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 8,
+    padding: 8,
   },
   mediaLockFrame: {
     display: 'grid',
@@ -12346,14 +12446,62 @@ const styles: Record<string, CSSProperties> = {
     textTransform: 'uppercase',
   },
   mediaLockFacts: {
-    display: 'grid',
-    gridTemplateColumns: '64px minmax(0, 1fr)',
-    gap: '5px 8px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
     margin: 0,
     color: '#94a3b8',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     fontSize: 10,
     lineHeight: 1.25,
+  },
+  mediaLockFactRow: {
+    minWidth: 0,
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    display: 'grid',
+    gridTemplateColumns: '58px minmax(0, 1fr)',
+    alignItems: 'center',
+    columnGap: 8,
+    overflow: 'hidden',
+    borderBottom: '1px solid rgba(55, 65, 81, 0.42)',
+    paddingBottom: 4,
+  },
+  mediaLockFactLabel: {
+    flex: '0 0 auto',
+    color: '#9ca3af',
+    fontWeight: 600,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+  },
+  mediaLockFactValue: {
+    minWidth: 0,
+    justifySelf: 'end',
+    maxWidth: '100%',
+    color: '#e5e7eb',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'right',
+  },
+  mediaLockPassValue: {
+    color: '#10b981',
+    fontWeight: 800,
+  },
+  mediaLockHashValue: {
+    minWidth: 0,
+    justifySelf: 'end',
+    maxWidth: 'min(180px, 100%)',
+    display: 'inline-block',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    color: '#9ca3af',
+    fontWeight: 500,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'right',
+    verticalAlign: 'middle',
   },
   stageActionBox: {
     borderTop: '1px solid rgba(255, 255, 255, 0.06)',
