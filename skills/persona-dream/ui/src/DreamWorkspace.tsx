@@ -544,9 +544,9 @@ const CANONICAL_PHASES = [
   { id: '06', label: 'Script', icon: FileText, legacyIds: ['phase_06_script'] },
   { id: '07', label: 'Storyboard', icon: Layout, legacyIds: ['phase_07_storyboard'] },
   { id: '08', label: 'Panels', icon: Grid, legacyIds: ['phase_08_panels_environment'] },
-  { id: '09', label: 'Kling Packet', icon: Package, legacyIds: ['phase_09_kling_optimized_packet'] },
+  { id: '09', label: 'Video Provider', icon: Package, legacyIds: ['phase_09_kling_optimized_packet', 'video-provider', 'kling-packet'] },
   { id: '10', label: 'Review Gate', icon: ShieldCheck, legacyIds: ['phase_10_creator_reviewer_gate'] },
-  { id: '11', label: 'Kling Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
+  { id: '11', label: 'Provider Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
 ] as const
 
 function createMissingStage(id: string, label: string): DreamStage {
@@ -596,7 +596,14 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
         ideaMemorySplitCount++
       }
     } else {
-      normalized.push({ ...matching[0], id: canonical.id, title: canonical.label })
+      const stage = { ...matching[0], id: canonical.id, title: canonical.label }
+      if (canonical.id === '09') {
+        stage.summary = 'Provider-neutral video scene packet, selected provider routing, prompt, locks, and media staging receipts.'
+      }
+      if (canonical.id === '11') {
+        stage.summary = 'Provider API response, task id, polling receipts, downloaded media, frame sheets, and post-provider review.'
+      }
+      normalized.push(stage)
     }
   }
   return normalized
@@ -625,9 +632,9 @@ const phaseShortLabels: Record<string, string> = {
   '06': 'Script',
   '07': 'Storyboard',
   '08': 'Panels',
-  '09': 'Kling Packet',
+  '09': 'Video Provider',
   '10': 'Review Gate',
-  '11': 'Kling Return',
+  '11': 'Provider Return',
 }
 
 const dreamPhaseHashAliases: Record<string, string> = {
@@ -640,6 +647,7 @@ const dreamPhaseHashAliases: Record<string, string> = {
   storyboard: '07',
   panels: '08',
   'kling-packet': '09',
+  'video-provider': '09',
   review: '10',
   return: '11',
 }
@@ -1114,7 +1122,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
         <div>
           <div style={nvis.storyboardEyebrow}>Animatic Storyboard</div>
           <h3 style={nvis.storyboardTitle}>
-            {targetLabel ? `Targeted proof for ${targetLabel}` : 'Four timed panels for a 10-second Kling scene'}
+            {targetLabel ? `Targeted proof for ${targetLabel}` : 'Four timed panels for a 10-second video scene'}
           </h3>
         </div>
         <div style={nvis.storyboardMetaRow}>
@@ -1720,7 +1728,7 @@ const contactSheetDecisionForStoryRow = (row: Pick<StoryMatrixRow, 'name' | 'obj
       status: 'existing_or_required',
       send_to_kling: true,
       priority: 'required',
-      rationale: 'Character identity continuity must be locked before Kling scene generation.',
+      rationale: 'Character identity continuity must be locked before video provider generation.',
     }
   }
   if (/\b(shortboard|surfboard|board|rashguard|phone)\b/.test(text)) {
@@ -2334,12 +2342,12 @@ function DirectorConsole({
                 type: 'object',
                 additionalProperties: false,
                 required: ['required', 'kind', 'status', 'send_to_kling', 'priority', 'rationale'],
-                description: 'Whether this row needs a contact sheet/reference pack for Phase 04 Kling preparation.',
+                description: 'Whether this row needs a contact sheet/reference pack for Phase 04 video provider preparation.',
                 properties: {
                   required: { type: 'boolean', description: 'True when a stable visual reference is needed for this row.' },
                   kind: { type: 'string', enum: ['character', 'prop', 'environment', 'prompt_only'] },
                   status: { type: 'string', enum: ['existing_or_required', 'missing', 'not_needed'] },
-                  send_to_kling: { type: 'boolean', description: 'True only when the reference should be part of the Kling element pack.' },
+                  send_to_kling: { type: 'boolean', description: 'True only when the reference should be part of the video provider element pack.' },
                   priority: { type: 'string', enum: ['required', 'recommended', 'conditional', 'prompt_only'] },
                   rationale: { type: 'string', description: 'One sentence explaining why the row does or does not require a contact sheet.' },
                 },
@@ -2442,7 +2450,7 @@ function DirectorConsole({
                 status: 'existing_or_required',
                 send_to_kling: true,
                 priority: 'required',
-                rationale: 'Embry identity continuity must be locked before Kling generation.',
+                rationale: 'Embry identity continuity must be locked before video provider generation.',
               },
             },
           ],
@@ -2577,7 +2585,7 @@ function DirectorConsole({
       `- Keep story to roughly ${targetStoryLengthWords.min}-${targetStoryLengthWords.max} words so the panel sequence stays focused.`,
       '- Include one interaction_matrix row for every source_context.interaction_rows[] item where is_complete is true.',
       '- The interaction_matrix is the completeness ledger: every character, object, location, environmental force, and relevant pressure used by the story must be explained there.',
-      '- Every interaction_matrix row must include contact_sheet. Characters require character contact sheets. Visually specific hero props such as surfboards require prop sheets when visible. Stable locations/environments require compact environment sheets when they anchor a Kling panel. Abstract pressures such as heat, humidity, glare, fatigue, etiquette, and timing are prompt-only unless embodied by a stable visual element.',
+      '- Every interaction_matrix row must include contact_sheet. Characters require character contact sheets. Visually specific hero props such as surfboards require prop sheets when visible. Stable locations/environments require compact environment sheets when they anchor a video provider panel. Abstract pressures such as heat, humidity, glare, fatigue, etiquette, and timing are prompt-only unless embodied by a stable visual element.',
       '- Do not mark send_to_kling true for abstract forces alone. Do mark send_to_kling true for Embry, Kai, visible surfboards, and the active surf-break environment when they appear in the panel.',
       '- Include asset_usage rows only for source_context.linked_assets[] entries that influence the story.',
       '- Include top-level location and environment objects. They must be populated from source_context.location and source_context.environment, not omitted.',
@@ -3794,7 +3802,7 @@ function VoiceBoard({ stage }: { stage: DreamStage }) {
   return (
     <div data-qid="voice-plugin" style={nvis.voicePlugin}>
       <div style={nvis.voiceHeaderRow}>
-        <span style={nvis.voiceMeta}><Mic2 size={13} /> Chatterbox / Kling voice references</span>
+        <span style={nvis.voiceMeta}><Mic2 size={13} /> Chatterbox / provider voice references</span>
         <span style={ready ? nvis.matrixReadyPill : nvis.matrixMutedPill}>{ready ? 'Voice gate ready' : 'Voice gate pending'}</span>
       </div>
       {voiceProfiles.map((profile) => {
@@ -3874,7 +3882,7 @@ function VoiceBoard({ stage }: { stage: DreamStage }) {
         )
       })}
       <div style={nvis.voiceCommitRow}>
-        <span style={nvis.voiceMeta}>Kai reference is shared by Chatterbox local ref_audio and Kling custom voice upload.</span>
+        <span style={nvis.voiceMeta}>Kai reference is shared by Chatterbox local ref_audio and provider voice upload.</span>
         <button
           type="button"
           data-qid="dream:voice-commit"
@@ -6983,9 +6991,9 @@ function PipelineNav({
           ...nvis.klingDeployBtn,
           ...(klingReady ? nvis.klingDeployBtnReady : nvis.disabled),
         }}
-        title={klingReady ? 'All phases pass. Submit to Kling.' : 'Blocked: some phases have not passed.'}
+        title={klingReady ? 'All phases pass. Submit to selected provider.' : 'Blocked: some phases have not passed.'}
       >
-        Deploy Kling
+        Deploy Video
       </button>
     </header>
   )
@@ -6999,7 +7007,7 @@ function KlingGate({ selectedRun, stages }: { selectedRun: DreamRun | null; stag
     <div
       data-qid="dream:kling-gate"
       style={styles.klingGate}
-      title={allPassed ? 'Kling deploy gate is ready.' : `Blocked by: ${failing.map((stage) => phaseNumber(stage.id)).join(', ') || 'missing upstream phases or paid authorization'}`}
+      title={allPassed ? 'Video provider deploy gate is ready.' : `Blocked by: ${failing.map((stage) => phaseNumber(stage.id)).join(', ') || 'missing upstream phases or paid authorization'}`}
     >
       <div style={styles.gateBadgesRow}>
         <GateMiniBadge status={allPassed ? 'KLING_READY' : 'BLOCKED'} label="Gate" />
@@ -7010,11 +7018,11 @@ function KlingGate({ selectedRun, stages }: { selectedRun: DreamRun | null; stag
         type="button"
         data-qid="dream:kling:deploy"
         data-qs-action="DREAM_KLING_DEPLOY"
-        title={allPassed ? 'Submit accepted packet to Kling' : `Blocked by: ${failing.map((stage) => phaseNumber(stage.id)).join(', ') || 'missing upstream phases or paid authorization'}`}
+        title={allPassed ? 'Submit accepted packet to selected provider' : `Blocked by: ${failing.map((stage) => phaseNumber(stage.id)).join(', ') || 'missing upstream phases or paid authorization'}`}
         disabled={!allPassed}
         style={{ ...styles.deployButton, ...(allPassed ? styles.deployButtonReady : styles.disabledButton) }}
       >
-        {allPassed ? 'Deploy to Kling' : 'Blocked: Review phases'}
+        {allPassed ? 'Deploy to Provider' : 'Blocked: Review phases'}
       </button>
     </div>
   )
@@ -7064,7 +7072,7 @@ export function DreamWorkspace() {
     app: 'ux-lab',
     action: 'DREAM_REFRESH_RUNS',
     label: 'Refresh Dream runs',
-    description: 'Reload persona-dream Kling preflight run artifacts',
+    description: 'Reload persona-dream video provider run artifacts',
   })
   useRegisterAction('dream:input:search', {
     app: 'ux-lab',
@@ -7076,7 +7084,7 @@ export function DreamWorkspace() {
     app: 'ux-lab',
     action: 'DREAM_SELECT_RUN',
     label: 'Select Dream run',
-    description: 'Open a persona-dream Kling preflight run artifact',
+    description: 'Open a persona-dream video provider run artifact',
   })
   useRegisterAction('dream:stage:navigate', {
     app: 'ux-lab',
@@ -7111,8 +7119,8 @@ export function DreamWorkspace() {
   useRegisterAction('dream:kling:deploy', {
     app: 'ux-lab',
     action: 'DREAM_KLING_DEPLOY',
-    label: 'Deploy Dream packet to Kling',
-    description: 'Submit to Kling only when all upstream preflight gates pass and paid-call authorization is present',
+    label: 'Deploy Dream packet to provider',
+    description: 'Submit to the selected video provider only when all upstream preflight gates pass and paid-call authorization is present',
   })
   useRegisterAction('dream:stage:edit-notes', {
     app: 'ux-lab',
@@ -7625,7 +7633,7 @@ export function DreamWorkspace() {
           <div style={styles.railTitleRow}>
             <div>
               <div style={styles.eyebrow}>Dream Library</div>
-              <h2 style={styles.railTitle}>Kling Preflight</h2>
+              <h2 style={styles.railTitle}>Video Provider</h2>
             </div>
             <button
               type="button"
