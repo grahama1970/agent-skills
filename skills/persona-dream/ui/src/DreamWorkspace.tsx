@@ -846,6 +846,7 @@ function StageCard({
       ...styles.stageCard,
       ...(stage.id === '01' ? { padding: 0, background: 'transparent', border: 'none', outline: 'none', boxShadow: 'none', backdropFilter: 'none' } : {}),
       ...(stage.id === '02' ? { maxWidth: 'none', justifySelf: 'stretch', padding: '24px 28px' } : {}),
+      ...(stage.id === '08' ? { borderRadius: 0 } : {}),
       ...(isBlockedByPrev ? nvis.blockedCard : null),
     }}>
       {stage.id !== '01' && <StageCardHeader stage={stage} />}
@@ -854,6 +855,7 @@ function StageCard({
       <div style={{
         ...styles.stageContentWell,
         ...(stage.id === '01' ? { border: 'none', background: 'transparent', padding: 0, minHeight: 0 } : {}),
+        ...(stage.id === '08' ? { borderRadius: 0 } : {}),
       }}>
         {stage.id === '01' && (
           <IdeaMemoryControl
@@ -965,13 +967,13 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
     <div style={styles.stageHeaderStack}>
       <div style={styles.stageCardHeader}>
         <div style={styles.stageIdentity}>
-          <span style={styles.stageIcon}>
+          <span style={{ ...styles.stageIcon, ...(stage.id === '08' ? { borderRadius: 0 } : null) }}>
             <PhaseIcon phaseId={stage.id} />
           </span>
           <div style={styles.phaseHeaderText}>
             <div style={styles.stageId}>{stage.id.replace(/_/g, ' ')}</div>
             <h2 style={styles.stageTitle}>{phaseShortLabels[stage.id] ?? stage.title}</h2>
-            <div style={styles.stageTitleRule} />
+            <div style={{ ...styles.stageTitleRule, ...(stage.id === '08' ? { borderRadius: 0 } : null) }} />
           </div>
         </div>
         <div style={styles.stageHeaderActions}>
@@ -1158,8 +1160,11 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
           {frameGroups.map((group) => (
             <section key={group.panelId} style={styles.mediaLockFrameGroup}>
               <div style={styles.mediaLockGroupHeader}>
-                <strong>{group.panelId}</strong>
-                <span>{mediaLockGroupTimeRange(group.frames)} | {group.frames.length} locked frames</span>
+                <div style={styles.mediaLockGroupTitle}>
+                  <strong>{group.panelId}</strong>
+                  <span>{mediaLockGroupTimeRange(group.frames)} | {group.frames.length} locked frames</span>
+                </div>
+                <span style={styles.mediaLockLockedBadge}>LOCKED</span>
               </div>
               <div style={styles.mediaLockGroupFrames}>
                 {group.frames.map((frame) => (
@@ -5288,6 +5293,7 @@ function ScriptConsole({
 }
 
 function ResearchPane({ research, ideaSeed }: { research: ResearchMemoryResult[]; ideaSeed: string }) {
+  const groupedResearch = groupResearchContext(research)
   return (
     <aside data-qid="research-pane" style={nvis.researchPane}>
       <div style={nvis.researchPaneHeader}>
@@ -5298,15 +5304,44 @@ function ResearchPane({ research, ideaSeed }: { research: ResearchMemoryResult[]
         Seed: <span style={{ color: '#e2e8f0' }}>"{ideaSeed.slice(0, 60)}{ideaSeed.length > 60 ? '...' : ''}"</span>
       </div>
       <div style={nvis.researchList}>
-        {research.map((r, i) => (
-          <div key={i} style={nvis.researchCard}>
-            <a href={r.url} target="_blank" rel="noreferrer" style={nvis.researchLink}>{readableMemoryText(r.title || r.memoryKey || 'Memory residue')}</a>
-            <p style={nvis.researchSnippet}>{readableMemoryText(r.snippet || r.title || '')}</p>
-          </div>
+        {groupedResearch.map((group, i) => (
+          <details key={group.label} open={i === 0} style={nvis.researchAccordion}>
+            <summary style={nvis.researchAccordionSummary}>
+              <span>{group.label} ({group.items.length})</span>
+            </summary>
+            <div style={nvis.researchAccordionContent}>
+              {group.items.map((r, itemIndex) => (
+                <div key={`${r.url ?? r.memoryKey ?? group.label}-${itemIndex}`} style={nvis.researchCard}>
+                  <a href={r.url} target="_blank" rel="noreferrer" style={nvis.researchLink}>{readableMemoryText(r.title || r.memoryKey || 'Memory residue')}</a>
+                  <p style={nvis.researchSnippet}>{readableMemoryText(r.snippet || r.title || '')}</p>
+                </div>
+              ))}
+            </div>
+          </details>
         ))}
       </div>
     </aside>
   )
+}
+
+function groupResearchContext(research: ResearchMemoryResult[]): Array<{ label: string; items: ResearchMemoryResult[] }> {
+  const groups = new Map<string, ResearchMemoryResult[]>([
+    ['Story & Script Contracts', []],
+    ['Entity & Env References', []],
+    ['Rich Media References', []],
+  ])
+  for (const item of research) {
+    const text = `${item.title ?? ''} ${item.memoryKey ?? ''} ${item.snippet ?? ''} ${item.url ?? ''}`.toLowerCase()
+    const label = /audio|video|wav|mp3|mp4|mov|surfing clip|drone/.test(text)
+      ? 'Rich Media References'
+      : /character|sheet|reference|embry|kai|lava|reef|environment|asset|image|photo|png|jpg|jpeg/.test(text)
+        ? 'Entity & Env References'
+        : 'Story & Script Contracts'
+    groups.get(label)?.push(item)
+  }
+  return Array.from(groups.entries())
+    .filter(([, items]) => items.length > 0)
+    .map(([label, items]) => ({ label, items }))
 }
 
 function MediaModal({ url, mediaType, onClose }: { url: string; mediaType?: string; onClose: () => void }) {
@@ -7387,6 +7422,16 @@ function PipelineNav({
   processingPhaseId?: string | null
   phases?: DreamStage[]
 }) {
+  const activeStage = phases?.find((stage) => stage.id === activePhaseId)
+  const mediaLockCanAdvance = activePhaseId === '08' && !!activeStage && isStagePassed(activeStage)
+  const ctaReady = klingReady || mediaLockCanAdvance
+  const ctaLabel = mediaLockCanAdvance ? 'Video Provider' : 'Deploy Video'
+  const ctaTitle = mediaLockCanAdvance
+    ? 'Media lock passed. Continue to Phase 09 Video Provider.'
+    : klingReady
+      ? 'All phases pass. Submit to selected provider.'
+      : 'Blocked: some phases have not passed.'
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreDreamPaneArrowKey(e)) return
@@ -7446,14 +7491,17 @@ function PipelineNav({
       </nav>
       <button
         data-qid="kling-deploy"
-        disabled={!klingReady}
+        disabled={!ctaReady}
+        onClick={() => {
+          if (mediaLockCanAdvance) onPhaseChange('09')
+        }}
         style={{
           ...nvis.klingDeployBtn,
-          ...(klingReady ? nvis.klingDeployBtnReady : nvis.disabled),
+          ...(ctaReady ? nvis.klingDeployBtnReady : nvis.disabled),
         }}
-        title={klingReady ? 'All phases pass. Submit to selected provider.' : 'Blocked: some phases have not passed.'}
+        title={ctaTitle}
       >
-        Deploy Video
+        {ctaLabel}
       </button>
     </header>
   )
@@ -8346,7 +8394,7 @@ const nvis: Record<string, CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
+    borderRadius: 0,
     border: 0,
     background: '#334155',
     color: '#64748b',
@@ -8359,8 +8407,9 @@ const nvis: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   klingDeployBtnReady: {
-    background: '#7c3aed',
-    color: '#e2e8f0',
+    background: '#10b981',
+    color: '#022c22',
+    boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)',
     cursor: 'pointer',
   },
   disabled: {
@@ -10693,10 +10742,35 @@ const nvis: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 8,
   },
+  researchAccordion: {
+    border: '1px solid rgba(75, 85, 99, 0.9)',
+    background: '#090909',
+  },
+  researchAccordionSummary: {
+    minHeight: 36,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 10px',
+    color: '#d1d5db',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  researchAccordionContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    borderTop: '1px solid rgba(75, 85, 99, 0.65)',
+    padding: 8,
+  },
   researchCard: {
     background: '#1a1a1a',
     padding: 10,
-    borderRadius: 6,
+    borderRadius: 0,
     border: '1px solid rgba(255,255,255,0.08)',
   },
   researchLink: {
@@ -12387,7 +12461,7 @@ const styles: Record<string, CSSProperties> = {
     display: 'grid',
     gridTemplateRows: 'auto 1fr',
     minWidth: 0,
-    borderRadius: 0,
+    borderRadius: 8,
     border: '1px solid rgba(148, 163, 184, 0.18)',
     background: 'rgba(15, 23, 42, 0.28)',
     overflow: 'hidden',
@@ -12405,6 +12479,22 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 850,
     letterSpacing: '0.11em',
     textTransform: 'uppercase',
+  },
+  mediaLockGroupTitle: {
+    minWidth: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  mediaLockLockedBadge: {
+    flex: '0 0 auto',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    background: 'rgba(16, 185, 129, 0.1)',
+    color: '#10b981',
+    padding: '2px 8px',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.05em',
   },
   mediaLockGroupFrames: {
     display: 'grid',
@@ -12486,8 +12576,8 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'right',
   },
   mediaLockPassValue: {
-    color: '#10b981',
-    fontWeight: 800,
+    color: '#d1d5db',
+    fontWeight: 600,
   },
   mediaLockHashValue: {
     minWidth: 0,
