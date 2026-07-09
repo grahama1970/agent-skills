@@ -5304,8 +5304,8 @@ function ResearchPane({ research, ideaSeed }: { research: ResearchMemoryResult[]
         Seed: <span style={{ color: '#e2e8f0' }}>"{ideaSeed.slice(0, 60)}{ideaSeed.length > 60 ? '...' : ''}"</span>
       </div>
       <div style={nvis.researchList}>
-        {groupedResearch.map((group, i) => (
-          <details key={group.label} open={i === 0} style={nvis.researchAccordion}>
+        {groupedResearch.map((group) => (
+          <details key={group.label} style={nvis.researchAccordion}>
             <summary style={nvis.researchAccordionSummary}>
               <span>{group.label} ({group.items.length})</span>
             </summary>
@@ -7320,7 +7320,7 @@ function AgentPane({
       )}
       <div style={styles.agentPaneHeader}>
         <div style={styles.detailEyebrow}>PROJECT AGENT</div>
-        <h2 style={styles.agentPaneTitle}>Phase repair chat</h2>
+        <h2 style={styles.agentPaneTitle}>{selectedStagePassed ? 'Phase status' : 'Phase repair chat'}</h2>
       </div>
       <div key={selectedStage?.id ?? 'none'} style={styles.agentContextMotion}>
         <div style={styles.agentContext}>
@@ -7361,27 +7361,31 @@ function AgentPane({
           </button>
         )}
       </div>
-      <WorkOrderInput
-        selectedStage={selectedStage}
-        note={note}
-        disabled={disabled}
-        onNoteChange={onNoteChange}
-        onCommit={() => onSubmitAction('ask-agent')}
-      />
-      <div style={styles.stageActionRow}>
-        <button
-          type="button"
-          data-qid="dream:agent:rerun"
-          data-qs-action="DREAM_STAGE_RERUN"
-          title="Write rerun work order"
-          disabled={disabled}
-          onClick={() => onSubmitAction('rerun')}
-          style={{ ...styles.stageActionButton, ...(disabled ? styles.disabledButton : null) }}
-        >
-          <Play size={14} />
-          Rerun phase
-        </button>
-      </div>
+      {!selectedStagePassed && (
+        <>
+          <WorkOrderInput
+            selectedStage={selectedStage}
+            note={note}
+            disabled={disabled}
+            onNoteChange={onNoteChange}
+            onCommit={() => onSubmitAction('ask-agent')}
+          />
+          <div style={styles.stageActionRow}>
+            <button
+              type="button"
+              data-qid="dream:agent:rerun"
+              data-qs-action="DREAM_STAGE_RERUN"
+              title="Write rerun work order"
+              disabled={disabled}
+              onClick={() => onSubmitAction('rerun')}
+              style={{ ...styles.stageActionButton, ...(disabled ? styles.disabledButton : null) }}
+            >
+              <Play size={14} />
+              Rerun phase
+            </button>
+          </div>
+        </>
+      )}
     </aside>
   )
 }
@@ -8348,6 +8352,7 @@ const nvis: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     height: '100%',
+    background: '#111111',
     position: 'relative' as const,
     isolation: 'isolate' as const,
   },
@@ -12435,6 +12440,11 @@ const styles: Record<string, CSSProperties> = {
   mediaLockPanel: {
     display: 'grid',
     gap: 14,
+    borderRadius: 8,
+    border: '1px solid rgba(148, 163, 184, 0.14)',
+    background: '#050505',
+    padding: 16,
+    overflow: 'hidden',
   },
   mediaLockStatusBar: {
     display: 'flex',
