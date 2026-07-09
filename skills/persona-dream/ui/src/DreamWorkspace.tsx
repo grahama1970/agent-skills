@@ -912,17 +912,20 @@ function StageCard({
         {stage.id === '07' && (
           <StoryboardConsole stage={stage} />
         )}
+        {stage.id === '08' && (
+          <MediaLockPanel stage={stage} allStages={allStages ?? []} />
+        )}
         {stage.id === '09' && (
           <VideoProviderPanel stage={stage} />
         )}
-        {!['01', '02', '03', '04', '05', '06', '07', '09'].includes(stage.id) && (
+        {!['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
             {stage.failureOrGap && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
             {!stage.failureOrGap && !isStagePassed(stage) && <div style={styles.gapBox}>{stageMissingMessage(stage)}</div>}
           </>
         )}
-        <StageEvidence stage={stage} />
+        {stage.id !== '08' && <StageEvidence stage={stage.id === '07' ? { ...stage, images: [] } : stage} />}
       </div>
 
     </article>
@@ -1013,12 +1016,8 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
 }
 
 function StageEvidence({ stage }: { stage: DreamStage }) {
-  const executionReceipts = stage.id === '08'
-    ? stage.artifacts.filter(isExecutionReceiptArtifact)
-    : []
-  const visibleArtifacts = stage.id === '08'
-    ? stage.artifacts.filter((artifact) => !isExecutionReceiptArtifact(artifact))
-    : stage.artifacts
+  const executionReceipts = stage.artifacts.filter(isExecutionReceiptArtifact)
+  const visibleArtifacts = stage.artifacts.filter((artifact) => !isExecutionReceiptArtifact(artifact))
 
   return (
     <>
@@ -1042,7 +1041,7 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
       )}
 
       {executionReceipts.length > 0 && (
-        <details style={styles.receiptAccordion}>
+        <details data-qid={`dream:${stage.id}:execution-receipts`} style={styles.receiptAccordion}>
           <summary style={styles.receiptAccordionSummary}>
             <span>View Execution Receipts ({executionReceipts.length})</span>
           </summary>
@@ -1088,6 +1087,121 @@ function ArtifactChip({
       <span style={styles.receiptPillLabel}>{artifact.label}</span>
     </a>
   )
+}
+
+type MediaLockFrame = {
+  id: string
+  panelId: string
+  role: string
+  path: string
+  url: string
+  sha256: string
+  status: string
+  identityStatus: string
+  acceptedAt: string
+  timeLabel: string
+}
+
+function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: DreamStage[] }) {
+  const storyboardStage = allStages.find((candidate) => candidate.id === '07')
+  const packetArtifact = storyboardStage?.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
+  const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
+  const [frames, setFrames] = useState<MediaLockFrame[]>([])
+  const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPacket() {
+      try {
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const packet = await response.json()
+        const nextFrames = mediaLockFramesFromPacket(packet)
+        if (cancelled) return
+        setFrames(nextFrames)
+        setPacketStatus(nextFrames.length > 0
+          ? `PASS_MEDIA_LOCK_SOURCE: ${nextFrames.length} accepted frames loaded from storyboard_packet.json`
+          : 'BLOCKED_MEDIA_LOCK: storyboard_packet.json did not expose accepted frames')
+      } catch (error) {
+        if (cancelled) return
+        setFrames([])
+        setPacketStatus(`BLOCKED_MEDIA_LOCK_PACKET_LOAD: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    void loadPacket()
+    return () => { cancelled = true }
+  }, [packetPath])
+
+  return (
+    <section data-qid="dream:media-lock-panel" style={styles.mediaLockPanel}>
+      <p style={styles.stageSummary}>{stage.summary}</p>
+      {stage.failureOrGap && !isStagePassed(stage) && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
+      <div style={styles.mediaLockStatusBar}>
+        <span>Accepted frame lock</span>
+        <strong>{packetStatus}</strong>
+      </div>
+      {frames.length > 0 ? (
+        <div style={styles.mediaLockGrid}>
+          {frames.map((frame) => (
+            <article key={frame.id} style={styles.mediaLockFrame}>
+              <img src={frame.url} alt={`${frame.panelId} ${frame.role}`} style={styles.mediaLockThumb} />
+              <div style={styles.mediaLockFrameBody}>
+                <div style={styles.mediaLockFrameTitle}>
+                  <strong>{frame.panelId}</strong>
+                  <span>{frame.role.replace(/_/g, ' ')}</span>
+                </div>
+                <div style={styles.mediaLockFacts}>
+                  <span>Status</span>
+                  <strong>{frame.status}</strong>
+                  <span>Identity</span>
+                  <strong>{frame.identityStatus}</strong>
+                  <span>Time</span>
+                  <strong>{frame.timeLabel}</strong>
+                  <span>SHA</span>
+                  <strong title={frame.sha256}>{frame.sha256}</strong>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div style={styles.gapBox}>Accepted storyboard frames are not available to the media-lock view yet.</div>
+      )}
+      <StageEvidence stage={{ ...stage, images: [] }} />
+    </section>
+  )
+}
+
+function mediaLockFramesFromPacket(packet: unknown): MediaLockFrame[] {
+  const root = payloadObject(packet)
+  const panels = payloadArray(root?.panels)
+  const frames: MediaLockFrame[] = []
+  for (const panel of panels) {
+    const panelId = firstString(panel.panel_id, panel.id) ?? `panel_${frames.length + 1}`
+    const timeRange = payloadObject(panel.time_range)
+    for (const role of ['start_frame', 'end_frame']) {
+      const frameWrapper = payloadObject(panel[role])
+      const acceptedFrame = payloadObject(frameWrapper?.accepted_frame) ?? frameWrapper
+      const path = firstString(acceptedFrame?.path)
+      const url = dreamAssetUrl(path ?? '')
+      if (!path || !url) continue
+      const identityReview = payloadObject(acceptedFrame?.identity_continuity_review)
+      const timeValue = role === 'start_frame' ? timeRange?.start_s : timeRange?.end_s
+      frames.push({
+        id: `${panelId}.${role}`,
+        panelId,
+        role,
+        path,
+        url,
+        sha256: firstString(acceptedFrame?.sha256) ?? 'sha256:missing',
+        status: firstString(acceptedFrame?.status) ?? 'ACCEPTED_FRAME',
+        identityStatus: firstString(identityReview?.status) ?? 'UNKNOWN',
+        acceptedAt: firstString(acceptedFrame?.accepted_at) ?? '',
+        timeLabel: typeof timeValue === 'number' ? `${timeValue.toFixed(1)}s` : 'n/a',
+      })
+    }
+  }
+  return frames
 }
 
 type DreamArtifact = DreamStage['artifacts'][number]
@@ -12172,6 +12286,74 @@ const styles: Record<string, CSSProperties> = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+  },
+  mediaLockPanel: {
+    display: 'grid',
+    gap: 14,
+  },
+  mediaLockStatusBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderRadius: 8,
+    border: '1px solid rgba(74, 158, 255, 0.28)',
+    borderLeft: '8px solid #4a9eff',
+    background: 'rgba(74, 158, 255, 0.08)',
+    padding: '11px 13px',
+    color: '#bfdbfe',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.10em',
+    textTransform: 'uppercase',
+  },
+  mediaLockGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+    gap: 10,
+  },
+  mediaLockFrame: {
+    display: 'grid',
+    gridTemplateRows: 'auto 1fr',
+    minWidth: 0,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.10)',
+    background: '#070707',
+    overflow: 'hidden',
+  },
+  mediaLockThumb: {
+    width: '100%',
+    aspectRatio: '16 / 9',
+    objectFit: 'cover',
+    display: 'block',
+    background: '#000',
+  },
+  mediaLockFrameBody: {
+    display: 'grid',
+    gap: 10,
+    padding: 10,
+    minWidth: 0,
+  },
+  mediaLockFrameTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    color: '#f8fafc',
+    fontSize: 12,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  mediaLockFacts: {
+    display: 'grid',
+    gridTemplateColumns: '64px minmax(0, 1fr)',
+    gap: '5px 8px',
+    margin: 0,
+    color: '#94a3b8',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 10,
+    lineHeight: 1.25,
   },
   stageActionBox: {
     borderTop: '1px solid rgba(255, 255, 255, 0.06)',
