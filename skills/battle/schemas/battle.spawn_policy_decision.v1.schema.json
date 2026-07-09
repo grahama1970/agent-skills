@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.spawn_policy_decision.v1.schema.json",
+  "title": "Battle Spawn Policy Decision",
+  "type": "object",
+  "required": ["schema", "status", "decision", "reason", "parent_terminal", "strategic_pre_kill_proven", "materialized_child"],
+  "properties": {
+    "schema": { "const": "battle.spawn_policy_decision.v1" },
+    "status": { "type": "string", "minLength": 1 },
+    "decision": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "minLength": 1 },
+    "parent_terminal": { "type": "boolean" },
+    "strategic_pre_kill_proven": { "type": "boolean" },
+    "materialized_child": { "type": "boolean" },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

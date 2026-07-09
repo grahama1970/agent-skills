@@ -406,11 +406,40 @@ lane.actor_visual.variant_id -> fixture.sprite_theme.variants[variant_id]
 
 ## Next Backend Actions
 
-1. Keep `lineage.spawns[]` as the fail-closed source even though lane parent fields are now redundant.
-2. Continue broadening exploit classes when new scenario kinds are added; update `battle.semantic_outcome_matrix.v1` and `battle.exploit_lifecycle_dag.v1` together.
-3. Do not make stream sidecars Phase 1 authority. Phase 2 stream consumption should validate `battle.transport_manifest.v1`, `battle.live_event.v1`, and `battle.snapshot.v1` against the normalized fixture first.
-4. If UX adds stream playback, rerun `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` and inspect screenshots for BATTLE-004/005/006/007.
-5. Next live backend slice: change Tau/Battle spawn policy so Red can emit `strategic_pre_kill` or `panic_spawn` from suspected pressure before Judge BLUE_SUCCESS, then validate the resulting lifecycle receipts.
+1. Add `exploit-combiner-proof` before the full genetic Battle engine.
+2. Keep `lineage.spawns[]` as the fail-closed source even though lane parent fields are now redundant.
+3. Continue broadening exploit classes when new scenario kinds are added; update `battle.semantic_outcome_matrix.v1` and `battle.exploit_lifecycle_dag.v1` together.
+4. Do not make stream sidecars Phase 1 authority. Phase 2 stream consumption should validate `battle.transport_manifest.v1`, `battle.live_event.v1`, and `battle.snapshot.v1` against the normalized fixture first.
+5. If UX adds stream playback, rerun `BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator` and inspect screenshots for BATTLE-004/005/006/007.
+6. After the combiner rung is stable, change Tau/Battle spawn policy so Red can emit `strategic_pre_kill` or `panic_spawn` from suspected pressure before Judge BLUE_SUCCESS, then validate the resulting lifecycle receipts.
+
+## Exploit Combiner Proof Rung
+
+Next backend rung:
+
+```text
+./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner
+```
+
+Purpose:
+
+```text
+Prove the specimen lifecycle for nondeterministic exploit-code synthesis:
+generated/bad code -> Docker run -> failure observations -> target contact ->
+repaired/runnable specimen -> no exploit-success claim.
+```
+
+Current non-claims:
+
+```text
+The first proof is fixture-backed and agentic:false.
+It does not prove Tau generated the code.
+It does not prove exploit success.
+Runnable specimen is not exploit success.
+Target contact is not exploit success.
+Child spawn materialization is future work.
+Judge replay is required for exploit-success claims.
+```
 
 ## Next UX Agent Contract
 

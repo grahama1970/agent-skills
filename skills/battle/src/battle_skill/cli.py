@@ -669,6 +669,46 @@ def validate_exploit_lifecycle_receipts_command(
     console.print_json(data=report)
 
 
+@app.command("exploit-combiner-proof")
+def exploit_combiner_proof(
+    battle_id: str = typer.Argument("battle-004", help="Battle id for the fixture-backed combiner proof."),
+    out: Path = typer.Option(..., "--out", help="Output directory for exploit combiner artifacts."),
+    max_attempts: int = typer.Option(4, "--max-attempts", min=1, help="Maximum fixture specimens to materialize and run."),
+    docker_image: str = typer.Option("python:3.12-slim", "--docker-image", help="Docker image used to run specimen code."),
+    model: str = typer.Option("gpt-5.5", "--model", help="Future Tau model request, recorded but not used by PR1 fixture proof."),
+    scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url", help="Future scillm endpoint, recorded but not used by PR1 fixture proof."),
+):
+    """Run fixture-backed exploit specimen combiner proof without claiming exploit success."""
+    from .exploit_combiner import run_exploit_combiner_proof
+
+    receipt = run_exploit_combiner_proof(
+        battle_id=battle_id,
+        out_dir=out,
+        max_attempts=max_attempts,
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+    )
+    scoreboard = receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
+    console.print_json(
+        data={
+            "status": receipt.get("status"),
+            "schema": receipt.get("schema"),
+            "battle_id": battle_id,
+            "out": str(out),
+            "proof_mode": receipt.get("proof_mode"),
+            "agentic": receipt.get("agentic"),
+            "generated_specimens": scoreboard.get("generated_specimens"),
+            "compile_failed": scoreboard.get("compile_failed"),
+            "runtime_failed": scoreboard.get("runtime_failed"),
+            "target_contact_unproven": scoreboard.get("target_contact_unproven"),
+            "runnable_unproven": scoreboard.get("runnable_unproven"),
+            "judge_verified_exploits": scoreboard.get("judge_verified_exploits"),
+            "verdict": scoreboard.get("verdict"),
+        }
+    )
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(
