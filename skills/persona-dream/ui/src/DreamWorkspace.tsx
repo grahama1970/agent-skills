@@ -12440,11 +12440,6 @@ const styles: Record<string, CSSProperties> = {
   mediaLockPanel: {
     display: 'grid',
     gap: 14,
-    borderRadius: 8,
-    border: '1px solid rgba(148, 163, 184, 0.14)',
-    background: '#050505',
-    padding: 16,
-    overflow: 'hidden',
   },
   mediaLockStatusBar: {
     display: 'flex',
