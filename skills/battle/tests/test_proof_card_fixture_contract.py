@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import jsonschema
+
+from battle_skill.exploit_combiner import run_exploit_combiner_proof
+from battle_skill.live_tau_child_dag_canary import run_live_tau_child_dag_canary
+from battle_skill.proof_card_fixture import normalize_pr3b_proof_card_fixture, validate_normalized_proof_card_fixture
+from battle_skill.spawn_architect import run_spawn_architect_proof
+
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+
+def _schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+
+
+def test_pr3b_proof_card_fixture_normalizes_backend_artifacts_without_tau_paths(tmp_path: Path) -> None:
+    combiner = tmp_path / "combiner"
+    run_exploit_combiner_proof(
+        battle_id="battle-004",
+        out_dir=combiner,
+        max_attempts=4,
+        docker_image="python:3.12-slim",
+        model="not-used",
+        scillm_base_url="not-used",
+    )
+    spawn = tmp_path / "spawn-architect"
+    run_spawn_architect_proof(battle_id="battle-004", out_dir=spawn, parent_combiner_proof=combiner)
+    live_tau = tmp_path / "live-tau"
+    run_live_tau_child_dag_canary(
+        battle_id="battle-004",
+        out_dir=live_tau,
+        spawn_architect_proof=spawn,
+        timeout_seconds=900,
+    )
+
+    out = tmp_path / "battle.normalized_proof_card_fixture.json"
+    fixture = normalize_pr3b_proof_card_fixture(live_tau_canary=live_tau, out=out)
+
+    jsonschema.validate(fixture, _schema("battle.normalized_proof_card_fixture.v1.schema.json"))
+    report = validate_normalized_proof_card_fixture(fixture)
+    assert report["status"] == "PASS"
+    assert fixture["proof_card_kind"] == "pr3b_tau_research_combiner"
+    assert fixture["node_status"] == {
+        "lineage-summarizer": "PASS",
+        "research-scout": "PASS",
+        "method-combiner": "PASS",
+        "exploit-code-author": "BLOCKED",
+    }
+    assert fixture["artifacts"]["child_research_receipts"]["schema"] == "battle.child_research_receipts.v1"
+    assert fixture["artifacts"]["child_candidate_methods"]["schema"] == "battle.child_candidate_methods.v1"
+    assert fixture["artifacts"]["child_exploit_genome"]["schema"] == "battle.child_exploit_genome.v1"
+    assert "child_exploit_generated" in fixture["claim_boundary"]["must_not_claim"]
+    assert "exploit_success" in fixture["claim_boundary"]["must_not_claim"]
+    assert "command-loop/command-artifacts" not in json.dumps(fixture)
+    assert fixture["copy"]["headline"] == "Research and method genome produced"

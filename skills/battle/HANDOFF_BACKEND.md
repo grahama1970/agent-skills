@@ -560,6 +560,25 @@ exploit-code-author remains BLOCKED until a real Tau/provider code-authoring ada
 Judge remains the only authority for exploit success
 ```
 
+Normalized proof-card fixture:
+
+```text
+schema = battle.normalized_proof_card_fixture.v1
+local path = skills/battle/local/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+public URL = /battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-proof-card-fixture /tmp/battle-pr3b-live-research-final/live-tau \
+  --out local/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+./run.sh validate-proof-card-fixture local/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+```
+
+UX must consume the normalized proof-card fixture only. Do not bind React to
+Tau runtime directories such as `tau-dag-run/command-loop/command-artifacts`.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

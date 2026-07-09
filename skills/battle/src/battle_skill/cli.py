@@ -860,6 +860,52 @@ def live_tau_child_dag_canary(
         raise typer.Exit(1)
 
 
+@app.command("normalize-proof-card-fixture")
+def normalize_proof_card_fixture(
+    live_tau_canary: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="PR3b live Tau canary directory or live-tau-child-dag-canary-receipt.json.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output battle.normalized_proof_card_fixture.json path."),
+):
+    """Normalize backend PR3b receipts into a stable proof-card fixture for UX."""
+    from .proof_card_fixture import normalize_pr3b_proof_card_fixture
+
+    fixture = normalize_pr3b_proof_card_fixture(live_tau_canary=live_tau_canary, out=out)
+    console.print_json(
+        data={
+            "status": fixture.get("status"),
+            "schema": fixture.get("schema"),
+            "proof_card_kind": fixture.get("proof_card_kind"),
+            "battle_id": fixture.get("battle_id"),
+            "out": str(out),
+            "node_status": fixture.get("node_status"),
+            "may_claim": fixture.get("claim_boundary", {}).get("may_claim"),
+            "must_not_claim": fixture.get("claim_boundary", {}).get("must_not_claim"),
+        }
+    )
+
+
+@app.command("validate-proof-card-fixture")
+def validate_proof_card_fixture(
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.normalized_proof_card_fixture.v1 JSON fixture.",
+    ),
+):
+    """Validate a normalized proof-card fixture."""
+    from .proof_card_fixture import validate_normalized_proof_card_fixture_path
+
+    report = validate_normalized_proof_card_fixture_path(fixture)
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

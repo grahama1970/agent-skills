@@ -247,6 +247,16 @@ with Tau-validated `tau.research_source_receipt.v1` design-input receipts, pass
 `exploit-code-author` unless a real Tau/provider code-authoring adapter exists.
 That block is expected; fixture child code fallback is forbidden.
 
+The proof-card UX contract is a separate normalized fixture:
+
+```text
+local/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
+```
+
+UX should consume that fixture only. It must not walk Tau's
+`command-loop/command-artifacts` directories.
+
 ## Claim Boundaries
 
 Battle uses strict proof language:

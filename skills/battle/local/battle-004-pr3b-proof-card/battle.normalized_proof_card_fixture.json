@@ -1,0 +1,324 @@
+{
+  "agentic": true,
+  "artifacts": {
+    "child_candidate_methods": {
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-child-dag-001",
+      "claims": {
+        "does_not_prove": [
+          "Any candidate method works.",
+          "Any exploit code was generated.",
+          "Exploit success."
+        ],
+        "proves": [
+          "Battle derived candidate methods from source-bearing research and parent lineage evidence."
+        ]
+      },
+      "fixture_fallback_used": false,
+      "live": "tau_command_spec_node",
+      "methods": [
+        {
+          "access_mode": "black_box",
+          "complexity": "low",
+          "evidence_refs": [
+            "research-source-receipt.json",
+            "lineage_summary.json"
+          ],
+          "expected_usefulness": "high",
+          "inherited": true,
+          "known_risks": [
+            "Target API specifics are not proven by research."
+          ],
+          "method_id": "child_archive_traversal_baseline",
+          "name": "Child archive traversal baseline",
+          "rationale": "Start child synthesis from the simplest archive path traversal family before adding unrelated staging ideas.",
+          "source": "manual_source_receipt",
+          "technique_class": "filesystem_path"
+        },
+        {
+          "access_mode": "grey_box",
+          "complexity": "medium",
+          "evidence_refs": [
+            "research-source-receipt.json",
+            "lineage_summary.json"
+          ],
+          "expected_usefulness": "medium",
+          "inherited": true,
+          "known_risks": [
+            "Could generate malformed archives or non-portable filenames."
+          ],
+          "method_id": "child_archive_path_normalization_variants",
+          "name": "Archive path normalization variants",
+          "rationale": "Try filename normalization and separator variants only after baseline contact is understood.",
+          "source": "manual_source_receipt",
+          "technique_class": "encoding_variant"
+        },
+        {
+          "access_mode": "black_box",
+          "complexity": "low",
+          "evidence_refs": [
+            "research-source-receipt.json",
+            "lineage_summary.json"
+          ],
+          "expected_usefulness": "high",
+          "inherited": false,
+          "known_risks": [
+            "May miss a creative but unsupported branch."
+          ],
+          "method_id": "child_drop_mitm_and_assembly",
+          "name": "Drop MITM and assembly ideas for first child",
+          "rationale": "Parent evidence labels protocol staging and assembly payload probes as likely irrelevant to local archive import.",
+          "source": "negative_parent_evidence",
+          "technique_class": "negative_filter"
+        }
+      ],
+      "mocked": false,
+      "provider_live": false,
+      "schema": "battle.child_candidate_methods.v1",
+      "status": "PASS"
+    },
+    "child_exploit_genome": {
+      "agentic": false,
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-child-dag-001",
+      "claims": {
+        "does_not_prove": [
+          "Tau authored exploit code.",
+          "Any exploit code was generated.",
+          "Any exploit code compiles.",
+          "Any exploit code runs.",
+          "Any exploit succeeded."
+        ],
+        "proves": [
+          "Battle deterministically combined source-backed child methods into an exploit genome candidate."
+        ]
+      },
+      "created_by": "battle_deterministic_method_combiner",
+      "fixture_fallback_used": false,
+      "live": "tau_command_spec_node",
+      "mocked": false,
+      "provider_live": false,
+      "rejected_method_ids": [
+        "child_drop_mitm_and_assembly"
+      ],
+      "schema": "battle.child_exploit_genome.v1",
+      "selected_method_ids": [
+        "child_archive_traversal_baseline",
+        "child_archive_path_normalization_variants"
+      ],
+      "status": "PASS",
+      "strategy": {
+        "negative_filter": "Defer MITM staging and assembly payload probes until evidence supports them.",
+        "primary": "Prefer low-complexity archive traversal baseline before high-complexity inherited branches.",
+        "repair_bias": "Use source-backed path normalization variants only after baseline target contact."
+      }
+    },
+    "child_research_receipts": {
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-child-dag-001",
+      "claims": {
+        "does_not_prove": [
+          "The cited sources are true.",
+          "The researched technique applies to BATTLE-004.",
+          "Any child exploit code was generated.",
+          "Any child exploit code compiles.",
+          "Any child exploit code runs.",
+          "Any exploit succeeded.",
+          "Any Blue detection, bypass, stealth, kill, or block occurred.",
+          "Any packet-level behavior was captured."
+        ],
+        "proves": [
+          "Research Scout executed through the live Tau command-spec DAG path.",
+          "Research Scout produced source-bearing design-input receipts.",
+          "Research Scout preserved Tau research-source receipt validation."
+        ]
+      },
+      "fixture_fallback_used": false,
+      "live": "tau_command_spec_node",
+      "mocked": false,
+      "provider_live": false,
+      "query": {
+        "external_tool_called": false,
+        "method": "manual",
+        "safety_receipt": null,
+        "value": "BATTLE-004 public archive import child research: Which public archive import edge cases are relevant to the /api/import-zip entrypoint?"
+      },
+      "schema": "battle.child_research_receipts.v1",
+      "source_receipts": [
+        {
+          "method": "manual",
+          "review_required": true,
+          "schema": "tau.research_source_receipt.v1",
+          "source_count": 3,
+          "source_type": "web",
+          "status": "PASS"
+        }
+      ],
+      "sources": [
+        {
+          "claims_supported": [
+            "Zip Slip is an archive extraction directory traversal pattern.",
+            "Traversal filenames can write outside the intended extraction directory."
+          ],
+          "classification": "design_input",
+          "limitations": [
+            "Research is not proof of exploitability.",
+            "Research does not prove the method applies to this target."
+          ],
+          "method": "manual",
+          "relevance": "HIGH",
+          "retrieved_at": "2026-07-09T16:12:48Z",
+          "source_id": "source-001",
+          "source_type": "web",
+          "title": "Zip Slip Vulnerability - Snyk Security Database",
+          "url": "https://security.snyk.io/research/zip-slip-vulnerability",
+          "used_for": [
+            "candidate_method",
+            "negative_evidence"
+          ]
+        },
+        {
+          "claims_supported": [
+            "Python archive path handling requires filename validation for unsafe member paths in some APIs.",
+            "Absolute paths and parent-directory components are relevant archive path risks."
+          ],
+          "classification": "design_input",
+          "limitations": [
+            "Research is not proof of exploitability.",
+            "Research does not prove the method applies to this target."
+          ],
+          "method": "manual",
+          "relevance": "HIGH",
+          "retrieved_at": "2026-07-09T16:12:48Z",
+          "source_id": "source-002",
+          "source_type": "web",
+          "title": "zipfile - Work with ZIP archives - Python documentation",
+          "url": "https://docs.python.org/3/library/zipfile.html",
+          "used_for": [
+            "candidate_method",
+            "compile_repair_policy"
+          ]
+        },
+        {
+          "claims_supported": [
+            "Public examples classify traversal filenames as the essential Zip Slip payload shape.",
+            "Archive formats and language APIs vary, so implementation-specific validation remains required."
+          ],
+          "classification": "design_input",
+          "limitations": [
+            "Research is not proof of exploitability.",
+            "Research does not prove the method applies to this target."
+          ],
+          "method": "manual",
+          "relevance": "MEDIUM",
+          "retrieved_at": "2026-07-09T16:12:48Z",
+          "source_id": "source-003",
+          "source_type": "web",
+          "title": "snyk/zip-slip-vulnerability examples",
+          "url": "https://github.com/snyk/zip-slip-vulnerability",
+          "used_for": [
+            "negative_evidence"
+          ]
+        }
+      ],
+      "status": "PASS"
+    }
+  },
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "may_claim": [
+      "research_receipts_materialized",
+      "candidate_methods_materialized",
+      "exploit_genome_materialized"
+    ],
+    "must_not_claim": [
+      "child_exploit_generated",
+      "child_exploit_compiled",
+      "child_exploit_runnable",
+      "exploit_success",
+      "blue_detection",
+      "blue_bypass",
+      "packet_level_behavior"
+    ]
+  },
+  "copy": {
+    "headline": "Research and method genome produced",
+    "status_label": "Blocked at exploit-code-author",
+    "subhead": "Exploit code authoring is blocked until a real Tau/provider code-authoring adapter exists."
+  },
+  "fixture_fallback_used": false,
+  "generated_at": "2026-07-09T20:21:49Z",
+  "live": "tau_dag_runtime",
+  "mocked": false,
+  "node_status": {
+    "exploit-code-author": "BLOCKED",
+    "lineage-summarizer": "PASS",
+    "method-combiner": "PASS",
+    "research-scout": "PASS"
+  },
+  "node_verdict": {
+    "exploit-code-author": "PROVIDER_OR_TAU_CODE_AUTHOR_ADAPTER_MISSING",
+    "lineage-summarizer": "PASS",
+    "method-combiner": "PASS",
+    "research-scout": "PASS"
+  },
+  "proof_card_kind": "pr3b_tau_research_combiner",
+  "proof_mode": "live_tau_child_dag_canary",
+  "reason": "command_failed",
+  "receipt_refs": [
+    {
+      "id": "live_tau_child_dag_canary",
+      "schema": "battle.live_tau_child_dag_canary_receipt.v1",
+      "status": "BLOCKED",
+      "verdict": "command_failed"
+    },
+    {
+      "id": "tau_dag_receipt",
+      "schema": "tau.dag_receipt.v1",
+      "status": "BLOCKED",
+      "verdict": "COMMAND_FAILED"
+    },
+    {
+      "id": "lineage-summarizer",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "research-scout",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "method-combiner",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "exploit-code-author",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "status": "BLOCKED",
+      "verdict": "PROVIDER_OR_TAU_CODE_AUTHOR_ADAPTER_MISSING"
+    }
+  ],
+  "run_id": "live-tau",
+  "schema": "battle.normalized_proof_card_fixture.v1",
+  "scoreboard": {
+    "battle_id": "battle-004",
+    "child_specimen_run": false,
+    "judge_verified_exploits": 0,
+    "reason": "command_failed",
+    "required_tau_artifacts_present": false,
+    "schema": "battle.live_tau_child_dag_canary_scoreboard.v1",
+    "tau_execution_attempted": true,
+    "tau_preflight_passed": true,
+    "tau_receipt_present": true,
+    "verdict": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "tau_execution": "attempted",
+  "tau_receipt_status": "BLOCKED",
+  "tau_receipt_verdict": "COMMAND_FAILED"
+}
