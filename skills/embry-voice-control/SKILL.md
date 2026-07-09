@@ -295,6 +295,34 @@ The receipt must record the `pw-play` command and whether local PipeWire
 playback returned successfully. Audible playback does not override semantic
 answer failure.
 
+Run the Embry Chat Tau-style static query rung before trusting the legacy UX Lab
+`/live-turn` adapter as the reasoning path:
+
+```bash
+./run.sh embry-chat-static-query-live --play-local --local-playback-target 64
+```
+
+This consumes the latest Unix listener receipt and proves the narrow voice
+front-end contract:
+
+```text
+RealtimeSTT final transcript
+  -> Embry Chat Tau subagent boundary
+  -> $memory /intent first
+  -> $memory /answer second
+  -> irrelevant or deterministic memory answer is classified as a miss
+  -> Tau static-answer route for "What is the capital of France?"
+  -> Chatterbox receives only Tau-approved tts_render_text
+  -> optional PipeWire playback receipt
+```
+
+The receipt schema is `embry_chat_turn_receipt.v1`. Required evidence includes
+`intent_call_index=1`, `answer_call_index=2`, `route_taken=static_answer`,
+`tts_render_text` matching the Tau response plan, a readable Chatterbox WAV, and
+`pw-play` return code `0` when `--play-local` is used. This rung does not prove
+browser mic, speaker identity, Chat UX rendering, orb sync, replay,
+interruption, or the 200+ stress suite.
+
 Run the research routing rung before claiming Embry can answer current-world
 non-compliance questions through the voice front-end:
 

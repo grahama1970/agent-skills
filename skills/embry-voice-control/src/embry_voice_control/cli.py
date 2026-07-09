@@ -24,6 +24,10 @@ from loguru import logger
 import typer
 from websockets.sync.client import connect as websocket_connect
 
+from embry_voice_control.embry_chat import DEFAULT_CHATTERBOX_URL as EMBRY_CHAT_CHATTERBOX_URL
+from embry_voice_control.embry_chat import DEFAULT_EMBRY_REF_AUDIO
+from embry_voice_control.embry_chat import DEFAULT_EXPECTED_ANSWER as EMBRY_CHAT_EXPECTED_ANSWER
+from embry_voice_control.embry_chat import run_embry_chat_static_query_live
 from embry_voice_control.live_wake import run_wake_capital_france
 from embry_voice_control.listener_turn import DEFAULT_BASE_URL as LISTENER_TURN_BASE_URL
 from embry_voice_control.listener_turn import DEFAULT_EXPECTED_ANSWER
@@ -797,6 +801,57 @@ def listener_turn_live(
         "turn_text": receipt["turn_text"],
         "answer_text": acceptance["answer_text"],
         "local_playback": receipt.get("local_playback"),
+        "failed_checks": [
+            key for key, value in acceptance["checks"].items()
+            if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
+        ],
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not acceptance["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("embry-chat-static-query-live")
+def embry_chat_static_query_live(
+    memory_url: str = typer.Option(RESEARCH_TURN_MEMORY_URL, help="Memory daemon HTTP base URL"),
+    chatterbox_url: str = typer.Option(EMBRY_CHAT_CHATTERBOX_URL, help="Chatterbox agent HTTP base URL"),
+    output_root: Path = typer.Option(LISTENER_TURN_OUTPUT_ROOT, help="12TB output root for receipts"),
+    listener_receipt_path: Path | None = typer.Option(None, help="Specific Unix listener wrapper receipt to consume"),
+    unix_listener_root: Path = typer.Option(DEFAULT_UNIX_LISTENER_ROOT, help="Unix listener output root with latest_unix_listener.json"),
+    ref_audio: Path = typer.Option(DEFAULT_EMBRY_REF_AUDIO, help="Embry Chatterbox reference WAV"),
+    expected_answer: str = typer.Option(EMBRY_CHAT_EXPECTED_ANSWER, help="Expected semantic answer substring"),
+    timeout: float = typer.Option(120.0, help="HTTP timeout in seconds"),
+    play_local: bool = typer.Option(False, help="Play returned Chatterbox WAV through local PipeWire"),
+    local_playback_target: str = typer.Option("64", help="PipeWire playback target for --play-local"),
+    local_playback_timeout: float = typer.Option(90.0, help="Local playback timeout in seconds"),
+) -> None:
+    """Run listener transcript through Embry Chat memory-first Tau-style routing."""
+    receipt = run_embry_chat_static_query_live(
+        memory_url=memory_url,
+        chatterbox_url=chatterbox_url,
+        output_root=output_root,
+        listener_receipt_path=listener_receipt_path,
+        unix_listener_root=unix_listener_root,
+        ref_audio=ref_audio,
+        expected_answer=expected_answer,
+        timeout=timeout,
+        play_local=play_local,
+        local_playback_target=local_playback_target,
+        local_playback_timeout=local_playback_timeout,
+    )
+    acceptance = receipt["acceptance"]
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": acceptance["pass"],
+        "receipt_path": receipt["receipt_path"],
+        "listener_receipt_path": receipt["input"]["listener_receipt_path"],
+        "turn_text": receipt["input"]["turn_text"],
+        "intent_action": receipt["memory_pipeline"]["intent_action"],
+        "memory_result_classification": receipt["memory_pipeline"]["memory_result_classification"],
+        "route_taken": receipt["tau_route"]["route_taken"],
+        "answer_text": receipt["response_plan"]["answer_text"],
+        "audio_path": (receipt.get("chatterbox", {}).get("audio") or {}).get("path"),
+        "local_playback": receipt.get("audio_output"),
         "failed_checks": [
             key for key, value in acceptance["checks"].items()
             if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
