@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import jsonschema
+
+from battle_skill.exploit_combiner import run_exploit_combiner_proof
+from battle_skill.spawn_architect import run_spawn_architect_proof
+
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+
+def _load_schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+
+
+def test_spawn_architect_proof_emits_dag_birth_contract_without_tau_execution(tmp_path: Path) -> None:
+    parent_dir = tmp_path / "combiner"
+    run_exploit_combiner_proof(
+        battle_id="battle-004",
+        out_dir=parent_dir,
+        max_attempts=4,
+        docker_image="python:3.12-slim",
+        model="not-used",
+        scillm_base_url="not-used",
+    )
+    receipt = run_spawn_architect_proof(
+        battle_id="battle-004",
+        out_dir=tmp_path / "spawn-architect",
+        parent_combiner_proof=parent_dir,
+    )
+    jsonschema.validate(receipt, _load_schema("battle.spawn_architect_receipt.v1.schema.json"))
+    jsonschema.validate(receipt["validation"], _load_schema("battle.child_exploit_tau_dag_summary.v1.schema.json"))
+
+    assert receipt["status"] == "PASS"
+    assert receipt["mocked"] is False
+    assert receipt["live"] == "local_fixture_dag_authoring_and_validation"
+    assert receipt["agentic"] is False
+    assert receipt["tau_execution"] == "deferred_to_pr3"
+    assert receipt["spawn_policy"]["decision"] == "ALLOWED_STALLED_PRE_TERMINAL"
+    assert receipt["validation"]["valid"] is True
+    assert receipt["scoreboard"]["live_tau_executions"] == 0
+    assert receipt["scoreboard"]["child_exploits_materialized"] == 0
+    assert receipt["scoreboard"]["judge_verified_exploits"] == 0
+
+    out_dir = tmp_path / "spawn-architect"
+    assert (out_dir / "spawn-architect-receipt.json").exists()
+    assert (out_dir / "spawn-policy-decision.json").exists()
+    assert (out_dir / "child-knowledge-packet.json").exists()
+    assert (out_dir / "child-exploit-dag.yaml").exists()
+    assert (out_dir / "child-exploit-dag.summary.json").exists()
+    assert (out_dir / "validation.json").exists()
+    assert (out_dir / "events.jsonl").exists()
+    assert (out_dir / "normalized" / "battle-004-spawn-architect.normalized.json").exists()
+
+    event_types = [json.loads(line)["event_type"] for line in (out_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert {
+        "spawn_policy_loaded",
+        "spawn_architect_started",
+        "child_knowledge_packet_created",
+        "child_tau_dag_authored",
+        "child_tau_dag_validated",
+        "child_tau_dag_private_boundary_passed",
+        "child_tau_execution_deferred",
+        "spawn_architect_scoreboard_written",
+    } <= set(event_types)
+    assert not {
+        "child_spawned",
+        "child_running",
+        "child_exploit_generated",
+        "child_compiled",
+        "child_target_contact",
+        "child_success",
+    } & set(event_types)
+
+    proves = " ".join(receipt["claims"]["proves"]).lower()
+    assert "exploit succeeded" not in proves
+    assert "any exploit succeeded." in " ".join(receipt["claims"]["does_not_prove"]).lower()

@@ -414,6 +414,14 @@ unproven code, and fail-closed non-claims. Live Tau generation, child
 materialization, packet capture, Blue adaptation, memory promotion, and Judge
 exploit-success replay are later rungs.
 
+The second backend proof rung is `spawn-architect-proof`. It is fixture-backed,
+`agentic:false`, and proves the DAG birth contract only: Battle loads a
+spawn-policy decision, constructs a child knowledge packet from parent specimen
+evidence, authors a `tau.dag_contract.v1` child exploit-synthesis DAG, validates
+private-artifact exclusions, and records that Tau execution is deferred to PR3.
+It does not run Tau, materialize a child exploit, generate live exploit code,
+compile child code, contact the target, or claim exploit success.
+
 ## File Structure
 
 ```
