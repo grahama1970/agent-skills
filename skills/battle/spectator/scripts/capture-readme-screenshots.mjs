@@ -35,6 +35,12 @@ const shots = [
     waitFor: '[data-battle-pixi-engine="animated-sprites"]',
     clipSelector: '.battle-mockup-shell',
   },
+  {
+    id: 'battle-004-pr3b-proof-card',
+    url: `${host}/#battle/proof?fixture=battle-004-pr3b`,
+    waitFor: '[data-qid="battle:proof-card:root"]',
+    clipSelector: '[data-qid="battle:proof-card:root"]',
+  },
 ]
 
 await mkdir(outDir, { recursive: true })

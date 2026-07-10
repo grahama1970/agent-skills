@@ -11,5 +11,13 @@ export {
 	childSpawnElapsedSeconds,
 } from "./lib/battle-receipt-replay";
 export { isBattlePixiEngine } from "./lib/is-battle-pixi-engine";
+export {
+	PROOF_CARD_FIXTURES,
+	battleProofCardFixtureId,
+	battleProofCardFixtureUrl,
+	isBattleProofCardView,
+} from "./lib/battle-proof-card-registry";
+export { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
+export { BattleProofCardView } from "./BattleProofCardView";
 export { BattleComponentCapabilityHarness, isBattleComponentCapabilityTest } from "./BattleComponentCapabilityHarness";
 export { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";

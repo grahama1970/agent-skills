@@ -48,16 +48,26 @@ echo "6/8 Pixi design route sanity"
 echo "7/8 Receipt replay Pixi proof (6 requirements)"
 (cd "$SPECTATOR_DIR" && npm run prove:receipt-replay)
 
-echo "8/9 Fresh arena fixture Pixi proof (BATTLE-005/006/007)"
+echo "8/13 Fresh arena fixture Pixi proof (BATTLE-005/006/007)"
 (cd "$SPECTATOR_DIR" && npm run prove:fresh-fixture-replay)
 
-echo "9/10 Hunger Games death notification UX proof"
+echo "9/13 Hunger Games death notification UX proof"
 (cd "$SPECTATOR_DIR" && npm run prove:hg-death-notification)
 
-echo "10/11 Hunger Games kill-cue replay proof"
+echo "10/13 Hunger Games kill-cue replay proof"
 (cd "$SPECTATOR_DIR" && npm run prove:hg-kill-cue-replay)
 
-echo "11/11 Pixi kill-shot animation proof"
+echo "11/14 No-mockup-leakage receipt chrome proof"
+(cd "$SPECTATOR_DIR" && npm run prove:no-mockup-leakage)
+
+echo "12/14 Lifecycle-enriched fixture proof"
+(cd "$BATTLE_DIR" && python3 scripts/enrich_pixi_replay_lifecycle.py)
+(cd "$SPECTATOR_DIR" && npm run prove:receipt-lifecycle-emitted)
+
+echo "13/14 Pixi kill-shot animation proof"
 (cd "$SPECTATOR_DIR" && npm run prove:kill-shot-pixi)
+
+echo "14/14 PR3b proof-card route proof"
+(cd "$SPECTATOR_DIR" && npm run prove:pr3b-proof-card)
 
 echo "BATTLE_PROVE_SPECTATOR_PASS"

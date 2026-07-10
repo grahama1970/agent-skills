@@ -1,0 +1,59 @@
+name: "Battle Receipt UX Authority Split"
+components:
+  - id: backend_receipts
+    label: Backend Receipts
+    tech: "Judge + Tau + scorekeeper"
+    latency: "source of truth"
+    color: green
+    files:
+      - skills/battle/src/battle_skill/receipts.py
+  - id: normalized_fixture
+    label: Normalized UX Fixture
+    tech: "battle.normalized_ux_fixture.json"
+    latency: "replay contract"
+    color: blue
+    files:
+      - skills/battle/spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json
+  - id: design_route
+    label: "#battle design route"
+    tech: "Mockup shell + BattleMockupFooter"
+    latency: "design only"
+    color: purple
+    files:
+      - skills/battle/spectator/src/BattleMockupFooter.tsx
+  - id: receipt_route
+    label: "#battle/receipt route"
+    tech: "Receipt shell + BattleReceiptFooter"
+    latency: "truth route"
+    color: green
+    files:
+      - skills/battle/spectator/src/BattleReceiptFooter.tsx
+  - id: react_transport
+    label: React Transport + Cockpit
+    tech: "director beats, HG cards, lifecycle fail-closed"
+    latency: "replay chrome"
+    color: purple
+    files:
+      - skills/battle/spectator/src/hooks/useBattleReceiptDirector.ts
+      - skills/battle/spectator/src/lib/battle-lane-lifecycle-evidence.ts
+  - id: pixi_track
+    label: Pixi Track + VFX
+    tech: "sprites, kill-shot, spawn/block emphasis"
+    latency: "motion only"
+    color: amber
+    files:
+      - skills/battle/spectator/src/engine/battle-pixi-scene.ts
+      - skills/battle/spectator/src/engine/battle-pixi-beat-vfx.ts
+connections:
+  - from: backend_receipts
+    to: normalized_fixture
+  - from: normalized_fixture
+    to: receipt_route
+  - from: normalized_fixture
+    to: react_transport
+  - from: normalized_fixture
+    to: pixi_track
+  - from: receipt_route
+    to: react_transport
+  - from: react_transport
+    to: pixi_track

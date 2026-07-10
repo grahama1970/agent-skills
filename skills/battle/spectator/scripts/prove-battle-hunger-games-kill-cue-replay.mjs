@@ -101,6 +101,7 @@ async function main() {
   })
   record('card-visible-after-kill-crossing', after.card && after.inLiveEvents, JSON.stringify(after))
   record('hg-eliminated-copy', after.info.includes('Payload') && after.tickerHighlights.some((t) => t.includes('ELIMINATED')), JSON.stringify(after))
+  record('no-stale-survival-highlight', !after.tickerHighlights.some((t) => /RED-1/i.test(t) && t.includes('SURVIVES')), JSON.stringify({ tickerHighlights: after.tickerHighlights }))
 
   await page.screenshot({ path: resolve(outDir, 'kill-cue-replay-death-card.png'), fullPage: true })
   await browser.close()

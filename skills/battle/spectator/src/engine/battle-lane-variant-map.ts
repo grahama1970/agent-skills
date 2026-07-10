@@ -1,4 +1,5 @@
 import type { BattleSpriteThemeV1, Lane } from "../lib/battle-types";
+import { isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
 import type { BattleRunnerSpriteId } from "./battle-runner-sprites";
 import { BATTLE_RUNNER_SPRITE_IDS } from "./battle-runner-sprites";
 
@@ -54,6 +55,9 @@ export function spriteIdForLane(lane: Lane, spriteTheme?: BattleSpriteThemeV1): 
 	}
 
 	if (!actorVariantId) {
+		if (isBattleReceiptReplayView()) {
+			return "skull_horn";
+		}
 		const fallbackVariant = LANE_VARIANT_OVERRIDES[lane.id];
 		if (fallbackVariant) {
 			const resolved = asRunnerSpriteId(spriteThemeSpriteId(fallbackVariant, spriteTheme));

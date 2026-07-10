@@ -247,7 +247,9 @@ with Tau-validated `tau.research_source_receipt.v1` design-input receipts, pass
 `exploit-code-author` unless a real Tau/provider code-authoring adapter exists.
 That block is expected; fixture child code fallback is forbidden.
 
-The proof-card UX contract is a separate normalized fixture:
+The proof-card UX contract is a separate normalized fixture.
+
+Route: `#battle/proof?fixture=battle-004-pr3b` (legacy alias: `#battle/proof-card?kind=pr3b-research-combiner`).
 
 ```text
 local/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json
@@ -284,6 +286,7 @@ fixtures.
 | Lifecycle evidence cockpit (fail-closed) | same fixture; agent pane `data-qid="battle:agent-pane:lifecycle-evidence"` | `docs/assets/screenshots/battle-004-lifecycle-cockpit.webp` | `cd spectator && npm run prove:receipt-replay` (check 7) |
 | Kill-shot impact + HG death card | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-kill-shot-impact.webp` | `cd spectator && npm run prove:kill-shot-pixi` |
 | Spawn/block receipt beats (Pixi VFX) | parent-spawn fixture frozen at `pixiSeconds=99.4` | `docs/assets/screenshots/battle-004-spawn-block-vfx.webp` | `cd spectator && npm run prove:receipt-director-spawn-block` |
+| PR3b research/genome proof card | `spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json` | `docs/assets/screenshots/battle-004-pr3b-proof-card.webp` | `cd spectator && npm run prove:pr3b-proof-card` |
 | Battle monitor v0 | `/tmp/battle-001` copied into `monitor/battle/public/artifacts/battle-001` | planned | `cd monitor/battle && npm run test:e2e` |
 | Future combiner loop | `/tmp/battle-004-combiner/normalized/battle-004-combiner.normalized.json` | planned | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` |
 | Future Spawn Architect DAG | `/tmp/battle-004-spawn-architect/normalized/battle-004-spawn-architect.normalized.json` | planned | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` |
@@ -302,6 +305,8 @@ cd .. && python3 scripts/compress-readme-screenshots.py
 ![Kill-shot impact replay](docs/assets/screenshots/battle-004-kill-shot-impact.webp)
 
 ![Spawn/block receipt beats](docs/assets/screenshots/battle-004-spawn-block-vfx.webp)
+
+![PR3b research/genome proof card](docs/assets/screenshots/battle-004-pr3b-proof-card.webp)
 
 ## Quickstart
 

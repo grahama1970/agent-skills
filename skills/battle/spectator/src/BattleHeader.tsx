@@ -1,4 +1,5 @@
 import { cn } from "./lib/utils";
+import { formatReceiptScore } from "./lib/format-receipt-score";
 import { Button } from "./ui/button";
 import type { BattleEvent } from "./lib/battle-types";
 import { activeBattleFixture } from "./lib/battle-data";
@@ -136,9 +137,9 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
       </div>
 
       <div className="battle-score-block pointer-events-auto absolute left-1/2 top-1/2 grid h-[84px] w-[430px] -translate-x-1/2 -translate-y-1/2 grid-cols-[1fr_44px_1fr] overflow-hidden rounded-2xl border border-white/10 bg-[rgba(3,8,15,.62)] shadow-acrylic max-[1500px]:w-[390px]">
-        <ScoreCell label="Red Team" sub="Exploit Agents" value={formatScore(scoreboard?.red_score)} tone="red" icon={<Icons.Bug className="h-7 w-7" />} align="left" />
+        <ScoreCell label="Red Team" sub="Exploit Agents" value={formatReceiptScore(scoreboard?.red_score)} tone="red" icon={<Icons.Bug className="h-7 w-7" />} align="left" />
         <div className="flex items-center justify-center border-x border-white/10 bg-black/25 text-[11px] font-black tracking-[0.24em] text-slate-500">VS</div>
-        <ScoreCell label="Blue Team" sub="Patch Agents" value={formatScore(scoreboard?.blue_score)} tone="blue" icon={<Icons.Shield className="h-7 w-7" />} align="right" />
+        <ScoreCell label="Blue Team" sub="Patch Agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="blue" icon={<Icons.Shield className="h-7 w-7" />} align="right" />
       </div>
 
       <div className="flex min-w-0 items-start justify-end gap-2">
@@ -217,9 +218,6 @@ function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
   return <span className="min-w-0 truncate">{event.ui.notification ?? event.summary}</span>;
 }
 
-function formatScore(value: number | undefined) {
-  return typeof value === "number" ? value.toFixed(value % 1 === 0 ? 0 : 1) : "0";
-}
 
 function MockLiveIcon({ icon }: { icon: "rocket" | "shield" | "shield-check" | "bug" }) {
   if (icon === "rocket") return <Icons.Rocket className="leIconSvg" />;

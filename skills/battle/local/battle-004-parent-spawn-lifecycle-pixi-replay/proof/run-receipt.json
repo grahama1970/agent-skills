@@ -1,0 +1,115 @@
+{
+  "agentic": true,
+  "artifacts": {
+    "arena_private_ledger": "arena/private/hidden-vulnerability-ledger.json",
+    "arena_private_oracle_receipt": "arena/arena-receipt.json",
+    "arena_run_receipt": "arena/run-receipt.json",
+    "blue_handoff": "tau-live/blue/handoff.json",
+    "blue_tau_subagent_receipt": "tau-live/blue/tau-subagent-receipt.json",
+    "judge_receipt": "judge/judge-receipt.json",
+    "lineage_receipts": "lineage-receipts.json",
+    "red_handoff": "tau-live/red/handoff.json",
+    "red_tau_subagent_receipt": "tau-live/red/tau-subagent-receipt.json",
+    "scoreboard": "scoreboard.json",
+    "tau_manifest": "tau-live/manifest.json",
+    "tau_public_context": "context/tau-public-context.json",
+    "team_public_brief": "arena/team-public/scenario-brief.json",
+    "team_public_target": "arena/team-public/target/app.py",
+    "visibility_validation": "visibility-validation.json"
+  },
+  "battle_clock": {
+    "allotted_seconds": 1200.0,
+    "elapsed_seconds": 110.502136,
+    "mode": "receipt_elapsed",
+    "remaining_seconds": 1089.497864,
+    "source_receipt_id": "tau-live/manifest"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Unbounded Battle swarm execution.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Arena created private answer-key artifacts and public team artifacts.",
+      "Battle invoked Tau's Red/Blue live handoff bridge, not direct Scillm.",
+      "Tau wrote tau.agent_handoff.v1 and tau.subagent_receipt.v1 artifacts for requested workers.",
+      "The Tau handoff context references only arena/team-public artifacts.",
+      "Battle Judge replayed materialized Tau Red/Blue artifact pairs in Docker.",
+      "A parent Red lane spawned a child Red lane from explicit lineage receipts after Judge handoff."
+    ]
+  },
+  "created_at": "2026-07-06T13:49:53Z",
+  "execution_scope": "public_only_tau_worker_matrix_rung",
+  "lineage_request": {
+    "condition": "parent lane must have a Judge BLUE_SUCCESS attempt before Tau child spawn is requested",
+    "mode": "spawn_red_child_after_blue_success",
+    "receipt": "lineage-receipts.json",
+    "requested": true,
+    "status": "PASS"
+  },
+  "live": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "round_config": {
+    "battle_id": "battle-004",
+    "canonical_allotted_seconds": 1200.0,
+    "resolved_allotted_seconds": 1200.0,
+    "time_limit_source": "scenario_default"
+  },
+  "run_id": "arena-parent-spawn-20260706T134722Z",
+  "schema": "battle.arena_tau_public_only_run_receipt.v1",
+  "status": "PASS",
+  "timing_receipts": {
+    "claims": {
+      "does_not_prove": [
+        "Precise model-token timing.",
+        "Precise in-container exploit phase timing.",
+        "Validated elapsed-time x-axis placement for the UX timeline."
+      ],
+      "proves": [
+        "Battle control plane measured coarse elapsed ordering for major Arena/Tau/Judge receipt stages."
+      ]
+    },
+    "events": [
+      {
+        "elapsed_seconds": 2.324148,
+        "receipt_id": "arena-receipt",
+        "stage": "arena_context_ready"
+      },
+      {
+        "elapsed_seconds": 114.672246,
+        "receipt_id": "tau-live/manifest",
+        "stage": "initial_tau_manifest_ready"
+      },
+      {
+        "elapsed_seconds": 114.673852,
+        "receipt_id": "visibility-validation",
+        "stage": "visibility_validation_ready"
+      },
+      {
+        "elapsed_seconds": 116.973403,
+        "receipt_id": "judge-receipt",
+        "stage": "parent_judge_ready"
+      },
+      {
+        "elapsed_seconds": 150.815601,
+        "receipt_id": "lineage-receipts",
+        "stage": "lineage_receipts_ready"
+      }
+    ],
+    "schema": "battle.control_plane_timing_receipts.v1",
+    "source": "battle_control_plane_perf_counter"
+  },
+  "upstream_arena_status": "PASS",
+  "verdict": "BLUE_SUCCESS",
+  "worker_counts": {
+    "blue_materialized": 2,
+    "blue_requested": 2,
+    "blue_success_pairs": 4,
+    "judged_pairs": 4,
+    "red_child_spawn_requested": true,
+    "red_initial_requested": 1,
+    "red_materialized": 2,
+    "red_requested": 2
+  }
+}

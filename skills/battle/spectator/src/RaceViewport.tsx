@@ -569,10 +569,10 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const providerBody = (
     <BattleTimelineProvider allottedSeconds={allotted}>
       <BlueControlStrip
-        actions={battleBluePatchActionsForView()}
+        actions={battleBluePatchActionsForView(fixture)}
         allottedSeconds={allotted}
-        interventionCount={designView ? mockupBlue.interventions : (scoreboard?.blue_success_count ?? battleBluePatchActionsForView().length)}
-        blockCount={designView ? mockupBlue.blocks : Math.max(blockCount, 2)}
+        interventionCount={designView ? mockupBlue.interventions : scoreboard?.blue_success_count}
+        blockCount={designView ? mockupBlue.blocks : blockCount > 0 ? blockCount : undefined}
       />
       {timelineChrome}
     </BattleTimelineProvider>

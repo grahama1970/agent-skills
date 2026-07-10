@@ -1,0 +1,49 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Parent Red lane handoff spawned child Red lane with explicit Tau subagent receipts."
+    ]
+  },
+  "run_id": "arena-parent-spawn-20260706T134722Z",
+  "schema": "battle.lineage_receipts_bundle.v1",
+  "spawns": [
+    {
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-red-1",
+      "child_payload_id": "payload-857-red-1",
+      "child_start_elapsed_seconds": 146.686852,
+      "child_subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "child_tau_subagent_id": "red-1",
+      "child_worker_id": "red-1",
+      "child_x_start": 62,
+      "generation": 2,
+      "goal": "Spawn child Red lane from receipt-backed parent handoff.",
+      "inherited_context": [
+        "parent_worker=red-0",
+        "parent_lane=payload-857-receipt",
+        "ZIP_SLIP_CONFIRMED"
+      ],
+      "label": "SPAWN CHILD",
+      "leased_task": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_subagent_receipt": "/tmp/battle-004-parent-spawn-20260706T134722Z/tau-live/red/tau-subagent-receipt.json",
+      "parent_tau_subagent_id": "red-0",
+      "parent_worker_id": "red-0",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+      "run_id": "arena-parent-spawn-20260706T134722Z",
+      "schema": "battle.lineage_spawn_receipt.v1",
+      "spawn_duration_elapsed_seconds": 29.713403,
+      "spawn_elapsed_seconds": 116.973449,
+      "status": "PASS",
+      "time_label": "handoff",
+      "timing_source": "battle_control_plane_perf_counter",
+      "x": 58
+    }
+  ],
+  "status": "PASS"
+}

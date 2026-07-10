@@ -1,5 +1,6 @@
 import type { BattleEffectCueKind, BattleNormalizedUxFixture, Lane } from "./battle-types";
 import { spriteIdForLane } from "../engine/battle-lane-variant-map";
+import { isBattleReceiptReplayView } from "./battle-receipt-replay";
 import { BATTLE_RUNNER_SPRITE_BASE_URL } from "../engine/battle-runner-sprites";
 
 export type HungerGamesTicker = {
@@ -59,14 +60,15 @@ function formatArchetype(lane: Lane): string {
 /** Full-screen tribute-down card data for Hunger Games style death announcements. */
 export function hungerGamesDeathCard(lane: Lane, fixture?: BattleNormalizedUxFixture): HungerGamesDeathCard {
 	const spriteId = spriteIdForLane(lane, fixture?.sprite_theme);
-	const family = lane.scenario?.hidden_vulnerability_family ?? fixture?.scenario?.hidden_vulnerability_family ?? "Archive path traversal";
-	const cwe = fixture?.scenario?.cwe ?? "CWE-22";
+	const family = lane.scenario?.hidden_vulnerability_family ?? fixture?.scenario?.hidden_vulnerability_family;
+	const cwe = fixture?.scenario?.cwe;
+	const familyLine = family && cwe ? `${cwe} · ${family}` : family ?? cwe ?? "scenario not emitted";
 	const districtLabel = `GEN ${lane.generation}`;
 	const infoLines = [
 		`${formatArchetype(lane)} · ${districtLabel}`,
 		`Payload ${lane.payloadId}`,
 		lane.mutationRationale ?? lane.summary ?? "Receipt-backed exploit eliminated by Blue patch.",
-		`${cwe} · ${family}`,
+		familyLine,
 	];
 	return {
 		tributeName: lane.name || lane.payloadId,

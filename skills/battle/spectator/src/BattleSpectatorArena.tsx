@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { battleBluePatchActionsForView, battleEventsForView, battleLanesForView, battleLeaderboardForView } from "./lib/battle-data";
 import { replayTickerEventsForPlayhead } from "./lib/battle-replay-cues";
@@ -16,6 +15,10 @@ import { battleHungerGamesDeathDemoFromUrl } from "./lib/is-battle-hg-death-demo
 import { useReceiptReplayFixture } from "./hooks/useReceiptReplayFixture";
 import { BATTLE_MOCKUP_AGENT_PANE_PX, BATTLE_MOCKUP_FOOTER_PX, BATTLE_MOCKUP_LEFT_RAIL_PX, BATTLE_MOCKUP_LEGEND_PX } from "./lib/layout-constants";
 import { BattleMockupFooter } from "./BattleMockupFooter";
+import { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
+import { BattleProofNav } from "./proof-card/BattleProofNav";
+import { isBattleProofCardView } from "./lib/battle-proof-card-registry";
+import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
 import { BattleHeader } from "./BattleHeader";
@@ -32,6 +35,7 @@ import "./battle-mockup-elements.css";
 type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
 
 export function BattleSpectatorArena() {
+  if (isBattleProofCardView()) return <BattleProofCardRoute />;
   const [routeEpoch, setRouteEpoch] = useState(0);
   useEffect(() => {
     const onHashChange = () => setRouteEpoch((value) => value + 1);
@@ -44,7 +48,9 @@ export function BattleSpectatorArena() {
   const typedReceiptFixture = receiptFixture as BattleNormalizedUxFixture | null;
   const receiptReady = !receiptReplay || Boolean(typedReceiptFixture);
 
-  const mockupShell = isBattleDesignView() || receiptReplay;
+  const designView = isBattleDesignView();
+  const mockupShell = designView || receiptReplay;
+  const receiptChrome = receiptReplay && !designView;
   const initialLanes = useMemo(() => (receiptReady ? battleLanesForView(undefined, typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const battleEvents = useMemo(() => (receiptReady ? battleEventsForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const leaderboard = useMemo(() => (receiptReady ? battleLeaderboardForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
@@ -161,6 +167,7 @@ export function BattleSpectatorArena() {
   return (
     <div className={cn("h-full min-h-0 overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
       <Toaster theme="dark" richColors position="top-right" />
+      {(receiptReplay || mockupShell) ? <BattleProofNav /> : null}
       <div
         className={cn(
           "mx-auto grid h-full min-h-0",
@@ -199,63 +206,36 @@ export function BattleSpectatorArena() {
           {selectedLane ? <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} /> : null}
         </div>
 
-        {mockupShell ? (
+        {designView ? (
           <>
             <BattleMockupLegend />
             <BattleMockupFooter playing={playing} setPlaying={setPlaying} speed={speed} setSpeed={setSpeed} filter={filter} setFilter={setFilter} enabled={enabled} arm={arm} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} onJumpToNextHighlight={() => setHighlightJumpToken((value) => value + 1)} />
           </>
-        ) : (
+        ) : receiptChrome ? (
           <>
-        <div className="battle-footer-legend flex min-h-[34px] items-center gap-4 rounded-xl border border-white/10 bg-[rgba(3,8,15,.45)] px-4 py-1.5 text-[10.5px] font-semibold text-slate-400"><span className="battle-label mr-1">Legend</span><span className="inline-flex items-center gap-1.5 text-battle-red"><Icons.Bug className="h-3.5 w-3.5" /><span className="text-slate-400">Exploit progress</span></span><span className="inline-flex items-center gap-1.5 text-battle-blue"><Icons.ShieldX className="h-3.5 w-3.5" /><span className="text-slate-400">Blue intervention / block</span></span><span className="inline-flex items-center gap-1.5 text-battle-yellow"><Icons.Lightbulb className="h-3.5 w-3.5" /><span className="text-slate-400">Useful signal</span></span><span className="inline-flex items-center gap-1.5 text-battle-green"><Icons.FileJson className="h-3.5 w-3.5" /><span className="text-slate-400">Receipt-backed proof</span></span></div>
-        <footer className="flex min-h-[56px] items-center justify-between gap-3 rounded-2xl border border-white/10 bg-battle-panel/80 px-3 py-2 shadow-acrylic backdrop-blur-xl">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button data-qid="battle:control:playhead" data-qs-action="BATTLE_REPLAY_PLAYHEAD_TOGGLE" title={playing ? "Pause receipt replay playhead" : "Play receipt replay playhead"} variant={playing ? "green" : "outline"} size="icon" className="min-h-11 min-w-11" onClick={() => setPlaying((value) => !value)}>
-              {playing ? <Icons.Pause className="h-4 w-4" /> : <Icons.Play className="h-4 w-4" />}
-            </Button>
-            <Button data-qid="battle:control:highlight-next" data-qs-action="BATTLE_HIGHLIGHT_NEXT" title="Jump playhead to next receipt-backed highlight" variant="outline" size="sm" className="min-h-11" onClick={() => setHighlightJumpToken((value) => value + 1)}>Next highlight</Button>
-            <Button data-qid="battle:control:highlight-reel" data-qs-action="BATTLE_HIGHLIGHT_REEL_TOGGLE" title={highlightReel ? "Disable highlight-reel transport" : "Play highlight reel (jump between proven terminal beats)"} variant={highlightReel ? "green" : "outline"} size="sm" className="min-h-11" onClick={() => setHighlightReel((value) => !value)}>{highlightReel ? "Highlights on" : "Highlights"}</Button>
-            <span className="battle-label mr-2 hidden sm:inline">Spectator mode</span><Button data-qid="battle:control:sound-arm" data-qs-action="BATTLE_SOUND_ARM" title="Arm sound for receipt-backed events with explicit cues" variant="outline" size="sm" className="min-h-11" onClick={arm}>
-              <Icons.Eye className="h-4 w-4" /> Spectator mode <span className={enabled ? "text-battle-green" : "text-slate-500"}>{enabled ? "LIVE" : "click to arm"}</span>
-            </Button>
-            <span className="battle-label mr-2 hidden sm:inline">Speed</span><ToggleGroup className="min-h-11" data-qid="battle:control:speed" data-qs-action="BATTLE_SPEED_SET" title="Set receipt-backed replay speed" type="single" value={speed} onValueChange={(value) => value && setSpeed(value)}>
-              {["1x", "2x", "4x", "8x"].map((item) => (
-                <ToggleGroupItem key={item} data-qid={`battle:control:speed:${item}`} data-qs-action="BATTLE_SPEED_SET" title={`Set replay speed to ${item}`} value={item} className="h-11 min-h-11 min-w-11 px-3">{item}</ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-            <span className="battle-label mr-2">Focus</span>
-            {[
-              ["all", "All Lanes"],
-              ["red", "Red Team"],
-              ["blue", "Blue Team"],
-              ["useful", "Useful"],
-              ["receipt", "Receipts"]
-            ].map(([id, label]) => (
-              <Button
-                key={id}
-                data-qid={`battle:toolbar:filter:${id}`}
-                data-qs-action="BATTLE_FILTER_SET"
-                title={`Focus ${label}`}
-                variant={filter === id ? "green" : "outline"}
-                size="sm"
-                className="min-h-11"
-                onClick={() => setFilter(id as BattleFilter)}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Button data-qid="battle:control:event:blue-patch" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue patch receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue worker patch receipts are materialized and receipt-backed.")}><Icons.Shield className="h-4 w-4" /> Blue patch proof</Button>
-            <Button data-qid="battle:control:event:blue-block" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue block receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue block proof comes only from Judge BLUE_SUCCESS attempts.")}><Icons.ShieldX className="h-4 w-4" /> Blue block proof</Button>
-            <LogSheet open={jsonlOpen} onOpenChange={setJsonlOpen} events={battleEvents} />
-          </div>
-        </footer>
+            <BattleMockupLegend />
+            <BattleReceiptFooter
+              playing={playing}
+              setPlaying={setPlaying}
+              speed={speed}
+              setSpeed={setSpeed}
+              filter={filter}
+              setFilter={setFilter}
+              enabled={enabled}
+              arm={arm}
+              highlightReel={highlightReel}
+              onHighlightReelChange={setHighlightReel}
+              onJumpToNextHighlight={() => setHighlightJumpToken((value) => value + 1)}
+              receiptStreamButton={
+                <>
+                  <Button data-qid="battle:control:event:blue-patch" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue patch receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue worker patch receipts are materialized and receipt-backed.")}><Icons.Shield className="h-4 w-4" /> Blue patch proof</Button>
+                  <Button data-qid="battle:control:event:blue-block" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue block receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue block proof comes only from Judge BLUE_SUCCESS attempts.")}><Icons.ShieldX className="h-4 w-4" /> Blue block proof</Button>
+                  <LogSheet open={jsonlOpen} onOpenChange={setJsonlOpen} events={battleEvents} />
+                </>
+              }
+            />
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { BATTLE_LANE_LABEL_PX } from "./lib/layout-constants";
 import { useBattleTimelineCoords } from "./useBattleTimelineCoords";
 import { Icons } from "./battle-icons";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
+import { isBattleReceiptReplayView } from "./lib/battle-receipt-replay";
+import { formatReceiptCount } from "./lib/format-receipt-score";
 import { cn } from "./lib/utils";
 import { mockupClockFromTrackPct, mockupBlueStripStats } from "./lib/mockup-design-fixture";
 
@@ -26,17 +28,28 @@ function patchClock(xStart: number, allottedSeconds: number) {
 
 export function BlueControlStrip({ actions, allottedSeconds, interventionCount, blockCount }: Props) {
   const designView = isBattleDesignView();
+  const receiptView = isBattleReceiptReplayView();
   const { leftPxFromLaneX } = useBattleTimelineCoords(allottedSeconds);
   const stats = mockupBlueStripStats();
-  const interventions = interventionCount ?? (designView ? stats.interventions : actions.length);
-  const blocks = blockCount ?? (designView ? stats.blocks : 2);
-  const markers = MOCKUP_PATCH_LABELS.map((label, index) => ({
-    id: actions[index]?.id ?? `mockup-patch-${index}`,
-    label,
-    left: MOCKUP_PATCH_LEFT[index],
-    clock: designView ? MOCKUP_PATCH_CLOCKS[index] : patchClock(MOCKUP_PATCH_LEFT[index], allottedSeconds),
-    detail: actions[index],
-  }));
+  const interventions = interventionCount ?? (designView ? stats.interventions : receiptView ? undefined : actions.length);
+  const blocks = blockCount ?? (designView ? stats.blocks : receiptView ? undefined : undefined);
+  const interventionLabel = formatReceiptCount(interventions);
+  const blockLabel = formatReceiptCount(blocks);
+  const markers = designView
+    ? MOCKUP_PATCH_LABELS.map((label, index) => ({
+        id: actions[index]?.id ?? `mockup-patch-${index}`,
+        label,
+        left: MOCKUP_PATCH_LEFT[index],
+        clock: MOCKUP_PATCH_CLOCKS[index],
+        detail: actions[index],
+      }))
+    : actions.map((action) => ({
+        id: action.id,
+        label: action.name,
+        left: action.xStart,
+        clock: patchClock(action.xStart, allottedSeconds),
+        detail: action,
+      }));
 
   if (designView) {
     return (
@@ -50,7 +63,7 @@ export function BlueControlStrip({ actions, allottedSeconds, interventionCount, 
             <div className="stripSub">Active Patches &amp; Defensive Actions</div>
           </div>
           <div className="blueStat">
-            Interventions <strong>{interventions}</strong> · Blocks <strong>{blocks}</strong>
+            Interventions <strong>{interventionLabel}</strong> · Blocks <strong>{blockLabel}</strong>
           </div>
         </div>
         <div className="grid" style={{ gridTemplateColumns: `${BATTLE_LANE_LABEL_PX}px minmax(0, 1fr)` }}>
@@ -85,13 +98,16 @@ export function BlueControlStrip({ actions, allottedSeconds, interventionCount, 
           <div className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">Active Patches &amp; Defensive Actions</div>
         </div>
         <div className="battle-blue-strip-stat whitespace-nowrap text-[11px] font-semibold text-slate-500">
-          Interventions <strong className="text-battle-blue">{interventions}</strong> · Blocks <strong className="text-battle-blue">{blocks}</strong>
+          Interventions <strong className="text-battle-blue">{interventionLabel}</strong> · Blocks <strong className="text-battle-blue">{blockLabel}</strong>
         </div>
       </div>
       <div className="grid" style={{ gridTemplateColumns: `${BATTLE_LANE_LABEL_PX}px minmax(0, 1fr)` }}>
         <div aria-hidden="true" />
-        <div className="battle-blue-patch-row relative h-[34px] border-b border-battle-blue/[.06] bg-[rgba(4,10,18,.35)]">
+        <div className="battle-blue-patch-row relative h-[34px] border-b border-battle-blue/[.06] bg-[rgba(4,10,18,.35)]" data-qid="battle:blue-strip:patches">
           <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-battle-blue/35" />
+          {!designView && markers.length === 0 ? (
+            <div className="absolute inset-0 grid place-items-center text-[10px] font-semibold text-slate-500">Blue patch actions not emitted</div>
+          ) : null}
           {markers.map(({ id, label, left, clock, detail }) => (
             <div key={id} className="battle-blue-patch absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: leftPxFromLaneX(left) }} title={detail ? `${label} · ${detail.agentName}` : label}>
               <Icons.Shield className="h-3.5 w-3.5 text-battle-blue" />

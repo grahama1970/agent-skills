@@ -21,7 +21,10 @@
     "prove:hg-kill-cue-replay": "node scripts/prove-battle-hunger-games-kill-cue-replay.mjs",
     "prove:kill-shot-pixi": "node scripts/prove-battle-kill-shot-pixi.mjs",
     "prove:receipt-director-killed": "node scripts/prove-battle-receipt-director-killed.mjs",
-    "prove:receipt-director-spawn-block": "node scripts/prove-battle-receipt-director-spawn-block.mjs"
+    "prove:receipt-director-spawn-block": "node scripts/prove-battle-receipt-director-spawn-block.mjs",
+    "prove:no-mockup-leakage": "node scripts/prove-battle-no-mockup-leakage.mjs",
+    "prove:receipt-lifecycle-emitted": "node scripts/prove-battle-receipt-lifecycle-emitted.mjs",
+    "prove:pr3b-proof-card": "node scripts/prove-battle-pr3b-proof-card.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",
@@ -31,6 +34,8 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.11",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",

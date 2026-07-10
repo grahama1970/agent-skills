@@ -12,6 +12,7 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
 	"battle-006-pickle-deserialization": "/battle-fixtures/battle-006-pickle-deserialization-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-007-file-upload": "/battle-fixtures/battle-007-file-upload-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-004-kill-shot": "/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json",
+	"battle-004-parent-spawn-lifecycle": "/battle-fixtures/battle-004-parent-spawn-lifecycle-pixi-replay/battle.normalized_ux_fixture.json",
 } as const;
 
 export type BattleReceiptReplayFixtureKey = keyof typeof BATTLE_RECEIPT_REPLAY_FIXTURE_URLS;

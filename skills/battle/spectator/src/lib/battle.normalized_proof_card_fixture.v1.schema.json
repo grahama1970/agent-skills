@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.normalized_proof_card_fixture.v1.schema.json",
+  "title": "Battle Normalized Proof Card Fixture",
+  "type": "object",
+  "required": [
+    "schema",
+    "proof_card_kind",
+    "battle_id",
+    "run_id",
+    "proof_mode",
+    "status",
+    "claim_boundary",
+    "node_status",
+    "artifacts",
+    "receipt_refs",
+    "copy"
+  ],
+  "properties": {
+    "schema": { "const": "battle.normalized_proof_card_fixture.v1" },
+    "proof_card_kind": { "const": "pr3b_tau_research_combiner" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "proof_mode": { "const": "live_tau_child_dag_canary" },
+    "status": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "reason": { "type": ["string", "null"] },
+    "mocked": { "const": false },
+    "live": { "const": "tau_dag_runtime" },
+    "agentic": { "const": true },
+    "fixture_fallback_used": { "const": false },
+    "tau_execution": { "enum": ["attempted", "not_attempted"] },
+    "tau_receipt_status": { "type": ["string", "null"] },
+    "tau_receipt_verdict": { "type": ["string", "null"] },
+    "claim_boundary": {
+      "type": "object",
+      "required": ["may_claim", "must_not_claim"],
+      "properties": {
+        "may_claim": { "type": "array", "items": { "type": "string" } },
+        "must_not_claim": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "node_status": {
+      "type": "object",
+      "required": ["lineage-summarizer", "research-scout", "method-combiner", "exploit-code-author"],
+      "properties": {
+        "lineage-summarizer": { "type": "string" },
+        "research-scout": { "type": "string" },
+        "method-combiner": { "type": "string" },
+        "exploit-code-author": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "node_verdict": { "type": "object" },
+    "artifacts": {
+      "type": "object",
+      "required": ["child_research_receipts", "child_candidate_methods", "child_exploit_genome"],
+      "properties": {
+        "child_research_receipts": {
+          "type": "object",
+          "required": ["schema"],
+          "properties": { "schema": { "const": "battle.child_research_receipts.v1" } },
+          "additionalProperties": true
+        },
+        "child_candidate_methods": {
+          "type": "object",
+          "required": ["schema"],
+          "properties": { "schema": { "const": "battle.child_candidate_methods.v1" } },
+          "additionalProperties": true
+        },
+        "child_exploit_genome": {
+          "type": "object",
+          "required": ["schema"],
+          "properties": { "schema": { "const": "battle.child_exploit_genome.v1" } },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "receipt_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "schema", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "schema": { "type": ["string", "null"] },
+          "status": { "type": ["string", "null"] },
+          "verdict": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "scoreboard": { "type": "object" },
+    "copy": {
+      "type": "object",
+      "required": ["headline", "subhead", "status_label"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "subhead": { "type": "string", "minLength": 1 },
+        "status_label": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

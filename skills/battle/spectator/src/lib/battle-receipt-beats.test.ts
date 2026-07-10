@@ -8,6 +8,7 @@ import {
 	heroReceiptBeats,
 	highlightReelDwellMs,
 	nextReceiptBeat,
+	receiptBeatsForTicker,
 } from "./battle-receipt-beats";
 import { KILL_SHOT_TRAVEL_SECONDS } from "../engine/battle-pixi-kill-shot";
 
@@ -89,5 +90,37 @@ describe("collectReceiptBeats", () => {
 		const heroes = heroReceiptBeats(collectReceiptBeats(fixture, lanes));
 		const next = nextReceiptBeat(heroes, 0);
 		expect(next?.kind).toBe("spawn");
+	});
+});
+
+
+describe("receiptBeatsForTicker", () => {
+	it("suppresses stale survival highlights after a confirmed kill on the same lane", () => {
+		const fixture = {
+			battle_id: "battle-004",
+			proof_mode: "receipt_backed_fixture",
+			clock: { allotted_seconds: 1200, current_elapsed_seconds: 100 },
+			battle_clock: { allotted_seconds: 1200 },
+			timeline_elapsed_axis_model: { x_position_is_elapsed_time: true },
+			lanes: [
+				{
+					id: "payload-857-red-1",
+					name: "Archive Escape red-1",
+					payloadId: "payload-857-red-1",
+					generation: 2,
+					xStart: 40,
+					xEnd: 90,
+					events: [
+						{ id: "blast", kind: "blue_blast", x: 80, elapsed_seconds: 90, proven: true },
+						{ id: "killed", kind: "killed", x: 85, elapsed_seconds: 95, proven: true },
+					],
+				},
+			],
+		} as any;
+		const beats = collectReceiptBeats(fixture, fixture.lanes);
+		const ticker = receiptBeatsForTicker(beats, 99, 5);
+		const highlights = ticker.map((beat) => beat.react.liveEvent.highlight);
+		expect(highlights.some((item) => item.includes("ELIMINATED") || item.includes("SURVIVES"))).toBe(true);
+		expect(highlights.filter((item) => item.includes("SURVIVES"))).toHaveLength(0);
 	});
 });

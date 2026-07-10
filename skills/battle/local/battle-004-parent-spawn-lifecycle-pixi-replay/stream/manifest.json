@@ -1,0 +1,73 @@
+{
+  "battle_id": "battle-004",
+  "event_count": 24,
+  "events_jsonl": "events.jsonl",
+  "last_seq": 24,
+  "latest_snapshot": "latest-snapshot.json",
+  "live_source": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "mode": "file_backed_replay_stream",
+  "normalized_fixture_schema": "battle.normalized_ux_fixture.v1",
+  "proof_mode": "receipt_backed_fixture",
+  "renderer_boundary": {
+    "backend_emits": [
+      "clock",
+      "semantic_events",
+      "segments",
+      "lanes",
+      "lineage",
+      "receipts",
+      "actor_visual_identity_when_present",
+      "lifecycle_events"
+    ],
+    "backend_must_not_emit": [
+      "pixi_object_ids",
+      "sprite_frame_indices",
+      "canvas_pixels",
+      "easing_names",
+      "particle_parameters"
+    ]
+  },
+  "replay_compression_policy": {
+    "backend_emits_cinematic_speed": false,
+    "backend_must_not_emit": [
+      "cinematic_speed",
+      "easing",
+      "camera_path",
+      "pixi_frame_timing"
+    ],
+    "long_gap_count": 0,
+    "long_gap_handling": "ux_may_compress_presentation_time",
+    "long_gap_threshold_seconds": 300.0,
+    "owner": "ux",
+    "source_duration_seconds": 98.39211,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "source_time_window_schema": "battle.source_time_window.v1"
+  },
+  "run_id": "arena-parent-spawn-20260707T220426Z",
+  "schema": "battle.transport_manifest.v1",
+  "source_time_window": {
+    "end_seconds": 98.39211,
+    "event_count": 24,
+    "long_gap_count": 0,
+    "long_gap_segments": [],
+    "long_gap_threshold_seconds": 300.0,
+    "max_gap_seconds": 70.499052,
+    "presentation_owner": "ux",
+    "proof_mode": "receipt_backed_fixture",
+    "schema": "battle.source_time_window.v1",
+    "source_duration_seconds": 98.39211,
+    "source_time_authority": "receipt_elapsed_seconds",
+    "start_seconds": 0.0
+  },
+  "stream_contract": {
+    "authority": "normalized_fixture_and_receipt_events",
+    "event_schema": "battle.live_event.v1",
+    "fail_closed_unknown_terminal_states": true,
+    "lifecycle_schema": "battle.lifecycle_event.v1",
+    "phase": "phase_2_contract",
+    "schema": "battle.stream_contract.v1",
+    "snapshot_schema": "battle.snapshot.v1",
+    "transport": "append_only_jsonl"
+  }
+}

@@ -280,8 +280,29 @@ export function nextReceiptBeat(beats: ReceiptBeat[], currentSeconds: number): R
 	return beats.find((beat) => beat.atSeconds > currentSeconds + 0.05) ?? null;
 }
 
+
+const SURVIVAL_TICKER_KINDS = new Set<ReceiptBeatKind>(["blue_blast", "block_impact", "blocked"]);
+const TERMINAL_KILL_KINDS = new Set<ReceiptBeatKind>(["kill_impact", "killed"]);
+
+/** Suppress stale survival highlights once a lane has a confirmed kill at or before playhead. */
+export function receiptBeatsForTicker(beats: ReceiptBeat[], playheadSeconds: number, limit = 3): ReceiptBeat[] {
+	const eligible = beats.filter((beat) => beat.atSeconds <= playheadSeconds + 0.001);
+	const suppressed = new Set<string>();
+	for (const laneId of new Set(eligible.map((beat) => beat.laneId))) {
+		const laneBeats = eligible.filter((beat) => beat.laneId === laneId);
+		const killBeat = laneBeats.filter((beat) => TERMINAL_KILL_KINDS.has(beat.kind)).at(-1);
+		if (!killBeat) continue;
+		for (const beat of laneBeats) {
+			if (beat.id === killBeat.id) continue;
+			if (!SURVIVAL_TICKER_KINDS.has(beat.kind)) continue;
+			if (beat.atSeconds + 0.001 < killBeat.atSeconds) suppressed.add(beat.id);
+		}
+	}
+	return eligible.filter((beat) => !suppressed.has(beat.id)).slice(-limit);
+}
+
 export function receiptBeatsVisibleAtPlayhead(beats: ReceiptBeat[], playheadSeconds: number, limit = 3): ReceiptBeat[] {
-	return beats.filter((beat) => beat.atSeconds <= playheadSeconds + 0.001).slice(-limit);
+	return receiptBeatsForTicker(beats, playheadSeconds, limit);
 }
 
 export function highlightReelDwellMs(beat: ReceiptBeat): number {

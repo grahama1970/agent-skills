@@ -6,6 +6,7 @@ import { Icons } from "./battle-icons";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { leaderboardEntryForLane, terminalStatusCounts } from "./lib/battle-lane-lifecycle-evidence";
 import { cn } from "./lib/utils";
+import { formatReceiptScore } from "./lib/format-receipt-score";
 
 type Props = {
   receiptFixture?: import("./lib/battle-types").BattleNormalizedUxFixture | null; leaderboard: LeaderboardEntry[]; selectedId?: string; onSelect: (id: string) => void };
@@ -75,8 +76,8 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
           </>
         ) : (
           <div className="space-y-2">
-            <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatScore(scoreboard?.red_score)} tone="text-battle-red" />
-            <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatScore(scoreboard?.blue_score)} tone="text-battle-blue" />
+            <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatReceiptScore(scoreboard?.red_score)} tone="text-battle-red" />
+            <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="text-battle-blue" />
           </div>
         )}
       </Panel>
@@ -185,6 +186,3 @@ function StatusIcon({ status }: { status: LeaderboardEntry["status"] }) {
   return <Icons.ShieldX className="h-4 w-4 text-battle-blue" />;
 }
 
-function formatScore(value: number | undefined) {
-  return typeof value === "number" ? value.toFixed(value % 1 === 0 ? 0 : 1) : "0";
-}

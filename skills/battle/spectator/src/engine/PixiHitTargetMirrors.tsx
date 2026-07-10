@@ -25,6 +25,7 @@ function laneXRange(lane: Lane, allottedSeconds: number, contentWidth: number, u
 
 export function PixiHitTargetMirrors({ lanes, rowLayout, input, contentWidth, allottedSeconds, scrollLeft }: Props) {
 	const useElapsed = fixtureUsesElapsedAxis(input.fixture);
+	const currentSeconds = input.testMode?.freezeTime ? input.testMode.currentSeconds : input.viewport.currentSeconds;
 	const layoutByLane = new Map(rowLayout.map((row) => [row.laneId, row]));
 
 	return (
@@ -57,7 +58,9 @@ export function PixiHitTargetMirrors({ lanes, rowLayout, input, contentWidth, al
 				const row = layoutByLane.get(lane.id);
 				if (!row) return [];
 				return lane.events.map((event: LaneEvent) => {
-					const x = secondsToTrackPx(eventElapsedSeconds(event, allottedSeconds, useElapsed), allottedSeconds, contentWidth);
+					const eventSeconds = eventElapsedSeconds(event, allottedSeconds, useElapsed);
+					if (eventSeconds > currentSeconds) return [];
+					const x = secondsToTrackPx(eventSeconds, allottedSeconds, contentWidth);
 					const screenX = BATTLE_LANE_LABEL_PX + x - scrollLeft - 12;
 					const eventId = event.id ?? `${lane.id}-${event.kind}-${event.x}`;
 					return (

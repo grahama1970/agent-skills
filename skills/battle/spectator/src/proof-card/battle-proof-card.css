@@ -1,0 +1,149 @@
+.battle-proof-card {
+  --proof-pass: #34d399;
+  --proof-blocked: #fbbf24;
+  --proof-fail: #f87171;
+  --proof-tau: #a78bfa;
+  --proof-blue: #60a5fa;
+  --proof-muted: #64748b;
+  color: #e2e8f0;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(167, 139, 250, 0.12), transparent 60%),
+    radial-gradient(900px 400px at 90% 0%, rgba(52, 211, 153, 0.08), transparent 55%),
+    #070b12;
+}
+
+.battle-proof-card .battle-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.battle-proof-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.battle-proof-nav a {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  text-decoration: none;
+}
+
+.battle-proof-nav a[aria-current="page"] {
+  border-color: rgba(167, 139, 250, 0.45);
+  background: rgba(167, 139, 250, 0.12);
+  color: #ddd6fe;
+}
+
+.battle-proof-node {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.75rem 0.9rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+.battle-proof-node:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.7);
+  outline-offset: 2px;
+}
+
+.battle-proof-node[data-treatment="pass"] {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.battle-proof-node[data-treatment="blocked"] {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.battle-proof-node[data-treatment="fail"] {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.battle-proof-node-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.battle-proof-node[data-treatment="pass"] .battle-proof-node-icon {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--proof-pass);
+}
+
+.battle-proof-node[data-treatment="blocked"] .battle-proof-node-icon {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--proof-blocked);
+}
+
+.battle-proof-node[data-treatment="fail"] .battle-proof-node-icon {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--proof-fail);
+}
+
+.battle-proof-node[data-treatment="missing"] .battle-proof-node-icon,
+.battle-proof-node[data-treatment="running"] .battle-proof-node-icon {
+  background: rgba(100, 116, 139, 0.2);
+  color: var(--proof-muted);
+}
+
+.battle-proof-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 0.9rem;
+}
+
+.battle-proof-panel:target,
+.battle-proof-panel[data-focused="true"] {
+  border-color: rgba(167, 139, 250, 0.45);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.2);
+}
+
+.battle-proof-notice {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.08);
+  color: #fde68a;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.battle-proof-genome-banner {
+  border: 1px dashed rgba(167, 139, 250, 0.45);
+  background: rgba(167, 139, 250, 0.08);
+  color: #ddd6fe;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-proof-card * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

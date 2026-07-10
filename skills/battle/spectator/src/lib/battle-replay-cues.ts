@@ -10,6 +10,7 @@ import {
 	collectReceiptBeats,
 	receiptBeatToBattleEvent,
 	receiptBeatToEffectCue,
+	receiptBeatsForTicker,
 	receiptBeatsVisibleAtPlayhead,
 } from "./battle-receipt-beats";
 import type { HungerGamesTicker } from "./battle-hunger-games-notifications";
@@ -60,7 +61,7 @@ export function replayTickerEventsForPlayhead(
 ): BattleEvent[] {
 	void battleEvents;
 	const beats = collectReceiptBeats(fixture, lanes);
-	const visible = receiptBeatsVisibleAtPlayhead(beats, playheadSeconds, 3);
+	const visible = receiptBeatsForTicker(beats, playheadSeconds, 3);
 	if (!visible.length) return battleEventsForPlayhead(battleEvents, fixture, lanes, playheadSeconds);
 	return visible.map((beat) => receiptBeatToBattleEvent(beat, fixture));
 }
