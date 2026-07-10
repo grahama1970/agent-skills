@@ -1,0 +1,53 @@
+{
+  "blockers": [],
+  "declared_tokens": [
+    "<<<element_embry>>>",
+    "<<<element_kahaluu_lava_reef>>>",
+    "<<<element_kai>>>",
+    "<<<image_1>>>",
+    "<<<image_2>>>",
+    "<<<image_3>>>",
+    "<<<image_4>>>"
+  ],
+  "expected_duration_s": 10.0,
+  "missing_tokens": [],
+  "referenced_tokens": [
+    "<<<element_embry>>>",
+    "<<<element_kahaluu_lava_reef>>>",
+    "<<<element_kai>>>",
+    "<<<image_1>>>",
+    "<<<image_2>>>",
+    "<<<image_3>>>",
+    "<<<image_4>>>"
+  ],
+  "schema": "persona_dream.kling.token_binding_linter_receipt.v1",
+  "status": "PASS",
+  "time_ranges": [
+    {
+      "duration_s": 2.5,
+      "end_s": 2.5,
+      "index": 0,
+      "start_s": 0.0
+    },
+    {
+      "duration_s": 2.5,
+      "end_s": 5.0,
+      "index": 1,
+      "start_s": 2.5
+    },
+    {
+      "duration_s": 2.5,
+      "end_s": 7.5,
+      "index": 2,
+      "start_s": 5.0
+    },
+    {
+      "duration_s": 2.5,
+      "end_s": 10.0,
+      "index": 3,
+      "start_s": 7.5
+    }
+  ],
+  "total_duration_s": 10.0,
+  "unused_tokens": []
+}

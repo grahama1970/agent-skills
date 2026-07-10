@@ -1,0 +1,56 @@
+{
+  "schema_version": "persona-dream.video-scene-classifier.v1",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_pipeline_complete_phase09_restore_20260710",
+  "scene_id": "embry-kai-kahaluu-10s",
+  "scene_contract_hash": null,
+  "classified_scene_types": [
+    "identity_locked_character_scene",
+    "first_last_frame_transition",
+    "surf_sports_motion_scene",
+    "multi_character_interaction",
+    "cinematic_camera_move"
+  ],
+  "required_capabilities": {
+    "image_to_video": true,
+    "first_last_frame_control": true,
+    "identity_reference_support": true,
+    "multi_character_consistency": true,
+    "motion_quality": true,
+    "cinematic_camera_control": true,
+    "duration_seconds": 10,
+    "aspect_ratio": "16:9",
+    "native_audio": false,
+    "audio_video_sync": false,
+    "provider_accessible_urls_required": true
+  },
+  "nice_to_have_capabilities": {
+    "reference_video_motion_control": true,
+    "multi_reference_inputs": true,
+    "fast_preview_mode": true
+  },
+  "policy_constraints": {
+    "provider_live": false,
+    "paid_call_authorized": false,
+    "manual_acceptance_required": true,
+    "ip_risk_review_required": false
+  },
+  "source_artifacts": {
+    "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+    "kling_scene_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/kling_scene_packet.json",
+    "media_lock": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/storyboard_media_lock_manifest.json"
+  },
+  "claims": {
+    "proves": [
+      "provider-neutral scene requirements were derived from accepted storyboard and media lock evidence"
+    ],
+    "does_not_prove": [
+      "provider readiness",
+      "manual acceptance",
+      "live provider schema compatibility",
+      "provider-accessible URLs",
+      "paid-call authorization",
+      "live video generation"
+    ]
+  }
+}
