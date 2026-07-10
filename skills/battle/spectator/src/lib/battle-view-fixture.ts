@@ -1,4 +1,5 @@
 import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-types";
+import type { BattleNormalizedCompileFixtureV1 } from "./battle-compile-types";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import type { BattleNormalizedUxFixture } from "./battle-types";
 
@@ -7,18 +8,20 @@ export const BATTLE_VIEW_FIXTURE_SCHEMAS = {
 	RACE: "battle.normalized_ux_fixture.v1",
 	PROOF_CARD: "battle.normalized_proof_card_fixture.v1",
 	SYNTHESIS: "battle.normalized_synthesis_fixture.v1",
+	COMPILE: "battle.normalized_compile_fixture.v1",
 	POPULATION: "battle.normalized_population_fixture.v1",
 } as const;
 
 export type BattleViewFixtureSchema = (typeof BATTLE_VIEW_FIXTURE_SCHEMAS)[keyof typeof BATTLE_VIEW_FIXTURE_SCHEMAS];
 
-export type BattleViewKind = "race" | "proof-card" | "synthesis" | "population";
+export type BattleViewKind = "race" | "proof-card" | "synthesis" | "compile" | "population";
 
 /** Discriminated union of fixtures the spectator can render. Future schemas stay typed but unsupported until registered. */
 export type BattleViewFixture =
 	| BattleNormalizedUxFixture
 	| BattleNormalizedProofCardFixtureV1
-	| BattleNormalizedSynthesisFixtureV1;
+	| BattleNormalizedSynthesisFixtureV1
+	| BattleNormalizedCompileFixtureV1;
 
 export type BattleFixtureLoadErrorCode =
 	| "UNSUPPORTED_FIXTURE"

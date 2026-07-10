@@ -2,12 +2,14 @@ import { isBattleProofCardView } from "../lib/battle-proof-card-registry";
 import { isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
 import { isBattleDesignView } from "../lib/battle-mockup-lanes";
 import { isBattleSynthesisView } from "../lib/battle-synthesis-registry";
+import { isBattleCompileView } from "../lib/battle-compile-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
 	const onProof = isBattleProofCardView(hash);
 	const onSynthesis = isBattleSynthesisView(hash);
-	const onRace = !onProof && !onSynthesis && (isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
+	const onCompile = isBattleCompileView(hash);
+	const onRace = !onProof && !onSynthesis && !onCompile && (isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
@@ -27,6 +29,13 @@ export function BattleProofNav() {
 				data-qid="battle:nav:synthesis"
 			>
 				Provider Synthesis
+			</a>
+			<a
+				href="#battle/compile?fixture=battle-004-pr3d"
+				aria-current={onCompile ? "page" : undefined}
+				data-qid="battle:nav:compile"
+			>
+				Compile Timeline
 			</a>
 		</nav>
 	);

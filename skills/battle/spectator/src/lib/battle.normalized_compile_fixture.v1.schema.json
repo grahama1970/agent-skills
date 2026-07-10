@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.normalized_compile_fixture.v1.schema.json",
+  "title": "Battle Normalized Compile Fixture",
+  "type": "object",
+  "required": [
+    "schema",
+    "fixture_kind",
+    "battle_id",
+    "run_id",
+    "generated_at",
+    "proof_mode",
+    "status",
+    "mocked",
+    "live",
+    "agentic",
+    "provider_live",
+    "fixture_fallback_used",
+    "stage_scope",
+    "source_run",
+    "node_status",
+    "node_verdict",
+    "provider_authorship",
+    "compile",
+    "repair",
+    "specimen_versions",
+    "selected_version",
+    "execution_boundary",
+    "claim_boundary",
+    "receipt_refs",
+    "provenance",
+    "copy"
+  ],
+  "properties": {
+    "schema": { "const": "battle.normalized_compile_fixture.v1" },
+    "fixture_kind": { "const": "pr3d_compile_repair" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "proof_mode": { "const": "live_tau_child_dag_canary" },
+    "status": { "const": "PASS" },
+    "mocked": { "const": false },
+    "live": { "const": "local_py_compile" },
+    "agentic": { "const": true },
+    "provider_live": { "const": true },
+    "fixture_fallback_used": { "const": false },
+    "stage_scope": {
+      "type": "object",
+      "required": ["included_through", "included_nodes", "excluded_nodes"],
+      "properties": {
+        "included_through": { "const": "compile-repair" },
+        "included_nodes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 5
+        },
+        "excluded_nodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_run": { "type": "object" },
+    "node_status": {
+      "type": "object",
+      "required": ["lineage-summarizer", "research-scout", "method-combiner", "exploit-code-author", "compile-repair"],
+      "properties": {
+        "lineage-summarizer": { "const": "PASS" },
+        "research-scout": { "const": "PASS" },
+        "method-combiner": { "const": "PASS" },
+        "exploit-code-author": { "const": "PASS" },
+        "compile-repair": { "enum": ["PASS", "BLOCKED"] }
+      },
+      "additionalProperties": false
+    },
+    "node_verdict": { "type": "object" },
+    "provider_authorship": {
+      "type": "object",
+      "required": ["status", "provider_live", "agentic", "authored_by", "observed_provider", "observed_model", "code_sha256"],
+      "properties": {
+        "status": { "const": "PASS" },
+        "provider_live": { "const": true },
+        "agentic": { "const": true },
+        "authored_by": { "const": "tau_provider" },
+        "observed_provider": { "type": "string", "minLength": 1 },
+        "observed_model": { "type": "string", "minLength": 1 },
+        "code_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": true
+    },
+    "compile": {
+      "type": "object",
+      "required": [
+        "status",
+        "compiler",
+        "compile_attempted",
+        "compile_failed",
+        "compile_passed",
+        "stderr_summary",
+        "source_version_id",
+        "compiled_version_id"
+      ],
+      "properties": {
+        "status": { "enum": ["FAILED", "PASSED"] },
+        "compiler": { "type": "string", "minLength": 1 },
+        "compile_attempted": { "const": true },
+        "compile_failed": { "type": "boolean" },
+        "compile_passed": { "type": "boolean" },
+        "stderr_summary": {
+          "type": "object",
+          "required": ["available", "lines", "redacted"],
+          "properties": {
+            "available": { "type": "boolean" },
+            "lines": { "type": "array", "items": { "type": "string" } },
+            "redacted": { "type": "boolean" },
+            "redaction_reasons": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": true
+        },
+        "source_version_id": { "type": "string", "minLength": 1 },
+        "compiled_version_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "repair": {
+      "type": "object",
+      "required": ["repair_attempted", "repair_exhausted", "attempt_count"],
+      "properties": {
+        "repair_attempted": { "type": "boolean" },
+        "repair_exhausted": { "type": "boolean" },
+        "attempt_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "specimen_versions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["version_id", "role", "code_sha256", "code_bytes", "compile_attempted", "compile_status"],
+        "properties": {
+          "version_id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "code_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "code_bytes": { "type": "integer", "minimum": 1 },
+          "compile_attempted": { "type": "boolean" },
+          "compile_status": { "enum": ["NOT_RUN", "FAILED", "PASSED"] },
+          "compile_failed": { "type": "boolean" },
+          "compile_passed": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "selected_version": { "type": "object" },
+    "execution_boundary": {
+      "type": "object",
+      "required": ["runtime_status", "target_contact", "judge_status", "judge_verified_exploits", "packet_behavior", "memory_promotion"],
+      "properties": {
+        "runtime_status": { "const": "NOT_RUN" },
+        "target_contact": { "const": "NOT_RUN" },
+        "judge_status": { "const": "NOT_RUN" },
+        "judge_verified_exploits": { "const": 0 },
+        "packet_behavior": { "const": "NOT_RUN" },
+        "memory_promotion": { "const": "NOT_RUN" }
+      },
+      "additionalProperties": true
+    },
+    "claim_boundary": {
+      "type": "object",
+      "required": ["may_claim", "must_not_claim"],
+      "properties": {
+        "may_claim": { "type": "array", "items": { "type": "string" } },
+        "must_not_claim": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "receipt_refs": { "type": "array" },
+    "provenance": { "type": "object" },
+    "copy": {
+      "type": "object",
+      "required": ["headline", "subhead", "status_label", "boundary_notice"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "subhead": { "type": "string", "minLength": 1 },
+        "status_label": { "type": "string", "minLength": 1 },
+        "boundary_notice": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

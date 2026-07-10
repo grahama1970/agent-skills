@@ -1,5 +1,7 @@
 import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-types";
 import { validateProofCardFixture } from "./battle-proof-card-validator";
+import type { BattleNormalizedCompileFixtureV1 } from "./battle-compile-types";
+import { validateCompileFixture } from "./battle-compile-validator";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import { validateSynthesisFixture } from "./battle-synthesis-validator";
 import type { BattleNormalizedUxFixture } from "./battle-types";
@@ -142,6 +144,27 @@ export function discriminateBattleViewFixture(
 		};
 	}
 
+	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE) {
+		const validated = validateCompileFixture(data);
+		if (!validated.ok) {
+			return {
+				ok: false,
+				error: {
+					code: validated.error.code === "UNSUPPORTED_SCHEMA" ? "UNSUPPORTED_SCHEMA" : "CONTRACT_VALIDATION_FAILED",
+					title: validated.error.title,
+					detail: validated.error.detail,
+					schema,
+				},
+			};
+		}
+		return {
+			ok: true,
+			fixture: validated.fixture,
+			schema: validated.fixture.schema,
+			viewKind: "compile",
+		};
+	}
+
 	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.RACE) {
 		const raceError = validateRaceFixtureShape(data);
 		if (raceError) return { ok: false, error: raceError };
@@ -209,6 +232,19 @@ export async function loadBattleSynthesisViewFixture(
 		fixture: result.fixture as BattleNormalizedSynthesisFixtureV1,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS,
 		viewKind: "synthesis",
+	};
+}
+
+export async function loadBattleCompileViewFixture(
+	url: string,
+): Promise<BattleFixtureLoadResult<BattleNormalizedCompileFixtureV1>> {
+	const result = await loadBattleViewFixture(url, "compile");
+	if (!result.ok) return result;
+	return {
+		ok: true,
+		fixture: result.fixture as BattleNormalizedCompileFixtureV1,
+		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE,
+		viewKind: "compile",
 	};
 }
 

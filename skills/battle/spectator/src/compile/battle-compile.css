@@ -1,0 +1,75 @@
+.battle-compile .battle-compile-banners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.battle-compile .battle-compile-banner {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.55rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.battle-compile .battle-compile-banner[data-tone="purple"] {
+  border-color: rgba(167, 139, 250, 0.45);
+  background: rgba(167, 139, 250, 0.12);
+  color: #ddd6fe;
+}
+.battle-compile .battle-compile-banner[data-tone="gray"] {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(100, 116, 139, 0.12);
+  color: #cbd5e1;
+}
+.battle-compile .battle-compile-banner[data-tone="blue"] {
+  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(96, 165, 250, 0.1);
+  color: #bfdbfe;
+}
+.battle-compile .battle-compile-banner[data-tone="amber"] {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.1);
+  color: #fde68a;
+}
+.battle-compile .battle-compile-banner[data-tone="red"] {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+}
+.battle-compile .battle-compile-banner[data-tone="green"] {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.1);
+  color: #a7f3d0;
+}
+
+.battle-compile .battle-compile-stderr {
+  margin-top: 0.75rem;
+  max-height: 16rem;
+  overflow: auto;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 0.7rem;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.75rem 0.9rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #fecaca;
+}
+
+.battle-compile .battle-compile-version {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.75rem 0.9rem;
+}
+
+.battle-compile .battle-compile-version[data-selected="true"] {
+  border-color: rgba(167, 139, 250, 0.45);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.2);
+}
