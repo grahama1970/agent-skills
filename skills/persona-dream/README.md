@@ -5,9 +5,9 @@
 > **Can an AI persona dream about what has happened to it, watch the dream it
 > made, learn from it, and still remain recognizably itself?**
 
-Persona Dream gives a persistent multimodal voice persona—a long-lived agent
+Persona Dream gives a persistent multimodal voice persona, a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
-video—a controlled way to turn experience into a synthetic dream and examine
+video, a controlled way to turn experience into a synthetic dream and examine
 what comes back.
 
 We are not building a movie generator. We are testing whether a bounded
@@ -30,6 +30,17 @@ and storyboard slices, media locking, provider routing, and a fixture-backed
 Phase 10 provider-contract dry run. It has not yet proven a live provider
 return, Watch-based self-analysis, dream persistence, or changed later
 behavior.
+
+**Jump to:**
+[Quick Start](#quick-start) -
+[Research](#research) -
+[Pipeline](#pipeline-01-16) -
+[Working Example](#embry-and-kai-the-working-example) -
+[Interface Walkthrough](#interface-walkthrough) -
+[Technical Architecture](#technical-architecture) -
+[Acceptance and Proof](#acceptance-and-proof)
+
+---
 
 ## Quick Start
 
@@ -58,7 +69,7 @@ interpretation forward.
 Persona Dream explores that missing middle. A persona could use a dream to
 rehearse a difficult relationship, connect a present event to an older memory,
 or surface a conflict it could not express directly. The dream is synthetic,
-but its effect on later reasoning can still matter—provided every stage
+but its effect on later reasoning can still matter, provided every stage
 preserves provenance, uncertainty, and the boundary between imagination and
 history.
 
@@ -101,7 +112,7 @@ One kind of evidence must never silently become another.
 Suppose the script asks Kai to answer Embry, but the generated video drops Kai
 from the final scene. `watch` can report that Kai is absent. Persona Dream may
 tentatively connect that absence to Embry's uncertainty about whether her
-boundaries will be respected—but it must also preserve the simpler explanation:
+boundaries will be respected, but it must also preserve the simpler explanation:
 the renderer failed to maintain character continuity.
 
 A dream-derived record therefore keeps facts such as:
@@ -159,16 +170,30 @@ Persona Dream is an advanced research prototype and a substantial hardening
 workload for Tau, the agentic harness that runs and verifies the pipeline. It is
 not yet a completed personality-evolution product.
 
+### Status Vocabulary
+
+The README uses these proof terms consistently:
+
+| Status | Meaning |
+|---|---|
+| **Implemented** | Code, scripts, artifacts, or a UX surface exist |
+| **Accepted evidence** | The selected run contains a receipt-backed artifact accepted by its current gate |
+| **Fixture-proven** | Deterministic fixture-backed checks pass; no live external behavior is implied |
+| **Live slice proven** | A real external operation or generated artifact was executed and inspected |
+| **Blocked** | A named prerequisite is missing or intentionally disallowed |
+| **Designed** | The architecture and evidence contract exist, but the implementation proof does not |
+| **Not implemented** | No working rung currently exists |
+
 | Boundary | State | What that proves |
 |---|---|---|
-| Grounded dream packets | Proven | Source links, contradiction reports, reflections, and receipts exist |
-| Image and storyboard production | Proven slices | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phase 08 — Media Lock | Proven locally | Accepted storyboard evidence has a stable local boundary |
-| Phase 09 — Video Provider | Dry run | Provider-neutral classification, ranking, and packet routing exist without a live-provider claim |
-| Phase 10 — Provider Contract | Outstanding; fixture-backed dry run only | A local compiler and fail-closed contract gate exist, but no current fal.ai provider schema or network call has been proven |
-| Phase 11 — Submit and Return | Outstanding and blocked | No paid call or live provider return has been authorized or proven |
-| Watch → interpretation → Memory | Designed, not closed | The architecture exists, but one accepted end-to-end run does not |
-| Later persona behavior | Not proven | No persisted dream has yet been shown to alter later behavior while preserving identity |
+| Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
+| Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
+| Phase 08 - Media Lock | **Accepted evidence** | Accepted storyboard evidence has a stable local boundary |
+| Phase 09 - Video Provider | **Fixture-proven dry run** | Provider-neutral classification, ranking, and packet routing exist without a live-provider claim |
+| Phase 10 - Provider Contract | **Fixture-proven dry run** | A local compiler and fail-closed contract gate work without network or provider calls |
+| Phase 11 - Submit and Return | **Blocked** | No paid call or live provider return has been authorized or proven |
+| Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
+| Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
 The screenshots below come from an archived Embry/Kai run. That run has not been
 regenerated with every newer provider artifact. A blocked screenshot describes
@@ -177,78 +202,59 @@ the selected run root, not the full set of current development capabilities.
 Provider selection is near the end of the media-production spine. It is not the
 end of the founding research experiment.
 
-### Pipeline at a Glance
+---
 
-#### Current media-production spine
+## Pipeline: 01-16
 
-| Phase | Purpose | Status |
-|---|---|---|
-| **01 — Idea and Memory Residue** | Capture the creative directive and inspect grounded multimodal recall | Implemented; D3 graph exploration exists |
-| **02 — Story** | Turn accepted residue into a story and interaction model | Implemented planning and generation slices |
-| **03 — Crew** | Select producer, scriptwriter, and director authority | Implemented sequential selection and contract work |
-| **04 — Contact Sheets** | Lock character, prop, and environment references | Implemented with live assets; still an active hardening area |
-| **05 — Voices** | Inspect reference voices and plan voice-identity boundaries | Audition and planning surface exists |
-| **06 — Script** | Generate and review screenplay evidence from accepted upstream material | Implemented creator/reviewer contract work |
-| **07 — Storyboard** | Produce and review panels, start/end frames, and continuity evidence | Accepted frame evidence exists in local receipts |
-| **08 — Media Lock** | Freeze the accepted provider-facing frame subset, roles, dimensions, and hashes | Implemented |
-| **09 — Video Provider** | Rank providers and create a provider-specific dry-run packet | Local dry-run routing exists; no live-provider claim |
-| **10 — Provider Contract** | Compile an inspectable request contract, field mapping, cost/entitlement plan, and async plan | **Outstanding after Video Provider**; fixture-backed local dry-run proof exists, but no current provider API proof or network call |
-| **11 — Submit and Return** | Authorize one paid call, submit, poll or receive callback, download, and validate media | **Outstanding after Video Provider**; blocked pending explicit proof and approval |
+The complete Persona Dream pipeline has two connected parts:
 
-#### Creative spine inventory: phases 02-07
+- **Phases 01-11** create, ground, plan, and eventually render the dream.
+- **Phases 12-16** let the persona observe, interpret, store, and later use that
+  experience.
 
-These phases are the spine between grounded memory residue and the media lock.
-They are not decorative UI tabs. Phase 08 can lock evidence only after this
-chain has turned source residue into reviewed story, references, script, and
-storyboard frames.
+### Media-Production Spine
 
-| Phase | Primary artifact | Current state | Evidence role |
+| Phase | Question | Primary evidence or output | Status |
 |---|---|---|---|
-| **02 — Story** | `story_contract.json`, interaction/relationship coverage, story intent | Implemented planning and generation slices exist for the Embry/Kai fixture | Defines the narrative and relationship contract consumed by script and storyboard |
-| **03 — Crew** | producer, scriptwriter, director, and acceptance-role contracts | Sequential selection and contract work exists | Assigns creative authority and review roles for downstream generation |
-| **04 — Contact Sheets** | character, prop, environment, and reference-pack evidence | Live reference assets and contact-sheet surfaces exist | Grounds Embry, Kai, surfboards, Kahaluʻu Bay, lava reef, and lineup references |
-| **05 — Voices** | voice references, audition state, voice handoff plan | Audition and planning surface exists | Captures voice intent and dialogue readiness without claiming provider voice readiness |
-| **06 — Script** | `script_contract.json`, timed beats, dialogue/action coverage, interaction matrix | Implemented creator/reviewer contract work exists | Turns story intent into timed action, dialogue, and interaction evidence |
-| **07 — Storyboard** | accepted panels, start/end frames, visual-review receipts, prompt contracts | Accepted frame evidence exists in local receipts; Phase 08 can lock that evidence | Produces accepted visual frames for the Phase 08 media lock |
+| **01 - Idea and Memory Residue** | What is the persona dreaming about, and which memories actually support it? | Core directive, grounded multimodal residue, source IDs, relevance, contradictions | **Implemented** |
+| **02 - Story** | What bounded story emerges from the accepted residue? | `story_contract.json`, interaction and relationship coverage, story intent | **Implemented** |
+| **03 - Crew** | Who has creative authority over this dream? | Producer, scriptwriter, director, reviewer, and authority contracts | **Implemented** |
+| **04 - Contact Sheets** | Which characters, props, and environments must remain visually stable? | Character, prop, environment, and reference-pack evidence | **Live slices proven; active hardening** |
+| **05 - Voices** | How should each persona sound without confusing voice expression with psychological authority? | Voice references, audition state, identity boundaries, voice handoff plan | **Implemented planning and audition surface** |
+| **06 - Script** | How does story intent become timed action and dialogue? | `script_contract.json`, beats, dialogue/action coverage, interaction matrix | **Implemented** |
+| **07 - Storyboard** | What must each shot visibly contain, and has it passed visual review? | Accepted panels, start/end frames, prompt contracts, visual-review receipts | **Accepted evidence** |
+| **08 - Media Lock** | Which accepted visual assets are frozen for provider-facing use? | Locked frame subset, roles, hashes, dimensions, identity state | **Accepted evidence** |
+| **09 - Video Provider** | Which provider best fits the accepted scene, and why? | Provider registry refresh, scorecard, selected provider, dry-run packet | **Fixture-proven dry run** |
+| **10 - Provider Contract** | Exactly what would eventually be sent, against which endpoint and contract? | Request body, payload hash, field mapping, media plan, cost/entitlement plan, async plan, non-claims | **Fixture-proven dry run** |
+| **11 - Submit and Return** | Can one explicitly authorized provider call produce a valid returned dream artifact? | Media URLs, approval, paid authorization, submit receipt, task ID, polling/callback, downloaded video, FFprobe | **Blocked** |
 
-Status terms in this inventory are intentionally conservative:
+### Cognitive and Memory Loop
 
-- **Implemented** means local artifacts, scripts, or UI surfaces exist.
-- **Accepted evidence** means a receipt-backed local artifact exists for the
-  selected run.
-- **Dry run** means no provider call, no paid call, and no live readiness claim.
+| Phase | Question | Primary evidence or output | Status |
+|---|---|---|---|
+| **12 - Watch Observation** | What is actually visible, audible, spoken, absent, or changed in the returned dream? | Frames, transcript, sound, scene table, visual descriptions, coverage gaps | **Designed** |
+| **13 - Persona Self-Interpretation** | What might the observed dream mean in the context of the persona's grounded memories? | Observation-backed interpretations, source references, uncertainty, alternative explanations | **Designed** |
+| **14 - Theory-of-Mind Validation** | Which proposed beliefs, fears, desires, trust states, or relationship updates are sufficiently grounded? | Accepted or rejected ToM candidates with subject, target, confidence, intensity, and receipts | **Designed** |
+| **15 - Memory, Graph, and Qdrant Persistence** | Can the accepted synthetic dream be stored and retrieved without becoming false history? | Dream memory record, ArangoDB edges, Qdrant points, cross-store validation receipts | **Designed** |
+| **16 - Recall and Behavior Evaluation** | Does the persona later use the dream appropriately while remaining recognizably itself? | Semantic recall, multi-hop traversal, identity-consistency probes, before/after conversation and Chatterbox evidence | **Not implemented as a closed proof** |
 
-#### Outstanding after Phase 09
+### Remaining Work Beyond the Local Dry-Run Boundary
 
-Phase 09 is the current provider-selection and dry-run routing boundary. The
-pipeline work after it is still outstanding:
+The repository has fixture-backed proof for Phase 10. The remaining live and
+closed-loop work is:
 
-- **10 — Provider Contract:** fetch or verify the current provider API schema,
-  compile the selected provider request, map fields, check cost and entitlement,
-  and keep `submitted=false`.
-- **11 — Submit and Return:** after explicit authorization, publish/probe input
-  media URLs, submit one bounded provider request, poll or receive callback, and
-  download/hash the returned media.
-- **Watch observation:** inspect the actual returned video for visible, audible,
-  transcript, scene, and timing evidence.
-- **Self-interpretation:** compare Watch evidence with source memories and dream
-  intention without treating the dream as literal history.
-- **Memory, graph, and Qdrant persistence:** persist only accepted synthetic
-  dream memory and ToM edges through the owning Memory/Graph layers.
-- **Recall and behavior proof:** retrieve the synthetic dream later and show
-  bounded Chatterbox/persona behavior changes without identity drift.
+1. verify the current provider endpoint and API schema;
+2. publish and externally probe provider-accessible input media;
+3. verify cost, entitlement, manual acceptance, and paid authorization;
+4. submit one bounded provider request and retrieve the returned artifact;
+5. run `watch` against the actual returned media;
+6. produce grounded self-interpretation and ToM candidates;
+7. persist only accepted synthetic memory and graph/embedding records; and
+8. prove later retrieval and bounded behavior change without identity drift.
 
-#### Research loop after provider return
+---
 
-| Stage | Purpose | Status |
-|---|---|---|
-| **Watch observation** | Extract frames, transcript, sound, scenes, visible facts, and coverage gaps from the actual returned dream | Not yet integrated into one closed run |
-| **Self-interpretation** | Compare dream intention, Watch evidence, source memories, and current persona state | Not yet proven |
-| **ToM validation** | Accept or reject bounded beliefs, fears, desires, trust states, and relationship candidates | Not yet proven |
-| **Memory and embedding persistence** | Write the synthetic dream, graph edges, and Qdrant multimodal points through the owning Memory layer | Not yet proven |
-| **Recall and behavior evaluation** | Retrieve the dream semantically and through graph traversal, then test later persona and Chatterbox behavior | Not yet proven |
-
-### Embry and Kai: The Working Example
+## Embry and Kai: The Working Example
 
 The current fixture begins with a deceptively ordinary choice: Embry and Kai
 fake a sick day from their summer jobs to surf Kahaluʻu Bay on Hawaiʻi's Big
@@ -258,29 +264,32 @@ and hesitation relational weight.
 
 One voice-test line captures the tension:
 
-> “Kai, wait. If we paddle now, we're cutting across the lineup.”
+> "Kai, wait. If we paddle now, we're cutting across the lineup."
 
 The pipeline can draw on character images, older text memories, surf audio,
-video references, environmental evidence, and relationship history. The test is
-not whether it can make an attractive surf clip. The test is whether Embry can
-later watch the actual returned media, distinguish a renderer failure from a
-meaningful pattern, form a bounded interpretation, and use that experience in a
-future conversation without claiming the dream literally happened.
+video references, environmental evidence, and relationship history.
+
+The test is not whether it can make an attractive surf clip. The test is
+whether Embry can later watch the actual returned media, distinguish a renderer
+failure from a meaningful pattern, form a bounded interpretation, and use that
+experience in a future conversation without claiming the dream literally
+happened.
 
 Chatterbox can express the resulting tone. It does not decide the psychology or
 rewrite Embry's durable identity.
 
 ---
 
-## Pipeline Step Walkthrough
+## Interface Walkthrough
 
 The current UX Lab surface is a developer-oriented inspection pane over the
-pipeline and its machine-readable receipts. The walkthrough below lists every
-pipeline phase in order. Screenshots are included for the phases that currently
-have committed README assets; phases without a committed screenshot are still
-shown because they are real spine steps, not hidden implementation details.
+pipeline and its machine-readable receipts.
 
-### 01 — Idea and Memory Residue
+The walkthrough lists every pipeline phase in order. Screenshots are included
+where committed README assets exist. A phase without a screenshot is still
+shown because it is a real research boundary, not hidden implementation detail.
+
+### 01 - Idea and Memory Residue
 
 ![Phase 01 Idea and memory residue board](assets/readme/phase01-idea-memory-residue.webp)
 
@@ -290,74 +299,9 @@ references, video, and audio so the source material can be inspected before
 story or media production begins.
 
 **What to notice:** the system exposes multiple memory modalities before it asks
-a story or renderer to transform them.
+a story model or renderer to transform them.
 
-### 02 — Story
-
-![Phase 02 Story contract surface](assets/readme/phase02-story-content-pane.webp)
-
-Phase 02 turns accepted memory residue into a story contract: the narrative
-premise, relationship pressure, surf-etiquette stakes, contradiction checks,
-and interaction model that later phases must preserve.
-
-**What to notice:** this is where the Embry/Kai sick-day idea becomes a bounded
-story rather than a loose prompt.
-
-### 03 — Crew
-
-![Phase 03 Crew selection surface](assets/readme/phase03-crew-content-pane.webp)
-
-Phase 03 selects the creative authorities for the run: producer, scriptwriter,
-director, and reviewer roles. Those choices determine which creative standards
-control later script, storyboard, and visual-review decisions.
-
-**What to notice:** crew selection is part of the evidence chain. It is not a
-cosmetic cast list.
-
-### 04 — Contact Sheets
-
-![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets-content-pane.webp)
-
-Phase 04 gathers character, environment, surfboard, lineup, and lava-reef
-references. Contact sheets are source and planning evidence; they do not
-automatically become provider-ready Element upload packs.
-
-**What to notice:** Embry, Kai, Kahaluʻu Bay, the lava reef, and the public
-lineup are grounded before the script and storyboard try to reuse them.
-
-### 05 — Voices
-
-![Phase 05 Voices surface](assets/readme/phase05-voices-content-pane.webp)
-
-Phase 05 inspects voice references, dialogue readiness, and voice-identity
-boundaries. It can preserve conversational intent and Chatterbox tone without
-claiming provider voice IDs or live voice readiness.
-
-**What to notice:** a voice surface can support the dream's emotional tone while
-still blocking live provider voice submission.
-
-### 06 — Script
-
-![Phase 06 Script contract surface](assets/readme/phase06-script-content-pane.webp)
-
-Phase 06 converts the accepted story into timed action, dialogue, interaction
-coverage, and screenplay evidence. The Embry/Kai fixture uses this phase to
-make surf etiquette, hesitation, pressure, and boundary-setting concrete.
-
-**What to notice:** this is the bridge from story intent to frameable action.
-
-### 07 — Storyboard
-
-![Phase 07 Storyboard surface](assets/readme/phase07-storyboard-content-pane.webp)
-
-Phase 07 produces and reviews storyboard panels, start/end frames, identity
-continuity, prompt contracts, and visual-review receipts. Accepted storyboard
-evidence is what Phase 08 is allowed to lock.
-
-**What to notice:** Media Lock does not create visual truth. It freezes the
-accepted storyboard evidence produced here.
-
-### Embry Portrait Memory Graph
+#### 01A - Memory Relationship Graph
 
 ![Embry portrait D3 Theory-of-Mind trace graph](assets/readme/phase01-embry-portrait-d3-graph.webp)
 
@@ -368,7 +312,72 @@ relationship nodes expand around it.
 **What to notice:** this is an explorer, not a write surface. It does not create
 canonical graph edges or accept a psychological interpretation.
 
-### 08 — Media Lock
+### 02 - Story
+
+![Phase 02 Story contract surface](assets/readme/phase02-story-content-pane.webp)
+
+Phase 02 turns accepted memory residue into a story contract: the narrative
+premise, relationship pressure, surf-etiquette stakes, contradiction checks,
+and interaction model that later phases must preserve.
+
+**What to notice:** this is where the Embry/Kai sick-day idea becomes a bounded
+story rather than a loose prompt.
+
+### 03 - Crew
+
+![Phase 03 Crew selection surface](assets/readme/phase03-crew-content-pane.webp)
+
+Phase 03 selects the creative authorities for the run: producer, scriptwriter,
+director, and reviewer roles. Those choices determine which creative standards
+control later script, storyboard, and visual-review decisions.
+
+**What to notice:** crew selection is part of the evidence chain. It is not a
+cosmetic cast list.
+
+### 04 - Contact Sheets
+
+![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets-content-pane.webp)
+
+Phase 04 gathers character, environment, surfboard, lineup, and lava-reef
+references. Contact sheets are source and planning evidence; they do not
+automatically become provider-ready upload packs.
+
+**What to notice:** Embry, Kai, Kahaluʻu Bay, the lava reef, and the public
+lineup are grounded before the script and storyboard try to reuse them.
+
+### 05 - Voices
+
+![Phase 05 Voices surface](assets/readme/phase05-voices-content-pane.webp)
+
+Phase 05 inspects voice references, dialogue readiness, and voice-identity
+boundaries. It can preserve conversational intent and Chatterbox tone without
+claiming provider voice IDs or live voice readiness.
+
+**What to notice:** a voice surface can support the dream's emotional tone while
+still blocking live provider voice submission.
+
+### 06 - Script
+
+![Phase 06 Script contract surface](assets/readme/phase06-script-content-pane.webp)
+
+Phase 06 converts the accepted story into timed action, dialogue, interaction
+coverage, and screenplay evidence. The Embry/Kai fixture uses this phase to
+make surf etiquette, hesitation, pressure, and boundary-setting concrete.
+
+**What to notice:** this is the bridge from story intent to frameable action.
+
+### 07 - Storyboard
+
+![Phase 07 Storyboard surface](assets/readme/phase07-storyboard-content-pane.webp)
+
+Phase 07 produces and reviews storyboard panels, start/end frames, identity
+continuity, prompt contracts, and visual-review receipts. Accepted storyboard
+evidence is what Phase 08 is allowed to lock.
+
+**What to notice:** Media Lock does not create visual truth. It freezes the
+accepted storyboard evidence produced here.
+
+### 08 - Media Lock
 
 ![Phase 08 Media Lock accepted storyboard frames](assets/readme/phase08-media-lock.webp)
 
@@ -378,40 +387,120 @@ hashes, identity status, and the receipts that support them.
 **What to notice:** a media lock proves a stable local evidence boundary. It
 does not prove that any provider is ready.
 
-### 09 — Video Provider
+### 09 - Video Provider
 
-![Phase 09 Video Provider current fail-closed state](assets/readme/phase09-video-provider-current.webp)
+![Phase 09 Video Provider dry-run scorecard](assets/readme/phase09-video-provider-current.webp)
 
 Phase 09 answers one question: which provider best fits the accepted scene, and
-why? The archived run shown here is fail-closed because its selected run root
-does not contain the provider scorecard and packet.
+why?
 
-**What to notice:** missing evidence stays visibly blocked instead of being
-presented as a successful provider choice.
+The selected Embry/Kai run currently shows a local provider scorecard and
+dry-run routing state. It remains explicitly non-live: no paid call, no
+provider submission, and no provider-ready claim.
 
-### 10 — Provider Contract
+**What to notice:** provider ranking is an inspectable recommendation. It is
+not authorization to call Kling, fal.ai, or any other live provider.
+
+### 10 - Provider Contract
 
 ![Phase 10 Provider Contract current fail-closed state](assets/readme/phase10-provider-contract-current.webp)
 
 Phase 10 answers a different question: exactly what would eventually be sent,
 against which endpoint and schema evidence, using which media plan, cost policy,
-and asynchronous return path? The current development rung is fixture-backed
-and dry-run only. The archived run shown here has not been regenerated with
-that contract artifact.
+and asynchronous return path?
 
-**What to notice:** the current screenshot is correctly blocked even though a
-newer local contract compiler exists. Neither state proves live fal.ai
-compatibility.
+The repository contains a fixture-backed, local dry-run compiler and
+fail-closed gate. The archived run shown here has not been regenerated with that
+contract artifact.
 
-### 11 — Submit and Return
+**What to notice:** the screenshot is correctly blocked even though newer local
+contract tooling exists. Neither state proves live fal.ai compatibility.
 
-Phase 11 is the outstanding live-provider boundary: explicit authorization,
-provider-accessible media URLs, one bounded paid call, polling or callback,
-download, hash validation, FFprobe, and returned-media receipt.
+### 11 - Submit and Return
 
-**What to notice:** this step is intentionally not complete. The README must not
-claim the persona watched a dream until a provider return exists and Watch has
-analyzed the actual media.
+Phase 11 is the live-provider boundary. It requires:
+
+- current provider schema evidence;
+- externally accessible and probed media URLs;
+- verified cost and entitlement;
+- manual acceptance bound to the exact payload;
+- paid-call authorization;
+- one bounded submission;
+- task-ID extraction;
+- polling or callback handling;
+- returned-media download;
+- hash and FFprobe validation.
+
+**What to notice:** this phase is intentionally blocked. The README must not
+claim that the persona watched a dream until a provider return exists and Watch
+has analyzed the actual media.
+
+### 12 - Watch Observation
+
+Phase 12 sends the actual returned dream to [`watch`](../watch/SKILL.md).
+`watch` extracts frames, transcript, sound, scene changes, visible facts, missing
+elements, and coverage gaps.
+
+**What to notice:** Watch reports evidence. It does not decide what the dream
+means or how the persona should change.
+
+### 13 - Persona Self-Interpretation
+
+Phase 13 compares:
+
+- the grounded source memories;
+- the intended dream;
+- the actual Watch observations; and
+- the persona's current state.
+
+It produces tentative interpretations with source references, observation
+references, confidence, uncertainty, and alternative explanations.
+
+**What to notice:** interpretation remains a proposal. A generated symbol is not
+automatically psychological truth.
+
+### 14 - Theory-of-Mind Validation
+
+Phase 14 accepts or rejects bounded ToM candidates such as beliefs, fears,
+desires, trust, distrust, avoidance, obligation, uncertainty, emotion, stance,
+preference, or relationship state.
+
+**What to notice:** a candidate must identify its subject, target, source
+memories, Watch observations, confidence, emotional intensity, and accepting or
+rejecting receipt.
+
+### 15 - Memory, Graph, and Qdrant Persistence
+
+Phase 15 writes only accepted records through the owning Memory and Graph Memory
+layers.
+
+The intended result includes:
+
+- an explicitly synthetic dream memory;
+- source and observation relationships in ArangoDB;
+- accepted ToM edges;
+- multimodal semantic points in Qdrant; and
+- receipts proving cross-store consistency.
+
+**What to notice:** Persona Dream does not create a second memory database or
+write directly around the Memory contract.
+
+### 16 - Recall and Behavior Evaluation
+
+Phase 16 asks whether the dream has become useful without destabilizing the
+persona.
+
+It should prove that:
+
+- Qdrant retrieves the dream from differently worded queries;
+- ArangoDB reconstructs the multi-hop relationship chain;
+- later conversation uses the dream appropriately;
+- the persona still distinguishes the dream from literal history;
+- identity-consistency probes remain stable; and
+- Chatterbox expresses the resulting state without inventing it.
+
+**What to notice:** this is the completion boundary for the founding research
+experiment, not provider selection and not video generation alone.
 
 ---
 
@@ -435,11 +524,16 @@ dream --supports_interpretation--> grounded ToM candidate
 ```
 
 ToM candidates can represent beliefs, desires, fears, trust, distrust,
-avoidance, obligation, uncertainty, emotion, stance, preference, or
-relationship state. Every candidate retains its subject and target,
-source-memory IDs, Watch observation IDs where applicable, confidence,
-emotional intensity, synthetic origin, and the gate receipt that accepted or
-rejected it.
+avoidance, obligation, uncertainty, emotion, stance, preference, or relationship
+state. Every candidate retains:
+
+- its subject and target;
+- source-memory IDs;
+- Watch observation IDs where applicable;
+- confidence;
+- emotional intensity;
+- synthetic origin; and
+- the gate receipt that accepted or rejected it.
 
 Qdrant and ArangoDB solve different retrieval problems:
 
@@ -459,15 +553,22 @@ The current developer UX includes a D3-based multimodal memory and ToM explorer.
 The intended user-facing evolution is a React Flow canvas backed by the same
 canonical Memory and Graph Memory records.
 
-The canvas should let a human inspect or correct the core idea, present events,
-recalled text, images, audio, video, code activity, people, places, objects,
-emotions, conflicts, typed relationships, salience, and accepted or rejected
-dream residue.
+The canvas should let a human inspect or correct:
+
+- the core idea;
+- present events;
+- recalled text, images, audio, video, and code activity;
+- people, places, objects, emotions, and conflicts;
+- typed relationships;
+- emotional salience;
+- accepted or rejected dream residue.
 
 D3 can remain the force-layout engine. React Flow should own editable custom
 nodes, typed connections, selection, grouping, saved layout, undo/redo, and
-multimodal playback. User-created links are not canonical until Memory accepts
-and receipts the write.
+multimodal playback.
+
+User-created links are not canonical until Memory accepts and receipts the
+write.
 
 ### Ownership Boundaries
 
@@ -483,18 +584,19 @@ and receipts the write.
 Persona Dream does not create a second persona database or a parallel memory
 store. It can emit proposal and evidence artifacts, but accepted memories,
 relationships, ToM state, and embeddings belong to Memory and Graph Memory.
+
 Durable canonical persona changes belong to `create-persona`.
 
 ### Artifacts
 
-#### Every run
+#### Every Run
 
 | Artifact | Purpose |
 |---|---|
 | `dream_request.json` | Persona, memory residue, mode, and run metadata |
 | `response.json` | Model or fixture response captured for audit |
 
-#### Successful dream runs
+#### Successful Dream Runs
 
 | Artifact | Purpose |
 |---|---|
@@ -510,7 +612,7 @@ Durable canonical persona changes belong to `create-persona`.
 `memory_write_receipt.json` remains `skipped` unless `--write-memory` was
 explicitly requested and the Memory API confirmed the write.
 
-#### `video_plan` runs
+#### `video_plan` Runs
 
 ```text
 dream_story.md
@@ -527,11 +629,23 @@ pipeline_stage_report.md
 manifest.json
 ```
 
-Hardened video experiments can add media-lock, provider-selection, payload, and
-provider-contract receipts. Their existence proves only the boundary named by
-the receipt.
+#### Provider-Hardening Artifacts
 
-#### Intended closed-loop evidence
+Hardened provider experiments can additionally emit artifacts such as:
+
+```text
+video_provider_scorecard.json
+video_provider_packet.json
+provider_payload_mapping_receipt.json
+phase10_provider_contract.json
+phase10_provider_contract_receipt.json
+```
+
+Their existence proves only the boundary named by the artifact or receipt. A
+Phase 10 contract does not prove live schema compatibility, media publication,
+authorization, submission, or provider return.
+
+#### Intended Closed-Loop Evidence
 
 The complete research loop should eventually produce evidence such as:
 
@@ -606,12 +720,14 @@ the following:
 | Treating a contact sheet as final output | Use it as an inspectable review artifact |
 | Treating provider selection as research completion | Close Watch, graph and Qdrant persistence, and future-behavior evaluation |
 
+---
+
 ## References
 
-- [`SKILL.md`](SKILL.md) — current operational contract
-- [`create-persona`](../create-persona/SKILL.md) — persona authority and identity-consistency validation
-- [`memory`](../memory/SKILL.md) — Memory First, multimodal recall, ToM, and persistence contract
-- [`watch`](../watch/SKILL.md) — evidence-first dream-media perception
-- [`create-movie`](../create-movie/SKILL.md) — downstream polished media lane
-- [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) — graph, retrieval, and persistence implementation
+- [`SKILL.md`](SKILL.md) - current operational contract
+- [`create-persona`](../create-persona/SKILL.md) - persona authority and identity-consistency validation
+- [`memory`](../memory/SKILL.md) - Memory First, multimodal recall, ToM, and persistence contract
+- [`watch`](../watch/SKILL.md) - evidence-first dream-media perception
+- [`create-movie`](../create-movie/SKILL.md) - downstream polished media lane
+- [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) - graph, retrieval, and persistence implementation
 - Nested creative helpers live under `skills/persona-dream/skills/`.
