@@ -1368,6 +1368,30 @@ function payloadArray(value: unknown): Array<Record<string, unknown>> {
     : []
 }
 
+const videoProviderMatrixMetrics = [
+  { key: 'image_to_video', label: 'I2V', title: 'Image-to-video fidelity', max: 20 },
+  { key: 'first_last_frame_control', label: 'Ends', title: 'First and last frame transition control', max: 20 },
+  { key: 'identity_reference_support', label: 'ID', title: 'Identity continuity and reference support', max: 15 },
+  { key: 'motion_quality', label: 'Mot', title: 'Motion quality and physics', max: 15 },
+  { key: 'multi_character_consistency', label: 'Chr', title: 'Multi-character consistency', max: 10 },
+] as const
+
+function formatBlockerText(value: string): string {
+  return value.replace(/^BLOCKED_/, '').replace(/_/g, ' ').toLowerCase()
+}
+
+function videoProviderFitValue(provider: Record<string, unknown>, key: string): number | null {
+  const fit = payloadObject(provider.fit)
+  return dreamNumber(fit?.[key])
+}
+
+function videoProviderScoreTone(score: number | null): CSSProperties {
+  if (score == null) return nvis.videoProviderScoreMissing
+  if (score >= 95) return nvis.videoProviderScorePass
+  if (score >= 75) return nvis.videoProviderScoreWarn
+  return nvis.videoProviderScoreBlocked
+}
+
 function VideoProviderPanel({ stage }: { stage: DreamStage }) {
   const providerArtifacts = useMemo(() => {
     const byRole = new Map<string, DreamArtifact>()
@@ -1479,24 +1503,42 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         <div style={nvis.videoProviderSection}>
           <h3 style={nvis.matrixSectionTitle}><Gauge size={12} /> Provider scorecard</h3>
           {providers.length > 0 ? (
-            <div style={nvis.videoProviderScoreRows}>
+            <div style={nvis.videoProviderMatrix}>
+              <div style={nvis.videoProviderMatrixHeader}>
+                <div>Provider</div>
+                <div>State</div>
+                {videoProviderMatrixMetrics.map((metric) => (
+                  <div key={metric.key} style={nvis.videoProviderMetricHeader} title={metric.title}>
+                    {metric.label}
+                  </div>
+                ))}
+                <div style={nvis.videoProviderScoreHeader}>Score</div>
+              </div>
               {providers.slice(0, 6).map((provider, index) => {
                 const providerId = firstString(provider.provider_id, provider.id, provider.name) ?? `provider_${index + 1}`
                 const score = dreamNumber(provider.score)
                 const providerBlockers = dreamList(provider.blockers)
+                const isSelected = providerId === recommendedProvider
                 return (
-                  <div key={providerId} style={nvis.videoProviderScoreRow}>
-                    <div>
-                      <strong>{providerId}</strong>
-                      <div style={nvis.videoProviderSubtle}>
-                        dry_run={dreamBooleanLabel(provider.eligible_for_dry_run)} / live={dreamBooleanLabel(provider.eligible_for_live_submit)}
-                      </div>
+                  <div key={providerId} style={isSelected ? nvis.videoProviderMatrixRowSelected : nvis.videoProviderMatrixRow}>
+                    <div style={isSelected ? nvis.videoProviderSelectedName : nvis.videoProviderName}>
+                      {providerId}
                     </div>
-                    <div style={nvis.videoProviderScoreMeta}>
-                      <span style={score != null ? nvis.matrixReadyPill : nvis.matrixMutedPill}>
-                        score {score ?? 'n/a'}
-                      </span>
-                      {providerBlockers.length > 0 && <span style={nvis.matrixPendingPill}>{providerBlockers.length} blockers</span>}
+                    <div style={nvis.videoProviderStateCell}>
+                      <span>{`dry=${dreamBooleanLabel(provider.eligible_for_dry_run)} live=${dreamBooleanLabel(provider.eligible_for_live_submit)}`}</span>
+                      <span>{`${providerBlockers.length} blk`}</span>
+                    </div>
+                    {videoProviderMatrixMetrics.map((metric) => {
+                      const value = videoProviderFitValue(provider, metric.key)
+                      const delta = typeof value === 'number' ? value - metric.max : null
+                      return (
+                        <div key={metric.key} style={delta == null || delta < 0 ? nvis.videoProviderPenaltyCell : nvis.videoProviderPerfectCell}>
+                          {delta == null ? 'n/a' : delta < 0 ? delta : '—'}
+                        </div>
+                      )
+                    })}
+                    <div style={nvis.videoProviderScoreCell}>
+                      <span style={videoProviderScoreTone(score)}>{score ?? 'n/a'}</span>
                     </div>
                   </div>
                 )
@@ -1510,11 +1552,14 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         <div style={nvis.videoProviderSection}>
           <h3 style={nvis.matrixSectionTitle}><ShieldCheck size={12} /> Blockers and non-live boundary</h3>
           {blockers.length > 0 ? (
-            <ul style={nvis.videoProviderBlockerList}>
+            <div style={nvis.videoProviderBlockerChips}>
               {[...new Set(blockers)].slice(0, 8).map((blocker) => (
-                <li key={blocker}>{blocker}</li>
+                <span key={blocker} style={nvis.videoProviderBlockerChip} title={blocker}>
+                  <span style={nvis.videoProviderBlockerDot} />
+                  {formatBlockerText(blocker)}
+                </span>
               ))}
-            </ul>
+            </div>
           ) : (
             <div style={styles.gapBox}>No live-call blockers were surfaced by the loaded receipts. Treat as not provider-ready until final gate evidence exists.</div>
           )}
@@ -8659,7 +8704,7 @@ const nvis: Record<string, CSSProperties> = {
     fontSize: 10,
     fontWeight: 800,
     letterSpacing: '0.12em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     whiteSpace: 'nowrap',
   },
   pipelineUnderline: {
@@ -9968,7 +10013,7 @@ const nvis: Record<string, CSSProperties> = {
   },
   videoProviderSplit: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     gap: 14,
   },
   videoProviderSection: {
@@ -9981,6 +10026,174 @@ const nvis: Record<string, CSSProperties> = {
   videoProviderScoreRows: {
     display: 'grid',
     gap: 8,
+  },
+  videoProviderMatrix: {
+    minWidth: 0,
+    display: 'grid',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    background: '#050505',
+  },
+  videoProviderMatrixHeader: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 34,
+    padding: '0 8px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.35)',
+    color: '#64748b',
+    fontSize: 8,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  videoProviderMetricHeader: {
+    textAlign: 'center' as const,
+    cursor: 'help',
+    transition: 'color 160ms ease',
+  },
+  videoProviderScoreHeader: {
+    textAlign: 'right' as const,
+    color: '#94a3b8',
+  },
+  videoProviderMatrixRow: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 48,
+    padding: '8px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderLeft: '2px solid transparent',
+    color: '#e2e8f0',
+    fontSize: 12,
+  },
+  videoProviderMatrixRowSelected: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 48,
+    padding: '8px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderLeft: '2px solid #22c55e',
+    background: 'rgba(34,197,94,0.08)',
+    color: '#e2e8f0',
+    fontSize: 12,
+  },
+  videoProviderName: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#f8fafc',
+    fontSize: 11,
+    fontWeight: 850,
+    textTransform: 'capitalize' as const,
+  },
+  videoProviderSelectedName: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#4ade80',
+    fontSize: 11,
+    fontWeight: 900,
+    textTransform: 'capitalize' as const,
+  },
+  videoProviderStateCell: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 2,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 8,
+    lineHeight: 1.2,
+    overflow: 'hidden',
+  },
+  videoProviderPerfectCell: {
+    textAlign: 'center' as const,
+    color: '#334155',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  videoProviderPenaltyCell: {
+    minHeight: 20,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    justifySelf: 'center',
+    minWidth: 24,
+    padding: '0 3px',
+    borderRadius: 4,
+    background: 'rgba(245,158,11,0.10)',
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreCell: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  videoProviderScorePass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(34,197,94,0.24)',
+    background: 'rgba(34,197,94,0.12)',
+    color: '#4ade80',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreWarn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(245,158,11,0.24)',
+    background: 'rgba(245,158,11,0.12)',
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(248,113,113,0.26)',
+    background: 'rgba(248,113,113,0.12)',
+    color: '#fca5a5',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreMissing: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(148,163,184,0.18)',
+    background: 'rgba(148,163,184,0.08)',
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
   },
   videoProviderScoreRow: {
     display: 'grid',
@@ -10008,6 +10221,38 @@ const nvis: Record<string, CSSProperties> = {
     color: '#fca5a5',
     fontSize: 12,
     lineHeight: 1.35,
+  },
+  videoProviderBlockerChips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  videoProviderBlockerChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    maxWidth: '100%',
+    gap: 7,
+    padding: '6px 8px',
+    borderRadius: 5,
+    border: '1px solid rgba(248,113,113,0.24)',
+    background: 'rgba(127,29,29,0.18)',
+    color: '#fca5a5',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 10,
+    fontWeight: 750,
+    lineHeight: 1.25,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    overflowWrap: 'anywhere',
+  },
+  videoProviderBlockerDot: {
+    width: 6,
+    height: 6,
+    flex: '0 0 auto',
+    borderRadius: 999,
+    background: '#f87171',
+    boxShadow: '0 0 8px rgba(248,113,113,0.45)',
   },
   videoProviderReceiptRow: {
     display: 'grid',
