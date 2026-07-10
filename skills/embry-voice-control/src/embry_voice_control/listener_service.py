@@ -12,14 +12,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
-from embry_voice_control.event_journal import (
-    ack_event,
-    append_event,
-    claim_events,
-    consumer_offset,
-    list_events,
-    session_ids,
-)
+from embry_voice_control.event_journal import append_event, list_events, session_ids
 
 
 DEFAULT_DB_PATH = Path(os.environ.get(
@@ -36,21 +29,10 @@ class VoiceEvent(BaseModel):
     event_id: str
     session_id: str
     turn_id: str
+    sequence: int = Field(ge=1)
     type: str
     created_at: str
-    causation_id: str
-    correlation_id: str
-    producer: str
-    mocked: bool
-    live: bool
-    artifact_hashes: list[str]
-    receipt_hash: str
     payload: dict[str, Any]
-
-
-class AckRequest(BaseModel):
-    consumer_name: str
-    event_id: str
 
 
 def utc_now() -> str:
@@ -70,17 +52,17 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
     @app.post("/v1/listener/events")
     def ingest(event: VoiceEvent) -> dict[str, Any]:
         try:
-            stored = append_event(db_path, event.model_dump(by_alias=True))
+            inserted = append_event(db_path, event.model_dump(by_alias=True))
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return {
             "schema": "embry.listener_event_ingest_receipt.v1",
             "accepted": True,
-            "event": stored,
-            "event_id": stored["event_id"],
-            "session_id": stored["session_id"],
-            "turn_id": stored["turn_id"],
-            "sequence": stored["sequence"],
+            "inserted": inserted,
+            "event_id": event.event_id,
+            "session_id": event.session_id,
+            "turn_id": event.turn_id,
+            "sequence": event.sequence,
         }
 
     @app.get("/v1/sessions")
@@ -105,57 +87,25 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
             "events": rows,
         }
 
-    @app.get("/v1/consumers/{consumer_name}/sessions/{session_id}/events")
-    def claim(consumer_name: str, session_id: str, limit: int = Query(default=100, ge=1)) -> dict[str, Any]:
-        return {
-            "schema": "embry.consumer_claim.v1",
-            "consumer_name": consumer_name,
-            "session_id": session_id,
-            "events": claim_events(db_path, consumer_name, session_id, limit),
-        }
-
-    @app.post("/v1/consumers/ack")
-    def ack(request: AckRequest) -> dict[str, Any]:
-        try:
-            offset = ack_event(db_path, request.consumer_name, request.event_id)
-        except ValueError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        return {"schema": "embry.consumer_ack.v1", "offset": offset}
-
-    @app.get("/v1/consumers/{consumer_name}/sessions/{session_id}/offset")
-    def offset(consumer_name: str, session_id: str) -> dict[str, Any]:
-        return {
-            "schema": "embry.consumer_offset.v1",
-            "consumer_name": consumer_name,
-            "session_id": session_id,
-            "sequence": consumer_offset(db_path, consumer_name, session_id),
-        }
-
     @app.post("/v1/turns/{turn_id}/cancel")
-    def cancel(turn_id: str, session_id: str) -> dict[str, Any]:
+    def cancel(turn_id: str, session_id: str, sequence: int) -> dict[str, Any]:
         payload = {"reason": "requested", "cancelled_at": utc_now()}
-        event_seed = f"{session_id}:{turn_id}:turn.cancelled"
+        event_seed = f"{session_id}:{turn_id}:{sequence}:turn.cancelled"
         event = {
             "schema": "embry.voice_event.v1",
             "event_id": "turn.cancelled." + hashlib.sha256(event_seed.encode()).hexdigest()[:16],
             "session_id": session_id,
             "turn_id": turn_id,
+            "sequence": sequence,
             "type": "turn.cancelled",
             "created_at": payload["cancelled_at"],
-            "causation_id": turn_id,
-            "correlation_id": session_id,
-            "producer": "embry.listener_service",
-            "mocked": False,
-            "live": True,
-            "artifact_hashes": [],
-            "receipt_hash": hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest(),
             "payload": payload,
         }
         try:
-            stored = append_event(db_path, event)
+            append_event(db_path, event)
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
-        return {"schema": "embry.turn_cancel_receipt.v1", "event": stored}
+        return {"schema": "embry.turn_cancel_receipt.v1", "event": event}
 
     return app
 
