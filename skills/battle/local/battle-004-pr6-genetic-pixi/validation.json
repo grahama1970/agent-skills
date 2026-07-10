@@ -1,0 +1,28 @@
+{
+  "battle_id": "battle-004",
+  "fixture_id": "battle-004-pr6-genetic-pixi",
+  "genetic_event_count": 12,
+  "not_emitted_event_types": [
+    "genome_promoted",
+    "judge_exploit_success",
+    "repair_materialized",
+    "repair_started"
+  ],
+  "present_event_types": [
+    "branch_abandoned",
+    "code_author_started",
+    "compile_failed",
+    "compile_passed",
+    "genome_selected",
+    "judge_pending",
+    "method_added",
+    "method_rejected",
+    "research_receipt_materialized",
+    "research_started",
+    "specimen_materialized",
+    "target_contact_unproven"
+  ],
+  "raw_paths_redacted": true,
+  "schema": "battle.normalized_genetic_pixi_fixture_validation.v1",
+  "status": "PASS"
+}

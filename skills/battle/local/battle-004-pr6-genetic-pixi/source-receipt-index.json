@@ -1,0 +1,20 @@
+{
+  "fixture_id": "battle-004-pr6-genetic-pixi",
+  "raw_paths_redacted": true,
+  "schema": "battle.normalized_genetic_pixi_source_index.v1",
+  "source_fixture_hashes": {
+    "base": "sha256:35cd6835689201f831678bef42135fb962c00d5a5178a7081e6cf6f03687e351",
+    "compile": "sha256:f881358d3e73c45301576cf24ee74de1b67f838883ae5ab644a1a11d8c5b9aba",
+    "population": "sha256:86e94a4a0b4eb6e4b3b4734238f21d322c559c5c1823d0a0683b7a9906e4b3ae",
+    "runtime_judge": "sha256:4310bcc4a34b974b95919d42643099dc8f400762f4c12553e994b3fd476beb9b",
+    "synthesis": "sha256:8b022d39c0ed7d8216ec3052c8fcc9a6f2a088016908e428e9c7df2632e706d8"
+  },
+  "source_fixtures": {
+    "base": "local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json",
+    "compile": "local/battle-004-pr3d-compile/battle.normalized_compile_fixture.json",
+    "population": "local/battle-004-pr5-population/battle.normalized_population_fixture.json",
+    "runtime_judge": "local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json",
+    "synthesis": "local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json"
+  },
+  "source_root": "skills/battle"
+}

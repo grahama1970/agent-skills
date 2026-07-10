@@ -204,6 +204,7 @@ promoted; failed mutations remain searchable negative evidence.
 | PR3d compile fixture | `./run.sh normalize-compile-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3d-compile --public-out spectator/public/battle-fixtures/battle-004-pr3d-compile` | UX-safe immutable specimen version timeline with compile attempt, compile failure/pass state, stderr summary, repair fields, and version hashes | Runnable child, runtime success, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 | PR4 runtime/Judge fixture | `./run.sh normalize-runtime-judge-fixture /tmp/battle-004-combiner --out local/battle-004-pr4-runtime-judge --public-out spectator/public/battle-fixtures/battle-004-pr4-runtime-judge` | UX-safe Docker specimen runtime summaries, container policy, exit/stdout/stderr summaries, target-contact-unproven state, and explicit Judge NOT_RUN progression | Exploit success, Blue outcome, Judge success, packet behavior, memory promotion, or target contact as exploit proof |
 | PR5 population fixture | `./run.sh normalize-population-fixture /tmp/battle-004-combiner --out local/battle-004-pr5-population --public-out spectator/public/battle-fixtures/battle-004-pr5-population` | UX-safe specimen cards, generation axis, receipt-backed parent-child lineage, fitness vectors, novelty, and selection labels from combiner receipts | Full autonomous population engine, live Tau code generation, provider-authored specimens, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
+| PR6 genetic Pixi fixture | `./run.sh normalize-genetic-pixi-fixture . --out local/battle-004-pr6-genetic-pixi --public-out spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi` | UX-safe ordered genetic lifecycle events inside the existing Pixi replay fixture contract, with present/not-emitted event vocabulary and claim boundaries | Live transport, Judge-confirmed exploit success, Blue outcome, packet behavior, memory promotion, or victory semantics for research/code/compile/target-contact events |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -342,6 +343,46 @@ specimens and generations, but it does not prove the full autonomous genetic
 population engine, live Tau code generation, provider-authored specimens,
 exploit success, Blue outcomes, packet behavior, Judge success, or memory
 promotion.
+
+The UX7 genetic Pixi replay contract enriches the existing race fixture schema
+with a `genetic_lifecycle` block and receipt-backed top-level events.
+
+Route: `#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi`.
+
+```text
+local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+```
+
+UX7 should consume that normalized replay fixture only. It must not read
+`tau-dag-run/**`, `command-loop/command-artifacts/**`, provider workspace
+directories, raw combiner paths, Docker mount paths, raw stdout/stderr paths, or
+Judge internals. The field map is:
+
+```text
+route = genetic_lifecycle.route
+fixture URL = genetic_lifecycle.fixture_url
+event vocabulary = genetic_lifecycle.required_event_types
+present events = genetic_lifecycle.present_event_types
+not emitted = genetic_lifecycle.not_emitted_event_types / not_emitted_reasons
+lane id = events[].payload.lane_id
+specimen id = events[].payload.specimen_id
+method id = events[].payload.method_id
+receipt id = events[].payload.receipt_id / events[].evidence.receipt_id
+playhead placement = events[].elapsed_seconds / events[].payload.playhead_x
+claim banner = genetic_lifecycle.claim_boundary
+```
+
+The current fixture emits `research_started`, `research_receipt_materialized`,
+`genome_selected`, `method_added`, `method_rejected`, `code_author_started`,
+`specimen_materialized`, `compile_failed`, `compile_passed`,
+`target_contact_unproven`, `judge_pending`, and `branch_abandoned`. It
+explicitly leaves `repair_started`, `repair_materialized`,
+`judge_exploit_success`, and `genome_promoted` as `NOT_EMITTED`. UX7 must not
+show victory, kill, containment, exploit success, Blue outcome, packet behavior,
+or memory promotion from research, genome, code, compile, target-contact, or
+pending-Judge events. Compile pass is not runnable proof. Target contact is not
+exploit proof.
 
 ## Claim Boundaries
 

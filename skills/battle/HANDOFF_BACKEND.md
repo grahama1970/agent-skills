@@ -802,6 +802,83 @@ memory promotion from this PR5 fixture. Target contact must remain
 specimen directories, raw stdout/stderr paths, Docker mount paths,
 Tau/command-loop directories, provider workspaces, or worker result paths.
 
+## UX7 Genetic Pixi Fixture Handoff
+
+Normalized genetic Pixi replay fixture:
+
+```text
+schema = battle.normalized_ux_fixture.v1
+genetic_lifecycle.schema = battle.genetic_lifecycle_events.v1
+local path = skills/battle/local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+public URL = /battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+route = #battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-genetic-pixi-fixture . \
+  --out local/battle-004-pr6-genetic-pixi \
+  --public-out spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi \
+  --generated-at 2026-07-10T22:20:00Z
+./run.sh validate-genetic-pixi-fixture local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+./run.sh validate-genetic-pixi-fixture spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+./run.sh validate-ux-contract local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+./run.sh validate-ux-contract spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json
+```
+
+UX7 should consume only the normalized fixture. Do not read Tau runtime,
+command-loop, provider workspace, raw combiner, Docker mount, raw stdout/stderr,
+or Judge-internal paths.
+
+Renderer field mapping:
+
+```text
+route = genetic_lifecycle.route
+fixture URL = genetic_lifecycle.fixture_url
+event vocabulary = genetic_lifecycle.required_event_types
+present events = genetic_lifecycle.present_event_types
+not emitted = genetic_lifecycle.not_emitted_event_types / not_emitted_reasons
+lane id = events[].payload.lane_id
+specimen id = events[].payload.specimen_id
+method id = events[].payload.method_id
+receipt id = events[].payload.receipt_id / events[].evidence.receipt_id
+playhead placement = events[].elapsed_seconds / events[].payload.playhead_x
+claim banner = genetic_lifecycle.claim_boundary
+```
+
+Currently emitted events:
+
+```text
+research_started
+research_receipt_materialized
+genome_selected
+method_added
+method_rejected
+code_author_started
+specimen_materialized
+compile_failed
+compile_passed
+target_contact_unproven
+judge_pending
+branch_abandoned
+```
+
+Currently NOT_EMITTED:
+
+```text
+repair_started
+repair_materialized
+judge_exploit_success
+genome_promoted
+```
+
+UX7 must not render victory, kill, containment, exploit success, Blue outcome,
+packet behavior, or memory promotion unless a matching normalized event and
+receipt exist. Compile pass is not runnable proof. Target contact is not exploit
+proof. `judge_pending` in this fixture means Judge success is not emitted and
+`judge_verified_exploits` remains `0`.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

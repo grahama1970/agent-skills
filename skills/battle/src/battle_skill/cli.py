@@ -1131,6 +1131,62 @@ def validate_population_fixture(
     console.print_json(data=report)
 
 
+@app.command("normalize-genetic-pixi-fixture")
+def normalize_genetic_pixi_fixture(
+    source_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Battle skill directory containing PR3c/PR3d/PR4/PR5 normalized source fixtures.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_ux_fixture.json."),
+    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+):
+    """Normalize genetic lifecycle receipts into a Pixi replay UX fixture."""
+    from .normalized_genetic_pixi_fixture import normalize_genetic_pixi_fixture as _normalize
+
+    fixture = _normalize(
+        source_dir=source_dir,
+        out_dir=out,
+        public_out_dir=public_out,
+        generated_at=generated_at,
+    )
+    genetic = fixture.get("genetic_lifecycle", {})
+    console.print_json(
+        data={
+            "status": fixture.get("status"),
+            "schema": fixture.get("schema"),
+            "fixture_id": genetic.get("fixture_id"),
+            "battle_id": fixture.get("battle_id"),
+            "route": genetic.get("route"),
+            "out": str(out / "battle.normalized_ux_fixture.json"),
+            "public_out": str(public_out / "battle.normalized_ux_fixture.json") if public_out else None,
+            "present_event_types": genetic.get("present_event_types"),
+            "not_emitted_event_types": genetic.get("not_emitted_event_types"),
+            "must_not_claim": genetic.get("claim_boundary", {}).get("must_not_claim"),
+        }
+    )
+
+
+@app.command("validate-genetic-pixi-fixture")
+def validate_genetic_pixi_fixture(
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.normalized_ux_fixture.v1 JSON fixture with genetic_lifecycle metadata.",
+    ),
+):
+    """Validate a normalized genetic lifecycle Pixi fixture."""
+    from .normalized_genetic_pixi_fixture import validate_normalized_genetic_pixi_fixture_path
+
+    report = validate_normalized_genetic_pixi_fixture_path(fixture)
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(
