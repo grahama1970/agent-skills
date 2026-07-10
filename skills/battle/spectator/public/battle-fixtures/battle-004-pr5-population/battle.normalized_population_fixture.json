@@ -1,0 +1,546 @@
+{
+  "battle_id": "battle-004",
+  "campaign": {
+    "best_specimen_id": "specimen-0004",
+    "campaign_id": "battle-004-pr5-population",
+    "full_population_engine_proven": false,
+    "generation_count": 4,
+    "source_limitations": [
+      "fixture-backed combiner population, not full autonomous genetic population engine",
+      "Tau/provider code generation is not proven by this population fixture",
+      "Judge replay was not run for these specimens"
+    ],
+    "source_proof": "exploit_combiner_proof",
+    "specimen_count": 4,
+    "verdict": "RUNNABLE_UNPROVEN"
+  },
+  "claim_boundary": {
+    "compile_passed_is_not_runnable": true,
+    "may_claim": [
+      "multiple_specimens_materialized",
+      "generation_metadata_recorded",
+      "parent_child_lineage_recorded",
+      "method_sets_recorded",
+      "provider_authorship_status_recorded",
+      "compile_status_recorded",
+      "runtime_status_recorded",
+      "target_contact_unproven_recorded",
+      "fitness_vector_recorded",
+      "selection_status_recorded",
+      "judge_not_run"
+    ],
+    "must_not_claim": [
+      "full_autonomous_population_engine",
+      "live_tau_code_generation",
+      "provider_authored_specimens",
+      "exploit_success",
+      "target_contact_is_exploit_success",
+      "runnable_is_exploit_success",
+      "blue_detection",
+      "blue_bypass",
+      "blue_kill",
+      "blue_block",
+      "judge_success",
+      "packet_level_behavior",
+      "memory_promotion"
+    ],
+    "population_fixture_is_not_full_engine": true,
+    "runnable_is_not_exploit_success": true,
+    "target_contact_is_not_exploit_success": true
+  },
+  "copy": {
+    "boundary_notice": "This fixture supports specimen cards, lineage, generation scrubbing, fitness, and selection only from receipts. Judge replay is required for exploit or Blue outcome claims.",
+    "headline": "Specimen population lineage captured",
+    "status_label": "Population fixture; exploit success not claimed",
+    "subhead": "Battle normalized four receipt-backed combiner specimens across generations without exposing raw runtime paths."
+  },
+  "fixture_kind": "pr5_population",
+  "frontend_handoff": {
+    "claim_boundary_field": "claim_boundary",
+    "generation_scrubber_field": "generation_axis",
+    "grid_field": "specimen_cards",
+    "lineage_tree_field": "lineage_edges",
+    "route": "#battle/population?fixture=battle-004-pr5-population"
+  },
+  "generated_at": "2026-07-10T21:00:00Z",
+  "generation_axis": [
+    {
+      "generation": 0,
+      "selected_count": 0,
+      "specimen_count": 1,
+      "specimen_ids": [
+        "specimen-0001"
+      ]
+    },
+    {
+      "generation": 1,
+      "selected_count": 0,
+      "specimen_count": 1,
+      "specimen_ids": [
+        "specimen-0002"
+      ]
+    },
+    {
+      "generation": 2,
+      "selected_count": 0,
+      "specimen_count": 1,
+      "specimen_ids": [
+        "specimen-0003"
+      ]
+    },
+    {
+      "generation": 3,
+      "selected_count": 1,
+      "specimen_count": 1,
+      "specimen_ids": [
+        "specimen-0004"
+      ]
+    }
+  ],
+  "lineage_edges": [
+    {
+      "abandoned": true,
+      "edge_id": "specimen-0001->specimen-0002",
+      "edge_type": "parent_child",
+      "from_specimen_id": "specimen-0001",
+      "inherited_methods": [
+        "assembly_payload_probe",
+        "zip_slip_basic"
+      ],
+      "promoted": false,
+      "spawn_cause": "combiner_iteration_after_prior_specimen_receipt",
+      "to_specimen_id": "specimen-0002"
+    },
+    {
+      "abandoned": true,
+      "edge_id": "specimen-0002->specimen-0003",
+      "edge_type": "parent_child",
+      "from_specimen_id": "specimen-0002",
+      "inherited_methods": [
+        "assembly_payload_probe",
+        "mitm_payload_staging",
+        "zip_slip_basic"
+      ],
+      "promoted": false,
+      "spawn_cause": "combiner_iteration_after_prior_specimen_receipt",
+      "to_specimen_id": "specimen-0003"
+    },
+    {
+      "abandoned": false,
+      "edge_id": "specimen-0003->specimen-0004",
+      "edge_type": "parent_child",
+      "from_specimen_id": "specimen-0003",
+      "inherited_methods": [
+        "archive_encoding_variant",
+        "assembly_payload_probe",
+        "mitm_payload_staging",
+        "zip_slip_basic"
+      ],
+      "promoted": false,
+      "spawn_cause": "combiner_iteration_after_prior_specimen_receipt",
+      "to_specimen_id": "specimen-0004"
+    }
+  ],
+  "lineage_summary": {
+    "abandoned_count": 3,
+    "parent_child_edges": 3,
+    "promoted_count": 1,
+    "recombination_edges": 0
+  },
+  "live": "local_docker_specimen_fixture",
+  "mocked": false,
+  "proof_mode": "local_docker_specimen_population_fixture",
+  "provenance": {
+    "command_loop_paths_exposed": false,
+    "credentials_exposed": false,
+    "docker_raw_paths_exposed": false,
+    "normalizer_schema": "battle.normalized_population_fixture_builder.v1",
+    "provider_workspace_paths_exposed": false,
+    "raw_paths_redacted": true,
+    "raw_stderr_paths_exposed": false,
+    "raw_stdout_paths_exposed": false,
+    "source_receipt_count": 11,
+    "source_run_label": "exploit_combiner_proof",
+    "tau_runtime_paths_exposed": false
+  },
+  "receipt_refs": [
+    {
+      "id": "combiner_run_receipt",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_combiner_proof.v1",
+      "sha256": "sha256:da3542348d747ba28ea41ce665fe1330b34a42d4c7ddd481f0a177e8398707cf",
+      "status": "PASS"
+    },
+    {
+      "id": "combiner_scoreboard",
+      "label": "scoreboard.json",
+      "schema": "battle.exploit_combiner_scoreboard.v1",
+      "sha256": "sha256:0bd6db5056b7a4d4827cae08a80c0481fafb15ba2d7ed84123302774b9ff1fd1",
+      "status": "RUNNABLE_UNPROVEN"
+    },
+    {
+      "id": "method_menu",
+      "label": "method-menu.json",
+      "schema": "battle.exploit_method_menu.v1",
+      "sha256": "sha256:e043be4f35188cc913e461aab0ef286a1d3530919f01a5844a1bd289f42bf13d",
+      "status": null
+    },
+    {
+      "id": "specimen_specimen-0001",
+      "label": "specimen.json",
+      "schema": "battle.exploit_specimen.v1",
+      "sha256": "sha256:c6d35d747a51cab9c528d9ec1d6c28814a603da67de96e7a1b8ea5062e4e8d24",
+      "status": null
+    },
+    {
+      "id": "specimen_run_specimen-0001",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:54a0ac24fca66da0751d8f6282e4b4172901468c9671a30113736fa97107fe51",
+      "status": "SPECIMEN_COMPILE_FAILED"
+    },
+    {
+      "id": "specimen_specimen-0002",
+      "label": "specimen.json",
+      "schema": "battle.exploit_specimen.v1",
+      "sha256": "sha256:1aa8f5388d9fbea4ca141c2781496f0f3b8ac6d8176f8cb7ec4c943ce683df32",
+      "status": null
+    },
+    {
+      "id": "specimen_run_specimen-0002",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:8f0148fd5fbe3eaec0c43e24767feb457230bff46273d9441402b95632cf793b",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_specimen-0003",
+      "label": "specimen.json",
+      "schema": "battle.exploit_specimen.v1",
+      "sha256": "sha256:0c37d4f51dd13f5b76b80769bc182d5b5624179e72cd21b85dbf4f2f81e5a269",
+      "status": null
+    },
+    {
+      "id": "specimen_run_specimen-0003",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:9362f18159b9929e8b263d69b4449f9555b4b6db666e100a9a243a09f609fd61",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_specimen-0004",
+      "label": "specimen.json",
+      "schema": "battle.exploit_specimen.v1",
+      "sha256": "sha256:48dc56bbd58079d98d6c91a45d7f91315d18b37b8f494d500da61d2a61617a7d",
+      "status": null
+    },
+    {
+      "id": "specimen_run_specimen-0004",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:c90c7a384a05f561926ea67fa79578ccb8585f44115a49dddc5e07f2dd99e5df",
+      "status": "SPECIMEN_RUNNABLE_UNPROVEN"
+    }
+  ],
+  "run_id": "battle-004-pr5-population",
+  "schema": "battle.normalized_population_fixture.v1",
+  "specimen_cards": [
+    {
+      "compile_status": "COMPILE_FAILED",
+      "fitness": {
+        "compile_ok": false,
+        "judge_confirmed_exploit": false,
+        "method_count": 2,
+        "novel_method_combination": true,
+        "runtime_ok": false,
+        "target_contact_unproven": false,
+        "tier": 0,
+        "tier_label": "compile_failed"
+      },
+      "generation": 0,
+      "inherited_methods": [],
+      "judge_status": "NOT_RUN",
+      "judge_verified_exploits": 0,
+      "novelty": {
+        "inherited_method_count": 0,
+        "method_combo_hash": "sha256:b885dc261ab1768664015d90130961782a836a77e288d9682443edc554ec6f5e",
+        "method_count": 2
+      },
+      "parent_specimen_id": null,
+      "provider_authorship": {
+        "agentic": false,
+        "authored_by": "fixture_combiner",
+        "does_not_prove": [
+          "Tau/provider authored this specimen",
+          "live model generation"
+        ],
+        "provider_live": false
+      },
+      "runtime_status": "COMPILE_FAILED",
+      "selected_method_ids": [
+        "zip_slip_basic",
+        "assembly_payload_probe"
+      ],
+      "selected_methods": [
+        {
+          "complexity": "low",
+          "method_id": "zip_slip_basic",
+          "name": "Zip Slip path traversal",
+          "source": "scan",
+          "technique_class": "filesystem_path"
+        },
+        {
+          "complexity": "obscure",
+          "method_id": "assembly_payload_probe",
+          "name": "Assembly-level payload probe",
+          "source": "subagent_hypothesis",
+          "technique_class": "assembly_payload_probe"
+        }
+      ],
+      "selection": {
+        "promoted": false,
+        "reason": "Compile failure retained for population history.",
+        "status": "retained_negative_evidence"
+      },
+      "specimen_id": "specimen-0001",
+      "target_contact": {
+        "does_not_prove": [
+          "exploit success",
+          "path traversal",
+          "Blue bypass"
+        ],
+        "entrypoint": null,
+        "observed": false,
+        "status": "NOT_OBSERVED"
+      }
+    },
+    {
+      "compile_status": "COMPILE_PASSED",
+      "fitness": {
+        "compile_ok": true,
+        "judge_confirmed_exploit": false,
+        "method_count": 2,
+        "novel_method_combination": true,
+        "runtime_ok": false,
+        "target_contact_unproven": false,
+        "tier": 1,
+        "tier_label": "compiles_runtime_failed"
+      },
+      "generation": 1,
+      "inherited_methods": [
+        "assembly_payload_probe",
+        "zip_slip_basic"
+      ],
+      "judge_status": "NOT_RUN",
+      "judge_verified_exploits": 0,
+      "novelty": {
+        "inherited_method_count": 2,
+        "method_combo_hash": "sha256:0eb898a929c56f1440361ba22785d749f835e03bcb67503e87a0c3e00112e7ac",
+        "method_count": 2
+      },
+      "parent_specimen_id": "specimen-0001",
+      "provider_authorship": {
+        "agentic": false,
+        "authored_by": "fixture_combiner",
+        "does_not_prove": [
+          "Tau/provider authored this specimen",
+          "live model generation"
+        ],
+        "provider_live": false
+      },
+      "runtime_status": "RUNTIME_FAILED",
+      "selected_method_ids": [
+        "zip_slip_basic",
+        "mitm_payload_staging"
+      ],
+      "selected_methods": [
+        {
+          "complexity": "low",
+          "method_id": "zip_slip_basic",
+          "name": "Zip Slip path traversal",
+          "source": "scan",
+          "technique_class": "filesystem_path"
+        },
+        {
+          "complexity": "high",
+          "method_id": "mitm_payload_staging",
+          "name": "MITM-style staged payload delivery",
+          "source": "subagent_hypothesis",
+          "technique_class": "protocol_staging"
+        }
+      ],
+      "selection": {
+        "promoted": false,
+        "reason": "Runtime failure retained for population history.",
+        "status": "retained_runtime_negative_evidence"
+      },
+      "specimen_id": "specimen-0002",
+      "target_contact": {
+        "does_not_prove": [
+          "exploit success",
+          "path traversal",
+          "Blue bypass"
+        ],
+        "entrypoint": null,
+        "observed": false,
+        "status": "NOT_OBSERVED"
+      }
+    },
+    {
+      "compile_status": "COMPILE_PASSED",
+      "fitness": {
+        "compile_ok": true,
+        "judge_confirmed_exploit": false,
+        "method_count": 3,
+        "novel_method_combination": true,
+        "runtime_ok": false,
+        "target_contact_unproven": true,
+        "tier": 1,
+        "tier_label": "compiles_runtime_failed"
+      },
+      "generation": 2,
+      "inherited_methods": [
+        "assembly_payload_probe",
+        "mitm_payload_staging",
+        "zip_slip_basic"
+      ],
+      "judge_status": "NOT_RUN",
+      "judge_verified_exploits": 0,
+      "novelty": {
+        "inherited_method_count": 3,
+        "method_combo_hash": "sha256:bba4bfc47427bfed23fd5d3a5b1f883744ee164ff200b6e8ccfe4d8b46abe977",
+        "method_count": 3
+      },
+      "parent_specimen_id": "specimen-0002",
+      "provider_authorship": {
+        "agentic": false,
+        "authored_by": "fixture_combiner",
+        "does_not_prove": [
+          "Tau/provider authored this specimen",
+          "live model generation"
+        ],
+        "provider_live": false
+      },
+      "runtime_status": "TARGET_CONTACT_UNPROVEN",
+      "selected_method_ids": [
+        "zip_slip_basic",
+        "archive_encoding_variant",
+        "mitm_payload_staging"
+      ],
+      "selected_methods": [
+        {
+          "complexity": "low",
+          "method_id": "zip_slip_basic",
+          "name": "Zip Slip path traversal",
+          "source": "scan",
+          "technique_class": "filesystem_path"
+        },
+        {
+          "complexity": "medium",
+          "method_id": "archive_encoding_variant",
+          "name": "Archive encoding variant",
+          "source": "research",
+          "technique_class": "encoding_variant"
+        },
+        {
+          "complexity": "high",
+          "method_id": "mitm_payload_staging",
+          "name": "MITM-style staged payload delivery",
+          "source": "subagent_hypothesis",
+          "technique_class": "protocol_staging"
+        }
+      ],
+      "selection": {
+        "promoted": false,
+        "reason": "Runtime failure retained for population history.",
+        "status": "retained_runtime_negative_evidence"
+      },
+      "specimen_id": "specimen-0003",
+      "target_contact": {
+        "does_not_prove": [
+          "exploit success",
+          "path traversal",
+          "Blue bypass"
+        ],
+        "entrypoint": "/api/import-zip",
+        "observed": true,
+        "status": "TARGET_CONTACT_UNPROVEN"
+      }
+    },
+    {
+      "compile_status": "COMPILE_PASSED",
+      "fitness": {
+        "compile_ok": true,
+        "judge_confirmed_exploit": false,
+        "method_count": 2,
+        "novel_method_combination": true,
+        "runtime_ok": true,
+        "target_contact_unproven": true,
+        "tier": 3,
+        "tier_label": "target_contact_unproven"
+      },
+      "generation": 3,
+      "inherited_methods": [
+        "archive_encoding_variant",
+        "assembly_payload_probe",
+        "mitm_payload_staging",
+        "zip_slip_basic"
+      ],
+      "judge_status": "NOT_RUN",
+      "judge_verified_exploits": 0,
+      "novelty": {
+        "inherited_method_count": 4,
+        "method_combo_hash": "sha256:70d34e3a347c8af86a5abfa9788dd440c3171e6a4a4bb5530814e839817a0789",
+        "method_count": 2
+      },
+      "parent_specimen_id": "specimen-0003",
+      "provider_authorship": {
+        "agentic": false,
+        "authored_by": "fixture_combiner",
+        "does_not_prove": [
+          "Tau/provider authored this specimen",
+          "live model generation"
+        ],
+        "provider_live": false
+      },
+      "runtime_status": "TARGET_CONTACT_UNPROVEN",
+      "selected_method_ids": [
+        "zip_slip_basic",
+        "archive_encoding_variant"
+      ],
+      "selected_methods": [
+        {
+          "complexity": "low",
+          "method_id": "zip_slip_basic",
+          "name": "Zip Slip path traversal",
+          "source": "scan",
+          "technique_class": "filesystem_path"
+        },
+        {
+          "complexity": "medium",
+          "method_id": "archive_encoding_variant",
+          "name": "Archive encoding variant",
+          "source": "research",
+          "technique_class": "encoding_variant"
+        }
+      ],
+      "selection": {
+        "promoted": false,
+        "reason": "Scoreboard selected this specimen as best because it became runnable or contacted the target, not because it exploited the target.",
+        "status": "selected_best_runnable_unproven"
+      },
+      "specimen_id": "specimen-0004",
+      "target_contact": {
+        "does_not_prove": [
+          "exploit success",
+          "path traversal",
+          "Blue bypass"
+        ],
+        "entrypoint": "/api/import-zip",
+        "observed": true,
+        "status": "TARGET_CONTACT_UNPROVEN"
+      }
+    }
+  ],
+  "status": "PASS"
+}

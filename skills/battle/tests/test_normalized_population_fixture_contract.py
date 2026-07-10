@@ -1,0 +1,273 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import jsonschema
+import pytest
+
+from battle_skill.normalized_population_fixture import normalize_population_fixture, validate_normalized_population_fixture
+
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+
+def _schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+
+
+def test_population_fixture_normalizes_specimen_cards_lineage_and_claim_boundary(tmp_path: Path) -> None:
+    proof = _write_population_source(tmp_path)
+    out = tmp_path / "local" / "battle-004-pr5-population"
+    public = tmp_path / "public" / "battle-004-pr5-population"
+
+    fixture = normalize_population_fixture(
+        proof_dir=proof,
+        out_dir=out,
+        public_out_dir=public,
+        generated_at="2026-07-10T21:00:00Z",
+    )
+
+    jsonschema.validate(fixture, _schema("battle.normalized_population_fixture.v1.schema.json"))
+    report = validate_normalized_population_fixture(fixture)
+    assert report["status"] == "PASS"
+    assert report["specimen_count"] == 3
+    assert report["generation_count"] == 3
+    assert report["lineage_edge_count"] == 2
+    assert fixture["fixture_kind"] == "pr5_population"
+    assert fixture["campaign"]["full_population_engine_proven"] is False
+    assert fixture["generation_axis"] == [
+        {"generation": 0, "selected_count": 0, "specimen_count": 1, "specimen_ids": ["specimen-0001"]},
+        {"generation": 1, "selected_count": 0, "specimen_count": 1, "specimen_ids": ["specimen-0002"]},
+        {"generation": 2, "selected_count": 1, "specimen_count": 1, "specimen_ids": ["specimen-0003"]},
+    ]
+    assert fixture["specimen_cards"][0]["compile_status"] == "COMPILE_FAILED"
+    assert fixture["specimen_cards"][1]["runtime_status"] == "RUNTIME_FAILED"
+    assert fixture["specimen_cards"][2]["runtime_status"] == "TARGET_CONTACT_UNPROVEN"
+    assert fixture["specimen_cards"][2]["target_contact"]["observed"] is True
+    assert fixture["specimen_cards"][2]["judge_status"] == "NOT_RUN"
+    assert fixture["specimen_cards"][2]["judge_verified_exploits"] == 0
+    assert fixture["specimen_cards"][2]["provider_authorship"] == {
+        "agentic": False,
+        "authored_by": "fixture_combiner",
+        "does_not_prove": ["Tau/provider authored this specimen", "live model generation"],
+        "provider_live": False,
+    }
+    assert fixture["lineage_edges"][0]["from_specimen_id"] == "specimen-0001"
+    assert fixture["lineage_edges"][0]["to_specimen_id"] == "specimen-0002"
+    assert "fitness_vector_recorded" in fixture["claim_boundary"]["may_claim"]
+    assert "exploit_success" in fixture["claim_boundary"]["must_not_claim"]
+    assert "full_autonomous_population_engine" in fixture["claim_boundary"]["must_not_claim"]
+    assert fixture["frontend_handoff"]["route"] == "#battle/population?fixture=battle-004-pr5-population"
+    serialized = json.dumps(fixture, sort_keys=True)
+    for marker in ["command-loop", "command-artifacts", "/tmp/", "/mnt/", "/workspace", "provider-workspace"]:
+        assert marker not in serialized
+    assert _sha256((out / "battle.normalized_population_fixture.json").read_bytes()) == _sha256(
+        (public / "battle.normalized_population_fixture.json").read_bytes()
+    )
+
+
+def test_population_fixture_rejects_exploit_success_source_claim(tmp_path: Path) -> None:
+    proof = _write_population_source(tmp_path, bad_claim=True)
+
+    with pytest.raises(ValueError, match="exploit success"):
+        normalize_population_fixture(proof_dir=proof, out_dir=tmp_path / "out")
+
+
+def test_population_fixture_rejects_path_leakage() -> None:
+    fixture = _minimal_valid_fixture()
+    fixture["copy"]["subhead"] = "Leaked /tmp/command-loop path"
+
+    with pytest.raises(ValueError, match="forbidden marker"):
+        validate_normalized_population_fixture(fixture)
+
+
+def _write_population_source(tmp_path: Path, *, bad_claim: bool = False) -> Path:
+    proof = tmp_path / "combiner"
+    specimens = proof / "specimens"
+    _write_json(
+        proof / "run-receipt.json",
+        {
+            "schema": "battle.exploit_combiner_proof.v1",
+            "status": "PASS",
+            "battle_id": "battle-004",
+            "claims": {"proves": ["Battle ran exploit specimen code in Docker."], "does_not_prove": ["The runnable specimen exploited the target."]},
+        },
+    )
+    _write_json(
+        proof / "scoreboard.json",
+        {
+            "schema": "battle.exploit_combiner_scoreboard.v1",
+            "battle_id": "battle-004",
+            "generated_specimens": 3,
+            "compile_failed": 1,
+            "runtime_failed": 1,
+            "target_contact_unproven": 1,
+            "runnable_unproven": 1,
+            "judge_verified_exploits": 0,
+            "best_specimen_id": "specimen-0003",
+            "verdict": "RUNNABLE_UNPROVEN",
+        },
+    )
+    _write_json(
+        proof / "method-menu.json",
+        {
+            "schema": "battle.exploit_method_menu.v1",
+            "battle_id": "battle-004",
+            "methods": [
+                {"method_id": "zip_slip_basic", "name": "Zip Slip path traversal", "source": "scan", "complexity": "low", "technique_class": "filesystem"},
+                {"method_id": "archive_encoding_variant", "name": "Archive encoding variant", "source": "research", "complexity": "medium", "technique_class": "encoding"},
+            ],
+        },
+    )
+    _write_specimen(
+        specimens,
+        "specimen-0001",
+        generation=0,
+        parent=None,
+        methods=["zip_slip_basic"],
+        inherited=[],
+        status="SPECIMEN_COMPILE_FAILED",
+        compile_ok=False,
+        runtime_ok=False,
+        target_contact=False,
+        bad_claim=bad_claim,
+    )
+    _write_specimen(
+        specimens,
+        "specimen-0002",
+        generation=1,
+        parent="specimen-0001",
+        methods=["zip_slip_basic", "archive_encoding_variant"],
+        inherited=["zip_slip_basic"],
+        status="SPECIMEN_RUNTIME_FAILED",
+        compile_ok=True,
+        runtime_ok=False,
+        target_contact=False,
+    )
+    _write_specimen(
+        specimens,
+        "specimen-0003",
+        generation=2,
+        parent="specimen-0002",
+        methods=["archive_encoding_variant"],
+        inherited=["zip_slip_basic", "archive_encoding_variant"],
+        status="SPECIMEN_RUNNABLE_UNPROVEN",
+        compile_ok=True,
+        runtime_ok=True,
+        target_contact=True,
+    )
+    return proof
+
+
+def _write_specimen(
+    specimens: Path,
+    specimen_id: str,
+    *,
+    generation: int,
+    parent: str | None,
+    methods: list[str],
+    inherited: list[str],
+    status: str,
+    compile_ok: bool,
+    runtime_ok: bool,
+    target_contact: bool,
+    bad_claim: bool = False,
+) -> None:
+    root = specimens / specimen_id
+    root.mkdir(parents=True)
+    _write_json(
+        root / "specimen.json",
+        {
+            "schema": "battle.exploit_specimen.v1",
+            "specimen_id": specimen_id,
+            "parent_specimen_id": parent,
+            "exploit_id": "payload-857-combiner",
+            "generation": generation,
+            "chosen_method_ids": methods,
+            "inherited_method_ids": inherited,
+            "created_by": "fixture_combiner",
+            "language": "python",
+            "generated_code_path": "exploit.py",
+        },
+    )
+    proves = ["specimen code was executed in Docker"]
+    if target_contact:
+        proves.append("specimen contacted the local target surface")
+    if bad_claim:
+        proves.append("exploit success")
+    _write_json(
+        root / "run-receipt.json",
+        {
+            "schema": "battle.exploit_specimen_run.v1",
+            "specimen_id": specimen_id,
+            "status": status,
+            "compile_ok": compile_ok,
+            "runtime_ok": runtime_ok,
+            "exit_code": 0 if runtime_ok else 1,
+            "elapsed_seconds": 1.25,
+            "target_contact": {
+                "observed": target_contact,
+                "entrypoint": "/api/import-zip" if target_contact else None,
+                "does_not_prove": ["the specimen exploited the target"],
+            },
+            "proves": proves,
+            "does_not_prove": ["exploit success", "the specimen exploited the target"],
+        },
+    )
+
+
+def _minimal_valid_fixture() -> dict:
+    return {
+        "schema": "battle.normalized_population_fixture.v1",
+        "fixture_kind": "pr5_population",
+        "battle_id": "battle-004",
+        "run_id": "battle-004-pr5-population",
+        "generated_at": "2026-07-10T21:00:00Z",
+        "status": "PASS",
+        "mocked": False,
+        "live": "local_docker_specimen_fixture",
+        "proof_mode": "local_docker_specimen_population_fixture",
+        "campaign": {"campaign_id": "battle-004-pr5-population", "generation_count": 2, "specimen_count": 2, "full_population_engine_proven": False},
+        "generation_axis": [
+            {"generation": 0, "specimen_ids": ["specimen-0001"], "specimen_count": 1},
+            {"generation": 1, "specimen_ids": ["specimen-0002"], "specimen_count": 1},
+        ],
+        "specimen_cards": [
+            _minimal_card("specimen-0001", 0, None),
+            _minimal_card("specimen-0002", 1, "specimen-0001"),
+        ],
+        "lineage_edges": [{"edge_id": "specimen-0001->specimen-0002", "edge_type": "parent_child", "from_specimen_id": "specimen-0001", "to_specimen_id": "specimen-0002"}],
+        "claim_boundary": {"may_claim": ["multiple_specimens_materialized", "generation_metadata_recorded", "parent_child_lineage_recorded", "method_sets_recorded", "provider_authorship_status_recorded", "compile_status_recorded", "runtime_status_recorded", "target_contact_unproven_recorded", "fitness_vector_recorded", "selection_status_recorded", "judge_not_run"], "must_not_claim": ["full_autonomous_population_engine", "live_tau_code_generation", "provider_authored_specimens", "exploit_success", "target_contact_is_exploit_success", "runnable_is_exploit_success", "blue_detection", "blue_bypass", "blue_kill", "blue_block", "judge_success", "packet_level_behavior", "memory_promotion"]},
+        "receipt_refs": [],
+        "provenance": {"raw_paths_redacted": True},
+        "copy": {"headline": "Specimen population lineage captured", "subhead": "No leak", "status_label": "Population fixture; exploit success not claimed", "boundary_notice": "Judge required."},
+    }
+
+
+def _minimal_card(specimen_id: str, generation: int, parent: str | None) -> dict:
+    return {
+        "specimen_id": specimen_id,
+        "generation": generation,
+        "parent_specimen_id": parent,
+        "selected_methods": [],
+        "inherited_methods": [],
+        "provider_authorship": {"authored_by": "fixture_combiner", "agentic": False, "provider_live": False},
+        "compile_status": "COMPILE_PASSED",
+        "runtime_status": "RUNNABLE_UNPROVEN",
+        "target_contact": {"observed": False, "status": "NOT_OBSERVED"},
+        "judge_status": "NOT_RUN",
+        "judge_verified_exploits": 0,
+        "fitness": {},
+        "selection": {},
+    }
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _sha256(value: bytes) -> str:
+    return "sha256:" + hashlib.sha256(value).hexdigest()

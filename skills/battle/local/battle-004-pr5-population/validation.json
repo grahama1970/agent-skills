@@ -1,0 +1,11 @@
+{
+  "battle_id": "battle-004",
+  "fixture_kind": "pr5_population",
+  "generation_count": 4,
+  "judge_verified_exploits": 0,
+  "lineage_edge_count": 3,
+  "raw_paths_redacted": true,
+  "schema": "battle.normalized_population_fixture_validation.v1",
+  "specimen_count": 4,
+  "status": "PASS"
+}

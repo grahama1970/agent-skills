@@ -756,6 +756,52 @@ rendered as `TARGET_CONTACT_UNPROVEN`, not as exploit proof. Do not bind React
 to raw specimen directories, raw stdout/stderr paths, Docker mount paths,
 Tau/command-loop directories, provider workspaces, or worker result paths.
 
+## UX6 Population Fixture Handoff
+
+Normalized population fixture:
+
+```text
+schema = battle.normalized_population_fixture.v1
+fixture kind = pr5_population
+local path = skills/battle/local/battle-004-pr5-population/battle.normalized_population_fixture.json
+public URL = /battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json
+route = #battle/population?fixture=battle-004-pr5-population
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-population-fixture /tmp/battle-pr3d-compile-repair-check/combiner \
+  --out local/battle-004-pr5-population \
+  --public-out spectator/public/battle-fixtures/battle-004-pr5-population \
+  --generated-at 2026-07-10T21:00:00Z
+./run.sh validate-population-fixture local/battle-004-pr5-population/battle.normalized_population_fixture.json
+./run.sh validate-population-fixture spectator/public/battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json
+```
+
+UX6 should consume the normalized population fixture only. It may show:
+
+```text
+specimen cards: specimen_cards[]
+lineage tree: lineage_edges[]
+generation scrubber: generation_axis
+fitness and novelty: specimen_cards[].fitness / specimen_cards[].novelty
+selection labels: specimen_cards[].selection
+claim banner: claim_boundary
+```
+
+This fixture is generated from real local combiner specimen receipts and
+contains four specimens across four generations with three receipt-backed
+parent-child lineage edges. It is a bounded population fixture, not a claim that
+the full autonomous genetic population engine exists.
+
+UX6 must not show exploit success, provider-authored specimen claims, live Tau
+code generation, Blue detection/block, packet-level behavior, Judge success, or
+memory promotion from this PR5 fixture. Target contact must remain
+`TARGET_CONTACT_UNPROVEN`, not exploit proof. Do not bind React to raw combiner
+specimen directories, raw stdout/stderr paths, Docker mount paths,
+Tau/command-loop directories, provider workspaces, or worker result paths.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

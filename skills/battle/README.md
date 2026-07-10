@@ -203,6 +203,7 @@ promoted; failed mutations remain searchable negative evidence.
 | PR3c synthesis fixture | `./run.sh normalize-synthesis-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3c-synthesis --public-out spectator/public/battle-fixtures/battle-004-pr3c-synthesis` | UX-safe provider-authored specimen materialization fixture with provider/model attestation, code hash, bounded code preview, and strict NOT_RUN execution boundary | Compile pass, runnable child, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 | PR3d compile fixture | `./run.sh normalize-compile-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3d-compile --public-out spectator/public/battle-fixtures/battle-004-pr3d-compile` | UX-safe immutable specimen version timeline with compile attempt, compile failure/pass state, stderr summary, repair fields, and version hashes | Runnable child, runtime success, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 | PR4 runtime/Judge fixture | `./run.sh normalize-runtime-judge-fixture /tmp/battle-004-combiner --out local/battle-004-pr4-runtime-judge --public-out spectator/public/battle-fixtures/battle-004-pr4-runtime-judge` | UX-safe Docker specimen runtime summaries, container policy, exit/stdout/stderr summaries, target-contact-unproven state, and explicit Judge NOT_RUN progression | Exploit success, Blue outcome, Judge success, packet behavior, memory promotion, or target contact as exploit proof |
+| PR5 population fixture | `./run.sh normalize-population-fixture /tmp/battle-004-combiner --out local/battle-004-pr5-population --public-out spectator/public/battle-fixtures/battle-004-pr5-population` | UX-safe specimen cards, generation axis, receipt-backed parent-child lineage, fitness vectors, novelty, and selection labels from combiner receipts | Full autonomous population engine, live Tau code generation, provider-authored specimens, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -320,6 +321,27 @@ summary row is driven by `runtime.summary`; Judge progression is driven by
 `judge`. This fixture may show `TARGET_CONTACT_UNPROVEN`, but target contact is
 not exploit success. Judge remains `NOT_RUN` until a later receipt-backed Judge
 fixture exists.
+
+The UX6 population contract is a separate normalized fixture.
+
+Route: `#battle/population?fixture=battle-004-pr5-population`.
+
+```text
+local/battle-004-pr5-population/battle.normalized_population_fixture.json
+spectator/public/battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json
+```
+
+UX should consume that fixture only. It must not read raw combiner specimen
+directories, `tau-dag-run/**`, `command-loop/command-artifacts/**`, provider
+workspace directories, Docker mount paths, raw stdout/stderr paths, or Judge
+internals. Specimen grid cards are driven by `specimen_cards[]`; the lineage
+tree is driven by `lineage_edges[]`; the generation scrubber is driven by
+`generation_axis`; the claim banner is driven by `claim_boundary`. This fixture
+is a bounded combiner-population view: it records multiple receipt-backed
+specimens and generations, but it does not prove the full autonomous genetic
+population engine, live Tau code generation, provider-authored specimens,
+exploit success, Blue outcomes, packet behavior, Judge success, or memory
+promotion.
 
 ## Claim Boundaries
 
