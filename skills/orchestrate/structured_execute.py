@@ -740,6 +740,54 @@ def _public_blind_feedback_line(check: dict[str, Any]) -> str:
     return f"  - [{category}] {public_hint}"
 
 
+def _blind_output_hint(output: str, fallback: str) -> tuple[str, str]:
+    """Return a safe category/hint emitted by a blind harness."""
+    for line in reversed(output.splitlines()):
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(payload, dict):
+            continue
+        category = str(payload.get("category") or "local_blind_check")[:80]
+        hint = str(payload.get("public_hint") or payload.get("blind_feedback") or fallback)
+        return category, " ".join(hint.split())[:240]
+    return "local_blind_check", fallback
+
+
+async def _blind_baseline_preflight(task: TaskRuntime, session_dir: Path) -> bool:
+    """Fail before implementation when a generic convention gate already fails."""
+    generic = []
+    for raw in task.blind_tests:
+        command = str(raw.get("command") if isinstance(raw, dict) else raw).strip()
+        if "test-lab/run.sh" in command and "verify-task" in command and "--domain" in command:
+            generic.append(command)
+    if not generic:
+        return True
+    checks = []
+    for command in generic:
+        proc = await asyncio.create_subprocess_exec(
+            "bash", "-lc", command, cwd=str(task.cwd),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+        output = stdout.decode(errors="replace") + stderr.decode(errors="replace")
+        category, hint = _blind_output_hint(output, "Generic blind baseline failed before implementation.")
+        checks.append({"command_sha256": __import__("hashlib").sha256(command.encode()).hexdigest(),
+                       "passed": proc.returncode == 0, "category": category,
+                       "public_hint": hint, "exit_code": proc.returncode})
+    artifact = session_dir / f"{task.task_id}.blind-baseline.json"
+    artifact.write_text(json.dumps({"schema": "orchestrate.blind_baseline.v1", "checks": checks}, indent=2))
+    failed = [check for check in checks if not check["passed"]]
+    if failed:
+        task.review_status = "fail"
+        task.failure_code = "BLIND_BASELINE_FAILED"
+        task.error = "; ".join(check["public_hint"] for check in failed)
+        task.review_output = f"blind baseline failed before implementation; artifact={artifact}"
+        return False
+    return True
+
+
 def _public_blind_checks(result: dict[str, Any]) -> list[dict[str, Any]]:
     checks: list[dict[str, Any]] = []
     for raw_check in result.get("checks", []):
@@ -1263,6 +1311,8 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
         return
     if not _code_runner_baseline_preflight(task, session_dir):
         return
+    if not await _blind_baseline_preflight(task, session_dir):
+        return
 
     max_blind_attempts = 3
     accumulated_feedback: list[str] = []
@@ -1650,10 +1700,14 @@ async def _run_local_blind_tests(
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
         output = stdout.decode(errors="replace") + stderr.decode(errors="replace")
         passed = proc.returncode == 0 and (not assertion or assertion in output)
+        category, public_hint = _blind_output_hint(
+            output,
+            "Hidden check passed." if passed else "Hidden check failed.",
+        )
         checks.append({
             "passed": passed,
-            "category": "local_blind_check",
-            "public_hint": "Hidden check passed." if passed else "Hidden check failed.",
+            "category": category,
+            "public_hint": public_hint,
             "raw_message_artifact": str(session_dir / f"{task.task_id}{attempt_tag}.blind-{index}.log"),
             "exit_code": proc.returncode,
         })
