@@ -294,7 +294,7 @@ a story or renderer to transform them.
 
 ### 02 — Story
 
-![Phase 02 Story contract surface](assets/readme/phase02-story.webp)
+![Phase 02 Story contract surface](assets/readme/phase02-story-center-pane.webp)
 
 Phase 02 turns accepted memory residue into a story contract: the narrative
 premise, relationship pressure, surf-etiquette stakes, contradiction checks,
@@ -305,7 +305,7 @@ story rather than a loose prompt.
 
 ### 03 — Crew
 
-![Phase 03 Crew selection surface](assets/readme/phase03-crew.webp)
+![Phase 03 Crew selection surface](assets/readme/phase03-crew-center-pane.webp)
 
 Phase 03 selects the creative authorities for the run: producer, scriptwriter,
 director, and reviewer roles. Those choices determine which creative standards
@@ -316,7 +316,7 @@ cosmetic cast list.
 
 ### 04 — Contact Sheets
 
-![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets.webp)
+![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets-center-pane.webp)
 
 Phase 04 gathers character, environment, surfboard, lineup, and lava-reef
 references. Contact sheets are source and planning evidence; they do not
@@ -327,7 +327,7 @@ lineup are grounded before the script and storyboard try to reuse them.
 
 ### 05 — Voices
 
-![Phase 05 Voices surface](assets/readme/phase05-voices.webp)
+![Phase 05 Voices surface](assets/readme/phase05-voices-center-pane.webp)
 
 Phase 05 inspects voice references, dialogue readiness, and voice-identity
 boundaries. It can preserve conversational intent and Chatterbox tone without
@@ -338,7 +338,7 @@ still blocking live provider voice submission.
 
 ### 06 — Script
 
-![Phase 06 Script contract surface](assets/readme/phase06-script.webp)
+![Phase 06 Script contract surface](assets/readme/phase06-script-center-pane.webp)
 
 Phase 06 converts the accepted story into timed action, dialogue, interaction
 coverage, and screenplay evidence. The Embry/Kai fixture uses this phase to
@@ -348,7 +348,7 @@ make surf etiquette, hesitation, pressure, and boundary-setting concrete.
 
 ### 07 — Storyboard
 
-![Phase 07 Storyboard surface](assets/readme/phase07-storyboard.webp)
+![Phase 07 Storyboard surface](assets/readme/phase07-storyboard-center-pane.webp)
 
 Phase 07 produces and reviews storyboard panels, start/end frames, identity
 continuity, prompt contracts, and visual-review receipts. Accepted storyboard
