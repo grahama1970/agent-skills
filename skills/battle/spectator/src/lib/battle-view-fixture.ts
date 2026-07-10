@@ -1,7 +1,8 @@
 import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-types";
+import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import type { BattleNormalizedUxFixture } from "./battle-types";
 
-/** Known normalized UX fixture schemas. Future synthesis/population schemas register here when backend emits them. */
+/** Known normalized UX fixture schemas. Population stays typed but unsupported until backend emits it. */
 export const BATTLE_VIEW_FIXTURE_SCHEMAS = {
 	RACE: "battle.normalized_ux_fixture.v1",
 	PROOF_CARD: "battle.normalized_proof_card_fixture.v1",
@@ -16,7 +17,8 @@ export type BattleViewKind = "race" | "proof-card" | "synthesis" | "population";
 /** Discriminated union of fixtures the spectator can render. Future schemas stay typed but unsupported until registered. */
 export type BattleViewFixture =
 	| BattleNormalizedUxFixture
-	| BattleNormalizedProofCardFixtureV1;
+	| BattleNormalizedProofCardFixtureV1
+	| BattleNormalizedSynthesisFixtureV1;
 
 export type BattleFixtureLoadErrorCode =
 	| "UNSUPPORTED_FIXTURE"

@@ -1,15 +1,17 @@
 import { isBattleProofCardView } from "../lib/battle-proof-card-registry";
 import { isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
 import { isBattleDesignView } from "../lib/battle-mockup-lanes";
+import { isBattleSynthesisView } from "../lib/battle-synthesis-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
 	const onProof = isBattleProofCardView(hash);
-	const onRace = isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle");
+	const onSynthesis = isBattleSynthesisView(hash);
+	const onRace = !onProof && !onSynthesis && (isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
-			<a href="#battle/receipt?engine=pixi" aria-current={!onProof && onRace ? "page" : undefined} data-qid="battle:nav:race">
+			<a href="#battle/receipt?engine=pixi" aria-current={onRace ? "page" : undefined} data-qid="battle:nav:race">
 				Battle Replay
 			</a>
 			<a
@@ -18,6 +20,13 @@ export function BattleProofNav() {
 				data-qid="battle:nav:proof"
 			>
 				Research & Genome Proof
+			</a>
+			<a
+				href="#battle/synthesis?fixture=battle-004-pr3c"
+				aria-current={onSynthesis ? "page" : undefined}
+				data-qid="battle:nav:synthesis"
+			>
+				Provider Synthesis
 			</a>
 		</nav>
 	);

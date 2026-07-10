@@ -18,6 +18,8 @@ import { BattleMockupFooter } from "./BattleMockupFooter";
 import { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
 import { BattleProofNav } from "./proof-card/BattleProofNav";
 import { isBattleProofCardView } from "./lib/battle-proof-card-registry";
+import { BattleSynthesisRoute } from "./synthesis/BattleSynthesisRoute";
+import { isBattleSynthesisView } from "./lib/battle-synthesis-registry";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
@@ -35,6 +37,7 @@ import "./battle-mockup-elements.css";
 type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
 
 export function BattleSpectatorArena() {
+  if (isBattleSynthesisView()) return <BattleSynthesisRoute />;
   if (isBattleProofCardView()) return <BattleProofCardRoute />;
   const [routeEpoch, setRouteEpoch] = useState(0);
   useEffect(() => {

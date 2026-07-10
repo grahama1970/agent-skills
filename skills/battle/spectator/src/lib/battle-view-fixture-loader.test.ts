@@ -13,7 +13,9 @@ describe("battle fixture registry", () => {
 	it("maps known schemas to renderers", () => {
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.RACE]?.renderer).toBe("BattleSpectatorArena");
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.PROOF_CARD]?.renderer).toBe("BattleProofCardPage");
-		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS)).toBe(false);
+		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS]?.renderer).toBe("BattleSynthesisPage");
+		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS)).toBe(true);
+		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION)).toBe(false);
 		expect(battleFixtureRegistryEntry("battle.unknown.v1")).toBeNull();
 	});
 });
@@ -53,8 +55,25 @@ describe("discriminateBattleViewFixture", () => {
 		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
 	});
 
+	it("accepts synthesis fixture on synthesis route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json");
+		const result = discriminateBattleViewFixture(data, "synthesis");
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.viewKind).toBe("synthesis");
+			expect(result.schema).toBe(BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS);
+		}
+	});
+
+	it("fails closed when synthesis fixture is forced onto race route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json");
+		const result = discriminateBattleViewFixture(data, "race");
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
+	});
+
 	it("fails closed on unknown schema", () => {
-		const result = discriminateBattleViewFixture({ schema: "battle.normalized_synthesis_fixture.v1", lanes: [] }, "race");
+		const result = discriminateBattleViewFixture({ schema: "battle.normalized_population_fixture.v1", lanes: [] }, "race");
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
 			expect(result.error.code).toBe("UNSUPPORTED_SCHEMA");

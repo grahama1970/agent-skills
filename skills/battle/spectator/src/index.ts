@@ -17,8 +17,15 @@ export {
 	battleProofCardFixtureUrl,
 	isBattleProofCardView,
 } from "./lib/battle-proof-card-registry";
+export {
+	SYNTHESIS_FIXTURES,
+	battleSynthesisFixtureId,
+	battleSynthesisFixtureUrl,
+	isBattleSynthesisView,
+} from "./lib/battle-synthesis-registry";
 export { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
 export { BattleProofCardView } from "./BattleProofCardView";
+export { BattleSynthesisRoute } from "./synthesis/BattleSynthesisRoute";
 export { BattleComponentCapabilityHarness, isBattleComponentCapabilityTest } from "./BattleComponentCapabilityHarness";
 export { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
 
@@ -37,4 +44,5 @@ export {
 	loadBattleViewFixture,
 	loadBattleRaceFixture,
 	loadBattleProofCardViewFixture,
+	loadBattleSynthesisViewFixture,
 } from "./lib/battle-view-fixture-loader";

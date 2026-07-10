@@ -1,6 +1,6 @@
 import { BATTLE_VIEW_FIXTURE_SCHEMAS, type BattleViewFixtureSchema, type BattleViewKind } from "./battle-view-fixture";
 
-export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "unsupported";
+export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "BattleSynthesisPage" | "unsupported";
 
 type RegistryEntry = {
 	schema: BattleViewFixtureSchema;
@@ -29,8 +29,8 @@ export const BATTLE_FIXTURE_RENDERERS: Record<string, RegistryEntry> = {
 	[BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS]: {
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS,
 		viewKind: "synthesis",
-		renderer: "unsupported",
-		supported: false,
+		renderer: "BattleSynthesisPage",
+		supported: true,
 	},
 	[BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION]: {
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION,
