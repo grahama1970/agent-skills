@@ -68,6 +68,43 @@ cd ../ask
 
 **Do not** pass `--webgpt-tab-id` on every round when a project binding exists.
 
+## Required lookup behavior when `$browser-oracle` is mentioned
+
+When a human mentions `$browser-oracle`, `browser-oracle`, WebGPT binding,
+reviewer tab, tab id, desktop, or "where should WebGPT look", the agent must
+first resolve from the relevant project or skill directory before asking the
+human for tab/url/desktop again.
+
+Use this order:
+
+1. If the task is inside a project repo, resolve from that repo root:
+   `./run.sh resolve --from /path/to/project --backend webgpt --json`.
+2. If the task is about a skill or subagent, resolve from that skill/subagent
+   directory first:
+   `./run.sh resolve --from /path/to/skill-or-agent --backend webgpt --json`.
+3. If the nearest `.ask/browser-oracles.yaml` resolves a project, use the
+   machine-local binding under `~/.pi/<backend>-projects/<project>.json`.
+4. Only ask the human for tab id, URL, or desktop when resolve/doctor reports
+   `no_registry`, `no_project_resolved`, `missing_live_tab`, or `url_mismatch`.
+
+Project repositories and skills should therefore commit a nearest registry file:
+
+```text
+<project-or-skill>/.ask/browser-oracles.yaml
+```
+
+with at least:
+
+```yaml
+version: 1
+webgpt:
+  default: <project-name>
+```
+
+It is acceptable to keep human-readable tab id, URL, and desktop notes as YAML
+comments in that registry when the human explicitly asks for them, but the
+executable binding remains `~/.pi/webgpt-projects/<project-name>.json`.
+
 ## Skill integration contract
 
 Every reviewable skill should connect to WebGPT through this two-part binding:
