@@ -201,6 +201,7 @@ promoted; failed mutations remain searchable negative evidence.
 | Spawn Architect proof | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` | Child knowledge packet and Tau child DAG birth contract | Live Tau DAG execution, child exploit code, target execution |
 | Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, produce Tau-validated source-bearing research receipts, deterministically combine child methods, and reach the PR3c provider-authorship boundary | Compile repair, Docker child execution, or exploit success unless later Tau/Judge receipts prove them |
 | PR3c synthesis fixture | `./run.sh normalize-synthesis-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3c-synthesis --public-out spectator/public/battle-fixtures/battle-004-pr3c-synthesis` | UX-safe provider-authored specimen materialization fixture with provider/model attestation, code hash, bounded code preview, and strict NOT_RUN execution boundary | Compile pass, runnable child, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
+| PR3d compile fixture | `./run.sh normalize-compile-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3d-compile --public-out spectator/public/battle-fixtures/battle-004-pr3d-compile` | UX-safe immutable specimen version timeline with compile attempt, compile failure/pass state, stderr summary, repair fields, and version hashes | Runnable child, runtime success, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -282,6 +283,24 @@ provider-authored specimen materialized, while compilation, runtime, target
 contact, Judge replay, packet behavior, Blue outcomes, and memory promotion are
 all `NOT_RUN`.
 
+The UX4 compile contract is a separate normalized fixture.
+
+Route: `#battle/compile?fixture=battle-004-pr3d`.
+
+```text
+local/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+```
+
+UX should consume that fixture only. It must not read `tau-dag-run/**`,
+`command-loop/command-artifacts/**`, provider workspace directories, SciLLM or
+OpenCode runtime directories, or raw compile stderr paths. The version timeline
+is driven by `specimen_versions[]`; the stderr panel is driven by
+`compile.stderr_summary`; the selected version panel is driven by
+`selected_version`. Compile pass is not runnable, and runtime, target contact,
+Judge replay, packet behavior, Blue outcomes, and memory promotion remain
+`NOT_RUN` unless later fixtures explicitly promote those receipts.
+
 ## Claim Boundaries
 
 Battle uses strict proof language:
@@ -310,6 +329,7 @@ fixtures.
 | Kill-shot impact + HG death card | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-kill-shot-impact.webp` | `cd spectator && npm run prove:kill-shot-pixi` |
 | Spawn/block receipt beats (Pixi VFX) | parent-spawn fixture frozen at `pixiSeconds=99.4` | `docs/assets/screenshots/battle-004-spawn-block-vfx.webp` | `cd spectator && npm run prove:receipt-director-spawn-block` |
 | PR3b research/genome proof card | `spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json` | `docs/assets/screenshots/battle-004-pr3b-proof-card.webp` | `cd spectator && npm run prove:pr3b-proof-card` |
+| PR3d compile fixture | `spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` | planned | `./run.sh validate-compile-fixture spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` |
 | Battle monitor v0 | `/tmp/battle-001` copied into `monitor/battle/public/artifacts/battle-001` | planned | `cd monitor/battle && npm run test:e2e` |
 | Future combiner loop | `/tmp/battle-004-combiner/normalized/battle-004-combiner.normalized.json` | planned | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` |
 | Future Spawn Architect DAG | `/tmp/battle-004-spawn-architect/normalized/battle-004-spawn-architect.normalized.json` | planned | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` |

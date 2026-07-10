@@ -656,6 +656,57 @@ Blue detection/block, packet-level behavior, or memory promotion from this PR3c
 fixture. Do not bind React to raw Tau, command-loop, provider workspace, worker
 result, or provider transcript paths.
 
+Normalized compile fixture:
+
+```text
+schema = battle.normalized_compile_fixture.v1
+fixture kind = pr3d_compile_repair
+local path = skills/battle/local/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+public URL = /battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+route = #battle/compile?fixture=battle-004-pr3d
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-compile-fixture /tmp/battle-pr3d-compile-repair-check/live-tau \
+  --out local/battle-004-pr3d-compile \
+  --public-out spectator/public/battle-fixtures/battle-004-pr3d-compile \
+  --generated-at 2026-07-10T19:00:00Z
+./run.sh validate-compile-fixture local/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+./run.sh validate-compile-fixture spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+```
+
+UX4 should consume the normalized compile fixture only. It may show:
+
+```text
+Provider-authored specimen: EXISTS
+Specimen versions: HASHED
+Compile attempt: RECORDED
+Compile failed or passed: RECEIPT-BACKED
+Repair attempted/exhausted: EXPLICIT BOOLEAN FIELDS
+Runtime: NOT RUN
+Target contact: NOT RUN
+Judge: NOT RUN
+Exploit success: NOT PROVEN
+```
+
+Renderer field mapping:
+
+```text
+version timeline = specimen_versions[]
+stderr panel = compile.stderr_summary
+selected version = selected_version
+repair status = repair.repair_attempted / repair.repair_exhausted
+claim banner = claim_boundary
+```
+
+UX4 must not show runnable child, runtime success, target contact, exploit
+success, Blue detection/block, packet-level behavior, Judge success, or memory
+promotion from this PR3d fixture. Compile pass must not be rendered as runnable.
+Do not bind React to raw Tau, command-loop, provider workspace, SciLLM/OpenCode
+runtime directories, raw compile stderr paths, or worker result paths.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:
@@ -691,3 +742,15 @@ Those fixtures are generated from a live PR3c code-author boundary run and are
 validated by `./run.sh validate-synthesis-fixture`. They intentionally stop at
 provider-authored specimen materialization and keep compile, runtime, target
 contact, Judge, Blue, packet, and memory states as `NOT_RUN` / not claimed.
+
+The active UX4 backend handoff is the PR3d normalized compile fixture:
+
+```text
+skills/battle/local/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+skills/battle/spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json
+```
+
+Those fixtures are generated from a live PR3d compile-repair boundary run and
+validated by `./run.sh validate-compile-fixture`. They intentionally stop at
+compiler evidence and keep runtime, target contact, Judge, Blue, packet, and
+memory states as `NOT_RUN` / not claimed.

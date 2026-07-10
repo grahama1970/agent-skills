@@ -1,0 +1,14 @@
+{
+  "battle_id": "battle-004",
+  "compile_failed": true,
+  "compile_passed": false,
+  "compile_status": "FAILED",
+  "fixture_kind": "pr3d_compile_repair",
+  "judge_verified_exploits": 0,
+  "node_status_count": 5,
+  "raw_paths_redacted": true,
+  "receipt_ref_count": 10,
+  "repair_attempted": false,
+  "schema": "battle.normalized_compile_fixture_validation.v1",
+  "status": "PASS"
+}
