@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import py_compile
+import shutil
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -65,6 +67,9 @@ def run_node(*, node_id: str, start_payload: dict[str, Any], artifact_dir: Path)
     if node_id == "exploit-code-author":
         response = _run_exploit_code_author(start_payload=start_payload, artifact_dir=artifact_dir)
         return response, 0 if response is not None and response.get("result", {}).get("status") == "PASS" else 1
+    if node_id == "compile-repair":
+        response = _run_compile_repair(start_payload=start_payload, artifact_dir=artifact_dir)
+        return response, 0
 
     return _blocked_missing_adapter(node_id=node_id, start_payload=start_payload, artifact_dir=artifact_dir), 1
 
@@ -323,6 +328,108 @@ def _run_method_combiner(*, start_payload: dict[str, Any], artifact_dir: Path) -
     )
 
 
+def _run_compile_repair(*, start_payload: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    code_path = _find_upstream_named_artifact(start_payload, artifact_dir, "exploit_specimen.py")
+    if code_path is None:
+        receipt = _node_receipt(node_id="compile-repair", status="BLOCKED", verdict="UPSTREAM_CODE_ARTIFACT_MISSING", evidence=[])
+        receipt["reason"] = "compile-repair requires exploit_specimen.py from the prior provider-authored node receipt evidence."
+        receipt["claims"] = {
+            "proves": ["Battle reached the compile-repair command-spec boundary."],
+            "does_not_prove": ["A provider-authored exploit specimen was found.", "Code compiled.", "Exploit success."],
+        }
+        receipt_path = artifact_dir / "compile-repair-node-receipt.json"
+        _write_json(receipt_path, receipt)
+        return _handoff(
+            start_payload=start_payload,
+            previous_subagent="compile-repair",
+            status="BLOCKED",
+            summary="Compile Repair blocked because exploit_specimen.py was not present in upstream evidence.",
+            evidence=[_evidence("compile-repair-node-receipt.json", receipt_path)],
+            next_agent="blocked",
+            artifacts=[str(receipt_path)],
+        )
+
+    repaired_path = artifact_dir / "repaired_exploit_specimen.py"
+    shutil.copyfile(code_path, repaired_path)
+    pyc_path = artifact_dir / "repaired_exploit_specimen.pyc"
+    errors: list[str] = []
+    status = "PASS"
+    verdict = "PASS"
+    try:
+        py_compile.compile(str(repaired_path), cfile=str(pyc_path), doraise=True)
+    except py_compile.PyCompileError as exc:
+        status = "BLOCKED"
+        verdict = "COMPILE_FAILED"
+        errors.append(str(exc))
+
+    compile_receipt = {
+        "schema": "battle.child_compile_receipt.v1",
+        "status": status,
+        "verdict": verdict,
+        "mocked": False,
+        "live": "local_py_compile",
+        "agentic": False,
+        "fixture_fallback_used": False,
+        "source_code_artifact": str(code_path),
+        "repaired_code_artifact": str(repaired_path),
+        "compiler": "py_compile",
+        "compile_status": "PASS" if status == "PASS" else "FAILED",
+        "runtime_status": "NOT_RUN",
+        "target_contact": "NOT_RUN",
+        "judge_status": "NOT_RUN",
+        "errors": errors,
+        "claims": {
+            "proves": ["Battle ran a local Python compile check for the provider-authored specimen artifact."]
+            if status == "PASS"
+            else ["Battle captured compiler failure for the provider-authored specimen artifact."],
+            "does_not_prove": [
+                "The specimen runs.",
+                "The specimen contacts the target.",
+                "The specimen exploits the target.",
+                "Any Blue detection, kill, or block occurred.",
+                "Judge verified exploit success.",
+            ],
+        },
+        "created_at": _utc_stamp(),
+    }
+    compile_receipt_path = artifact_dir / "compile_receipt.json"
+    _write_json(compile_receipt_path, compile_receipt)
+
+    evidence = [
+        _evidence("exploit_specimen.py", code_path),
+        _evidence("repaired_exploit_specimen.py", repaired_path),
+        _evidence("compile_receipt.json", compile_receipt_path),
+    ]
+    receipt = _node_receipt(node_id="compile-repair", status=status, verdict=verdict, evidence=evidence)
+    receipt["compiler"] = "py_compile"
+    receipt["errors"] = errors
+    receipt["claims"] = compile_receipt["claims"]
+    receipt_path = artifact_dir / "compile-repair-node-receipt.json"
+    _write_json(receipt_path, receipt)
+
+    evidence.append(_evidence("compile-repair-node-receipt.json", receipt_path))
+    if status != "PASS":
+        return _handoff(
+            start_payload=start_payload,
+            previous_subagent="compile-repair",
+            status="BLOCKED",
+            summary="Compile Repair captured compiler failure for the provider-authored specimen.",
+            evidence=evidence,
+            next_agent="blocked",
+            artifacts=[str(compile_receipt_path), str(repaired_path), str(receipt_path)],
+        )
+
+    return _handoff(
+        start_payload=start_payload,
+        previous_subagent="compile-repair",
+        status="PASS",
+        summary="Compile Repair produced a locally compiled child specimen candidate.",
+        evidence=evidence,
+        next_agent="artifact-reviewer",
+        artifacts=[str(compile_receipt_path), str(repaired_path), str(receipt_path)],
+    )
+
+
 def _blocked_verdict(node_id: str) -> str:
     if node_id == "research-scout":
         return "RESEARCH_ADAPTER_MISSING"
@@ -444,6 +551,32 @@ def _find_named_artifact(payload: dict[str, Any], name: str) -> Path | None:
         path = Path(candidate)
         if path.name == name and path.exists():
             return path.resolve()
+    return None
+
+
+def _find_upstream_named_artifact(payload: dict[str, Any], artifact_dir: Path, name: str) -> Path | None:
+    if path := _find_named_artifact(payload, name):
+        return path
+    return _find_named_artifact_from_node_receipts(artifact_dir.parent, name)
+
+
+def _find_named_artifact_from_node_receipts(root: Path, name: str) -> Path | None:
+    if not root.exists():
+        return None
+    for receipt_path in sorted(root.rglob("*node-receipt.json")):
+        try:
+            receipt = _read_json(receipt_path)
+        except (OSError, json.JSONDecodeError, RuntimeError):
+            continue
+        for item in receipt.get("evidence", []):
+            if not isinstance(item, dict) or item.get("kind") != name:
+                continue
+            path_value = item.get("path")
+            if not isinstance(path_value, str) or not path_value:
+                continue
+            path = Path(path_value)
+            if path.exists():
+                return path.resolve()
     return None
 
 

@@ -167,3 +167,69 @@ def test_method_combiner_writes_source_backed_genome_without_code(tmp_path: Path
     assert "child_archive_traversal_baseline" in genome["selected_method_ids"]
     assert not (combiner_dir / "exploit_specimen.py").exists()
     assert "Any exploit code was generated." in genome["claims"]["does_not_prove"]
+
+
+def test_compile_repair_follows_prior_node_receipt_external_code_artifact(tmp_path: Path, monkeypatch) -> None:
+    external_workspace = tmp_path / "provider-workspace" / "outputs"
+    external_workspace.mkdir(parents=True)
+    code_path = external_workspace / "exploit_specimen.py"
+    code_path.write_text("print('provider-authored candidate')\n", encoding="utf-8")
+
+    code_author_dir = tmp_path / "artifacts" / "exploit-code-author"
+    code_author_dir.mkdir(parents=True)
+    code_author_receipt = {
+        "schema": "battle.child_dag_node_receipt.v1",
+        "node_id": "exploit-code-author",
+        "status": "PASS",
+        "verdict": "PASS",
+        "evidence": [{"kind": "exploit_specimen.py", "path": str(code_path)}],
+    }
+    (code_author_dir / "exploit-code-author-node-receipt.json").write_text(json.dumps(code_author_receipt), encoding="utf-8")
+
+    artifact_dir = tmp_path / "artifacts" / "compile-repair"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "compile-repair")
+    response, exit_code = run_node(
+        node_id="compile-repair",
+        start_payload={
+            **_start_payload(tmp_path / "child-exploit-dag.yaml"),
+            "previous_subagent": "exploit-code-author",
+            "context": {"summary": "code author passed", "artifacts": [str(code_author_dir / "exploit-code-author-node-receipt.json")]},
+            "result": {"status": "PASS", "summary": "code", "evidence": []},
+        },
+        artifact_dir=artifact_dir,
+    )
+
+    assert exit_code == 0
+    assert response is not None
+    assert response["previous_subagent"] == "compile-repair"
+    assert response["next_agent"]["name"] == "artifact-reviewer"
+    compile_receipt = json.loads((artifact_dir / "compile_receipt.json").read_text(encoding="utf-8"))
+    node_receipt = json.loads((artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8"))
+    assert compile_receipt["status"] == "PASS"
+    assert compile_receipt["runtime_status"] == "NOT_RUN"
+    assert compile_receipt["target_contact"] == "NOT_RUN"
+    assert compile_receipt["judge_status"] == "NOT_RUN"
+    assert node_receipt["status"] == "PASS"
+    assert (artifact_dir / "repaired_exploit_specimen.py").read_text(encoding="utf-8") == code_path.read_text(encoding="utf-8")
+    proves = " ".join(compile_receipt["claims"]["proves"]).lower()
+    assert "runs" not in proves
+    assert "exploit" not in proves
+
+
+def test_compile_repair_blocks_semantically_when_prior_code_artifact_missing(tmp_path: Path, monkeypatch) -> None:
+    artifact_dir = tmp_path / "artifacts" / "compile-repair"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "compile-repair")
+    response, exit_code = run_node(
+        node_id="compile-repair",
+        start_payload=_start_payload(tmp_path / "child-exploit-dag.yaml"),
+        artifact_dir=artifact_dir,
+    )
+
+    assert exit_code == 0
+    assert response is not None
+    assert response["result"]["status"] == "BLOCKED"
+    assert response["next_agent"]["name"] == "blocked"
+    receipt = json.loads((artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "BLOCKED"
+    assert receipt["verdict"] == "UPSTREAM_CODE_ARTIFACT_MISSING"
+    assert receipt["fixture_fallback_used"] is False
