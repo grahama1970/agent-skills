@@ -120,6 +120,7 @@ def run_code_author(
             work_order_path=tau_work_order_path,
             result_path=worker_result_path,
             out_path=validation_receipt_path,
+            launch_receipt_path=launch_receipt_path,
         )
 
     code_path = outputs / "exploit_specimen.py"
@@ -225,6 +226,7 @@ def _run_tau_scillm_validate(
     work_order_path: Path,
     result_path: Path,
     out_path: Path,
+    launch_receipt_path: Path,
 ) -> dict[str, Any] | None:
     command = [
         "uv",
@@ -237,6 +239,8 @@ def _run_tau_scillm_validate(
         str(result_path),
         "--out",
         str(out_path),
+        "--launch-receipt",
+        str(launch_receipt_path),
     ]
     return _run_tau_command(command=command, cwd=tau_root, expected_json=out_path)
 

@@ -92,8 +92,11 @@ def validate_provider_artifact(
     if tau_worker_validation is not None and "outputs/exploit_specimen.py" not in validation_artifacts:
         errors.append("TAU_VALIDATION_OMITS_CODE_ARTIFACT")
 
-    if isinstance(tau_worker_validation, dict) and tau_worker_validation.get("provider_live") is not True:
-        errors.append("PROVIDER_EXECUTION_ATTESTATION_MISSING")
+    if isinstance(tau_worker_validation, dict):
+        if tau_worker_validation.get("provider_live") is not True:
+            errors.append("PROVIDER_EXECUTION_ATTESTATION_MISSING")
+        elif tau_worker_validation.get("status") != "PASS":
+            errors.append("TAU_WORKER_VALIDATION_BLOCKED")
 
     output_manifest = _manifest(output_root)
     unexpected = [
