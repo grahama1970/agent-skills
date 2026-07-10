@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
@@ -356,11 +356,18 @@ async function waitForPageLoad(cdp, timeoutMs = 45000) {
 async function isCloudflareBlocked(cdp) {
   const title = await evaluate(cdp, "document.title.toLowerCase()");
   if (title && title.includes("just a moment")) return true;
-  const hasScript = await evaluate(
+  const state = await evaluate(
     cdp,
-    `Boolean(document.querySelector('${SELECTORS.cloudflareScript}'))`
+    `(() => {
+      const text = document.body?.innerText || "";
+      const hasChallengeText = /verify you are human|checking your browser|just a moment|cloudflare|turnstile/i.test(text);
+      const hasComposer = Boolean(document.querySelector('${SELECTORS.promptTextarea}'));
+      const hasConversation = Boolean(document.querySelector('${SELECTORS.assistantMessage}'));
+      const hasScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
+      return { hasChallengeText, hasComposer, hasConversation, hasScript };
+    })()`
   );
-  return hasScript;
+  return Boolean(state?.hasChallengeText && !state?.hasComposer && !state?.hasConversation);
 }
 
 async function checkLoginStatus(cdp) {
