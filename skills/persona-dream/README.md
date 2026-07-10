@@ -165,8 +165,8 @@ not yet a completed personality-evolution product.
 | Image and storyboard production | Proven slices | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
 | Phase 08 — Media Lock | Proven locally | Accepted storyboard evidence has a stable local boundary |
 | Phase 09 — Video Provider | Dry run | Provider-neutral classification, ranking, and packet routing exist without a live-provider claim |
-| Phase 10 — Provider Contract | Fixture-backed dry run | A local compiler and fail-closed contract gate work without network or provider calls |
-| Phase 11 — Submit and Return | Blocked | No paid call or live provider return has been authorized or proven |
+| Phase 10 — Provider Contract | Outstanding; fixture-backed dry run only | A local compiler and fail-closed contract gate exist, but no current fal.ai provider schema or network call has been proven |
+| Phase 11 — Submit and Return | Outstanding and blocked | No paid call or live provider return has been authorized or proven |
 | Watch → interpretation → Memory | Designed, not closed | The architecture exists, but one accepted end-to-end run does not |
 | Later persona behavior | Not proven | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -192,8 +192,51 @@ end of the founding research experiment.
 | **07 — Storyboard** | Produce and review panels, start/end frames, and continuity evidence | Accepted frame evidence exists in local receipts |
 | **08 — Media Lock** | Freeze the accepted provider-facing frame subset, roles, dimensions, and hashes | Implemented |
 | **09 — Video Provider** | Rank providers and create a provider-specific dry-run packet | Local dry-run routing exists; no live-provider claim |
-| **10 — Provider Contract** | Compile an inspectable request contract, field mapping, cost/entitlement plan, and async plan | Fixture-backed local dry-run proof; no network or provider call |
-| **11 — Submit and Return** | Authorize one paid call, submit, poll or receive callback, download, and validate media | Blocked pending explicit proof and approval |
+| **10 — Provider Contract** | Compile an inspectable request contract, field mapping, cost/entitlement plan, and async plan | **Outstanding after Video Provider**; fixture-backed local dry-run proof exists, but no current provider API proof or network call |
+| **11 — Submit and Return** | Authorize one paid call, submit, poll or receive callback, download, and validate media | **Outstanding after Video Provider**; blocked pending explicit proof and approval |
+
+#### Creative spine inventory: phases 02-07
+
+These phases are the spine between grounded memory residue and the media lock.
+They are not decorative UI tabs. Phase 08 can lock evidence only after this
+chain has turned source residue into reviewed story, references, script, and
+storyboard frames.
+
+| Phase | Primary artifact | Current state | Evidence role |
+|---|---|---|---|
+| **02 — Story** | `story_contract.json`, interaction/relationship coverage, story intent | Implemented planning and generation slices exist for the Embry/Kai fixture | Defines the narrative and relationship contract consumed by script and storyboard |
+| **03 — Crew** | producer, scriptwriter, director, and acceptance-role contracts | Sequential selection and contract work exists | Assigns creative authority and review roles for downstream generation |
+| **04 — Contact Sheets** | character, prop, environment, and reference-pack evidence | Live reference assets and contact-sheet surfaces exist | Grounds Embry, Kai, surfboards, Kahaluʻu Bay, lava reef, and lineup references |
+| **05 — Voices** | voice references, audition state, voice handoff plan | Audition and planning surface exists | Captures voice intent and dialogue readiness without claiming provider voice readiness |
+| **06 — Script** | `script_contract.json`, timed beats, dialogue/action coverage, interaction matrix | Implemented creator/reviewer contract work exists | Turns story intent into timed action, dialogue, and interaction evidence |
+| **07 — Storyboard** | accepted panels, start/end frames, visual-review receipts, prompt contracts | Accepted frame evidence exists in local receipts; Phase 08 can lock that evidence | Produces accepted visual frames for the Phase 08 media lock |
+
+Status terms in this inventory are intentionally conservative:
+
+- **Implemented** means local artifacts, scripts, or UI surfaces exist.
+- **Accepted evidence** means a receipt-backed local artifact exists for the
+  selected run.
+- **Dry run** means no provider call, no paid call, and no live readiness claim.
+
+#### Outstanding after Phase 09
+
+Phase 09 is the current provider-selection and dry-run routing boundary. The
+pipeline work after it is still outstanding:
+
+- **10 — Provider Contract:** fetch or verify the current provider API schema,
+  compile the selected provider request, map fields, check cost and entitlement,
+  and keep `submitted=false`.
+- **11 — Submit and Return:** after explicit authorization, publish/probe input
+  media URLs, submit one bounded provider request, poll or receive callback, and
+  download/hash the returned media.
+- **Watch observation:** inspect the actual returned video for visible, audible,
+  transcript, scene, and timing evidence.
+- **Self-interpretation:** compare Watch evidence with source memories and dream
+  intention without treating the dream as literal history.
+- **Memory, graph, and Qdrant persistence:** persist only accepted synthetic
+  dream memory and ToM edges through the owning Memory/Graph layers.
+- **Recall and behavior proof:** retrieve the synthetic dream later and show
+  bounded Chatterbox/persona behavior changes without identity drift.
 
 #### Research loop after provider return
 
