@@ -21,3 +21,20 @@ export { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
 export { BattleProofCardView } from "./BattleProofCardView";
 export { BattleComponentCapabilityHarness, isBattleComponentCapabilityTest } from "./BattleComponentCapabilityHarness";
 export { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
+
+export {
+	BATTLE_VIEW_FIXTURE_SCHEMAS,
+	type BattleViewFixture,
+	type BattleViewKind,
+} from "./lib/battle-view-fixture";
+export {
+	BATTLE_FIXTURE_RENDERERS,
+	battleFixtureRegistryEntry,
+	isSupportedBattleFixtureSchema,
+} from "./lib/battle-view-fixture-registry";
+export {
+	discriminateBattleViewFixture,
+	loadBattleViewFixture,
+	loadBattleRaceFixture,
+	loadBattleProofCardViewFixture,
+} from "./lib/battle-view-fixture-loader";

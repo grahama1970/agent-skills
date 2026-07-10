@@ -24,7 +24,8 @@
     "prove:receipt-director-spawn-block": "node scripts/prove-battle-receipt-director-spawn-block.mjs",
     "prove:no-mockup-leakage": "node scripts/prove-battle-no-mockup-leakage.mjs",
     "prove:receipt-lifecycle-emitted": "node scripts/prove-battle-receipt-lifecycle-emitted.mjs",
-    "prove:pr3b-proof-card": "node scripts/prove-battle-pr3b-proof-card.mjs"
+    "prove:pr3b-proof-card": "node scripts/prove-battle-pr3b-proof-card.mjs",
+    "prove:view-fixture-loader": "node scripts/prove-battle-view-fixture-loader.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

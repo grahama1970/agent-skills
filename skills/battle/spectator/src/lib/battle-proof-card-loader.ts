@@ -1,10 +1,24 @@
 import { battleProofCardFixtureId, battleProofCardFixtureUrl, isBattleProofCardView } from "./battle-proof-card-registry";
 import type { BattleNormalizedProofCardFixtureV1, ProofCardLoadError } from "./battle-proof-card-types";
-import { validateProofCardFixture } from "./battle-proof-card-validator";
+import { formatBattleFixtureLoadError, loadBattleProofCardViewFixture } from "./battle-view-fixture-loader";
+import type { BattleFixtureLoadError } from "./battle-view-fixture";
 
 export type ProofCardLoadResult =
 	| { ok: true; fixture: BattleNormalizedProofCardFixtureV1; fixtureId: string }
 	| { ok: false; error: ProofCardLoadError };
+
+function toProofCardError(error: BattleFixtureLoadError): ProofCardLoadError {
+	if (error.code === "UNSUPPORTED_FIXTURE") {
+		return { code: "UNSUPPORTED_FIXTURE", title: error.title, detail: error.detail };
+	}
+	if (error.code === "FIXTURE_UNAVAILABLE") {
+		return { code: "PROOF_FIXTURE_UNAVAILABLE", title: error.title, detail: error.detail };
+	}
+	if (error.code === "UNSUPPORTED_SCHEMA" || error.code === "SCHEMA_ROUTE_MISMATCH") {
+		return { code: "UNSUPPORTED_SCHEMA", title: error.title, detail: error.detail };
+	}
+	return { code: "CONTRACT_VALIDATION_FAILED", title: error.title, detail: error.detail };
+}
 
 export async function loadBattleProofCardFixture(hash: string): Promise<ProofCardLoadResult> {
 	if (!isBattleProofCardView(hash)) {
@@ -31,46 +45,11 @@ export async function loadBattleProofCardFixture(hash: string): Promise<ProofCar
 		};
 	}
 
-	let response: Response;
-	try {
-		response = await fetch(url);
-	} catch (error) {
-		return {
-			ok: false,
-			error: {
-				code: "PROOF_FIXTURE_UNAVAILABLE",
-				title: "PROOF FIXTURE UNAVAILABLE",
-				detail: error instanceof Error ? error.message : "No receipt-backed state was loaded.",
-			},
-		};
+	const result = await loadBattleProofCardViewFixture(url);
+	if (!result.ok) {
+		return { ok: false, error: toProofCardError(result.error) };
 	}
-
-	if (!response.ok) {
-		return {
-			ok: false,
-			error: {
-				code: "PROOF_FIXTURE_UNAVAILABLE",
-				title: "PROOF FIXTURE UNAVAILABLE",
-				detail: `No receipt-backed state was loaded (HTTP ${response.status}).`,
-			},
-		};
-	}
-
-	let data: unknown;
-	try {
-		data = await response.json();
-	} catch {
-		return {
-			ok: false,
-			error: {
-				code: "PROOF_FIXTURE_UNAVAILABLE",
-				title: "PROOF FIXTURE UNAVAILABLE",
-				detail: "Fixture response was not valid JSON.",
-			},
-		};
-	}
-
-	const validated = validateProofCardFixture(data);
-	if (!validated.ok) return validated;
-	return { ok: true, fixture: validated.fixture, fixtureId };
+	return { ok: true, fixture: result.fixture, fixtureId };
 }
+
+export { formatBattleFixtureLoadError };

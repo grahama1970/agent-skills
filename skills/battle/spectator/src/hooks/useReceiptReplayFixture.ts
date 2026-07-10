@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import type { BattleNormalizedUxFixture } from "../lib/battle-types";
 import { battleReceiptReplayFixtureUrl, isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
+import { formatBattleFixtureLoadError, loadBattleRaceFixture } from "../lib/battle-view-fixture-loader";
 
 export function useReceiptReplayFixture() {
 	const [fixture, setFixture] = useState<BattleNormalizedUxFixture | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(() => isBattleReceiptReplayView());
-	const routeKey = typeof window !== "undefined" ? window.location.hash : "";
+	const [routeKey, setRouteKey] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
+
+	useEffect(() => {
+		const onHashChange = () => setRouteKey(window.location.hash);
+		window.addEventListener("hashchange", onHashChange);
+		return () => window.removeEventListener("hashchange", onHashChange);
+	}, []);
 
 	useEffect(() => {
 		if (!isBattleReceiptReplayView()) {
@@ -20,22 +27,17 @@ export function useReceiptReplayFixture() {
 		setLoading(true);
 		setError(null);
 
-		fetch(battleReceiptReplayFixtureUrl(routeKey))
-			.then((response) => {
-				if (!response.ok) throw new Error(`fixture fetch failed: HTTP ${response.status}`);
-				return response.json() as Promise<BattleNormalizedUxFixture>;
-			})
-			.then((data) => {
-				if (cancelled) return;
-				setFixture(data);
-				setLoading(false);
-			})
-			.catch((fetchError: unknown) => {
-				if (cancelled) return;
+		loadBattleRaceFixture(battleReceiptReplayFixtureUrl(routeKey)).then((result) => {
+			if (cancelled) return;
+			if (!result.ok) {
 				setFixture(null);
-				setError(fetchError instanceof Error ? fetchError.message : String(fetchError));
+				setError(formatBattleFixtureLoadError(result.error));
 				setLoading(false);
-			});
+				return;
+			}
+			setFixture(result.fixture);
+			setLoading(false);
+		});
 
 		return () => {
 			cancelled = true;

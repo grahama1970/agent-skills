@@ -57,17 +57,20 @@ echo "9/13 Hunger Games death notification UX proof"
 echo "10/13 Hunger Games kill-cue replay proof"
 (cd "$SPECTATOR_DIR" && npm run prove:hg-kill-cue-replay)
 
-echo "11/14 No-mockup-leakage receipt chrome proof"
+echo "11/15 No-mockup-leakage receipt chrome proof"
 (cd "$SPECTATOR_DIR" && npm run prove:no-mockup-leakage)
 
-echo "12/14 Lifecycle-enriched fixture proof"
+echo "12/15 Lifecycle-enriched fixture proof"
 (cd "$BATTLE_DIR" && python3 scripts/enrich_pixi_replay_lifecycle.py)
 (cd "$SPECTATOR_DIR" && npm run prove:receipt-lifecycle-emitted)
 
-echo "13/14 Pixi kill-shot animation proof"
+echo "13/15 Pixi kill-shot animation proof"
 (cd "$SPECTATOR_DIR" && npm run prove:kill-shot-pixi)
 
-echo "14/14 PR3b proof-card route proof"
+echo "14/15 PR3b proof-card route proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr3b-proof-card)
+
+echo "15/15 Shared view-fixture loader proof"
+(cd "$SPECTATOR_DIR" && npm run prove:view-fixture-loader)
 
 echo "BATTLE_PROVE_SPECTATOR_PASS"
