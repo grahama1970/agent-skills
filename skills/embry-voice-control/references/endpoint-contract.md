@@ -127,16 +127,17 @@ Current workstation transport is localhost HTTP with SQLite WAL persistence:
 
 ```text
 POST /v1/listener/events
+POST /v1/listener/events/claim-one
 GET  /v1/sessions
 GET  /v1/sessions/{session_id}/events
 GET  /v1/sessions/{session_id}/journal
 POST /v1/turns/{turn_id}/cancel
 ```
 
-Each `embry.voice_event.v1` requires `event_id`, `session_id`, `turn_id`, a
-monotonic positive `sequence`, `type`, `created_at`, and `payload`. Producers
-must continue sequence numbers across turns in a session. Exact event replay is
-idempotent; conflicting event IDs or duplicate session sequence numbers fail.
+Each producer `embry.voice_event.v1` requires `event_id`, `session_id`,
+`turn_id`, `type`, `created_at`, and `payload`. Producers must not assign
+`sequence`; the journal allocates a monotonic positive sequence per session.
+Exact event replay is idempotent and conflicting event IDs fail closed.
 
 Required event types:
 
@@ -149,7 +150,9 @@ Required event types:
 
 ## Wake Word Event
 
-The wake word is exactly `Embry`. Do not require `Hey Embry`.
+The qualified wake phrase is `Hey Embry`. Transcript-level bounded variants may
+handle ASR renderings such as `Hey Embree`; bare `Embry` does not complete a
+turn. A custom Porcupine wake model remains the production detector target.
 
 The listener service owns wake detection. React only renders state from the
 event stream. Chatterbox does not detect wake words.

@@ -1,0 +1,46 @@
+"""HTTP contract checks for exact listener-event claims."""
+
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from fastapi.testclient import TestClient
+
+from embry_voice_control.listener_service import create_app
+
+
+def test_claim_one_endpoint_returns_canonical_event_and_conflicts(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path / "events.sqlite3"))
+    event = {
+        "schema": "embry.voice_event.v1",
+        "event_id": "final",
+        "session_id": "session-a",
+        "turn_id": "turn-a",
+        "type": "listener.final_transcript",
+        "created_at": "2026-07-10T12:00:00Z",
+        "causation_id": "wake",
+        "correlation_id": "session-a",
+        "producer": "realtimestt",
+        "mocked": False,
+        "live": True,
+        "artifact_hashes": {},
+        "receipt_hash": "sha256:test",
+        "payload": {"text": "What is the capital of France?"},
+    }
+    ingest = client.post("/v1/listener/events", json=event)
+    assert ingest.status_code == 200
+    sequence = ingest.json()["sequence"]
+    request = {
+        "consumer_name": "controller",
+        "event_id": "final",
+        "expected_session_id": "session-a",
+        "expected_turn_id": "turn-a",
+        "expected_sequence": sequence,
+        "expected_type": "listener.final_transcript",
+        "lease_seconds": 300,
+    }
+    claimed = client.post("/v1/listener/events/claim-one", json=request)
+    assert claimed.status_code == 200
+    assert claimed.json()["event"]["event_id"] == "final"
+    assert client.post("/v1/listener/events/claim-one", json=request).status_code == 409

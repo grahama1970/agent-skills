@@ -10,6 +10,7 @@ import pytest
 from embry_voice_control.event_journal import (
     ack_event,
     append_event,
+    claim_event,
     claim_events,
     consumer_offset,
     list_events,
@@ -97,3 +98,70 @@ def test_claim_lease_is_exclusive_until_expiry(tmp_path: Path) -> None:
     assert len(claim_events(db, "consumer-a", limit=1, lease_seconds=30)) == 1
     assert claim_events(db, "consumer-a", limit=1, lease_seconds=30) == []
     assert len(claim_events(db, "consumer-b", limit=1, lease_seconds=30)) == 1
+
+
+def test_claim_one_validates_lineage_lease_and_ack(tmp_path: Path) -> None:
+    db = tmp_path / "events.sqlite3"
+    stored = append_event(db, event(event_id="final"))
+    claimed = claim_event(
+        db,
+        "controller",
+        "final",
+        expected_session_id="session-a",
+        expected_turn_id="turn-a",
+        expected_sequence=stored["sequence"],
+        expected_type="listener.final_transcript",
+        lease_seconds=30,
+    )
+    assert claimed["schema"] == "embry.listener_event_claim_one.v1"
+    assert claimed["event"] == stored
+
+    with pytest.raises(ValueError, match="event_claim_active"):
+        claim_event(
+            db,
+            "controller",
+            "final",
+            expected_session_id="session-a",
+            expected_turn_id="turn-a",
+            expected_sequence=stored["sequence"],
+            expected_type="listener.final_transcript",
+            lease_seconds=30,
+        )
+
+    ack_event(db, "controller", "final")
+    with pytest.raises(ValueError, match="event_already_acked"):
+        claim_event(
+            db,
+            "controller",
+            "final",
+            expected_session_id="session-a",
+            expected_turn_id="turn-a",
+            expected_sequence=stored["sequence"],
+            expected_type="listener.final_transcript",
+            lease_seconds=30,
+        )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "error"),
+    [
+        ({"event_id": "missing"}, "event_id_unknown"),
+        ({"expected_session_id": "wrong"}, "event_session_id_mismatch"),
+        ({"expected_turn_id": "wrong"}, "event_turn_id_mismatch"),
+        ({"expected_sequence": 99}, "event_sequence_mismatch"),
+        ({"expected_type": "listener.partial_transcript"}, "event_type_mismatch"),
+    ],
+)
+def test_claim_one_rejects_mismatched_identity(tmp_path: Path, overrides: dict, error: str) -> None:
+    db = tmp_path / "events.sqlite3"
+    stored = append_event(db, event(event_id="final"))
+    arguments = {
+        "event_id": "final",
+        "expected_session_id": "session-a",
+        "expected_turn_id": "turn-a",
+        "expected_sequence": stored["sequence"],
+        "expected_type": "listener.final_transcript",
+    }
+    arguments.update(overrides)
+    with pytest.raises(ValueError, match=error):
+        claim_event(db, "controller", lease_seconds=30, **arguments)

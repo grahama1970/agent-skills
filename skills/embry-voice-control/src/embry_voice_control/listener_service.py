@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from embry_voice_control.event_journal import (
     ack_event,
     append_event,
+    claim_event,
     claim_events,
     consumer_offset,
     list_events,
@@ -64,6 +65,18 @@ class AckRequest(BaseModel):
     event_id: str
 
 
+class ClaimOneRequest(BaseModel):
+    """Exact event claim with fail-closed lineage expectations."""
+
+    consumer_name: str
+    event_id: str
+    expected_session_id: str
+    expected_turn_id: str
+    expected_sequence: int = Field(ge=1)
+    expected_type: str
+    lease_seconds: int = Field(default=300, ge=1)
+
+
 def utc_now() -> str:
     """Return an ISO UTC timestamp."""
     return datetime.now(timezone.utc).isoformat()
@@ -111,6 +124,22 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return {"schema": "embry.listener_event_claim.v1", "events": rows}
+
+    @app.post("/v1/listener/events/claim-one")
+    def claim_one(request: ClaimOneRequest) -> dict[str, Any]:
+        try:
+            return claim_event(
+                db_path,
+                request.consumer_name,
+                request.event_id,
+                expected_session_id=request.expected_session_id,
+                expected_turn_id=request.expected_turn_id,
+                expected_sequence=request.expected_sequence,
+                expected_type=request.expected_type,
+                lease_seconds=request.lease_seconds,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     @app.post("/v1/listener/events/ack")
     def ack(request: AckRequest) -> dict[str, Any]:

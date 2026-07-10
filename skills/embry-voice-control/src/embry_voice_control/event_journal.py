@@ -261,6 +261,70 @@ def claim_events(
     return [_row_to_event(row) for row in rows]
 
 
+def claim_event(
+    path: Path,
+    consumer_name: str,
+    event_id: str,
+    *,
+    expected_session_id: str,
+    expected_turn_id: str,
+    expected_sequence: int,
+    expected_type: str,
+    lease_seconds: int,
+) -> dict[str, Any]:
+    """Claim one exact event after atomically validating its lineage."""
+    if lease_seconds < 1:
+        raise ValueError("lease_seconds_invalid")
+    now = _utc_now()
+    until = _lease_until(lease_seconds)
+    with connect(path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        _register_consumer(connection, consumer_name)
+        row = connection.execute("SELECT * FROM events WHERE event_id = ?", (event_id,)).fetchone()
+        if row is None:
+            connection.rollback()
+            raise ValueError("event_id_unknown")
+        expected = {
+            "session_id": expected_session_id,
+            "turn_id": expected_turn_id,
+            "sequence": expected_sequence,
+            "event_type": expected_type,
+        }
+        for column, value in expected.items():
+            if row[column] != value:
+                connection.rollback()
+                field = "type" if column == "event_type" else column.removeprefix("event_")
+                raise ValueError(f"event_{field}_mismatch")
+        state = connection.execute(
+            "SELECT claimed_until, acked_at FROM consumer_events WHERE consumer_name = ? AND event_id = ?",
+            (consumer_name, event_id),
+        ).fetchone()
+        if state is not None and state["acked_at"] is not None:
+            connection.rollback()
+            raise ValueError("event_already_acked")
+        if state is not None and state["claimed_until"] is not None and state["claimed_until"] > now:
+            connection.rollback()
+            raise ValueError("event_claim_active")
+        stamp = _utc_now()
+        connection.execute(
+            """INSERT INTO consumer_events (
+            consumer_name, event_id, session_id, sequence, claimed_until, acked_at, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
+            ON CONFLICT(consumer_name, event_id) DO UPDATE SET
+              claimed_until = excluded.claimed_until,
+              updated_at = excluded.updated_at""",
+            (consumer_name, event_id, row["session_id"], row["sequence"], until, stamp, stamp),
+        )
+        connection.commit()
+    return {
+        "schema": "embry.listener_event_claim_one.v1",
+        "claimed": True,
+        "already_acked": False,
+        "event": _row_to_event(row),
+        "lease_expires_at": until,
+    }
+
+
 def ack_event(path: Path, consumer_name: str, event_id: str) -> bool:
     """Ack an event for a consumer. Repeated acks are idempotent."""
     with connect(path) as connection:
