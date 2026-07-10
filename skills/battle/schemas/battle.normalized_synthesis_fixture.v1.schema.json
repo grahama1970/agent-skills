@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.normalized_synthesis_fixture.v1.schema.json",
+  "title": "Battle Normalized Synthesis Fixture",
+  "type": "object",
+  "required": [
+    "schema",
+    "fixture_kind",
+    "battle_id",
+    "run_id",
+    "generated_at",
+    "proof_mode",
+    "status",
+    "mocked",
+    "live",
+    "agentic",
+    "provider_live",
+    "fixture_fallback_used",
+    "stage_scope",
+    "source_run",
+    "node_status",
+    "node_verdict",
+    "provider_authorship",
+    "specimen",
+    "research",
+    "genome",
+    "execution_boundary",
+    "claim_boundary",
+    "receipt_refs",
+    "provenance",
+    "copy"
+  ],
+  "properties": {
+    "schema": { "const": "battle.normalized_synthesis_fixture.v1" },
+    "fixture_kind": { "const": "pr3c_provider_code_author" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "proof_mode": { "const": "live_tau_child_dag_canary" },
+    "status": { "const": "PASS" },
+    "mocked": { "const": false },
+    "live": { "const": "tau_provider_artifact_authoring" },
+    "agentic": { "const": true },
+    "provider_live": { "const": true },
+    "fixture_fallback_used": { "const": false },
+    "stage_scope": {
+      "type": "object",
+      "required": ["included_through", "included_nodes", "excluded_nodes", "downstream_receipts_ignored"],
+      "properties": {
+        "included_through": { "const": "exploit-code-author" },
+        "included_nodes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 4
+        },
+        "excluded_nodes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3
+        },
+        "downstream_receipts_ignored": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "source_run": { "type": "object" },
+    "node_status": {
+      "type": "object",
+      "required": ["lineage-summarizer", "research-scout", "method-combiner", "exploit-code-author"],
+      "properties": {
+        "lineage-summarizer": { "const": "PASS" },
+        "research-scout": { "const": "PASS" },
+        "method-combiner": { "const": "PASS" },
+        "exploit-code-author": { "const": "PASS" }
+      },
+      "additionalProperties": false
+    },
+    "node_verdict": { "type": "object" },
+    "provider_authorship": {
+      "type": "object",
+      "required": [
+        "status",
+        "provider_live",
+        "agentic",
+        "authored_by",
+        "observed_provider",
+        "observed_model",
+        "provider_run_id_present",
+        "provider_session_id_present",
+        "code_sha256",
+        "code_bytes"
+      ],
+      "properties": {
+        "status": { "const": "PASS" },
+        "provider_live": { "const": true },
+        "agentic": { "const": true },
+        "authored_by": { "const": "tau_provider" },
+        "observed_provider": { "type": "string", "minLength": 1 },
+        "observed_model": { "type": "string", "minLength": 1 },
+        "provider_run_id_present": { "type": "boolean" },
+        "provider_session_id_present": { "type": "boolean" },
+        "code_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "code_bytes": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "specimen": {
+      "type": "object",
+      "required": ["schema", "specimen_id", "language", "code_artifact_label", "code_sha256", "code_bytes", "code_preview"],
+      "properties": {
+        "schema": { "const": "battle.exploit_specimen.v2" },
+        "specimen_id": { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "minLength": 1 },
+        "code_artifact_label": { "const": "exploit_specimen.py" },
+        "code_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "code_bytes": { "type": "integer", "minimum": 1 },
+        "code_preview": {
+          "type": "object",
+          "required": ["available", "redacted", "truncated", "max_lines", "max_bytes", "line_count_total", "preview_sha256", "lines"],
+          "properties": {
+            "available": { "type": "boolean" },
+            "redacted": { "type": "boolean" },
+            "truncated": { "type": "boolean" },
+            "max_lines": { "const": 80 },
+            "max_bytes": { "const": 16384 },
+            "line_count_total": { "type": "integer", "minimum": 0 },
+            "preview_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            "lines": { "type": "array", "items": { "type": "string" } },
+            "redaction_reasons": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "research": { "type": "object" },
+    "genome": { "type": "object" },
+    "execution_boundary": {
+      "type": "object",
+      "required": ["compile_status", "runtime_status", "target_contact", "judge_status", "judge_verified_exploits", "packet_behavior", "memory_promotion"],
+      "properties": {
+        "compile_status": { "const": "NOT_RUN" },
+        "runtime_status": { "const": "NOT_RUN" },
+        "target_contact": { "const": "NOT_RUN" },
+        "judge_status": { "const": "NOT_RUN" },
+        "judge_verified_exploits": { "const": 0 },
+        "packet_behavior": { "const": "NOT_RUN" },
+        "memory_promotion": { "const": "NOT_RUN" }
+      },
+      "additionalProperties": true
+    },
+    "claim_boundary": {
+      "type": "object",
+      "required": ["may_claim", "must_not_claim"],
+      "properties": {
+        "may_claim": { "type": "array", "items": { "type": "string" } },
+        "must_not_claim": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "receipt_refs": { "type": "array" },
+    "provenance": { "type": "object" },
+    "copy": {
+      "type": "object",
+      "required": ["headline", "subhead", "status_label", "boundary_notice"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "subhead": { "type": "string", "minLength": 1 },
+        "status_label": { "type": "string", "minLength": 1 },
+        "boundary_notice": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
