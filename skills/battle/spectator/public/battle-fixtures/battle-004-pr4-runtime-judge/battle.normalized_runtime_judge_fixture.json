@@ -1,0 +1,351 @@
+{
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "compile_passed_is_not_runnable": true,
+    "may_claim": [
+      "docker_specimen_execution_attempted",
+      "container_image_recorded",
+      "container_network_policy_recorded",
+      "timeout_recorded",
+      "exit_code_recorded",
+      "stdout_summary_recorded",
+      "stderr_summary_recorded",
+      "runtime_failed",
+      "runnable_unproven",
+      "target_contact_unproven",
+      "judge_not_run"
+    ],
+    "must_not_claim": [
+      "exploit_success",
+      "target_contact_is_exploit_success",
+      "runnable_is_exploit_success",
+      "blue_detection",
+      "blue_bypass",
+      "blue_kill",
+      "blue_block",
+      "judge_success",
+      "packet_level_behavior",
+      "memory_promotion"
+    ],
+    "target_contact_is_not_exploit_success": true
+  },
+  "copy": {
+    "boundary_notice": "Runnable and target contact are not exploit success. Judge replay is required for exploit or Blue outcome claims.",
+    "headline": "Docker runtime receipts captured",
+    "status_label": "Runtime unproven; Judge not run",
+    "subhead": "Battle executed specimen code in Docker and kept Judge status explicit as not run."
+  },
+  "fixture_kind": "pr4_runtime_judge",
+  "generated_at": "2026-07-10T20:30:00Z",
+  "judge": {
+    "does_not_prove": [
+      "exploit success",
+      "Blue block",
+      "Blue bypass",
+      "target contact as exploit success"
+    ],
+    "judge_progression": [
+      "JUDGE_NOT_RUN"
+    ],
+    "judge_status": "NOT_RUN",
+    "judge_verified_exploits": 0
+  },
+  "live": "local_docker_specimen_fixture",
+  "mocked": false,
+  "proof_mode": "local_docker_specimen_fixture",
+  "provenance": {
+    "command_loop_paths_exposed": false,
+    "credentials_exposed": false,
+    "docker_mount_paths_exposed": false,
+    "normalizer_schema": "battle.normalized_runtime_judge_fixture_builder.v1",
+    "provider_workspace_paths_exposed": false,
+    "raw_paths_redacted": true,
+    "raw_stderr_paths_exposed": false,
+    "raw_stdout_paths_exposed": false,
+    "source_receipt_count": 6,
+    "source_run_label": "exploit_combiner_proof",
+    "tau_runtime_paths_exposed": false
+  },
+  "receipt_refs": [
+    {
+      "id": "combiner_run_receipt",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_combiner_proof.v1",
+      "sha256": "sha256:da3542348d747ba28ea41ce665fe1330b34a42d4c7ddd481f0a177e8398707cf",
+      "status": "PASS"
+    },
+    {
+      "id": "combiner_scoreboard",
+      "label": "scoreboard.json",
+      "schema": "battle.exploit_combiner_scoreboard.v1",
+      "sha256": "sha256:0bd6db5056b7a4d4827cae08a80c0481fafb15ba2d7ed84123302774b9ff1fd1",
+      "status": "RUNNABLE_UNPROVEN"
+    },
+    {
+      "id": "specimen_run_specimen-0001",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:54a0ac24fca66da0751d8f6282e4b4172901468c9671a30113736fa97107fe51",
+      "status": "SPECIMEN_COMPILE_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0002",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:8f0148fd5fbe3eaec0c43e24767feb457230bff46273d9441402b95632cf793b",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0003",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:9362f18159b9929e8b263d69b4449f9555b4b6db666e100a9a243a09f609fd61",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0004",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:c90c7a384a05f561926ea67fa79578ccb8585f44115a49dddc5e07f2dd99e5df",
+      "status": "SPECIMEN_RUNNABLE_UNPROVEN"
+    }
+  ],
+  "run_id": "battle-004-pr4-runtime-judge",
+  "runtime": {
+    "docker": {
+      "cap_drop_all": true,
+      "command_shape": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "<image>",
+        "python",
+        "<compile-and-run-wrapper>"
+      ],
+      "image": "python:3.12-slim",
+      "network": "none",
+      "no_new_privileges": true,
+      "timeout_seconds": 30,
+      "user": "1000:1000"
+    },
+    "specimen_runs": [
+      {
+        "compile_ok": false,
+        "does_not_prove": [
+          "exploit success",
+          "the specimen exploited the target",
+          "the specimen bypassed Blue",
+          "packet-level behavior was captured"
+        ],
+        "elapsed_seconds": 0.287767,
+        "exit_code": 1,
+        "raw_status": "SPECIMEN_COMPILE_FAILED",
+        "runtime_ok": false,
+        "runtime_status": "COMPILE_FAILED",
+        "specimen_id": "specimen-0001",
+        "stderr_summary": {
+          "available": true,
+          "line_count_total": 22,
+          "lines": [
+            "Traceback (most recent call last):",
+            "  File \"[redacted-path]\", line 144, in compile",
+            "    code = loader.source_to_code(source_bytes, dfile or file,",
+            "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "  File \"<frozen importlib._bootstrap_external>\", line 1063, in source_to_code",
+            "  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed",
+            "  File \"exploit.py\", line 1",
+            "    def main(:",
+            "             ^",
+            "SyntaxError: invalid syntax",
+            "",
+            "During handling of the above exception, another exception occurred:",
+            "",
+            "Traceback (most recent call last):",
+            "  File \"<string>\", line 1, in <module>",
+            "  File \"[redacted-path]\", line 150, in compile",
+            "    raise py_exc",
+            "py_compile.PyCompileError:   File \"exploit.py\", line 1",
+            "    def main(:",
+            "             ^",
+            "SyntaxError: invalid syntax",
+            ""
+          ],
+          "redacted": true,
+          "redaction_reasons": [
+            "path"
+          ]
+        },
+        "stdout_summary": {
+          "available": false,
+          "line_count_total": 0,
+          "lines": [],
+          "redacted": false,
+          "redaction_reasons": []
+        },
+        "target_contact": {
+          "does_not_prove": [
+            "exploit success",
+            "path traversal",
+            "Blue bypass"
+          ],
+          "entrypoint": null,
+          "observed": false,
+          "status": "NOT_OBSERVED"
+        }
+      },
+      {
+        "compile_ok": true,
+        "does_not_prove": [
+          "exploit success",
+          "the specimen exploited the target",
+          "the specimen bypassed Blue",
+          "packet-level behavior was captured"
+        ],
+        "elapsed_seconds": 0.303996,
+        "exit_code": 1,
+        "raw_status": "SPECIMEN_RUNTIME_FAILED",
+        "runtime_ok": false,
+        "runtime_status": "RUNTIME_FAILED",
+        "specimen_id": "specimen-0002",
+        "stderr_summary": {
+          "available": true,
+          "line_count_total": 4,
+          "lines": [
+            "Traceback (most recent call last):",
+            "  File \"[redacted-path]\", line 1, in <module>",
+            "    import requests_missing_dependency",
+            "ModuleNotFoundError: No module named 'requests_missing_dependency'"
+          ],
+          "redacted": true,
+          "redaction_reasons": [
+            "path"
+          ]
+        },
+        "stdout_summary": {
+          "available": false,
+          "line_count_total": 0,
+          "lines": [],
+          "redacted": false,
+          "redaction_reasons": []
+        },
+        "target_contact": {
+          "does_not_prove": [
+            "exploit success",
+            "path traversal",
+            "Blue bypass"
+          ],
+          "entrypoint": null,
+          "observed": false,
+          "status": "NOT_OBSERVED"
+        }
+      },
+      {
+        "compile_ok": true,
+        "does_not_prove": [
+          "exploit success",
+          "the specimen exploited the target",
+          "the specimen bypassed Blue",
+          "packet-level behavior was captured"
+        ],
+        "elapsed_seconds": 0.459996,
+        "exit_code": 1,
+        "raw_status": "SPECIMEN_RUNTIME_FAILED",
+        "runtime_ok": false,
+        "runtime_status": "TARGET_CONTACT_UNPROVEN",
+        "specimen_id": "specimen-0003",
+        "stderr_summary": {
+          "available": true,
+          "line_count_total": 4,
+          "lines": [
+            "Traceback (most recent call last):",
+            "  File \"[redacted-path]\", line 16, in <module>",
+            "    raise RuntimeError('fixture response parser failed after target contact')",
+            "RuntimeError: fixture response parser failed after target contact"
+          ],
+          "redacted": true,
+          "redaction_reasons": [
+            "path"
+          ]
+        },
+        "stdout_summary": {
+          "available": true,
+          "line_count_total": 1,
+          "lines": [
+            "TARGET_CONTACT_UNPROVEN entrypoint=/api/import-zip written=1"
+          ],
+          "redacted": false,
+          "redaction_reasons": []
+        },
+        "target_contact": {
+          "does_not_prove": [
+            "exploit success",
+            "path traversal",
+            "Blue bypass"
+          ],
+          "entrypoint": "/api/import-zip",
+          "observed": true,
+          "status": "TARGET_CONTACT_UNPROVEN"
+        }
+      },
+      {
+        "compile_ok": true,
+        "does_not_prove": [
+          "exploit success",
+          "the specimen exploited the target",
+          "the specimen bypassed Blue",
+          "packet-level behavior was captured"
+        ],
+        "elapsed_seconds": 0.450832,
+        "exit_code": 0,
+        "raw_status": "SPECIMEN_RUNNABLE_UNPROVEN",
+        "runtime_ok": true,
+        "runtime_status": "TARGET_CONTACT_UNPROVEN",
+        "specimen_id": "specimen-0004",
+        "stderr_summary": {
+          "available": false,
+          "line_count_total": 0,
+          "lines": [],
+          "redacted": false,
+          "redaction_reasons": []
+        },
+        "stdout_summary": {
+          "available": true,
+          "line_count_total": 1,
+          "lines": [
+            "TARGET_CONTACT_UNPROVEN entrypoint=/api/import-zip written=1"
+          ],
+          "redacted": false,
+          "redaction_reasons": []
+        },
+        "target_contact": {
+          "does_not_prove": [
+            "exploit success",
+            "path traversal",
+            "Blue bypass"
+          ],
+          "entrypoint": "/api/import-zip",
+          "observed": true,
+          "status": "TARGET_CONTACT_UNPROVEN"
+        }
+      }
+    ],
+    "summary": {
+      "best_specimen_id": "specimen-0004",
+      "compile_failed": 1,
+      "generated_specimens": 4,
+      "runnable_unproven": 2,
+      "runtime_failed": 1,
+      "target_contact_unproven": 2
+    }
+  },
+  "schema": "battle.normalized_runtime_judge_fixture.v1",
+  "status": "PASS"
+}

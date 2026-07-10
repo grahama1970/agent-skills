@@ -202,6 +202,7 @@ promoted; failed mutations remain searchable negative evidence.
 | Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, produce Tau-validated source-bearing research receipts, deterministically combine child methods, and reach the PR3c provider-authorship boundary | Compile repair, Docker child execution, or exploit success unless later Tau/Judge receipts prove them |
 | PR3c synthesis fixture | `./run.sh normalize-synthesis-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3c-synthesis --public-out spectator/public/battle-fixtures/battle-004-pr3c-synthesis` | UX-safe provider-authored specimen materialization fixture with provider/model attestation, code hash, bounded code preview, and strict NOT_RUN execution boundary | Compile pass, runnable child, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 | PR3d compile fixture | `./run.sh normalize-compile-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3d-compile --public-out spectator/public/battle-fixtures/battle-004-pr3d-compile` | UX-safe immutable specimen version timeline with compile attempt, compile failure/pass state, stderr summary, repair fields, and version hashes | Runnable child, runtime success, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
+| PR4 runtime/Judge fixture | `./run.sh normalize-runtime-judge-fixture /tmp/battle-004-combiner --out local/battle-004-pr4-runtime-judge --public-out spectator/public/battle-fixtures/battle-004-pr4-runtime-judge` | UX-safe Docker specimen runtime summaries, container policy, exit/stdout/stderr summaries, target-contact-unproven state, and explicit Judge NOT_RUN progression | Exploit success, Blue outcome, Judge success, packet behavior, memory promotion, or target contact as exploit proof |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -300,6 +301,25 @@ is driven by `specimen_versions[]`; the stderr panel is driven by
 `selected_version`. Compile pass is not runnable, and runtime, target contact,
 Judge replay, packet behavior, Blue outcomes, and memory promotion remain
 `NOT_RUN` unless later fixtures explicitly promote those receipts.
+
+The UX5 runtime/Judge contract is a combined normalized fixture.
+
+Route: `#battle/runtime?fixture=battle-004-pr4`.
+
+```text
+local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+spectator/public/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+```
+
+UX should consume that fixture only. It must not read raw combiner specimen
+directories, `tau-dag-run/**`, `command-loop/command-artifacts/**`, provider
+workspace directories, SciLLM/OpenCode runtime directories, raw stdout/stderr
+paths, or Docker mount paths. The Docker policy panel is driven by
+`runtime.docker`; runtime cards are driven by `runtime.specimen_runs[]`; the
+summary row is driven by `runtime.summary`; Judge progression is driven by
+`judge`. This fixture may show `TARGET_CONTACT_UNPROVEN`, but target contact is
+not exploit success. Judge remains `NOT_RUN` until a later receipt-backed Judge
+fixture exists.
 
 ## Claim Boundaries
 

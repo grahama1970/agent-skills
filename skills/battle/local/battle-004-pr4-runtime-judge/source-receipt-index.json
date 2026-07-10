@@ -1,0 +1,52 @@
+{
+  "battle_id": "battle-004",
+  "fixture_kind": "pr4_runtime_judge",
+  "raw_paths_redacted": true,
+  "receipts": [
+    {
+      "id": "combiner_run_receipt",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_combiner_proof.v1",
+      "sha256": "sha256:da3542348d747ba28ea41ce665fe1330b34a42d4c7ddd481f0a177e8398707cf",
+      "status": "PASS"
+    },
+    {
+      "id": "combiner_scoreboard",
+      "label": "scoreboard.json",
+      "schema": "battle.exploit_combiner_scoreboard.v1",
+      "sha256": "sha256:0bd6db5056b7a4d4827cae08a80c0481fafb15ba2d7ed84123302774b9ff1fd1",
+      "status": "RUNNABLE_UNPROVEN"
+    },
+    {
+      "id": "specimen_run_specimen-0001",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:54a0ac24fca66da0751d8f6282e4b4172901468c9671a30113736fa97107fe51",
+      "status": "SPECIMEN_COMPILE_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0002",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:8f0148fd5fbe3eaec0c43e24767feb457230bff46273d9441402b95632cf793b",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0003",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:9362f18159b9929e8b263d69b4449f9555b4b6db666e100a9a243a09f609fd61",
+      "status": "SPECIMEN_RUNTIME_FAILED"
+    },
+    {
+      "id": "specimen_run_specimen-0004",
+      "label": "run-receipt.json",
+      "schema": "battle.exploit_specimen_run.v1",
+      "sha256": "sha256:c90c7a384a05f561926ea67fa79578ccb8585f44115a49dddc5e07f2dd99e5df",
+      "status": "SPECIMEN_RUNNABLE_UNPROVEN"
+    }
+  ],
+  "schema": "battle.normalized_runtime_judge_source_receipt_index.v1",
+  "source_receipt_count": 6,
+  "status": "PASS"
+}

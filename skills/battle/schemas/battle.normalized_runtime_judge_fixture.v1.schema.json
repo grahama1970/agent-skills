@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.normalized_runtime_judge_fixture.v1.schema.json",
+  "title": "Battle Normalized Runtime Judge Fixture",
+  "type": "object",
+  "required": [
+    "schema",
+    "fixture_kind",
+    "battle_id",
+    "run_id",
+    "generated_at",
+    "status",
+    "mocked",
+    "live",
+    "proof_mode",
+    "runtime",
+    "judge",
+    "claim_boundary",
+    "receipt_refs",
+    "provenance",
+    "copy"
+  ],
+  "properties": {
+    "schema": { "const": "battle.normalized_runtime_judge_fixture.v1" },
+    "fixture_kind": { "const": "pr4_runtime_judge" },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "status": { "const": "PASS" },
+    "mocked": { "const": false },
+    "live": { "const": "local_docker_specimen_fixture" },
+    "proof_mode": { "const": "local_docker_specimen_fixture" },
+    "runtime": {
+      "type": "object",
+      "required": ["docker", "specimen_runs", "summary"],
+      "properties": {
+        "docker": {
+          "type": "object",
+          "required": ["image", "network", "timeout_seconds"],
+          "properties": {
+            "image": { "type": "string", "minLength": 1 },
+            "network": { "type": "string", "minLength": 1 },
+            "timeout_seconds": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": true
+        },
+        "specimen_runs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "specimen_id",
+              "runtime_status",
+              "exit_code",
+              "compile_ok",
+              "runtime_ok",
+              "target_contact",
+              "stdout_summary",
+              "stderr_summary"
+            ],
+            "properties": {
+              "specimen_id": { "type": "string", "minLength": 1 },
+              "runtime_status": {
+                "enum": [
+                  "COMPILE_FAILED",
+                  "RUNTIME_FAILED",
+                  "RUNNABLE_UNPROVEN",
+                  "TARGET_CONTACT_UNPROVEN",
+                  "POLICY_BLOCKED"
+                ]
+              },
+              "exit_code": { "type": ["integer", "null"] },
+              "compile_ok": { "type": "boolean" },
+              "runtime_ok": { "type": "boolean" },
+              "target_contact": {
+                "type": "object",
+                "required": ["observed", "status", "does_not_prove"],
+                "properties": {
+                  "observed": { "type": "boolean" },
+                  "status": { "enum": ["NOT_OBSERVED", "TARGET_CONTACT_UNPROVEN"] },
+                  "entrypoint": { "type": ["string", "null"] },
+                  "does_not_prove": { "type": "array", "items": { "type": "string" } }
+                },
+                "additionalProperties": true
+              },
+              "stdout_summary": { "type": "object" },
+              "stderr_summary": { "type": "object" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "summary": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "judge": {
+      "type": "object",
+      "required": ["judge_status", "judge_progression", "judge_verified_exploits"],
+      "properties": {
+        "judge_status": { "const": "NOT_RUN" },
+        "judge_progression": { "type": "array", "items": { "type": "string" } },
+        "judge_verified_exploits": { "const": 0 }
+      },
+      "additionalProperties": true
+    },
+    "claim_boundary": {
+      "type": "object",
+      "required": ["may_claim", "must_not_claim"],
+      "properties": {
+        "may_claim": { "type": "array", "items": { "type": "string" } },
+        "must_not_claim": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "receipt_refs": { "type": "array" },
+    "provenance": { "type": "object" },
+    "copy": {
+      "type": "object",
+      "required": ["headline", "subhead", "status_label", "boundary_notice"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "subhead": { "type": "string", "minLength": 1 },
+        "status_label": { "type": "string", "minLength": 1 },
+        "boundary_notice": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,16 @@
+{
+  "battle_id": "battle-004",
+  "fixture_kind": "pr4_runtime_judge",
+  "judge_status": "NOT_RUN",
+  "judge_verified_exploits": 0,
+  "raw_paths_redacted": true,
+  "runtime_run_count": 4,
+  "runtime_statuses": [
+    "COMPILE_FAILED",
+    "RUNTIME_FAILED",
+    "TARGET_CONTACT_UNPROVEN"
+  ],
+  "schema": "battle.normalized_runtime_judge_fixture_validation.v1",
+  "status": "PASS",
+  "target_contact_unproven_count": 2
+}

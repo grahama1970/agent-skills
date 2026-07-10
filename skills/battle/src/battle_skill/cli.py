@@ -1019,6 +1019,61 @@ def validate_compile_fixture(
     console.print_json(data=report)
 
 
+@app.command("normalize-runtime-judge-fixture")
+def normalize_runtime_judge_fixture(
+    proof_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Combiner/runtime proof directory or run-receipt.json.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_runtime_judge_fixture.json."),
+    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+):
+    """Normalize backend runtime and Judge boundary receipts into a stable UX fixture."""
+    from .normalized_runtime_judge_fixture import normalize_runtime_judge_fixture as _normalize
+
+    fixture = _normalize(
+        proof_dir=proof_dir,
+        out_dir=out,
+        public_out_dir=public_out,
+        generated_at=generated_at,
+    )
+    console.print_json(
+        data={
+            "status": fixture.get("status"),
+            "schema": fixture.get("schema"),
+            "fixture_kind": fixture.get("fixture_kind"),
+            "battle_id": fixture.get("battle_id"),
+            "out": str(out / "battle.normalized_runtime_judge_fixture.json"),
+            "public_out": str(public_out / "battle.normalized_runtime_judge_fixture.json") if public_out else None,
+            "runtime_summary": fixture.get("runtime", {}).get("summary"),
+            "judge": fixture.get("judge"),
+            "may_claim": fixture.get("claim_boundary", {}).get("may_claim"),
+            "must_not_claim": fixture.get("claim_boundary", {}).get("must_not_claim"),
+        }
+    )
+
+
+@app.command("validate-runtime-judge-fixture")
+def validate_runtime_judge_fixture(
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.normalized_runtime_judge_fixture.v1 JSON fixture.",
+    ),
+):
+    """Validate a normalized runtime/Judge fixture."""
+    from .normalized_runtime_judge_fixture import validate_normalized_runtime_judge_fixture_path
+
+    report = validate_normalized_runtime_judge_fixture_path(fixture)
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

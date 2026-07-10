@@ -707,6 +707,55 @@ promotion from this PR3d fixture. Compile pass must not be rendered as runnable.
 Do not bind React to raw Tau, command-loop, provider workspace, SciLLM/OpenCode
 runtime directories, raw compile stderr paths, or worker result paths.
 
+Normalized runtime/Judge fixture:
+
+```text
+schema = battle.normalized_runtime_judge_fixture.v1
+fixture kind = pr4_runtime_judge
+local path = skills/battle/local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+public URL = /battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+route = #battle/runtime?fixture=battle-004-pr4
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-runtime-judge-fixture /tmp/battle-pr3d-compile-repair-check/combiner \
+  --out local/battle-004-pr4-runtime-judge \
+  --public-out spectator/public/battle-fixtures/battle-004-pr4-runtime-judge \
+  --generated-at 2026-07-10T20:30:00Z
+./run.sh validate-runtime-judge-fixture local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+./run.sh validate-runtime-judge-fixture spectator/public/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+```
+
+UX5 should consume the normalized runtime/Judge fixture only. It may show:
+
+```text
+Docker image/network/timeout: RECORDED
+Specimen exit codes: RECORDED
+stdout/stderr summaries: REDACTED SUMMARIES
+Runtime failed / runnable unproven / target contact unproven: RECEIPT-BACKED
+Judge progression: NOT_RUN
+Judge verified exploits: 0
+Exploit success: NOT PROVEN
+```
+
+Renderer field mapping:
+
+```text
+Docker policy = runtime.docker
+runtime cards = runtime.specimen_runs[]
+runtime totals = runtime.summary
+Judge progression = judge.judge_progression / judge.judge_status
+claim banner = claim_boundary
+```
+
+UX5 must not show exploit success, Blue detection/block, packet-level behavior,
+Judge success, or memory promotion from this PR4 fixture. Target contact must be
+rendered as `TARGET_CONTACT_UNPROVEN`, not as exploit proof. Do not bind React
+to raw specimen directories, raw stdout/stderr paths, Docker mount paths,
+Tau/command-loop directories, provider workspaces, or worker result paths.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:
@@ -754,3 +803,15 @@ Those fixtures are generated from a live PR3d compile-repair boundary run and
 validated by `./run.sh validate-compile-fixture`. They intentionally stop at
 compiler evidence and keep runtime, target contact, Judge, Blue, packet, and
 memory states as `NOT_RUN` / not claimed.
+
+The active UX5 backend handoff is the PR4 normalized runtime/Judge fixture:
+
+```text
+skills/battle/local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+skills/battle/spectator/public/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json
+```
+
+Those fixtures are generated from real local Docker specimen run receipts and
+validated by `./run.sh validate-runtime-judge-fixture`. Judge remains
+`NOT_RUN`; runtime target contact remains `TARGET_CONTACT_UNPROVEN`; no exploit,
+Blue, packet, or memory outcome is claimed.
