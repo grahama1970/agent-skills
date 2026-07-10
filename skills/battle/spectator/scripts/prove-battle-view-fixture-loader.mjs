@@ -26,19 +26,23 @@ const proof = await page.evaluate(async () => {
   const proofCard = await load('/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json')
   const synthesis = await load('/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json')
   const compile = await load('/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json')
+  const runtime = await load('/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json')
   return {
     raceSchema: race.json?.schema ?? null,
     proofSchema: proofCard.json?.schema ?? null,
     synthesisSchema: synthesis.json?.schema ?? null,
     compileSchema: compile.json?.schema ?? null,
+    runtimeSchema: runtime.json?.schema ?? null,
     raceOk: race.ok,
     proofOk: proofCard.ok,
     synthesisOk: synthesis.ok,
     compileOk: compile.ok,
+    runtimeOk: runtime.ok,
     raceHasLanes: Array.isArray(race.json?.lanes),
     proofHasNodes: Boolean(proofCard.json?.node_status),
     synthesisProviderLive: synthesis.json?.provider_live === true,
     compileFailed: compile.json?.compile?.compile_failed === true,
+    judgeNotRun: runtime.json?.judge?.judge_status === 'NOT_RUN',
   }
 })
 
@@ -46,7 +50,8 @@ record('1-race-fixture-served', proof.raceOk && proof.raceSchema === 'battle.nor
 record('2-proof-card-fixture-served', proof.proofOk && proof.proofSchema === 'battle.normalized_proof_card_fixture.v1', JSON.stringify(proof))
 record('2b-synthesis-fixture-served', proof.synthesisOk && proof.synthesisSchema === 'battle.normalized_synthesis_fixture.v1' && proof.synthesisProviderLive, JSON.stringify(proof))
 record('2c-compile-fixture-served', proof.compileOk && proof.compileSchema === 'battle.normalized_compile_fixture.v1' && proof.compileFailed, JSON.stringify(proof))
-record('3-schemas-differ', proof.raceSchema !== proof.proofSchema && proof.proofSchema !== proof.synthesisSchema && proof.synthesisSchema !== proof.compileSchema, JSON.stringify({ race: proof.raceSchema, proof: proof.proofSchema, synthesis: proof.synthesisSchema, compile: proof.compileSchema }))
+record('2d-runtime-fixture-served', proof.runtimeOk && proof.runtimeSchema === 'battle.normalized_runtime_judge_fixture.v1' && proof.judgeNotRun, JSON.stringify(proof))
+record('3-schemas-differ', proof.raceSchema !== proof.proofSchema && proof.proofSchema !== proof.synthesisSchema && proof.synthesisSchema !== proof.compileSchema && proof.compileSchema !== proof.runtimeSchema, JSON.stringify({ race: proof.raceSchema, proof: proof.proofSchema, synthesis: proof.synthesisSchema, compile: proof.compileSchema, runtime: proof.runtimeSchema }))
 record('4-race-has-lanes', proof.raceHasLanes, JSON.stringify(proof))
 record('5-proof-has-nodes', proof.proofHasNodes, JSON.stringify(proof))
 
@@ -82,6 +87,14 @@ const onCompile = await page.evaluate(() => ({
   pixi: !!document.querySelector('[data-battle-pixi-engine]'),
 }))
 record('9-compile-route-no-pixi', onCompile.root && !onCompile.pixi, JSON.stringify(onCompile))
+
+await page.goto(`${host}/#battle/runtime?fixture=battle-004-pr4`, { waitUntil: 'networkidle', timeout: 60000 })
+await page.waitForSelector('[data-qid="battle:runtime:root"]', { timeout: 20000 })
+const onRuntime = await page.evaluate(() => ({
+  root: !!document.querySelector('[data-qid="battle:runtime:root"]'),
+  pixi: !!document.querySelector('[data-battle-pixi-engine]'),
+}))
+record('10-runtime-route-no-pixi', onRuntime.root && !onRuntime.pixi, JSON.stringify(onRuntime))
 
 await browser.close()
 const failed = checks.filter((c) => !c.pass).length

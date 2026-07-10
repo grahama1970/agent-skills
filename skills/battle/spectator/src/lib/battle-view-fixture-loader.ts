@@ -2,6 +2,8 @@ import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-typ
 import { validateProofCardFixture } from "./battle-proof-card-validator";
 import type { BattleNormalizedCompileFixtureV1 } from "./battle-compile-types";
 import { validateCompileFixture } from "./battle-compile-validator";
+import type { BattleNormalizedRuntimeJudgeFixtureV1 } from "./battle-runtime-types";
+import { validateRuntimeJudgeFixture } from "./battle-runtime-validator";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import { validateSynthesisFixture } from "./battle-synthesis-validator";
 import type { BattleNormalizedUxFixture } from "./battle-types";
@@ -165,6 +167,27 @@ export function discriminateBattleViewFixture(
 		};
 	}
 
+	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE) {
+		const validated = validateRuntimeJudgeFixture(data);
+		if (!validated.ok) {
+			return {
+				ok: false,
+				error: {
+					code: validated.error.code === "UNSUPPORTED_SCHEMA" ? "UNSUPPORTED_SCHEMA" : "CONTRACT_VALIDATION_FAILED",
+					title: validated.error.title,
+					detail: validated.error.detail,
+					schema,
+				},
+			};
+		}
+		return {
+			ok: true,
+			fixture: validated.fixture,
+			schema: validated.fixture.schema,
+			viewKind: "runtime",
+		};
+	}
+
 	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.RACE) {
 		const raceError = validateRaceFixtureShape(data);
 		if (raceError) return { ok: false, error: raceError };
@@ -245,6 +268,19 @@ export async function loadBattleCompileViewFixture(
 		fixture: result.fixture as BattleNormalizedCompileFixtureV1,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE,
 		viewKind: "compile",
+	};
+}
+
+export async function loadBattleRuntimeViewFixture(
+	url: string,
+): Promise<BattleFixtureLoadResult<BattleNormalizedRuntimeJudgeFixtureV1>> {
+	const result = await loadBattleViewFixture(url, "runtime");
+	if (!result.ok) return result;
+	return {
+		ok: true,
+		fixture: result.fixture as BattleNormalizedRuntimeJudgeFixtureV1,
+		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE,
+		viewKind: "runtime",
 	};
 }
 

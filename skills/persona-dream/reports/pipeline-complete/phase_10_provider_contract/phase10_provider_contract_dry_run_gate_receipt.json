@@ -1,0 +1,54 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "current fal provider schema compatibility",
+      "provider-accessible media URLs",
+      "URL probe success",
+      "cost approval",
+      "provider entitlement",
+      "manual acceptance",
+      "paid-call authorization",
+      "live provider readiness",
+      "live video generation",
+      "provider return",
+      "Watch observation",
+      "memory persistence"
+    ],
+    "proves": [
+      "the Phase 10 provider contract was emitted for local inspection",
+      "the contract receipt is bound by path and sha256",
+      "live-readiness blockers are retained",
+      "no provider request was submitted"
+    ]
+  },
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/phase10_provider_contract.json",
+  "contract_receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/phase10_provider_contract_receipt.json",
+  "contract_receipt_sha256": "sha256:df40dfa486382417498cf06c695e0f38728f83dcfb16f35f737e3640816d51a6",
+  "contract_sha256": "sha256:9834036a9e42f4d18e5be021b412f37aebff182795e98b8aec113c8ec179e792",
+  "fixture_backed": true,
+  "generated_at": "2026-07-10T19:30:25.050265+00:00",
+  "live_external_evidence": false,
+  "live_submit_ready": false,
+  "mocked": false,
+  "mocked_provider_response": false,
+  "paid_call_authorized": false,
+  "phase10_contract_blockers": [],
+  "phase10_contract_status": "PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN",
+  "phase11_live_readiness_blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+    "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+    "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+    "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+  ],
+  "proof_kind": "local_dry_run_contract_gate",
+  "provider_accessible_url_created": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "schema": "persona_dream.phase10.provider_contract_dry_run_gate_receipt.v1",
+  "status": "PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN_GATE",
+  "submitted": false
+}

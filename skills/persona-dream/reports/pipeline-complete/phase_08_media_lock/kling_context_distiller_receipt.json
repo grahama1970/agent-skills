@@ -1,0 +1,25 @@
+{
+  "distill_into_kling": {
+    "audio_state": "ambience/foley on; dialogue/voice explicit as VOICE_TEXT_ONLY",
+    "camera": "waterline, identity-readable, continuity-preserving",
+    "provider_state": "dry run only; no paid or live call",
+    "what_moves": "characters, boards, water, swell, background lineup, glare, spray",
+    "what_not_to_change": "identity, wardrobe, surf etiquette, lava reef, public lineup, no generic surfers",
+    "when": "10 seconds, four timed 2.5 second beats",
+    "where": "Kahaluu Bay / Kona Coast / lava reef / public lineup",
+    "who": "Embry and Kai"
+  },
+  "omitted_from_provider_prompt": [
+    "raw memory residue",
+    "serialized story/script contract JSON",
+    "interaction matrices",
+    "Tau receipts",
+    "reviewer prose",
+    "failed/rejected attempts",
+    "UI screenshots",
+    "internal filesystem paths except dry-run traceability fields"
+  ],
+  "schema": "persona_dream.kling.context_distiller_receipt.v1",
+  "source_panel_count": 4,
+  "status": "PASS_DISTILLED"
+}

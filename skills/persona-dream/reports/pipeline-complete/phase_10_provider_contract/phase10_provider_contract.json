@@ -1,0 +1,1127 @@
+{
+  "actual_provider_call_attempts": 0,
+  "async_return_contract": {
+    "callback_url": null,
+    "callback_verified": false,
+    "live_blockers": [],
+    "output_contract": {
+      "download_required": true,
+      "expected_media_type": "video",
+      "ffprobe_required": true,
+      "sha256_required": true
+    },
+    "polling_plan": {
+      "accepted_for_phase10_dry_run": true,
+      "enabled": true,
+      "interval_s": 15,
+      "max_attempts": 80,
+      "task_id_source": "future_provider_submit_response.task_id",
+      "terminal_states": [
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED",
+        "TIMEOUT"
+      ]
+    },
+    "selected_async_mode": "polling",
+    "status": "DRY_RUN_ASYNC_PLAN_ONLY"
+  },
+  "claims": {
+    "does_not_prove": [
+      "current fal provider schema compatibility",
+      "provider-accessible media URLs",
+      "URL probe success",
+      "cost approval",
+      "provider entitlement",
+      "callback readiness",
+      "manual acceptance",
+      "paid-call authorization",
+      "live provider readiness",
+      "live video generation",
+      "Watch observation",
+      "memory persistence"
+    ],
+    "proves": [
+      "Phase 09 provider packet was compiled into an inspectable Phase 10 provider contract",
+      "the exact dry-run request body and payload hash were recorded",
+      "registry refresh evidence was bound by path and sha256",
+      "provider media publication, cost, entitlement, async return, manual acceptance, and paid authorization states are represented",
+      "no provider request was submitted"
+    ]
+  },
+  "cost_contract": {
+    "cost_ceiling": null,
+    "currency": null,
+    "estimated_cost": null,
+    "live_blockers": [
+      "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+      "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING"
+    ],
+    "paid_call_authorized": false,
+    "status": "DRY_RUN_COST_ESTIMATE_UNVERIFIED"
+  },
+  "distillation_source_paths": {
+    "media_lock_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_media_lock/storyboard_media_lock_manifest.json",
+    "media_lock_sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+    "script_contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_06_script/script_contract.json",
+    "script_contract_sha256": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+    "storyboard_packet_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+    "storyboard_packet_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+  },
+  "dry_run_blockers": [],
+  "entitlement_contract": {
+    "fal_api_key_observed": false,
+    "live_blockers": [
+      "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED"
+    ],
+    "provider_entitlement_verified": false,
+    "status": "DRY_RUN_ENTITLEMENT_UNVERIFIED"
+  },
+  "fal_model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "field_mapping": [
+    {
+      "provider_field": "model",
+      "source": "video_provider_packet.fal_model_endpoint",
+      "status": "MAPPED",
+      "value": "fal-ai/kling-video/v3/pro/image-to-video"
+    },
+    {
+      "provider_field": "input.aspect_ratio",
+      "source": "video_scene_contract",
+      "status": "MAPPED",
+      "value_present": true,
+      "value_type": "string"
+    },
+    {
+      "provider_field": "input.duration",
+      "source": "video_scene_contract",
+      "status": "MAPPED",
+      "value_present": true,
+      "value_type": "integer"
+    },
+    {
+      "provider_field": "input.end_frame_asset_id",
+      "source": "media_lock_manifest",
+      "status": "MAPPED",
+      "value_present": true,
+      "value_type": "string"
+    },
+    {
+      "provider_field": "input.end_image_url",
+      "source": "phase10.provider_media_publication_plan",
+      "status": "MAPPED_AS_LIVE_BLOCKER",
+      "value_present": false,
+      "value_type": "null"
+    },
+    {
+      "provider_field": "input.image_url",
+      "source": "phase10.provider_media_publication_plan",
+      "status": "MAPPED_AS_LIVE_BLOCKER",
+      "value_present": false,
+      "value_type": "null"
+    },
+    {
+      "provider_field": "input.prompt",
+      "source": "video_scene_contract",
+      "status": "MAPPED",
+      "value_present": true,
+      "value_type": "string"
+    },
+    {
+      "provider_field": "input.start_frame_asset_id",
+      "source": "media_lock_manifest",
+      "status": "MAPPED",
+      "value_present": true,
+      "value_type": "string"
+    }
+  ],
+  "fixture_backed": true,
+  "generated_at": "2026-07-10T19:30:25.050265+00:00",
+  "live_call_blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+    "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+    "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+    "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+  ],
+  "live_external_evidence": false,
+  "live_submit_ready": false,
+  "live_submit_status": "BLOCKED_LIVE_SUBMIT_PENDING_APPROVAL",
+  "manual_acceptance": {
+    "accepted": false,
+    "live_blockers": [
+      "BLOCKED_MANUAL_ACCEPTANCE_MISSING"
+    ],
+    "status": "MISSING"
+  },
+  "mocked": false,
+  "mocked_provider_response": false,
+  "non_claims": [
+    "does not prove current live fal schema compatibility",
+    "does not prove provider-accessible media publication",
+    "does not prove provider URL fetch behavior",
+    "does not prove cost or entitlement",
+    "does not prove manual acceptance",
+    "does not prove paid authorization",
+    "does not prove provider submission",
+    "does not prove provider return",
+    "does not prove Watch observation",
+    "does not prove dream interpretation",
+    "does not prove memory persistence"
+  ],
+  "normalized_request_schema": {
+    "does_not_prove": [
+      "provider accepted this schema today",
+      "fal endpoint has not changed",
+      "media URLs are fetchable by provider"
+    ],
+    "input_fields": [
+      {
+        "name": "aspect_ratio",
+        "required": true,
+        "type": "string",
+        "value_present": true
+      },
+      {
+        "name": "duration",
+        "required": true,
+        "type": "integer",
+        "value_present": true
+      },
+      {
+        "name": "end_frame_asset_id",
+        "required": true,
+        "type": "string",
+        "value_present": true
+      },
+      {
+        "name": "end_image_url",
+        "required": false,
+        "type": "null",
+        "value_present": false
+      },
+      {
+        "name": "image_url",
+        "required": false,
+        "type": "null",
+        "value_present": false
+      },
+      {
+        "name": "prompt",
+        "required": true,
+        "type": "string",
+        "value_present": true
+      },
+      {
+        "name": "start_frame_asset_id",
+        "required": true,
+        "type": "string",
+        "value_present": true
+      }
+    ],
+    "model_field": {
+      "name": "model",
+      "required": true,
+      "type": "string"
+    },
+    "status": "DRY_RUN_SCHEMA_DERIVED_FROM_LOCAL_PAYLOAD_AND_REGISTRY_EVIDENCE"
+  },
+  "paid_call_authorized": false,
+  "panel_payloads": [
+    {
+      "accepted_end_frame": {
+        "asset_id": "sb_001.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_001",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:b224348750cd419e9eb000df13d7675d3af0bb0b7668bd010b732d48a66a5335",
+        "time_s": 2.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "accepted_start_frame": {
+        "asset_id": "sb_001.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_001",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+        "time_s": 0.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "distillation": {
+        "aspect_ratio": "16:9",
+        "audio_strategy": "NO_DIALOGUE",
+        "duration": 2.5,
+        "negative_constraints": [
+          "do not change accepted character identities",
+          "do not invent provider-accessible URLs",
+          "do not imply live submission",
+          "do not treat local file paths as upload URLs"
+        ],
+        "provider_prompt": "Panel sb_001. Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera: {\"camera_equipment\": \"water-housed action or cinema camera for the waterline plate; shore safety B-camera optional\", \"composition\": \"Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.\", \"height\": \"waterline\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"slow observational drift with the swell, no dramatic push\", \"shot_code\": \"WS\"} Acting beats: Embry scans the lineup and chooses not to rush.; Kai watches the reef and the locals before giving any cue.; Both characters show autonomy through restraint rather than speech. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+        "provider_scene_type": "fal_kling_image_to_video",
+        "scene_types": [
+          "identity_locked_character_scene",
+          "first_last_frame_transition",
+          "surf_sports_motion_scene",
+          "multi_character_interaction",
+          "cinematic_camera_move"
+        ],
+        "voice_status": "NO_DIALOGUE"
+      },
+      "live_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+        "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+        "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+        "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+      ],
+      "non_claims": [
+        "panel payload projection was not submitted",
+        "local frame paths are not provider-accessible URLs",
+        "voice text is not a provider voice id"
+      ],
+      "panel_id": "sb_001",
+      "provider_id": "kling",
+      "provider_payload_projection": {
+        "input": {
+          "aspect_ratio": "16:9",
+          "duration": 2.5,
+          "end_frame_asset_id": "sb_001.end_frame",
+          "end_image_url": null,
+          "image_url": null,
+          "prompt": "Panel sb_001. Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera: {\"camera_equipment\": \"water-housed action or cinema camera for the waterline plate; shore safety B-camera optional\", \"composition\": \"Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.\", \"height\": \"waterline\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"slow observational drift with the swell, no dramatic push\", \"shot_code\": \"WS\"} Acting beats: Embry scans the lineup and chooses not to rush.; Kai watches the reef and the locals before giving any cue.; Both characters show autonomy through restraint rather than speech. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+          "start_frame_asset_id": "sb_001.start_frame"
+        },
+        "model": "fal-ai/kling-video/v3/pro/image-to-video",
+        "submitted": false
+      },
+      "selected_provider_best_practice": "best-practices-kling-scene",
+      "source_evidence": {
+        "acting_beats": [
+          "Embry scans the lineup and chooses not to rush.",
+          "Kai watches the reef and the locals before giving any cue.",
+          "Both characters show autonomy through restraint rather than speech."
+        ],
+        "action": "Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules.",
+        "camera": {
+          "camera_equipment": "water-housed action or cinema camera for the waterline plate; shore safety B-camera optional",
+          "composition": "Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
+          "height": "waterline",
+          "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+          "movement": "slow observational drift with the swell, no dramatic push",
+          "shot_code": "WS"
+        },
+        "dialogue": null,
+        "lighting": {
+          "continuity": "skin, rashguards, and boards stay wet; glare and humidity affect visibility",
+          "direction": "high side-front sunlight reflecting off the wave face",
+          "quality": "hard coastal glare softened by water spray",
+          "time_of_day": "daylight surf window in hot, humid June"
+        },
+        "references": [
+          {
+            "id": "embry_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+            "role": "identity_reference",
+            "title": "Embry character sheet montage"
+          },
+          {
+            "id": "kai_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+            "role": "identity_reference",
+            "title": "Kai Akana character sheet"
+          }
+        ],
+        "required_entities": [
+          "Embry",
+          "Kai",
+          "Lava Reef",
+          "Kona Coast"
+        ],
+        "time_range": [
+          0.0,
+          2.5
+        ],
+        "transcript_lines": [
+          {
+            "end_s": 10.0,
+            "speaker": null,
+            "start_s": 0.0,
+            "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+            "voice_direction": "action description"
+          },
+          {
+            "end_s": 10.0,
+            "speaker": "Kai",
+            "start_s": 0.0,
+            "text": "If we paddle now, we're cutting across the lineup.",
+            "voice_direction": "quiet, practical restraint"
+          }
+        ],
+        "voice_status": "NO_DIALOGUE"
+      }
+    },
+    {
+      "accepted_end_frame": {
+        "asset_id": "sb_002.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_002",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:caa1e08be654167a6176fd400f7c69960ff135f44d9531b24ed8ac57be3df088",
+        "time_s": 5.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "accepted_start_frame": {
+        "asset_id": "sb_002.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_002",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+        "time_s": 2.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "distillation": {
+        "aspect_ratio": "16:9",
+        "audio_strategy": "NO_DIALOGUE",
+        "duration": 2.5,
+        "negative_constraints": [
+          "do not change accepted character identities",
+          "do not invent provider-accessible URLs",
+          "do not imply live submission",
+          "do not treat local file paths as upload URLs"
+        ],
+        "provider_prompt": "Panel sb_002. Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera: {\"camera_equipment\": \"water housing with close-focus capability; safety spotter required near reef\", \"composition\": \"Hands, rail, wax, Embry's face, and reef line all remain legible.\", \"height\": \"low waterline close to the board rail\", \"lens\": \"moderate wide water-housing perspective, approximately 28-40mm equivalent\", \"movement\": \"small handheld/swell movement tracking Embry's grip reset\", \"shot_code\": \"MS\"} Acting beats: Embry notices the palm skid without melodrama.; She resets her grip deliberately instead of pretending she is fine.; The physical correction is the autonomy beat. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+        "provider_scene_type": "fal_kling_image_to_video",
+        "scene_types": [
+          "identity_locked_character_scene",
+          "first_last_frame_transition",
+          "surf_sports_motion_scene",
+          "multi_character_interaction",
+          "cinematic_camera_move"
+        ],
+        "voice_status": "NO_DIALOGUE"
+      },
+      "live_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+        "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+        "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+        "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+      ],
+      "non_claims": [
+        "panel payload projection was not submitted",
+        "local frame paths are not provider-accessible URLs",
+        "voice text is not a provider voice id"
+      ],
+      "panel_id": "sb_002",
+      "provider_id": "kling",
+      "provider_payload_projection": {
+        "input": {
+          "aspect_ratio": "16:9",
+          "duration": 2.5,
+          "end_frame_asset_id": "sb_002.end_frame",
+          "end_image_url": null,
+          "image_url": null,
+          "prompt": "Panel sb_002. Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera: {\"camera_equipment\": \"water housing with close-focus capability; safety spotter required near reef\", \"composition\": \"Hands, rail, wax, Embry's face, and reef line all remain legible.\", \"height\": \"low waterline close to the board rail\", \"lens\": \"moderate wide water-housing perspective, approximately 28-40mm equivalent\", \"movement\": \"small handheld/swell movement tracking Embry's grip reset\", \"shot_code\": \"MS\"} Acting beats: Embry notices the palm skid without melodrama.; She resets her grip deliberately instead of pretending she is fine.; The physical correction is the autonomy beat. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+          "start_frame_asset_id": "sb_002.start_frame"
+        },
+        "model": "fal-ai/kling-video/v3/pro/image-to-video",
+        "submitted": false
+      },
+      "selected_provider_best_practice": "best-practices-kling-scene",
+      "source_evidence": {
+        "acting_beats": [
+          "Embry notices the palm skid without melodrama.",
+          "She resets her grip deliberately instead of pretending she is fine.",
+          "The physical correction is the autonomy beat."
+        ],
+        "action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line.",
+        "camera": {
+          "camera_equipment": "water housing with close-focus capability; safety spotter required near reef",
+          "composition": "Hands, rail, wax, Embry's face, and reef line all remain legible.",
+          "height": "low waterline close to the board rail",
+          "lens": "moderate wide water-housing perspective, approximately 28-40mm equivalent",
+          "movement": "small handheld/swell movement tracking Embry's grip reset",
+          "shot_code": "MS"
+        },
+        "dialogue": null,
+        "lighting": {
+          "continuity": "heat visibly affects wax softness, skin sheen, and Embry's paddle fatigue",
+          "direction": "sun catches sweat, salt, and wax texture",
+          "quality": "bright glare off clear water with wet skin highlights",
+          "time_of_day": "daylight surf window"
+        },
+        "references": [
+          {
+            "id": "embry_surfing_reference",
+            "media_type": "image",
+            "memory_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+            "role": "surf_action_reference",
+            "title": "Embry surfing on the Big Island"
+          },
+          {
+            "id": "embry_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+            "role": "identity_reference",
+            "title": "Embry character sheet montage"
+          },
+          {
+            "id": "kai_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+            "role": "identity_reference",
+            "title": "Kai Akana character sheet"
+          }
+        ],
+        "required_entities": [
+          "Embry",
+          "Embry surfboard",
+          "June Swell",
+          "Lava Reef",
+          "Kai"
+        ],
+        "time_range": [
+          2.5,
+          5.0
+        ],
+        "transcript_lines": [
+          {
+            "end_s": 10.0,
+            "speaker": null,
+            "start_s": 0.0,
+            "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+            "voice_direction": "action description"
+          },
+          {
+            "end_s": 10.0,
+            "speaker": "Kai",
+            "start_s": 0.0,
+            "text": "If we paddle now, we're cutting across the lineup.",
+            "voice_direction": "quiet, practical restraint"
+          }
+        ],
+        "voice_status": "NO_DIALOGUE"
+      }
+    },
+    {
+      "accepted_end_frame": {
+        "asset_id": "sb_003.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_003",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:41b7789f3c89e63f3cd5014364baa8cb5cc45a8f088ba93e8d90c4ffbbcae763",
+        "time_s": 7.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "accepted_start_frame": {
+        "asset_id": "sb_003.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_003",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+        "time_s": 5.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "distillation": {
+        "aspect_ratio": "16:9",
+        "audio_strategy": "TEXT_ONLY_DIALOGUE_BLOCKED_FOR_PROVIDER_VOICE_ID",
+        "duration": 2.5,
+        "negative_constraints": [
+          "do not change accepted character identities",
+          "do not invent provider-accessible URLs",
+          "do not imply live submission",
+          "do not treat local file paths as upload URLs"
+        ],
+        "provider_prompt": "Panel sb_003. Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera: {\"camera_equipment\": \"water housing with operator outside the path; optional shore lens for continuity\", \"composition\": \"Kai, Embry, channel, and shared lineup geometry are all visible.\", \"height\": \"waterline, slightly outside the pair\", \"lens\": \"wide-to-normal water-housing perspective, approximately 30-45mm equivalent\", \"movement\": \"gentle lateral drift that keeps Kai outside and Embry nearer the decision point\", \"shot_code\": \"MWS\"} Acting beats: Kai conserves energy and waits.; He notices the lineup first, then the channel, then Embry's cadence.; His cue is restrained; Embry keeps agency. Dialogue: Kai: If we paddle now, we're cutting across the lineup. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+        "provider_scene_type": "fal_kling_image_to_video",
+        "scene_types": [
+          "identity_locked_character_scene",
+          "first_last_frame_transition",
+          "surf_sports_motion_scene",
+          "multi_character_interaction",
+          "cinematic_camera_move"
+        ],
+        "voice_status": "VOICE_TEXT_ONLY_PROVIDER_ID_MISSING"
+      },
+      "live_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+        "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+        "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+        "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+      ],
+      "non_claims": [
+        "panel payload projection was not submitted",
+        "local frame paths are not provider-accessible URLs",
+        "voice text is not a provider voice id"
+      ],
+      "panel_id": "sb_003",
+      "provider_id": "kling",
+      "provider_payload_projection": {
+        "input": {
+          "aspect_ratio": "16:9",
+          "duration": 2.5,
+          "end_frame_asset_id": "sb_003.end_frame",
+          "end_image_url": null,
+          "image_url": null,
+          "prompt": "Panel sb_003. Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera: {\"camera_equipment\": \"water housing with operator outside the path; optional shore lens for continuity\", \"composition\": \"Kai, Embry, channel, and shared lineup geometry are all visible.\", \"height\": \"waterline, slightly outside the pair\", \"lens\": \"wide-to-normal water-housing perspective, approximately 30-45mm equivalent\", \"movement\": \"gentle lateral drift that keeps Kai outside and Embry nearer the decision point\", \"shot_code\": \"MWS\"} Acting beats: Kai conserves energy and waits.; He notices the lineup first, then the channel, then Embry's cadence.; His cue is restrained; Embry keeps agency. Dialogue: Kai: If we paddle now, we're cutting across the lineup. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+          "start_frame_asset_id": "sb_003.start_frame"
+        },
+        "model": "fal-ai/kling-video/v3/pro/image-to-video",
+        "submitted": false
+      },
+      "selected_provider_best_practice": "best-practices-kling-scene",
+      "source_evidence": {
+        "acting_beats": [
+          "Kai conserves energy and waits.",
+          "He notices the lineup first, then the channel, then Embry's cadence.",
+          "His cue is restrained; Embry keeps agency."
+        ],
+        "action": "Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue.",
+        "camera": {
+          "camera_equipment": "water housing with operator outside the path; optional shore lens for continuity",
+          "composition": "Kai, Embry, channel, and shared lineup geometry are all visible.",
+          "height": "waterline, slightly outside the pair",
+          "lens": "wide-to-normal water-housing perspective, approximately 30-45mm equivalent",
+          "movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
+          "shot_code": "MWS"
+        },
+        "dialogue": "Kai: If we paddle now, we're cutting across the lineup.",
+        "lighting": {
+          "continuity": "same humidity, salt, and public beach pressure as previous panels",
+          "direction": "sun reveals spray on Kai's black rashguard and glare on the channel",
+          "quality": "wet rashguard highlights and high water glare",
+          "time_of_day": "same hot daylight surf window"
+        },
+        "references": [
+          {
+            "id": "kai_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+            "role": "identity_reference",
+            "title": "Kai Akana character sheet"
+          },
+          {
+            "id": "kai_surfing_reference",
+            "media_type": "image",
+            "memory_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+            "role": "surf_action_reference",
+            "title": "Kai Akana surfing on the Big Island"
+          },
+          {
+            "id": "embry_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+            "role": "identity_reference",
+            "title": "Embry character sheet montage"
+          }
+        ],
+        "required_entities": [
+          "Embry",
+          "Kai",
+          "Kai surfboard",
+          "Kona Coast"
+        ],
+        "time_range": [
+          5.0,
+          7.5
+        ],
+        "transcript_lines": [
+          {
+            "end_s": 10.0,
+            "speaker": null,
+            "start_s": 0.0,
+            "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+            "voice_direction": "action description"
+          },
+          {
+            "end_s": 10.0,
+            "speaker": "Kai",
+            "start_s": 0.0,
+            "text": "If we paddle now, we're cutting across the lineup.",
+            "voice_direction": "quiet, practical restraint"
+          }
+        ],
+        "voice_status": "VOICE_TEXT_ONLY_PROVIDER_ID_MISSING"
+      }
+    },
+    {
+      "accepted_end_frame": {
+        "asset_id": "sb_004.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_004",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
+        "time_s": 10.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "accepted_start_frame": {
+        "asset_id": "sb_004.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_004",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+        "time_s": 7.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      "distillation": {
+        "aspect_ratio": "16:9",
+        "audio_strategy": "NO_DIALOGUE",
+        "duration": 2.5,
+        "negative_constraints": [
+          "do not change accepted character identities",
+          "do not invent provider-accessible URLs",
+          "do not imply live submission",
+          "do not treat local file paths as upload URLs"
+        ],
+        "provider_prompt": "Panel sb_004. Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera: {\"camera_equipment\": \"water-housed camera for the accepted keyframe; B-camera can confirm geography from shore\", \"composition\": \"Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.\", \"height\": \"waterline just inside the wave shoulder\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"brief forward glide with the shoulder as Embry chooses the safe line\", \"shot_code\": \"POV\"} Acting beats: Embry lets the wrong moment pass.; She commits only when the water and lineup give permission.; Kai's reaction is understated and does not steal the beat. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+        "provider_scene_type": "fal_kling_image_to_video",
+        "scene_types": [
+          "identity_locked_character_scene",
+          "first_last_frame_transition",
+          "surf_sports_motion_scene",
+          "multi_character_interaction",
+          "cinematic_camera_move"
+        ],
+        "voice_status": "NO_DIALOGUE"
+      },
+      "live_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+        "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+        "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+        "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+      ],
+      "non_claims": [
+        "panel payload projection was not submitted",
+        "local frame paths are not provider-accessible URLs",
+        "voice text is not a provider voice id"
+      ],
+      "panel_id": "sb_004",
+      "provider_id": "kling",
+      "provider_payload_projection": {
+        "input": {
+          "aspect_ratio": "16:9",
+          "duration": 2.5,
+          "end_frame_asset_id": "sb_004.end_frame",
+          "end_image_url": null,
+          "image_url": null,
+          "prompt": "Panel sb_004. Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera: {\"camera_equipment\": \"water-housed camera for the accepted keyframe; B-camera can confirm geography from shore\", \"composition\": \"Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.\", \"height\": \"waterline just inside the wave shoulder\", \"lens\": \"wide water-housing perspective, approximately 24-35mm equivalent\", \"movement\": \"brief forward glide with the shoulder as Embry chooses the safe line\", \"shot_code\": \"POV\"} Acting beats: Embry lets the wrong moment pass.; She commits only when the water and lineup give permission.; Kai's reaction is understated and does not steal the beat. Preserve accepted start/end frame identities, surf geography, reef safety, lineup etiquette, and physical continuity.",
+          "start_frame_asset_id": "sb_004.start_frame"
+        },
+        "model": "fal-ai/kling-video/v3/pro/image-to-video",
+        "submitted": false
+      },
+      "selected_provider_best_practice": "best-practices-kling-scene",
+      "source_evidence": {
+        "acting_beats": [
+          "Embry lets the wrong moment pass.",
+          "She commits only when the water and lineup give permission.",
+          "Kai's reaction is understated and does not steal the beat."
+        ],
+        "action": "Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision.",
+        "camera": {
+          "camera_equipment": "water-housed camera for the accepted keyframe; B-camera can confirm geography from shore",
+          "composition": "Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
+          "height": "waterline just inside the wave shoulder",
+          "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+          "movement": "brief forward glide with the shoulder as Embry chooses the safe line",
+          "shot_code": "POV"
+        },
+        "dialogue": null,
+        "lighting": {
+          "continuity": "heat, salt, fatigue, and reef caution stay visible through the final beat",
+          "direction": "side-front sun catches the face of the wave and wet board rail",
+          "quality": "bright silver glare on the wave face with spray highlights",
+          "time_of_day": "hot daylight, same surf window"
+        },
+        "references": [
+          {
+            "id": "candidate_panel_001",
+            "media_type": "image",
+            "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+            "role": "rejected_candidate_reference",
+            "title": "Generated candidate panel, not final storyboard authority"
+          },
+          {
+            "id": "embry_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+            "role": "identity_reference",
+            "title": "Embry character sheet montage"
+          },
+          {
+            "id": "kai_character_sheet",
+            "media_type": "image",
+            "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+            "role": "identity_reference",
+            "title": "Kai Akana character sheet"
+          }
+        ],
+        "required_entities": [
+          "Embry",
+          "Kai",
+          "Embry surfboard",
+          "June Swell",
+          "Lava Reef",
+          "Kona Coast"
+        ],
+        "time_range": [
+          7.5,
+          10.0
+        ],
+        "transcript_lines": [
+          {
+            "end_s": 10.0,
+            "speaker": null,
+            "start_s": 0.0,
+            "text": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+            "voice_direction": "action description"
+          },
+          {
+            "end_s": 10.0,
+            "speaker": "Kai",
+            "start_s": 0.0,
+            "text": "If we paddle now, we're cutting across the lineup.",
+            "voice_direction": "quiet, practical restraint"
+          }
+        ],
+        "voice_status": "NO_DIALOGUE"
+      }
+    }
+  ],
+  "phase": "10_provider_contract",
+  "phase10_contract_blockers": [],
+  "phase11_live_readiness_blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_URL_PROBES_MISSING",
+    "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+    "BLOCKED_PROVIDER_ENTITLEMENT_UNVERIFIED",
+    "BLOCKED_MANUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_LIVE_SUBMIT_DISABLED_IN_PHASE10_DRY_RUN"
+  ],
+  "proof_kind": "fixture_contract_test",
+  "provider_accessible_url_created": false,
+  "provider_id": "kling",
+  "provider_live": false,
+  "provider_media_publication_plan": {
+    "asset_count": 8,
+    "assets": [
+      {
+        "asset_id": "sb_001.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_001",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+        "time_s": 0.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_001.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_001",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:b224348750cd419e9eb000df13d7675d3af0bb0b7668bd010b732d48a66a5335",
+        "time_s": 2.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_002.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_002",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+        "time_s": 2.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_002.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_002",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:caa1e08be654167a6176fd400f7c69960ff135f44d9531b24ed8ac57be3df088",
+        "time_s": 5.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_003.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_003",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+        "time_s": 5.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_003.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_003",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:41b7789f3c89e63f3cd5014364baa8cb5cc45a8f088ba93e8d90c4ffbbcae763",
+        "time_s": 7.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_004.start_frame",
+        "frame_role": "start_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_004",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+        "time_s": 7.5,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      },
+      {
+        "asset_id": "sb_004.end_frame",
+        "frame_role": "end_frame",
+        "height": 864,
+        "identity_continuity_status": "PASS",
+        "live_blockers": [
+          "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+          "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+        ],
+        "local_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+        "media_lock_status": "LOCKED_LOCAL_ONLY",
+        "panel_id": "sb_004",
+        "provider_accessible_url": null,
+        "publication_status": "NOT_PUBLISHED_IN_PHASE10_DRY_RUN",
+        "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
+        "time_s": 10.0,
+        "url_probe_status": "NOT_RUN",
+        "width": 1536
+      }
+    ],
+    "live_blockers": [
+      "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+      "BLOCKED_PROVIDER_URL_PROBES_MISSING"
+    ],
+    "media_lock_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_media_lock/storyboard_media_lock_manifest.json",
+    "provider_accessible_url_created": false,
+    "status": "DRY_RUN_MEDIA_PUBLICATION_PLAN_ONLY",
+    "url_probe_results": []
+  },
+  "provider_ready": false,
+  "provider_request": {
+    "body": {
+      "input": {
+        "aspect_ratio": "16:9",
+        "duration": 10,
+        "end_frame_asset_id": "sb_001.end_frame",
+        "end_image_url": null,
+        "image_url": null,
+        "prompt": "Dry-run Persona Dream video scene embry_kai_kahaluu_10s_storyboard: identity_locked_character_scene, first_last_frame_transition, surf_sports_motion_scene, multi_character_interaction, cinematic_camera_move. Duration target 10s. Preserve accepted storyboard identity, camera, motion, and negative constraints from upstream packet.",
+        "start_frame_asset_id": "sb_001.start_frame"
+      },
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "submitted": false
+    },
+    "external_task_id": null,
+    "payload_sha256": "sha256:dd6a5d839b266abf500105403a9d24d3df5b9b9ada49690e9bda40c94994b23f",
+    "status": "DRY_RUN_REQUEST_BODY_NOT_SUBMITTED",
+    "submitted": false
+  },
+  "provider_route": "fal-kling",
+  "registry_refresh_fal_api_doc_provider_ids": [
+    "bytedance-seedance",
+    "kling",
+    "luma",
+    "runway",
+    "sora",
+    "veo"
+  ],
+  "registry_refresh_generated_at": "2026-07-09T15:02:17.155301+00:00",
+  "registry_refresh_mode": "LIVE_BRAVE_SEARCH",
+  "registry_refresh_receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_video_provider/provider_registry_refresh_receipt.v1.json",
+  "registry_refresh_receipt_sha256": "sha256:2632643f653357a7af407091ea0596ab93725e78b334dcbb7d165014c64f8f55",
+  "registry_refresh_status": "PASS_PROVIDER_REGISTRY_REFRESH",
+  "revision_id": "rev_pipeline_complete_phase09_dry_run",
+  "run_id": "pipeline-complete",
+  "scene_id": "embry_kai_kahaluu_10s_storyboard",
+  "schema": "persona_dream.phase10.provider_contract.v1",
+  "selected_provider_best_practice": {
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/best-practices-kling-scene/SKILL.md",
+    "provider_id": "kling",
+    "required_sections": [
+      "Core Rule",
+      "Scene Packet Schema",
+      "Provider Payload Template",
+      "Omni Prompting Rules",
+      "Cinematography Control Matrix",
+      "Multi-Shot Rules",
+      "Voice And Audio Rules",
+      "API Execution Rules",
+      "Review Page Requirements",
+      "Minimum Acceptance Gate"
+    ],
+    "sha256": "sha256:745f171c234956302bb2aceae7e662a12bd490a60780c8acf15a0a4d157fd934",
+    "skill": "best-practices-kling-scene",
+    "status": "SELECTED_PROVIDER_BEST_PRACTICE_BOUND"
+  },
+  "status": "PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN",
+  "submitted": false,
+  "video_provider_packet_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_video_provider/video_provider_packet/video_provider_packet.json",
+  "video_provider_packet_sha256": "sha256:7c7db599e114718b5876d34b3eeb72b0f852feccb1e2ecfbf129d0a68088e6bb"
+}

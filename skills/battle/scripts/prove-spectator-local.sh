@@ -67,16 +67,19 @@ echo "12/15 Lifecycle-enriched fixture proof"
 echo "13/15 Pixi kill-shot animation proof"
 (cd "$SPECTATOR_DIR" && npm run prove:kill-shot-pixi)
 
-echo "14/17 PR3b proof-card route proof"
+echo "14/18 PR3b proof-card route proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr3b-proof-card)
 
-echo "15/17 Shared view-fixture loader proof"
+echo "15/18 Shared view-fixture loader proof"
 (cd "$SPECTATOR_DIR" && npm run prove:view-fixture-loader)
 
-echo "16/17 PR3c synthesis route proof"
+echo "16/18 PR3c synthesis route proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr3c-synthesis)
 
-echo "17/17 PR3d compile route proof"
+echo "17/18 PR3d compile route proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr3d-compile)
+
+echo "18/18 PR4 runtime/Judge route proof"
+(cd "$SPECTATOR_DIR" && npm run prove:pr4-runtime)
 
 echo "BATTLE_PROVE_SPECTATOR_PASS"

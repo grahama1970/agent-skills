@@ -1,0 +1,31 @@
+{
+  "classified_scene_types": [
+    "identity_locked_character_scene",
+    "first_last_frame_transition",
+    "surf_sports_motion_scene",
+    "multi_character_interaction",
+    "cinematic_camera_move"
+  ],
+  "policy_constraints": {
+    "ip_risk_review_required": false,
+    "manual_acceptance_required": true,
+    "paid_call_authorized": false,
+    "provider_live": false
+  },
+  "required_capabilities": {
+    "aspect_ratio": "16:9",
+    "cinematic_camera_control": true,
+    "duration_seconds": 10,
+    "first_last_frame_control": true,
+    "identity_reference_support": true,
+    "image_to_video": true,
+    "motion_quality": true,
+    "multi_character_consistency": true,
+    "provider_accessible_urls_required": true
+  },
+  "revision_id": "rev_pipeline_complete_phase09_dry_run",
+  "run_id": "pipeline-complete",
+  "scene_contract_hash_source": "phase_07_storyboard_live_tau/storyboard_packet.json",
+  "scene_id": "embry_kai_kahaluu_10s_storyboard",
+  "schema_version": "persona-dream.video-scene-classifier.v1"
+}

@@ -15,8 +15,10 @@ describe("battle fixture registry", () => {
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.PROOF_CARD]?.renderer).toBe("BattleProofCardPage");
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS]?.renderer).toBe("BattleSynthesisPage");
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE]?.renderer).toBe("BattleCompilePage");
+		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE]?.renderer).toBe("BattleRuntimePage");
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS)).toBe(true);
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE)).toBe(true);
+		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE)).toBe(true);
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION)).toBe(false);
 		expect(battleFixtureRegistryEntry("battle.unknown.v1")).toBeNull();
 	});
@@ -87,6 +89,23 @@ describe("discriminateBattleViewFixture", () => {
 	it("fails closed when compile fixture is forced onto synthesis route", async () => {
 		const data = await loadJson("../../public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json");
 		const result = discriminateBattleViewFixture(data, "synthesis");
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
+	});
+
+	it("accepts runtime fixture on runtime route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json");
+		const result = discriminateBattleViewFixture(data, "runtime");
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.viewKind).toBe("runtime");
+			expect(result.schema).toBe(BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE);
+		}
+	});
+
+	it("fails closed when runtime fixture is forced onto compile route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json");
+		const result = discriminateBattleViewFixture(data, "compile");
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
 	});

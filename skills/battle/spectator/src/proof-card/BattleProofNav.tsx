@@ -3,13 +3,15 @@ import { isBattleReceiptReplayView } from "../lib/battle-receipt-replay";
 import { isBattleDesignView } from "../lib/battle-mockup-lanes";
 import { isBattleSynthesisView } from "../lib/battle-synthesis-registry";
 import { isBattleCompileView } from "../lib/battle-compile-registry";
+import { isBattleRuntimeView } from "../lib/battle-runtime-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
 	const onProof = isBattleProofCardView(hash);
 	const onSynthesis = isBattleSynthesisView(hash);
 	const onCompile = isBattleCompileView(hash);
-	const onRace = !onProof && !onSynthesis && !onCompile && (isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
+	const onRuntime = isBattleRuntimeView(hash);
+	const onRace = !onProof && !onSynthesis && !onCompile && !onRuntime && (isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
@@ -36,6 +38,13 @@ export function BattleProofNav() {
 				data-qid="battle:nav:compile"
 			>
 				Compile Timeline
+			</a>
+			<a
+				href="#battle/runtime?fixture=battle-004-pr4"
+				aria-current={onRuntime ? "page" : undefined}
+				data-qid="battle:nav:runtime"
+			>
+				Runtime & Judge
 			</a>
 		</nav>
 	);

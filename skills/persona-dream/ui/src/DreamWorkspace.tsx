@@ -29,6 +29,7 @@ import {
   Info,
   Layout,
   Lightbulb,
+  Lock,
   MapPin,
   Maximize2,
   Mic,
@@ -545,7 +546,7 @@ const CANONICAL_PHASES = [
   { id: '07', label: 'Storyboard', icon: Layout, legacyIds: ['phase_07_storyboard'] },
   { id: '08', label: 'Media Lock', icon: Grid, legacyIds: ['phase_08_panels_environment', 'media-lock', 'panels'] },
   { id: '09', label: 'Video Provider', icon: Package, legacyIds: ['phase_09_kling_optimized_packet', 'video-provider', 'kling-packet'] },
-  { id: '10', label: 'Review Gate', icon: ShieldCheck, legacyIds: ['phase_10_creator_reviewer_gate'] },
+  { id: '10', label: 'Provider Distillation', icon: ShieldCheck, legacyIds: ['phase_10_provider_contract', 'phase10-provider-contract', 'provider-contract', 'phase_10_creator_reviewer_gate'] },
   { id: '11', label: 'Provider Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
 ] as const
 
@@ -604,6 +605,10 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
       if (canonical.id === '09') {
         stage.summary = 'Provider-neutral video scene packet, selected provider routing, prompt, locks, and media staging receipts.'
       }
+      if (canonical.id === '10') {
+        stage.summary = 'Provider distillation contract: upstream story/script/storyboard/media-lock evidence condensed into provider-shaped payload projections, payload hash, field mapping, media publication plan, cost, entitlement, async return, manual acceptance, and live-readiness blockers.'
+        stage.failureOrGap = stage.failureOrGap || 'Phase 10 provider contract evidence is required before any live provider submit gate can be inspected.'
+      }
       if (canonical.id === '11') {
         stage.summary = 'Provider API response, task id, polling receipts, downloaded media, frame sheets, and post-provider review.'
       }
@@ -637,7 +642,7 @@ const phaseShortLabels: Record<string, string> = {
   '07': 'Storyboard',
   '08': 'Media Lock',
   '09': 'Video Provider',
-  '10': 'Review Gate',
+  '10': 'Provider Distillation',
   '11': 'Provider Return',
 }
 
@@ -653,13 +658,26 @@ const dreamPhaseHashAliases: Record<string, string> = {
   'media-lock': '08',
   'kling-packet': '09',
   'video-provider': '09',
+  distillation: '10',
+  'provider-contract': '10',
+  'phase10-provider-contract': '10',
   review: '10',
   return: '11',
 }
 
-const dreamPhaseHashById = Object.fromEntries(
-  Object.entries(dreamPhaseHashAliases).map(([slug, id]) => [id, slug])
-) as Record<string, string>
+const dreamPhaseHashById: Record<string, string> = {
+  '01': 'idea',
+  '02': 'story',
+  '03': 'crew',
+  '04': 'contact-sheets',
+  '05': 'voices',
+  '06': 'script',
+  '07': 'storyboard',
+  '08': 'media-lock',
+  '09': 'video-provider',
+  '10': 'distillation',
+  '11': 'return',
+}
 
 function activeDreamPhaseFromLocation(): string {
   if (typeof window === 'undefined') return ''
@@ -770,6 +788,24 @@ function ArtifactField({ label, value }: { label: string; value?: string }) {
     <div>
       <dt style={styles.artifactLabel}>{label}</dt>
       <dd style={styles.artifactValue}>{value || 'missing'}</dd>
+    </div>
+  )
+}
+
+function AgentStatusField({ label, value, tone = 'neutral' }: { label: string; value?: string; tone?: 'pass' | 'dry' | 'blocked' | 'neutral' }) {
+  const toneStyle = tone === 'pass'
+    ? styles.agentStatusPillPass
+    : tone === 'dry'
+      ? styles.agentStatusPillDry
+      : tone === 'blocked'
+        ? styles.agentStatusPillBlocked
+        : styles.agentStatusPillNeutral
+  return (
+    <div>
+      <dt style={styles.artifactLabel}>{label}</dt>
+      <dd style={styles.agentStatusValue}>
+        <span style={toneStyle} title={value || 'missing'}>{value || 'missing'}</span>
+      </dd>
     </div>
   )
 }
@@ -920,7 +956,12 @@ function StageCard({
         {stage.id === '09' && (
           <VideoProviderPanel stage={stage} />
         )}
-        {!['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(stage.id) && (
+        {stage.id === '10' && (
+          <PipelineErrorBoundary surface="Provider Distillation">
+            <ProviderContractPanel stage={stage} />
+          </PipelineErrorBoundary>
+        )}
+        {!['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
             {stage.failureOrGap && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
@@ -1049,11 +1090,9 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
           </summary>
           <div style={styles.receiptGrid}>
             {executionReceipts.map((artifact) => (
-              <ArtifactChip
+              <ReceiptFileCard
                 key={artifact.path}
                 artifact={artifact}
-                style={styles.receiptPill}
-                iconSize={12}
                 label={fileNameFromPath(artifact.label || artifact.path)}
                 title={artifact.path}
               />
@@ -1062,6 +1101,29 @@ function StageEvidence({ stage }: { stage: DreamStage }) {
         </details>
       )}
     </>
+  )
+}
+
+function ReceiptFileCard({
+  artifact,
+  label,
+  title,
+}: {
+  artifact: DreamStage['artifacts'][number]
+  label: string
+  title: string
+}) {
+  return (
+    <a
+      href={`/api/projects/dream/asset?path=${encodeURIComponent(artifact.path)}`}
+      target="_blank"
+      rel="noreferrer"
+      title={title}
+      style={styles.receiptFileCard}
+    >
+      <span style={styles.receiptFileIcon}><FileJson size={14} /></span>
+      <span style={styles.receiptPillLabel}>{label}</span>
+    </a>
   )
 }
 
@@ -1298,6 +1360,30 @@ function videoProviderArtifactRole(artifact: DreamArtifact): string | null {
   return null
 }
 
+function providerContractArtifactRole(artifact: DreamArtifact): string | null {
+  const text = `${artifact.label} ${artifact.path}`.toLowerCase()
+  if (/phase10[_-]?provider[_-]?contract\.json|provider[_-]?contract\.json/.test(text) && !/receipt|check/.test(text)) return 'contract'
+  if (/phase10[_-]?provider[_-]?contract[_-]?receipt|provider[_-]?contract[_-]?receipt/.test(text)) return 'contract_receipt'
+  if (/phase10.*check|provider[_-]?contract.*gate|dry[_-]?run[_-]?gate/.test(text)) return 'gate_receipt'
+  if (/video[_-]?provider[_-]?packet/.test(text)) return 'video_provider_packet'
+  if (/provider[_-]?registry[_-]?refresh|registry[_-]?refresh/.test(text)) return 'registry_refresh'
+  if (/video[_-]?provider[_-]?scorecard|scorecard/.test(text)) return 'scorecard'
+  return null
+}
+
+function shortProviderHash(value: unknown): string {
+  const text = typeof value === 'string' ? value : ''
+  if (text.length <= 22) return text || 'missing'
+  return `${text.slice(0, 14)}...${text.slice(-6)}`
+}
+
+function providerContractStatusTone(value: unknown): CSSProperties {
+  const text = String(value ?? '').toUpperCase()
+  if (text.includes('PASS')) return nvis.providerContractPillPass
+  if (text.includes('BLOCK') || text.includes('MISSING') || text.includes('FAIL')) return nvis.providerContractPillBlocked
+  return nvis.providerContractPillDry
+}
+
 function dreamNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -1333,6 +1419,38 @@ function payloadArray(value: unknown): Array<Record<string, unknown>> {
   return Array.isArray(value)
     ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
     : []
+}
+
+const videoProviderMatrixMetrics = [
+  { key: 'image_to_video', label: 'I2V', title: 'Image-to-video fidelity', max: 20 },
+  { key: 'first_last_frame_control', label: 'Ends', title: 'First and last frame transition control', max: 20 },
+  { key: 'identity_reference_support', label: 'ID', title: 'Identity continuity and reference support', max: 15 },
+  { key: 'motion_quality', label: 'Mot', title: 'Motion quality and physics', max: 15 },
+  { key: 'multi_character_consistency', label: 'Chr', title: 'Multi-character consistency', max: 10 },
+] as const
+
+function formatBlockerText(value: string): string {
+  return value.replace(/^BLOCKED_/, '').replace(/_/g, ' ').toLowerCase()
+}
+
+function formatProviderContractBlocker(value: string): string {
+  return value
+    .replace(/^BLOCKED_/, '')
+    .replace(/^NO_/, 'NO ')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+}
+
+function videoProviderFitValue(provider: Record<string, unknown>, key: string): number | null {
+  const fit = payloadObject(provider.fit)
+  return dreamNumber(fit?.[key])
+}
+
+function videoProviderScoreTone(score: number | null): CSSProperties {
+  if (score == null) return nvis.videoProviderScoreMissing
+  if (score >= 95) return nvis.videoProviderScorePass
+  if (score >= 75) return nvis.videoProviderScoreWarn
+  return nvis.videoProviderScoreBlocked
 }
 
 function VideoProviderPanel({ stage }: { stage: DreamStage }) {
@@ -1446,24 +1564,46 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         <div style={nvis.videoProviderSection}>
           <h3 style={nvis.matrixSectionTitle}><Gauge size={12} /> Provider scorecard</h3>
           {providers.length > 0 ? (
-            <div style={nvis.videoProviderScoreRows}>
+            <div style={nvis.videoProviderMatrix}>
+              <div style={nvis.videoProviderMatrixHeader}>
+                <div>Provider</div>
+                <div>State</div>
+                {videoProviderMatrixMetrics.map((metric) => (
+                  <div key={metric.key} style={nvis.videoProviderMetricHeader} title={metric.title}>
+                    {metric.label}
+                  </div>
+                ))}
+                <div style={nvis.videoProviderScoreHeader}>Score</div>
+              </div>
               {providers.slice(0, 6).map((provider, index) => {
                 const providerId = firstString(provider.provider_id, provider.id, provider.name) ?? `provider_${index + 1}`
                 const score = dreamNumber(provider.score)
                 const providerBlockers = dreamList(provider.blockers)
+                const isSelected = providerId === recommendedProvider
                 return (
-                  <div key={providerId} style={nvis.videoProviderScoreRow}>
-                    <div>
-                      <strong>{providerId}</strong>
-                      <div style={nvis.videoProviderSubtle}>
-                        dry_run={dreamBooleanLabel(provider.eligible_for_dry_run)} / live={dreamBooleanLabel(provider.eligible_for_live_submit)}
-                      </div>
+                  <div key={providerId} style={isSelected ? nvis.videoProviderMatrixRowSelected : nvis.videoProviderMatrixRow}>
+                    <div style={isSelected ? nvis.videoProviderSelectedName : nvis.videoProviderName}>
+                      {providerId}
                     </div>
-                    <div style={nvis.videoProviderScoreMeta}>
-                      <span style={score != null ? nvis.matrixReadyPill : nvis.matrixMutedPill}>
-                        score {score ?? 'n/a'}
-                      </span>
-                      {providerBlockers.length > 0 && <span style={nvis.matrixPendingPill}>{providerBlockers.length} blockers</span>}
+                    <div style={nvis.videoProviderStateCell}>
+                      <span>{`dry=${dreamBooleanLabel(provider.eligible_for_dry_run)} live=${dreamBooleanLabel(provider.eligible_for_live_submit)}`}</span>
+                      <span>{`${providerBlockers.length} blk`}</span>
+                    </div>
+                    {videoProviderMatrixMetrics.map((metric) => {
+                      const value = videoProviderFitValue(provider, metric.key)
+                      const isBelowMax = typeof value === 'number' && value < metric.max
+                      return (
+                        <div
+                          key={metric.key}
+                          style={value == null || isBelowMax ? nvis.videoProviderPenaltyCell : nvis.videoProviderPerfectCell}
+                          title={`${metric.title}: ${value ?? 'missing'} / ${metric.max}`}
+                        >
+                          {value ?? 'n/a'}
+                        </div>
+                      )
+                    })}
+                    <div style={nvis.videoProviderScoreCell}>
+                      <span style={videoProviderScoreTone(score)}>{score ?? 'n/a'}</span>
                     </div>
                   </div>
                 )
@@ -1477,11 +1617,14 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         <div style={nvis.videoProviderSection}>
           <h3 style={nvis.matrixSectionTitle}><ShieldCheck size={12} /> Blockers and non-live boundary</h3>
           {blockers.length > 0 ? (
-            <ul style={nvis.videoProviderBlockerList}>
+            <div style={nvis.videoProviderBlockerChips}>
               {[...new Set(blockers)].slice(0, 8).map((blocker) => (
-                <li key={blocker}>{blocker}</li>
+                <span key={blocker} style={nvis.videoProviderBlockerChip} title={blocker}>
+                  <span style={nvis.videoProviderBlockerDot} />
+                  {formatBlockerText(blocker)}
+                </span>
               ))}
-            </ul>
+            </div>
           ) : (
             <div style={styles.gapBox}>No live-call blockers were surfaced by the loaded receipts. Treat as not provider-ready until final gate evidence exists.</div>
           )}
@@ -1501,6 +1644,604 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         })}
       </div>
     </section>
+  )
+}
+
+class PipelineErrorBoundary extends React.Component {
+  state = { hasError: false, error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      const message = this.state.error instanceof Error ? this.state.error.message : String(this.state.error ?? 'Unknown component fault')
+      return (
+        <div style={nvis.pipelineErrorBoundary}>
+          <div style={nvis.pipelineErrorTitle}>
+            <AlertTriangle size={18} />
+            <span>{String(this.props.surface ?? 'Pipeline')} system fault detected</span>
+          </div>
+          <p style={nvis.pipelineErrorMessage}>{message}</p>
+          <button
+            type="button"
+            data-qid="dream:pipeline-error-boundary:reboot"
+            data-qs-action="DREAM_PIPELINE_ERROR_BOUNDARY_REBOOT"
+            style={nvis.pipelineErrorButton}
+            title="Reboot this pipeline component"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Reboot component
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function ProviderContractPanel({ stage }: { stage: DreamStage }) {
+  const contractArtifacts = useMemo(() => {
+    const byRole = new Map<string, DreamArtifact>()
+    for (const artifact of stage.artifacts) {
+      const role = providerContractArtifactRole(artifact)
+      if (role && !byRole.has(role)) byRole.set(role, artifact)
+    }
+    return [...byRole.entries()].map(([role, artifact]) => ({ role, artifact }))
+  }, [stage.artifacts])
+  const [loaded, setLoaded] = useState<LoadedVideoArtifact[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadArtifacts() {
+      const next: LoadedVideoArtifact[] = []
+      for (const item of contractArtifacts) {
+        try {
+          const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(item.artifact.path)}`)
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const payload = await response.json()
+          next.push({
+            ...item,
+            payload: payloadObject(payload),
+          })
+        } catch (error) {
+          next.push({
+            ...item,
+            payload: null,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+      if (!cancelled) setLoaded(next)
+    }
+    void loadArtifacts()
+    return () => { cancelled = true }
+  }, [contractArtifacts])
+
+  const byRole = useMemo(() => new Map(loaded.map((item) => [item.role, item])), [loaded])
+  const contract = byRole.get('contract')?.payload ?? null
+  const receipt = byRole.get('contract_receipt')?.payload ?? null
+  const gateReceipt = byRole.get('gate_receipt')?.payload ?? null
+  const providerRequest = payloadObject(contract?.provider_request)
+  const requestBody = payloadObject(providerRequest?.body)
+  const providerInput = payloadObject(requestBody?.input)
+  const mediaPlan = payloadObject(contract?.provider_media_publication_plan)
+  const costContract = payloadObject(contract?.cost_contract)
+  const entitlementContract = payloadObject(contract?.entitlement_contract)
+  const asyncContract = payloadObject(contract?.async_return_contract)
+  const manualAcceptance = payloadObject(contract?.manual_acceptance)
+  const fieldMapping = payloadArray(contract?.field_mapping)
+  const publicationAssets = payloadArray(mediaPlan?.assets)
+  const contractPanelPayloads = payloadArray(contract?.panel_payloads)
+  const requestBodyJson = JSON.stringify(requestBody ?? {}, null, 2)
+  const dryRunBlockers = dreamList(contract?.phase10_contract_blockers ?? contract?.dry_run_blockers)
+  const liveBlockers = dreamList(contract?.phase11_live_readiness_blockers ?? contract?.live_call_blockers)
+  const nonClaims = dreamList(contract?.non_claims ?? contract?.claims?.does_not_prove)
+  const providerId = firstString(contract?.provider_id, receipt?.provider_id) ?? 'missing'
+  const endpoint = firstString(contract?.fal_model_endpoint, receipt?.fal_model_endpoint) ?? 'missing'
+  const status = firstString(contract?.status, receipt?.status, gateReceipt?.status) ?? 'MISSING_PHASE10_PROVIDER_CONTRACT'
+  const liveSubmitStatus = firstString(contract?.live_submit_status, gateReceipt?.live_submit_status) ?? 'DRY_RUN_NOT_LIVE_SUBMITTABLE'
+  const payloadHash = firstString(providerRequest?.payload_sha256, receipt?.payload_sha256) ?? 'missing'
+  const submitted = contract?.submitted ?? providerRequest?.submitted ?? receipt?.submitted
+  const paidCallAuthorized = contract?.paid_call_authorized ?? receipt?.paid_call_authorized
+  const providerLive = contract?.provider_live ?? receipt?.provider_live
+  const providerAttempts = dreamNumber(contract?.actual_provider_call_attempts) ?? dreamNumber(receipt?.actual_provider_call_attempts) ?? 0
+  const hasContract = Boolean(contract)
+  const panelPayloadRows = useMemo(() => {
+    if (contractPanelPayloads.length > 0) {
+      return contractPanelPayloads.map((panelPayload, index) => {
+        const projection = payloadObject(panelPayload.provider_payload_projection)
+        const projectionInput = payloadObject(projection?.input)
+        const sourceEvidence = payloadObject(panelPayload.source_evidence)
+        const distillation = payloadObject(panelPayload.distillation)
+        const panelId = String(panelPayload.panel_id ?? `panel_${index + 1}`)
+        return {
+          panelId,
+          start: payloadObject(panelPayload.accepted_start_frame) ?? undefined,
+          end: payloadObject(panelPayload.accepted_end_frame) ?? undefined,
+          duration: projectionInput?.duration,
+          selected: projectionInput?.start_frame_asset_id === providerInput?.start_frame_asset_id && projectionInput?.end_frame_asset_id === providerInput?.end_frame_asset_id,
+          sourceEvidence,
+          distillation,
+          panelRequestJson: JSON.stringify(projection ?? {}, null, 2),
+          panelSummary: `dialogue=${dreamBooleanLabel(sourceEvidence?.dialogue)} / voice=${String(sourceEvidence?.voice_status ?? 'missing')} / duration=${String(projectionInput?.duration ?? 'missing')} / aspect=${String(projectionInput?.aspect_ratio ?? 'missing')}`,
+        }
+      })
+    }
+    const byPanel = new Map<string, { panelId: string; start?: Record<string, unknown>; end?: Record<string, unknown> }>()
+    for (const asset of publicationAssets) {
+      const assetId = String(asset.asset_id ?? '')
+      const match = assetId.match(/^(sb_\d+)\.(start|end)_frame$/)
+      if (!match) continue
+      const panelId = match[1]
+      const frameKind = match[2] as 'start' | 'end'
+      const row = byPanel.get(panelId) ?? { panelId }
+      row[frameKind] = asset
+      byPanel.set(panelId, row)
+    }
+    const selectedStart = String(providerInput?.start_frame_asset_id ?? '')
+    const selectedEnd = String(providerInput?.end_frame_asset_id ?? '')
+    const baseInput = providerInput ?? {}
+    const baseRequest = requestBody ?? {}
+    return Array.from(byPanel.values())
+      .sort((a, b) => a.panelId.localeCompare(b.panelId))
+      .map((row) => {
+        const startAssetId = String(row.start?.asset_id ?? `${row.panelId}.start_frame`)
+        const endAssetId = String(row.end?.asset_id ?? `${row.panelId}.end_frame`)
+        const startTime = dreamNumber(row.start?.time_s)
+        const endTime = dreamNumber(row.end?.time_s)
+        const duration = startTime != null && endTime != null && endTime > startTime
+          ? Number((endTime - startTime).toFixed(3))
+          : baseInput.duration
+        const panelRequest = {
+          ...baseRequest,
+          input: {
+            ...baseInput,
+            duration,
+            end_frame_asset_id: endAssetId,
+            end_image_url: row.end?.provider_accessible_url ?? null,
+            image_url: row.start?.provider_accessible_url ?? null,
+            start_frame_asset_id: startAssetId,
+          },
+          submitted: false,
+        }
+        return {
+          ...row,
+          duration,
+          selected: startAssetId === selectedStart && endAssetId === selectedEnd,
+          panelRequestJson: JSON.stringify(panelRequest, null, 2),
+          panelSummary: `image_url=${dreamBooleanLabel(row.start?.provider_accessible_url)} / end_image_url=${dreamBooleanLabel(row.end?.provider_accessible_url)} / duration=${String(duration ?? 'missing')} / aspect=${String(baseInput.aspect_ratio ?? 'missing')}`,
+        }
+      })
+  }, [contractPanelPayloads, publicationAssets, providerInput, requestBody])
+  const [copyStatus, setCopyStatus] = useState('')
+  const copyRequestBody = async () => {
+    try {
+      await navigator.clipboard.writeText(requestBodyJson)
+      setCopyStatus('Copied')
+      window.setTimeout(() => setCopyStatus(''), 1600)
+    } catch {
+      setCopyStatus('Copy failed')
+      window.setTimeout(() => setCopyStatus(''), 1800)
+    }
+  }
+
+  return (
+    <section data-qid="dream:provider-contract-panel" style={nvis.providerContractPanel}>
+      <style>{`
+        [data-phase10-interactive]:focus-visible {
+          outline: 2px solid #4a9eff;
+          outline-offset: 2px;
+        }
+        details[data-provider-contract-details] > summary::-webkit-details-marker {
+          display: none;
+        }
+        details[data-provider-contract-details] > summary::marker {
+          content: "";
+          font-size: 0;
+        }
+      `}</style>
+      <p style={styles.stageSummary}>{stage.summary}</p>
+
+      {!hasContract && (
+        <div style={nvis.providerContractMissing}>
+          <div>
+            <strong>Phase 10 provider contract is not present in this run.</strong>
+            <span>
+              This surface is fail-closed. It needs a local provider contract artifact before it can display request mapping or live-readiness blockers.
+            </span>
+          </div>
+          <pre style={nvis.providerContractCommand}>{`skills/persona-dream/run.sh write-phase10-provider-contract \\
+  --video-provider-packet <run-root>/video_provider_packet/video_provider_packet.json \\
+  --registry-refresh-receipt <run-root>/provider_registry_refresh_receipt.v1.json \\
+  --output-root <run-root>/phase10_provider_contract \\
+  --json
+
+skills/persona-dream/run.sh check-phase10-provider-contract \\
+  --fixtures-root skills/persona-dream/tests/fixtures/phase10-provider-contract \\
+  --receipt-out /tmp/persona-dream-phase10-provider-contract/check_receipt.json \\
+  --json`}</pre>
+        </div>
+      )}
+
+      <div style={nvis.providerContractRibbon}>
+        <ProviderContractRibbonMetric label="Provider" value={`${providerId} ${endpoint}`} tone={hasContract ? 'pass' : 'blocked'} />
+        <ProviderContractRibbonMetric label="Request" value={`${dreamDisplayCode(String(providerRequest?.status ?? 'missing'))} / payload ${shortProviderHash(payloadHash)}`} tone={hasContract ? 'dry' : 'blocked'} />
+        <ProviderContractRibbonMetric label="Boundary" value={`${providerAttempts} calls / live=${dreamBooleanLabel(providerLive)} / paid=${dreamBooleanLabel(paidCallAuthorized)} / submitted=${dreamBooleanLabel(submitted)}`} tone={providerAttempts === 0 && submitted !== true ? 'pass' : 'blocked'} />
+        <ProviderContractRibbonMetric label="Gate state" value={`${dreamDisplayCode(status)} / ${dreamDisplayCode(liveSubmitStatus)}`} tone={statusTone(status) === 'pass' ? 'pass' : 'blocked'} />
+      </div>
+
+      {panelPayloadRows.length > 0 && (
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><Clapperboard size={12} /> Panel distillation review</h3>
+          <div style={nvis.providerContractPanelPayloadList}>
+            {panelPayloadRows.map((row) => (
+              <div key={row.panelId} style={row.selected ? nvis.providerContractPanelPayloadSelected : nvis.providerContractPanelPayload}>
+                <div style={nvis.providerContractPanelPayloadHeader}>
+                  <strong>{row.panelId}</strong>
+                  <span>{row.selected ? 'selected provider projection' : 'panel provider projection'}</span>
+                </div>
+                <div style={nvis.providerContractPanelPayloadFrames}>
+                  <ProviderContractFrameState label="Start" asset={row.start} selectedField="image_url" selected={row.selected} providerUrl={providerInput?.image_url} />
+                  <ProviderContractFrameState label="End" asset={row.end} selectedField="end_image_url" selected={row.selected} providerUrl={providerInput?.end_image_url} />
+                </div>
+                <div style={row.selected ? nvis.providerContractPanelPayloadJson : nvis.providerContractPanelPayloadJsonMuted}>
+                  <div style={nvis.providerContractDistillationTextBlock}>
+                    <div style={nvis.providerContractDistillationTextItem}>
+                      <span style={nvis.providerContractDistillationLabel}>Source action</span>
+                      <p style={nvis.providerContractDistillationText} title={String(row.sourceEvidence?.action ?? 'missing')}>
+                        {String(row.sourceEvidence?.action ?? 'missing')}
+                      </p>
+                    </div>
+                    <div style={nvis.providerContractDistillationTextItem}>
+                      <span style={nvis.providerContractDistillationLabel}>Distilled audio</span>
+                      <code style={nvis.providerContractDistillationAudio} title={String(row.distillation?.audio_strategy ?? row.distillation?.voice_status ?? 'missing')}>
+                        {dreamDisplayCode(String(row.distillation?.audio_strategy ?? row.distillation?.voice_status ?? 'missing'))}
+                      </code>
+                    </div>
+                  </div>
+                  <ProviderContractAudioSummary value={row.panelSummary} />
+                  <details data-provider-contract-details data-phase10-interactive style={nvis.providerContractPanelPayloadDetails}>
+                    <summary data-phase10-interactive style={nvis.providerContractPanelPayloadSummary}>
+                      <span>{row.selected ? 'Final provider JSON projection' : 'Panel provider JSON projection'}</span>
+                      <span>{row.selected ? 'dry run / blocked' : 'not selected / blocked'}</span>
+                    </summary>
+                    <JsonProjectionViewer jsonPayload={row.panelRequestJson} label="Provider JSON payload" compact />
+                  </details>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div style={nvis.providerContractSplit}>
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><Table2 size={12} /> Field mapping</h3>
+          {fieldMapping.length > 0 ? (
+            <div style={nvis.providerContractMapping}>
+              <div style={nvis.providerContractMappingHeader}>
+                <span style={nvis.providerContractMappingHeaderField}>Provider field</span>
+                <span style={nvis.providerContractMappingHeaderSource}>Source</span>
+                <span style={nvis.providerContractMappingHeaderStatus}>Status</span>
+              </div>
+              {fieldMapping.map((item, index) => {
+                const mappingStatus = firstString(item.status) ?? 'MISSING'
+                return (
+                  <div key={`${String(item.provider_field ?? index)}-${index}`} style={nvis.providerContractMappingRow}>
+                    <span style={nvis.providerContractMappingField} title={String(item.provider_field ?? '')}>{String(item.provider_field ?? 'missing')}</span>
+                    <span style={nvis.providerContractMappingSource} title={String(item.source ?? item.source_artifact ?? '')}>{String(item.source ?? item.source_artifact ?? 'missing')}</span>
+                    <span style={nvis.providerContractMappingStatus}>
+                      <strong style={providerContractStatusTone(mappingStatus)} title={mappingStatus}>{dreamDisplayCode(mappingStatus)}</strong>
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={styles.gapBox}>No field mapping was loaded. The contract gate must reject provider-submit work without mapping evidence.</div>
+          )}
+        </section>
+
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><ShieldAlert size={12} /> Live-readiness boundary</h3>
+          <div style={nvis.providerContractBoundaryGrid}>
+            <ProviderContractState label="Media URLs" value={mediaPlan?.status} detail={`${dreamNumber(mediaPlan?.asset_count) ?? 0} assets / published=${dreamBooleanLabel(mediaPlan?.provider_accessible_url_created)}`} />
+            <ProviderContractState label="Cost" value={costContract?.status} detail={`paid=${dreamBooleanLabel(costContract?.paid_call_authorized)}`} />
+            <ProviderContractState label="Entitlement" value={entitlementContract?.status} detail={`fal key observed=${dreamBooleanLabel(entitlementContract?.fal_api_key_observed)}`} />
+            <ProviderContractState label="Return" value={asyncContract?.status} detail={`mode=${firstString(asyncContract?.selected_async_mode) ?? 'missing'}`} />
+            <ProviderContractState label="Manual" value={manualAcceptance?.status} detail={`accepted=${dreamBooleanLabel(manualAcceptance?.accepted)}`} />
+          </div>
+        </section>
+      </div>
+
+      <div style={nvis.providerContractValidationGrid}>
+        <section style={{ ...nvis.providerContractSection, ...nvis.providerContractBlockersPanel }}>
+          <h3 style={nvis.matrixSectionTitle}><AlertTriangle size={12} /> Blockers</h3>
+          <div style={nvis.providerContractBlockerGrid}>
+            {(dryRunBlockers.length > 0 ? dryRunBlockers : ['NO_PHASE10_DRY_RUN_BLOCKERS_REPORTED']).map((blocker) => (
+              <span key={blocker} style={dryRunBlockers.length > 0 ? nvis.providerContractBlockerPill : nvis.providerContractNeutralPill} title={blocker}>{formatProviderContractBlocker(blocker)}</span>
+            ))}
+            {liveBlockers.map((blocker) => (
+              <span key={blocker} style={nvis.providerContractLiveBlockerPill} title={blocker}>{formatProviderContractBlocker(blocker)}</span>
+            ))}
+          </div>
+        </section>
+
+        <section style={{ ...nvis.providerContractSection, ...nvis.providerContractNonClaimsPanel }}>
+          <h3 style={nvis.matrixSectionTitle}><Info size={12} /> Non-claims</h3>
+          {nonClaims.length > 0 ? (
+            <ul style={nvis.providerContractNonClaims}>
+              {nonClaims.slice(0, 12).map((claim) => (
+                <li key={claim} style={nvis.providerContractNonClaimItem}>
+                  <Info size={13} style={nvis.providerContractNonClaimIcon} />
+                  <span>{claim}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={styles.gapBox}>Non-claims were not found. Phase 10 must not imply live provider readiness without explicit non-claims.</div>
+          )}
+        </section>
+      </div>
+
+      <details data-provider-contract-details data-phase10-interactive style={nvis.providerContractDetails}>
+        <summary data-phase10-interactive style={nvis.providerContractSummary}>
+          <span>View provider request body</span>
+          <span style={nvis.providerContractSummaryMeta}>{shortProviderHash(payloadHash)}</span>
+        </summary>
+        <div style={nvis.providerContractJsonToolbar}>
+          <span>JSON request payload</span>
+          <button
+            type="button"
+            data-phase10-interactive
+            data-qid="dream:provider-distillation:copy-payload"
+            data-qs-action="DREAM_PROVIDER_DISTILLATION_COPY_PAYLOAD"
+            onClick={() => { void copyRequestBody() }}
+            style={nvis.providerContractCopyButton}
+            title="Copy provider request JSON payload"
+          >
+            {copyStatus === 'Copied' ? <ClipboardCheck size={13} /> : <Copy size={13} />}
+            {copyStatus || 'Copy payload'}
+          </button>
+        </div>
+        <JsonProjectionViewer jsonPayload={requestBodyJson} label="JSON request payload" />
+      </details>
+
+      <div style={nvis.videoProviderReceiptRow}>
+        {['contract', 'contract_receipt', 'gate_receipt', 'video_provider_packet', 'registry_refresh', 'scorecard'].map((role) => {
+          const item = byRole.get(role)
+          const label = role.replace(/_/g, ' ')
+          return <SystemStatusIndicator key={role} label={label} status={item?.payload ? 'loaded' : item?.error ? 'error' : 'missing'} />
+        })}
+      </div>
+    </section>
+  )
+}
+
+function ProviderContractRibbonMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: unknown
+  tone: 'pass' | 'dry' | 'blocked'
+}) {
+  const toneStyle = tone === 'pass'
+    ? nvis.providerContractRibbonValuePass
+    : tone === 'dry'
+      ? nvis.providerContractRibbonValueDry
+      : nvis.providerContractRibbonValueBlocked
+  return (
+    <div style={nvis.providerContractRibbonMetric}>
+      <span style={nvis.providerContractRibbonLabel}>{label}</span>
+      <strong style={{ ...nvis.providerContractRibbonValue, ...toneStyle }} title={String(value ?? '')}>{dreamDisplayCode(String(value ?? 'missing'))}</strong>
+    </div>
+  )
+}
+
+function JsonProjectionViewer({
+  jsonPayload,
+  label,
+  compact = false,
+}: {
+  jsonPayload: unknown
+  label: string
+  compact?: boolean
+}) {
+  const formattedJson = typeof jsonPayload === 'string' ? jsonPayload : JSON.stringify(jsonPayload ?? {}, null, 2)
+  return (
+    <div style={nvis.providerContractSyntaxShell}>
+      <div style={nvis.providerContractSyntaxToolbar}>
+        <Code2 size={12} />
+        <span>{label}</span>
+      </div>
+      <pre style={{ ...nvis.providerContractSyntaxHighlighter, maxHeight: compact ? 220 : 360 }}>
+        <code style={nvis.providerContractSyntaxCode}>{highlightJsonForProviderContract(formattedJson)}</code>
+      </pre>
+    </div>
+  )
+}
+
+function highlightJsonForProviderContract(json: string): React.ReactNode[] {
+  return json.split('\n').flatMap((line, lineIndex) => {
+    const nodes = highlightJsonLineForProviderContract(line, lineIndex)
+    return lineIndex === json.split('\n').length - 1 ? nodes : [...nodes, <br key={`json-br-${lineIndex}`} />]
+  })
+}
+
+function highlightJsonLineForProviderContract(line: string, lineIndex: number): React.ReactNode[] {
+  const tokenRegex = /("(?:\\.|[^"\\])*"|true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}\[\],:])/g
+  const nodes: React.ReactNode[] = []
+  let cursor = 0
+  let tokenIndex = 0
+  for (const match of line.matchAll(tokenRegex)) {
+    const token = match[0]
+    const start = match.index ?? 0
+    if (start > cursor) nodes.push(line.slice(cursor, start))
+    const after = line.slice(start + token.length).trimStart()
+    const style = providerContractJsonTokenStyle(token, after)
+    nodes.push(<span key={`json-${lineIndex}-${tokenIndex++}`} style={style}>{token}</span>)
+    cursor = start + token.length
+  }
+  if (cursor < line.length) nodes.push(line.slice(cursor))
+  return nodes
+}
+
+function providerContractJsonTokenStyle(token: string, after: string): CSSProperties {
+  if (/^"/.test(token) && after.startsWith(':')) return nvis.providerContractSyntaxKey
+  if (/^"/.test(token)) return nvis.providerContractSyntaxString
+  if (/^(true|false|null)$/.test(token)) return nvis.providerContractSyntaxBoolean
+  if (/^-?\d/.test(token)) return nvis.providerContractSyntaxNumber
+  return nvis.providerContractSyntaxPunctuation
+}
+
+function ProviderContractAudioSummary({ value }: { value: string }) {
+  const pairs = parseProviderContractAudioSummary(value)
+  if (pairs.length === 0) {
+    return <code style={nvis.providerContractPanelSummary}>{value}</code>
+  }
+  return (
+    <div style={nvis.providerContractAudioPillRow} aria-label="Distilled audio parameters">
+      {pairs.map((pair) => (
+        <span key={`${pair.label}:${pair.value}`} style={nvis.providerContractAudioPill} title={`${pair.label}=${pair.value}`}>
+          <span style={nvis.providerContractAudioPillLabel}>{pair.label}</span>
+          <span style={{
+            ...nvis.providerContractAudioPillValue,
+            ...(providerContractAudioValueTone(pair.value) === 'warning' ? nvis.providerContractAudioPillValueWarning : nvis.providerContractAudioPillValueNeutral),
+          }}>
+            {pair.value}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function parseProviderContractAudioSummary(value: string): Array<{ label: string; value: string }> {
+  return String(value ?? '')
+    .split('/')
+    .map((part) => part.trim())
+    .map((part) => {
+      const [label, ...rest] = part.split('=')
+      return { label: label?.trim(), value: rest.join('=').trim() }
+    })
+    .filter((pair): pair is { label: string; value: string } => Boolean(pair.label && pair.value))
+}
+
+function providerContractAudioValueTone(value: string): 'warning' | 'neutral' {
+  return /missing|false|no_dialogue|not[_\s-]?run/i.test(value) ? 'warning' : 'neutral'
+}
+
+function ProviderContractState({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: unknown
+  detail?: string
+}) {
+  const status = String(value ?? 'MISSING')
+  return (
+    <div style={nvis.providerContractStateCard}>
+      <span style={nvis.providerContractStateLabel}>{label}</span>
+      <strong style={providerContractStatusTone(status)}>{dreamDisplayCode(status)}</strong>
+      {detail && <span style={nvis.providerContractStateDetail}>{dreamDisplayCode(detail)}</span>}
+    </div>
+  )
+}
+
+function ProviderContractFrameState({
+  label,
+  asset,
+  selected,
+  selectedField,
+  providerUrl,
+}: {
+  label: string
+  asset?: Record<string, unknown>
+  selected: boolean
+  selectedField: string
+  providerUrl: unknown
+}) {
+  const assetId = String(asset?.asset_id ?? 'missing')
+  const publicationStatus = String(asset?.publication_status ?? 'MISSING')
+  const probeStatus = String(asset?.url_probe_status ?? 'MISSING')
+  const urlValue = typeof providerUrl === 'string' && providerUrl.trim() ? 'present' : 'missing'
+  const imageUrl = dreamAssetUrl(String(asset?.local_path ?? asset?.path ?? ''))
+  return (
+    <div style={nvis.providerContractFrameState}>
+      <div style={nvis.providerContractFrameHeader}>
+        <strong>{label}</strong>
+        <span>{assetId}</span>
+      </div>
+      {imageUrl && (
+        <div style={nvis.providerContractFramePreview}>
+          <img src={imageUrl} alt={`${assetId} locked pre-contract frame`} style={nvis.providerContractFrameImage} />
+          <span style={nvis.providerContractFrameCaption}>
+            <Lock size={11} style={nvis.providerContractFrameCaptionIcon} />
+            Pre-contract media lock
+          </span>
+        </div>
+      )}
+      <div style={nvis.providerContractFrameRows}>
+        <ProviderContractMetadataRow label="SHA" value={shortProviderHash(String(asset?.sha256 ?? 'missing'))} title={String(asset?.sha256 ?? 'missing')} tone="muted" />
+        <ProviderContractMetadataRow label="Lock" value={dreamDisplayCode(String(asset?.media_lock_status ?? 'missing'))} title={String(asset?.media_lock_status ?? 'missing')} tone={String(asset?.media_lock_status ?? '').includes('LOCKED') ? 'warning' : 'neutral'} />
+        <ProviderContractMetadataRow label="Identity" value={dreamDisplayCode(String(asset?.identity_continuity_status ?? 'missing'))} title={String(asset?.identity_continuity_status ?? 'missing')} tone={String(asset?.identity_continuity_status ?? '').toUpperCase() === 'PASS' ? 'success' : 'neutral'} />
+        <ProviderContractMetadataRow label="Publication" value={dreamDisplayCode(publicationStatus)} title={publicationStatus} tone={publicationStatus.includes('NOT_PUBLISHED') ? 'warning' : 'neutral'} />
+        <ProviderContractMetadataRow label="Probe" value={dreamDisplayCode(probeStatus)} title={probeStatus} tone={probeStatus === 'NOT_RUN' ? 'neutral' : 'muted'} />
+        {selected && (
+          <>
+            <ProviderContractMetadataRow label={selectedField} value={urlValue} title={urlValue} tone={urlValue === 'present' ? 'success' : 'warning'} />
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ProviderContractMetadataRow({
+  label,
+  value,
+  title,
+  tone,
+}: {
+  label: string
+  value: string
+  title?: string
+  tone: 'success' | 'warning' | 'neutral' | 'muted'
+}) {
+  const valueStyle = tone === 'success'
+    ? nvis.providerContractMetaValueSuccess
+    : tone === 'warning'
+      ? nvis.providerContractMetaValueWarning
+      : tone === 'muted'
+        ? nvis.providerContractMetaValueMuted
+        : nvis.providerContractMetaValue
+  return (
+    <div style={nvis.providerContractMetadataRow}>
+      <span style={nvis.providerContractMetaLabel}>{label}</span>
+      <code style={valueStyle} title={title ?? value}>{value}</code>
+    </div>
+  )
+}
+
+function SystemStatusIndicator({ label, status }: { label: string; status: string }) {
+  const isLoaded = status === 'loaded'
+  const isError = status === 'error'
+  return (
+    <div style={nvis.systemStatusIndicator}>
+      <span style={nvis.systemStatusLabel}>{label}</span>
+      <span style={nvis.systemStatusValue}>
+        <span style={isLoaded ? nvis.systemStatusDotLoaded : isError ? nvis.systemStatusDotError : nvis.systemStatusDotMissing} />
+        <strong style={isLoaded ? nvis.systemStatusTextLoaded : isError ? nvis.systemStatusTextError : nvis.systemStatusTextMissing}>
+          {status}
+        </strong>
+      </span>
+    </div>
   )
 }
 
@@ -7324,9 +8065,9 @@ function AgentPane({
       </div>
       <div key={selectedStage?.id ?? 'none'} style={styles.agentContextMotion}>
         <div style={styles.agentContext}>
-          <ArtifactField label="Run" value={selectedRun?.title} />
-          <ArtifactField label="Active phase" value={selectedStage ? `${phaseNumber(selectedStage.id)} ${phaseShortLabels[selectedStage.id] ?? selectedStage.title}` : undefined} />
-          <ArtifactField label="Gate state" value={selectedStage ? statusLabel(selectedStageStatus) : undefined} />
+          <AgentStatusField label="Run status" value={selectedRun?.title} tone={selectedRun?.status && /pass|complete|done/i.test(selectedRun.status) ? 'dry' : 'neutral'} />
+          <AgentStatusField label="Active phase" value={selectedStage ? `${phaseNumber(selectedStage.id)} ${phaseShortLabels[selectedStage.id] ?? selectedStage.title}` : undefined} tone="neutral" />
+          <AgentStatusField label="Gate state" value={selectedStage ? statusLabel(selectedStageStatus) : undefined} tone={selectedStagePassed ? 'pass' : selectedStageMissing ? 'blocked' : 'dry'} />
           {selectedRun && (
             <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedRun.runRoot.split('/').pop()}
@@ -7428,12 +8169,15 @@ function PipelineNav({
 }) {
   const activeStage = phases?.find((stage) => stage.id === activePhaseId)
   const mediaLockCanAdvance = activePhaseId === '08' && !!activeStage && isStagePassed(activeStage)
-  const ctaReady = klingReady || mediaLockCanAdvance
-  const ctaLabel = mediaLockCanAdvance ? 'Video Provider' : 'Deploy Video'
+  const videoProviderCanAdvance = activePhaseId === '09' && !!activeStage && isStagePassed(activeStage)
+  const ctaReady = klingReady || mediaLockCanAdvance || videoProviderCanAdvance
+  const ctaLabel = mediaLockCanAdvance ? 'Video Provider' : videoProviderCanAdvance ? 'Provider Distillation' : 'Deploy Video'
   const ctaTitle = mediaLockCanAdvance
     ? 'Media lock passed. Continue to Phase 09 Video Provider.'
+    : videoProviderCanAdvance
+      ? 'Video provider packet passed. Continue to Phase 10 Provider Distillation.'
     : klingReady
-      ? 'All phases pass. Submit to selected provider.'
+      ? 'All phases pass. Submit remains gated by Phase 10 provider distillation evidence and live authorization.'
       : 'Blocked: some phases have not passed.'
 
   useEffect(() => {
@@ -7498,14 +8242,14 @@ function PipelineNav({
         disabled={!ctaReady}
         onClick={() => {
           if (mediaLockCanAdvance) onPhaseChange('09')
+          else if (videoProviderCanAdvance) onPhaseChange('10')
         }}
-        style={{
-          ...nvis.klingDeployBtn,
-          ...(ctaReady ? nvis.klingDeployBtnReady : nvis.disabled),
-        }}
+        style={ctaReady ? { ...nvis.klingDeployBtn, ...nvis.klingDeployBtnReady } : nvis.klingDeployBtnBlocked}
         title={ctaTitle}
       >
-        {ctaLabel}
+        {!ctaReady && <span style={nvis.klingDeployStripe} aria-hidden="true" />}
+        {!ctaReady && <Lock size={14} style={nvis.klingDeployLockIcon} />}
+        <span style={nvis.klingDeployLabel}>{ctaReady ? ctaLabel : 'Deploy Video (Blocked)'}</span>
       </button>
     </header>
   )
@@ -7538,6 +8282,65 @@ function KlingGate({ selectedRun, stages }: { selectedRun: DreamRun | null; stag
       </button>
     </div>
   )
+}
+
+function ArchiveRunItem({
+  run,
+  active,
+  onSelect,
+  kind = 'archive',
+}: {
+  run: DreamRun
+  active: boolean
+  onSelect: () => void
+  kind?: 'archive' | 'active'
+}) {
+  const status = archiveRunStatus(run)
+  const parsed = parseArchiveRunLabel(run)
+  return (
+    <button
+      type="button"
+      data-qid={`dream:item:run:${run.id}`}
+      data-qs-action="DREAM_SELECT_RUN"
+      title={`Open Dream run: ${run.title}`}
+      onClick={onSelect}
+      style={{
+        ...styles.archiveRunItem,
+        ...(active ? styles.archiveRunItemSelected : null),
+        ...(kind === 'active' ? styles.archiveRunItemActive : null),
+      }}
+    >
+      <span style={{ ...styles.archiveRunDot, ...archiveRunDotStyle(status) }} />
+      <span style={styles.archiveRunText}>
+        <span style={styles.archiveRunDate}>{parsed.date}</span>
+        <span style={styles.archiveRunTitle}>{parsed.title}</span>
+      </span>
+    </button>
+  )
+}
+
+function archiveRunStatus(run: DreamRun): 'complete' | 'failed' | 'partial' {
+  const text = `${run.status} ${run.title} ${run.id}`.toLowerCase()
+  if (/fail|error|blocked|reject/.test(text)) return 'failed'
+  if (/running|live|active|partial|pending|draft|dry|missing/.test(text)) return 'partial'
+  return 'complete'
+}
+
+function archiveRunDotStyle(status: 'complete' | 'failed' | 'partial'): CSSProperties {
+  if (status === 'failed') return styles.archiveRunDotFailed
+  if (status === 'partial') return styles.archiveRunDotPartial
+  return styles.archiveRunDotComplete
+}
+
+function parseArchiveRunLabel(run: DreamRun): { date: string; title: string } {
+  const title = run.title || run.id
+  const yyyymmdd = title.match(/^(\d{4})(\d{2})(\d{2})\s+(.+)$/)
+  if (yyyymmdd) {
+    return { date: `${yyyymmdd[1]}-${yyyymmdd[2]}-${yyyymmdd[3]}`, title: yyyymmdd[4] }
+  }
+  const updated = run.updatedAt ? new Date(run.updatedAt) : null
+  const date = updated && !Number.isNaN(updated.getTime()) ? updated.toISOString().slice(0, 10) : run.source
+  return { date, title }
 }
 
 export function DreamWorkspace() {
@@ -7696,6 +8499,18 @@ export function DreamWorkspace() {
 
   useEffect(() => {
     void loadRuns()
+  }, [])
+
+  useEffect(() => {
+    const handleSearchShortcut = (event: KeyboardEvent) => {
+      if (!event.ctrlKey || event.key.toLowerCase() !== 'k') return
+      const target = event.target
+      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"]')) return
+      event.preventDefault()
+      document.querySelector<HTMLInputElement>('[data-qid="dream:input:search"]')?.focus()
+    }
+    window.addEventListener('keydown', handleSearchShortcut)
+    return () => window.removeEventListener('keydown', handleSearchShortcut)
   }, [])
 
   const filteredRuns = useMemo(() => {
@@ -8191,6 +9006,7 @@ export function DreamWorkspace() {
               placeholder="Filter runs, status, paths"
               style={styles.searchInput}
             />
+            <span style={styles.searchShortcutHint}>Ctrl K</span>
           </label>
             </>
           )}
@@ -8213,51 +9029,24 @@ export function DreamWorkspace() {
                     <div style={{ color: '#64748b', fontSize: 13, fontStyle: 'italic', marginBottom: 10 }}>No active runs</div>
                   )}
                   {filteredRuns.filter((r) => r.status === 'RUNNING' || r.status === 'LIVE' || r.status === 'active').map((run) => (
-                    <button
+                    <ArchiveRunItem
                       key={`active-${run.id}`}
-                      type="button"
-                      data-qid={`dream:item:run:${run.id}`}
-                      data-qs-action="DREAM_SELECT_RUN"
-                      title={`Open Dream run: ${run.title}`}
-                      onClick={() => setSelectedId(run.id)}
-                      style={{
-                        ...styles.runCard,
-                        ...(selectedRun?.id === run.id ? styles.runCardSelected : null),
-                        marginBottom: 8,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>{run.title}</span>
-                        <span style={{ color: '#00ff88', fontSize: 11, letterSpacing: '0.06em' }}>● LIVE</span>
-                      </div>
-                    </button>
+                      run={run}
+                      active={selectedRun?.id === run.id}
+                      onSelect={() => setSelectedId(run.id)}
+                      kind="active"
+                    />
                   ))}
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '6px 14px 14px' }}>
                   <div style={{ color: '#64748b', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Archives</div>
                   {filteredRuns.filter((r) => r.status !== 'RUNNING' && r.status !== 'LIVE' && r.status !== 'active').map((run) => (
-                    <button
+                    <ArchiveRunItem
                       key={`archive-${run.id}`}
-                      type="button"
-                      data-qid={`dream:item:run:${run.id}`}
-                      data-qs-action="DREAM_SELECT_RUN"
-                      title={`Open Dream run: ${run.title}`}
-                      onClick={() => setSelectedId(run.id)}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 0',
-                        border: 'none',
-                        borderBottom: '1px solid rgba(255,255,255,0.06)',
-                        background: 'transparent',
-                        color: selectedRun?.id === run.id ? '#e2e8f0' : '#64748b',
-                        fontSize: 13,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {run.title}
-                    </button>
+                      run={run}
+                      active={selectedRun?.id === run.id}
+                      onSelect={() => setSelectedId(run.id)}
+                    />
                   ))}
                 </div>
               </>
@@ -8391,7 +9180,7 @@ const nvis: Record<string, CSSProperties> = {
     fontSize: 10,
     fontWeight: 800,
     letterSpacing: '0.12em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     whiteSpace: 'nowrap',
   },
   pipelineUnderline: {
@@ -8424,6 +9213,41 @@ const nvis: Record<string, CSSProperties> = {
     color: '#022c22',
     boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)',
     cursor: 'pointer',
+  },
+  klingDeployBtnBlocked: {
+    position: 'relative' as const,
+    height: 32,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 0,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#020617',
+    color: '#64748b',
+    padding: '0 14px',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    cursor: 'not-allowed',
+    overflow: 'hidden',
+  },
+  klingDeployStripe: {
+    position: 'absolute' as const,
+    inset: 0,
+    opacity: 0.12,
+    background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, currentColor 4px, currentColor 8px)',
+  },
+  klingDeployLockIcon: {
+    position: 'relative' as const,
+    zIndex: 1,
+    flex: '0 0 auto',
+  },
+  klingDeployLabel: {
+    position: 'relative' as const,
+    zIndex: 1,
   },
   disabled: {
     opacity: 0.5,
@@ -9700,7 +10524,7 @@ const nvis: Record<string, CSSProperties> = {
   },
   videoProviderSplit: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     gap: 14,
   },
   videoProviderSection: {
@@ -9713,6 +10537,175 @@ const nvis: Record<string, CSSProperties> = {
   videoProviderScoreRows: {
     display: 'grid',
     gap: 8,
+  },
+  videoProviderMatrix: {
+    minWidth: 0,
+    display: 'grid',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    background: '#050505',
+  },
+  videoProviderMatrixHeader: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 34,
+    padding: '0 8px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.35)',
+    color: '#64748b',
+    fontSize: 8,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  videoProviderMetricHeader: {
+    textAlign: 'center' as const,
+    cursor: 'help',
+    transition: 'color 160ms ease',
+  },
+  videoProviderScoreHeader: {
+    textAlign: 'right' as const,
+    color: '#94a3b8',
+  },
+  videoProviderMatrixRow: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 48,
+    padding: '8px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderLeft: '2px solid transparent',
+    color: '#e2e8f0',
+    fontSize: 12,
+  },
+  videoProviderMatrixRowSelected: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(50px, 0.95fr) minmax(64px, 1.05fr) repeat(5, minmax(24px, 0.48fr)) minmax(36px, 0.62fr)',
+    gap: 5,
+    alignItems: 'center',
+    minHeight: 48,
+    padding: '8px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderLeft: '2px solid #22c55e',
+    background: 'rgba(34,197,94,0.08)',
+    color: '#e2e8f0',
+    fontSize: 12,
+  },
+  videoProviderName: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#f8fafc',
+    fontSize: 11,
+    fontWeight: 850,
+    textTransform: 'capitalize' as const,
+  },
+  videoProviderSelectedName: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#4ade80',
+    fontSize: 11,
+    fontWeight: 900,
+    textTransform: 'capitalize' as const,
+  },
+  videoProviderStateCell: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 2,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 8,
+    lineHeight: 1.2,
+    overflow: 'hidden',
+  },
+  videoProviderPerfectCell: {
+    textAlign: 'center' as const,
+    color: '#cbd5e1',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 11,
+    fontWeight: 800,
+  },
+  videoProviderPenaltyCell: {
+    minHeight: 20,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    justifySelf: 'center',
+    minWidth: 24,
+    padding: '0 3px',
+    borderRadius: 4,
+    background: 'rgba(245,158,11,0.10)',
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreCell: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  videoProviderScorePass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(34,197,94,0.24)',
+    background: 'rgba(34,197,94,0.12)',
+    color: '#4ade80',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreWarn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(245,158,11,0.24)',
+    background: 'rgba(245,158,11,0.12)',
+    color: '#f59e0b',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(248,113,113,0.26)',
+    background: 'rgba(248,113,113,0.12)',
+    color: '#fca5a5',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  videoProviderScoreMissing: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 34,
+    height: 22,
+    borderRadius: 999,
+    border: '1px solid rgba(148,163,184,0.18)',
+    background: 'rgba(148,163,184,0.08)',
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
   },
   videoProviderScoreRow: {
     display: 'grid',
@@ -9740,6 +10733,38 @@ const nvis: Record<string, CSSProperties> = {
     color: '#fca5a5',
     fontSize: 12,
     lineHeight: 1.35,
+  },
+  videoProviderBlockerChips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  videoProviderBlockerChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    maxWidth: '100%',
+    gap: 7,
+    padding: '6px 8px',
+    borderRadius: 5,
+    border: '1px solid rgba(248,113,113,0.24)',
+    background: 'rgba(127,29,29,0.18)',
+    color: '#fca5a5',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 10,
+    fontWeight: 750,
+    lineHeight: 1.25,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    overflowWrap: 'anywhere',
+  },
+  videoProviderBlockerDot: {
+    width: 6,
+    height: 6,
+    flex: '0 0 auto',
+    borderRadius: 999,
+    background: '#f87171',
+    boxShadow: '0 0 8px rgba(248,113,113,0.45)',
   },
   videoProviderReceiptRow: {
     display: 'grid',
@@ -9775,6 +10800,901 @@ const nvis: Record<string, CSSProperties> = {
     fontWeight: 850,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
+  },
+  systemStatusIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: '9px 10px',
+    borderRadius: 6,
+    border: '1px solid rgba(148,163,184,0.16)',
+    background: 'rgba(15,23,42,0.32)',
+    minWidth: 0,
+  },
+  systemStatusLabel: {
+    color: '#94a3b8',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  systemStatusValue: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    flex: '0 0 auto',
+  },
+  systemStatusDotLoaded: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    background: '#06b6d4',
+    boxShadow: '0 0 8px rgba(6,182,212,0.62)',
+  },
+  systemStatusDotError: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    background: '#f87171',
+    boxShadow: '0 0 8px rgba(248,113,113,0.52)',
+  },
+  systemStatusDotMissing: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    background: '#334155',
+  },
+  systemStatusTextLoaded: {
+    color: '#22d3ee',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  systemStatusTextError: {
+    color: '#fca5a5',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  systemStatusTextMissing: {
+    color: '#64748b',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  pipelineErrorBoundary: {
+    display: 'grid',
+    gap: 12,
+    padding: 18,
+    borderRadius: 8,
+    border: '1px solid rgba(248,113,113,0.36)',
+    background: 'rgba(127,29,29,0.18)',
+    color: '#fecaca',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  pipelineErrorTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    color: '#f87171',
+    fontSize: 12,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  pipelineErrorMessage: {
+    margin: 0,
+    color: '#fca5a5',
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
+  pipelineErrorButton: {
+    justifySelf: 'start',
+    height: 30,
+    padding: '0 10px',
+    borderRadius: 4,
+    border: '1px solid rgba(248,113,113,0.36)',
+    background: 'rgba(127,29,29,0.26)',
+    color: '#fecaca',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+  },
+  providerContractPanel: {
+    display: 'grid',
+    gap: 16,
+  },
+  providerContractMissing: {
+    display: 'grid',
+    gap: 12,
+    padding: 16,
+    borderRadius: 8,
+    border: '1px solid rgba(251, 191, 36, 0.32)',
+    borderLeft: '8px solid #f59e0b',
+    background: 'rgba(120, 53, 15, 0.18)',
+    color: '#fde68a',
+    lineHeight: 1.45,
+  },
+  providerContractCommand: {
+    margin: 0,
+    padding: 12,
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.42)',
+    color: '#e5e7eb',
+    fontSize: 11,
+    lineHeight: 1.45,
+    whiteSpace: 'pre-wrap',
+    overflowX: 'auto',
+  },
+  providerContractKpiGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: 12,
+  },
+  providerContractKpiCard: {
+    minHeight: 96,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: 14,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+    overflow: 'hidden',
+  },
+  providerContractKpiPass: {
+    borderLeft: '6px solid #22c55e',
+  },
+  providerContractKpiDry: {
+    borderLeft: '6px solid #4a9eff',
+  },
+  providerContractKpiBlocked: {
+    borderLeft: '6px solid #f59e0b',
+    background: 'rgba(120, 53, 15, 0.12)',
+  },
+  providerContractKpiLabel: {
+    color: '#a8b3c7',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  providerContractKpiValue: {
+    color: '#f8fafc',
+    fontSize: 18,
+    lineHeight: 1.08,
+    fontWeight: 900,
+    letterSpacing: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  providerContractKpiDetail: {
+    color: '#a8b3c7',
+    fontSize: 11,
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  providerContractRibbon: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(2,6,23,0.48)',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+  },
+  providerContractRibbonMetric: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 6,
+    padding: '12px 14px',
+    borderRight: '1px solid rgba(255,255,255,0.07)',
+  },
+  providerContractRibbonLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  providerContractRibbonValue: {
+    minWidth: 0,
+    fontSize: 12,
+    lineHeight: 1.25,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractRibbonValuePass: {
+    color: '#4ade80',
+  },
+  providerContractRibbonValueDry: {
+    color: '#facc15',
+  },
+  providerContractRibbonValueBlocked: {
+    color: '#fb7185',
+  },
+  providerContractSplit: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: 14,
+  },
+  providerContractValidationGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+    gap: 14,
+    alignItems: 'start',
+  },
+  providerContractBlockersPanel: {
+    borderColor: 'rgba(245,158,11,0.22)',
+    background: 'rgba(120,53,15,0.08)',
+  },
+  providerContractNonClaimsPanel: {
+    borderColor: 'rgba(148,163,184,0.16)',
+    background: 'rgba(15,23,42,0.22)',
+  },
+  providerContractSection: {
+    minWidth: 0,
+    padding: 16,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+  },
+  providerContractPanelPayloadList: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))',
+    gap: 12,
+  },
+  providerContractPanelPayload: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 10,
+    padding: 12,
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.018)',
+  },
+  providerContractPanelPayloadSelected: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 10,
+    padding: 12,
+    borderRadius: 6,
+    border: '1px solid rgba(34,197,94,0.28)',
+    borderLeft: '6px solid #22c55e',
+    background: 'rgba(20,83,45,0.12)',
+  },
+  providerContractPanelPayloadHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    color: '#f8fafc',
+    fontSize: 12,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  providerContractPanelPayloadFrames: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+  },
+  providerContractFrameState: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 8,
+    padding: 10,
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(0,0,0,0.28)',
+  },
+  providerContractFrameHeader: {
+    display: 'grid',
+    gridTemplateColumns: '52px minmax(0, 1fr)',
+    gap: 10,
+    alignItems: 'center',
+    color: '#dbeafe',
+    fontSize: 11,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    overflow: 'hidden',
+  },
+  providerContractFramePreview: {
+    position: 'relative',
+    display: 'grid',
+    gap: 6,
+  },
+  providerContractFrameImage: {
+    width: '100%',
+    aspectRatio: '16 / 9',
+    objectFit: 'cover',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#020617',
+  },
+  providerContractFrameCaption: {
+    minHeight: 24,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: '0 7px',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(15,23,42,0.46)',
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  providerContractFrameCaptionIcon: {
+    color: 'rgba(245,158,11,0.76)',
+    flex: '0 0 auto',
+  },
+  providerContractFrameRows: {
+    display: 'grid',
+    gap: 0,
+    padding: 10,
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'rgba(2,6,23,0.46)',
+  },
+  providerContractMetadataRow: {
+    display: 'grid',
+    gridTemplateColumns: '92px minmax(0, 1fr)',
+    alignItems: 'center',
+    gap: 14,
+    minWidth: 0,
+    padding: '5px 0',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    fontSize: 10,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  providerContractMetaLabel: {
+    color: '#64748b',
+    fontWeight: 850,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+  },
+  providerContractMetaValue: {
+    minWidth: 0,
+    color: '#cbd5e1',
+    fontWeight: 650,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  },
+  providerContractMetaValueSuccess: {
+    minWidth: 0,
+    color: '#22c55e',
+    fontWeight: 850,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  },
+  providerContractMetaValueWarning: {
+    minWidth: 0,
+    color: '#f59e0b',
+    fontWeight: 850,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  },
+  providerContractMetaValueMuted: {
+    minWidth: 0,
+    color: '#64748b',
+    fontWeight: 650,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  },
+  providerContractPanelPayloadJson: {
+    display: 'grid',
+    gap: 8,
+    padding: 10,
+    borderRadius: 4,
+    border: '1px solid rgba(74,158,255,0.18)',
+    background: 'rgba(74,158,255,0.07)',
+    color: '#bfdbfe',
+    fontSize: 10,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+  },
+  providerContractPanelPayloadJsonMuted: {
+    display: 'grid',
+    gap: 8,
+    padding: 10,
+    borderRadius: 4,
+    border: '1px solid rgba(148,163,184,0.16)',
+    background: 'rgba(15,23,42,0.36)',
+    color: '#94a3b8',
+    fontSize: 10,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+  },
+  providerContractDistillationTextBlock: {
+    display: 'grid',
+    gap: 9,
+    padding: 10,
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(2,6,23,0.42)',
+  },
+  providerContractDistillationTextItem: {
+    display: 'grid',
+    gap: 5,
+    minWidth: 0,
+  },
+  providerContractDistillationLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  providerContractDistillationText: {
+    display: '-webkit-box',
+    margin: 0,
+    color: '#cbd5e1',
+    fontSize: 11,
+    lineHeight: 1.45,
+    overflow: 'hidden',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 3,
+  },
+  providerContractDistillationAudio: {
+    justifySelf: 'start',
+    maxWidth: '100%',
+    padding: '3px 7px',
+    borderRadius: 4,
+    border: '1px solid rgba(34,211,238,0.22)',
+    background: 'rgba(8,145,178,0.12)',
+    color: '#67e8f9',
+    fontSize: 10,
+    fontWeight: 850,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractPanelSummary: {
+    display: 'block',
+    minWidth: 0,
+    color: '#8ba1bd',
+    fontSize: 10,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractAudioPillRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+    minWidth: 0,
+  },
+  providerContractAudioPill: {
+    display: 'inline-flex',
+    alignItems: 'stretch',
+    minHeight: 22,
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(2,6,23,0.42)',
+    overflow: 'hidden',
+  },
+  providerContractAudioPillLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '0 6px',
+    borderRight: '1px solid rgba(255,255,255,0.08)',
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  },
+  providerContractAudioPillValue: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    maxWidth: 160,
+    padding: '0 7px',
+    fontSize: 10,
+    fontWeight: 850,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractAudioPillValueNeutral: {
+    color: '#67e8f9',
+  },
+  providerContractAudioPillValueWarning: {
+    color: '#fbbf24',
+  },
+  providerContractPanelPayloadDetails: {
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.24)',
+    overflow: 'hidden',
+  },
+  providerContractPanelPayloadSummary: {
+    minHeight: 36,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: '0 10px',
+    color: '#bfdbfe',
+    cursor: 'pointer',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    userSelect: 'none',
+  },
+  providerContractPanelPayloadPre: {
+    margin: 0,
+    maxHeight: 260,
+    overflow: 'auto',
+    padding: 10,
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.38)',
+    color: '#dbeafe',
+    fontSize: 10,
+    lineHeight: 1.45,
+    whiteSpace: 'pre',
+  },
+  providerContractSyntaxShell: {
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#1e1e1e',
+    overflow: 'hidden',
+  },
+  providerContractSyntaxToolbar: {
+    minHeight: 32,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 7,
+    padding: '0 10px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(15,23,42,0.72)',
+    color: '#94a3b8',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  providerContractSyntaxHighlighter: {
+    margin: 0,
+    padding: 12,
+    background: 'transparent',
+    fontSize: 10,
+    lineHeight: 1.45,
+    overflow: 'auto',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere',
+  },
+  providerContractSyntaxCode: {
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
+  providerContractSyntaxKey: {
+    color: '#9cdcfe',
+  },
+  providerContractSyntaxString: {
+    color: '#ce9178',
+  },
+  providerContractSyntaxNumber: {
+    color: '#b5cea8',
+  },
+  providerContractSyntaxBoolean: {
+    color: '#569cd6',
+  },
+  providerContractSyntaxPunctuation: {
+    color: '#d4d4d4',
+  },
+  providerContractMapping: {
+    display: 'grid',
+    borderRadius: 6,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.07)',
+  },
+  providerContractMappingHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '9px 10px',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#a8b3c7',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  providerContractMappingHeaderField: {
+    flex: '0 1 34%',
+    minWidth: 132,
+  },
+  providerContractMappingHeaderSource: {
+    flex: '1 1 auto',
+    minWidth: 0,
+  },
+  providerContractMappingHeaderStatus: {
+    flex: '0 0 auto',
+    minWidth: 170,
+    textAlign: 'right' as const,
+  },
+  providerContractMappingRow: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+    color: '#dbeafe',
+    fontSize: 11,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    minWidth: 0,
+  },
+  providerContractMappingField: {
+    flex: '0 1 34%',
+    minWidth: 132,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractMappingSource: {
+    flex: '1 1 auto',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#8ba1bd',
+  },
+  providerContractMappingStatus: {
+    flex: '0 0 auto',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    minWidth: 170,
+  },
+  providerContractBoundaryGrid: {
+    display: 'grid',
+    gap: 0,
+    padding: '4px 2px',
+    borderRadius: 5,
+    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'rgba(15,23,42,0.20)',
+  },
+  providerContractStateCard: {
+    display: 'grid',
+    gridTemplateColumns: '116px minmax(0, 1fr)',
+    alignItems: 'center',
+    gap: 12,
+    padding: '9px 10px',
+    borderTop: '1px solid rgba(255,255,255,0.055)',
+  },
+  providerContractStateLabel: {
+    color: '#a8b3c7',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  },
+  providerContractStateDetail: {
+    gridColumn: '2',
+    color: '#a8b3c7',
+    fontSize: 11,
+    lineHeight: 1.3,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractPillPass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(34,197,94,0.28)',
+    background: 'rgba(34,197,94,0.10)',
+    color: '#86efac',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    justifySelf: 'end',
+  },
+  providerContractPillDry: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(74,158,255,0.28)',
+    background: 'rgba(74,158,255,0.10)',
+    color: '#bfdbfe',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    justifySelf: 'end',
+  },
+  providerContractPillBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(245,158,11,0.35)',
+    background: 'rgba(245,158,11,0.12)',
+    color: '#fcd34d',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    justifySelf: 'end',
+  },
+  providerContractBlockerGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gap: 8,
+  },
+  providerContractBlockerPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(248,113,113,0.32)',
+    background: 'rgba(127,29,29,0.18)',
+    color: '#fecaca',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+    textTransform: 'uppercase',
+  },
+  providerContractLiveBlockerPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(245,158,11,0.32)',
+    background: 'rgba(120,53,15,0.18)',
+    color: '#fde68a',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+    textTransform: 'uppercase',
+  },
+  providerContractNeutralPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(34,197,94,0.22)',
+    background: 'rgba(20,83,45,0.14)',
+    color: '#bbf7d0',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+    textTransform: 'uppercase',
+  },
+  providerContractNonClaims: {
+    display: 'grid',
+    gap: 8,
+    margin: 0,
+    padding: 0,
+    listStyle: 'none',
+    color: '#94a3b8',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  providerContractNonClaimItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 8,
+    minWidth: 0,
+    color: '#94a3b8',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 11,
+  },
+  providerContractNonClaimIcon: {
+    flex: '0 0 auto',
+    marginTop: 1,
+    color: '#475569',
+  },
+  providerContractDetails: {
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+    overflow: 'hidden',
+  },
+  providerContractSummary: {
+    minHeight: 48,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '0 14px',
+    cursor: 'pointer',
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    userSelect: 'none',
+  },
+  providerContractSummaryMeta: {
+    color: '#8ba1bd',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    whiteSpace: 'nowrap',
+  },
+  providerContractJsonToolbar: {
+    minHeight: 44,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '0 14px',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.03)',
+    color: '#8ba1bd',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  },
+  providerContractCopyButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 7,
+    height: 30,
+    padding: '0 10px',
+    borderRadius: 4,
+    border: '1px solid rgba(74,158,255,0.34)',
+    background: 'rgba(74,158,255,0.10)',
+    color: '#bfdbfe',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+  },
+  providerContractJsonPre: {
+    margin: 0,
+    padding: 14,
+    maxHeight: 360,
+    overflow: 'auto',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.36)',
+    color: '#dbeafe',
+    fontSize: 11,
+    lineHeight: 1.45,
   },
   matrixEnv: {
     marginBottom: 14,
@@ -12011,6 +13931,20 @@ const styles: Record<string, CSSProperties> = {
     color: '#f8fafc',
     fontSize: 14,
   },
+  searchShortcutHint: {
+    flex: '0 0 auto',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(2,6,23,0.38)',
+    color: '#64748b',
+    padding: '2px 5px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    whiteSpace: 'nowrap',
+  },
   runList: {
     minHeight: 0,
     flex: 1,
@@ -12059,6 +13993,72 @@ const styles: Record<string, CSSProperties> = {
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
     color: '#64748b',
+  },
+  archiveRunItem: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 46,
+    padding: '7px 8px',
+    border: 'none',
+    borderBottom: '1px solid rgba(255,255,255,0.055)',
+    borderRadius: 6,
+    background: 'transparent',
+    color: '#64748b',
+    textAlign: 'left' as const,
+    cursor: 'pointer',
+  },
+  archiveRunItemSelected: {
+    background: 'rgba(74,158,255,0.10)',
+    color: '#dbeafe',
+  },
+  archiveRunItemActive: {
+    background: 'rgba(16,185,129,0.08)',
+  },
+  archiveRunDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    flex: '0 0 auto',
+  },
+  archiveRunDotComplete: {
+    background: '#22c55e',
+    boxShadow: '0 0 8px rgba(34,197,94,0.42)',
+  },
+  archiveRunDotFailed: {
+    background: '#ef4444',
+    boxShadow: '0 0 8px rgba(239,68,68,0.42)',
+  },
+  archiveRunDotPartial: {
+    background: '#f59e0b',
+    boxShadow: '0 0 8px rgba(245,158,11,0.42)',
+  },
+  archiveRunText: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 3,
+    flex: 1,
+  },
+  archiveRunDate: {
+    color: '#475569',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    whiteSpace: 'nowrap',
+  },
+  archiveRunTitle: {
+    minWidth: 0,
+    color: 'inherit',
+    fontSize: 12,
+    lineHeight: 1.25,
+    fontWeight: 650,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   badgeRow: {
     display: 'flex',
@@ -12438,6 +14438,35 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 11,
     transition: 'background 160ms ease, border-color 160ms ease, color 160ms ease',
     overflow: 'hidden',
+  },
+  receiptFileCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    minWidth: 0,
+    minHeight: 42,
+    borderRadius: 6,
+    border: '1px solid rgba(75, 85, 99, 0.72)',
+    background: 'rgba(15, 23, 42, 0.42)',
+    padding: '8px 10px',
+    color: '#94a3b8',
+    textDecoration: 'none',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 11,
+    transition: 'background 160ms ease, border-color 160ms ease, color 160ms ease',
+    overflow: 'hidden',
+  },
+  receiptFileIcon: {
+    flex: '0 0 26px',
+    width: 26,
+    height: 26,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    border: '1px solid rgba(34,211,238,0.16)',
+    background: 'rgba(15,23,42,0.78)',
+    color: '#22d3ee',
   },
   receiptPillLabel: {
     minWidth: 0,
@@ -12907,6 +14936,81 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 12,
     lineHeight: 1.35,
     overflowWrap: 'anywhere',
+  },
+  agentStatusValue: {
+    margin: '5px 0 0',
+  },
+  agentStatusPillNeutral: {
+    display: 'inline-flex',
+    maxWidth: '100%',
+    borderRadius: 4,
+    border: '1px solid rgba(148,163,184,0.18)',
+    background: 'rgba(15,23,42,0.30)',
+    color: '#cbd5e1',
+    padding: '3px 7px',
+    fontSize: 10,
+    lineHeight: 1.25,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  agentStatusPillPass: {
+    display: 'inline-flex',
+    maxWidth: '100%',
+    borderRadius: 4,
+    border: '1px solid rgba(34,197,94,0.26)',
+    background: 'rgba(34,197,94,0.10)',
+    color: '#86efac',
+    padding: '3px 7px',
+    fontSize: 10,
+    lineHeight: 1.25,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  agentStatusPillDry: {
+    display: 'inline-flex',
+    maxWidth: '100%',
+    borderRadius: 4,
+    border: '1px solid rgba(34,211,238,0.22)',
+    background: 'rgba(8,145,178,0.12)',
+    color: '#67e8f9',
+    padding: '3px 7px',
+    fontSize: 10,
+    lineHeight: 1.25,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  agentStatusPillBlocked: {
+    display: 'inline-flex',
+    maxWidth: '100%',
+    borderRadius: 4,
+    border: '1px solid rgba(248,113,113,0.28)',
+    background: 'rgba(127,29,29,0.16)',
+    color: '#fecaca',
+    padding: '3px 7px',
+    fontSize: 10,
+    lineHeight: 1.25,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   warningBox: {
     marginTop: 16,

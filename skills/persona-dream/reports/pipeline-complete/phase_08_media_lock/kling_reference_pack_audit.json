@@ -1,0 +1,133 @@
+{
+  "dry_run_blockers": [],
+  "elements": [
+    {
+      "allowed_variation": [
+        "wet hair movement",
+        "subtle expression changes",
+        "natural salt spray"
+      ],
+      "description": "Embry, adult woman surfer, brown hair, navy rashguard/polo continuity, controlled under heat and glare.",
+      "do_not_change": [
+        "do not change Embry into a male surfer",
+        "do not change brown hair",
+        "do not change navy rashguard/polo continuity",
+        "do not remove or hide Embry"
+      ],
+      "element_id": "element_embry_v1",
+      "ignore": [
+        "contact sheet grid",
+        "labels",
+        "borders",
+        "reference layout artifacts"
+      ],
+      "live_blockers": [
+        "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"
+      ],
+      "reference_pack_status": "DRAFT_CONTACT_SHEET_SOURCE_ONLY",
+      "source_asset_ids": [
+        "embry_character_sheet"
+      ],
+      "source_assets": [
+        {
+          "bundle_path": "references/01-embry_character_sheet.jpg",
+          "generator_attachment_required": true,
+          "id": "embry_character_sheet",
+          "media_type": "image",
+          "pane_visible": true,
+          "pane_visible_required": true,
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "reference_only_not_output": true,
+          "reviewer_attachment_required": true,
+          "role": "primary_identity_reference",
+          "sent_to_generator_required": true,
+          "sent_to_reviewer_required": true,
+          "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+          "source_path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+          "title": "Embry character sheet montage"
+        }
+      ],
+      "token": "<<<element_embry>>>",
+      "type": "character_reference"
+    },
+    {
+      "allowed_variation": [
+        "wet hair movement",
+        "subtle stance changes",
+        "natural surf posture"
+      ],
+      "description": "Kai Akana, young Hawaiian male surfer, curly dark hair, black rashguard, calm and lineup-aware.",
+      "do_not_change": [
+        "do not replace Kai with a generic surfer",
+        "do not remove Kai where required",
+        "do not change black rashguard continuity"
+      ],
+      "element_id": "element_kai_v1",
+      "ignore": [
+        "contact sheet grid",
+        "labels",
+        "borders",
+        "reference layout artifacts"
+      ],
+      "live_blockers": [
+        "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"
+      ],
+      "reference_pack_status": "DRAFT_CONTACT_SHEET_SOURCE_ONLY",
+      "source_asset_ids": [
+        "kai_character_sheet"
+      ],
+      "source_assets": [
+        {
+          "bundle_path": "references/02-kai_character_sheet.png",
+          "generator_attachment_required": true,
+          "id": "kai_character_sheet",
+          "media_type": "image",
+          "pane_visible": true,
+          "pane_visible_required": true,
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "reference_only_not_output": true,
+          "reviewer_attachment_required": true,
+          "role": "primary_identity_reference",
+          "sent_to_generator_required": true,
+          "sent_to_reviewer_required": true,
+          "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+          "source_path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "title": "Kai Akana character sheet"
+        }
+      ],
+      "token": "<<<element_kai>>>",
+      "type": "character_reference"
+    },
+    {
+      "allowed_variation": [
+        "water shimmer",
+        "small swell movement",
+        "spray",
+        "glare"
+      ],
+      "description": "Kahaluu Bay / Kona Coast public reef break, clear shallow water over dark lava reef, hot glare, public lineup pressure.",
+      "do_not_change": [
+        "do not turn into a private empty beach",
+        "do not remove the lava reef boundary",
+        "do not turn into a generic tropical postcard",
+        "do not turn the water into a pool or sandbar"
+      ],
+      "element_id": "element_kahaluu_lava_reef_v1",
+      "ignore": [],
+      "live_blockers": [
+        "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING"
+      ],
+      "reference_pack_status": "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING",
+      "source_asset_ids": [],
+      "source_assets": [],
+      "token": "<<<element_kahaluu_lava_reef>>>",
+      "type": "scene_environment"
+    }
+  ],
+  "live_blockers": [
+    "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+    "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING"
+  ],
+  "schema": "persona_dream.kling.reference_pack_audit.v1",
+  "status": "GENERATED_WITH_LIVE_BLOCKERS"
+}

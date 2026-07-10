@@ -27,7 +27,8 @@
     "prove:pr3b-proof-card": "node scripts/prove-battle-pr3b-proof-card.mjs",
     "prove:view-fixture-loader": "node scripts/prove-battle-view-fixture-loader.mjs",
     "prove:pr3c-synthesis": "node scripts/prove-battle-pr3c-synthesis.mjs",
-    "prove:pr3d-compile": "node scripts/prove-battle-pr3d-compile.mjs"
+    "prove:pr3d-compile": "node scripts/prove-battle-pr3d-compile.mjs",
+    "prove:pr4-runtime": "node scripts/prove-battle-pr4-runtime.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

@@ -1,6 +1,6 @@
 import { BATTLE_VIEW_FIXTURE_SCHEMAS, type BattleViewFixtureSchema, type BattleViewKind } from "./battle-view-fixture";
 
-export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "BattleSynthesisPage" | "BattleCompilePage" | "unsupported";
+export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "BattleSynthesisPage" | "BattleCompilePage" | "BattleRuntimePage" | "unsupported";
 
 type RegistryEntry = {
 	schema: BattleViewFixtureSchema;
@@ -38,6 +38,12 @@ export const BATTLE_FIXTURE_RENDERERS: Record<string, RegistryEntry> = {
 		renderer: "BattleCompilePage",
 		supported: true,
 	},
+	[BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE]: {
+		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE,
+		viewKind: "runtime",
+		renderer: "BattleRuntimePage",
+		supported: true,
+	},
 	[BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION]: {
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION,
 		viewKind: "population",
@@ -59,6 +65,7 @@ export function expectedSchemaForViewKind(viewKind: BattleViewKind): BattleViewF
 	if (viewKind === "proof-card") return BATTLE_VIEW_FIXTURE_SCHEMAS.PROOF_CARD;
 	if (viewKind === "synthesis") return BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS;
 	if (viewKind === "compile") return BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE;
+	if (viewKind === "runtime") return BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE;
 	if (viewKind === "population") return BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION;
 	return BATTLE_VIEW_FIXTURE_SCHEMAS.RACE;
 }
