@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.provider_authorship_receipt.v1.schema.json",
+  "title": "Battle Provider Authorship Receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "mocked",
+    "live",
+    "agentic",
+    "provider_live",
+    "fixture_fallback_used",
+    "battle_id",
+    "node_id",
+    "compile_status",
+    "runtime_status",
+    "judge_status",
+    "judge_verified_exploits",
+    "claims"
+  ],
+  "properties": {
+    "schema": { "const": "battle.provider_authorship_receipt.v1" },
+    "status": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "mocked": { "const": false },
+    "live": { "const": "tau_provider_artifact_authoring" },
+    "agentic": { "type": "boolean" },
+    "provider_live": { "type": "boolean" },
+    "fixture_fallback_used": { "const": false },
+    "battle_id": { "type": "string", "minLength": 1 },
+    "node_id": { "const": "exploit-code-author" },
+    "compile_status": { "const": "NOT_RUN" },
+    "runtime_status": { "const": "NOT_RUN" },
+    "target_contact": { "const": "NOT_RUN" },
+    "judge_status": { "const": "NOT_RUN" },
+    "judge_verified_exploits": { "const": 0 },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": { "type": "array", "items": { "type": "string" } },
+        "does_not_prove": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

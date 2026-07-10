@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.provider_workspace_baseline.v1.schema.json",
+  "title": "Battle Provider Workspace Baseline",
+  "type": "object",
+  "required": [
+    "schema",
+    "workspace",
+    "input_tree_sha256",
+    "output_files_present",
+    "expected_outputs"
+  ],
+  "properties": {
+    "schema": { "const": "battle.provider_workspace_baseline.v1" },
+    "workspace": { "type": "string", "minLength": 1 },
+    "input_tree_sha256": { "type": "string", "pattern": "^sha256:" },
+    "output_files_present": { "type": "array", "items": { "type": "string" } },
+    "expected_outputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "contains": { "const": "outputs/exploit_specimen.py" }
+    }
+  },
+  "additionalProperties": true
+}

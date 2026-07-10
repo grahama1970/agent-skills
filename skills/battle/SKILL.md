@@ -424,17 +424,19 @@ compile child code, contact the target, or claim exploit success.
 
 The current live Tau child DAG canary is `live-tau-child-dag-canary`. It is
 non-mocked and invokes the existing local Tau DAG runtime without fixture
-fallback. The PR3b boundary is:
+fallback. The PR3b/PR3c boundary is:
 
 ```text
 lineage-summarizer PASS
 research-scout PASS with Tau-validated source-bearing design-input receipts
 method-combiner PASS with a deterministic exploit genome candidate
-exploit-code-author BLOCKED unless a real Tau/provider code-authoring adapter exists
+exploit-code-author PASS only when Tau/SciLLM returns provider_live:true
+provider-authorship evidence; otherwise BLOCKED at the precise attestation gap
 ```
 
-The PR3b canary does not generate child exploit code, compile child code, run a
-child specimen in Docker, or claim exploit success.
+The PR3c boundary may materialize provider-authored child exploit code, but it
+does not compile child code, run a child specimen in Docker, or claim exploit
+success. Compile repair, Docker execution, and Judge replay are later gates.
 
 ## File Structure
 

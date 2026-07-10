@@ -199,7 +199,7 @@ promoted; failed mutations remain searchable negative evidence.
 | BATTLE-004 Tau public-only | `./run.sh arena-tau-public-only-proof ...` | Arena public/private split, Tau handoff, Judge replay of materialized artifacts | Full genetic spawning or pre-kill child survival |
 | Exploit combiner proof | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` | Generated/bad/runnable specimen lifecycle, Docker receipts, target contact, no exploit-success overclaim | Live Tau code generation, child materialization, Judge exploit success |
 | Spawn Architect proof | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` | Child knowledge packet and Tau child DAG birth contract | Live Tau DAG execution, child exploit code, target execution |
-| Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, produce Tau-validated source-bearing research receipts, and deterministically combine child methods into an exploit genome candidate | Exploit code generation, compile repair, Docker child execution, or exploit success unless later Tau/Judge receipts prove them |
+| Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, produce Tau-validated source-bearing research receipts, deterministically combine child methods, and reach the PR3c provider-authorship boundary | Compile repair, Docker child execution, or exploit success unless later Tau/Judge receipts prove them |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -239,13 +239,19 @@ DAG, rejects the DAG, omits required receipts, or fails to produce
 `battle_exploit_runner_handoff.json`, Battle records `BLOCKED` with
 `fixture_fallback_used:false`.
 
-The current PR3b canary materializes Tau command specs beside the Spawn
+The PR3b canary materializes Tau command specs beside the Spawn
 Architect DAG and invokes `battle_skill.child_dag_node_adapter` through the real
 Tau command loop. It should pass `lineage-summarizer`, pass `research-scout`
 with Tau-validated `tau.research_source_receipt.v1` design-input receipts, pass
-`method-combiner` with `battle.child_exploit_genome.v1`, and then block at
-`exploit-code-author` unless a real Tau/provider code-authoring adapter exists.
-That block is expected; fixture child code fallback is forbidden.
+`method-combiner` with `battle.child_exploit_genome.v1`.
+
+The PR3c boundary wires `exploit-code-author` to a Battle wrapper around Tau's
+SciLLM worker route. It writes a Battle semantic work order, a Tau
+`tau.executor.scillm_worker.v1` work order, a provider workspace baseline, and
+provider-authorship receipts. PR3c may still block unless Tau returns
+`provider_live:true` attestation from a real provider/model run. Battle must not
+infer provider authorship from HTTP success, and fixture child code fallback is
+forbidden.
 
 The proof-card UX contract is a separate normalized fixture.
 

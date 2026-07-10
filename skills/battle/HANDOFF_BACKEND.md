@@ -560,6 +560,46 @@ exploit-code-author remains BLOCKED until a real Tau/provider code-authoring ada
 Judge remains the only authority for exploit success
 ```
 
+Current PR3c provider-authorship target:
+
+```text
+lineage-summarizer PASS
+research-scout PASS
+method-combiner PASS
+exploit-code-author PASS only with provider_live:true attestation
+compile-repair may remain BLOCKED
+```
+
+`exploit-code-author` now writes a bounded provider workspace and receipts:
+
+```text
+exploit-code-author/inputs/exploit-code-author-work-order.json
+exploit-code-author/inputs/tau-scillm-worker-work-order.json
+exploit-code-author/receipts/workspace-baseline-manifest.json
+exploit-code-author/receipts/tau-scillm-worker-launch-receipt.json
+exploit-code-author/receipts/provider-artifact-validation.json
+exploit-code-author/receipts/provider-authorship-receipt.json
+exploit-code-author/receipts/provider-code-author-boundary-receipt.json
+```
+
+Phase 1 PR3c PASS requires:
+
+```text
+provider_live = true
+agentic = true
+fixture_fallback_used = false
+provider run/session evidence
+work-order and code hash binding
+provider-authored exploit_specimen.py under outputs/
+compile_status = NOT_RUN
+runtime_status = NOT_RUN
+judge_verified_exploits = 0
+```
+
+If Tau/SciLLM still reports `provider_live:false`, the correct backend result is
+`PROVIDER_EXECUTION_ATTESTATION_MISSING`, not a frontend fixture or a fake child
+specimen.
+
 Normalized proof-card fixture:
 
 ```text

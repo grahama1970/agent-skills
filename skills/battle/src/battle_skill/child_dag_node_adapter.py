@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .child_dag_code_author import run_code_author
 from .child_dag_method_combiner import run_method_combiner
 from .child_dag_research import run_research_scout
 
@@ -61,6 +62,9 @@ def run_node(*, node_id: str, start_payload: dict[str, Any], artifact_dir: Path)
     if node_id == "method-combiner":
         response = _run_method_combiner(start_payload=start_payload, artifact_dir=artifact_dir)
         return response, 0 if response is not None else 1
+    if node_id == "exploit-code-author":
+        response = _run_exploit_code_author(start_payload=start_payload, artifact_dir=artifact_dir)
+        return response, 0 if response is not None and response.get("result", {}).get("status") == "PASS" else 1
 
     return _blocked_missing_adapter(node_id=node_id, start_payload=start_payload, artifact_dir=artifact_dir), 1
 
@@ -129,6 +133,101 @@ def _blocked_missing_adapter(*, node_id: str, start_payload: dict[str, Any], art
     }
     _write_json(artifact_dir / f"{node_id}-node-receipt.json", receipt)
     return None
+
+
+def _run_exploit_code_author(*, start_payload: dict[str, Any], artifact_dir: Path) -> dict[str, Any] | None:
+    lineage_path = _find_named_artifact(start_payload, "lineage_summary.json")
+    research_path = _find_named_artifact(start_payload, "research_receipts.json")
+    candidates_path = _find_named_artifact(start_payload, "candidate_methods.json")
+    genome_path = _find_named_artifact(start_payload, "exploit_genome.json")
+    child_packet_path = _find_named_artifact(start_payload, "child-knowledge-packet.json")
+    missing = [
+        name
+        for name, path in {
+            "lineage_summary.json": lineage_path,
+            "research_receipts.json": research_path,
+            "candidate_methods.json": candidates_path,
+            "exploit_genome.json": genome_path,
+        }.items()
+        if path is None
+    ]
+    if missing:
+        receipt = _node_receipt(node_id="exploit-code-author", status="BLOCKED", verdict="UPSTREAM_CODE_AUTHOR_INPUT_MISSING", evidence=[])
+        receipt["reason"] = f"exploit-code-author missing upstream artifacts: {', '.join(missing)}"
+        receipt["claims"] = {
+            "proves": ["Battle reached the exploit-code-author command-spec boundary."],
+            "does_not_prove": ["A provider authored exploit code.", "Exploit success."],
+        }
+        _write_json(artifact_dir / "exploit-code-author-node-receipt.json", receipt)
+        return None
+
+    result = run_code_author(
+        artifact_dir=artifact_dir,
+        lineage_summary_path=lineage_path,
+        research_receipts_path=research_path,
+        candidate_methods_path=candidates_path,
+        exploit_genome_path=genome_path,
+        child_knowledge_packet_path=child_packet_path,
+        dag_id=_target_value(start_payload, "dag_id"),
+        goal_hash=_goal_hash(start_payload),
+    )
+    evidence = [
+        _evidence("lineage_summary.json", lineage_path),
+        _evidence("research_receipts.json", research_path),
+        _evidence("candidate_methods.json", candidates_path),
+        _evidence("exploit_genome.json", genome_path),
+        _evidence("exploit-code-author-work-order.json", result["battle_work_order_path"]),
+        _evidence("tau-scillm-worker-work-order.json", result["tau_work_order_path"]),
+        _evidence("tau-scillm-worker-launch-receipt.json", result["launch_receipt_path"]),
+        _evidence("provider-artifact-validation.json", result["artifact_validation_path"]),
+        _evidence("provider-authorship-receipt.json", result["provider_authorship_path"]),
+        _evidence("provider-code-author-boundary-receipt.json", result["boundary_receipt_path"]),
+    ]
+    if result.get("worker_result_path") is not None:
+        evidence.append(_evidence("provider-worker-result.json", result["worker_result_path"]))
+    if result.get("validation_receipt_path") is not None:
+        evidence.append(_evidence("tau-worker-validation-receipt.json", result["validation_receipt_path"]))
+    if result.get("code_path") is not None:
+        evidence.append(_evidence("exploit_specimen.py", result["code_path"]))
+    if result.get("specimen_path") is not None:
+        evidence.append(_evidence("specimen.json", result["specimen_path"]))
+
+    status = result["status"]
+    receipt = _node_receipt(
+        node_id="exploit-code-author",
+        status=status,
+        verdict=result["verdict"],
+        evidence=evidence,
+    )
+    receipt["provider_live"] = result["authorship"].get("provider_live")
+    receipt["agentic"] = bool(result["authorship"].get("agentic"))
+    receipt["execution_mode"] = result["authorship"].get("execution_mode")
+    receipt["authored_by"] = result["authorship"].get("authored_by")
+    receipt["errors"] = result["authorship"].get("errors", [])
+    receipt["claims"] = result["claims"]
+    receipt_path = artifact_dir / "exploit-code-author-node-receipt.json"
+    _write_json(receipt_path, receipt)
+
+    if status != "PASS":
+        return _handoff(
+            start_payload=start_payload,
+            previous_subagent="exploit-code-author",
+            status="BLOCKED",
+            summary=f"Exploit Code Author blocked at {result['verdict']}.",
+            evidence=[*evidence, _evidence("exploit-code-author-node-receipt.json", receipt_path)],
+            next_agent="compile-repair",
+            artifacts=[str(item["path"]) for item in evidence if item.get("path")],
+        )
+
+    return _handoff(
+        start_payload=start_payload,
+        previous_subagent="exploit-code-author",
+        status="PASS",
+        summary="Exploit Code Author materialized provider-authored exploit specimen artifact.",
+        evidence=[*evidence, _evidence("exploit-code-author-node-receipt.json", receipt_path)],
+        next_agent="compile-repair",
+        artifacts=[str(result["code_path"]), str(result["specimen_path"]), str(result["provider_authorship_path"]), str(result["boundary_receipt_path"]), str(receipt_path)],
+    )
 
 
 def _run_research_scout(*, start_payload: dict[str, Any], artifact_dir: Path) -> dict[str, Any] | None:
@@ -252,6 +351,7 @@ def _handoff(
     next_agent: str,
     artifacts: list[str],
 ) -> dict[str, Any]:
+    carried_artifacts = _dedupe_artifacts([*_context_artifacts(start_payload), *artifacts])
     return {
         "schema": "tau.agent_handoff.v1",
         "github": start_payload.get("github") if isinstance(start_payload.get("github"), dict) else {"repo": "grahama1970/agent-skills", "target": "skills/battle"},
@@ -259,7 +359,7 @@ def _handoff(
         "previous_subagent": previous_subagent,
         "context": {
             "summary": summary,
-            "artifacts": artifacts,
+            "artifacts": carried_artifacts,
         },
         "result": {
             "status": status,
@@ -277,6 +377,17 @@ def _handoff(
     }
 
 
+def _dedupe_artifacts(artifacts: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for artifact in artifacts:
+        if artifact in seen:
+            continue
+        seen.add(artifact)
+        result.append(artifact)
+    return result
+
+
 def _node_receipt(*, node_id: str, status: str, verdict: str, evidence: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "schema": NODE_RECEIPT_SCHEMA,
@@ -285,7 +396,7 @@ def _node_receipt(*, node_id: str, status: str, verdict: str, evidence: list[dic
         "verdict": verdict,
         "mocked": False,
         "live": "tau_command_spec_node",
-        "agentic": node_id not in {"lineage-summarizer", "artifact-reviewer", "battle-handoff-writer"},
+        "agentic": False,
         "fixture_fallback_used": False,
         "evidence": evidence,
         "created_at": _utc_stamp(),
@@ -341,6 +452,12 @@ def _target_value(payload: dict[str, Any], key: str) -> Any:
     tau_node = context.get("tau_dag_node") if isinstance(context, dict) else None
     target = tau_node.get("target") if isinstance(tau_node, dict) else None
     return target.get(key) if isinstance(target, dict) else None
+
+
+def _goal_hash(payload: dict[str, Any]) -> str | None:
+    goal = payload.get("goal")
+    value = goal.get("goal_hash") if isinstance(goal, dict) else None
+    return value if isinstance(value, str) and value else None
 
 
 def _evidence(kind: str, path: Path) -> dict[str, Any]:
