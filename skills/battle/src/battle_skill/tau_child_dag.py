@@ -96,6 +96,7 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             {"from": "compile-repair", "to": "artifact-reviewer"},
             {"from": "artifact-reviewer", "to": "battle-handoff-writer"},
             {"from": "compile-repair", "to": "research-scout", "condition": "compile_failed_twice_requires_new_research"},
+            {"from": "compile-repair", "to": "blocked", "condition": "compile_failed_no_repair_adapter"},
             {"from": "artifact-reviewer", "to": "blocked", "condition": "forbidden_claim_or_private_input_leak"},
         ],
         "required_evidence": [
