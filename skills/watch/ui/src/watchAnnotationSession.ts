@@ -209,9 +209,17 @@ export function annotationSessionReducer(
 
       for (const record of action.records) {
         const keyframe = parseMemoryKeyframe(action.row, record)
-        if (!keyframe) continue
-        if (isTombstoned(keyframe, state.deleteTombstonesByLocalId)) continue
-        const put = putKeyframeIntoMaps(tracksByCharacterId, trackOrder, action.row, keyframe)
+        if (keyframe) {
+          if (isTombstoned(keyframe, state.deleteTombstonesByLocalId)) continue
+          const put = putKeyframeIntoMaps(tracksByCharacterId, trackOrder, action.row, keyframe)
+          tracksByCharacterId = put.tracksByCharacterId
+          trackOrder = put.trackOrder
+          continue
+        }
+
+        const marker = parseMemoryOffscreenMarker(action.row, record)
+        if (!marker) continue
+        const put = putMarkerIntoMaps(tracksByCharacterId, trackOrder, marker)
         tracksByCharacterId = put.tracksByCharacterId
         trackOrder = put.trackOrder
       }
@@ -460,6 +468,14 @@ export function annotationSessionReducer(
         return updateKeyframeById(next, action.localId, (keyframe) => ({
           ...keyframe,
           memoryRef: action.memoryRef || keyframe.memoryRef,
+          status: 'clean',
+          source: 'memory',
+        }))
+      }
+      if (op.kind === 'mark_offscreen') {
+        return updateMarkerById(next, action.localId, (marker) => ({
+          ...marker,
+          memoryRef: action.memoryRef || marker.memoryRef,
           status: 'clean',
           source: 'memory',
         }))
@@ -725,11 +741,38 @@ function updateKeyframeById(state: AnnotationSessionState, localId: string, upda
   }
 }
 
+function updateMarkerById(state: AnnotationSessionState, localId: string, update: (marker: OffscreenMarker) => OffscreenMarker): AnnotationSessionState {
+  const found = findMarkerById(state, localId)
+  if (!found) return state
+  return {
+    ...state,
+    tracksByCharacterId: {
+      ...state.tracksByCharacterId,
+      [found.track.characterId]: {
+        ...found.track,
+        offscreenById: {
+          ...found.track.offscreenById,
+          [localId]: update(found.marker),
+        },
+      },
+    },
+  }
+}
+
 function findKeyframeById(state: AnnotationSessionState, localId: string): { track: AnnotationTrack; keyframe: Keyframe } | null {
   for (const characterId of state.trackOrder) {
     const track = state.tracksByCharacterId[characterId]
     const keyframe = track?.keyframesById[localId]
     if (track && keyframe) return { track, keyframe }
+  }
+  return null
+}
+
+function findMarkerById(state: AnnotationSessionState, localId: string): { track: AnnotationTrack; marker: OffscreenMarker } | null {
+  for (const characterId of state.trackOrder) {
+    const track = state.tracksByCharacterId[characterId]
+    const marker = track?.offscreenById[localId]
+    if (track && marker) return { track, marker }
   }
   return null
 }
@@ -849,14 +892,16 @@ function selectPendingOps(pendingOpsByLocalId: Record<string, PendingPersistence
 }
 
 function parseMemoryKeyframe(row: SessionRow, record: WatchMemoryRecord): Keyframe | null {
+  const payload = recordPayload(record)
   const collection = stringField(record, ['collection'])
   const id = stringField(record, ['_id', 'id'])
   if (collection && collection !== WATCH_KEYFRAME_COLLECTION) return null
   if (id && !id.startsWith(`${WATCH_KEYFRAME_COLLECTION}/`)) return null
-  const characterName = cleanCharacterName(stringField(record, ['characterName', 'character_name', 'character']) || UNASSIGNED_CHARACTER)
-  const characterId = stringField(record, ['characterId', 'character_id']) || characterIdFor(characterName)
-  const timeSeconds = numberField(record, ['timeSeconds', 'time_seconds', 'keyframe_time_seconds', 'capturedFrameSeconds', 'captured_frame_seconds'])
-  const bbox = bboxField(record)
+  if (isOffscreenRecord(payload)) return null
+  const characterName = cleanCharacterName(stringField(payload, ['characterName', 'character_name', 'character']) || UNASSIGNED_CHARACTER)
+  const characterId = stringField(payload, ['characterId', 'character_id']) || characterIdFor(characterName)
+  const timeSeconds = numberField(payload, ['timeSeconds', 'time_seconds', 'keyframe_time_seconds', 'capturedFrameSeconds', 'captured_frame_seconds'])
+  const bbox = bboxField(payload)
   if (timeSeconds == null || !bbox) return null
   const ref: MemoryRecordRef = {
     collection: WATCH_KEYFRAME_COLLECTION,
@@ -882,6 +927,70 @@ function parseMemoryKeyframe(row: SessionRow, record: WatchMemoryRecord): Keyfra
     createdAtTick: 0,
     updatedAtTick: 0,
   }
+}
+
+function parseMemoryOffscreenMarker(row: SessionRow, record: WatchMemoryRecord): OffscreenMarker | null {
+  const payload = recordPayload(record)
+  const collection = stringField(record, ['collection'])
+  const id = stringField(record, ['_id', 'id'])
+  if (collection && collection !== WATCH_KEYFRAME_COLLECTION) return null
+  if (id && !id.startsWith(`${WATCH_KEYFRAME_COLLECTION}/`)) return null
+  if (!isOffscreenRecord(payload)) return null
+
+  const characterName = cleanCharacterName(stringField(payload, ['characterName', 'character_name', 'character']) || UNASSIGNED_CHARACTER)
+  const characterId = stringField(payload, ['characterId', 'character_id']) || characterIdFor(characterName)
+  const timeSeconds = numberField(payload, ['timeSeconds', 'time_seconds', 'keyframe_time_seconds', 'capturedFrameSeconds', 'captured_frame_seconds', 'applies_after_seconds'])
+  if (timeSeconds == null) return null
+  const ref: MemoryRecordRef = {
+    collection: WATCH_KEYFRAME_COLLECTION,
+    id: id || undefined,
+    key: stringField(record, ['_key', 'key']) || stringField(payload, ['id', 'box_id']) || undefined,
+    rev: stringField(record, ['_rev', 'rev']) || undefined,
+    rowIndex: numberField(payload, ['rowIndex', 'row_index']) ?? numberField(record, ['rowIndex', 'row_index']) ?? row.rowIndex,
+  }
+  const timeKey = timeKeyFor(row, timeSeconds)
+  return {
+    type: 'offscreen',
+    localId: ref.id ? `mem:${ref.id}` : `mem-offscreen:${row.rowIndex}:${characterId}:${timeKey}`,
+    characterId,
+    characterName,
+    actorName: stringField(payload, ['actorName', 'actor_name']) || undefined,
+    timeSeconds,
+    timeKey,
+    memoryRef: ref,
+    source: 'memory',
+    status: 'clean',
+    createdAtTick: 0,
+    updatedAtTick: 0,
+  }
+}
+
+function recordPayload(record: WatchMemoryRecord): WatchMemoryRecord {
+  const annotation = record.annotation
+  return annotation && typeof annotation === 'object' && !Array.isArray(annotation)
+    ? annotation as WatchMemoryRecord
+    : record
+}
+
+function isOffscreenRecord(record: WatchMemoryRecord): boolean {
+  const trackControl = record.track_control
+  const trackControlAction = trackControl && typeof trackControl === 'object' && !Array.isArray(trackControl)
+    ? stringField(trackControl as WatchMemoryRecord, ['action', 'event', 'type'])
+    : null
+  const fields = [
+    stringField(record, ['annotation_kind', 'control_type', 'event', 'action', 'visibility_state', 'type', 'kind', 'status']),
+    stringField(record, ['reason']),
+    trackControlAction,
+  ].filter(Boolean).map((value) => value!.toLowerCase())
+  return fields.some((value) => [
+    'unassign_stop',
+    'offscreen',
+    'track-control',
+    'track_control',
+    'character_offscreen',
+    'stop_character_scan',
+    'mark_offscreen',
+  ].includes(value))
 }
 
 function stringField(record: WatchMemoryRecord, keys: string[]): string | null {
