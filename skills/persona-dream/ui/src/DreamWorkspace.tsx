@@ -1335,6 +1335,31 @@ function payloadArray(value: unknown): Array<Record<string, unknown>> {
     : []
 }
 
+const videoProviderFitColumns = [
+  { key: 'image_to_video', label: 'I2V', title: 'Image-to-video fidelity' },
+  { key: 'first_last_frame_control', label: 'Ends', title: 'First and last frame transition control' },
+  { key: 'identity_reference_support', label: 'ID', title: 'Identity continuity and reference support' },
+  { key: 'motion_quality', label: 'Motion', title: 'Motion quality and physics' },
+  { key: 'multi_character_consistency', label: 'Chars', title: 'Multi-character consistency' },
+] as const
+
+function providerFitValue(provider: Record<string, unknown>, key: string): number | null {
+  const fit = payloadObject(provider.fit)
+  return dreamNumber(fit?.[key])
+}
+
+function providerFitMax(providers: Array<Record<string, unknown>>, key: string): number | null {
+  const values = providers.map((provider) => providerFitValue(provider, key)).filter((value): value is number => value != null)
+  return values.length > 0 ? Math.max(...values) : null
+}
+
+function providerFitDelta(provider: Record<string, unknown>, providers: Array<Record<string, unknown>>, key: string): number | null {
+  const value = providerFitValue(provider, key)
+  const max = providerFitMax(providers, key)
+  if (value == null || max == null) return null
+  return value - max
+}
+
 function VideoProviderPanel({ stage }: { stage: DreamStage }) {
   const providerArtifacts = useMemo(() => {
     const byRole = new Map<string, DreamArtifact>()
@@ -1446,24 +1471,46 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         <div style={nvis.videoProviderSection}>
           <h3 style={nvis.matrixSectionTitle}><Gauge size={12} /> Provider scorecard</h3>
           {providers.length > 0 ? (
-            <div style={nvis.videoProviderScoreRows}>
+            <div style={nvis.videoProviderScoreMatrix}>
+              <div style={nvis.videoProviderScoreHeader}>
+                <span>Provider</span>
+                <span>State</span>
+                {videoProviderFitColumns.map((column) => (
+                  <span key={column.key} title={column.title} style={nvis.videoProviderFeatureHeader}>{column.label}</span>
+                ))}
+                <span style={nvis.videoProviderScoreHeaderCell}>Score</span>
+              </div>
               {providers.slice(0, 6).map((provider, index) => {
                 const providerId = firstString(provider.provider_id, provider.id, provider.name) ?? `provider_${index + 1}`
                 const score = dreamNumber(provider.score)
                 const providerBlockers = dreamList(provider.blockers)
+                const isRecommended = providerId === recommendedProvider
                 return (
-                  <div key={providerId} style={nvis.videoProviderScoreRow}>
-                    <div>
+                  <div key={providerId} style={{
+                    ...nvis.videoProviderScoreMatrixRow,
+                    ...(isRecommended ? nvis.videoProviderScoreMatrixRowSelected : null),
+                  }}>
+                    <div style={isRecommended ? nvis.videoProviderRecommendedName : undefined}>
                       <strong>{providerId}</strong>
-                      <div style={nvis.videoProviderSubtle}>
-                        dry_run={dreamBooleanLabel(provider.eligible_for_dry_run)} / live={dreamBooleanLabel(provider.eligible_for_live_submit)}
-                      </div>
                     </div>
-                    <div style={nvis.videoProviderScoreMeta}>
-                      <span style={score != null ? nvis.matrixReadyPill : nvis.matrixMutedPill}>
-                        score {score ?? 'n/a'}
+                    <div>
+                      <div style={nvis.videoProviderSubtle}>
+                        dry={dreamBooleanLabel(provider.eligible_for_dry_run)} live={dreamBooleanLabel(provider.eligible_for_live_submit)}
+                      </div>
+                      {providerBlockers.length > 0 && <div style={nvis.videoProviderTinyMuted}>{providerBlockers.length} blk</div>}
+                    </div>
+                    {videoProviderFitColumns.map((column) => {
+                      const delta = providerFitDelta(provider, providers, column.key)
+                      return (
+                        <div key={column.key} title={`${column.title}: ${providerFitValue(provider, column.key) ?? 'missing'}`} style={delta != null && delta < 0 ? nvis.videoProviderPenaltyCell : nvis.videoProviderNeutralCell}>
+                          {delta == null ? 'n/a' : delta < 0 ? delta : '-'}
+                        </div>
+                      )
+                    })}
+                    <div style={nvis.videoProviderScoreFinalCell}>
+                      <span style={score != null && score >= 90 ? nvis.matrixReadyPill : nvis.matrixPendingPill}>
+                        {score ?? 'n/a'}
                       </span>
-                      {providerBlockers.length > 0 && <span style={nvis.matrixPendingPill}>{providerBlockers.length} blockers</span>}
                     </div>
                   </div>
                 )
@@ -9713,6 +9760,80 @@ const nvis: Record<string, CSSProperties> = {
   videoProviderScoreRows: {
     display: 'grid',
     gap: 8,
+  },
+  videoProviderScoreMatrix: {
+    display: 'grid',
+    overflow: 'hidden',
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.06)',
+    background: '#050505',
+  },
+  videoProviderScoreHeader: {
+    display: 'grid',
+    gridTemplateColumns: '1.35fr 1.55fr repeat(5, minmax(44px, 0.7fr)) minmax(72px, 0.8fr)',
+    gap: 10,
+    alignItems: 'center',
+    padding: '10px 12px',
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(255,255,255,0.02)',
+    color: '#64748b',
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+  },
+  videoProviderFeatureHeader: {
+    textAlign: 'center' as const,
+    cursor: 'help',
+  },
+  videoProviderScoreHeaderCell: {
+    textAlign: 'right' as const,
+  },
+  videoProviderScoreMatrixRow: {
+    display: 'grid',
+    gridTemplateColumns: '1.35fr 1.55fr repeat(5, minmax(44px, 0.7fr)) minmax(72px, 0.8fr)',
+    gap: 10,
+    alignItems: 'center',
+    padding: '12px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderLeft: '2px solid transparent',
+    color: '#e2e8f0',
+    fontSize: 11,
+  },
+  videoProviderScoreMatrixRowSelected: {
+    borderLeftColor: '#22c55e',
+    background: 'rgba(34,197,94,0.08)',
+  },
+  videoProviderRecommendedName: {
+    color: '#22c55e',
+  },
+  videoProviderTinyMuted: {
+    marginTop: 2,
+    color: '#64748b',
+    fontSize: 9,
+    fontFamily: 'JetBrains Mono, monospace',
+  },
+  videoProviderNeutralCell: {
+    textAlign: 'center' as const,
+    color: '#334155',
+    fontSize: 12,
+    fontWeight: 800,
+    fontFamily: 'JetBrains Mono, monospace',
+  },
+  videoProviderPenaltyCell: {
+    justifySelf: 'center',
+    minWidth: 28,
+    padding: '3px 5px',
+    borderRadius: 5,
+    background: 'rgba(245,158,11,0.14)',
+    color: '#f59e0b',
+    textAlign: 'center' as const,
+    fontSize: 10,
+    fontWeight: 900,
+    fontFamily: 'JetBrains Mono, monospace',
+  },
+  videoProviderScoreFinalCell: {
+    textAlign: 'right' as const,
   },
   videoProviderScoreRow: {
     display: 'grid',
