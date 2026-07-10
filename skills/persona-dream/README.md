@@ -272,12 +272,13 @@ rewrite Embry's durable identity.
 
 ---
 
-## Selected Interface Walkthrough
+## Pipeline Step Walkthrough
 
 The current UX Lab surface is a developer-oriented inspection pane over the
-pipeline and its machine-readable receipts. These screenshots illustrate
-selected boundaries, not every phase and not proof that the full Dream → Watch
-→ Memory loop is complete.
+pipeline and its machine-readable receipts. The walkthrough below lists every
+pipeline phase in order. Screenshots are included for the phases that currently
+have committed README assets; phases without a committed screenshot are still
+shown because they are real spine steps, not hidden implementation details.
 
 ### 01 — Idea and Memory Residue
 
@@ -290,6 +291,59 @@ story or media production begins.
 
 **What to notice:** the system exposes multiple memory modalities before it asks
 a story or renderer to transform them.
+
+### 02 — Story
+
+Phase 02 turns accepted memory residue into a story contract: the narrative
+premise, relationship pressure, surf-etiquette stakes, contradiction checks,
+and interaction model that later phases must preserve.
+
+**What to notice:** this is where the Embry/Kai sick-day idea becomes a bounded
+story rather than a loose prompt.
+
+### 03 — Crew
+
+Phase 03 selects the creative authorities for the run: producer, scriptwriter,
+director, and reviewer roles. Those choices determine which creative standards
+control later script, storyboard, and visual-review decisions.
+
+**What to notice:** crew selection is part of the evidence chain. It is not a
+cosmetic cast list.
+
+### 04 — Contact Sheets
+
+Phase 04 gathers character, environment, surfboard, lineup, and lava-reef
+references. Contact sheets are source and planning evidence; they do not
+automatically become provider-ready Element upload packs.
+
+**What to notice:** Embry, Kai, Kahaluʻu Bay, the lava reef, and the public
+lineup are grounded before the script and storyboard try to reuse them.
+
+### 05 — Voices
+
+Phase 05 inspects voice references, dialogue readiness, and voice-identity
+boundaries. It can preserve conversational intent and Chatterbox tone without
+claiming provider voice IDs or live voice readiness.
+
+**What to notice:** a voice surface can support the dream's emotional tone while
+still blocking live provider voice submission.
+
+### 06 — Script
+
+Phase 06 converts the accepted story into timed action, dialogue, interaction
+coverage, and screenplay evidence. The Embry/Kai fixture uses this phase to
+make surf etiquette, hesitation, pressure, and boundary-setting concrete.
+
+**What to notice:** this is the bridge from story intent to frameable action.
+
+### 07 — Storyboard
+
+Phase 07 produces and reviews storyboard panels, start/end frames, identity
+continuity, prompt contracts, and visual-review receipts. Accepted storyboard
+evidence is what Phase 08 is allowed to lock.
+
+**What to notice:** Media Lock does not create visual truth. It freezes the
+accepted storyboard evidence produced here.
 
 ### Embry Portrait Memory Graph
 
@@ -336,6 +390,16 @@ that contract artifact.
 **What to notice:** the current screenshot is correctly blocked even though a
 newer local contract compiler exists. Neither state proves live fal.ai
 compatibility.
+
+### 11 — Submit and Return
+
+Phase 11 is the outstanding live-provider boundary: explicit authorization,
+provider-accessible media URLs, one bounded paid call, polling or callback,
+download, hash validation, FFprobe, and returned-media receipt.
+
+**What to notice:** this step is intentionally not complete. The README must not
+claim the persona watched a dream until a provider return exists and Watch has
+analyzed the actual media.
 
 ---
 
