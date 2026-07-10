@@ -72,8 +72,6 @@ Commands:
   check-video-provider-registry-refresh  Prove provider refresh parsing stays dry-run and fail-closed
   write-video-provider-packet  Write a provider-specific dry-run video packet from a scorecard
   check-video-provider-packet-routing  Prove provider packet routing stays dry-run and fail-closed
-  write-phase10-provider-contract  Compile a Phase 10 dry-run provider contract from a provider packet
-  check-phase10-provider-contract  Prove Phase 10 provider contracts stay dry-run and fail-closed
   check-fal-api-preflight  Check FAL auth and non-generation API/docs access without submitting jobs
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
@@ -147,8 +145,6 @@ Examples:
   ./run.sh check-video-provider-registry-refresh --fixtures-root tests/fixtures/video-provider-registry-refresh --receipt-out /tmp/persona-dream-video-provider-refresh/check_receipt.json --json
   ./run.sh write-video-provider-packet --scene-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_scene_contract.v1.json --scorecard /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_scorecard.v1.json --media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/media_lock_manifest.v1.json --output-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_packet --json
   ./run.sh check-video-provider-packet-routing --fixtures-root tests/fixtures/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
-  ./run.sh write-phase10-provider-contract --video-provider-packet /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_packet/video_provider_packet.json --registry-refresh-receipt /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/provider_registry_refresh_receipt.v1.json --output-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/phase10_provider_contract --json
-  ./run.sh check-phase10-provider-contract --fixtures-root tests/fixtures/phase10-provider-contract --receipt-out /tmp/persona-dream-phase10-provider-contract/check_receipt.json --json
   ./run.sh check-fal-api-preflight --live --receipt-out /tmp/persona-dream-fal-api-preflight/live_receipt.json --json
   ./run.sh check-fal-api-preflight-fixtures --fixtures-root tests/fixtures/fal-api-preflight --receipt-out /tmp/persona-dream-fal-api-preflight/check_receipt.json --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
@@ -355,12 +351,6 @@ case "$COMMAND" in
     ;;
   check-video-provider-packet-routing)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_video_provider_packet_routing.py" "$@"
-    ;;
-  write-phase10-provider-contract)
-    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_provider_contract.py" "$@"
-    ;;
-  check-phase10-provider-contract)
-    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_phase10_provider_contract.py" "$@"
     ;;
   check-fal-api-preflight)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_fal_api_preflight.py" "$@"
