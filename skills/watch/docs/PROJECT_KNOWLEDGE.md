@@ -103,7 +103,7 @@ The pipeline reads `WHISPER_API_KEY` and `WHISPER_API_URL` from environment.
 
 ## Bazarr
 
-Configured with OpenSubtitles credentials and Radarr integration. Working API key: `63251eb7ee21880126c0a70dacf96548`. Config at `/path/to/bazarr/config/config/config.yaml`.
+Configured with OpenSubtitles credentials and Radarr integration via runtime secrets. Use `BAZARR_API_KEY` or the local Bazarr secret store; do not commit plaintext keys. The config path is environment-specific and must not contain committed credentials.
 
 Bazarr is NOT used as a subtitle source for watch — only for Orpheus TTS dataset curation. Third-party SRTs have unreliable timing vs specific encodes.
 
