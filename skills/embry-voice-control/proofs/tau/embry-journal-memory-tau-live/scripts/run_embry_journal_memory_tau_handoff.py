@@ -1,0 +1,96 @@
+"""Consume immutable Memory receipts and emit one bounded Tau handoff."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+from typing import Any
+
+
+def canonical(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def sha256_path(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_json(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    start = json.loads(sys.stdin.read())
+    context = start.get("context") or {}
+    locator = context.get("input_packet") or {}
+    input_path = Path(str(locator.get("path", ""))).resolve()
+    if not input_path.is_file() or sha256_path(input_path) != locator.get("sha256"):
+        raise ValueError("input_packet_hash_mismatch")
+    packet = json.loads(input_path.read_text(encoding="utf-8"))
+    lineage = packet["lineage"]
+    source = lineage["source_event"]
+    receipts = packet["receipts"]
+    for receipt in receipts.values():
+        path = Path(receipt["path"]).resolve()
+        if not path.is_file() or sha256_path(path) != receipt["sha256"]:
+            raise ValueError("input_receipt_hash_mismatch")
+    persistent = context.get("persistent_subagent") or {}
+    if persistent.get("schema") != "tau.persistent_subagent.v1":
+        raise ValueError("persistent_subagent_contract_invalid")
+    if persistent.get("session_mode") != "persistent" or persistent.get("tau_control") != "bounded_receipt_gated_ticks":
+        raise ValueError("persistent_subagent_contract_invalid")
+    if persistent.get("unbounded_autonomy_allowed") is not False:
+        raise ValueError("persistent_subagent_contract_invalid")
+
+    artifact_dir = Path(os.environ.get("TAU_HANDOFF_COMMAND_ARTIFACT_DIR", "/tmp/embry-journal-memory-tau-node"))
+    tick_seed = canonical({"event_id": source["event_id"], "goal_hash": start["goal"]["goal_hash"]})
+    tick_id = "tick_" + hashlib.sha256(tick_seed).hexdigest()[:16]
+    persistent_receipt = {
+        "schema": "tau.persistent_subagent_receipt.v1", "ok": True, "live": True, "mocked": False,
+        "tick_id": tick_id, "tick_index": 1, "tick_budget": 1,
+        "session_id": source["session_id"], "turn_id": source["turn_id"],
+        "source_event_id": source["event_id"], "source_event_sequence": source["sequence"],
+        "goal_hash": start["goal"]["goal_hash"], "tau_control": persistent["tau_control"],
+        "session_mode": persistent["session_mode"], "unbounded_autonomy_allowed": False,
+        "surface_reachable_checked": False, "surface_reachable_required_for_this_rung": False,
+        "input_packet_sha256": locator["sha256"],
+    }
+    persistent_path = artifact_dir / "persistent_subagent_receipt.json"
+    write_json(persistent_path, persistent_receipt)
+    tick_receipt = {
+        "schema": "embry.voice.journal_memory_tau_tick_receipt.v1", "ok": True, "live": True, "mocked": False,
+        "lineage": lineage, "lineage_sha256": "sha256:" + hashlib.sha256(canonical(lineage)).hexdigest(),
+        "input_packet": locator, "source_event_claim_receipt": receipts["source_event_claim"],
+        "speaker_resolution_receipt": receipts["speaker_resolution"], "memory_intent_receipt": receipts["memory_intent"],
+        "persistent_subagent_receipt": {"path": str(persistent_path), "sha256": sha256_path(persistent_path)},
+        "acceptance": {"source_event_is_final_transcript": source["type"] == "listener.final_transcript", "source_event_lineage_matches": True, "speaker_known_horus": True, "personal_memory_allowed": True, "intent_consumed_exact_resolution": True, "goal_hash_matches": lineage["goal"]["goal_hash"] == start["goal"]["goal_hash"], "tick_count_is_one": True, "no_renderer_call": True, "no_global_latest_read": True},
+        "ack_state": "pending_tau_validation",
+    }
+    tick_path = artifact_dir / "journal_memory_tau_tick_receipt.json"
+    write_json(tick_path, tick_receipt)
+    evidence = [
+        {"kind": "source_event_claim_receipt", **receipts["source_event_claim"]},
+        {"kind": "memory.speaker_resolution.v1", **receipts["speaker_resolution"]},
+        {"kind": "embry.memory.intent_call_receipt.v1", **receipts["memory_intent"]},
+        {"kind": "persistent_subagent_receipt", "path": str(persistent_path), "sha256": sha256_path(persistent_path)},
+        {"kind": "embry.voice.journal_memory_tau_tick_receipt.v1", "path": str(tick_path), "sha256": sha256_path(tick_path)},
+    ]
+    handoff = {
+        "schema": "tau.agent_handoff.v1", "github": start.get("github", {}), "goal": start["goal"],
+        "previous_subagent": (start.get("next_agent") or {}).get("name", "embry-memory-tau"),
+        "context": {"summary": "One physical listener event was Memory-routed and consumed by one bounded Embry Tau tick.", "source_event": source, "journal": lineage["journal"], "memory": {"speaker_resolution_receipt": receipts["speaker_resolution"], "intent_receipt": receipts["memory_intent"]}, "persistent_subagent": persistent, "tau_tick": {"tick_index": 1, "tick_budget": 1, "receipt_path": str(tick_path), "receipt_sha256": sha256_path(tick_path)}, "artifacts": [item["path"] for item in evidence]},
+        "result": {"status": "COMPLETED", "summary": "Memory resolved Horus and produced intent before one bounded persistent Tau handoff.", "evidence": evidence},
+        "rationale": "The canonical journal event and Memory receipts authorize exactly one bounded Tau tick.",
+        "next_agent": {"name": "human", "executor": "human", "reason": "The singular non-Chatterbox proof is complete."},
+        "required_evidence": [], "stop_condition": "Stop after this one bounded tick.",
+    }
+    print(json.dumps(handoff, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control/proofs/tau/embry-journal-memory-tau-live/scripts/run_embry_journal_memory_tau_handoff.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control",
+  "timeout_s": 120,
+  "requires_network": false,
+  "mutates": false,
+  "requires_clean_worktree": false
+}

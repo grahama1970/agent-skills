@@ -1,0 +1,10 @@
+{
+  "schema": "embry.voice.goal_packet.v1",
+  "goal_id": "embry-journal-memory-tau-live",
+  "goal_version": 1,
+  "objective": "Prove one claimed physical listener event flows through Memory speaker resolution and intent into exactly one bounded persistent Tau tick.",
+  "scope": {
+    "in": ["exact listener event claim", "Memory speaker resolution", "Memory intent", "one persistent Tau tick", "journal ack", "duplicate execution rejection"],
+    "out": ["Chatterbox", "playback", "browser", "Chat UX", "orb", "replay", "interruption"]
+  }
+}
