@@ -1,4 +1,5 @@
 import type { Lane, LaneEvent, LaneEventKind, RunnerState } from "../lib/battle-types";
+import { geneticMarkerAtlasFrame, isGeneticLaneEventKind } from "../lib/battle-genetic-lifecycle";
 
 const RUNNER_STATES: RunnerState[] = [
 	"advance",
@@ -43,6 +44,12 @@ export function runnerAtlasFrame(lane: Lane): string {
 }
 
 export function markerAtlasFrame(event: LaneEvent): string {
+	if (event.geneticEffect) return geneticMarkerAtlasFrame(event.geneticEffect);
+	if (isGeneticLaneEventKind(event.kind)) return geneticMarkerAtlasFrame(
+		event.kind === "compile_failed" || event.kind === "method_rejected" || event.kind === "branch_abandoned"
+			? "compile_error"
+			: "research_scan",
+	);
 	return MARKER_FRAMES[event.kind] ?? "marker-blocked";
 }
 

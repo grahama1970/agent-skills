@@ -535,3 +535,10 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+.battle-genetic-banner {
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  background: rgba(15, 10, 30, 0.72);
+  border-radius: 12px;
+  padding: 10px 12px;
+}

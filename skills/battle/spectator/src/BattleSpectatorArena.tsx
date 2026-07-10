@@ -26,6 +26,8 @@ import { BattleRuntimeRoute } from "./runtime/BattleRuntimeRoute";
 import { isBattleRuntimeView } from "./lib/battle-runtime-registry";
 import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 import { isBattlePopulationView } from "./lib/battle-population-registry";
+import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
+import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
@@ -122,6 +124,11 @@ export function BattleSpectatorArena() {
     [initialLanes, receiptReplay, typedReceiptFixture],
   );
 
+  const geneticModel = useMemo(
+    () => (typedReceiptFixture ? geneticLifecycleViewModel(typedReceiptFixture) : null),
+    [typedReceiptFixture],
+  );
+
   useEffect(() => {
     if (!receiptReplay || !typedReceiptFixture) return;
     const beat = receiptBeatsVisibleAtPlayhead(receiptBeats, playheadSeconds, 1).at(-1) ?? null;
@@ -180,6 +187,11 @@ export function BattleSpectatorArena() {
     <div className={cn("h-full min-h-0 overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
       <Toaster theme="dark" richColors position="top-right" />
       {(receiptReplay || mockupShell) ? <BattleProofNav /> : null}
+      {geneticModel ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleGeneticLifecycleBanner model={geneticModel} />
+        </div>
+      ) : null}
       <div
         className={cn(
           "mx-auto grid h-full min-h-0",

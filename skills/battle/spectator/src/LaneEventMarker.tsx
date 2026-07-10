@@ -8,7 +8,7 @@ import { useBattleTimelineCoords } from "./useBattleTimelineCoords";
 import { Icons } from "./battle-icons";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 
-const eventIcon: Record<LaneEvent["kind"], ComponentType<{ className?: string }>> = {
+const eventIcon: Partial<Record<LaneEvent["kind"], ComponentType<{ className?: string }>>> = {
   research: Icons.Search,
   payload: Icons.Code2,
   useful: Icons.Lightbulb,
@@ -23,6 +23,22 @@ const eventIcon: Record<LaneEvent["kind"], ComponentType<{ className?: string }>
   blocked: Icons.ShieldX,
   promoted: Icons.ShieldCheck,
   fastest_crash: Icons.Rocket,
+  research_started: Icons.Search,
+  research_receipt_materialized: Icons.FileJson,
+  genome_selected: Icons.Dna,
+  method_added: Icons.GitBranch,
+  method_rejected: Icons.ShieldX,
+  code_author_started: Icons.Code2,
+  specimen_materialized: Icons.Code2,
+  compile_failed: Icons.Terminal,
+  repair_started: Icons.Wrench,
+  repair_materialized: Icons.Wrench,
+  compile_passed: Icons.ShieldCheck,
+  target_contact_unproven: Icons.Radar,
+  judge_pending: Icons.Shield,
+  judge_exploit_success: Icons.Rocket,
+  genome_promoted: Icons.ShieldCheck,
+  branch_abandoned: Icons.ShieldX,
 };
 
 export function LaneEventMarker({
@@ -42,7 +58,7 @@ export function LaneEventMarker({
 }) {
   const designView = isBattleDesignView();
   const { leftPxFromLaneX } = useBattleTimelineCoords(allottedSeconds);
-  const Icon = eventIcon[event.kind];
+  const Icon = eventIcon[event.kind] ?? Icons.Lightbulb;
   const hero = isHeroMarker(event.kind);
   const tooltip = formatMarkerTooltip(event);
   const left = leftPxFromLaneX(event.x);

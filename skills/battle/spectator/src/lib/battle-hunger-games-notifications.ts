@@ -1,4 +1,5 @@
 import type { BattleEffectCueKind, BattleNormalizedUxFixture, Lane } from "./battle-types";
+import { isGeneticLaneEventKind } from "./battle-genetic-lifecycle";
 import { spriteIdForLane } from "../engine/battle-lane-variant-map";
 import { isBattleReceiptReplayView } from "./battle-receipt-replay";
 import { BATTLE_RUNNER_SPRITE_BASE_URL } from "../engine/battle-runner-sprites";
@@ -34,7 +35,22 @@ export function hungerGamesNotification(cue: BattleEffectCueKind, lane: Lane): H
 				notification: `Still standing — ${tribute} survives`,
 			};
 		case "blue_blast":
+			return {
+				prefix: "Blue patch inbound — ",
+				highlight: `LOCKED ON ${tribute}`,
+				highlightTone: "blue",
+				notification: `Blue patch inbound — locked on ${tribute}`,
+			};
 		default:
+			if (isGeneticLaneEventKind(cue)) {
+				const label = cue.replace(/_/g, " ").toUpperCase();
+				return {
+					prefix: "Genetic lifecycle — ",
+					highlight: `${tribute}: ${label}`,
+					highlightTone: "green",
+					notification: `Genetic lifecycle — ${tribute}: ${label}`,
+				};
+			}
 			return {
 				prefix: "Blue patch inbound — ",
 				highlight: `LOCKED ON ${tribute}`,

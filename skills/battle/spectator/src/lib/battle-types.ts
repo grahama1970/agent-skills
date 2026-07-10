@@ -114,7 +114,23 @@ export type BattleEventType =
 	| "replay.blue_blast"
 	| "replay.spawn"
 	| "replay.fastest_crash"
-	| "replay.promoted";
+	| "replay.promoted"
+	| "research_started"
+	| "research_receipt_materialized"
+	| "genome_selected"
+	| "method_added"
+	| "method_rejected"
+	| "code_author_started"
+	| "specimen_materialized"
+	| "compile_failed"
+	| "repair_started"
+	| "repair_materialized"
+	| "compile_passed"
+	| "target_contact_unproven"
+	| "judge_pending"
+	| "judge_exploit_success"
+	| "genome_promoted"
+	| "branch_abandoned";
 
 export type BattleSkillEvent = {
 	name: string;
@@ -424,7 +440,7 @@ export type BattleEvent = {
 	time?: string;
 	tone?: "red" | "blue" | "green" | "yellow" | "purple" | "slate";
 	text?: string;
-	ts: string;
+	ts: string | number;
 	battle_id: string;
 	team: Team;
 	actor_id: string;
@@ -519,6 +535,19 @@ export type BattleEvent = {
 		notification_highlight_tone?: "red" | "blue" | "green";
 	};
 	proof_mode?: ProofMode;
+	presentation?: {
+		pixi_effect?: string;
+		victory_allowed?: boolean;
+		kill_allowed?: boolean;
+		containment_allowed?: boolean;
+		must_not_render_as?: string[];
+	};
+	payload?: Record<string, unknown>;
+	claim_boundary?: {
+		does_not_prove?: string[];
+		victory_requires_judge_receipt?: boolean;
+	};
+	order_index?: number | null;
 };
 
 export type LaneTerminal = "none" | "killed" | "blocked" | "blocked_handoff" | "promoted" | "fastest_crash" | "survivor";
@@ -537,7 +566,23 @@ export type LaneEventKind =
 	| "killed"
 	| "blocked"
 	| "promoted"
-	| "fastest_crash";
+	| "fastest_crash"
+	| "research_started"
+	| "research_receipt_materialized"
+	| "genome_selected"
+	| "method_added"
+	| "method_rejected"
+	| "code_author_started"
+	| "specimen_materialized"
+	| "compile_failed"
+	| "repair_started"
+	| "repair_materialized"
+	| "compile_passed"
+	| "target_contact_unproven"
+	| "judge_pending"
+	| "judge_exploit_success"
+	| "genome_promoted"
+	| "branch_abandoned";
 
 export type LaneEvent = {
 	id: string;
@@ -556,6 +601,9 @@ export type LaneEvent = {
 	label_band?: "upper" | "lower" | "auto";
 	marker_priority?: number;
 	collision_group?: string;
+	geneticEffect?: import("./battle-genetic-lifecycle").GeneticPixiEffect;
+	geneticEventType?: import("./battle-genetic-lifecycle").GeneticEventType;
+	victoryAllowed?: boolean;
 };
 
 export type LaneActivitySegment = {
@@ -989,6 +1037,7 @@ export type BattleNormalizedUxFixture = {
 	sprite_theme?: BattleSpriteThemeV1;
 	lanes: Lane[];
 	events: BattleEvent[];
+	genetic_lifecycle?: import("./battle-genetic-lifecycle").GeneticLifecycleBlock;
 	leaderboard: LeaderboardEntry[];
 	receipts: BattleReceiptRef[];
 	bluePatchActions?: BluePatchAction[];
@@ -1016,7 +1065,30 @@ export type BattleTimelineViewportState = {
 
 export type BattleRaceEngineMode = "design_fixture" | "receipt_replay" | "live";
 
-export type BattleEffectCueKind = "spawn" | "blocked" | "killed" | "fastest_crash" | "promoted" | "useful" | "blue_blast";
+export type BattleEffectCueKind =
+	| "spawn"
+	| "blocked"
+	| "killed"
+	| "fastest_crash"
+	| "promoted"
+	| "useful"
+	| "blue_blast"
+	| "research_started"
+	| "research_receipt_materialized"
+	| "genome_selected"
+	| "method_added"
+	| "method_rejected"
+	| "code_author_started"
+	| "specimen_materialized"
+	| "compile_failed"
+	| "repair_started"
+	| "repair_materialized"
+	| "compile_passed"
+	| "target_contact_unproven"
+	| "judge_pending"
+	| "judge_exploit_success"
+	| "genome_promoted"
+	| "branch_abandoned";
 
 export type BattleEffectCue = {
 	eventId: string;

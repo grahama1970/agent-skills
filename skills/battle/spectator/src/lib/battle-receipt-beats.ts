@@ -11,6 +11,10 @@ import { KILL_SHOT_TRAVEL_SECONDS, killShotVariant, resolveKillShotImpact } from
 import { eventElapsedSeconds, fixtureUsesElapsedAxis } from "./battle-elapsed-axis";
 import { battleTimelineDomain } from "./battle-timeline-domain";
 import { hungerGamesNotification, type HungerGamesTicker } from "./battle-hunger-games-notifications";
+import {
+	isGeneticLaneEventKind,
+	type GeneticPixiEffect,
+} from "./battle-genetic-lifecycle";
 
 export type ReceiptBeatKind = BattleEffectCueKind | "kill_impact" | "block_impact";
 export type ReceiptBeatImportance = "hero" | "standard";
@@ -30,7 +34,14 @@ export type ReceiptBeatReact = {
 };
 
 export type ReceiptBeatPixi = {
-	emphasis: "none" | "kill_shot_travel" | "kill_impact" | "block_impact" | "spawn" | "terminal";
+	emphasis:
+		| "none"
+		| "kill_shot_travel"
+		| "kill_impact"
+		| "block_impact"
+		| "spawn"
+		| "terminal"
+		| GeneticPixiEffect;
 };
 
 /** Director manifest beat — single source for React chrome and Pixi emphasis. */
@@ -66,6 +77,11 @@ function soundForKind(kind: ReceiptBeatKind, laneEvent?: LaneEvent): SoundCue {
 	if (kind === "blue_blast") return "blue_blast";
 	if (kind === "blocked" || kind === "block_impact") return "blue_blast";
 	if (kind === "spawn") return "spawn_rise";
+	if (isGeneticLaneEventKind(kind)) {
+		if (kind === "compile_failed" || kind === "method_rejected" || kind === "branch_abandoned") return "retry_tick";
+		if (kind === "compile_passed" || kind === "genome_selected" || kind === "specimen_materialized") return "scan_ping";
+		return "scan_ping";
+	}
 	return "none";
 }
 
@@ -73,6 +89,7 @@ function cueKindForReact(kind: ReceiptBeatKind): BattleEffectCueKind {
 	if (kind === "kill_impact") return "killed";
 	if (kind === "block_impact") return "blocked";
 	if (kind === "spawn") return "spawn";
+	if (isGeneticLaneEventKind(kind)) return kind;
 	return kind as BattleEffectCueKind;
 }
 
@@ -95,7 +112,7 @@ function cameraForKind(kind: ReceiptBeatKind): Pick<ReceiptBeatCamera, "preRollM
 	}
 }
 
-function pixiEmphasisForKind(kind: ReceiptBeatKind): ReceiptBeatPixi["emphasis"] {
+function pixiEmphasisForKind(kind: ReceiptBeatKind, laneEvent?: LaneEvent): ReceiptBeatPixi["emphasis"] {
 	switch (kind) {
 		case "blue_blast":
 			return "kill_shot_travel";
@@ -111,6 +128,9 @@ function pixiEmphasisForKind(kind: ReceiptBeatKind): ReceiptBeatPixi["emphasis"]
 		case "fastest_crash":
 			return "terminal";
 		default:
+			if (isGeneticLaneEventKind(kind)) {
+				return (laneEvent?.geneticEffect ?? kind) as ReceiptBeatPixi["emphasis"];
+			}
 			return "none";
 	}
 }
@@ -155,7 +175,7 @@ function makeBeat(args: {
 			deathCard: args.deathCard ?? (kind === "kill_impact" || kind === "killed"),
 			soundCue: soundForKind(kind, laneEvent),
 		},
-		pixi: { emphasis: pixiEmphasisForKind(kind) },
+		pixi: { emphasis: pixiEmphasisForKind(kind, laneEvent) },
 	};
 }
 
@@ -265,6 +285,26 @@ export function collectReceiptBeats(fixture: BattleNormalizedUxFixture, lanes: L
 						deathCard: laneEvent.kind === "killed",
 					}),
 				);
+				continue;
+			}
+
+			if (isGeneticLaneEventKind(laneEvent.kind)) {
+				// Fail-closed: genetic lifecycle never emits death/victory cards here.
+				const victory = Boolean(laneEvent.victoryAllowed);
+				pushBeat(
+					beats,
+					makeBeat({
+						fixture,
+						lanes,
+						lane,
+						laneEvent,
+						atSeconds,
+						kind: victory ? "promoted" : (laneEvent.kind as ReceiptBeatKind),
+						importance: "hero",
+						follow: true,
+						deathCard: false,
+					}),
+				);
 			}
 		}
 	}
@@ -351,6 +391,8 @@ export function receiptBeatToEffectCue(beat: ReceiptBeat): BattleEffectCue {
 
 export function receiptBeatToBattleEvent(beat: ReceiptBeat, fixture: BattleNormalizedUxFixture): BattleEvent {
 	const team = beat.kind === "blue_blast" || beat.kind === "block_impact" || beat.kind === "blocked" ? "blue" : "red";
+	const reactCue = cueKindForReact(beat.kind);
+	const eventType = isGeneticLaneEventKind(reactCue) ? reactCue : (`replay.${reactCue}` as BattleEvent["event_type"]);
 	return {
 		id: beat.id,
 		ts: new Date(0).toISOString(),
@@ -358,7 +400,7 @@ export function receiptBeatToBattleEvent(beat: ReceiptBeat, fixture: BattleNorma
 		team,
 		actor_id: beat.laneId,
 		actor_kind: team === "blue" ? "patch_agent" : "exploit_agent",
-		event_type: `replay.${cueKindForReact(beat.kind)}`,
+		event_type: eventType,
 		summary: beat.react.liveEvent.notification,
 		proof_mode: fixture.proof_mode,
 		ui: {

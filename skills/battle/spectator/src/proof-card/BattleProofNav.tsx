@@ -23,8 +23,15 @@ export function BattleProofNav() {
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
-			<a href="#battle/receipt?engine=pixi" aria-current={onRace ? "page" : undefined} data-qid="battle:nav:race">
+			<a href="#battle/receipt?engine=pixi" aria-current={onRace && !hash.includes("pr6-genetic") ? "page" : undefined} data-qid="battle:nav:race">
 				Battle Replay
+			</a>
+			<a
+				href="#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
+				aria-current={hash.includes("pr6-genetic") ? "page" : undefined}
+				data-qid="battle:nav:genetic"
+			>
+				Genetic Pixi
 			</a>
 			<a href="#battle/proof?fixture=battle-004-pr3b" aria-current={onProof ? "page" : undefined} data-qid="battle:nav:proof">
 				Research & Genome Proof

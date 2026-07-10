@@ -1,7 +1,11 @@
 import type { BattleSpriteTheme, Lane, LaneEvent, PixiDisplaySpec, PixiEffectSpec } from "../lib/battle-types";
 import { effectAtlasFrame, markerAtlasFrame, runnerAtlasFrame } from "./battle-race-icon-map";
+import {
+	geneticEffectAtlasFrame,
+	isGeneticLaneEventKind,
+} from "../lib/battle-genetic-lifecycle";
 
-function effectForKind(kind: string): PixiEffectSpec | null {
+function effectForKind(kind: string, event?: LaneEvent): PixiEffectSpec | null {
 	switch (kind) {
 		case "blocked":
 		case "blue_blast":
@@ -18,6 +22,20 @@ function effectForKind(kind: string): PixiEffectSpec | null {
 		case "useful":
 			return { kind: "useful", durationMs: 280, intensity: 0.75, texture: effectAtlasFrame("useful") };
 		default:
+			if (isGeneticLaneEventKind(kind)) {
+				// Never map non-victory genetic events to promoted/killed textures.
+				if (!event?.victoryAllowed && (kind === "judge_exploit_success" || kind === "genome_promoted")) {
+					return null;
+				}
+				const effect = event?.geneticEffect;
+				const texture = effect ? geneticEffectAtlasFrame(effect) : effectAtlasFrame("useful");
+				return {
+					kind: event?.victoryAllowed ? "promoted" : "useful",
+					durationMs: 520,
+					intensity: 0.85,
+					texture,
+				};
+			}
 			return null;
 	}
 }
@@ -39,7 +57,7 @@ export const battleSpriteTheme: BattleSpriteTheme = {
 	},
 	effectForEvent(event: LaneEvent): PixiEffectSpec | null {
 		if (!event.proven) return null;
-		return effectForKind(event.kind);
+		return effectForKind(event.kind, event);
 	},
 };
 

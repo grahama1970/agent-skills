@@ -8,7 +8,7 @@ import { laneElapsedRange } from "../lib/battle-elapsed-axis";
 export const SPAWN_PULSE_SECONDS = 0.62;
 export const BLOCK_SHIELD_SECONDS = 0.88;
 
-export type BeatVfxKind = "spawn_pulse" | "block_shield" | "none";
+export type BeatVfxKind = "spawn_pulse" | "block_shield" | "genetic" | "none";
 
 export type BeatVfxLayer = {
 	container: Container;
@@ -94,6 +94,80 @@ function placeBlockShield(
 	return index + 1;
 }
 
+
+export const GENETIC_VFX_SECONDS = 0.9;
+
+const GENETIC_COLORS: Record<string, number> = {
+	research_scan: 0xa78bfa,
+	research_receipt: 0xc4b5fd,
+	genome_lock: 0xfbbf24,
+	gene_shard_join: 0x34d399,
+	gene_shard_fade: 0xf87171,
+	code_authoring: 0x38bdf8,
+	code_glyph: 0x22d3ee,
+	compile_error: 0xfb7185,
+	compile_lock: 0x4ade80,
+	endpoint_pulse: 0x60a5fa,
+	judge_pending: 0x94a3b8,
+	branch_fade: 0x64748b,
+	repair_pulse: 0xf59e0b,
+	repair_glyph: 0xfbbf24,
+	judge_victory: 0xfacc15,
+	genome_promote: 0xfde047,
+};
+
+function drawGeneticEffect(gfx: Graphics, x: number, y: number, progress: number, effect: string) {
+	gfx.clear();
+	const color = GENETIC_COLORS[effect] ?? 0xa78bfa;
+	const fade = Math.max(0, 1 - progress);
+	if (effect === "research_scan" || effect === "endpoint_pulse" || effect === "judge_pending") {
+		for (let ring = 0; ring < 3; ring += 1) {
+			const ringProgress = Math.max(0, Math.min(1, progress * 1.2 - ring * 0.15));
+			if (ringProgress <= 0) continue;
+			const radius = 8 + ringProgress * (effect === "endpoint_pulse" ? 36 : 28);
+			gfx.circle(x, y, radius);
+			gfx.stroke({ width: 2.2 - ring * 0.35, color, alpha: (1 - ringProgress) * 0.85 });
+		}
+		return;
+	}
+	if (effect === "genome_lock" || effect === "compile_lock") {
+		const radius = 10 + Math.sin(progress * Math.PI) * 8;
+		gfx.circle(x, y, radius);
+		gfx.stroke({ width: 3, color, alpha: fade * 0.95 });
+		gfx.circle(x, y, 4);
+		gfx.fill({ color, alpha: fade * 0.8 });
+		return;
+	}
+	if (effect === "gene_shard_join" || effect === "code_glyph" || effect === "code_authoring" || effect === "repair_glyph") {
+		const spread = 18 * (1 - progress);
+		for (const dx of [-spread, 0, spread]) {
+			gfx.moveTo(x + dx, y - 10);
+			gfx.lineTo(x + dx + 4, y);
+			gfx.lineTo(x + dx, y + 10);
+			gfx.lineTo(x + dx - 4, y);
+			gfx.closePath();
+			gfx.fill({ color, alpha: fade * 0.75 });
+		}
+		return;
+	}
+	if (effect === "gene_shard_fade" || effect === "branch_fade" || effect === "compile_error") {
+		const radius = 6 + progress * 22;
+		gfx.circle(x, y, radius);
+		gfx.stroke({ width: 2, color, alpha: fade * 0.7 });
+		gfx.moveTo(x - 10, y - 10);
+		gfx.lineTo(x + 10, y + 10);
+		gfx.moveTo(x + 10, y - 10);
+		gfx.lineTo(x - 10, y + 10);
+		gfx.stroke({ width: 2.5, color, alpha: fade * 0.9 });
+		return;
+	}
+	// default pulse
+	gfx.circle(x, y, 7 + progress * 20);
+	gfx.stroke({ width: 2, color, alpha: fade * 0.8 });
+	gfx.circle(x, y, 4);
+	gfx.fill({ color, alpha: fade * 0.55 });
+}
+
 export function syncBeatEmphasisVfx(args: {
 	layer: BeatVfxLayer;
 	markerAtlas: Record<string, Texture>;
@@ -161,6 +235,23 @@ export function syncBeatEmphasisVfx(args: {
 		);
 		hideShieldPool(layer.shieldPool, shieldCount);
 		return { vfx: "block_shield" };
+	}
+
+	if (
+		emphasis !== "none" &&
+		emphasis !== "kill_shot_travel" &&
+		emphasis !== "kill_impact" &&
+		emphasis !== "block_impact" &&
+		emphasis !== "spawn" &&
+		emphasis !== "terminal" &&
+		elapsed >= 0 &&
+		elapsed <= GENETIC_VFX_SECONDS
+	) {
+		const x = secondsToWorldX(activeBeat.atSeconds, allottedSeconds, contentWidth);
+		drawGeneticEffect(layer.pulseGfx, x, y, elapsed / GENETIC_VFX_SECONDS, emphasis);
+		hideShieldPool(layer.shieldPool, 0);
+		layer.activeKey = `${activeBeat.id}:genetic:${emphasis}`;
+		return { vfx: "genetic" };
 	}
 
 	layer.pulseGfx.clear();

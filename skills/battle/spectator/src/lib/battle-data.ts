@@ -2,6 +2,7 @@ import { generatedBattleFixture } from "./battle-data.generated";
 import { isBattleDesignView, mockupDesignLanes } from "./battle-mockup-lanes";
 import { isBattleReceiptReplayView } from "./battle-receipt-replay";
 import { adaptReceiptLanesForDesignPartition } from "./receipt-mockup-adapter";
+import { hasGeneticLifecycle, lanesWithGeneticLifecycleEvents } from "./battle-genetic-lifecycle";
 import type {
 	BattleEvent,
 	BattleNormalizedUxFixture,
@@ -78,7 +79,11 @@ export const lanes: Lane[] = legacyReceiptBackedFixture.lanes;
 export function battleLanesForView(source?: Lane[], receiptFixture?: GeneratedBattleFixture | null): Lane[] {
 	const fixtureLanes = source ?? activeBattleFixture(receiptFixture).lanes;
 	if (isBattleDesignView()) return mockupDesignLanes;
-	return adaptReceiptLanesForDesignPartition(withDevLineagePreview(fixtureLanes));
+	const adapted = adaptReceiptLanesForDesignPartition(withDevLineagePreview(fixtureLanes));
+	if (receiptFixture && hasGeneticLifecycle(receiptFixture)) {
+		return lanesWithGeneticLifecycleEvents(adapted, receiptFixture);
+	}
+	return adapted;
 }
 export function battleLeaderboardForView(receiptFixture?: GeneratedBattleFixture | null): LeaderboardEntry[] {
 	return activeBattleFixture(receiptFixture).leaderboard;
