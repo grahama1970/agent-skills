@@ -1,0 +1,58 @@
+"""Contract tests for the focused non-UI event spine hardening runner."""
+
+from pathlib import Path
+import json
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
+
+from sanity_event_spine_hardening import run
+
+
+def test_event_spine_hardening_runner_writes_receipts_and_preserves_hashes(tmp_path: Path) -> None:
+    proof_path = tmp_path / "pipewire-proof.json"
+    proof_path.write_text(
+        json.dumps(
+            {
+                "schema": "embry_voice_control.realtimestt_pipewire_sanity_receipt.v1",
+                "capture_source": "PipeWire",
+                "asr_engine": "RealtimeSTT",
+                "final_transcript": "Embry event spine sanity",
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+
+    output_dir = tmp_path / "out"
+    receipt = run(output_dir, proof_path)
+
+    receipt_path = output_dir / "receipt.json"
+    manifest_path = output_dir / "run-manifest.json"
+    db_path = output_dir / "event-spine.sqlite3"
+
+    assert receipt["status"] == "pass"
+    assert receipt["physical_hot_mic"] is False
+    assert receipt["ui_exercised"] is False
+    assert receipt["restart_recovery"]["sequence_numbers"] == [1, 2, 3]
+    assert receipt["restart_recovery"]["immutable_hashes_preserved"] is True
+    assert receipt["consumer_claim_ack"]["offset_after_ack"] == 3
+    assert receipt["consumer_claim_ack"]["claim_after_ack_count"] == 0
+    assert {event["type"] for event in receipt["stored_events"]} == {
+        "listener.state",
+        "listener.final_transcript",
+        "listener.receipt_written",
+    }
+    assert all(event["payload"].get("physical_hot_mic") is False for event in receipt["stored_events"])
+    assert receipt_path.exists()
+    assert manifest_path.exists()
+    assert db_path.exists()
+
+    written_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert written_receipt["immutable_hashes"] == receipt["immutable_hashes"]
+    assert manifest["physical_hot_mic"] is False
+    assert "receipt.json" in manifest["artifacts"]
+    assert "event-spine.sqlite3" in manifest["artifacts"]
