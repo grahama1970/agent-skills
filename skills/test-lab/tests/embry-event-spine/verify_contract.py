@@ -38,7 +38,7 @@ def journal(target: Path) -> None:
 
         def append(index: int):
             return module.append_event(db, {
-                "schema": "embry.voice_event.v2",
+                "schema": module.EVENT_SCHEMA,
                 "event_id": f"evt-{index}", "session_id": "session-a", "turn_id": "turn-a",
                 "type": "listener.final_transcript", "created_at": f"2026-07-10T00:00:{index:02d}Z",
                 "causation_id": "wake-1", "correlation_id": "session-a", "producer": "realtimestt",
@@ -58,8 +58,8 @@ def journal(target: Path) -> None:
         if len(claims) != 2:
             fail("consumer_claim", "Exclusive consumer claim did not return the requested events.")
         event_id = claims[0]["event_id"]
-        module.ack_event(db, "consumer-a", "session-a", event_id)
-        module.ack_event(db, "consumer-a", "session-a", event_id)
+        module.ack_event(db, "consumer-a", event_id)
+        module.ack_event(db, "consumer-a", event_id)
         if module.consumer_offset(db, "consumer-a", "session-a") < 1:
             fail("consumer_restart", "Acknowledged cursor was not durably persisted.")
     print(json.dumps({"category": "journal_semantics", "public_hint": "Journal semantic contract passed."}))
@@ -105,7 +105,12 @@ def main() -> None:
     parser.add_argument("contract", choices=("journal", "runner", "publisher", "audit"))
     parser.add_argument("target", type=Path)
     args = parser.parse_args()
-    {"journal": journal, "runner": runner, "publisher": publisher, "audit": audit}[args.contract](args.target.resolve())
+    try:
+        {"journal": journal, "runner": runner, "publisher": publisher, "audit": audit}[args.contract](args.target.resolve())
+    except SystemExit:
+        raise
+    except Exception as exc:
+        fail(f"{args.contract}_runtime", f"Semantic contract raised {type(exc).__name__}.")
 
 
 if __name__ == "__main__":
