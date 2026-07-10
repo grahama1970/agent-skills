@@ -9,6 +9,7 @@ import pytest
 import battle_skill.child_dag_code_author as code_author
 from battle_skill.child_dag_node_adapter import run_node
 from battle_skill.exploit_combiner import run_exploit_combiner_proof
+from battle_skill.provider_authorship import build_provider_authorship_receipt
 from battle_skill.spawn_architect import run_spawn_architect_proof
 
 
@@ -253,3 +254,59 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
     jsonschema.validate(specimen, _schema("battle.exploit_specimen.v2.schema.json"))
     assert specimen["compile_status"] == "NOT_RUN"
     assert "The code compiles." in authorship["claims"]["does_not_prove"]
+
+
+def test_scillm_validation_command_binds_launch_receipt(tmp_path: Path, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_tau_command(*, command: list[str], cwd: Path, expected_json: Path) -> dict:
+        captured.update(command=command, cwd=cwd, expected_json=expected_json)
+        return {"status": "PASS"}
+
+    monkeypatch.setattr(code_author, "_run_tau_command", fake_run_tau_command)
+    launch_receipt = tmp_path / "launch-receipt.json"
+    result = code_author._run_tau_scillm_validate(
+        tau_root=tmp_path,
+        work_order_path=tmp_path / "work-order.json",
+        result_path=tmp_path / "worker-result.json",
+        out_path=tmp_path / "validation.json",
+        launch_receipt_path=launch_receipt,
+    )
+
+    assert result == {"status": "PASS"}
+    command = captured["command"]
+    assert isinstance(command, list)
+    assert command[command.index("--launch-receipt") + 1] == str(launch_receipt)
+
+
+def test_provider_authorship_distinguishes_validation_block_from_missing_attestation(
+    tmp_path: Path,
+) -> None:
+    receipt = build_provider_authorship_receipt(
+        out_path=tmp_path / "provider-authorship.json",
+        battle_id="battle-004",
+        dag_id="dag-1",
+        node_id="exploit-code-author",
+        child_lane_id="child-1",
+        goal_hash="sha256:goal",
+        battle_work_order_path=tmp_path / "battle-work-order.json",
+        tau_work_order_path=tmp_path / "tau-work-order.json",
+        launch_receipt_path=tmp_path / "launch.json",
+        worker_result_path=tmp_path / "result.json",
+        worker_validation_path=tmp_path / "validation.json",
+        artifact_validation={"status": "BLOCKED", "errors": ["TAU_WORKER_VALIDATION_BLOCKED"]},
+        launch_receipt={
+            "status": "PASS",
+            "live": True,
+            "provider_live": True,
+            "observed_provider": "opencode-go",
+            "observed_model": "opencode-go/kimi-k2.6",
+        },
+        worker_result={"artifacts": ["outputs/exploit_specimen.py"]},
+        worker_validation={"status": "BLOCKED", "provider_live": True},
+    )
+
+    assert receipt["status"] == "BLOCKED"
+    assert receipt["provider_live"] is True
+    assert "TAU_WORKER_VALIDATION_BLOCKED" in receipt["errors"]
+    assert "PROVIDER_EXECUTION_ATTESTATION_MISSING" not in receipt["errors"]

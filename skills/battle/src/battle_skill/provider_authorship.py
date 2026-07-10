@@ -31,10 +31,21 @@ def build_provider_authorship_receipt(
     worker_validation: dict[str, Any] | None,
 ) -> dict[str, Any]:
     provider_live = _provider_live(launch_receipt, worker_validation)
-    status = "PASS" if provider_live and artifact_validation.get("status") == "PASS" else "BLOCKED"
+    worker_validation_passed = bool(
+        isinstance(worker_validation, dict) and worker_validation.get("status") == "PASS"
+    )
+    status = (
+        "PASS"
+        if provider_live
+        and worker_validation_passed
+        and artifact_validation.get("status") == "PASS"
+        else "BLOCKED"
+    )
     errors: list[str] = []
     if not provider_live:
         errors.append("PROVIDER_EXECUTION_ATTESTATION_MISSING")
+    elif not worker_validation_passed:
+        errors.append("TAU_WORKER_VALIDATION_BLOCKED")
     if artifact_validation.get("status") != "PASS":
         errors.extend([str(item) for item in artifact_validation.get("errors", [])])
 
@@ -147,7 +158,6 @@ def _provider_live(launch: dict[str, Any] | None, validation: dict[str, Any] | N
         and launch.get("provider_live") is True
         and validation.get("provider_live") is True
         and launch.get("live") is True
-        and validation.get("status") == "PASS"
     )
 
 
