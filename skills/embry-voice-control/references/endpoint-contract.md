@@ -123,6 +123,21 @@ Preferred listener event transport:
 Unix socket or localhost SSE/WebSocket
 ```
 
+Current workstation transport is localhost HTTP with SQLite WAL persistence:
+
+```text
+POST /v1/listener/events
+GET  /v1/sessions
+GET  /v1/sessions/{session_id}/events
+GET  /v1/sessions/{session_id}/journal
+POST /v1/turns/{turn_id}/cancel
+```
+
+Each `embry.voice_event.v1` requires `event_id`, `session_id`, `turn_id`, a
+monotonic positive `sequence`, `type`, `created_at`, and `payload`. Producers
+must continue sequence numbers across turns in a session. Exact event replay is
+idempotent; conflicting event IDs or duplicate session sequence numbers fail.
+
 Required event types:
 
 - `listener.state`

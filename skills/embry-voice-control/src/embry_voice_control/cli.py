@@ -22,6 +22,7 @@ import wave
 import httpx
 from loguru import logger
 import typer
+import uvicorn
 from websockets.sync.client import connect as websocket_connect
 
 from embry_voice_control.embry_chat import DEFAULT_CHATTERBOX_URL as EMBRY_CHAT_CHATTERBOX_URL
@@ -71,6 +72,21 @@ DEFAULT_INTERRUPT_POLICY = {
     "acknowledgement_tone": "interrupted",
     "acknowledgement_text": "Okay, stopping that.",
 }
+
+
+@app.command("listener-service")
+def listener_service(
+    host: str = typer.Option("127.0.0.1", help="Local bind address"),
+    port: int = typer.Option(8019, help="Local listener journal port"),
+    db_path: Path = typer.Option(
+        Path("/mnt/storage12tb/skills/embry-voice-control/state/voice-events.sqlite3"),
+        help="SQLite WAL journal path",
+    ),
+) -> None:
+    """Serve the persistent localhost listener event journal."""
+    from embry_voice_control.listener_service import create_app
+
+    uvicorn.run(create_app(db_path), host=host, port=port, log_level="info")
 
 
 def http_to_ws_url(base_url: str, suffix: str) -> str:

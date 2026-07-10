@@ -272,6 +272,23 @@ realtime and final transcript callbacks, final transcript match, and wake word
 detection from the transcript. It does not prove browser mic, speaker identity,
 Tau/memory, Chatterbox, Chat UX, orb, replay, or interruption.
 
+Run the persistent local event journal before continuous listener proofs:
+
+```bash
+./run.sh listener-service \
+  --host 127.0.0.1 \
+  --port 8019 \
+  --db-path /mnt/storage12tb/skills/embry-voice-control/state/voice-events.sqlite3
+```
+
+RealtimeSTT proof runners publish live callbacks to
+`POST /v1/listener/events`. The service persists canonical
+`embry.voice_event.v1` rows in SQLite WAL and exposes ordered session journals
+at `GET /v1/sessions/{session_id}/journal`. Event IDs are idempotent, while
+conflicting IDs or session sequence numbers fail closed. This replaces
+`latest_unix_listener.json` as the event authority; that compatibility pointer
+must not be used for suite-readiness audits.
+
 Run the listener-to-turn rung after `unix-listener-sanity`:
 
 ```bash
