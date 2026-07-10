@@ -432,7 +432,29 @@ def _child_output_artifact_paths(tau_run_dir: Path) -> list[Path]:
 
 def _find_artifact(root: Path, name: str) -> Path | None:
     matches = sorted(root.rglob(name)) if root.exists() else []
-    return matches[0] if matches else None
+    if matches:
+        return matches[0]
+    return _find_artifact_from_node_receipts(root, name)
+
+
+def _find_artifact_from_node_receipts(root: Path, name: str) -> Path | None:
+    if not root.exists():
+        return None
+    for receipt_path in sorted(root.rglob("*node-receipt.json")):
+        try:
+            receipt = _read_json(receipt_path)
+        except (OSError, json.JSONDecodeError, RuntimeError):
+            continue
+        for item in receipt.get("evidence", []):
+            if not isinstance(item, dict) or item.get("kind") != name:
+                continue
+            evidence_path = item.get("path")
+            if not isinstance(evidence_path, str) or not evidence_path:
+                continue
+            path = Path(evidence_path)
+            if path.exists():
+                return path
+    return None
 
 
 def _private_reference_findings(paths: list[Path]) -> list[dict[str, Any]]:
