@@ -27,22 +27,26 @@ const proof = await page.evaluate(async () => {
   const synthesis = await load('/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json')
   const compile = await load('/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json')
   const runtime = await load('/battle-fixtures/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json')
+  const population = await load('/battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json')
   return {
     raceSchema: race.json?.schema ?? null,
     proofSchema: proofCard.json?.schema ?? null,
     synthesisSchema: synthesis.json?.schema ?? null,
     compileSchema: compile.json?.schema ?? null,
     runtimeSchema: runtime.json?.schema ?? null,
+    populationSchema: population.json?.schema ?? null,
     raceOk: race.ok,
     proofOk: proofCard.ok,
     synthesisOk: synthesis.ok,
     compileOk: compile.ok,
     runtimeOk: runtime.ok,
+    populationOk: population.ok,
     raceHasLanes: Array.isArray(race.json?.lanes),
     proofHasNodes: Boolean(proofCard.json?.node_status),
     synthesisProviderLive: synthesis.json?.provider_live === true,
     compileFailed: compile.json?.compile?.compile_failed === true,
     judgeNotRun: runtime.json?.judge?.judge_status === 'NOT_RUN',
+    populationSpecimens: Array.isArray(population.json?.specimen_cards) ? population.json.specimen_cards.length : 0,
   }
 })
 
@@ -51,7 +55,8 @@ record('2-proof-card-fixture-served', proof.proofOk && proof.proofSchema === 'ba
 record('2b-synthesis-fixture-served', proof.synthesisOk && proof.synthesisSchema === 'battle.normalized_synthesis_fixture.v1' && proof.synthesisProviderLive, JSON.stringify(proof))
 record('2c-compile-fixture-served', proof.compileOk && proof.compileSchema === 'battle.normalized_compile_fixture.v1' && proof.compileFailed, JSON.stringify(proof))
 record('2d-runtime-fixture-served', proof.runtimeOk && proof.runtimeSchema === 'battle.normalized_runtime_judge_fixture.v1' && proof.judgeNotRun, JSON.stringify(proof))
-record('3-schemas-differ', proof.raceSchema !== proof.proofSchema && proof.proofSchema !== proof.synthesisSchema && proof.synthesisSchema !== proof.compileSchema && proof.compileSchema !== proof.runtimeSchema, JSON.stringify({ race: proof.raceSchema, proof: proof.proofSchema, synthesis: proof.synthesisSchema, compile: proof.compileSchema, runtime: proof.runtimeSchema }))
+record('2e-population-fixture-served', proof.populationOk && proof.populationSchema === 'battle.normalized_population_fixture.v1' && proof.populationSpecimens === 4, JSON.stringify(proof))
+record('3-schemas-differ', proof.raceSchema !== proof.proofSchema && proof.proofSchema !== proof.synthesisSchema && proof.synthesisSchema !== proof.compileSchema && proof.compileSchema !== proof.runtimeSchema && proof.runtimeSchema !== proof.populationSchema, JSON.stringify({ race: proof.raceSchema, proof: proof.proofSchema, synthesis: proof.synthesisSchema, compile: proof.compileSchema, runtime: proof.runtimeSchema, population: proof.populationSchema }))
 record('4-race-has-lanes', proof.raceHasLanes, JSON.stringify(proof))
 record('5-proof-has-nodes', proof.proofHasNodes, JSON.stringify(proof))
 
@@ -95,6 +100,14 @@ const onRuntime = await page.evaluate(() => ({
   pixi: !!document.querySelector('[data-battle-pixi-engine]'),
 }))
 record('10-runtime-route-no-pixi', onRuntime.root && !onRuntime.pixi, JSON.stringify(onRuntime))
+
+await page.goto(`${host}/#battle/population?fixture=battle-004-pr5-population`, { waitUntil: 'networkidle', timeout: 60000 })
+await page.waitForSelector('[data-qid="battle:population:root"]', { timeout: 20000 })
+const onPopulation = await page.evaluate(() => ({
+  root: !!document.querySelector('[data-qid="battle:population:root"]'),
+  pixi: !!document.querySelector('[data-battle-pixi-engine]'),
+}))
+record('11-population-route-no-pixi', onPopulation.root && !onPopulation.pixi, JSON.stringify(onPopulation))
 
 await browser.close()
 const failed = checks.filter((c) => !c.pass).length

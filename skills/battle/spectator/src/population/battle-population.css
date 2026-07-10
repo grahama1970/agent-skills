@@ -1,0 +1,31 @@
+.battle-population .battle-population-banners {
+  display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem;
+}
+.battle-population .battle-population-banner {
+  border: 1px solid rgba(255,255,255,.12); border-radius: .55rem; padding: .4rem .7rem;
+  font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
+.battle-population .battle-population-banner[data-tone="purple"] { border-color: rgba(167,139,250,.45); background: rgba(167,139,250,.12); color: #ddd6fe; }
+.battle-population .battle-population-banner[data-tone="gray"] { border-color: rgba(148,163,184,.35); background: rgba(100,116,139,.12); color: #cbd5e1; }
+.battle-population .battle-population-banner[data-tone="amber"] { border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.1); color: #fde68a; }
+.battle-population .battle-population-banner[data-tone="blue"] { border-color: rgba(96,165,250,.4); background: rgba(96,165,250,.1); color: #bfdbfe; }
+.battle-population .battle-population-banner[data-tone="red"] { border-color: rgba(248,113,113,.45); background: rgba(248,113,113,.12); color: #fecaca; }
+.battle-population .battle-population-banner[data-tone="green"] { border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.1); color: #a7f3d0; }
+
+.battle-population .battle-population-gen-btn {
+  border: 1px solid rgba(255,255,255,.12); border-radius: .65rem; background: rgba(0,0,0,.25);
+  padding: .55rem .7rem; text-align: left; color: inherit; cursor: pointer;
+}
+.battle-population .battle-population-gen-btn[data-active="true"] {
+  border-color: rgba(167,139,250,.45); background: rgba(167,139,250,.12);
+}
+.battle-population .battle-population-card {
+  border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; background: rgba(0,0,0,.25); padding: .75rem .9rem;
+}
+.battle-population .battle-population-card[data-best="true"] {
+  border-color: rgba(167,139,250,.45); box-shadow: 0 0 0 1px rgba(167,139,250,.2);
+}
+.battle-population .battle-population-edge {
+  border: 1px solid rgba(255,255,255,.08); border-radius: .6rem; background: rgba(0,0,0,.2);
+  padding: .55rem .7rem; font-size: .8rem;
+}

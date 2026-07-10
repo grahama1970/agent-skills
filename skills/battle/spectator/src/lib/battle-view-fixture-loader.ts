@@ -2,6 +2,8 @@ import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-typ
 import { validateProofCardFixture } from "./battle-proof-card-validator";
 import type { BattleNormalizedCompileFixtureV1 } from "./battle-compile-types";
 import { validateCompileFixture } from "./battle-compile-validator";
+import type { BattleNormalizedPopulationFixtureV1 } from "./battle-population-types";
+import { validatePopulationFixture } from "./battle-population-validator";
 import type { BattleNormalizedRuntimeJudgeFixtureV1 } from "./battle-runtime-types";
 import { validateRuntimeJudgeFixture } from "./battle-runtime-validator";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
@@ -188,6 +190,27 @@ export function discriminateBattleViewFixture(
 		};
 	}
 
+	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION) {
+		const validated = validatePopulationFixture(data);
+		if (!validated.ok) {
+			return {
+				ok: false,
+				error: {
+					code: validated.error.code === "UNSUPPORTED_SCHEMA" ? "UNSUPPORTED_SCHEMA" : "CONTRACT_VALIDATION_FAILED",
+					title: validated.error.title,
+					detail: validated.error.detail,
+					schema,
+				},
+			};
+		}
+		return {
+			ok: true,
+			fixture: validated.fixture,
+			schema: validated.fixture.schema,
+			viewKind: "population",
+		};
+	}
+
 	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.RACE) {
 		const raceError = validateRaceFixtureShape(data);
 		if (raceError) return { ok: false, error: raceError };
@@ -281,6 +304,19 @@ export async function loadBattleRuntimeViewFixture(
 		fixture: result.fixture as BattleNormalizedRuntimeJudgeFixtureV1,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE,
 		viewKind: "runtime",
+	};
+}
+
+export async function loadBattlePopulationViewFixture(
+	url: string,
+): Promise<BattleFixtureLoadResult<BattleNormalizedPopulationFixtureV1>> {
+	const result = await loadBattleViewFixture(url, "population");
+	if (!result.ok) return result;
+	return {
+		ok: true,
+		fixture: result.fixture as BattleNormalizedPopulationFixtureV1,
+		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION,
+		viewKind: "population",
 	};
 }
 

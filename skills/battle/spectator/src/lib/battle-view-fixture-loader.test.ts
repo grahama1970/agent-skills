@@ -16,10 +16,11 @@ describe("battle fixture registry", () => {
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS]?.renderer).toBe("BattleSynthesisPage");
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE]?.renderer).toBe("BattleCompilePage");
 		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE]?.renderer).toBe("BattleRuntimePage");
+		expect(BATTLE_FIXTURE_RENDERERS[BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION]?.renderer).toBe("BattlePopulationPage");
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.SYNTHESIS)).toBe(true);
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.COMPILE)).toBe(true);
 		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.RUNTIME_JUDGE)).toBe(true);
-		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION)).toBe(false);
+		expect(isSupportedBattleFixtureSchema(BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION)).toBe(true);
 		expect(battleFixtureRegistryEntry("battle.unknown.v1")).toBeNull();
 	});
 });
@@ -110,8 +111,25 @@ describe("discriminateBattleViewFixture", () => {
 		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
 	});
 
+	it("accepts population fixture on population route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json");
+		const result = discriminateBattleViewFixture(data, "population");
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.viewKind).toBe("population");
+			expect(result.schema).toBe(BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION);
+		}
+	});
+
+	it("fails closed when population fixture is forced onto runtime route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-pr5-population/battle.normalized_population_fixture.json");
+		const result = discriminateBattleViewFixture(data, "runtime");
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.error.code).toBe("SCHEMA_ROUTE_MISMATCH");
+	});
+
 	it("fails closed on unknown schema", () => {
-		const result = discriminateBattleViewFixture({ schema: "battle.normalized_population_fixture.v1", lanes: [] }, "race");
+		const result = discriminateBattleViewFixture({ schema: "battle.normalized.unknown.v1", lanes: [] }, "race");
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
 			expect(result.error.code).toBe("UNSUPPORTED_SCHEMA");

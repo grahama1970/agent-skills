@@ -1,6 +1,6 @@
 import { BATTLE_VIEW_FIXTURE_SCHEMAS, type BattleViewFixtureSchema, type BattleViewKind } from "./battle-view-fixture";
 
-export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "BattleSynthesisPage" | "BattleCompilePage" | "BattleRuntimePage" | "unsupported";
+export type BattleFixtureRendererId = "BattleSpectatorArena" | "BattleProofCardPage" | "BattleSynthesisPage" | "BattleCompilePage" | "BattleRuntimePage" | "BattlePopulationPage" | "unsupported";
 
 type RegistryEntry = {
 	schema: BattleViewFixtureSchema;
@@ -47,8 +47,8 @@ export const BATTLE_FIXTURE_RENDERERS: Record<string, RegistryEntry> = {
 	[BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION]: {
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.POPULATION,
 		viewKind: "population",
-		renderer: "unsupported",
-		supported: false,
+		renderer: "BattlePopulationPage",
+		supported: true,
 	},
 };
 

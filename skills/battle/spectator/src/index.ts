@@ -35,11 +35,18 @@ export {
 	battleRuntimeFixtureUrl,
 	isBattleRuntimeView,
 } from "./lib/battle-runtime-registry";
+export {
+	POPULATION_FIXTURES,
+	battlePopulationFixtureId,
+	battlePopulationFixtureUrl,
+	isBattlePopulationView,
+} from "./lib/battle-population-registry";
 export { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
 export { BattleProofCardView } from "./BattleProofCardView";
 export { BattleSynthesisRoute } from "./synthesis/BattleSynthesisRoute";
 export { BattleCompileRoute } from "./compile/BattleCompileRoute";
 export { BattleRuntimeRoute } from "./runtime/BattleRuntimeRoute";
+export { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 export { BattleComponentCapabilityHarness, isBattleComponentCapabilityTest } from "./BattleComponentCapabilityHarness";
 export { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
 
@@ -61,4 +68,5 @@ export {
 	loadBattleSynthesisViewFixture,
 	loadBattleCompileViewFixture,
 	loadBattleRuntimeViewFixture,
+	loadBattlePopulationViewFixture,
 } from "./lib/battle-view-fixture-loader";

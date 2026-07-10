@@ -24,6 +24,8 @@ import { BattleCompileRoute } from "./compile/BattleCompileRoute";
 import { isBattleCompileView } from "./lib/battle-compile-registry";
 import { BattleRuntimeRoute } from "./runtime/BattleRuntimeRoute";
 import { isBattleRuntimeView } from "./lib/battle-runtime-registry";
+import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
+import { isBattlePopulationView } from "./lib/battle-population-registry";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
@@ -41,6 +43,7 @@ import "./battle-mockup-elements.css";
 type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
 
 export function BattleSpectatorArena() {
+  if (isBattlePopulationView()) return <BattlePopulationRoute />;
   if (isBattleRuntimeView()) return <BattleRuntimeRoute />;
   if (isBattleCompileView()) return <BattleCompileRoute />;
   if (isBattleSynthesisView()) return <BattleSynthesisRoute />;

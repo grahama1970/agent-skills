@@ -1,10 +1,11 @@
 import type { BattleNormalizedProofCardFixtureV1 } from "./battle-proof-card-types";
 import type { BattleNormalizedCompileFixtureV1 } from "./battle-compile-types";
+import type { BattleNormalizedPopulationFixtureV1 } from "./battle-population-types";
 import type { BattleNormalizedRuntimeJudgeFixtureV1 } from "./battle-runtime-types";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import type { BattleNormalizedUxFixture } from "./battle-types";
 
-/** Known normalized UX fixture schemas. Population stays typed but unsupported until backend emits it. */
+/** Known normalized UX fixture schemas. Population is supported via PR5 normalized fixture. */
 export const BATTLE_VIEW_FIXTURE_SCHEMAS = {
 	RACE: "battle.normalized_ux_fixture.v1",
 	PROOF_CARD: "battle.normalized_proof_card_fixture.v1",
@@ -24,7 +25,8 @@ export type BattleViewFixture =
 	| BattleNormalizedProofCardFixtureV1
 	| BattleNormalizedSynthesisFixtureV1
 	| BattleNormalizedCompileFixtureV1
-	| BattleNormalizedRuntimeJudgeFixtureV1;
+	| BattleNormalizedRuntimeJudgeFixtureV1
+	| BattleNormalizedPopulationFixtureV1;
 
 export type BattleFixtureLoadErrorCode =
 	| "UNSUPPORTED_FIXTURE"
