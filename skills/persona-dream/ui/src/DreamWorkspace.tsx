@@ -545,7 +545,7 @@ const CANONICAL_PHASES = [
   { id: '07', label: 'Storyboard', icon: Layout, legacyIds: ['phase_07_storyboard'] },
   { id: '08', label: 'Media Lock', icon: Grid, legacyIds: ['phase_08_panels_environment', 'media-lock', 'panels'] },
   { id: '09', label: 'Video Provider', icon: Package, legacyIds: ['phase_09_kling_optimized_packet', 'video-provider', 'kling-packet'] },
-  { id: '10', label: 'Review Gate', icon: ShieldCheck, legacyIds: ['phase_10_creator_reviewer_gate'] },
+  { id: '10', label: 'Provider Contract', icon: ShieldCheck, legacyIds: ['phase_10_provider_contract', 'phase10-provider-contract', 'provider-contract', 'phase_10_creator_reviewer_gate'] },
   { id: '11', label: 'Provider Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
 ] as const
 
@@ -604,6 +604,10 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
       if (canonical.id === '09') {
         stage.summary = 'Provider-neutral video scene packet, selected provider routing, prompt, locks, and media staging receipts.'
       }
+      if (canonical.id === '10') {
+        stage.summary = 'Provider request-body contract, payload hash, field mapping, media publication plan, cost, entitlement, async return, manual acceptance, and live-readiness blockers.'
+        stage.failureOrGap = stage.failureOrGap || 'Phase 10 provider contract evidence is required before any live provider submit gate can be inspected.'
+      }
       if (canonical.id === '11') {
         stage.summary = 'Provider API response, task id, polling receipts, downloaded media, frame sheets, and post-provider review.'
       }
@@ -637,7 +641,7 @@ const phaseShortLabels: Record<string, string> = {
   '07': 'Storyboard',
   '08': 'Media Lock',
   '09': 'Video Provider',
-  '10': 'Review Gate',
+  '10': 'Provider Contract',
   '11': 'Provider Return',
 }
 
@@ -653,6 +657,8 @@ const dreamPhaseHashAliases: Record<string, string> = {
   'media-lock': '08',
   'kling-packet': '09',
   'video-provider': '09',
+  'provider-contract': '10',
+  'phase10-provider-contract': '10',
   review: '10',
   return: '11',
 }
@@ -920,7 +926,10 @@ function StageCard({
         {stage.id === '09' && (
           <VideoProviderPanel stage={stage} />
         )}
-        {!['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(stage.id) && (
+        {stage.id === '10' && (
+          <ProviderContractPanel stage={stage} />
+        )}
+        {!['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
             {stage.failureOrGap && <div style={styles.gapBox}>{stage.failureOrGap}</div>}
@@ -1298,6 +1307,30 @@ function videoProviderArtifactRole(artifact: DreamArtifact): string | null {
   return null
 }
 
+function providerContractArtifactRole(artifact: DreamArtifact): string | null {
+  const text = `${artifact.label} ${artifact.path}`.toLowerCase()
+  if (/phase10[_-]?provider[_-]?contract\.json|provider[_-]?contract\.json/.test(text) && !/receipt|check/.test(text)) return 'contract'
+  if (/phase10[_-]?provider[_-]?contract[_-]?receipt|provider[_-]?contract[_-]?receipt/.test(text)) return 'contract_receipt'
+  if (/phase10.*check|provider[_-]?contract.*gate|dry[_-]?run[_-]?gate/.test(text)) return 'gate_receipt'
+  if (/video[_-]?provider[_-]?packet/.test(text)) return 'video_provider_packet'
+  if (/provider[_-]?registry[_-]?refresh|registry[_-]?refresh/.test(text)) return 'registry_refresh'
+  if (/video[_-]?provider[_-]?scorecard|scorecard/.test(text)) return 'scorecard'
+  return null
+}
+
+function shortProviderHash(value: unknown): string {
+  const text = typeof value === 'string' ? value : ''
+  if (text.length <= 22) return text || 'missing'
+  return `${text.slice(0, 14)}...${text.slice(-6)}`
+}
+
+function providerContractStatusTone(value: unknown): CSSProperties {
+  const text = String(value ?? '').toUpperCase()
+  if (text.includes('PASS')) return nvis.providerContractPillPass
+  if (text.includes('BLOCK') || text.includes('MISSING') || text.includes('FAIL')) return nvis.providerContractPillBlocked
+  return nvis.providerContractPillDry
+}
+
 function dreamNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -1501,6 +1534,246 @@ function VideoProviderPanel({ stage }: { stage: DreamStage }) {
         })}
       </div>
     </section>
+  )
+}
+
+function ProviderContractPanel({ stage }: { stage: DreamStage }) {
+  const contractArtifacts = useMemo(() => {
+    const byRole = new Map<string, DreamArtifact>()
+    for (const artifact of stage.artifacts) {
+      const role = providerContractArtifactRole(artifact)
+      if (role && !byRole.has(role)) byRole.set(role, artifact)
+    }
+    return [...byRole.entries()].map(([role, artifact]) => ({ role, artifact }))
+  }, [stage.artifacts])
+  const [loaded, setLoaded] = useState<LoadedVideoArtifact[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadArtifacts() {
+      const next: LoadedVideoArtifact[] = []
+      for (const item of contractArtifacts) {
+        try {
+          const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(item.artifact.path)}`)
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const payload = await response.json()
+          next.push({
+            ...item,
+            payload: payloadObject(payload),
+          })
+        } catch (error) {
+          next.push({
+            ...item,
+            payload: null,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+      if (!cancelled) setLoaded(next)
+    }
+    void loadArtifacts()
+    return () => { cancelled = true }
+  }, [contractArtifacts])
+
+  const byRole = useMemo(() => new Map(loaded.map((item) => [item.role, item])), [loaded])
+  const contract = byRole.get('contract')?.payload ?? null
+  const receipt = byRole.get('contract_receipt')?.payload ?? null
+  const gateReceipt = byRole.get('gate_receipt')?.payload ?? null
+  const providerRequest = payloadObject(contract?.provider_request)
+  const requestBody = payloadObject(providerRequest?.body)
+  const mediaPlan = payloadObject(contract?.provider_media_publication_plan)
+  const costContract = payloadObject(contract?.cost_contract)
+  const entitlementContract = payloadObject(contract?.entitlement_contract)
+  const asyncContract = payloadObject(contract?.async_return_contract)
+  const manualAcceptance = payloadObject(contract?.manual_acceptance)
+  const fieldMapping = payloadArray(contract?.field_mapping)
+  const dryRunBlockers = dreamList(contract?.phase10_contract_blockers ?? contract?.dry_run_blockers)
+  const liveBlockers = dreamList(contract?.phase11_live_readiness_blockers ?? contract?.live_call_blockers)
+  const nonClaims = dreamList(contract?.non_claims ?? contract?.claims?.does_not_prove)
+  const providerId = firstString(contract?.provider_id, receipt?.provider_id) ?? 'missing'
+  const endpoint = firstString(contract?.fal_model_endpoint, receipt?.fal_model_endpoint) ?? 'missing'
+  const status = firstString(contract?.status, receipt?.status, gateReceipt?.status) ?? 'MISSING_PHASE10_PROVIDER_CONTRACT'
+  const liveSubmitStatus = firstString(contract?.live_submit_status, gateReceipt?.live_submit_status) ?? 'DRY_RUN_NOT_LIVE_SUBMITTABLE'
+  const payloadHash = firstString(providerRequest?.payload_sha256, receipt?.payload_sha256) ?? 'missing'
+  const submitted = contract?.submitted ?? providerRequest?.submitted ?? receipt?.submitted
+  const paidCallAuthorized = contract?.paid_call_authorized ?? receipt?.paid_call_authorized
+  const providerLive = contract?.provider_live ?? receipt?.provider_live
+  const providerAttempts = dreamNumber(contract?.actual_provider_call_attempts) ?? dreamNumber(receipt?.actual_provider_call_attempts) ?? 0
+  const hasContract = Boolean(contract)
+
+  return (
+    <section data-qid="dream:provider-contract-panel" style={nvis.providerContractPanel}>
+      <style>{`
+        [data-phase10-interactive]:focus-visible {
+          outline: 2px solid #4a9eff;
+          outline-offset: 2px;
+        }
+        details[data-provider-contract-details] > summary::-webkit-details-marker {
+          display: none;
+        }
+        details[data-provider-contract-details] > summary::marker {
+          content: "";
+          font-size: 0;
+        }
+      `}</style>
+      <p style={styles.stageSummary}>{stage.summary}</p>
+
+      {!hasContract && (
+        <div style={nvis.providerContractMissing}>
+          <div>
+            <strong>Phase 10 provider contract is not present in this run.</strong>
+            <span>
+              This surface is fail-closed. It needs a local provider contract artifact before it can display request mapping or live-readiness blockers.
+            </span>
+          </div>
+          <pre style={nvis.providerContractCommand}>{`skills/persona-dream/run.sh write-phase10-provider-contract \\
+  --video-provider-packet <run-root>/video_provider_packet/video_provider_packet.json \\
+  --registry-refresh-receipt <run-root>/provider_registry_refresh_receipt.v1.json \\
+  --output-root <run-root>/phase10_provider_contract \\
+  --json
+
+skills/persona-dream/run.sh check-phase10-provider-contract \\
+  --fixtures-root skills/persona-dream/tests/fixtures/phase10-provider-contract \\
+  --receipt-out /tmp/persona-dream-phase10-provider-contract/check_receipt.json \\
+  --json`}</pre>
+        </div>
+      )}
+
+      <div style={nvis.providerContractKpiGrid}>
+        <ProviderContractKpi label="Provider" value={providerId} detail={endpoint} tone={hasContract ? 'pass' : 'blocked'} />
+        <ProviderContractKpi label="Request" value={providerRequest?.status ?? 'missing'} detail={`payload ${shortProviderHash(payloadHash)}`} tone={hasContract ? 'dry' : 'blocked'} />
+        <ProviderContractKpi label="Boundary" value={`${providerAttempts} calls`} detail={`live=${dreamBooleanLabel(providerLive)} / paid=${dreamBooleanLabel(paidCallAuthorized)} / submitted=${dreamBooleanLabel(submitted)}`} tone={providerAttempts === 0 && submitted !== true ? 'pass' : 'blocked'} />
+        <ProviderContractKpi label="Gate" value={status} detail={liveSubmitStatus} tone={statusTone(status) === 'pass' ? 'pass' : 'blocked'} />
+      </div>
+
+      <div style={nvis.providerContractSplit}>
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><Table2 size={12} /> Field mapping</h3>
+          {fieldMapping.length > 0 ? (
+            <div style={nvis.providerContractMapping}>
+              <div style={nvis.providerContractMappingHeader}>
+                <span>Provider field</span>
+                <span>Source</span>
+                <span>Status</span>
+              </div>
+              {fieldMapping.map((item, index) => {
+                const mappingStatus = firstString(item.status) ?? 'MISSING'
+                return (
+                  <div key={`${String(item.provider_field ?? index)}-${index}`} style={nvis.providerContractMappingRow}>
+                    <span title={String(item.provider_field ?? '')}>{String(item.provider_field ?? 'missing')}</span>
+                    <span title={String(item.source ?? item.source_artifact ?? '')}>{String(item.source ?? item.source_artifact ?? 'missing')}</span>
+                    <strong style={providerContractStatusTone(mappingStatus)}>{dreamDisplayCode(mappingStatus)}</strong>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={styles.gapBox}>No field mapping was loaded. The contract gate must reject provider-submit work without mapping evidence.</div>
+          )}
+        </section>
+
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><ShieldAlert size={12} /> Live-readiness boundary</h3>
+          <div style={nvis.providerContractBoundaryGrid}>
+            <ProviderContractState label="Media URLs" value={mediaPlan?.status} detail={`${dreamNumber(mediaPlan?.asset_count) ?? 0} assets / published=${dreamBooleanLabel(mediaPlan?.provider_accessible_url_created)}`} />
+            <ProviderContractState label="Cost" value={costContract?.status} detail={`paid=${dreamBooleanLabel(costContract?.paid_call_authorized)}`} />
+            <ProviderContractState label="Entitlement" value={entitlementContract?.status} detail={`fal key observed=${dreamBooleanLabel(entitlementContract?.fal_api_key_observed)}`} />
+            <ProviderContractState label="Return" value={asyncContract?.status} detail={`mode=${firstString(asyncContract?.selected_async_mode) ?? 'missing'}`} />
+            <ProviderContractState label="Manual" value={manualAcceptance?.status} detail={`accepted=${dreamBooleanLabel(manualAcceptance?.accepted)}`} />
+          </div>
+        </section>
+      </div>
+
+      <div style={nvis.providerContractSplit}>
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><AlertTriangle size={12} /> Blockers</h3>
+          <div style={nvis.providerContractBlockerGrid}>
+            {(dryRunBlockers.length > 0 ? dryRunBlockers : ['NO_PHASE10_DRY_RUN_BLOCKERS_REPORTED']).map((blocker) => (
+              <span key={blocker} style={dryRunBlockers.length > 0 ? nvis.providerContractBlockerPill : nvis.providerContractNeutralPill}>{blocker}</span>
+            ))}
+            {liveBlockers.map((blocker) => (
+              <span key={blocker} style={nvis.providerContractLiveBlockerPill}>{blocker}</span>
+            ))}
+          </div>
+        </section>
+
+        <section style={nvis.providerContractSection}>
+          <h3 style={nvis.matrixSectionTitle}><Info size={12} /> Non-claims</h3>
+          {nonClaims.length > 0 ? (
+            <ul style={nvis.providerContractNonClaims}>
+              {nonClaims.slice(0, 12).map((claim) => <li key={claim}>{claim}</li>)}
+            </ul>
+          ) : (
+            <div style={styles.gapBox}>Non-claims were not found. Phase 10 must not imply live provider readiness without explicit non-claims.</div>
+          )}
+        </section>
+      </div>
+
+      <details data-provider-contract-details data-phase10-interactive style={nvis.providerContractDetails}>
+        <summary data-phase10-interactive style={nvis.providerContractSummary}>
+          <span>View provider request body</span>
+          <span>{shortProviderHash(payloadHash)}</span>
+        </summary>
+        <pre style={nvis.providerContractJsonPre}>{JSON.stringify(requestBody ?? {}, null, 2)}</pre>
+      </details>
+
+      <div style={nvis.videoProviderReceiptRow}>
+        {['contract', 'contract_receipt', 'gate_receipt', 'video_provider_packet', 'registry_refresh', 'scorecard'].map((role) => {
+          const item = byRole.get(role)
+          const label = role.replace(/_/g, ' ')
+          return (
+            <div key={role} style={item?.payload ? nvis.videoProviderReceiptReady : nvis.videoProviderReceiptMissing}>
+              <span>{label}</span>
+              <strong>{item?.payload ? 'loaded' : item?.error ? 'error' : 'missing'}</strong>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function ProviderContractKpi({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string
+  value: unknown
+  detail?: string
+  tone: 'pass' | 'dry' | 'blocked'
+}) {
+  const toneStyle = tone === 'pass'
+    ? nvis.providerContractKpiPass
+    : tone === 'dry'
+      ? nvis.providerContractKpiDry
+      : nvis.providerContractKpiBlocked
+  return (
+    <div style={{ ...nvis.providerContractKpiCard, ...toneStyle }}>
+      <span style={nvis.providerContractKpiLabel}>{label}</span>
+      <strong style={nvis.providerContractKpiValue} title={String(value ?? '')}>{dreamDisplayCode(String(value ?? 'missing'))}</strong>
+      {detail && <span style={nvis.providerContractKpiDetail} title={detail}>{dreamDisplayCode(detail)}</span>}
+    </div>
+  )
+}
+
+function ProviderContractState({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: unknown
+  detail?: string
+}) {
+  const status = String(value ?? 'MISSING')
+  return (
+    <div style={nvis.providerContractStateCard}>
+      <span style={nvis.providerContractStateLabel}>{label}</span>
+      <strong style={providerContractStatusTone(status)}>{dreamDisplayCode(status)}</strong>
+      {detail && <span style={nvis.providerContractStateDetail}>{dreamDisplayCode(detail)}</span>}
+    </div>
   )
 }
 
@@ -7428,12 +7701,15 @@ function PipelineNav({
 }) {
   const activeStage = phases?.find((stage) => stage.id === activePhaseId)
   const mediaLockCanAdvance = activePhaseId === '08' && !!activeStage && isStagePassed(activeStage)
-  const ctaReady = klingReady || mediaLockCanAdvance
-  const ctaLabel = mediaLockCanAdvance ? 'Video Provider' : 'Deploy Video'
+  const videoProviderCanAdvance = activePhaseId === '09' && !!activeStage && isStagePassed(activeStage)
+  const ctaReady = klingReady || mediaLockCanAdvance || videoProviderCanAdvance
+  const ctaLabel = mediaLockCanAdvance ? 'Video Provider' : videoProviderCanAdvance ? 'Provider Contract' : 'Deploy Video'
   const ctaTitle = mediaLockCanAdvance
     ? 'Media lock passed. Continue to Phase 09 Video Provider.'
+    : videoProviderCanAdvance
+      ? 'Video provider packet passed. Continue to Phase 10 Provider Contract.'
     : klingReady
-      ? 'All phases pass. Submit to selected provider.'
+      ? 'All phases pass. Submit remains gated by Phase 10 provider contract evidence and live authorization.'
       : 'Blocked: some phases have not passed.'
 
   useEffect(() => {
@@ -7498,6 +7774,7 @@ function PipelineNav({
         disabled={!ctaReady}
         onClick={() => {
           if (mediaLockCanAdvance) onPhaseChange('09')
+          else if (videoProviderCanAdvance) onPhaseChange('10')
         }}
         style={{
           ...nvis.klingDeployBtn,
@@ -9766,6 +10043,285 @@ const nvis: Record<string, CSSProperties> = {
     fontWeight: 850,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
+  },
+  providerContractPanel: {
+    display: 'grid',
+    gap: 16,
+  },
+  providerContractMissing: {
+    display: 'grid',
+    gap: 12,
+    padding: 16,
+    borderRadius: 8,
+    border: '1px solid rgba(251, 191, 36, 0.32)',
+    borderLeft: '8px solid #f59e0b',
+    background: 'rgba(120, 53, 15, 0.18)',
+    color: '#fde68a',
+    lineHeight: 1.45,
+  },
+  providerContractCommand: {
+    margin: 0,
+    padding: 12,
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.42)',
+    color: '#e5e7eb',
+    fontSize: 11,
+    lineHeight: 1.45,
+    whiteSpace: 'pre-wrap',
+    overflowX: 'auto',
+  },
+  providerContractKpiGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: 12,
+  },
+  providerContractKpiCard: {
+    minHeight: 96,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: 14,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+    overflow: 'hidden',
+  },
+  providerContractKpiPass: {
+    borderLeft: '6px solid #22c55e',
+  },
+  providerContractKpiDry: {
+    borderLeft: '6px solid #4a9eff',
+  },
+  providerContractKpiBlocked: {
+    borderLeft: '6px solid #f59e0b',
+    background: 'rgba(120, 53, 15, 0.12)',
+  },
+  providerContractKpiLabel: {
+    color: '#a8b3c7',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+  },
+  providerContractKpiValue: {
+    color: '#f8fafc',
+    fontSize: 18,
+    lineHeight: 1.08,
+    fontWeight: 900,
+    letterSpacing: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  providerContractKpiDetail: {
+    color: '#a8b3c7',
+    fontSize: 11,
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  providerContractSplit: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: 14,
+  },
+  providerContractSection: {
+    minWidth: 0,
+    padding: 16,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+  },
+  providerContractMapping: {
+    display: 'grid',
+    borderRadius: 6,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.07)',
+  },
+  providerContractMappingHeader: {
+    display: 'grid',
+    gridTemplateColumns: '1.25fr 1.55fr 0.95fr',
+    gap: 12,
+    padding: '9px 10px',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#a8b3c7',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+  },
+  providerContractMappingRow: {
+    display: 'grid',
+    gridTemplateColumns: '1.25fr 1.55fr 0.95fr',
+    gap: 12,
+    alignItems: 'center',
+    padding: '10px',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+    color: '#dbeafe',
+    fontSize: 11,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    minWidth: 0,
+  },
+  providerContractBoundaryGrid: {
+    display: 'grid',
+    gap: 9,
+  },
+  providerContractStateCard: {
+    display: 'grid',
+    gridTemplateColumns: '96px minmax(0, 1fr)',
+    alignItems: 'center',
+    gap: 10,
+    padding: '9px 0',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+  },
+  providerContractStateLabel: {
+    color: '#a8b3c7',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  },
+  providerContractStateDetail: {
+    gridColumn: '2',
+    color: '#a8b3c7',
+    fontSize: 11,
+    lineHeight: 1.3,
+  },
+  providerContractPillPass: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(34,197,94,0.28)',
+    background: 'rgba(34,197,94,0.10)',
+    color: '#86efac',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractPillDry: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(74,158,255,0.28)',
+    background: 'rgba(74,158,255,0.10)',
+    color: '#bfdbfe',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractPillBlocked: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+    borderRadius: 5,
+    border: '1px solid rgba(245,158,11,0.35)',
+    background: 'rgba(245,158,11,0.12)',
+    color: '#fcd34d',
+    padding: '3px 8px',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  providerContractBlockerGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gap: 8,
+  },
+  providerContractBlockerPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(248,113,113,0.32)',
+    background: 'rgba(127,29,29,0.18)',
+    color: '#fecaca',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+  },
+  providerContractLiveBlockerPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(245,158,11,0.32)',
+    background: 'rgba(120,53,15,0.18)',
+    color: '#fde68a',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+  },
+  providerContractNeutralPill: {
+    borderRadius: 5,
+    border: '1px solid rgba(34,197,94,0.22)',
+    background: 'rgba(20,83,45,0.14)',
+    color: '#bbf7d0',
+    padding: '8px 9px',
+    fontSize: 10,
+    fontWeight: 800,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    overflowWrap: 'anywhere',
+  },
+  providerContractNonClaims: {
+    display: 'grid',
+    gap: 7,
+    margin: 0,
+    padding: '0 0 0 18px',
+    color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 1.45,
+  },
+  providerContractDetails: {
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#0a0a0a',
+    overflow: 'hidden',
+  },
+  providerContractSummary: {
+    minHeight: 48,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '0 14px',
+    cursor: 'pointer',
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontWeight: 850,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    userSelect: 'none',
+  },
+  providerContractJsonPre: {
+    margin: 0,
+    padding: 14,
+    maxHeight: 360,
+    overflow: 'auto',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.36)',
+    color: '#dbeafe',
+    fontSize: 11,
+    lineHeight: 1.45,
   },
   matrixEnv: {
     marginBottom: 14,
