@@ -200,6 +200,7 @@ promoted; failed mutations remain searchable negative evidence.
 | Exploit combiner proof | `./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner` | Generated/bad/runnable specimen lifecycle, Docker receipts, target contact, no exploit-success overclaim | Live Tau code generation, child materialization, Judge exploit success |
 | Spawn Architect proof | `./run.sh spawn-architect-proof battle-004 --out /tmp/battle-004-spawn-architect --parent-combiner-proof /tmp/battle-004-combiner` | Child knowledge packet and Tau child DAG birth contract | Live Tau DAG execution, child exploit code, target execution |
 | Live child Tau DAG canary | `./run.sh live-tau-child-dag-canary battle-004 --out /tmp/battle-004-live-tau-child-dag --spawn-architect-proof /tmp/battle-004-spawn-architect` | Battle can preflight and invoke the existing local Tau DAG runtime without fixture fallback, produce Tau-validated source-bearing research receipts, deterministically combine child methods, and reach the PR3c provider-authorship boundary | Compile repair, Docker child execution, or exploit success unless later Tau/Judge receipts prove them |
+| PR3c synthesis fixture | `./run.sh normalize-synthesis-fixture /tmp/battle-004-live-tau-child-dag --out local/battle-004-pr3c-synthesis --public-out spectator/public/battle-fixtures/battle-004-pr3c-synthesis` | UX-safe provider-authored specimen materialization fixture with provider/model attestation, code hash, bounded code preview, and strict NOT_RUN execution boundary | Compile pass, runnable child, target contact, Docker execution, Judge success, Blue outcome, packet behavior, or memory promotion |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -264,6 +265,22 @@ spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_pr
 
 UX should consume that fixture only. It must not walk Tau's
 `command-loop/command-artifacts` directories.
+
+The UX3 synthesis contract is also a separate normalized fixture.
+
+Route: `#battle/synthesis?fixture=battle-004-pr3c-synthesis`.
+
+```text
+local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+spectator/public/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+```
+
+UX should consume that fixture only. It must not read `tau-dag-run/**`,
+`command-loop/command-artifacts/**`, provider workspace directories, provider
+request transcripts, or raw worker results. The fixture is strict PR3c scope:
+provider-authored specimen materialized, while compilation, runtime, target
+contact, Judge replay, packet behavior, Blue outcomes, and memory promotion are
+all `NOT_RUN`.
 
 ## Claim Boundaries
 

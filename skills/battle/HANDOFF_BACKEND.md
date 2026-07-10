@@ -619,6 +619,43 @@ Generation and validation:
 UX must consume the normalized proof-card fixture only. Do not bind React to
 Tau runtime directories such as `tau-dag-run/command-loop/command-artifacts`.
 
+Normalized synthesis fixture:
+
+```text
+schema = battle.normalized_synthesis_fixture.v1
+fixture kind = pr3c_provider_code_author
+local path = skills/battle/local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+public URL = /battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+```
+
+Generation and validation:
+
+```bash
+./run.sh normalize-synthesis-fixture /tmp/battle-pr3d-compile-repair-check/live-tau \
+  --out local/battle-004-pr3c-synthesis \
+  --public-out spectator/public/battle-fixtures/battle-004-pr3c-synthesis \
+  --generated-at 2026-07-10T18:00:00Z
+./run.sh validate-synthesis-fixture local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+./run.sh validate-synthesis-fixture spectator/public/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+```
+
+UX3 should consume the normalized synthesis fixture only. It may show:
+
+```text
+Provider authorship: PROVEN
+Code artifact: MATERIALIZED
+Compilation: NOT RUN
+Runtime: NOT RUN
+Target contact: NOT RUN
+Judge: NOT RUN
+Exploit success: NOT PROVEN
+```
+
+UX3 must not show compile pass, runnable child, target contact, exploit success,
+Blue detection/block, packet-level behavior, or memory promotion from this PR3c
+fixture. Do not bind React to raw Tau, command-loop, provider workspace, worker
+result, or provider transcript paths.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:
@@ -641,25 +678,16 @@ first_active_segment_elapsed_seconds as child visibility gate
 stream/events.jsonl as Phase 1 authority
 ```
 
-## Working Tree Status At Handoff
+## Current Backend Handoff State
 
-Battle-local changes are currently uncommitted.
-
-Relevant `git status --short skills/battle` entries:
+The active UX3 backend handoff is the PR3c normalized synthesis fixture:
 
 ```text
-M skills/battle/local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json
-M skills/battle/local/battle-004-parent-spawn-pixi-replay/stream/latest-snapshot.json
-M skills/battle/local/battle-004-parent-spawn.normalized.json
-M skills/battle/local/battle-004-renderer-bundle.json
-M skills/battle/local/battle-004-sparse-pixi-replay/battle.normalized_ux_fixture.json
-M skills/battle/local/battle-004-sparse.normalized.json
-M skills/battle/local/battle-004-ux-data-contract-index.json
-M skills/battle/local/battle-004-ux-renderer-values.json
-M skills/battle/schemas/battle.normalized_ux_fixture.v1.schema.json
-M skills/battle/spectator/src/lib/battle-data.generated.ts
-M skills/battle/src/battle_skill/battle_event_adapter.py
-M skills/battle/src/battle_skill/ux_contract_validator.py
+skills/battle/local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
+skills/battle/spectator/public/battle-fixtures/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json
 ```
 
-This handoff file is also uncommitted after creation.
+Those fixtures are generated from a live PR3c code-author boundary run and are
+validated by `./run.sh validate-synthesis-fixture`. They intentionally stop at
+provider-authored specimen materialization and keep compile, runtime, target
+contact, Judge, Blue, packet, and memory states as `NOT_RUN` / not claimed.

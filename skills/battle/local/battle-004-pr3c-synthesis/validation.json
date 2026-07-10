@@ -1,0 +1,11 @@
+{
+  "battle_id": "battle-004",
+  "code_sha256": "sha256:259e46eaca0188f35da5f6b8feaba002e4becfd8298e2f80e0440e580c0a81f6",
+  "fixture_kind": "pr3c_provider_code_author",
+  "node_status_count": 4,
+  "provider_live": true,
+  "raw_paths_redacted": true,
+  "receipt_ref_count": 10,
+  "schema": "battle.normalized_synthesis_fixture_validation.v1",
+  "status": "PASS"
+}
