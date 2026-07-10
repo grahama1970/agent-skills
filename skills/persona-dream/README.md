@@ -17,6 +17,17 @@ README explains the founding research purpose, ownership boundaries, current
 implementation status, and intended closed loop. The current runtime is narrower
 than the complete research architecture described here.
 
+In the current Embry/Kai fixture, the pipeline uses an intense but bounded surf
+scenario to test whether grounded multimodal residue can become emotionally
+salient synthetic memory without becoming false history. Embry's recalled image,
+text, audio, video, character, and relationship evidence is converted into a
+dream about obligation, heat, reef risk, Kai, and public surf etiquette. If a
+future run is rendered and accepted, Memory and the Graph Memory Operator should
+store the result with emotional tags, synthetic-origin flags, source references,
+and Theory-of-Mind candidates. Chatterbox may later express the resulting
+conversational tone, but it does not decide the psychology or rewrite Embry's
+durable identity.
+
 ## Founding Research Question
 
 Can a persona with a Chatterbox-rendered voice:
@@ -123,6 +134,68 @@ memories.
 It must not independently claim that a symbol changed the persona's beliefs or
 that a relationship permanently changed. Those are grounded interpretation and
 persistence decisions downstream of the observed evidence.
+
+## Embry/Kai Interface Walkthrough
+
+The current UX Lab surface is used as an inspection pane over the same
+receipt-backed pipeline. These screenshots are Pillow-compressed WebP assets
+captured from the local Embry/Kai run; they are documentation evidence for the
+interface, not proof that the closed Dream -> Watch -> Memory loop is complete.
+
+### 01 Idea and Memory Residue
+
+![Phase 01 Idea and memory residue board](assets/readme/phase01-idea-memory-residue.webp)
+
+Phase 01 starts with the core creative directive and the recalled memory-residue
+board. The board mixes Embry/Kai surf images, text memories, character sheets,
+reef environment references, video, and audio. The job of this phase is to make
+the dream source material inspectable before downstream story, storyboard, or
+provider work begins.
+
+### Embry Portrait Memory Graph
+
+![Embry portrait D3 Theory-of-Mind trace graph](assets/readme/phase01-embry-portrait-d3-graph.webp)
+
+Clicking the graph affordance on the Embry character-sheet/portrait card opens
+the D3 trace graph. The graph shows the selected Embry portrait/contact-sheet
+memory as a root node and expands related media, text, person, audio, and
+relationship nodes. This is an inspection surface for memory and
+Theory-of-Mind neighborhood structure; it does not by itself persist new graph
+edges or claim an accepted interpretation.
+
+### 08 Media Lock
+
+![Phase 08 Media Lock accepted storyboard frames](assets/readme/phase08-media-lock.webp)
+
+Phase 08 locks the accepted storyboard evidence. The eight start/end frames,
+dimensions, hashes, identity status, and execution receipts are evidence inputs
+for later provider-facing distillation. Media lock does not mean provider
+readiness; it means the accepted visual evidence has a stable local boundary.
+
+### 09 Video Provider
+
+![Phase 09 Video Provider current fail-closed state](assets/readme/phase09-video-provider-current.webp)
+
+Phase 09 is the provider-routing surface. In the currently selected archived
+run, the UI is fail-closed because the provider scorecard and dry-run packet are
+not present in that run root. That state is intentional: missing scorecard data
+must not be displayed as if a live provider has been selected.
+
+Video Provider and the phases after it are the outstanding next steps for this
+run: provider registry refresh, provider scorecard selection, provider-specific
+packet conversion, provider contract generation, authorized live render, Watch
+observation, self-interpretation, Memory/Graph persistence, recall proof, and
+Chatterbox behavior verification.
+
+### 10 Provider Contract
+
+![Phase 10 Provider Contract current fail-closed state](assets/readme/phase10-provider-contract-current.webp)
+
+Phase 10 is the provider request-body contract boundary. It should show the
+chosen provider's payload mapping, media publication plan, cost/entitlement
+state, async return plan, manual acceptance, and live-readiness blockers only
+after those artifacts exist. The current screenshot shows the correct
+fail-closed state for a run without a Phase 10 contract artifact.
 
 ## Theory-of-Mind and Graph Memory
 
