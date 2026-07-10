@@ -389,7 +389,7 @@ does not prove that any provider is ready.
 
 ### 09 - Video Provider
 
-![Phase 09 Video Provider dry-run scorecard](assets/readme/phase09-video-provider-current.webp)
+![Phase 09 Video Provider dry-run scorecard](assets/readme/phase09-video-provider-scorecard-20260710.webp)
 
 Phase 09 answers one question: which provider best fits the accepted scene, and
 why?
