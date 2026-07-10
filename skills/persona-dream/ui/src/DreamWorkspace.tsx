@@ -7815,9 +7815,18 @@ export function DreamWorkspace() {
     directionRef.current = dir
     setSlideDir(dir)
     setSelectedStageId(stageId)
-    if (window.location.pathname.replace(/\/+$/, '') === '/dream') {
-      const slug = dreamPhaseHashById[stageId]
-      if (slug && window.location.hash !== `#${slug}`) window.history.replaceState(null, '', `/dream#${slug}`)
+    const slug = dreamPhaseHashById[stageId]
+    if (slug) {
+      const path = window.location.pathname.replace(/\/+$/, '')
+      const hashParts = window.location.hash.replace(/^#/, '').split('/').filter(Boolean)
+      const nextUrl = path === '/dream'
+        ? `/dream#${slug}`
+        : hashParts[0] === 'dream' || path === '' || path === '/'
+          ? `/#dream/${slug}`
+          : `/dream#${slug}`
+      if (`${window.location.pathname}${window.location.hash}` !== nextUrl) {
+        window.history.replaceState(null, '', nextUrl)
+      }
     }
   }
 
@@ -8145,7 +8154,7 @@ export function DreamWorkspace() {
           <div style={styles.railTitleRow}>
             <div>
               <div style={styles.eyebrow}>Dream Library</div>
-              <h2 style={styles.railTitle}>Video Provider</h2>
+              <h2 style={styles.railTitle}>Persona Dream</h2>
             </div>
             <button
               type="button"
