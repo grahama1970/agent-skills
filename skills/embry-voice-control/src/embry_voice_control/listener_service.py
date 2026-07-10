@@ -22,22 +22,16 @@ DEFAULT_DB_PATH = Path(os.environ.get(
 
 
 class VoiceEvent(BaseModel):
-    """Canonical producer event accepted by the local listener service."""
+    """Canonical event accepted by the local listener service."""
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     schema_: str = Field(default="embry.voice_event.v1", alias="schema")
     event_id: str
     session_id: str
     turn_id: str
+    sequence: int = Field(ge=1)
     type: str
     created_at: str
-    causation_id: str
-    correlation_id: str
-    producer: str
-    mocked: bool
-    live: bool
-    artifact_hashes: list[str]
-    receipt_hash: str
     payload: dict[str, Any]
 
 
@@ -58,13 +52,17 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
     @app.post("/v1/listener/events")
     def ingest(event: VoiceEvent) -> dict[str, Any]:
         try:
-            stored = append_event(db_path, event.model_dump(by_alias=True))
+            inserted = append_event(db_path, event.model_dump(by_alias=True))
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return {
             "schema": "embry.listener_event_ingest_receipt.v1",
             "accepted": True,
-            "event": stored,
+            "inserted": inserted,
+            "event_id": event.event_id,
+            "session_id": event.session_id,
+            "turn_id": event.turn_id,
+            "sequence": event.sequence,
         }
 
     @app.get("/v1/sessions")
@@ -90,30 +88,24 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
         }
 
     @app.post("/v1/turns/{turn_id}/cancel")
-    def cancel(turn_id: str, session_id: str) -> dict[str, Any]:
+    def cancel(turn_id: str, session_id: str, sequence: int) -> dict[str, Any]:
         payload = {"reason": "requested", "cancelled_at": utc_now()}
-        event_seed = f"{session_id}:{turn_id}:turn.cancelled:{payload['cancelled_at']}"
+        event_seed = f"{session_id}:{turn_id}:{sequence}:turn.cancelled"
         event = {
             "schema": "embry.voice_event.v1",
             "event_id": "turn.cancelled." + hashlib.sha256(event_seed.encode()).hexdigest()[:16],
             "session_id": session_id,
             "turn_id": turn_id,
+            "sequence": sequence,
             "type": "turn.cancelled",
             "created_at": payload["cancelled_at"],
-            "causation_id": turn_id,
-            "correlation_id": session_id,
-            "producer": "embry.listener_service",
-            "mocked": False,
-            "live": True,
-            "artifact_hashes": [],
-            "receipt_hash": hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest(),
             "payload": payload,
         }
         try:
-            stored = append_event(db_path, event)
+            append_event(db_path, event)
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
-        return {"schema": "embry.turn_cancel_receipt.v1", "event": stored}
+        return {"schema": "embry.turn_cancel_receipt.v1", "event": event}
 
     return app
 
