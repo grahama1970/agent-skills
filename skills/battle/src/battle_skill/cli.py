@@ -906,6 +906,39 @@ def validate_proof_card_fixture(
     console.print_json(data=report)
 
 
+@app.command("normalize-music-fixture")
+def normalize_music_fixture_command(
+    source_fixture: Path = typer.Argument(..., exists=True, readable=True),
+    catalog: Path = typer.Option(..., "--catalog", exists=True, readable=True),
+    out: Path = typer.Option(..., "--out"),
+    public_out: Optional[Path] = typer.Option(None, "--public-out"),
+    public_audio_root: Path = typer.Option(..., "--public-audio-root"),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at"),
+):
+    """Promote receipt-backed music assets and publish a normalized schedule fixture."""
+    from .normalized_music_fixture import normalize_music_fixture
+
+    fixture = normalize_music_fixture(
+        source_fixture=source_fixture,
+        catalog=catalog,
+        out_dir=out,
+        public_out_dir=public_out,
+        public_audio_root=public_audio_root,
+        generated_at=generated_at,
+    )
+    console.print_json(data={"status": fixture["status"], "schema": fixture["schema"], "fixture_id": fixture["fixture_id"], "events_present": fixture["events_present"], "events_not_emitted": fixture["events_not_emitted"]})
+
+
+@app.command("validate-music-fixture")
+def validate_music_fixture_command(
+    fixture: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+):
+    """Validate a normalized Battle music fixture."""
+    from .normalized_music_fixture import validate_normalized_music_fixture_path
+
+    console.print_json(data=validate_normalized_music_fixture_path(fixture))
+
+
 @app.command("normalize-synthesis-fixture")
 def normalize_synthesis_fixture(
     live_tau_canary: Path = typer.Argument(

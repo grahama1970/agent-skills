@@ -1,0 +1,32 @@
+{
+  "battle_id": "battle-004",
+  "checks": {
+    "claim_boundary": true,
+    "future_boundary_shape": true,
+    "motif_shape": true,
+    "playback_not_run": true,
+    "raw_path_boundary": true,
+    "receipt_bound": true,
+    "rendering_not_run": true,
+    "required_fields": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "The MIDI renders successfully.",
+      "The score was promoted by Battle.",
+      "The score was scheduled or played.",
+      "Any Battle death, victory, exploit, Blue, or Judge outcome occurred."
+    ],
+    "proves": [
+      "The Battle music score packet is structurally valid for deterministic handoff."
+    ]
+  },
+  "errors": [],
+  "live": "local_deterministic_validator",
+  "mocked": false,
+  "packet": "../battle/local/battle-004-music-runtime/score-packets/motif-plague_nurgling.json",
+  "schema": "battle.music_score_packet_validation.v1",
+  "score_id": "motif-plague_nurgling",
+  "status": "PASS",
+  "warnings": []
+}

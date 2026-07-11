@@ -1,0 +1,297 @@
+{
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "may_claim": [
+      "assets_promoted",
+      "receipt_authorized_schedule_emitted",
+      "version_hashes_recorded"
+    ],
+    "must_not_claim": [
+      "audio_played",
+      "speaker_output",
+      "death",
+      "victory",
+      "arena_transition",
+      "exploit_success",
+      "blue_outcome",
+      "judge_success"
+    ]
+  },
+  "context_summary": {
+    "intensity": 0.35,
+    "phase": "running",
+    "playhead_elapsed_seconds": 0.0
+  },
+  "events_not_emitted": [
+    "exploit_death_stinger",
+    "exploit_victory_stinger",
+    "next_battle_arena"
+  ],
+  "events_present": [
+    "live_arena_loop",
+    "motif:plague_nurgling"
+  ],
+  "fixture_id": "battle-004-music-runtime",
+  "frontend_handoff": {
+    "claim_boundary_field": "claim_boundary",
+    "promotion_field": "promotions",
+    "route": "#battle/music?fixture=battle-004-music-runtime",
+    "schedule_field": "schedule.entries"
+  },
+  "generated_at": "2026-07-11T12:00:00Z",
+  "mocked": false,
+  "playback_contract": {
+    "browser_format": "audio/ogg",
+    "local_actor_focus_is_preview_only": true,
+    "midi_is_source_material": true,
+    "music_never_authorizes_battle_truth": true,
+    "time_domain": "elapsed_seconds"
+  },
+  "promotions": [
+    {
+      "assets": [
+        {
+          "asset_id": "battle-004-music-promotion-001-ogg",
+          "bytes": 328338,
+          "duration_seconds": 30.0,
+          "media_type": "audio/ogg",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.ogg",
+          "role": "ogg",
+          "sha256": "e68e8e1cbeb88c86b71d259521892a80df7e519a1db806f1ac0aefba4e330c3c"
+        },
+        {
+          "asset_id": "battle-004-music-promotion-001-midi",
+          "bytes": 4150,
+          "duration_seconds": 30.0,
+          "media_type": "audio/midi",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.mid",
+          "role": "midi",
+          "sha256": "9c2c7534352117b3067a41257716b7fc6b84962511eb2b82468dfddc646ca255"
+        }
+      ],
+      "canonical_music_id": "live_arena_loop",
+      "eligibility": {
+        "schedule_eligible": true,
+        "terminal_playback_authority_granted": false
+      },
+      "promotion_id": "battle-004-music-promotion-001",
+      "promotion_receipt_sha256": "92a6cd2ac846b61f0e6d90f12d57ec75a0a4e82b6aad2ea92e3089fc7bd6a00b",
+      "score_id": "live_arena_loop",
+      "status": "PASS",
+      "validation": {
+        "receipt_id": "create-midi-validation-battle-004-music-promotion-001",
+        "receipt_sha256": "679a84d0eb1909bfa129f9eeece6140493006d35d8de04879604adc33e127112",
+        "score_packet_sha256": "b1b469dd66d37e7f57e6cd1323f4d313747641292906c6d112054ca2e30768dd",
+        "status": "PASS"
+      }
+    },
+    {
+      "assets": [
+        {
+          "asset_id": "battle-004-music-promotion-002-ogg",
+          "bytes": 89204,
+          "duration_seconds": 3.0,
+          "media_type": "audio/ogg",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.ogg",
+          "role": "ogg",
+          "sha256": "c4fd29c9b0588191fffbbd4a4747b662f060fc14624dd22eabd6e6e7e1e196e2"
+        },
+        {
+          "asset_id": "battle-004-music-promotion-002-midi",
+          "bytes": 533,
+          "duration_seconds": 3.0,
+          "media_type": "audio/midi",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.mid",
+          "role": "midi",
+          "sha256": "55c97f42d276fe503454395387e7504ffc2c2cf30f460de07aa7613b04ca162f"
+        }
+      ],
+      "canonical_music_id": "motif:plague_nurgling",
+      "eligibility": {
+        "schedule_eligible": true,
+        "terminal_playback_authority_granted": false
+      },
+      "promotion_id": "battle-004-music-promotion-002",
+      "promotion_receipt_sha256": "8954099a7c879c037f9f1f43a75bb198a2c3c203d5a97d8d15fc8c6ef22732de",
+      "score_id": "motif-plague_nurgling",
+      "status": "PASS",
+      "validation": {
+        "receipt_id": "create-midi-validation-battle-004-music-promotion-002",
+        "receipt_sha256": "b2951c6af2ca571d2b2c2e7866d4eb1a6289e78c50b9c16839e6eaf1a29e605f",
+        "score_packet_sha256": "4b240ab1bc9ac7ac78fc1a11e721599321f20a07ef9bfb23c752a3905766f0ee",
+        "status": "PASS"
+      }
+    }
+  ],
+  "proof_mode": "receipt_backed_promotion_schedule",
+  "provenance": {
+    "composer_paths_exposed": false,
+    "create_midi_paths_exposed": false,
+    "credentials_exposed": false,
+    "raw_paths_redacted": true,
+    "source_fixture_sha256": "0af8f7263300d75ed1ce8b1962112fdb89966745f91a62b502a6afe3a4f63da5"
+  },
+  "receipt_refs": [
+    {
+      "event_id": "battle-004-run-started",
+      "receipt_id": "run-receipt",
+      "receipt_kind": "battle.run_started",
+      "sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+    },
+    {
+      "event_id": "payload-857-receipt-spawned-payload-857-red-1",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_kind": "tau.spawned_child",
+      "sha256": "3da0314f047907697e100275f6a73b79ad1dedf8543e58190746df52820a25ad"
+    },
+    {
+      "receipt_id": "create-midi-validation-battle-004-music-promotion-001",
+      "sha256": "679a84d0eb1909bfa129f9eeece6140493006d35d8de04879604adc33e127112"
+    },
+    {
+      "receipt_id": "create-midi-validation-battle-004-music-promotion-002",
+      "sha256": "b2951c6af2ca571d2b2c2e7866d4eb1a6289e78c50b9c16839e6eaf1a29e605f"
+    }
+  ],
+  "schedule": {
+    "battle_id": "battle-004",
+    "claim_boundary": {
+      "may_claim": [
+        "assets_promoted",
+        "receipt_authorized_schedule_emitted",
+        "version_hashes_recorded"
+      ],
+      "must_not_claim": [
+        "audio_played",
+        "speaker_output",
+        "death",
+        "victory",
+        "arena_transition",
+        "exploit_success",
+        "blue_outcome",
+        "judge_success"
+      ]
+    },
+    "clock_ref": {
+      "elapsed_time_domain": "battle_elapsed_seconds",
+      "source_receipt_id": "run-receipt"
+    },
+    "entries": [
+      {
+        "asset_ref": {
+          "kind": "cue",
+          "midi": {
+            "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.mid",
+            "sha256": "9c2c7534352117b3067a41257716b7fc6b84962511eb2b82468dfddc646ca255"
+          },
+          "music_id": "live_arena_loop",
+          "ogg": {
+            "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.ogg",
+            "sha256": "e68e8e1cbeb88c86b71d259521892a80df7e519a1db806f1ac0aefba4e330c3c"
+          }
+        },
+        "authorization": {
+          "permission_kind": "battle_lifecycle_started",
+          "source_receipt_id": "run-receipt",
+          "source_receipt_kind": "battle.run_started",
+          "source_receipt_sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+        },
+        "claims": {
+          "does_not_prove": [
+            "Browser playback occurred.",
+            "Music proves Battle truth."
+          ],
+          "proves": [
+            "A promoted asset was scheduled from a named Battle receipt."
+          ]
+        },
+        "playback": {
+          "channel": "background",
+          "duck_policy": "none",
+          "interrupt_policy": "replace_same_channel",
+          "loop": true,
+          "priority": 10
+        },
+        "playback_class": "promoted",
+        "promotion_id": "battle-004-music-promotion-001",
+        "schedule_entry_id": "schedule-entry-001",
+        "schema": "battle.music_schedule_entry.v1",
+        "score_id": "live_arena_loop",
+        "timing": {
+          "resolved_start_elapsed_seconds": 0.0,
+          "source_elapsed_seconds": 0.0,
+          "timing_mode": "receipt_elapsed"
+        }
+      },
+      {
+        "asset_ref": {
+          "kind": "motif",
+          "midi": {
+            "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.mid",
+            "sha256": "55c97f42d276fe503454395387e7504ffc2c2cf30f460de07aa7613b04ca162f"
+          },
+          "music_id": "motif:plague_nurgling",
+          "ogg": {
+            "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.ogg",
+            "sha256": "c4fd29c9b0588191fffbbd4a4747b662f060fc14624dd22eabd6e6e7e1e196e2"
+          }
+        },
+        "authorization": {
+          "lane_id": "payload-857-red-1",
+          "permission_kind": "materialized_spawn",
+          "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+          "source_receipt_kind": "tau.spawned_child",
+          "source_receipt_sha256": "3da0314f047907697e100275f6a73b79ad1dedf8543e58190746df52820a25ad",
+          "sprite_id": "plague_nurgling"
+        },
+        "claims": {
+          "does_not_prove": [
+            "Browser playback occurred.",
+            "Music proves Battle truth."
+          ],
+          "proves": [
+            "A promoted asset was scheduled from a named Battle receipt."
+          ]
+        },
+        "playback": {
+          "channel": "motif",
+          "duck_policy": "duck_background",
+          "interrupt_policy": "replace_same_channel",
+          "loop": false,
+          "priority": 40
+        },
+        "playback_class": "promoted",
+        "promotion_id": "battle-004-music-promotion-002",
+        "schedule_entry_id": "schedule-entry-002",
+        "schema": "battle.music_schedule_entry.v1",
+        "score_id": "motif-plague_nurgling",
+        "timing": {
+          "resolved_start_elapsed_seconds": 96.294927,
+          "source_elapsed_seconds": 96.294927,
+          "timing_mode": "receipt_elapsed"
+        }
+      }
+    ],
+    "generated_at": "2026-07-11T12:00:00Z",
+    "revision": 1,
+    "schedule_id": "battle-004-music-schedule-001",
+    "schema": "battle.music_schedule.v1",
+    "source_receipt_refs": [
+      {
+        "event_id": "battle-004-run-started",
+        "receipt_id": "run-receipt",
+        "receipt_kind": "battle.run_started",
+        "sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+      },
+      {
+        "event_id": "payload-857-receipt-spawned-payload-857-red-1",
+        "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+        "receipt_kind": "tau.spawned_child",
+        "sha256": "3da0314f047907697e100275f6a73b79ad1dedf8543e58190746df52820a25ad"
+      }
+    ],
+    "status": "PASS"
+  },
+  "schema": "battle.normalized_music_fixture.v1",
+  "status": "PASS"
+}

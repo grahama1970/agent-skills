@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.music_context_packet.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "context_id", "battle_id", "run_id", "created_at", "authority", "composition_brief", "claims"],
+  "properties": {
+    "schema": {"const": "battle.music_context_packet.v1"},
+    "context_id": {"type": "string", "minLength": 1},
+    "battle_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 1},
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_receipts", "clock", "battle_state", "permissions"],
+      "properties": {
+        "source_receipts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/receipt"}},
+        "clock": {"type": "object", "required": ["mode", "playhead_elapsed_seconds"], "properties": {"mode": {"const": "elapsed_seconds"}, "playhead_elapsed_seconds": {"type": "number", "minimum": 0}}, "additionalProperties": false},
+        "battle_state": {"type": "object", "required": ["phase", "intensity"], "properties": {"phase": {"type": "string"}, "intensity": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": false},
+        "permissions": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["music_id", "allowed", "permission_kind", "source_receipt_id"], "properties": {"music_id": {"type": "string"}, "allowed": {"const": true}, "permission_kind": {"enum": ["battle_lifecycle_started", "materialized_spawn", "confirmed_terminal", "judge_exploit_success", "arena_transition_committed"]}, "source_receipt_id": {"type": "string"}, "lane_id": {"type": "string"}, "sprite_id": {"type": "string"}}, "additionalProperties": false}}
+      }
+    },
+    "composition_brief": {"type": "object", "required": ["section_role", "fallback_score_id", "required_theme_ids"], "properties": {"section_role": {"type": "string"}, "fallback_score_id": {"type": "string"}, "required_theme_ids": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
+    "claims": {"$ref": "#/$defs/claims"}
+  },
+  "$defs": {
+    "receipt": {"type": "object", "required": ["receipt_id", "receipt_kind", "event_id", "sha256"], "properties": {"receipt_id": {"type": "string"}, "receipt_kind": {"type": "string"}, "event_id": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}, "additionalProperties": false},
+    "claims": {"type": "object", "required": ["proves", "does_not_prove"], "properties": {"proves": {"type": "array", "items": {"type": "string"}}, "does_not_prove": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}
+  }
+}

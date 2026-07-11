@@ -1,0 +1,9 @@
+{
+  "claim_boundary_valid": true,
+  "fixture_id": "battle-004-music-runtime",
+  "raw_paths_redacted": true,
+  "schedule_entry_count": 2,
+  "schema": "battle.normalized_music_fixture_validation.v1",
+  "schema_valid": true,
+  "status": "PASS"
+}

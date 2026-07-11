@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "battle.music_promotion_receipt.v1", "type": "object", "additionalProperties": false,
+  "required": ["schema", "promotion_id", "status", "battle_id", "context_id", "score_id", "canonical_music_id", "composer", "validation", "assets", "eligibility", "fixture_fallback_used", "mocked", "live", "created_at", "claims"],
+  "properties": {
+    "schema": {"const": "battle.music_promotion_receipt.v1"}, "promotion_id": {"type": "string"}, "status": {"const": "PASS"}, "battle_id": {"type": "string"}, "context_id": {"type": "string"}, "score_id": {"type": "string"}, "canonical_music_id": {"type": "string"},
+    "composer": {"type": "object", "required": ["composer_live", "score_packet_authorship"], "properties": {"composer_live": {"const": false}, "score_packet_authorship": {"const": "checked_in_fixture"}}, "additionalProperties": false},
+    "validation": {"type": "object", "required": ["receipt_id", "receipt_sha256", "status", "score_packet_sha256"], "properties": {"receipt_id": {"type": "string"}, "receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "status": {"const": "PASS"}, "score_packet_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}, "additionalProperties": false},
+    "assets": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "object", "required": ["asset_id", "role", "media_type", "public_url", "sha256", "bytes", "duration_seconds"], "properties": {"asset_id": {"type": "string"}, "role": {"enum": ["midi", "ogg", "wav"]}, "media_type": {"type": "string"}, "public_url": {"type": "string", "pattern": "^/battle-audio/promoted/v1/"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "bytes": {"type": "integer", "minimum": 1}, "duration_seconds": {"type": "number", "exclusiveMinimum": 0}}, "additionalProperties": false}},
+    "eligibility": {"type": "object", "required": ["schedule_eligible", "terminal_playback_authority_granted"], "properties": {"schedule_eligible": {"const": true}, "terminal_playback_authority_granted": {"const": false}}, "additionalProperties": false},
+    "fixture_fallback_used": {"const": false}, "mocked": {"const": false}, "live": {"const": "local_deterministic_music_promotion_schedule"}, "created_at": {"type": "string"},
+    "claims": {"type": "object", "required": ["proves", "does_not_prove"], "properties": {"proves": {"type": "array", "items": {"type": "string"}}, "does_not_prove": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}
+  }
+}

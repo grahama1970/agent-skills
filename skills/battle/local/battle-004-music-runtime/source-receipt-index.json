@@ -1,0 +1,21 @@
+{
+  "fixture_id": "battle-004-music-runtime",
+  "raw_paths_redacted": true,
+  "receipts": [
+    {
+      "event_id": "battle-004-run-started",
+      "receipt_id": "run-receipt",
+      "receipt_kind": "battle.run_started",
+      "sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+    },
+    {
+      "event_id": "payload-857-receipt-spawned-payload-857-red-1",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_kind": "tau.spawned_child",
+      "sha256": "3da0314f047907697e100275f6a73b79ad1dedf8543e58190746df52820a25ad"
+    }
+  ],
+  "schema": "battle.normalized_music_source_receipt_index.v1",
+  "source_fixture_sha256": "0af8f7263300d75ed1ce8b1962112fdb89966745f91a62b502a6afe3a4f63da5",
+  "status": "PASS"
+}

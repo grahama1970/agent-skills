@@ -941,3 +941,44 @@ Self-contained BATTLE-004 spectator UI + Pixi race engine. Host apps (e.g. `ux-l
 cd skills/battle/spectator
 UX_LAB_UI_PORT=3012 node scripts/prove-battle-receipt-replay-6.mjs
 ```
+## Receipt-Backed Music M1
+
+Battle publishes music through the same authority split as other spectator
+surfaces:
+
+```text
+Battle receipts -> music context -> validated promotion -> schedule -> normalized fixture -> renderer
+```
+
+The frozen schemas are:
+
+```text
+battle.music_context_packet.v1
+battle.music_promotion_receipt.v1
+battle.music_schedule_entry.v1
+battle.music_schedule.v1
+battle.normalized_music_fixture.v1
+```
+
+The BATTLE-004 M1 fixture is available at
+`/battle-fixtures/battle-004-music-runtime/battle.normalized_music_fixture.json`.
+It schedules `live_arena_loop` from the lifecycle-start receipt and
+`motif:plague_nurgling` from a materialized-spawn receipt. Death, victory, and
+next-arena cues are explicitly not emitted. Promoted MIDI and OGG assets live
+only under `/battle-audio/promoted/v1/<promotion-id>/`.
+
+Generate and validate the fixture with:
+
+```bash
+./run.sh normalize-music-fixture local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json \
+  --catalog spectator/public/battle-audio/score/v1/runtime-catalog.json \
+  --out local/battle-004-music-runtime \
+  --public-out spectator/public/battle-fixtures/battle-004-music-runtime \
+  --public-audio-root spectator/public/battle-audio/promoted/v1
+./run.sh validate-music-fixture local/battle-004-music-runtime/battle.normalized_music_fixture.json
+./run.sh validate-music-fixture spectator/public/battle-fixtures/battle-004-music-runtime/battle.normalized_music_fixture.json
+```
+
+M1 uses checked-in source material with `composer_live:false`. It proves
+deterministic promotion and receipt-authorized scheduling, not live composition,
+browser playback, speaker output, musical quality, or Battle outcomes.

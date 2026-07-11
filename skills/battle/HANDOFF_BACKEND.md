@@ -1061,3 +1061,37 @@ Those fixtures are generated from real local Docker specimen run receipts and
 validated by `./run.sh validate-runtime-judge-fixture`. Judge remains
 `NOT_RUN`; runtime target contact remains `TARGET_CONTACT_UNPROVEN`; no exploit,
 Blue, packet, or memory outcome is claimed.
+## Music M1 Spectator Handoff
+
+Schema: `battle.normalized_music_fixture.v1`
+
+Fixture ID: `battle-004-music-runtime`
+
+Public URL:
+
+```text
+/battle-fixtures/battle-004-music-runtime/battle.normalized_music_fixture.json
+```
+
+Suggested route:
+
+```text
+#battle/music?fixture=battle-004-music-runtime
+```
+
+Field map:
+
+```text
+schedule entries: schedule.entries
+promotion summaries and immutable hashes: promotions
+receipt authorization: schedule.entries[].authorization
+browser OGG and source MIDI: schedule.entries[].asset_ref
+presentation limits: claim_boundary
+unsupported cues: events_not_emitted
+```
+
+Only entries with `playback_class: promoted` are authoritative. Actor-focus
+motifs remain `local_preview` behavior outside this schedule. The fixture does
+not expose composer, create-midi, Tau, provider, or host working paths. It does
+not prove browser playback, speaker output, live composer execution, death,
+victory, arena transition, exploit success, Blue outcome, or Judge success.

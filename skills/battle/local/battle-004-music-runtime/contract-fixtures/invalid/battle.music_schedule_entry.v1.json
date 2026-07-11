@@ -1,0 +1,45 @@
+{
+  "asset_ref": {
+    "kind": "cue",
+    "midi": {
+      "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.mid",
+      "sha256": "9c2c7534352117b3067a41257716b7fc6b84962511eb2b82468dfddc646ca255"
+    },
+    "music_id": "live_arena_loop",
+    "ogg": {
+      "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.ogg",
+      "sha256": "e68e8e1cbeb88c86b71d259521892a80df7e519a1db806f1ac0aefba4e330c3c"
+    }
+  },
+  "authorization": {
+    "permission_kind": "battle_lifecycle_started",
+    "source_receipt_id": "run-receipt",
+    "source_receipt_kind": "battle.run_started",
+    "source_receipt_sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+  },
+  "claims": {
+    "does_not_prove": [
+      "Browser playback occurred.",
+      "Music proves Battle truth."
+    ],
+    "proves": [
+      "A promoted asset was scheduled from a named Battle receipt."
+    ]
+  },
+  "playback": {
+    "channel": "background",
+    "duck_policy": "none",
+    "interrupt_policy": "replace_same_channel",
+    "loop": true,
+    "priority": 10
+  },
+  "playback_class": "promoted",
+  "promotion_id": "battle-004-music-promotion-001",
+  "schedule_entry_id": "schedule-entry-001",
+  "score_id": "live_arena_loop",
+  "timing": {
+    "resolved_start_elapsed_seconds": 0.0,
+    "source_elapsed_seconds": 0.0,
+    "timing_mode": "receipt_elapsed"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "battle.music_schedule.v1", "type": "object", "additionalProperties": false,
+  "required": ["schema", "schedule_id", "revision", "battle_id", "generated_at", "status", "clock_ref", "entries", "claim_boundary", "source_receipt_refs"],
+  "properties": {
+    "schema": {"const": "battle.music_schedule.v1"}, "schedule_id": {"type": "string"}, "revision": {"type": "integer", "minimum": 1}, "battle_id": {"type": "string"}, "generated_at": {"type": "string"}, "status": {"const": "PASS"},
+    "clock_ref": {"type": "object", "required": ["elapsed_time_domain", "source_receipt_id"], "properties": {"elapsed_time_domain": {"const": "battle_elapsed_seconds"}, "source_receipt_id": {"type": "string"}}, "additionalProperties": false},
+    "entries": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "claim_boundary": {"$ref": "#/$defs/boundary"}, "source_receipt_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/receipt"}}
+  },
+  "$defs": {
+    "boundary": {"type": "object", "required": ["may_claim", "must_not_claim"], "properties": {"may_claim": {"type": "array", "items": {"type": "string"}}, "must_not_claim": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
+    "receipt": {"type": "object", "required": ["receipt_id", "receipt_kind", "event_id", "sha256"], "properties": {"receipt_id": {"type": "string"}, "receipt_kind": {"type": "string"}, "event_id": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}, "additionalProperties": false}
+  }
+}

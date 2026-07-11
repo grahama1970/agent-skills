@@ -1,0 +1,118 @@
+{
+  "promotions": [
+    {
+      "assets": [
+        {
+          "asset_id": "battle-004-music-promotion-001-ogg",
+          "bytes": 328338,
+          "duration_seconds": 30.0,
+          "media_type": "audio/ogg",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.ogg",
+          "role": "ogg",
+          "sha256": "e68e8e1cbeb88c86b71d259521892a80df7e519a1db806f1ac0aefba4e330c3c"
+        },
+        {
+          "asset_id": "battle-004-music-promotion-001-midi",
+          "bytes": 4150,
+          "duration_seconds": 30.0,
+          "media_type": "audio/midi",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-001/live_arena_loop.mid",
+          "role": "midi",
+          "sha256": "9c2c7534352117b3067a41257716b7fc6b84962511eb2b82468dfddc646ca255"
+        }
+      ],
+      "battle_id": "battle-004",
+      "canonical_music_id": "live_arena_loop",
+      "claims": {
+        "does_not_prove": [
+          "The cue was authorized for a Battle event.",
+          "The cue played.",
+          "A Battle outcome occurred."
+        ],
+        "proves": [
+          "MIDI and OGG assets were hash-bound and made eligible for scheduling."
+        ]
+      },
+      "composer": {
+        "composer_live": false,
+        "score_packet_authorship": "checked_in_fixture"
+      },
+      "context_id": "battle-004-music-context-001",
+      "created_at": "2026-07-11T12:00:00Z",
+      "eligibility": {
+        "schedule_eligible": true,
+        "terminal_playback_authority_granted": false
+      },
+      "fixture_fallback_used": false,
+      "live": "local_deterministic_music_promotion_schedule",
+      "mocked": false,
+      "promotion_id": "battle-004-music-promotion-001",
+      "schema": "battle.music_promotion_receipt.v1",
+      "score_id": "live_arena_loop",
+      "status": "PASS",
+      "validation": {
+        "receipt_id": "create-midi-validation-battle-004-music-promotion-001",
+        "receipt_sha256": "679a84d0eb1909bfa129f9eeece6140493006d35d8de04879604adc33e127112",
+        "score_packet_sha256": "b1b469dd66d37e7f57e6cd1323f4d313747641292906c6d112054ca2e30768dd",
+        "status": "PASS"
+      }
+    },
+    {
+      "assets": [
+        {
+          "asset_id": "battle-004-music-promotion-002-ogg",
+          "bytes": 89204,
+          "duration_seconds": 3.0,
+          "media_type": "audio/ogg",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.ogg",
+          "role": "ogg",
+          "sha256": "c4fd29c9b0588191fffbbd4a4747b662f060fc14624dd22eabd6e6e7e1e196e2"
+        },
+        {
+          "asset_id": "battle-004-music-promotion-002-midi",
+          "bytes": 533,
+          "duration_seconds": 3.0,
+          "media_type": "audio/midi",
+          "public_url": "/battle-audio/promoted/v1/battle-004-music-promotion-002/motif-plague_nurgling.mid",
+          "role": "midi",
+          "sha256": "55c97f42d276fe503454395387e7504ffc2c2cf30f460de07aa7613b04ca162f"
+        }
+      ],
+      "battle_id": "battle-004",
+      "canonical_music_id": "motif:plague_nurgling",
+      "claims": {
+        "does_not_prove": [
+          "The cue was authorized for a Battle event.",
+          "The cue played.",
+          "A Battle outcome occurred."
+        ],
+        "proves": [
+          "MIDI and OGG assets were hash-bound and made eligible for scheduling."
+        ]
+      },
+      "composer": {
+        "composer_live": false,
+        "score_packet_authorship": "checked_in_fixture"
+      },
+      "context_id": "battle-004-music-context-001",
+      "created_at": "2026-07-11T12:00:00Z",
+      "eligibility": {
+        "schedule_eligible": true,
+        "terminal_playback_authority_granted": false
+      },
+      "fixture_fallback_used": false,
+      "live": "local_deterministic_music_promotion_schedule",
+      "mocked": false,
+      "promotion_id": "battle-004-music-promotion-002",
+      "schema": "battle.music_promotion_receipt.v1",
+      "score_id": "motif-plague_nurgling",
+      "status": "PASS",
+      "validation": {
+        "receipt_id": "create-midi-validation-battle-004-music-promotion-002",
+        "receipt_sha256": "b2951c6af2ca571d2b2c2e7866d4eb1a6289e78c50b9c16839e6eaf1a29e605f",
+        "score_packet_sha256": "4b240ab1bc9ac7ac78fc1a11e721599321f20a07ef9bfb23c752a3905766f0ee",
+        "status": "PASS"
+      }
+    }
+  ]
+}

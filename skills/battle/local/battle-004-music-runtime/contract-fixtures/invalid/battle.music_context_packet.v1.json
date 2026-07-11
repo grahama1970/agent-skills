@@ -1,0 +1,63 @@
+{
+  "authority": {
+    "battle_state": {
+      "intensity": 0.35,
+      "phase": "running"
+    },
+    "clock": {
+      "mode": "elapsed_seconds",
+      "playhead_elapsed_seconds": 0.0
+    },
+    "permissions": [
+      {
+        "allowed": true,
+        "music_id": "live_arena_loop",
+        "permission_kind": "battle_lifecycle_started",
+        "source_receipt_id": "run-receipt"
+      },
+      {
+        "allowed": true,
+        "lane_id": "payload-857-red-1",
+        "music_id": "motif:plague_nurgling",
+        "permission_kind": "materialized_spawn",
+        "source_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+        "sprite_id": "plague_nurgling"
+      }
+    ],
+    "source_receipts": [
+      {
+        "event_id": "battle-004-run-started",
+        "receipt_id": "run-receipt",
+        "receipt_kind": "battle.run_started",
+        "sha256": "09fd71d190b9f001dc739ef38ab94d58ab614a14dadfd267d09741f6cf42c19d"
+      },
+      {
+        "event_id": "payload-857-receipt-spawned-payload-857-red-1",
+        "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+        "receipt_kind": "tau.spawned_child",
+        "sha256": "3da0314f047907697e100275f6a73b79ad1dedf8543e58190746df52820a25ad"
+      }
+    ]
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "A composer ran.",
+      "Audio played.",
+      "Any terminal or Judge outcome occurred."
+    ],
+    "proves": [
+      "Battle supplied receipt-backed music permissions."
+    ]
+  },
+  "composition_brief": {
+    "fallback_score_id": "live_arena_loop",
+    "required_theme_ids": [
+      "battle_main_theme"
+    ],
+    "section_role": "arena_loop_and_spawn_entrance"
+  },
+  "context_id": "battle-004-music-context-001",
+  "created_at": "2026-07-11T12:00:00Z",
+  "run_id": "battle-004-music-runtime"
+}

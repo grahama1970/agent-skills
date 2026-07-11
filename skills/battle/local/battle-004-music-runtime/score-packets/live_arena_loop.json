@@ -1,0 +1,41 @@
+{
+  "battle_id": "battle-004",
+  "duration_bars": 8,
+  "fallback_score_id": "live_arena_loop",
+  "forbidden_claims": [
+    "victory",
+    "death",
+    "kill",
+    "exploit_success"
+  ],
+  "intensity": 0.35,
+  "motifs": [
+    {
+      "role": "foreground",
+      "sprite_id": "plague_nurgling"
+    }
+  ],
+  "output_midi": "scores/live_arena_loop.mid",
+  "required_theme_ids": [
+    "battle_main_theme"
+  ],
+  "schema": "battle.music_score_packet.v1",
+  "score_id": "live_arena_loop",
+  "source_receipt_ids": [
+    "run-receipt"
+  ],
+  "start_boundary": {
+    "bar": 1,
+    "beat": 1
+  },
+  "status": "generated_unvalidated",
+  "tempo_bpm": 120,
+  "time_signature_plan": [
+    {
+      "bar_start": 1,
+      "denominator": 4,
+      "numerator": 4
+    }
+  ],
+  "tonal_center": "D minor"
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "battle.music_schedule_entry.v1", "type": "object", "additionalProperties": false,
+  "required": ["schema", "schedule_entry_id", "promotion_id", "score_id", "playback_class", "asset_ref", "authorization", "timing", "playback", "claims"],
+  "properties": {
+    "schema": {"const": "battle.music_schedule_entry.v1"}, "schedule_entry_id": {"type": "string"}, "promotion_id": {"type": "string"}, "score_id": {"type": "string"}, "playback_class": {"enum": ["promoted", "local_preview"]},
+    "asset_ref": {"type": "object", "required": ["kind", "music_id", "ogg", "midi"], "properties": {"kind": {"enum": ["cue", "motif"]}, "music_id": {"type": "string"}, "ogg": {"$ref": "#/$defs/ref"}, "midi": {"$ref": "#/$defs/ref"}}, "additionalProperties": false},
+    "authorization": {"type": "object", "required": ["permission_kind", "source_receipt_id", "source_receipt_kind", "source_receipt_sha256"], "properties": {"permission_kind": {"enum": ["battle_lifecycle_started", "materialized_spawn", "confirmed_terminal", "judge_exploit_success", "arena_transition_committed"]}, "source_receipt_id": {"type": "string"}, "source_receipt_kind": {"type": "string"}, "source_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "lane_id": {"type": "string"}, "sprite_id": {"type": "string"}}, "additionalProperties": false},
+    "timing": {"type": "object", "required": ["timing_mode", "source_elapsed_seconds", "resolved_start_elapsed_seconds"], "properties": {"timing_mode": {"enum": ["receipt_elapsed", "bar_beat_resolved"]}, "source_elapsed_seconds": {"type": "number", "minimum": 0}, "resolved_start_elapsed_seconds": {"type": "number", "minimum": 0}}, "additionalProperties": false},
+    "playback": {"type": "object", "required": ["channel", "priority", "loop", "interrupt_policy", "duck_policy"], "properties": {"channel": {"type": "string"}, "priority": {"type": "integer", "minimum": 0}, "loop": {"type": "boolean"}, "interrupt_policy": {"type": "string"}, "duck_policy": {"type": "string"}}, "additionalProperties": false},
+    "claims": {"$ref": "#/$defs/claims"}
+  },
+  "$defs": {"ref": {"type": "object", "required": ["public_url", "sha256"], "properties": {"public_url": {"type": "string", "pattern": "^/battle-audio/promoted/v1/"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}, "additionalProperties": false}, "claims": {"type": "object", "required": ["proves", "does_not_prove"], "properties": {"proves": {"type": "array", "items": {"type": "string"}}, "does_not_prove": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}}
+}
