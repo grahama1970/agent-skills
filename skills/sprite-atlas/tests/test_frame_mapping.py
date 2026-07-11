@@ -1,0 +1,30 @@
+from sprite_atlas.contracts import Profile, AtlasSpec, Anchor, NormalizationSpec, AnimationRow
+from sprite_atlas.contracts import SourceBBox, FrameMapping, RowMapping, MappingDocument
+from sprite_atlas.map_frames import mapping_gaps
+
+
+def _profile():
+    animations = (AnimationRow("run", 2, 8, True),)
+    return Profile(
+        schema="sprite_atlas.profile.v1",
+        profile_id="test",
+        atlas=AtlasSpec(8, 14, 64, 64),
+        output_format="png",
+        output_mode="RGBA",
+        background="transparent",
+        scale_mode="nearest_neighbor",
+        anchor=Anchor(0.5, 0.85),
+        normalization=NormalizationSpec(),
+        animations=animations,
+    )
+
+
+def test_mapping_gaps_detect_missing_frames():
+    profile = _profile()
+    mapping = MappingDocument(
+        schema="sprite_atlas.mapping.v1",
+        source_sha256="abc",
+        rows=[RowMapping(2, "run", [FrameMapping(0, SourceBBox(0, 0, 10, 10))])],
+    )
+    gaps = mapping_gaps(profile, mapping)
+    assert gaps and gaps[0]["expected"] == 8
