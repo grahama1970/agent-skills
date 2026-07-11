@@ -1253,6 +1253,73 @@ def validate_live_transport_contract(
     console.print_json(data=report)
 
 
+@app.command("serve-live-transport")
+def serve_live_transport(
+    fixture: Path = typer.Option(
+        Path("spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"),
+        "--fixture",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Normalized Battle UX fixture used as the live transport source.",
+    ),
+    battle_id: str = typer.Option("battle-004", "--battle-id", help="Battle id for the live endpoints."),
+    host: str = typer.Option("127.0.0.1", "--host", help="HTTP bind host."),
+    port: int = typer.Option(8765, "--port", help="HTTP bind port."),
+):
+    """Serve executable UX8 snapshot/SSE endpoints from a normalized fixture."""
+    from .live_transport_server import build_live_transport_source, serve_live_transport as _serve
+
+    source = build_live_transport_source(fixture_path=fixture, battle_id=battle_id)
+    console.print_json(
+        data={
+            "schema": "battle.live_transport_server_start.v1",
+            "status": "SERVING",
+            "mocked": False,
+            "live": "local_http_sse_adapter",
+            "battle_id": battle_id,
+            "run_id": source.run_id,
+            "snapshot_endpoint": source.snapshot_endpoint,
+            "sse_endpoint": source.events_endpoint,
+            "event_count": len(source.events),
+            "host": host,
+            "port": port,
+            "claim_boundary": {
+                "does_not_prove": [
+                    "production deployment",
+                    "WebSocket support",
+                    "exploit success",
+                    "Blue outcome",
+                    "Judge success",
+                ]
+            },
+        }
+    )
+    _serve(fixture_path=fixture, battle_id=battle_id, host=host, port=port)
+
+
+@app.command("prove-live-transport-server")
+def prove_live_transport_server(
+    fixture: Path = typer.Option(
+        Path("spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"),
+        "--fixture",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Normalized Battle UX fixture used as the live transport source.",
+    ),
+    battle_id: str = typer.Option("battle-004", "--battle-id", help="Battle id for the live endpoints."),
+    out: Path = typer.Option(..., "--out", help="Output directory for the executable live transport proof receipt."),
+):
+    """Prove UX8 snapshot/SSE endpoints execute locally and preserve claim boundaries."""
+    from .live_transport_server import prove_live_transport_server as _prove
+
+    receipt = _prove(fixture_path=fixture, battle_id=battle_id, out_dir=out)
+    console.print_json(data=receipt)
+
+
 @app.command("export-ux-handoff-summary")
 def export_ux_handoff_summary(
     summary: Path = typer.Argument(
