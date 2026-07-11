@@ -15,7 +15,7 @@
     ]
   },
   "command": "./run.sh write-phase10-reproducibility-receipt --phase10-root /tmp/agent-skills-main-funnel/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract",
-  "created_at": "2026-07-11T11:51:37Z",
+  "created_at": "2026-07-11T12:03:23Z",
   "excluded_dynamic_fields": [
     "created_at",
     "generated_at",
@@ -57,7 +57,7 @@
     "provider_schema_receipt.json": "sha256:d4d202374b1ef91d1c169e65e49b344d7f6c569b8b30e378526a91e2bc8dc086"
   },
   "implementation": {
-    "git_commit": "eaf223a04dd7372fe6e9d28cc7c36ff5007d3c16",
+    "git_commit": "cae0069974c4ccfba17420eeaad8b73e2803e454",
     "schema_version": "persona_dream.phase10_reproducibility_receipt.v1",
     "writer_path": "/tmp/agent-skills-main-funnel/skills/persona-dream/scripts/write_phase10_reproducibility_receipt.py",
     "writer_sha256": "sha256:14187f302ab602688d10c6b041569ae8258d326cf9faebf7d51348b4e1a7049d"
