@@ -48,11 +48,14 @@ describe("UX8 live transport contract", () => {
 		expect(contract.claim_boundary.live_contract_is_not_endpoint_execution).toBe(true);
 	});
 
-	it("arms SSE planner without opening EventSource under contract_only", () => {
+	it("stays contract_only_blocked until serve-live-transport is probed", () => {
 		const contract = loadContract();
 		expect(shouldOpenEventSource(contract)).toBe(false);
+		expect(shouldOpenEventSource(contract, { adapterAvailable: false })).toBe(false);
 		const planned = planLiveSseClient(contract);
 		expect(planned.status).toBe("contract_only_blocked");
+		expect(planned.transportMode).toBe("none");
+		expect(planned.error).toMatch(/serve-live-transport/);
 		expect(planned.endpoint).toBe("/battle/live/battle-004/events");
 		const model = liveTransportContractViewModel(contract);
 		expect(model.sseClientConnected).toBe(false);
@@ -92,7 +95,7 @@ describe("UX8 live transport contract", () => {
 		expect(parseSseLiveEventData("{bad")).toBeNull();
 	});
 
-	it("opens SSE planner when local adapter is available", () => {
+	it("arms EventSource planner only when serve-live-transport probe passes", () => {
 		const contract = loadContract();
 		expect(shouldOpenEventSource(contract, { adapterAvailable: true })).toBe(true);
 		const planned = planLiveSseClient(contract, {
@@ -101,6 +104,7 @@ describe("UX8 live transport contract", () => {
 		});
 		expect(planned.status).toBe("connecting");
 		expect(planned.live).toBe("local_http_sse_adapter");
+		expect(planned.transportMode).toBe("event_source");
 		expect(planned.baseUrl).toBe("http://127.0.0.1:18765");
 	});
 

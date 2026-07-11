@@ -21,6 +21,8 @@ export type BattleLiveSseClientState = {
 	endpoint: string | null;
 	baseUrl: string | null;
 	live: "contract_only" | "local_http_sse_adapter" | null;
+	/** How the stream is opened once serve-live-transport is up. */
+	transportMode: "none" | "event_source" | "fetch_last_event_id";
 };
 
 export function createIdleLiveSseClientState(): BattleLiveSseClientState {
@@ -32,6 +34,7 @@ export function createIdleLiveSseClientState(): BattleLiveSseClientState {
 		endpoint: null,
 		baseUrl: null,
 		live: null,
+		transportMode: "none",
 	};
 }
 
@@ -47,16 +50,15 @@ export function planLiveSseClient(
 	const endpoint = contract.transport.endpoint;
 	if (!options?.adapterAvailable) {
 		return {
-			status: contract.live === "contract_only" ? "contract_only_blocked" : "adapter_unavailable",
+			status: "contract_only_blocked",
 			lastSeq: 0,
 			lastEventId: null,
 			error:
-				contract.live === "contract_only"
-					? "SSE endpoint shape is defined by contract; local adapter not connected (live=contract_only)."
-					: "Live SSE adapter unavailable.",
+				"contract_only_blocked until ./run.sh serve-live-transport is running (healthz PASS). EventSource will not open.",
 			endpoint,
 			baseUrl: options?.baseUrl ?? null,
 			live: "contract_only",
+			transportMode: "none",
 		};
 	}
 	return {
@@ -67,6 +69,7 @@ export function planLiveSseClient(
 		endpoint,
 		baseUrl: options?.baseUrl ?? null,
 		live: "local_http_sse_adapter",
+		transportMode: "event_source",
 	};
 }
 
@@ -89,7 +92,10 @@ export function applySseLiveEvent(
 	return applyTransportEvent(state, event);
 }
 
-/** True only when a probed local adapter is available for the contract endpoints. */
+/**
+ * True only when serve-live-transport was probed healthy.
+ * Published contracts stay live=contract_only; runtime probe flips EventSource on.
+ */
 export function shouldOpenEventSource(
 	contract: BattleLiveTransportContractV1,
 	options?: { adapterAvailable?: boolean },

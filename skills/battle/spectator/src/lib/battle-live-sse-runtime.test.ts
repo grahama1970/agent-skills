@@ -3,6 +3,7 @@ import {
 	absoluteLiveTransportUrl,
 	buildLiveSseTransportPackage,
 	resolveBattleLiveTransportBaseUrl,
+	resolveBattleLiveTransportBaseCandidates,
 	DEFAULT_BATTLE_LIVE_TRANSPORT_BASE,
 } from "./battle-live-sse-runtime";
 import { bootstrapLiveTransportState, applyTransportEvent } from "./battle-transport-reducer";
@@ -19,6 +20,12 @@ describe("UX8 live SSE runtime", () => {
 		expect(absoluteLiveTransportUrl("http://127.0.0.1:18765", "/battle/live/battle-004/events")).toBe(
 			"http://127.0.0.1:18765/battle/live/battle-004/events",
 		);
+		const candidates = resolveBattleLiveTransportBaseCandidates("#battle/live?battle=battle-004");
+		expect(candidates[0]).toBe(DEFAULT_BATTLE_LIVE_TRANSPORT_BASE);
+		expect(candidates).toContain("http://127.0.0.1:8765");
+		expect(
+			resolveBattleLiveTransportBaseCandidates("#battle/live?liveBase=http://127.0.0.1:59999"),
+		).toEqual(["http://127.0.0.1:59999"]);
 	});
 
 	it("bootstraps live package at seq 0 then applies ordered events", () => {

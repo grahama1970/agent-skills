@@ -17,9 +17,9 @@ import {
 import {
 	buildLiveSseTransportPackage,
 	contractAllowsLiveAdapterExecution,
+	discoverBattleLiveTransportAdapter,
 	fetchBattleLiveSnapshot,
 	openBattleLiveSseStream,
-	probeBattleLiveTransportAdapter,
 	resolveBattleLiveTransportBaseUrl,
 } from "../lib/battle-live-sse-runtime";
 import { battleLiveTransportContractCompanionUrl } from "../lib/battle-live-transport-contract-registry";
@@ -92,6 +92,7 @@ export function useBattleLiveTransport() {
 					endpoint: args.contract.transport.endpoint,
 					baseUrl: args.baseUrl,
 					live: "local_http_sse_adapter",
+					transportMode: (args.lastEventId ?? 0) > 0 ? "fetch_last_event_id" : "event_source",
 				});
 				return;
 			}
@@ -106,6 +107,7 @@ export function useBattleLiveTransport() {
 			setError(null);
 			setCompanion(args.companion);
 			setState(bootstrapLiveTransportState(pack));
+			const transportMode = (args.lastEventId ?? 0) > 0 ? "fetch_last_event_id" : "event_source";
 			setSseClient({
 				status: "connecting",
 				lastSeq: 0,
@@ -114,19 +116,37 @@ export function useBattleLiveTransport() {
 				endpoint: args.contract.transport.endpoint,
 				baseUrl: args.baseUrl,
 				live: "local_http_sse_adapter",
+				transportMode,
 			});
 
 			const handle = openBattleLiveSseStream({
 				baseUrl: args.baseUrl,
 				eventsEndpoint: args.contract.transport.endpoint,
 				lastEventId: args.lastEventId ?? 0,
+				onOpen: () => {
+					setSseClient((current) => ({
+						...current,
+						status: "open",
+						transportMode,
+						error: null,
+					}));
+				},
 				onEvent: (event) => {
-					setState((current) => applySseLiveEvent(current, event));
+					setState((current) => {
+						const next = applySseLiveEvent(current, event);
+						const lastSeq = next.pack?.manifest.last_seq ?? 0;
+						if (event.seq >= lastSeq && lastSeq > 0) {
+							// Finite adapter stream complete — close EventSource to avoid reconnect loop.
+							queueMicrotask(() => streamCloseRef.current?.());
+						}
+						return next;
+					});
 					setSseClient((current) => ({
 						...current,
 						status: "open",
 						lastSeq: event.seq,
 						lastEventId: String(event.seq),
+						transportMode,
 						error: null,
 					}));
 				},
@@ -201,9 +221,17 @@ export function useBattleLiveTransport() {
 				setCompanion(result.companion);
 
 				const canExecute = contractAllowsLiveAdapterExecution(result.contract);
+				// Stay contract_only_blocked unless serve-live-transport healthz PASS.
 				const probe = canExecute
-					? await probeBattleLiveTransportAdapter({ baseUrl: liveBaseUrl, battleId })
-					: ({ ok: false as const, error: { code: "TRANSPORT_UNAVAILABLE" as const, title: "TRANSPORT UNAVAILABLE", detail: "Contract transport incomplete." } });
+					? await discoverBattleLiveTransportAdapter({ battleId })
+					: ({
+							ok: false as const,
+							error: {
+								code: "TRANSPORT_UNAVAILABLE" as const,
+								title: "TRANSPORT UNAVAILABLE",
+								detail: "Contract transport incomplete.",
+							},
+					  });
 
 				if (cancelled) return;
 

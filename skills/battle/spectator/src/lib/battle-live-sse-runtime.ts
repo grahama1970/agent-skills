@@ -12,6 +12,12 @@ import { battleHashSearchParams } from "./battle-transport-registry";
 
 export const DEFAULT_BATTLE_LIVE_TRANSPORT_BASE = "http://127.0.0.1:18765";
 
+/** Candidate bases for local `./run.sh serve-live-transport` (handoff 8765 + non-colliding 18765). */
+export const BATTLE_LIVE_TRANSPORT_BASE_CANDIDATES = [
+	"http://127.0.0.1:18765",
+	"http://127.0.0.1:8765",
+] as const;
+
 export type BattleLiveAdapterProbe =
 	| {
 			ok: true;
@@ -56,6 +62,45 @@ export function resolveBattleLiveTransportBaseUrl(
 			: "";
 	if (fromEnv) return trimBase(fromEnv);
 	return DEFAULT_BATTLE_LIVE_TRANSPORT_BASE;
+}
+
+/** Ordered base URLs to probe for a running serve-live-transport adapter. */
+export function resolveBattleLiveTransportBaseCandidates(
+	hash = typeof window !== "undefined" ? window.location.hash : "",
+): string[] {
+	const params = battleHashSearchParams(hash);
+	const explicit = params.get("liveBase")?.trim();
+	// Explicit liveBase is fail-closed to that host only (prove/fallback paths).
+	if (explicit) return [trimBase(explicit)];
+	const primary = resolveBattleLiveTransportBaseUrl(hash);
+	const out: string[] = [];
+	const push = (value: string) => {
+		const trimmed = trimBase(value);
+		if (trimmed && !out.includes(trimmed)) out.push(trimmed);
+	};
+	push(primary);
+	for (const candidate of BATTLE_LIVE_TRANSPORT_BASE_CANDIDATES) push(candidate);
+	return out;
+}
+
+/** Probe candidate bases until serve-live-transport healthz returns PASS for this battle. */
+export async function discoverBattleLiveTransportAdapter(args: {
+	battleId: string;
+	hash?: string;
+}): Promise<BattleLiveAdapterProbe> {
+	const bases = resolveBattleLiveTransportBaseCandidates(args.hash);
+	let lastFail: BattleLiveAdapterProbe | null = null;
+	for (const baseUrl of bases) {
+		const probe = await probeBattleLiveTransportAdapter({ baseUrl, battleId: args.battleId });
+		if (probe.ok) return probe;
+		lastFail = probe;
+	}
+	return (
+		lastFail ?? {
+			ok: false,
+			error: fail("serve-live-transport is not running on any known liveBase."),
+		}
+	);
 }
 
 export function absoluteLiveTransportUrl(baseUrl: string, endpoint: string): string {
@@ -164,8 +209,9 @@ export function buildLiveSseTransportPackage(args: {
 }
 
 /**
- * Open an ordered SSE stream using fetch so Last-Event-ID can be set on connect.
- * Native EventSource cannot set Last-Event-ID on the initial request.
+ * Open live SSE.
+ * - Prefer native EventSource when starting from seq 0 (serve-live-transport running).
+ * - Use fetch + Last-Event-ID only for explicit resume/gap recovery (EventSource cannot set it on first connect).
  */
 export function openBattleLiveSseStream(args: {
 	baseUrl: string;
@@ -173,6 +219,102 @@ export function openBattleLiveSseStream(args: {
 	lastEventId?: number | null;
 	onEvent: (event: BattleLiveEventV1) => void;
 	onError?: (error: string) => void;
+	onOpen?: () => void;
+	signal?: AbortSignal;
+}): BattleLiveSseStreamHandle {
+	const lastEventId = args.lastEventId ?? 0;
+	if (lastEventId > 0) {
+		return openBattleLiveSseStreamWithFetch(args);
+	}
+	return openBattleLiveEventSource(args);
+}
+
+/** Native EventSource path — only call after serve-live-transport healthz PASS. */
+export function openBattleLiveEventSource(args: {
+	baseUrl: string;
+	eventsEndpoint: string;
+	onEvent: (event: BattleLiveEventV1) => void;
+	onError?: (error: string) => void;
+	onOpen?: () => void;
+	signal?: AbortSignal;
+}): BattleLiveSseStreamHandle {
+	const url = absoluteLiveTransportUrl(args.baseUrl, args.eventsEndpoint);
+	let closed = false;
+	let source: EventSource | null = null;
+	let settle!: () => void;
+	const done = new Promise<void>((resolve) => {
+		settle = resolve;
+	});
+
+	const close = () => {
+		if (closed) return;
+		closed = true;
+		source?.close();
+		source = null;
+		settle();
+	};
+
+	if (args.signal) {
+		if (args.signal.aborted) {
+			close();
+			return { close, done };
+		}
+		args.signal.addEventListener("abort", close, { once: true });
+	}
+
+	try {
+		source = new EventSource(url);
+	} catch (error) {
+		args.onError?.(error instanceof Error ? error.message : "EventSource open failed.");
+		close();
+		return { close, done };
+	}
+
+	const handlePayload = (raw: string) => {
+		const parsed = parseSseLiveEventData(raw);
+		if (!parsed) {
+			args.onError?.("SSE frame was not battle.live_event.v1; fail-closed.");
+			close();
+			return;
+		}
+		const validated = validateLiveEvent(parsed);
+		if (!validated.ok) {
+			args.onError?.(validated.error.detail);
+			close();
+			return;
+		}
+		args.onEvent(validated.event);
+	};
+
+	source.addEventListener("battle.live_event", (event) => {
+		handlePayload((event as MessageEvent).data);
+	});
+	source.onmessage = (event) => {
+		handlePayload(event.data);
+	};
+	source.onopen = () => {
+		args.onOpen?.();
+	};
+	source.onerror = () => {
+		// Finite serve-live-transport streams close after the last event. Close without
+		// forcing a browser reconnect loop; callers decide if seq was complete.
+		if (!source) return;
+		if (source.readyState === EventSource.CONNECTING || source.readyState === EventSource.CLOSED) {
+			close();
+		}
+	};
+
+	return { close, done };
+}
+
+/** Fetch SSE with Last-Event-ID — used for gap/resume only. */
+export function openBattleLiveSseStreamWithFetch(args: {
+	baseUrl: string;
+	eventsEndpoint: string;
+	lastEventId?: number | null;
+	onEvent: (event: BattleLiveEventV1) => void;
+	onError?: (error: string) => void;
+	onOpen?: () => void;
 	signal?: AbortSignal;
 }): BattleLiveSseStreamHandle {
 	const controller = new AbortController();
@@ -204,6 +346,7 @@ export function openBattleLiveSseStream(args: {
 				);
 				return;
 			}
+			args.onOpen?.();
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = "";

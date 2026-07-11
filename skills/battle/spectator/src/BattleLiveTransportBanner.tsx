@@ -52,7 +52,17 @@ export function BattleLiveTransportBanner({
 						className="rounded border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100"
 						data-qid="battle:live:banner:sse-connected"
 					>
-						SSE CONNECTED
+						{sseClient?.transportMode === "event_source" ? "EVENTSOURCE OPEN" : "SSE CONNECTED"}
+					</span>
+					<span
+						className="rounded border border-sky-400/30 bg-sky-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-sky-100"
+						data-qid="battle:live:banner:transport-mode"
+					>
+						{sseClient?.transportMode === "event_source"
+							? "TRANSPORT: EVENTSOURCE"
+							: sseClient?.transportMode === "fetch_last_event_id"
+								? "TRANSPORT: FETCH RESUME"
+								: "TRANSPORT: UNKNOWN"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
 						status {model?.status ?? sseClient?.status ?? "connecting"}

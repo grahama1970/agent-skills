@@ -90,6 +90,7 @@ const liveChrome = await page.evaluate(() => {
     mode: document.querySelector('[data-qid="battle:live:banner:mode"]')?.textContent ?? '',
     liveSource: document.querySelector('[data-qid="battle:live:banner:live-source"]')?.textContent ?? '',
     connected: document.querySelector('[data-qid="battle:live:banner:sse-connected"]')?.textContent ?? '',
+    transportMode: document.querySelector('[data-qid="battle:live:banner:transport-mode"]')?.textContent ?? '',
     mocked: document.querySelector('[data-qid="battle:live:banner:mocked"]')?.textContent ?? '',
     seq: document.querySelector('[data-qid="battle:live:seq"]')?.textContent ?? '',
     sseClient: document.querySelector('[data-qid="battle:live:sse-client"]')?.textContent ?? '',
@@ -108,7 +109,8 @@ const liveChrome = await page.evaluate(() => {
 record('11-live-banner', liveChrome.banner, 'banner')
 record('12-live-mode-badge', /LIVE SSE ADAPTER/i.test(liveChrome.mode), liveChrome.mode)
 record('13-live-source-badge', /LOCAL HTTP SSE/i.test(liveChrome.liveSource), liveChrome.liveSource)
-record('14-sse-connected-badge', /SSE CONNECTED/i.test(liveChrome.connected), liveChrome.connected)
+record('14-sse-connected-badge', /EVENTSOURCE OPEN|SSE CONNECTED/i.test(liveChrome.connected), liveChrome.connected)
+record('14b-eventsource-mode', /TRANSPORT:\s*EVENTSOURCE/i.test(liveChrome.transportMode), liveChrome.transportMode)
 record('15-mocked-no', /MOCKED:\s*NO/i.test(liveChrome.mocked), liveChrome.mocked)
 record('16-seq-complete', /36\/36/.test(liveChrome.seq), liveChrome.seq)
 record('17-sse-client-open-or-ended', /(open|ended)/i.test(liveChrome.sseClient), liveChrome.sseClient)
@@ -138,7 +140,7 @@ const blocked = await page.evaluate(() => ({
 }))
 record('27-fallback-contract-only', /SSE CONTRACT/i.test(blocked.mode) && /CONTRACT ONLY/i.test(blocked.contractOnly), JSON.stringify(blocked))
 record('28-fallback-not-executed', /NOT EXECUTED/i.test(blocked.noEndpoint), blocked.noEndpoint)
-record('29-fallback-client-blocked', /contract_only_blocked|adapter_unavailable/i.test(blocked.sseClient), blocked.sseClient)
+record('29-fallback-client-blocked', /contract_only_blocked/i.test(blocked.sseClient), blocked.sseClient)
 
 await page.goto(fileBackedUrl, { waitUntil: 'networkidle', timeout: 60_000 })
 await page.waitForSelector('[data-qid="battle:live:banner"]', { timeout: 20_000 })
