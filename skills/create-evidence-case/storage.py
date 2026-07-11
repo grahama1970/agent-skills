@@ -31,11 +31,9 @@ if not STORAGE_ROOT.exists():
     UCT_CACHE.mkdir(parents=True, exist_ok=True)
     AUDIT_LOG.mkdir(parents=True, exist_ok=True)
 
-# embry-memory daemon Unix socket
-_MEMORY_SOCKET = os.environ.get(
-    "EMBRY_MEMORY_SOCKET",
-    f"/run/user/{os.getuid()}/embry/memory.sock",
-)
+# Canonical Memory HTTP daemon. The retired Unix-socket service does not expose
+# the current /upsert contract used by evidence-case persistence.
+_MEMORY_API_BASE = os.environ.get("MEMORY_API_BASE", "http://127.0.0.1:8601")
 
 # Thread-local httpx clients for memory daemon (safe for ThreadPoolExecutor)
 _thread_local = threading.local()
@@ -45,10 +43,8 @@ def _get_memory_http() -> httpx.Client:
     """Get per-thread httpx client for embry-memory Unix socket. Thread-safe."""
     client = getattr(_thread_local, "memory_http", None)
     if client is None:
-        transport = httpx.HTTPTransport(uds=_MEMORY_SOCKET)
         client = httpx.Client(
-            transport=transport,
-            base_url="http://localhost",
+            base_url=_MEMORY_API_BASE,
             timeout=30.0,
         )
         _thread_local.memory_http = client

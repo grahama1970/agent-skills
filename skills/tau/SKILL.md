@@ -47,6 +47,11 @@ ${HOME}/workspace/experiments/tau
 Do not duplicate Tau implementation in this skill. Use the scripts here to
 locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
+SciLLM is Tau's default LLM engine boundary. Keep Tau's core provider-neutral,
+route one-shot model names through SciLLM chat/worker surfaces, and reserve
+Chutes model pools for SciLLM batch endpoints. Do not send pool names to
+`/v1/chat/completions` or call provider APIs directly from Tau.
+
 ## Commands
 
 Currently implemented in this skill wrapper:

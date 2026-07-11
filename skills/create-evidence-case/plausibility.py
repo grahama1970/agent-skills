@@ -37,7 +37,7 @@ load_dotenv(find_dotenv(usecwd=True), override=False)
 
 SCILLM_BASE = os.getenv("SCILLM_API_BASE", "http://localhost:4001")
 SCILLM_KEY = os.getenv("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
-SCILLM_PLAUSIBILITY_MODEL = os.getenv("SCILLM_PLAUSIBILITY_MODEL", "gemini/gemini-2.5-flash")
+SCILLM_PLAUSIBILITY_MODEL = os.getenv("SCILLM_PLAUSIBILITY_MODEL", "gemini-flash")
 
 
 def _check_deterministic(
@@ -166,6 +166,7 @@ def _call_scillm(prompt: str, model: str | None = None) -> str:
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SCILLM_KEY}",
+            "X-Caller-Skill": "create-evidence-case",
         },
     )
     with urllib.request.urlopen(req, timeout=60) as resp:

@@ -38,6 +38,7 @@ from scoring import (
 
 SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001")
 SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
+SCILLM_EVIDENCE_MODEL = os.environ.get("SCILLM_EVIDENCE_MODEL", "gemini-flash")
 
 
 class AgentAction(str, Enum):
@@ -484,12 +485,14 @@ EVIDENCE_CASE:
             try:
                 resp = httpx.post(
                     f"{SCILLM_URL}/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+                    headers={
+                        "Authorization": f"Bearer {SCILLM_KEY}",
+                        "X-Caller-Skill": "create-evidence-case",
+                    },
                     json={
-                        "model": "text",
+                        "model": SCILLM_EVIDENCE_MODEL,
                         "messages": messages,
                         "temperature": 0.2,
-                        "max_tokens": 600,
                     },
                     timeout=30,
                 )
