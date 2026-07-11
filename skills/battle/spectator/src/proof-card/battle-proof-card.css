@@ -22,20 +22,26 @@
 
 .battle-proof-nav {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .battle-proof-nav a {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
   border-radius: 999px;
-  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(90, 173, 255, 0.18);
+  background: rgba(4, 10, 18, 0.65);
+  color: #9eb6d0;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94a3b8;
   text-decoration: none;
+  padding: 8px 12px;
 }
 
 .battle-proof-nav a[aria-current="page"] {
