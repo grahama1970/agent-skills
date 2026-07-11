@@ -25,7 +25,17 @@ export function battleHashPath(): string {
 
 export function isBattleReceiptReplayView(): boolean {
 	const path = battleHashPath();
-	return path === "#battle/receipt" || path.startsWith("#battle/receipt/");
+	return (
+		path === "#battle/receipt" ||
+		path.startsWith("#battle/receipt/") ||
+		path === "#battle/campaign" ||
+		path.startsWith("#battle/campaign/")
+	);
+}
+
+export function isBattleCampaignReplayView(): boolean {
+	const path = battleHashPath();
+	return path === "#battle/campaign" || path.startsWith("#battle/campaign/");
 }
 
 export function battleHashSearchParams(hash: string): URLSearchParams {
@@ -34,8 +44,11 @@ export function battleHashSearchParams(hash: string): URLSearchParams {
 }
 
 export function battleReceiptReplayFixtureKey(hash: string): BattleReceiptReplayFixtureKey {
-	const requested = battleHashSearchParams(hash).get("fixture") ?? "battle-004-parent-spawn";
-	return requested in BATTLE_RECEIPT_REPLAY_FIXTURE_URLS ? (requested as BattleReceiptReplayFixtureKey) : "battle-004-parent-spawn";
+	const path = (hash || "").split("?")[0] || "";
+	const isCampaign = path === "#battle/campaign" || path.startsWith("#battle/campaign/");
+	const fallback = isCampaign ? "battle-004-pr6-genetic-pixi" : "battle-004-parent-spawn";
+	const requested = battleHashSearchParams(hash).get("fixture") ?? fallback;
+	return requested in BATTLE_RECEIPT_REPLAY_FIXTURE_URLS ? (requested as BattleReceiptReplayFixtureKey) : fallback;
 }
 
 export function battleReceiptReplayFixtureUrl(hash: string): string {

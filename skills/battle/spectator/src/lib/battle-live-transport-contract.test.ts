@@ -48,11 +48,14 @@ describe("UX8 live transport contract", () => {
 		expect(contract.claim_boundary.live_contract_is_not_endpoint_execution).toBe(true);
 	});
 
-	it("arms SSE planner without opening EventSource under contract_only", () => {
+	it("stays contract_only_blocked until serve-live-transport is probed", () => {
 		const contract = loadContract();
 		expect(shouldOpenEventSource(contract)).toBe(false);
+		expect(shouldOpenEventSource(contract, { adapterAvailable: false })).toBe(false);
 		const planned = planLiveSseClient(contract);
 		expect(planned.status).toBe("contract_only_blocked");
+		expect(planned.transportMode).toBe("none");
+		expect(planned.error).toMatch(/serve-live-transport/);
 		expect(planned.endpoint).toBe("/battle/live/battle-004/events");
 		const model = liveTransportContractViewModel(contract);
 		expect(model.sseClientConnected).toBe(false);
@@ -91,4 +94,42 @@ describe("UX8 live transport contract", () => {
 		expect(ok?.seq).toBe(1);
 		expect(parseSseLiveEventData("{bad")).toBeNull();
 	});
+
+	it("arms EventSource planner only when serve-live-transport probe passes", () => {
+		const contract = loadContract();
+		expect(shouldOpenEventSource(contract, { adapterAvailable: true })).toBe(true);
+		const planned = planLiveSseClient(contract, {
+			adapterAvailable: true,
+			baseUrl: "http://127.0.0.1:18765",
+		});
+		expect(planned.status).toBe("connecting");
+		expect(planned.live).toBe("local_http_sse_adapter");
+		expect(planned.transportMode).toBe("event_source");
+		expect(planned.baseUrl).toBe("http://127.0.0.1:18765");
+	});
+
+	it("resolves liveBase from hash", async () => {
+		const { resolveBattleLiveTransportBaseUrl, buildLiveSseTransportPackage } = await import("./battle-live-sse-runtime");
+		expect(
+			resolveBattleLiveTransportBaseUrl("#battle/live?battle=battle-004&liveBase=http://127.0.0.1:19999/"),
+		).toBe("http://127.0.0.1:19999");
+		const pack = buildLiveSseTransportPackage({
+			snapshot: {
+				schema: "battle.snapshot.v1",
+				battle_id: "battle-004",
+				run_id: "run",
+				last_seq: 2,
+				generated_at: "2026-07-11T00:00:00Z",
+				mode: "receipt_replay",
+				events: [],
+				lanes: [],
+			},
+			baseUrl: "http://127.0.0.1:18765",
+			companionFixtureUrl: "/battle-fixtures/x.json",
+		});
+		expect(pack.manifest.mode).toBe("live_sse_adapter");
+		expect(pack.manifest.stream_contract.transport).toBe("sse");
+		expect(pack.manifest.live_source).toBe("local_http_sse_adapter");
+	});
+
 });

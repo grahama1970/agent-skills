@@ -73,5 +73,6 @@ export function useBattleSound() {
 		[beep],
 	);
 
-	return { enabled, arm: ensure, play };
+	const getContext = useCallback(() => ensure(), [ensure]);
+	return { enabled, arm: ensure, play, getContext };
 }

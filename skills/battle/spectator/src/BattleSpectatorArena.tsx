@@ -28,11 +28,19 @@ import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 import { isBattlePopulationView } from "./lib/battle-population-registry";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
+import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
+import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
+import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
+import { buildBattleRoundIntro } from "./lib/battle-round-intro";
+import { BattleRoundStoryIntro } from "./BattleRoundStoryIntro";
+import { scoreCaptionForCue, scoreTriggerForEffectCue, scoreTriggerForReceiptBeat } from "./lib/battle-score-bindings";
+import { spriteIdForLane } from "./engine/battle-lane-variant-map";
 import { BattleLiveTransportBanner } from "./BattleLiveTransportBanner";
 import { useBattleLiveTransport } from "./hooks/useBattleLiveTransport";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
+import { useBattleScore } from "./hooks/useBattleScore";
 import { BattleHeader } from "./BattleHeader";
 import { BattleHungerGamesDeathAnnouncement } from "./BattleHungerGamesDeathAnnouncement";
 import { hungerGamesDeathCard, type HungerGamesDeathCard } from "./lib/battle-hunger-games-notifications";
@@ -113,7 +121,8 @@ export function BattleSpectatorArena() {
     if (!lane) return;
     setDeathAnnouncement(hungerGamesDeathCard(lane, typedReceiptFixture ?? undefined));
   }, [initialLanes, receiptReady, receiptReplay, typedReceiptFixture]);
-  const { enabled, arm, play } = useBattleSound();
+  const { enabled, arm, play, getContext } = useBattleSound();
+  const score = useBattleScore(getContext);
 
   const selectedLane = useMemo(
     () => initialLanes.find((lane) => lane.id === selectedId) ?? initialLanes[0] ?? null,
@@ -143,6 +152,29 @@ export function BattleSpectatorArena() {
     () => (typedReceiptFixture ? geneticLifecycleViewModel(typedReceiptFixture) : null),
     [typedReceiptFixture],
   );
+  const campaignView = isBattleCampaignView();
+  const campaignPresentation = battleCampaignPresentationFromUrl();
+  const campaignStory = useMemo(
+    () => (campaignView && typedReceiptFixture ? buildCampaignStory(typedReceiptFixture) : null),
+    [campaignView, typedReceiptFixture],
+  );
+  const activeCampaignChapter = useMemo(
+    () => campaignChapterAtPlayhead(campaignStory, playheadSeconds),
+    [campaignStory, playheadSeconds],
+  );
+  const [soundCaption, setSoundCaption] = useState<string | null>(null);
+  const [roundIntroOpen, setRoundIntroOpen] = useState(() => !battleCampaignPresentationFromUrl().skipIntro);
+  const [overturePlaying, setOverturePlaying] = useState(false);
+  const roundIntro = useMemo(
+    () => (campaignView && typedReceiptFixture ? buildBattleRoundIntro(typedReceiptFixture, campaignStory) : null),
+    [campaignStory, campaignView, typedReceiptFixture],
+  );
+  useEffect(() => {
+    setRoundIntroOpen(!campaignPresentation.skipIntro);
+    setOverturePlaying(false);
+    score.stopAll();
+  }, [campaignPresentation.skipIntro, campaignView, score.stopAll, typedReceiptFixture?.battle_id]);
+  useEffect(() => () => score.stopAll(), [score.stopAll]);
 
   useEffect(() => {
     if (!receiptReplay || !typedReceiptFixture) return;
@@ -163,12 +195,48 @@ export function BattleSpectatorArena() {
   }, [initialLanes, playheadSeconds, receiptBeats, receiptReplay, typedReceiptFixture]);
 
   const handleReceiptBeat = useCallback((beat: ReceiptBeat) => {
-    if (beat.react.soundCue && beat.react.soundCue !== "none") playCue(beat.react.soundCue);
-  }, []);
+    if (campaignPresentation.mute) return;
+    if (beat.react.soundCue && beat.react.soundCue !== "none") {
+      playCue(beat.react.soundCue);
+      setSoundCaption(soundCaptionForCue(beat.react.soundCue, beat.kind as never));
+    }
+    const scoreTrigger = scoreTriggerForReceiptBeat(beat);
+    if (!scoreTrigger) return;
+    if (scoreTrigger.kind === "cue") {
+      void score.playCue(scoreTrigger.cueId).then(() => {
+        setSoundCaption(scoreCaptionForCue(scoreTrigger.cueId));
+      });
+      return;
+    }
+    const lane = initialLanes.find((item) => item.id === beat.laneId);
+    const spriteId = lane ? spriteIdForLane(lane, typedReceiptFixture?.sprite_theme) : null;
+    if (!spriteId) return;
+    void score.playMotif(spriteId).then((ok) => {
+      if (ok) setSoundCaption(`Sprite motif (${spriteId}) — entrance receipt.`);
+    });
+  }, [campaignPresentation.mute, initialLanes, score, typedReceiptFixture?.sprite_theme]);
 
   const handleReplayCue = useCallback((cue: BattleEffectCue) => {
-    if (cue.soundCue && cue.soundCue !== "none") playCue(cue.soundCue);
-  }, []);
+    if (campaignPresentation.mute) return;
+    if (cue.soundCue && cue.soundCue !== "none") {
+      playCue(cue.soundCue);
+      setSoundCaption(soundCaptionForCue(cue.soundCue));
+    }
+    const scoreTrigger = scoreTriggerForEffectCue(cue);
+    if (!scoreTrigger) return;
+    if (scoreTrigger.kind === "cue") {
+      void score.playCue(scoreTrigger.cueId).then(() => {
+        setSoundCaption(scoreCaptionForCue(scoreTrigger.cueId));
+      });
+      return;
+    }
+    const lane = initialLanes.find((item) => item.id === cue.laneId);
+    const spriteId = lane ? spriteIdForLane(lane, typedReceiptFixture?.sprite_theme) : null;
+    if (!spriteId) return;
+    void score.playMotif(spriteId).then((ok) => {
+      if (ok) setSoundCaption(`Sprite motif (${spriteId}) — entrance receipt.`);
+    });
+  }, [campaignPresentation.mute, initialLanes, score, typedReceiptFixture?.sprite_theme]);
 
   const handlePlayheadSeconds = useCallback((seconds: number) => {
     setPlayheadSeconds(seconds);
@@ -189,7 +257,18 @@ export function BattleSpectatorArena() {
 
   function selectActor(id: string) {
     const exists = initialLanes.some((lane) => lane.id === id);
-    if (exists) setSelectedId(id);
+    if (!exists) return;
+    setSelectedId(id);
+    if (campaignPresentation.mute) return;
+    const lane = initialLanes.find((item) => item.id === id);
+    if (!lane) return;
+    const spriteId = spriteIdForLane(lane, typedReceiptFixture?.sprite_theme);
+    void score.playMotif(spriteId).then((ok) => {
+      if (ok) {
+        arm();
+        setSoundCaption(`Sprite motif (${spriteId}) — actor focus.`);
+      }
+    });
   }
 
   function showProof(label: string) {
@@ -241,6 +320,65 @@ export function BattleSpectatorArena() {
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleGeneticLifecycleBanner model={geneticModel} />
+        </div>
+      ) : null}
+      {roundIntro && roundIntroOpen ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleRoundStoryIntro
+            intro={roundIntro}
+            audioPlaying={overturePlaying}
+            onArmAudio={() => {
+              arm();
+              void score.playCue("death_clock_overture").then(() => {
+                setOverturePlaying(true);
+                setSoundCaption(scoreCaptionForCue("death_clock_overture"));
+              });
+            }}
+            onStopAudio={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setSoundCaption("Death Clock overture stopped.");
+            }}
+            onSkip={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setRoundIntroOpen(false);
+            }}
+            onStartArena={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setRoundIntroOpen(false);
+              setPlaying(true);
+              if (!campaignPresentation.mute) {
+                void score.startLoop().then(() => {
+                  setSoundCaption(scoreCaptionForCue("live_arena_loop"));
+                });
+              } else {
+                setSoundCaption("Arena entered after Death Clock round intro.");
+              }
+            }}
+          />
+        </div>
+      ) : null}
+      {campaignStory ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleCampaignStoryPanel
+            story={campaignStory}
+            activeChapter={activeCampaignChapter}
+            soundCaption={soundCaption}
+            soundEnabled={enabled}
+            reducedMotion={campaignPresentation.reducedMotion}
+            particles={campaignPresentation.particles}
+            onArmSound={() => {
+              arm();
+              setSoundCaption("Sound armed for receipt-backed campaign cues.");
+            }}
+            onSelectChapter={(chapter) => {
+              setPlayheadSeconds(chapter.atSeconds);
+              setPlaying(false);
+              setSoundCaption(chapter.soundCaption);
+            }}
+          />
         </div>
       ) : null}
       <div

@@ -31,7 +31,9 @@
     "prove:pr4-runtime": "node scripts/prove-battle-pr4-runtime.mjs",
     "prove:pr5-population": "node scripts/prove-battle-pr5-population.mjs",
     "prove:pr6-genetic-pixi": "node scripts/prove-battle-pr6-genetic-pixi.mjs",
-    "prove:pr8-live-transport": "node scripts/prove-battle-pr8-live-transport.mjs"
+    "prove:pr8-live-transport": "node scripts/prove-battle-pr8-live-transport.mjs",
+    "prove:pr9-campaign": "node scripts/prove-battle-pr9-campaign.mjs",
+    "prove:score-package": "node scripts/prove-battle-score-package.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

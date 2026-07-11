@@ -101,3 +101,23 @@ export {
 	loadBattleRuntimeViewFixture,
 	loadBattlePopulationViewFixture,
 } from "./lib/battle-view-fixture-loader";
+
+export { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
+export { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
+export { isBattleCampaignView, battleCampaignFixtureUrl } from "./lib/battle-campaign-registry";
+
+export { BattleRoundStoryIntro } from "./BattleRoundStoryIntro";
+export { buildBattleRoundIntro } from "./lib/battle-round-intro";
+export {
+	BATTLE_SCORE_CUES,
+	BATTLE_SPRITE_MOTIFS,
+	BATTLE_SCORE_PROVISIONAL_GM_RENDER,
+	BATTLE_LEGACY_GENESIS_INTRO_MIDI,
+} from "./lib/battle-music-catalog";
+export { scoreTriggerForReceiptBeat, scoreTriggerForEffectCue } from "./lib/battle-score-bindings";
+export { createBattleScoreRuntime } from "./lib/battle-score-runtime";
+/** @deprecated Legacy Genesis intro — not production. */
+export { BattleGenesisStoryIntro } from "./BattleGenesisStoryIntro";
+/** @deprecated Use buildBattleRoundIntro. */
+export { buildGenesisRoundIntro } from "./lib/battle-genesis-intro";
+export { createGenesisMidiPlayer, loadGenesisRoundIntroMidi, parseMidiBytes } from "./lib/battle-genesis-midi";

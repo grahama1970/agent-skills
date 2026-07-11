@@ -27,6 +27,21 @@ export function createIdleTransportState(): BattleTransportState {
 	};
 }
 
+
+/** Start following a live SSE stream from seq 0 after snapshot bootstrap. */
+export function bootstrapLiveTransportState(pack: BattleTransportPackage): BattleTransportState {
+	return {
+		status: "ready",
+		pack,
+		appliedBySeq: new Map(),
+		appliedByEventId: new Map(),
+		appliedSeq: 0,
+		cursorSeconds: 0,
+		followLive: true,
+		gapExpectedSeq: null,
+		error: null,
+	};
+}
 export function bootstrapTransportState(pack: BattleTransportPackage): BattleTransportState {
 	const appliedBySeq = new Map<number, BattleLiveEventV1>();
 	const appliedByEventId = new Map<string, BattleLiveEventV1>();

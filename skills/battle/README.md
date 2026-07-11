@@ -206,6 +206,7 @@ promoted; failed mutations remain searchable negative evidence.
 | PR5 population fixture | `./run.sh normalize-population-fixture /tmp/battle-004-combiner --out local/battle-004-pr5-population --public-out spectator/public/battle-fixtures/battle-004-pr5-population` | UX-safe specimen cards, generation axis, receipt-backed parent-child lineage, fitness vectors, novelty, and selection labels from combiner receipts | Full autonomous population engine, live Tau code generation, provider-authored specimens, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
 | PR6 genetic Pixi fixture | `./run.sh normalize-genetic-pixi-fixture . --out local/battle-004-pr6-genetic-pixi --public-out spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi` | UX-safe ordered genetic lifecycle events inside the existing Pixi replay fixture contract, with present/not-emitted event vocabulary and claim boundaries | Live transport, Judge-confirmed exploit success, Blue outcome, packet behavior, memory promotion, or victory semantics for research/code/compile/target-contact events |
 | PR8 live transport contract | `./run.sh publish-live-transport-contract --out local/battle-004-pr8-live-transport --public-out spectator/public/battle-fixtures/battle-004-pr8-live-transport` | UX-safe SSE snapshot/event contract with event id, sequence, reconnect, gap handling, receipt refs, genetic event vocabulary, and raw-path boundaries | Implemented SSE/WebSocket endpoint, live stream execution, live genetic events, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
+| PR8 executable SSE adapter | `./run.sh prove-live-transport-server --out local/battle-004-pr8-live-transport-server-proof` | Local HTTP adapter serves `battle.snapshot.v1`, ordered `battle.live_event.v1` SSE, `Last-Event-ID` resume, and future-cursor fail-closed behavior from normalized fixture authority | Production deployment, WebSocket, direct Tau/provider/Docker/Judge raw path access, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -419,6 +420,43 @@ This contract is `live: contract_only`. It allows the frontend to implement the
 SSE client against stable backend semantics, but it explicitly does not prove
 that `/battle/live/battle-004/snapshot` or `/battle/live/battle-004/events`
 exists, that a stream was executed, or that any live genetic event was emitted.
+
+The executable UX8 SSE adapter serves the same endpoint shape from a normalized
+fixture source:
+
+```bash
+./run.sh serve-live-transport \
+  --fixture spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json \
+  --battle-id battle-004 \
+  --host 127.0.0.1 \
+  --port 8765
+```
+
+Runtime endpoints:
+
+```text
+GET http://127.0.0.1:8765/battle/live/battle-004/snapshot
+GET http://127.0.0.1:8765/battle/live/battle-004/events
+```
+
+The proof command starts the adapter on an ephemeral local port and verifies
+snapshot response, full SSE replay, `Last-Event-ID` resume, and future
+`Last-Event-ID` fail-closed behavior:
+
+```bash
+./run.sh prove-live-transport-server --out local/battle-004-pr8-live-transport-server-proof
+```
+
+Proof receipt:
+
+```text
+local/battle-004-pr8-live-transport-server-proof/live-transport-server-proof.json
+```
+
+This executable adapter proves local HTTP/SSE behavior. It still does not prove
+a production deployment, WebSocket support, live Tau/provider/Docker/Judge raw
+runtime reads, exploit success, Blue outcomes, Judge success, packet behavior,
+or memory promotion.
 
 ## Claim Boundaries
 

@@ -6,6 +6,7 @@ import { isBattleCompileView } from "../lib/battle-compile-registry";
 import { isBattleRuntimeView } from "../lib/battle-runtime-registry";
 import { isBattlePopulationView } from "../lib/battle-population-registry";
 import { isBattleLiveView } from "../lib/battle-transport-registry";
+import { isBattleCampaignView } from "../lib/battle-campaign-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
@@ -15,6 +16,7 @@ export function BattleProofNav() {
 	const onRuntime = isBattleRuntimeView(hash);
 	const onPopulation = isBattlePopulationView(hash);
 	const onLive = isBattleLiveView(hash);
+	const onCampaign = isBattleCampaignView(hash);
 	const onRace =
 		!onProof &&
 		!onSynthesis &&
@@ -26,15 +28,22 @@ export function BattleProofNav() {
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
-			<a href="#battle/receipt?engine=pixi" aria-current={onRace && !hash.includes("pr6-genetic") ? "page" : undefined} data-qid="battle:nav:race">
+			<a href="#battle/receipt?engine=pixi" aria-current={onRace && !hash.includes("pr6-genetic") && !onCampaign ? "page" : undefined} data-qid="battle:nav:race">
 				Battle Replay
 			</a>
 			<a
 				href="#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
-				aria-current={hash.includes("pr6-genetic") ? "page" : undefined}
+				aria-current={hash.includes("pr6-genetic") && !onCampaign ? "page" : undefined}
 				data-qid="battle:nav:genetic"
 			>
 				Genetic Pixi
+			</a>
+			<a
+				href="#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
+				aria-current={onCampaign ? "page" : undefined}
+				data-qid="battle:nav:campaign"
+			>
+				Campaign Story
 			</a>
 			<a
 				href="#battle/live?engine=pixi&battle=battle-004"

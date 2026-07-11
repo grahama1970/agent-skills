@@ -946,6 +946,62 @@ The next backend slice, if frontend needs an executable live proof, is the
 actual SSE server/adapter that emits `battle.snapshot.v1` and ordered
 `battle.live_event.v1` records using this contract.
 
+## UX8 Executable SSE Adapter Handoff
+
+Executable local adapter:
+
+```bash
+./run.sh serve-live-transport \
+  --fixture spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json \
+  --battle-id battle-004 \
+  --host 127.0.0.1 \
+  --port 8765
+```
+
+Endpoints:
+
+```text
+GET /battle/live/battle-004/snapshot -> battle.snapshot.v1
+GET /battle/live/battle-004/events -> text/event-stream of battle.live_event.v1
+Last-Event-ID: <seq> resumes from the next event
+Future Last-Event-ID beyond snapshot.last_seq fails closed with HTTP 400
+```
+
+Proof:
+
+```bash
+./run.sh prove-live-transport-server --out local/battle-004-pr8-live-transport-server-proof
+```
+
+Receipt:
+
+```text
+skills/battle/local/battle-004-pr8-live-transport-server-proof/live-transport-server-proof.json
+```
+
+Current proof receipt records:
+
+```text
+status = PASS
+mocked = false
+live = local_http_sse_adapter
+snapshot_schema = battle.snapshot.v1
+event_schema = battle.live_event.v1
+event_count = 36
+last_seq = 36
+resume_from_last_event_id = 2
+resumed_event_count = 34
+future_last_event_id_status = 400
+raw_paths_leaked = false
+```
+
+The adapter uses the normalized fixture as authority and must not read
+`tau-dag-run/**`, `command-loop/command-artifacts/**`, provider workspace,
+Docker mount, raw stdout/stderr, or Judge-internal paths. It proves local
+HTTP/SSE execution only. It does not prove production deployment, WebSocket
+support, exploit success, Blue detection/kill/block, Judge exploit success,
+packet-level behavior, or memory promotion.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:
