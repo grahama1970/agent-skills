@@ -244,6 +244,7 @@ tool_policy:
       create-midi:
         commands:
           - validate
+          - validate-score-packet
           - render
     denied_skills:
       - github
@@ -295,7 +296,7 @@ delegated_access_skills:
       Request MIDI parsing, rendering, or validation artifacts for a generated
       score packet. The helper may validate and render files, but it must not
       schedule playback, infer battle outcomes, or promote the score.
-    required_request_form: "$ask project agent to run create-midi validation on <score_packet_path>"
+    required_request_form: "$ask project agent to run create-midi validate-score-packet on <score_packet_path>"
     forbidden_actions:
       - direct_playback
       - infer_terminal_outcome

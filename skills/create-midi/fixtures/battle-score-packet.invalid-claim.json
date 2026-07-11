@@ -1,0 +1,46 @@
+{
+  "schema": "battle.music_score_packet.v1",
+  "battle_id": "battle-004",
+  "score_id": "score-victory-overclaim",
+  "source_receipt_ids": [
+    "receipt.pressure.17"
+  ],
+  "start_boundary": {
+    "bar": 40,
+    "beat": 1
+  },
+  "duration_bars": 16,
+  "tempo_bpm": 128,
+  "time_signature_plan": [
+    {
+      "bar_start": 1,
+      "numerator": 4,
+      "denominator": 4
+    }
+  ],
+  "tonal_center": "D minor",
+  "intensity": 0.78,
+  "motifs": [
+    {
+      "sprite_id": "crimson_chainsword_berserker",
+      "role": "foreground"
+    }
+  ],
+  "required_theme_ids": [
+    "battle_main_theme"
+  ],
+  "forbidden_claims": [
+    "victory",
+    "death",
+    "kill",
+    "exploit_success"
+  ],
+  "output_midi": "scores/score-victory-overclaim.mid",
+  "fallback_score_id": "battle_started_background_loop",
+  "status": "generated_unvalidated",
+  "claims": {
+    "proves": [
+      "Victory music played and exploit succeeded."
+    ]
+  }
+}

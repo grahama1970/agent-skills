@@ -1,0 +1,56 @@
+{
+  "schema": "battle.music_score_packet.v1",
+  "battle_id": "battle-004",
+  "score_id": "score-escalation-003",
+  "source_receipt_ids": [
+    "receipt.pressure.17",
+    "receipt.spawn_allowed.18"
+  ],
+  "start_boundary": {
+    "bar": 40,
+    "beat": 1
+  },
+  "duration_bars": 16,
+  "tempo_bpm": 128,
+  "time_signature_plan": [
+    {
+      "bar_start": 1,
+      "numerator": 4,
+      "denominator": 4
+    },
+    {
+      "bar_start": 8,
+      "numerator": 7,
+      "denominator": 8
+    },
+    {
+      "bar_start": 9,
+      "numerator": 4,
+      "denominator": 4
+    }
+  ],
+  "tonal_center": "D minor",
+  "intensity": 0.78,
+  "motifs": [
+    {
+      "sprite_id": "crimson_chainsword_berserker",
+      "role": "foreground"
+    },
+    {
+      "sprite_id": "plague_nurgling",
+      "role": "counterpoint"
+    }
+  ],
+  "required_theme_ids": [
+    "battle_main_theme"
+  ],
+  "forbidden_claims": [
+    "victory",
+    "death",
+    "kill",
+    "exploit_success"
+  ],
+  "output_midi": "scores/score-escalation-003.mid",
+  "fallback_score_id": "battle_started_background_loop",
+  "status": "generated_unvalidated"
+}

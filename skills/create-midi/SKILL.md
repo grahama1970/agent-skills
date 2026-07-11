@@ -23,14 +23,19 @@ provides:
   - midi-composition
   - midi-conversion
   - arrangement-creation
+  - battle-score-packet-validation
 composes:
   - memory
   - consume-midi
   - prompt-lab
   - review-music
+complies:
+  - best-practices-skills
+  - best-practices-python
 read_before_use:
   - compose.py
   - midi_utils.py
+  - battle_score_packet.py
   - run.sh
 ---
 
@@ -81,6 +86,39 @@ Mechanical JSON↔MIDI conversion via pretty_midi. No LLM involved.
 
 The MIDI file has separate tracks per instrument. This is the song's
 intermediate representation — between creative decisions and audio rendering.
+
+## 3. Battle Score Packet Validation (`validate-score-packet`)
+
+Deterministically validate `battle.music_score_packet.v1` packets for the
+Battle Music Director subagent. This command is validation-only: it does not
+render MIDI, play audio, schedule playback, or promote a score.
+
+```bash
+./run.sh validate-score-packet \
+  --packet battle.music_score_packet.v1.json \
+  --motif-manifest battle_music_manifest.json \
+  --out validation.json
+```
+
+The validator checks:
+
+- required score packet fields;
+- receipt binding shape;
+- future bar/beat boundary shape;
+- tempo, meter, intensity, and motif role bounds;
+- optional motif existence against a supplied manifest;
+- raw path redaction boundaries;
+- unsupported Battle outcome claims.
+
+Claim boundary:
+
+```text
+mocked: false
+live: local_deterministic_validator
+proves: score-packet structure is valid for deterministic handoff
+does_not_prove: MIDI rendering, audio playback, Battle promotion, victory,
+death, exploit success, Blue outcome, or Judge success
+```
 
 ## Architecture Note
 
