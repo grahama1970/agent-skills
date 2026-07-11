@@ -11,7 +11,7 @@ const TERMINAL_KINDS = new Set(["kill_impact", "killed"]);
 const VICTORY_KINDS = new Set(["judge_exploit_success"]);
 const ENTRANCE_KINDS = new Set(["spawn"]);
 const LIFECYCLE_KINDS = new Set(["research_started"]);
-const ARENA_TRANSITION_KINDS = new Set(["scenario_loaded"]);
+/** scenario_loaded is NOT arena-transition authority (M1 frozen). next_battle_arena stays NOT_EMITTED until accepted/committed transition evidence exists. */
 
 export type BattleScoreTrigger =
 	| { kind: "cue"; cueId: BattleScoreCueId; reason: string }
@@ -36,9 +36,7 @@ export function scoreTriggerForReceiptBeat(beat: ReceiptBeat): BattleScoreTrigge
 	if (LIFECYCLE_KINDS.has(kind)) {
 		return { kind: "cue", cueId: "live_arena_loop", reason: `receipt:${kind}` };
 	}
-	if (ARENA_TRANSITION_KINDS.has(kind)) {
-		return { kind: "cue", cueId: "next_battle_arena", reason: `receipt:${kind}` };
-	}
+	// next_battle_arena: NOT_EMITTED — scenario_loaded alone is not transition authority.
 	return null;
 }
 
@@ -67,7 +65,7 @@ export function scoreCaptionForCue(cueId: BattleScoreCueId): string {
 		case "exploit_victory_stinger":
 			return "Exploit victory stinger — Judge-backed success only.";
 		case "next_battle_arena":
-			return "Next arena cue — accepted arena transition only.";
+			return "Next arena cue — accepted/committed transition receipt only (not scenario_loaded).";
 		case "live_arena_loop":
 			return "Live arena loop — battle lifecycle started.";
 		default:

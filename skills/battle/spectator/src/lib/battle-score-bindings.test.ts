@@ -67,6 +67,10 @@ describe("battle-score-bindings fail-closed", () => {
 		expect(lifecycle && lifecycle.kind === "cue" ? lifecycle.cueId : null).toBe("live_arena_loop");
 	});
 
+	it("does not treat scenario_loaded as next_battle_arena authority", () => {
+		expect(scoreTriggerForReceiptBeat(beat({ kind: "scenario_loaded" as never }))).toBeNull();
+	});
+
 	it("maps effect cues with the same fail-closed rules", () => {
 		const killed: BattleEffectCue = {
 			eventId: "e",

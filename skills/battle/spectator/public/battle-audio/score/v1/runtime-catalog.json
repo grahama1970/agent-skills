@@ -152,5 +152,15 @@
     "death",
     "victory",
     "arena_progression"
-  ]
+  ],
+  "bindings_notes": {
+    "scenario_loaded": "NOT arena-transition authority; next_battle_arena stays NOT_EMITTED without accepted/committed transition evidence",
+    "input_alias": "battle_started_background_loop maps to live_arena_loop; public outputs use live_arena_loop",
+    "playback_class_promoted": "authoritative schedule entries require playback_class:promoted",
+    "actor_focus": "local_preview only; semantic_authority:false; outside battle.music_schedule.v1",
+    "m1_status": "provisional_gm_render catalog playback until normalized_music_fixture published"
+  },
+  "input_aliases": {
+    "battle_started_background_loop": "live_arena_loop"
+  }
 }
