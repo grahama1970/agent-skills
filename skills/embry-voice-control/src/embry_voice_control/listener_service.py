@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from embry_voice_control.event_journal import (
@@ -21,6 +21,8 @@ from embry_voice_control.event_journal import (
     list_events,
     session_ids,
 )
+from embry_voice_control.artifact_authority import resolve_audio_artifact
+from embry_voice_control.chat_projection import build_turn_chat_projection
 
 
 DEFAULT_DB_PATH = Path(os.environ.get(
@@ -179,6 +181,40 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
             "sha256": digest,
             "events": rows,
         }
+
+    @app.get("/v1/sessions/{session_id}/turns/{turn_id}/chat-projection")
+    def chat_projection(session_id: str, turn_id: str) -> dict[str, Any]:
+        try:
+            return build_turn_chat_projection(db_path, session_id=session_id, turn_id=turn_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except (RuntimeError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    def artifact_response(session_id: str, turn_id: str, audio_sha256: str, *, include_body: bool) -> Response:
+        try:
+            artifact = resolve_audio_artifact(
+                db_path, session_id=session_id, turn_id=turn_id, audio_sha256=audio_sha256,
+            )
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        headers = {
+            "Content-Length": str(artifact["bytes"]),
+            "ETag": f'"sha256:{audio_sha256}"',
+            "Cache-Control": "private, immutable",
+        }
+        content = artifact["path"].read_bytes() if include_body else b""
+        return Response(content=content, media_type="audio/wav", headers=headers)
+
+    @app.get("/v1/sessions/{session_id}/turns/{turn_id}/artifacts/{audio_sha256}")
+    def get_artifact(session_id: str, turn_id: str, audio_sha256: str) -> Response:
+        return artifact_response(session_id, turn_id, audio_sha256, include_body=True)
+
+    @app.head("/v1/sessions/{session_id}/turns/{turn_id}/artifacts/{audio_sha256}")
+    def head_artifact(session_id: str, turn_id: str, audio_sha256: str) -> Response:
+        return artifact_response(session_id, turn_id, audio_sha256, include_body=False)
 
     @app.post("/v1/turns/{turn_id}/cancel")
     def cancel(turn_id: str, session_id: str) -> dict[str, Any]:

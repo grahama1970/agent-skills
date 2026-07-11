@@ -116,6 +116,10 @@ export function ThinkingTrace({
             <li
               key={`${step.id}-${step.status ?? 'pending'}`}
               data-qid={`${qid}:step:${step.id}`}
+              data-event-id={String((step.data as Record<string, unknown> | undefined)?.eventId ?? '')}
+              data-event-type={String((step.data as Record<string, unknown> | undefined)?.eventType ?? '')}
+              data-sequence={String((step.data as Record<string, unknown> | undefined)?.sequence ?? '')}
+              data-receipt-hash={String((step.data as Record<string, unknown> | undefined)?.receiptHash ?? '')}
               style={{ display: 'grid', gridTemplateColumns: '18px 1fr', gap: 8, alignItems: 'start' }}
             >
               <StepStatusIcon status={step.status} />

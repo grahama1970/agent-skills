@@ -52,6 +52,7 @@ export type SharedChatShellProps = Omit<
   voiceStatus?: 'off' | 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
   voiceLabel?: string
   onVoiceToggle?: (enabled: boolean) => void
+  projectionOnly?: boolean
 }
 
 export function SharedChatShell({
@@ -78,6 +79,7 @@ export function SharedChatShell({
   voiceStatus,
   voiceLabel,
   onVoiceToggle,
+  projectionOnly = false,
   placeholder,
   disabled,
   composerDisabled,
@@ -87,6 +89,9 @@ export function SharedChatShell({
   qid,
   className,
 }: SharedChatShellProps): JSX.Element {
+  if (projectionOnly && (adapter !== undefined || onSend !== undefined)) {
+    throw new Error('projection_only_turn_control_forbidden')
+  }
   const [mode, setModeState] = useState<PersonaPlexChatMode>(defaultMode)
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>(initialMessages)
   const [streamingSteps, setStreamingSteps] = useState<StreamingStep[]>([])
@@ -211,6 +216,7 @@ export function SharedChatShell({
       data-qid={shellId}
       data-surface={surface}
       data-mode={mode}
+      data-projection-only={projectionOnly ? 'true' : 'false'}
       className={className}
       style={{ minHeight: 0, height: '100%', display: 'grid', gridTemplateRows: hideHeader ? '1fr' : 'auto 1fr', gap: hideHeader ? 0 : 12 }}
     >
@@ -243,14 +249,14 @@ export function SharedChatShell({
         messages={displayMessages}
         streamingSteps={displayStreamingSteps}
         isStreaming={displayIsStreaming}
-        onSend={(value) => void handleSend(value)}
+        onSend={projectionOnly ? undefined : (value) => void handleSend(value)}
         placeholder={placeholder ?? (mode === 'personaplex' ? 'Ask Embry…' : 'Ask SPARTA…')}
         disabled={disabled}
         composerDisabled={composerDisabled}
-        showComposer={showComposer}
+        showComposer={projectionOnly ? false : showComposer}
         emptyTitle={emptyTitle ?? (surface === 'watch' ? 'Hello, Graham' : 'Ask anything')}
         emptyDescription={emptyDescription}
-        starterChips={starterChips}
+        starterChips={projectionOnly ? [] : starterChips}
         qid={qid ?? `${shellId}:well`}
         surface={surface}
         activeBranch={activeBranch}

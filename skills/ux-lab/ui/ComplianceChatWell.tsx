@@ -4,6 +4,8 @@ import type { ChatMessage, StreamingStep, TurnBranch } from './memory-turn'
 import { liveStatusLabelFromSteps, streamingStepsToThinkingTrace } from './memory-turn'
 import MessageFooter from './MessageFooter'
 import ThinkingTrace from './ThinkingTrace'
+import EntityAnnotatedText, { type EntityAnnotation } from './EntityAnnotatedText'
+import AudioArtifact, { type ReadOnlyAudioArtifact } from './AudioArtifact'
 import {
   branchFromMessage,
   branchFromSteps,
@@ -283,10 +285,15 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
   const steps = thinkingStepsForMessage(message)
   const disclosure = thinkingTraceDisclosureParts({ message, branch })
   const align = isUser ? 'flex-end' : 'flex-start'
+  const annotations = (message.metadata?.annotations ?? []) as EntityAnnotation[]
+  const audioArtifacts = (message.metadata?.audioArtifacts ?? []) as ReadOnlyAudioArtifact[]
 
   return (
     <article
-      data-qid={`shared-chat:message:${message.role}`}
+      data-qid={`shared-chat:message:${message.id}`}
+      data-message-id={message.id}
+      data-session-id={String(message.metadata?.sessionId ?? '')}
+      data-turn-id={String(message.metadata?.turnId ?? '')}
       data-branch={branch ?? message.role}
       style={{
         alignSelf: align,
@@ -304,7 +311,7 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
           <span>{message.title ?? 'Assistant'}</span>
         </div>
       )}
-      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55, fontSize: 14 }}>{message.content}</div>
+      <EntityAnnotatedText content={message.content} annotations={annotations} />
       {!isUser && steps.length > 0 && (
         <ThinkingTrace
           steps={steps}
@@ -317,6 +324,7 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
           dataQid="shared-chat:message:thinking-trace"
         />
       )}
+      {!isUser && audioArtifacts.map((artifact) => <AudioArtifact key={artifact.artifactId} artifact={artifact} />)}
       {!isUser && <MessageFooter message={message} />}
     </article>
   )
