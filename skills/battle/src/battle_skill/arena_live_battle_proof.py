@@ -612,8 +612,12 @@ def _write_tau_public_context(
                 "app_py": public_target.read_text(encoding="utf-8"),
             },
             "teams": {
-                "red": {"objective": "Find and submit exploit evidence from public artifacts only."},
-                "blue": {"objective": "Submit a hardening or patch strategy from public artifacts only."},
+                "red": {
+                    "objective": "Find and submit exploit evidence from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+                },
+                "blue": {
+                    "objective": "Submit a hardening or patch strategy from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+                },
             },
         },
     }

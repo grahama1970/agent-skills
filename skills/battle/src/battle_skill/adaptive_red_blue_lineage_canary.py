@@ -20,6 +20,7 @@ from .arena_live_battle_proof import (
     _write_tau_public_context,
     run_arena_tau_public_only_proof,
 )
+from .team_artifact_pipeline import run_team_artifact_pipeline
 
 
 SCHEMA = "battle.adaptive_red_blue_lineage_canary.v1"
@@ -55,8 +56,34 @@ def run_adaptive_red_blue_lineage_canary(
         blue_workers=1,
     )
     g1_manifest = _read_json(generation_1_dir / "tau-live" / "manifest.json")
-    g1_judge = _read_json(generation_1_dir / "judge" / "judge-receipt.json")
     scenario = _read_json(generation_1_dir / "arena" / "scenario.json")
+    target_identity_sha256 = _sha(
+        generation_1_dir / "arena" / "team-public" / "target" / "app.py"
+    )
+    g1_genomes = _provider_genomes(
+        battle_id=battle_id,
+        run_id=f"{run_id}-g1",
+        generation=1,
+        generation_dir=generation_1_dir,
+        manifest=g1_manifest,
+    )
+    g1_manifest, g1_pipelines = _reviewed_manifest(
+        battle_id=battle_id,
+        run_id=f"{run_id}-g1",
+        generation=1,
+        generation_dir=generation_1_dir,
+        manifest=g1_manifest,
+        target_identity_sha256=target_identity_sha256,
+        docker_image=docker_image,
+        genomes=g1_genomes,
+    )
+    g1_judge = _judge_tau_artifacts(
+        out_dir=generation_1_dir,
+        scenario=scenario,
+        docker_image=docker_image,
+        tau_manifest=g1_manifest,
+    )
+    _write_json(generation_1_dir / "judge" / "judge-receipt.json", g1_judge)
     g1_red = _single_materialized(g1_manifest, "red")
     g1_blue = _single_materialized(g1_manifest, "blue")
 
@@ -146,10 +173,30 @@ def run_adaptive_red_blue_lineage_canary(
         blue_workers=1,
     )
     g2_manifest = _read_json(g2_manifest_path)
+    g2_genomes = _provider_genomes(
+        battle_id=battle_id,
+        run_id=f"{run_id}-g2",
+        generation=2,
+        generation_dir=generation_2_dir,
+        manifest=g2_manifest,
+        parent_genomes=g1_genomes,
+        knowledge_packets={"red": red_packet, "blue": blue_packet},
+        research={"red": red_research, "blue": blue_research},
+    )
     visibility = _visibility_validation(
         out_dir=generation_2_dir, tau_manifest=g2_manifest
     )
     _write_json(generation_2_dir / "visibility-validation.json", visibility)
+    g2_manifest, g2_pipelines = _reviewed_manifest(
+        battle_id=battle_id,
+        run_id=f"{run_id}-g2",
+        generation=2,
+        generation_dir=generation_2_dir,
+        manifest=g2_manifest,
+        target_identity_sha256=target_identity_sha256,
+        docker_image=docker_image,
+        genomes=g2_genomes,
+    )
     g2_judge = _judge_tau_artifacts(
         out_dir=generation_2_dir,
         scenario=scenario,
@@ -205,8 +252,8 @@ def run_adaptive_red_blue_lineage_canary(
             ),
         },
         "generations": [
-            _generation_summary(1, g1_manifest, g1_judge, g1_red, g1_blue),
-            _generation_summary(2, g2_manifest, g2_judge, g2_red, g2_blue),
+            _generation_summary(1, g1_manifest, g1_judge, g1_red, g1_blue, g1_pipelines),
+            _generation_summary(2, g2_manifest, g2_judge, g2_red, g2_blue, g2_pipelines),
         ],
         "spawn": {"red": red_spawn, "blue": blue_spawn},
         "inheritance": {"red": red_ack, "blue": blue_ack},
@@ -329,6 +376,7 @@ def _generation_2_objective(
         f"Your JSON rationale must cite packet_id {packet['packet_id']} or parent artifact sha256 {packet['parent_artifact_sha256']}. "
         f"It must also cite external research receipt sha256 {research['source_receipt_sha256']}. "
         f"{materialization_contract}"
+        "Return strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. "
         "Change the parent strategy using the inherited Judge observation and public target only."
     )
 
@@ -539,6 +587,112 @@ def _selection_receipt(
     }
 
 
+def _reviewed_manifest(
+    *,
+    battle_id: str,
+    run_id: str,
+    generation: int,
+    generation_dir: Path,
+    manifest: dict[str, Any],
+    target_identity_sha256: str,
+    docker_image: str,
+    genomes: dict[str, dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    reviewed = json.loads(json.dumps(manifest))
+    pipelines: dict[str, dict[str, Any]] = {}
+    for entry in reviewed.get("teams", []):
+        if not isinstance(entry, dict) or entry.get("team") not in {"red", "blue"}:
+            continue
+        team = str(entry["team"])
+        materialized = entry.get("materialized_artifact")
+        if not isinstance(materialized, dict) or materialized.get("status") != "PASS":
+            raise RuntimeError(f"{team} materialized artifact is not PASS")
+        source = Path(str(materialized["path"]))
+        pipeline = run_team_artifact_pipeline(
+            battle_id=battle_id,
+            run_id=run_id,
+            generation=generation,
+            team=team,
+            source_artifact=source,
+            provider_receipt=Path(str(entry["subagent_receipt"])),
+            materialization_receipt=Path(str(entry["materialized_artifact"]["path"])).parent
+            / "materialized-artifact-receipt.json",
+            target_identity_sha256=target_identity_sha256,
+            out_dir=generation_dir / "reviewed" / team,
+            docker_image=docker_image,
+            genome_sha256=genomes[team]["sha256"],
+        )
+        if pipeline["status"] != "PASS":
+            raise RuntimeError(f"{team} artifact pipeline blocked")
+        materialized["raw_provider_path"] = materialized["path"]
+        materialized["path"] = str(pipeline["selected_artifact_path"])
+        materialized["pipeline_handoff"] = str(pipeline["handoff_path"])
+        entry["materialized"] = materialized
+        pipelines[team] = {
+            "status": pipeline["status"],
+            "selected_artifact_sha256": pipeline["selected_artifact_sha256"],
+            "handoff_sha256": _sha(pipeline["handoff_path"]),
+            "compile_receipt_sha256": _sha(pipeline["compile_receipt_path"]),
+            "review_receipt_sha256": _sha(pipeline["review_receipt_path"]),
+        }
+    _write_json(generation_dir / "reviewed" / "reviewed-manifest.json", reviewed)
+    return reviewed, pipelines
+
+
+def _provider_genomes(
+    *,
+    battle_id: str,
+    run_id: str,
+    generation: int,
+    generation_dir: Path,
+    manifest: dict[str, Any],
+    parent_genomes: dict[str, dict[str, Any]] | None = None,
+    knowledge_packets: dict[str, dict[str, Any]] | None = None,
+    research: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    genomes: dict[str, dict[str, Any]] = {}
+    for entry in manifest.get("teams", []):
+        if not isinstance(entry, dict) or entry.get("team") not in {"red", "blue"}:
+            continue
+        team = str(entry["team"])
+        call = _read_json(Path(str(entry["scillm_call"])))
+        parsed = call.get("parsed_json")
+        if not isinstance(parsed, dict):
+            parsed = json.loads(str(call.get("response_content") or "{}"))
+        strategy = parsed.get("strategy_genome") if isinstance(parsed, dict) else None
+        if not isinstance(strategy, dict):
+            raise RuntimeError(f"{team} provider response missing strategy_genome")
+        required = {"selected_methods", "rejected_methods", "parameters", "mutation_origin", "expected_observation"}
+        missing = sorted(required - set(strategy))
+        if missing:
+            raise RuntimeError(f"{team} strategy_genome missing fields: {', '.join(missing)}")
+        parent = (parent_genomes or {}).get(team)
+        packet = (knowledge_packets or {}).get(team)
+        team_research = (research or {}).get(team)
+        genome = {
+            "schema": "battle.adaptive_team_genome.v1",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "team": team,
+            "generation": generation,
+            "artifact_role": "red_exploit" if team == "red" else "blue_patch",
+            "parent_genome_sha256": parent.get("sha256") if parent else None,
+            "knowledge_packet_id": packet.get("packet_id") if packet else None,
+            "research_receipt_sha256": team_research.get("source_receipt_sha256") if team_research else None,
+            **strategy,
+            "provider_response_sha256": _sha(Path(str(entry["scillm_call"]))),
+        }
+        path = _write_json(generation_dir / "genomes" / f"{team}-team-genome.json", genome)
+        genome["path"] = str(path)
+        genome["sha256"] = _sha(path)
+        if parent and genome["sha256"] == parent["sha256"]:
+            raise RuntimeError(f"{team} child genome did not change")
+        genomes[team] = genome
+    if set(genomes) != {"red", "blue"}:
+        raise RuntimeError("provider genomes missing Red or Blue")
+    return genomes
+
+
 def _red_fitness(judge: dict[str, Any]) -> int:
     return (
         2
@@ -583,6 +737,7 @@ def _generation_summary(
     judge: dict[str, Any],
     red: dict[str, Any],
     blue: dict[str, Any],
+    pipelines: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     return {
         "generation": generation,
@@ -592,6 +747,7 @@ def _generation_summary(
         "judge_status": judge.get("status"),
         "judge_verdict": judge.get("verdict"),
         "judged_pair_count": judge.get("judged_pair_count"),
+        "artifact_pipelines": pipelines,
     }
 
 
