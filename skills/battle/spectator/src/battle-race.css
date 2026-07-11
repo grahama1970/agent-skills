@@ -549,3 +549,25 @@
   border-radius: 12px;
   padding: 10px 12px;
 }
+
+
+/* Receipt/design shell: never let header/main min-content blow past viewport */
+.battle-mockup-shell {
+  width: 100%;
+  max-width: 1672px;
+  min-width: 0;
+  overflow-x: hidden;
+  grid-template-columns: minmax(0, 1fr);
+}
+.battle-mockup-shell > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.battle-mockup-main {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.battle-mockup-main > * {
+  min-width: 0;
+}

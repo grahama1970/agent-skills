@@ -35,7 +35,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl p-0">
         <header className="border-b border-white/10 bg-gradient-to-r from-white/[.035] to-transparent p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div><div className="battle-label">Agent Detail</div><div className="mt-0.5 text-xs font-semibold text-slate-400">Selected agent cockpit</div></div>
+            <div className="min-w-0"><div className="battle-label">Agent Detail</div><div className="mt-0.5 text-xs font-semibold leading-snug text-slate-400">Selected agent cockpit</div></div>
             <ProofBadge mode={model.proofMode} />
           </div>
           <div className="flex items-start gap-3">
@@ -121,9 +121,9 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
 
 function LifecycleLine({ field, value }: { field: string; value: string }) {
   return (
-    <div className="min-w-0 rounded border border-white/10 bg-black/20 px-2 py-1" data-battle-lifecycle-field={field}>
-      <span className="battle-label mr-1">{field}</span>
-      <span className="font-mono text-slate-300">{value}</span>
+    <div className="min-w-0 rounded border border-white/10 bg-black/20 px-2 py-1.5" data-battle-lifecycle-field={field}>
+      <div className="battle-label truncate" title={field}>{field}</div>
+      <div className="mt-0.5 truncate font-mono text-[11px] leading-snug text-slate-300" title={value}>{value}</div>
     </div>
   );
 }

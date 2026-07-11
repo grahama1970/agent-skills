@@ -235,6 +235,15 @@ function hideUnusedMarkers(pool: Sprite[], usedCount: number) {
 	}
 }
 
+
+/** Keep runners inside the lane band — never fill ~95% of row height. */
+export function runnerDisplayScale(rowHeightPx: number): number {
+	const framePx = 64;
+	// Compact lane actors — leave room for labels, markers, and playhead chrome.
+	const raw = (Math.max(24, rowHeightPx) * 0.34) / framePx;
+	return Math.max(0.38, Math.min(0.52, raw));
+}
+
 function upsertRunnerActor(args: {
 	runners: Container;
 	runnerMap: Map<string, RunnerActor>;
@@ -250,7 +259,7 @@ function upsertRunnerActor(args: {
 	const { runners, runnerMap, laneId, variantId, sheet, animation, x, y, rowHeightPx, alpha = 1 } = args;
 	const textures = runnerAnimationTextures(sheet, animation);
 	const anchor = runnerSpriteAnchor(variantId);
-	const scale = Math.max(1.0, Math.min(1.8, (rowHeightPx * 0.95) / 64));
+	const scale = runnerDisplayScale(rowHeightPx);
 	let actor = runnerMap.get(laneId);
 
 	if (!actor || actor.variantId !== variantId) {
@@ -466,22 +475,47 @@ function syncEntities(
 
 			if (event.kind === "blue_blast") continue;
 
-			const effect = battleSpriteTheme.effectForEvent(event);
-			if (!effect || disableParticles || !effect.texture) continue;
-			if (!pixiAllowsTerminalEffect(event, validationGate, input.mode)) continue;
-			const alpha = Math.max(0.12, 1 - (currentSeconds - eventSeconds) / (effect.durationMs / 1000));
-			if (alpha <= 0.12) continue;
-			const burstScale = 1 + effect.intensity * 0.35;
+			if (input.mode === "design_fixture") {
+				const effect = battleSpriteTheme.effectForEvent(event);
+				if (!effect || disableParticles || !effect.texture) continue;
+				if (!pixiAllowsTerminalEffect(event, validationGate, input.mode)) continue;
+				const alpha = Math.max(0.12, 1 - (currentSeconds - eventSeconds) / (effect.durationMs / 1000));
+				if (alpha <= 0.12) continue;
+				const burstScale = Math.min(1.15, 1 + effect.intensity * 0.2);
+				markerWriteIndex = placePooledMarker(
+					layers.markerPool,
+					layers.markers,
+					markerWriteIndex,
+					textureFromAtlas(effect.texture, markerAtlas),
+					mx,
+					y,
+					alpha,
+					burstScale,
+				);
+			}
+		}
+
+		// Full character sheets are design-fixture only until art is clean enough for receipt chrome.
+		// Receipt/live use compact atlas tokens so lanes stay readable.
+		const allowCharacterRunners = input.mode === "design_fixture";
+		if (!allowCharacterRunners) {
+			const existing = runnerMap.get(lane.id);
+			if (existing) {
+				existing.sprite.destroy();
+				runnerMap.delete(lane.id);
+			}
+			const token = row.isChild ? "runner-child" : "runner-parent";
 			markerWriteIndex = placePooledMarker(
 				layers.markerPool,
 				layers.markers,
 				markerWriteIndex,
-				textureFromAtlas(effect.texture, markerAtlas),
-				mx,
+				textureFromAtlas(token, markerAtlas),
+				runnerX,
 				y,
-				alpha,
-				burstScale,
+				1,
+				0.9,
 			);
+			continue;
 		}
 
 		const variantId = spriteIdForLane(lane, spriteTheme);
