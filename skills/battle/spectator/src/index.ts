@@ -44,12 +44,25 @@ export {
 export {
 	BATTLE_LIVE_TRANSPORT_STREAMS,
 	battleLiveTransportFixtureKey,
+	battleLiveTransportBattleId,
+	battleLiveTransportMode,
 	battleLiveTransportStreamBaseUrl,
 	battleLiveTransportCompanionFixtureUrl,
 	isBattleLiveView,
 	isRegisteredLiveTransportFixture,
 } from "./lib/battle-transport-registry";
 export { loadBattleTransportPackage } from "./lib/battle-transport-loader";
+export {
+	BATTLE_LIVE_TRANSPORT_CONTRACTS,
+	isRegisteredLiveTransportBattle,
+} from "./lib/battle-live-transport-contract-registry";
+export { loadBattleLiveTransportContract, liveTransportContractViewModel } from "./lib/battle-live-transport-contract-loader";
+export { validateLiveTransportContract } from "./lib/battle-live-transport-contract-validator";
+export {
+	planLiveSseClient,
+	shouldOpenEventSource,
+	parseSseLiveEventData,
+} from "./lib/battle-live-sse-client";
 export {
 	applyTransportEvent,
 	bootstrapTransportState,

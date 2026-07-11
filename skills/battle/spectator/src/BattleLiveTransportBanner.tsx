@@ -1,12 +1,110 @@
+import type { BattleLiveTransportContractViewModel } from "./lib/battle-live-transport-contract-types";
+import type { BattleLiveSseClientState } from "./lib/battle-live-sse-client";
 import type { BattleTransportViewModel } from "./lib/battle-transport-types";
+import type { BattleLiveTransportMode } from "./lib/battle-transport-registry";
 
 type Props = {
-	model: BattleTransportViewModel;
+	mode: BattleLiveTransportMode;
+	model: BattleTransportViewModel | null;
+	contractModel?: BattleLiveTransportContractViewModel | null;
+	sseClient?: BattleLiveSseClientState | null;
 	onReturnToLive: () => void;
 	onRecover?: () => void;
 };
 
-export function BattleLiveTransportBanner({ model, onReturnToLive, onRecover }: Props) {
+export function BattleLiveTransportBanner({
+	mode,
+	model,
+	contractModel = null,
+	sseClient = null,
+	onReturnToLive,
+	onRecover,
+}: Props) {
+	if (mode === "contract" && contractModel) {
+		return (
+			<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live transport contract">
+				<div className="flex flex-wrap items-center gap-2">
+					<span
+						className="rounded border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
+						data-qid="battle:live:banner:mode"
+					>
+						SSE CONTRACT
+					</span>
+					<span
+						className="rounded border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100"
+						data-qid="battle:live:banner:contract-only"
+					>
+						LIVE: CONTRACT ONLY
+					</span>
+					<span
+						className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
+						data-qid="battle:live:banner:mocked"
+					>
+						MOCKED: NO
+					</span>
+					<span
+						className="rounded border border-rose-400/30 bg-rose-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-100"
+						data-qid="battle:live:banner:no-endpoint"
+					>
+						SSE ENDPOINT NOT EXECUTED
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
+						status {contractModel.status}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:transport">
+						{contractModel.transportKind}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:sse-client">
+						sse client {sseClient?.status ?? "idle"}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:genetic-count">
+						genetic types {contractModel.geneticEventCount}
+					</span>
+				</div>
+				<div className="mt-2 grid gap-1 text-[11px] text-slate-300 md:grid-cols-3">
+					<div data-qid="battle:live:battle-id">battle_id: {contractModel.battleId}</div>
+					<div data-qid="battle:live:run-id">run_id: {contractModel.runId}</div>
+					<div data-qid="battle:live:sse-endpoint">sse: {contractModel.sseEndpoint}</div>
+					<div data-qid="battle:live:snapshot-endpoint">snapshot: {contractModel.snapshotEndpoint}</div>
+					<div data-qid="battle:live:reconnect">reconnect: {contractModel.reconnectHeader}</div>
+					<div data-qid="battle:live:gap">gap: {contractModel.gapResponse}</div>
+				</div>
+				<div className="mt-2 grid gap-2 md:grid-cols-2" data-qid="battle:live:claim-boundary">
+					<div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-2" data-qid="battle:live:claim-may">
+						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-300/80">May claim</div>
+						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
+							{contractModel.mayClaim.map((item) => (
+								<li key={item}>{item.replace(/_/g, " ")}</li>
+							))}
+						</ul>
+					</div>
+					<div className="rounded-lg border border-rose-400/20 bg-rose-400/5 p-2" data-qid="battle:live:claim-must-not">
+						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-rose-300/80">Must not claim</div>
+						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
+							{contractModel.mustNotClaim.map((item) => (
+								<li key={item}>{item.replace(/_/g, " ")}</li>
+							))}
+						</ul>
+					</div>
+				</div>
+				<div className="mt-2 flex flex-wrap gap-1" data-qid="battle:live:genetic-types">
+					{contractModel.geneticEventTypes.map((item) => (
+						<span key={item} className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-300" data-qid={`battle:live:genetic:${item}`}>
+							{item}
+						</span>
+					))}
+				</div>
+				{sseClient?.error ? (
+					<div className="mt-2 rounded border border-amber-400/30 bg-amber-500/10 p-2 text-xs text-amber-100" data-qid="battle:live:contract-note">
+						{sseClient.error}
+					</div>
+				) : null}
+			</section>
+		);
+	}
+
+	if (!model) return null;
+
 	return (
 		<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live transport">
 			<div className="flex flex-wrap items-center gap-2">

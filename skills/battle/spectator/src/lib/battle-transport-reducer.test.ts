@@ -41,6 +41,7 @@ describe("UX8 live transport", () => {
 		expect(isBattleLiveView("#battle/receipt?engine=pixi")).toBe(false);
 		expect(battleLiveTransportFixtureKey("#battle/live?fixture=battle-004-parent-spawn")).toBe("battle-004-parent-spawn");
 		expect(battleLiveTransportFixtureKey("#battle/live?fixture=not-a-registered-stream")).toBeNull();
+		expect(battleLiveTransportFixtureKey("#battle/live?engine=pixi&battle=battle-004")).toBeNull();
 		expect(isRegisteredLiveTransportFixture("not-real")).toBe(false);
 	});
 

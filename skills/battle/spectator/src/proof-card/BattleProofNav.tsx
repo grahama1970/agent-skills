@@ -37,7 +37,7 @@ export function BattleProofNav() {
 				Genetic Pixi
 			</a>
 			<a
-				href="#battle/live?engine=pixi&fixture=battle-004-parent-spawn"
+				href="#battle/live?engine=pixi&battle=battle-004"
 				aria-current={onLive ? "page" : undefined}
 				data-qid="battle:nav:live"
 			>

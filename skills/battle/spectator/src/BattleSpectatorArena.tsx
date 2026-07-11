@@ -226,10 +226,13 @@ export function BattleSpectatorArena() {
     <div className={cn("h-full min-h-0 overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
       <Toaster theme="dark" richColors position="top-right" />
       {(receiptReplay || liveReplay || mockupShell) ? <BattleProofNav /> : null}
-      {liveTransport.model ? (
+      {liveTransport.isLiveRoute && (liveTransport.contractModel || liveTransport.model) ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleLiveTransportBanner
+            mode={liveTransport.mode}
             model={liveTransport.model}
+            contractModel={liveTransport.contractModel}
+            sseClient={liveTransport.sseClient}
             onReturnToLive={liveTransport.returnToLive}
             onRecover={liveTransport.recoverFromGap}
           />
