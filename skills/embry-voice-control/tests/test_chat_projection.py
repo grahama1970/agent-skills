@@ -51,11 +51,17 @@ def test_projection_and_artifact_endpoints_are_hash_bound(tmp_path: Path) -> Non
     add(db, "entities-user", "entities.extraction.completed", {"target_role": "user", "result_path": str(user_path), "result_sha256": "sha256:" + user_hash}, cause="source")
     add(db, "entities-assistant", "entities.extraction.completed", {"target_role": "assistant", "result_path": str(assistant_path), "result_sha256": "sha256:" + assistant_hash}, cause="tau-plan")
     add(db, "render", "chatterbox.voice_render.completed", {"audio": {"artifact_id": "audio:" + audio_hash, "path": str(audio), "sha256": audio_hash, "bytes": len(audio.read_bytes()), "content_type": "audio/wav", "channels": 1, "sample_rate_hz": 24000, "duration_ms": 1}}, cause="tau-plan")
+    authority = {"playback_authority_id": "pipewire-playback:test"}
+    add(db, "requested", "playback.requested", authority, cause="render")
+    add(db, "started", "playback.started", authority, cause="requested")
+    add(db, "ended", "playback.ended", authority, cause="started")
     client = TestClient(create_app(db))
     projection = client.get("/v1/sessions/s/turns/t/chat-projection")
     assert projection.status_code == 200
     assert [message["id"] for message in projection.json()["messages"]] == ["source", "tau-plan"]
     assert projection.json()["messages"][1]["annotations"][0]["mention"] == "Paris"
+    assert projection.json()["playback"]["state"] == "idle"
+    assert [event["type"] for event in projection.json()["playback"]["events"]] == ["playback.requested", "playback.started", "playback.ended"]
     artifact = client.get(f"/v1/sessions/s/turns/t/artifacts/{audio_hash}")
     assert artifact.status_code == 200 and artifact.content == audio.read_bytes()
     assert client.get(f"/v1/sessions/s/turns/t/artifacts/{'0' * 64}").status_code == 404

@@ -58,6 +58,12 @@ export type EmbryChatProjectionV1 = {
   source_sequence: number
   journal: { through_sequence: number; event_count: number; sha256: string }
   messages: EmbryProjectionMessage[]
+  playback?: {
+    authority_id: string
+    state: 'idle'
+    final_state_reason: 'playback.ended'
+    events: Array<{ event_id: string; type: 'playback.requested' | 'playback.started' | 'playback.ended'; sequence: number; created_at: string }>
+  }
   hashes: Record<string, string>
   projection_sha256: string
 }
