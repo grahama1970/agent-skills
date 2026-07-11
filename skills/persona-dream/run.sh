@@ -74,6 +74,9 @@ Commands:
   check-video-provider-packet-routing  Prove provider packet routing stays dry-run and fail-closed
   check-fal-api-preflight  Check FAL auth and non-generation API/docs access without submitting jobs
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
+  check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
+  write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
+  tailscale-funnel-publication-canary  Plan or run authorized Funnel publish/probe/teardown with zero provider calls
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -147,6 +150,9 @@ Examples:
   ./run.sh check-video-provider-packet-routing --fixtures-root tests/fixtures/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
   ./run.sh check-fal-api-preflight --live --receipt-out /tmp/persona-dream-fal-api-preflight/live_receipt.json --json
   ./run.sh check-fal-api-preflight-fixtures --fixtures-root tests/fixtures/fal-api-preflight --receipt-out /tmp/persona-dream-fal-api-preflight/check_receipt.json --json
+  ./run.sh check-pipeline-contract --json
+  ./run.sh write-phase10-reproducibility-receipt --json
+  ./run.sh tailscale-funnel-publication-canary --asset reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png --output-root /tmp/persona-dream-funnel-canary --json
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
@@ -357,6 +363,15 @@ case "$COMMAND" in
     ;;
   check-fal-api-preflight-fixtures)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_fal_api_preflight_fixtures.py" "$@"
+    ;;
+  check-pipeline-contract)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
+    ;;
+  write-phase10-reproducibility-receipt)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_reproducibility_receipt.py" "$@"
+    ;;
+  tailscale-funnel-publication-canary)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

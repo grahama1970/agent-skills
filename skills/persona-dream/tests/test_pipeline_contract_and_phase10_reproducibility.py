@@ -1,0 +1,51 @@
+from pathlib import Path
+import importlib.util
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+check_contract_module = load_module(
+    "check_persona_dream_pipeline_contract",
+    ROOT / "scripts/check_persona_dream_pipeline_contract.py",
+)
+repro_module = load_module(
+    "write_phase10_reproducibility_receipt",
+    ROOT / "scripts/write_phase10_reproducibility_receipt.py",
+)
+
+
+def test_pipeline_contract_has_01_16_and_funnel_boundary():
+    receipt = check_contract_module.check_pipeline_contract(
+        ROOT / "contracts/persona_dream_pipeline.v1.yaml"
+    )
+
+    assert receipt["status"] == "PASS_PERSONA_DREAM_PIPELINE_CONTRACT"
+    assert receipt["phase_count"] == 16
+    assert receipt["workstreams"] == ["A", "B", "E"]
+    assert receipt["publication_backend"] == "tailscale_funnel"
+    assert receipt["actual_provider_call_attempts"] == 0
+    assert receipt["live"] == "no"
+
+
+def test_phase10_reproducibility_receipt_is_dry_run_and_zero_provider_calls():
+    receipt = repro_module.write_phase10_reproducibility_receipt(
+        ROOT / "reports/pipeline-complete/phase_10_provider_contract",
+        "./run.sh write-phase10-reproducibility-receipt --json",
+    )
+
+    assert receipt["status"] == "PASS_PHASE10_REPRODUCIBLE"
+    assert receipt["canonical_hashes_match"] is True
+    assert receipt["actual_provider_call_attempts"] == 0
+    assert receipt["submitted"] is False
+    assert receipt["live"] is False
+    assert receipt["network_calls_observed"] == []

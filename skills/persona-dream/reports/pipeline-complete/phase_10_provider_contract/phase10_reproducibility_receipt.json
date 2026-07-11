@@ -1,0 +1,105 @@
+{
+  "actual_provider_call_attempts": 0,
+  "blockers": [],
+  "canonical_hashes_match": true,
+  "claims": {
+    "does_not_prove": [
+      "live fal schema compatibility",
+      "provider-accessible media publication",
+      "paid authorization",
+      "provider submit",
+      "provider return"
+    ],
+    "proves": [
+      "Phase 10 committed artifact set is canonically stable from frozen local inputs"
+    ]
+  },
+  "command": "./run.sh write-phase10-reproducibility-receipt --phase10-root /tmp/agent-skills-main-funnel/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract",
+  "created_at": "2026-07-11T11:51:37Z",
+  "excluded_dynamic_fields": [
+    "created_at",
+    "generated_at",
+    "receipt_path",
+    "runtime_seconds"
+  ],
+  "expected_contract_hashes": {
+    "final_provider_payload_by_panel.json": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+    "panel_distillation_contract.json": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "panel_distillation_review_receipt.json": "sha256:75ad0e61750b2fb25dae97a2d4bb3e047d980f51a495b99820123769b16532bb",
+    "phase10_provider_contract_receipt.json": "sha256:9faa98c2db858520966dcb68247dd908fc6ae4098bde107921cf8754b45bcf94",
+    "provider_media_probe_receipt.json": "sha256:8fe8166996c61983bd28f02185b3421172dcb384df242258e7f3d501b3d68e00",
+    "provider_media_publication_receipt.json": "sha256:e61a198b8e498f98b39d215138171343a2a185c88885cf55cbeaac936e690304",
+    "provider_payload_field_mapping.json": "sha256:e1579093f33b534cccf92821bfe4b5ff876c37b210b3c032504a44bf488ceb73",
+    "provider_payload_omitted_context.json": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
+    "provider_schema_receipt.json": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "expected_manifest_hashes": {
+    "final_provider_payload_by_panel.json": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+    "panel_distillation_contract.json": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "panel_distillation_review_receipt.json": "sha256:75ad0e61750b2fb25dae97a2d4bb3e047d980f51a495b99820123769b16532bb",
+    "phase10_provider_contract_receipt.json": "sha256:dd361e9e4b67e22c9396c373c0f9045c7577f4077c86eb6a3a1db46cccb90eb6",
+    "provider_media_probe_receipt.json": "sha256:8fe8166996c61983bd28f02185b3421172dcb384df242258e7f3d501b3d68e00",
+    "provider_media_publication_receipt.json": "sha256:e61a198b8e498f98b39d215138171343a2a185c88885cf55cbeaac936e690304",
+    "provider_payload_field_mapping.json": "sha256:e1579093f33b534cccf92821bfe4b5ff876c37b210b3c032504a44bf488ceb73",
+    "provider_payload_omitted_context.json": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
+    "provider_schema_receipt.json": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "first_contract_canonical_hashes": {
+    "final_provider_payload_by_panel.json": "sha256:a34c75f6b87a5d0063d1dae0e8af882ff0d09b2c4a1530ace1779426a221c698",
+    "manifest.json": "sha256:b399cb644d2fe329f8d97043a8f1057d716e6feefc8a03762844c787864d8e0d",
+    "panel_distillation_contract.json": "sha256:593f55a4e58880b1600230cf8bb72c1586c67fa57e9032980d4e8d69f35fd1d7",
+    "panel_distillation_review_receipt.json": "sha256:85866bcb1bcec0860060a42cb1f8a32d96be2a2bc93fa26ae7025fd0105c8ebd",
+    "phase10_provider_contract_receipt.json": "sha256:da6fa1d16d644141795a9728e5793fa4c341c18b3bf3ed6fdf29f06613035d29",
+    "provider_media_probe_receipt.json": "sha256:7c67d6d4a01be836505aa00a6d61d9fa996d9774c6c4ab34147f7acaa37ba923",
+    "provider_media_publication_receipt.json": "sha256:a23862a2bcba53dde343c991426690fe0c491564c5dd9bd554d1b31a848d0b57",
+    "provider_payload_field_mapping.json": "sha256:b28342ad4a9812b4117175711b4f921797fd11b1ad2d10cc6b4e7f769920149d",
+    "provider_payload_omitted_context.json": "sha256:b100f3b0ec9ed49866bcc30e41e299f1d5838530b360eb08802c4aab07e42a88",
+    "provider_schema_receipt.json": "sha256:d4d202374b1ef91d1c169e65e49b344d7f6c569b8b30e378526a91e2bc8dc086"
+  },
+  "implementation": {
+    "git_commit": "eaf223a04dd7372fe6e9d28cc7c36ff5007d3c16",
+    "schema_version": "persona_dream.phase10_reproducibility_receipt.v1",
+    "writer_path": "/tmp/agent-skills-main-funnel/skills/persona-dream/scripts/write_phase10_reproducibility_receipt.py",
+    "writer_sha256": "sha256:14187f302ab602688d10c6b041569ae8258d326cf9faebf7d51348b4e1a7049d"
+  },
+  "input_hashes": {
+    "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+    "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+    "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366",
+    "phase_09_video_provider/storyboard_media_lock_manifest.json": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+    "phase_09_video_provider/video_provider_packet/video_provider_packet.json": "sha256:7544a6cccd61e3e1da20572e23340120bfe4fccd896e00577b2ba371be218fb7",
+    "phase_09_video_provider/video_provider_scorecard.v1.json": "sha256:d25eecc3be9f9dc198c9f99c941249bd737e1ac6750cfb3f2110c53158d095f3"
+  },
+  "live": false,
+  "mocked": false,
+  "network_calls_observed": [],
+  "observed_byte_hashes": {
+    "final_provider_payload_by_panel.json": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+    "manifest.json": "sha256:9fbfe243d5e36778a95bd3cbe4da92dcff6f26fca46f070070319d6d0d27e679",
+    "panel_distillation_contract.json": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "panel_distillation_review_receipt.json": "sha256:75ad0e61750b2fb25dae97a2d4bb3e047d980f51a495b99820123769b16532bb",
+    "phase10_provider_contract_receipt.json": "sha256:dd361e9e4b67e22c9396c373c0f9045c7577f4077c86eb6a3a1db46cccb90eb6",
+    "provider_media_probe_receipt.json": "sha256:8fe8166996c61983bd28f02185b3421172dcb384df242258e7f3d501b3d68e00",
+    "provider_media_publication_receipt.json": "sha256:e61a198b8e498f98b39d215138171343a2a185c88885cf55cbeaac936e690304",
+    "provider_payload_field_mapping.json": "sha256:e1579093f33b534cccf92821bfe4b5ff876c37b210b3c032504a44bf488ceb73",
+    "provider_payload_omitted_context.json": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
+    "provider_schema_receipt.json": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "phase10_root": "/tmp/agent-skills-main-funnel/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase10_reproducibility_receipt.v1",
+  "second_contract_canonical_hashes": {
+    "final_provider_payload_by_panel.json": "sha256:a34c75f6b87a5d0063d1dae0e8af882ff0d09b2c4a1530ace1779426a221c698",
+    "manifest.json": "sha256:b399cb644d2fe329f8d97043a8f1057d716e6feefc8a03762844c787864d8e0d",
+    "panel_distillation_contract.json": "sha256:593f55a4e58880b1600230cf8bb72c1586c67fa57e9032980d4e8d69f35fd1d7",
+    "panel_distillation_review_receipt.json": "sha256:85866bcb1bcec0860060a42cb1f8a32d96be2a2bc93fa26ae7025fd0105c8ebd",
+    "phase10_provider_contract_receipt.json": "sha256:da6fa1d16d644141795a9728e5793fa4c341c18b3bf3ed6fdf29f06613035d29",
+    "provider_media_probe_receipt.json": "sha256:7c67d6d4a01be836505aa00a6d61d9fa996d9774c6c4ab34147f7acaa37ba923",
+    "provider_media_publication_receipt.json": "sha256:a23862a2bcba53dde343c991426690fe0c491564c5dd9bd554d1b31a848d0b57",
+    "provider_payload_field_mapping.json": "sha256:b28342ad4a9812b4117175711b4f921797fd11b1ad2d10cc6b4e7f769920149d",
+    "provider_payload_omitted_context.json": "sha256:b100f3b0ec9ed49866bcc30e41e299f1d5838530b360eb08802c4aab07e42a88",
+    "provider_schema_receipt.json": "sha256:d4d202374b1ef91d1c169e65e49b344d7f6c569b8b30e378526a91e2bc8dc086"
+  },
+  "status": "PASS_PHASE10_REPRODUCIBLE",
+  "submitted": false
+}
