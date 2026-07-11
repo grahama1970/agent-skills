@@ -1,17 +1,44 @@
 import type { GeneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { humanizeGeneticClaimKey } from "./lib/battle-genetic-lifecycle";
+import { BattleEvidenceLadder } from "./lineage/BattleEvidenceLadder";
+import { BattleLineageComparisonPanel } from "./lineage/BattleLineageComparisonPanel";
+import type { BattleNormalizedUxFixture } from "./lib/battle-types";
 
 type Props = {
 	model: GeneticLifecycleViewModel;
+	fixture?: BattleNormalizedUxFixture | null;
 };
 
-export function BattleGeneticLifecycleBanner({ model }: Props) {
+export function BattleGeneticLifecycleBanner({ model, fixture = null }: Props) {
 	return (
-		<section className="battle-genetic-banner" data-qid="battle:genetic:banner" aria-label="Genetic lifecycle claim boundary">
+		<section className="battle-genetic-banner space-y-3" data-qid="battle:genetic:banner" aria-label="Genetic lifecycle claim boundary">
+			{model.compositeDemonstration ? (
+				<div
+					className="rounded-lg border border-amber-400/40 bg-amber-500/15 p-3"
+					data-qid="battle:genetic:composite-banner"
+					data-proof-mode={model.presentationProofMode}
+					data-causal-continuity={model.causalContinuityProven ? "1" : "0"}
+					data-source-run-count={String(model.sourceRunCount)}
+					data-timeline-source={model.timelineSource}
+				>
+					<div className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-100" data-qid="battle:genetic:composite-title">
+						COMPOSITE DEMONSTRATION
+					</div>
+					<p className="mt-1 text-[12px] leading-5 text-amber-50/90" data-qid="battle:genetic:composite-body">
+						Stages are assembled from separate proof runs ({model.sourceRunCount}: {model.sourceFixtureKeys.join(", ")}).
+						Causal continuity is not proven. Timeline source: {model.timelineSource.replaceAll("_", " ")}.
+					</p>
+				</div>
+			) : null}
 			<div className="flex flex-wrap items-center gap-2">
 				<span className="rounded border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-200" data-qid="battle:genetic:banner:fixture">
-					GENETIC PIXI FIXTURE
+					{model.compositeDemonstration ? "GENETIC PIXI · COMPOSITE" : "GENETIC PIXI FIXTURE"}
 				</span>
+				{model.compositeDemonstration ? (
+					<span className="rounded border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100" data-qid="battle:genetic:banner:no-causal">
+						NO CAUSAL CONTINUITY
+					</span>
+				) : null}
 				<span className="rounded border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100" data-qid="battle:genetic:banner:no-victory">
 					NO VICTORY WITHOUT JUDGE
 				</span>
@@ -44,7 +71,7 @@ export function BattleGeneticLifecycleBanner({ model }: Props) {
 				<div className="rounded-lg border border-rose-400/20 bg-rose-400/5 p-2" data-qid="battle:genetic:claim-must-not">
 					<div className="text-[10px] font-black uppercase tracking-[0.1em] text-rose-300/80">Must not claim</div>
 					<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
-						{model.mustNotClaim.slice(0, 6).map((item) => (
+						{model.mustNotClaim.slice(0, 8).map((item) => (
 							<li key={item}>{humanizeGeneticClaimKey(item)}</li>
 						))}
 					</ul>
@@ -64,6 +91,8 @@ export function BattleGeneticLifecycleBanner({ model }: Props) {
 					</span>
 				))}
 			</div>
+			<BattleEvidenceLadder present={model.present} notEmitted={model.notEmitted} />
+			{fixture ? <BattleLineageComparisonPanel fixture={fixture} composite={model.compositeDemonstration} /> : null}
 		</section>
 	);
 }

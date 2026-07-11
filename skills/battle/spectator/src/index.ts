@@ -109,6 +109,11 @@ export { isBattleMusicView, battleMusicFixtureUrl } from "./lib/battle-music-reg
 export { loadBattleMusicFixture } from "./lib/battle-music-loader";
 export { buildMusicScheduleViewModel, validateNormalizedMusicFixture } from "./lib/battle-normalized-music-fixture";
 export { BattleMusicRoute } from "./music/BattleMusicRoute";
+export { BattleEvidenceLadder } from "./lineage/BattleEvidenceLadder";
+export { BattleLineageComparisonPanel } from "./lineage/BattleLineageComparisonPanel";
+export { buildEvidenceLadder } from "./lib/battle-evidence-ladder";
+export { buildLineageComparisonViewModel } from "./lib/battle-lineage-comparison";
+export { geneticCompositePresentation } from "./lib/battle-genetic-lifecycle";
 
 export { BattleRoundStoryIntro } from "./BattleRoundStoryIntro";
 export { buildBattleRoundIntro } from "./lib/battle-round-intro";

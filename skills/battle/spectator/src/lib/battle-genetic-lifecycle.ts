@@ -169,6 +169,13 @@ export type GeneticLifecycleViewModel = {
 	victoryRequiresJudge: boolean;
 	fixtureId: string;
 	route: string;
+	/** Assembled from separate stage fixtures — not one adaptive lineage run. */
+	compositeDemonstration: boolean;
+	causalContinuityProven: boolean;
+	sourceRunCount: number;
+	timelineSource: "synthetic_presentation_order" | "single_campaign_clock" | "unknown";
+	sourceFixtureKeys: string[];
+	presentationProofMode: "composite_demonstration_fixture" | "receipt_backed_fixture" | string;
 };
 
 type GeneticPresentation = {
@@ -234,20 +241,56 @@ export function hasGeneticLifecycle(fixture: BattleNormalizedUxFixture | null | 
 	return geneticLifecycleOf(fixture) != null;
 }
 
+export function geneticCompositePresentation(fixture: BattleNormalizedUxFixture): {
+	compositeDemonstration: boolean;
+	causalContinuityProven: boolean;
+	sourceRunCount: number;
+	timelineSource: "synthetic_presentation_order" | "single_campaign_clock" | "unknown";
+	sourceFixtureKeys: string[];
+	presentationProofMode: string;
+} {
+	const block = asRecord((fixture as { genetic_lifecycle?: unknown }).genetic_lifecycle);
+	const sourceFixtures = asRecord(block?.source_fixtures) ?? {};
+	const provenance = asRecord(block?.provenance);
+	const hashes = asRecord(provenance?.source_fixture_hashes) ?? {};
+	const keys = [...new Set([...Object.keys(sourceFixtures), ...Object.keys(hashes)])].sort();
+	const sourceRunCount = keys.length;
+	const compositeDemonstration = sourceRunCount >= 2;
+	const topProof = typeof fixture.proof_mode === "string" ? fixture.proof_mode : "";
+	const presentationProofMode = compositeDemonstration
+		? "composite_demonstration_fixture"
+		: topProof || "receipt_backed_fixture";
+	return {
+		compositeDemonstration,
+		causalContinuityProven: false,
+		sourceRunCount,
+		timelineSource: compositeDemonstration ? "synthetic_presentation_order" : "unknown",
+		sourceFixtureKeys: keys,
+		presentationProofMode,
+	};
+}
+
 export function geneticLifecycleViewModel(fixture: BattleNormalizedUxFixture): GeneticLifecycleViewModel | null {
 	const genetic = geneticLifecycleOf(fixture);
 	if (!genetic) return null;
+	const composite = geneticCompositePresentation(fixture);
 	return {
 		present: genetic.present_event_types,
 		notEmitted: genetic.not_emitted_event_types,
 		notEmittedReasons: genetic.not_emitted_reasons ?? {},
 		mayClaim: genetic.claim_boundary.may_claim,
-		mustNotClaim: genetic.claim_boundary.must_not_claim,
+		mustNotClaim: [
+			...genetic.claim_boundary.must_not_claim,
+			...(composite.compositeDemonstration
+				? ["causal_continuity_across_stage_fixtures", "single_campaign_clock", "adaptive_lineage_canary"]
+				: []),
+		],
 		compilePassedNotRunnable: genetic.claim_boundary.compile_passed_is_not_runnable === true,
 		targetContactNotExploit: genetic.claim_boundary.target_contact_is_not_exploit_success === true,
 		victoryRequiresJudge: genetic.claim_boundary.victory_requires_judge_receipt === true,
 		fixtureId: genetic.fixture_id ?? "battle-004-pr6-genetic-pixi",
 		route: genetic.route ?? "#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi",
+		...composite,
 	};
 }
 

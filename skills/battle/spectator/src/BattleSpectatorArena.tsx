@@ -322,7 +322,7 @@ export function BattleSpectatorArena() {
       ) : null}
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
-          <BattleGeneticLifecycleBanner model={geneticModel} />
+          <BattleGeneticLifecycleBanner model={geneticModel} fixture={typedReceiptFixture} />
         </div>
       ) : null}
       {roundIntro && roundIntroOpen ? (

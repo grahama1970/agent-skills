@@ -88,6 +88,8 @@ const chrome = await page.evaluate(() => {
   }
 })
 record('14-chapter-count', /CHAPTERS\s+12/i.test(chrome.chapters), chrome.chapters)
+const compositeBadge = await page.evaluate(() => document.querySelector('[data-qid="battle:campaign:composite"]')?.textContent ?? '')
+record('14b-campaign-composite', /COMPOSITE DEMONSTRATION/i.test(compositeBadge), compositeBadge)
 record('15-active-compile', /compile passes/i.test(chrome.activeTitle), chrome.activeTitle)
 record('16-chapter-compile', chrome.chapterCompile, 'compile chapter')
 record('17-no-false-victory', !chrome.chapterJudgeSuccess && chrome.notEmittedJudge, JSON.stringify({ chapterJudgeSuccess: chrome.chapterJudgeSuccess, notEmittedJudge: chrome.notEmittedJudge }))

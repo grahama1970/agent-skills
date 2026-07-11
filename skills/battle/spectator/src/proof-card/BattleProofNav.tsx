@@ -38,15 +38,17 @@ export function BattleProofNav() {
 				href="#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
 				aria-current={hash.includes("pr6-genetic") && !onCampaign ? "page" : undefined}
 				data-qid="battle:nav:genetic"
+				title="Composite demonstration — causal continuity not proven"
 			>
-				Genetic Pixi
+				Genetic Pixi (composite)
 			</a>
 			<a
 				href="#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
 				aria-current={onCampaign ? "page" : undefined}
 				data-qid="battle:nav:campaign"
+				title="Campaign story over composite genetic fixture"
 			>
-				Campaign Story
+				Campaign (composite)
 			</a>
 			<a
 				href="#battle/music?fixture=battle-004-music-runtime"

@@ -42,6 +42,11 @@ const chrome = await page.evaluate(() => {
   const root = document.body.textContent ?? ''
   return {
     banner: !!document.querySelector('[data-qid="battle:genetic:banner"]'),
+    composite: !!document.querySelector('[data-qid="battle:genetic:composite-banner"]'),
+    compositeTitle: document.querySelector('[data-qid="battle:genetic:composite-title"]')?.textContent ?? '',
+    causal: document.querySelector('[data-qid="battle:genetic:composite-banner"]')?.getAttribute('data-causal-continuity') ?? '',
+    ladder: !!document.querySelector('[data-qid="battle:evidence-ladder"]'),
+    lineage: !!document.querySelector('[data-qid="battle:lineage-comparison"]'),
     noVictory: !!document.querySelector('[data-qid="battle:genetic:banner:no-victory"]'),
     compileNotRunnable: !!document.querySelector('[data-qid="battle:genetic:banner:compile-not-runnable"]'),
     targetNotExploit: !!document.querySelector('[data-qid="battle:genetic:banner:target-not-exploit"]'),
@@ -57,6 +62,10 @@ const chrome = await page.evaluate(() => {
 })
 
 record('2-genetic-banner', chrome.banner, 'banner')
+record('2b-composite-banner', chrome.composite && /COMPOSITE DEMONSTRATION/i.test(chrome.compositeTitle), chrome.compositeTitle)
+record('2c-no-causal', chrome.causal === '0', chrome.causal)
+record('2d-evidence-ladder', chrome.ladder, 'ladder')
+record('2e-lineage-comparison', chrome.lineage, 'lineage')
 record('3-no-victory-banner', chrome.noVictory, 'no victory')
 record('4-compile-not-runnable-banner', chrome.compileNotRunnable, 'compile')
 record('5-target-not-exploit-banner', chrome.targetNotExploit, 'target')

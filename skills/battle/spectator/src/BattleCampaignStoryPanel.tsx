@@ -22,13 +22,19 @@ export function BattleCampaignStoryPanel({
 	onSelectChapter,
 }: Props) {
 	return (
-		<section className="battle-campaign-story" data-qid="battle:campaign:banner" aria-label="Battle campaign storytelling">
+		<section className="battle-campaign-story" data-qid="battle:campaign:banner" data-composite="1" aria-label="Battle campaign storytelling">
 			<div className="flex flex-wrap items-center gap-2">
 				<span
 					className="rounded border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100"
 					data-qid="battle:campaign:banner:mode"
 				>
 					CAMPAIGN STORY
+				</span>
+				<span
+					className="rounded border border-amber-400/40 bg-amber-500/15 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100"
+					data-qid="battle:campaign:composite"
+				>
+					COMPOSITE DEMONSTRATION
 				</span>
 				<span
 					className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
