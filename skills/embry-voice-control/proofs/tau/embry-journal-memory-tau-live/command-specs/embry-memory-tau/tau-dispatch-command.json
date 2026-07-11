@@ -1,6 +1,12 @@
 {
   "command": [
-    "python3",
+    "uv",
+    "run",
+    "--project",
+    "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control",
+    "--locked",
+    "--no-sync",
+    "python",
     "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control/proofs/tau/embry-journal-memory-tau-live/scripts/run_embry_journal_memory_tau_handoff.py"
   ],
   "cwd": "/home/graham/workspace/experiments/agent-skills/skills/embry-voice-control",
