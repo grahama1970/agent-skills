@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from embry_voice_control.embry_chat import build_tau_response_plan
+from embry_voice_control.embry_chat import build_tau_response_plan, chunk_tone_arc, split_speakable_text
 
 
 def canonical(value: Any) -> bytes:
@@ -63,6 +63,8 @@ def main() -> int:
     answer_text = str(response_plan["answer_text"])
     tts_render_text = str(response_plan["tts_render_text"])
     tts_sha256 = hashlib.sha256(tts_render_text.encode()).hexdigest()
+    speakable_texts = split_speakable_text(tts_render_text, max_chars=180)
+    chunk_tones = chunk_tone_arc(len(speakable_texts))
     plan_seed = canonical({"source_event_id": source["event_id"], "source_event_sequence": source["sequence"], "memory_intent_sha256": receipts["memory_intent"]["sha256"], "memory_answer_sha256": receipts["memory_answer"]["sha256"], "goal_hash": start["goal"]["goal_hash"], "tts_render_text_sha256": tts_sha256})
     turn_plan = {
         "schema": "tau.turn_plan.v1",
@@ -87,9 +89,21 @@ def main() -> int:
         "voice_policy": response_plan["voice_policy"],
         "memory_intent_receipt": receipts["memory_intent"],
         "memory_answer_receipt": receipts["memory_answer"],
-        "speakable_chunks": [{"chunk_id": source["turn_id"] + "-chunk-001", "text": tts_render_text, "text_sha256": tts_sha256, "tone": response_plan["voice_policy"]["tone"], "pause_after_ms": 250, "interruptible": True, "max_chars": 300}],
+        "speakable_chunks": [
+            {
+                "chunk_id": f"{source['turn_id']}-chunk-{index:03d}",
+                "text": text,
+                "text_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                "tone": chunk_tones[index - 1],
+                "pause_after_ms": 250,
+                "interruptible": True,
+                "max_chars": 300,
+            }
+            for index, text in enumerate(speakable_texts, 1)
+        ],
         "planner": {"callable": "embry_voice_control.embry_chat.build_tau_response_plan", "python_executable": sys.executable, "project_root": str(Path(__file__).resolve().parents[4])},
     }
+    turn_plan["voice_policy"]["chunk_tone_arc"] = chunk_tones
     plan_path = artifact_dir / "tau-turn-plan.json"
     write_json(plan_path, turn_plan)
     tick_seed = canonical({"event_id": source["event_id"], "goal_hash": start["goal"]["goal_hash"]})

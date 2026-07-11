@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import wave
 from typing import Any
 
 SKILL_ROOT = Path(__file__).resolve().parents[4]
@@ -52,17 +53,31 @@ def main() -> int:
     turn_id = source_lineage["turn_id"]
     events = [event for event in session_snapshot(args.journal, session_id)["events"] if event["turn_id"] == turn_id]
     source = next(event for event in events if event["event_id"] == source_lineage["event_id"])
-    tau = next(event for event in events if event["type"] == "tau.turn_plan.completed")
     plan_path = Path(render_receipt["tau"]["turn_plan_path"])
     plan = json.loads(plan_path.read_text())
+    tau = next(
+        event for event in events
+        if event["type"] == "tau.turn_plan.completed"
+        and event["payload"].get("turn_plan_sha256") == render_receipt["tau"]["turn_plan_sha256"]
+    )
     targets = (("user", source["event_id"], source["payload"]["text"]), ("assistant", tau["event_id"], plan["display_text"]))
 
     stored: list[dict[str, Any]] = []
     for role, target_event_id, text in targets:
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
+        existing = next((
+            event for event in events
+            if event["type"] == "entities.extraction.completed"
+            and event["payload"].get("target_role") == role
+            and event["payload"].get("target_event_id") == target_event_id
+            and event["payload"].get("target_text_sha256") == "sha256:" + text_hash
+        ), None)
+        if existing is not None:
+            stored.append(existing)
+            continue
         result_path = args.output_dir / f"{role}-entities.json"
         result = extract(text, result_path)
         result_hash = sha(result_path)
-        text_hash = hashlib.sha256(text.encode()).hexdigest()
         span_count = len(result.get("entity_nodes", []))
         seed = {"target_event_id": target_event_id, "target_text_sha256": text_hash, "result_sha256": result_hash}
         payload = {
@@ -93,16 +108,22 @@ def main() -> int:
     if audio_hash != render_receipt["chatterbox"]["audio_sha256"]:
         raise RuntimeError("accepted_audio_hash_mismatch")
     render_hash = sha(args.render_receipt)
+    with wave.open(str(audio_path), "rb") as audio:
+        channels = audio.getnchannels()
+        sample_rate_hz = audio.getframerate()
+        duration_ms = round(audio.getnframes() / sample_rate_hz * 1000)
+    acceptance_count = len(render_receipt["acceptance"])
+    acceptance_true_count = sum(value is True for value in render_receipt["acceptance"].values())
     render_payload = {
         "schema": "embry.chatterbox_voice_render_event_payload.v1",
         "journalization_mode": "backfill_from_accepted_live_receipt",
         "tau_turn_plan": {"path": str(plan_path), "sha256": render_receipt["tau"]["turn_plan_sha256"]},
         "tts_render_text_sha256": render_receipt["tau"]["tts_render_text_sha256"],
-        "render_receipt": {"path": str(args.render_receipt), "sha256": "sha256:" + render_hash, "acceptance_field_count": 16, "acceptance_true_count": 16, "acceptance_all_true": all(render_receipt["acceptance"].values())},
+        "render_receipt": {"path": str(args.render_receipt), "sha256": "sha256:" + render_hash, "acceptance_field_count": acceptance_count, "acceptance_true_count": acceptance_true_count, "acceptance_all_true": all(render_receipt["acceptance"].values())},
         "audio": {
             "artifact_id": "audio:" + audio_hash, "path": str(audio_path), "sha256": audio_hash,
-            "bytes": audio_path.stat().st_size, "content_type": "audio/wav", "channels": 1,
-            "sample_rate_hz": 24000, "duration_ms": 2040,
+            "bytes": audio_path.stat().st_size, "content_type": "audio/wav", "channels": channels,
+            "sample_rate_hz": sample_rate_hz, "duration_ms": duration_ms,
         },
     }
     render_seed = {"tau_turn_plan_sha256": render_receipt["tau"]["turn_plan_sha256"], "audio_sha256": audio_hash, "render_receipt_sha256": render_hash}

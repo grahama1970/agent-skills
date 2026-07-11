@@ -125,6 +125,7 @@ def run_playback(
     popen: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
 ) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
+    audio_sha256 = audio_sha256.removeprefix("sha256:")
     health = httpx.get(f"{journal_url.rstrip('/')}/health", timeout=5).json()
     if Path(health["db_path"]).resolve() != journal_db.resolve():
         raise RuntimeError("journal_db_mismatch")
@@ -271,6 +272,9 @@ def run_playback(
 
 def _machine_receipt(identity: dict[str, str], audio: dict[str, Any], metadata: dict[str, Any], events: list[dict[str, Any]], pid: int | None, idempotent: bool, output_dir: Path) -> dict[str, Any]:
     by_type = {event["type"]: event for event in events}
+    plan_path = Path(audio["render_event"]["payload"]["tau_turn_plan"]["path"])
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    expected_text = str(plan["tts_render_text"])
     receipt = {
         "schema": "embry.voice.pipewire_playback_machine_receipt.v1",
         "status": "MACHINE_PASS_HUMAN_PENDING", "ok": True, "proof_complete": False,
@@ -279,7 +283,11 @@ def _machine_receipt(identity: dict[str, str], audio: dict[str, Any], metadata: 
         "events": {name.split(".")[1]: {"event_id": event["event_id"], "sequence": event["sequence"]} for name, event in by_type.items()},
         "process_pid": pid, "idempotent_replay": idempotent, "process_spawned": not idempotent,
         "machine_acceptance": {"requested_started_ended": set(by_type) >= {"playback.requested", "playback.started", "playback.ended"}, "journal_lineage_preserved": True, "browser_audio_not_used": True, "orb_events_emitted": False},
-        "human_audible_witness": {"status": "pending", "expected_text": "The capital of France is Paris."},
+        "human_audible_witness": {
+            "status": "pending",
+            "expected_text": expected_text,
+            "expected_text_sha256": "sha256:" + hashlib.sha256(expected_text.encode()).hexdigest(),
+        },
         "failed_gates": [],
     }
     path = output_dir / "machine-receipt.json"

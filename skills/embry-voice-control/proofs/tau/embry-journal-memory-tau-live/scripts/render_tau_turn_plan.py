@@ -62,6 +62,14 @@ def main() -> int:
         raise ValueError("turn_plan_text_hash_mismatch")
 
     plan_locator = handoff["context"]["tau_turn_plan"]
+    chunks_match_plan = (
+        " ".join(chunk["text"] for chunk in plan["speakable_chunks"]) == tts_text
+        and all(
+            chunk["text_sha256"] == hashlib.sha256(chunk["text"].encode()).hexdigest()
+            and len(chunk["text"]) <= int(chunk["max_chars"])
+            for chunk in plan["speakable_chunks"]
+        )
+    )
     request = {
         "schema": "tau.voice_render_request.v1",
         "run_id": plan["plan_id"],
@@ -87,7 +95,11 @@ def main() -> int:
     }
     request_path = output / "request.json"
     write_json(request_path, request)
-    response = httpx.post(args.chatterbox_url.rstrip("/") + "/tau/voice-render", json=request, timeout=180).json()
+    http_response = httpx.post(
+        args.chatterbox_url.rstrip("/") + "/tau/voice-render", json=request, timeout=180
+    )
+    http_response.raise_for_status()
+    response = http_response.json()
     response_path = output / "response.json"
     write_json(response_path, response)
     audio_value = response.get("finished_response_audio")
@@ -109,7 +121,7 @@ def main() -> int:
         "speaker_verification": {"event_id": claim["speaker_evidence_event"]["event_id"], "speaker_id": "horus_lupercal", "score": claim["speaker_evidence_event"]["payload"]["candidates"][0]["confidence"]},
         "tau": {"tick_count": 1, "turn_plan_schema": plan["schema"], "turn_plan_path": str(plan_path), "turn_plan_sha256": plan_locator["sha256"], "route": plan["route"], "memory_result_classification": plan["memory_result_classification"], "tts_render_text_sha256": tts_hash},
         "chatterbox": {"endpoint": "/tau/voice-render", "request_path": str(request_path), "request_sha256": sha256_path(request_path), "response_path": str(response_path), "response_sha256": sha256_path(response_path), "response_source": response.get("source"), "answer_text_sha256": tau_receipt.get("answer_text_sha256"), "echoed_turn_plan_sha256": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256"), "audio_path": str(audio_path), "audio_sha256": audio_sha, "audio_bytes": audio_path.stat().st_size if audio_path.is_file() else 0},
-        "acceptance": {"embry_project_runtime_selected": str(plan["planner"]["python_executable"]).startswith(str(Path(__file__).resolve().parents[4] / ".venv")), "production_planner_called": plan["planner"]["callable"] == "embry_voice_control.embry_chat.build_tau_response_plan", "source_event_lineage_preserved": actual == expected, "irrelevant_memory_answer_rejected": plan["memory_result_classification"] == "memory_miss_irrelevant_answer", "static_answer_selected_by_existing_policy": plan["route"] == "static_answer", "one_bounded_tau_tick": True, "turn_plan_hash_preserved_in_handoff": sha256_path(plan_path) == plan_locator["sha256"], "render_request_built_only_from_turn_plan": True, "question_hash_matches_source_event": request["question_text_sha256"] == hashlib.sha256(source_event["payload"]["text"].encode()).hexdigest(), "chunk_hash_matches_turn_plan": request["speakable_chunks"][0]["text_sha256"] == tts_hash, "chatterbox_echoed_turn_plan_hash": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256") == plan_locator["sha256"], "chatterbox_audio_nonempty": audio_path.is_file() and audio_path.stat().st_size > 44, "no_global_latest_read": True, "no_ui": True, "no_orb": True, "no_replay": True, "no_playback": True},
+        "acceptance": {"embry_project_runtime_selected": str(plan["planner"]["python_executable"]).startswith(str(Path(__file__).resolve().parents[4] / ".venv")), "production_planner_called": plan["planner"]["callable"] == "embry_voice_control.embry_chat.build_tau_response_plan", "source_event_lineage_preserved": actual == expected, "memory_classification_matches_route": (plan["route"] == "memory_answer" and plan["memory_result_classification"] == "memory_answer") or (plan["route"] != "memory_answer" and plan["memory_result_classification"].startswith("memory_miss")), "turn_plan_route_is_renderable": plan["route"] in {"memory_answer", "static_answer", "research_answer", "skill_answer"}, "one_bounded_tau_tick": True, "turn_plan_hash_preserved_in_handoff": sha256_path(plan_path) == plan_locator["sha256"], "render_request_built_only_from_turn_plan": True, "question_hash_matches_source_event": request["question_text_sha256"] == hashlib.sha256(source_event["payload"]["text"].encode()).hexdigest(), "chunk_hashes_match_turn_plan": chunks_match_plan, "chatterbox_echoed_turn_plan_hash": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256") == plan_locator["sha256"], "chatterbox_audio_nonempty": audio_path.is_file() and audio_path.stat().st_size > 44, "no_global_latest_read": True, "no_ui": True, "no_orb": True, "no_replay": True, "no_playback": True},
         "failed_gates": failed,
     }
     if not all(receipt["acceptance"].values()):

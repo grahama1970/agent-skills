@@ -155,6 +155,36 @@ def is_capital_france_query(text: str) -> bool:
     return "capital" in normalized and "france" in normalized
 
 
+def split_speakable_text(text: str, max_chars: int = 300) -> list[str]:
+    """Split speech at word boundaries without exceeding the renderer limit."""
+    words = text.split()
+    chunks: list[str] = []
+    current: list[str] = []
+    for word in words:
+        if len(word) > max_chars:
+            raise ValueError("speakable_word_exceeds_max_chars")
+        candidate = " ".join([*current, word])
+        if current and len(candidate) > max_chars:
+            chunks.append(" ".join(current))
+            current = [word]
+        else:
+            current.append(word)
+    if current:
+        chunks.append(" ".join(current))
+    return chunks
+
+
+def chunk_tone_arc(chunk_count: int) -> list[str]:
+    """Return a bounded concerned-to-confident-to-happy delivery arc."""
+    if chunk_count <= 0:
+        return []
+    if chunk_count == 1:
+        return ["memory_confident"]
+    if chunk_count == 2:
+        return ["careful_concerned", "playful_light"]
+    return ["careful_concerned", *(["memory_confident"] * (chunk_count - 2)), "playful_light"]
+
+
 def build_tau_response_plan(
     *,
     turn_text: str,
@@ -167,14 +197,22 @@ def build_tau_response_plan(
     memory_classification = classify_memory_answer(answer_result, turn_text=turn_text)
     if memory_classification.startswith("memory_miss"):
         memory_answer = ""
-    if intent_action in {"COMPLIANCE", "CLARIFY", "IDENTITY_CLARIFICATION", "DEFLECT"}:
+    if intent_action in {"CLARIFY", "IDENTITY_CLARIFICATION", "DEFLECT"}:
         route_taken = "fail_closed"
         answer_text = "I need to keep that inside the memory and compliance path."
         route_reason = f"memory_intent_action_{intent_action.lower()}"
     elif memory_answer:
         route_taken = "memory_answer"
         answer_text = memory_answer
-        route_reason = "memory_answer_available"
+        route_reason = (
+            "compliance_grounded_memory_answer"
+            if intent_action == "COMPLIANCE"
+            else "memory_answer_available"
+        )
+    elif intent_action == "COMPLIANCE":
+        route_taken = "fail_closed"
+        answer_text = "I need to keep that inside the memory and compliance path."
+        route_reason = "memory_intent_action_compliance"
     elif is_capital_france_query(turn_text):
         route_taken = "static_answer"
         answer_text = "The capital of France is Paris."
