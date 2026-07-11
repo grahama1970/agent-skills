@@ -1,0 +1,14 @@
+{
+  "schema_id": "schemas/kling_submit_gate_receipt.schema.json",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "provider": "kling",
+  "attempted_live_submit": false,
+  "decision": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "reason": "one-scene Kling call packet is ready for dry-run inspection, but live paid submission is not approved",
+  "evidence": [
+    "one_scene_kling_call_contract.live_submission_allowed=false",
+    "one_scene_kling_call_contract.paid_call_performed=false",
+    "pipeline_paid_call_approval_receipt.live_submission_allowed=false",
+    "provider_readiness_receipt.ready_for_dry_run=true"
+  ]
+}

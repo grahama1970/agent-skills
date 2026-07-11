@@ -1,0 +1,18 @@
+{
+  "verdict": "BLOCKED",
+  "can_move_to_next_phase": false,
+  "blocking_count": 10,
+  "blockers": [
+    "panel_1_embry_missing",
+    "unreviewed_panels_blocking",
+    "panel_9_failed_state",
+    "pasted_overlay_gate_not_closed",
+    "second_pass_script_not_verified",
+    "callback_or_polling_missing",
+    "voice_ids_missing",
+    "provider_media_urls_missing",
+    "canon_reference_receipts_incomplete",
+    "mode_cost_tier_ambiguity"
+  ],
+  "recommended_subagent": "persona-dream-panel-repair-gate"
+}

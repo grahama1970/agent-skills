@@ -1,0 +1,13 @@
+{
+  "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+  "status": "PASS_PROVIDER_MEDIA_URL_PROBE",
+  "url": "https://assets.example.com/persona-dream/panel_01_attempt_02.png",
+  "expected_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "observed_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "http_status": 200,
+  "content_length": 12345,
+  "mocked": "yes",
+  "live": "no",
+  "exercised": "fixture provider media probe contract and sha256 comparison fields",
+  "unverified": "Kling provider fetch behavior, provider task submission, paid-call authorization"
+}

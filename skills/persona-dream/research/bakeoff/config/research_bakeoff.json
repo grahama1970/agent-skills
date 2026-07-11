@@ -1,0 +1,41 @@
+{
+  "schema_version": "persona_dream_research_bakeoff_config.v0.1",
+  "default_run_root": "research/bakeoff/runs",
+  "contact_sheet_backend": {
+    "default": "dry_run",
+    "allowed": [
+      "dry_run",
+      "fal_flux",
+      "gpt_image",
+      "scillm_image",
+      "local_diffusion"
+    ],
+    "implemented": [
+      "dry_run",
+      "fal_flux"
+    ]
+  },
+  "voice_lane": {
+    "default": "elevenlabs",
+    "allowed": [
+      "elevenlabs",
+      "wavtts",
+      "kokoro",
+      "nava"
+    ],
+    "implemented": [
+      "elevenlabs",
+      "wavtts",
+      "nava"
+    ],
+    "research_only": [
+      "wavtts",
+      "nava"
+    ],
+    "future": [
+      "kokoro"
+    ]
+  },
+  "external_lanes_require_explicit_command": true,
+  "memory_writes": false
+}

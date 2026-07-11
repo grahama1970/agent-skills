@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/one_scene_kling_call_contract.schema.json",
+  "title": "P0 One-Scene Kling Call Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "scene_id",
+    "provider",
+    "model",
+    "duration_seconds",
+    "mode",
+    "resolution",
+    "aspect_ratio",
+    "prompt",
+    "negative_prompt",
+    "source_artifacts",
+    "provider_media_urls",
+    "media_hashes",
+    "callback_or_polling_plan",
+    "live_submission_allowed",
+    "paid_call_performed"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/one_scene_kling_call_contract.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scene_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "const": "kling"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 10
+    },
+    "mode": {
+      "const": "std"
+    },
+    "resolution": {
+      "const": "720p"
+    },
+    "aspect_ratio": {
+      "enum": ["16:9", "9:16", "1:1"]
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "negative_prompt": {
+      "type": "string"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dream_packet", "story_contract", "storyboard_panel", "visual_review_receipt"],
+      "properties": {
+        "dream_packet": {
+          "type": "string",
+          "minLength": 1
+        },
+        "story_contract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "storyboard_panel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visual_review_receipt": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "provider_media_urls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^https?://"
+      }
+    },
+    "media_hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "callback_or_polling_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "timeout_seconds", "result_receipt_path"],
+      "properties": {
+        "method": {
+          "enum": ["polling", "callback"]
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 60
+        },
+        "result_receipt_path": {
+          "type": "string",
+          "pattern": "^receipts/.+\\.json$"
+        }
+      }
+    },
+    "live_submission_allowed": {
+      "const": false
+    },
+    "paid_call_performed": {
+      "const": false
+    }
+  }
+}

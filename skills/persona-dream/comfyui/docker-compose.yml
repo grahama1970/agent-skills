@@ -1,0 +1,33 @@
+services:
+  comfyui:
+    build:
+      context: /home/graham/workspace/experiments/ComfyUI
+      dockerfile: /home/graham/workspace/experiments/agent-skills/skills/persona-dream/comfyui/Dockerfile
+    image: persona-dream-comfyui:local
+    container_name: persona-dream-comfyui
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8188:8188"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "${NVIDIA_VISIBLE_DEVICES:-all}"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+      PYTHONUNBUFFERED: "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - /home/graham/workspace/experiments/ComfyUI:/opt/comfyui
+      - /mnt/storage12tb/comfyui/models:/opt/comfyui/models
+      - /mnt/storage12tb/skills/persona-dream/comfyui/input:/opt/comfyui/input
+      - /mnt/storage12tb/skills/persona-dream/comfyui/output:/opt/comfyui/output
+      - /mnt/storage12tb/skills/persona-dream/comfyui/user:/opt/comfyui/user
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8188/system_stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s

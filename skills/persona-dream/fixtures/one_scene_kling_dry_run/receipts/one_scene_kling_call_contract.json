@@ -1,0 +1,32 @@
+{
+  "schema_id": "schemas/one_scene_kling_call_contract.schema.json",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "scene_id": "scene-001",
+  "provider": "kling",
+  "model": "kling-video/std",
+  "duration_seconds": 5,
+  "mode": "std",
+  "resolution": "720p",
+  "aspect_ratio": "16:9",
+  "prompt": "Single five-second scene: Horus and Embry stand on a rain-dark patio beside a stone railing, listening to distant thunder while a small creature watches from under an umbrella. Camera holds a restrained medium-wide frame, slow push-in, natural motion only.",
+  "negative_prompt": "No text overlays, no logos, no cuts, no extra characters, no warped hands, no flickering faces.",
+  "source_artifacts": {
+    "dream_packet": "artifacts/dream_packet.json",
+    "story_contract": "artifacts/story_contract.json",
+    "storyboard_panel": "artifacts/panel_001.json",
+    "visual_review_receipt": "receipts/visual_review_receipt.json"
+  },
+  "provider_media_urls": [
+    "https://example.invalid/persona-dream/one-scene/panel_001_reference.png"
+  ],
+  "media_hashes": {
+    "panel_001_reference.png": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "callback_or_polling_plan": {
+    "method": "polling",
+    "timeout_seconds": 900,
+    "result_receipt_path": "receipts/kling_result_receipt.json"
+  },
+  "live_submission_allowed": false,
+  "paid_call_performed": false
+}

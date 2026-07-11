@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.review_display_interaction_manifest.v1",
+  "type": "object",
+  "required": ["schema", "status", "created_at", "page", "checks"],
+  "properties": {
+    "schema": {"const": "persona_dream.review_display_interaction_manifest.v1"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "page": {"type": "string"},
+    "checks": {"type": "array", "minItems": 1}
+  }
+}

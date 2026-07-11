@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_story_contract import validate_story_contract  # noqa: E402
+
+
+def _write_contract(path: Path, **overrides: object) -> None:
+    contract = {
+        "schema": "persona_dream.story_contract.v1",
+        "artifact_id": "fixture_story_contract",
+        "status": "ACCEPTED_AUTOMATED",
+        "created_at": "2026-06-28T20:00:00Z",
+        "input_idea_contract": "artifacts/idea_contract.json",
+        "seed": "shared dream seed",
+        "story": "Horus and Embry review evidence under a void-world patio sky.",
+        "target_duration_s": 8.0,
+        "speaking_characters": ["horus", "embry"],
+    }
+    contract.update(overrides)
+    path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+
+
+class TestStoryContract(unittest.TestCase):
+    def test_valid_story_contract_passes_local_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            contract = run_root / "story_contract.json"
+            _write_contract(contract)
+
+            result = validate_story_contract(contract, run_root=run_root)
+
+        self.assertEqual(result["status"], "PASS_STORY_CONTRACT")
+        self.assertIsNone(result["first_blocker"])
+        self.assertEqual(result["mocked"], "no")
+        self.assertEqual(result["live"], "no")
+
+    def test_story_contract_blocks_on_unaccepted_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            contract = run_root / "story_contract.json"
+            _write_contract(contract, status="DRAFT")
+
+            result = validate_story_contract(contract, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "story_contract")
+        self.assertEqual(result["first_blocker"]["reason"], "story_contract_not_accepted:DRAFT")
+
+    def test_story_contract_blocks_on_nonpositive_duration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            contract = run_root / "story_contract.json"
+            _write_contract(contract, target_duration_s=0)
+
+            result = validate_story_contract(contract, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["reason"], "target_duration_not_positive")
+
+    def test_story_contract_blocks_on_blank_speaking_character(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            contract = run_root / "story_contract.json"
+            _write_contract(contract, speaking_characters=["horus", " "])
+
+            result = validate_story_contract(contract, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["reason"], "invalid_speaking_character")
+
+
+if __name__ == "__main__":
+    unittest.main()

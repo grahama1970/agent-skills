@@ -1,0 +1,47 @@
+steps:
+  - id: story_executor
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung21_story_executor_real_dry_run.py"
+      - "--run-dir"
+      - "__RUN_DIR__"
+      - "--receipt"
+      - "__RUN_DIR__/story_executor_receipt.json"
+    receipt: "__RUN_DIR__/story_executor_receipt.json"
+    expect_receipt:
+      schema: "persona_dream.rung21_story_executor_receipt.v1"
+      ok: true
+      phase: "story"
+      executor_readonly: true
+      workspace_manifest_unchanged: true
+      execution_isolated: true
+      active_artifact_mutation_performed: false
+      provider_call_performed: false
+      live_call_performed: false
+      paid_call_performed: false
+  - id: story_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung12_shared_phase_gate.py"
+      - "--case"
+      - "story_executor_pass"
+      - "--story-executor-receipt"
+      - "__RUN_DIR__/story_executor_receipt.json"
+      - "--receipt"
+      - "__RUN_DIR__/story_gate_receipt.json"
+    receipt: "__RUN_DIR__/story_gate_receipt.json"
+    expect_receipt:
+      schema: "persona_dream.rung12_shared_phase_gate.v1"
+      ok: true
+      cases.0.case_id: "story_executor_pass"
+      cases.0.executor_receipt_path: "__RUN_DIR__/story_executor_receipt.json"
+      cases.0.executor_schema: "persona_dream.rung21_story_executor_receipt.v1"
+      cases.0.verdict: "PASS"
+      cases.0.advance_allowed: true
+      cases.0.executor_readonly: true
+      cases.0.workspace_manifest_unchanged: true
+      cases.0.execution_isolated: true
+      cases.0.active_artifact_mutation_performed: false
+      cases.0.provider_call_performed: false
+      cases.0.live_call_performed: false
+      cases.0.paid_call_performed: false

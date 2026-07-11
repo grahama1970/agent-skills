@@ -1,0 +1,12 @@
+{
+  "schema": "persona_dream.manual_review_receipt.v1",
+  "artifact_id": "one_scene_panel_001_visual_review",
+  "status": "BLOCKED",
+  "created_at": "2026-06-28T18:50:00Z",
+  "reviewed_artifacts": [
+    "artifacts/panel_001_reference.png",
+    "receipts/provider_media_lock_receipt.json",
+    "receipts/kling_scene_packet.json"
+  ],
+  "decision": "Visual review receipt exists, but the panel has not been accepted by a human or VLM reviewer. Provider readiness remains blocked."
+}

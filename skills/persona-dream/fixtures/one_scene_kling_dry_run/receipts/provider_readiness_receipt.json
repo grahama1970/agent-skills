@@ -1,0 +1,15 @@
+{
+  "schema_id": "schemas/provider_readiness_receipt.schema.json",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "provider": "kling",
+  "ready_for_dry_run": true,
+  "ready_for_live_submit": false,
+  "checks": [
+    {"name": "one_scene_call_contract", "status": "PASS"},
+    {"name": "provider_media_urls", "status": "PASS"},
+    {"name": "media_hashes", "status": "PASS"},
+    {"name": "callback_or_polling_plan", "status": "PASS"},
+    {"name": "paid_call_approval", "status": "BLOCKED"}
+  ],
+  "missing": []
+}

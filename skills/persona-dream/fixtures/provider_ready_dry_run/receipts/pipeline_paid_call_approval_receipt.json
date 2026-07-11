@@ -1,0 +1,10 @@
+{
+  "schema_id": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+  "run_id": "provider-ready-dry-run-fixture",
+  "provider": "kling",
+  "approval_state": "NOT_REQUESTED",
+  "live_submission_allowed": false,
+  "dry_run_only": true,
+  "approver": null,
+  "evidence": ["dry-run fixture has no live paid-call approval"]
+}

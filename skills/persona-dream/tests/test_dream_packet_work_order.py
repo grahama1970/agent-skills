@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_dream_packet_work_order import validate_dream_packet_work_order  # noqa: E402
+from write_dream_packet_work_order import build_dream_packet_work_order  # noqa: E402
+
+
+class TestDreamPacketWorkOrder(unittest.TestCase):
+    def test_missing_dream_packet_work_order_captures_beginning_blocker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            output = run_root / "receipts/dream_packet_work_order.json"
+            work_order = build_dream_packet_work_order(
+                run_root=run_root,
+                blocker={
+                    "phase": "dream_packet",
+                    "reason": "missing_artifact",
+                    "path": "dream_packet.json | artifacts/dream_packet.json",
+                },
+                created_at="2026-06-28T23:59:00Z",
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+
+            validation = validate_dream_packet_work_order(output)
+
+        self.assertEqual(work_order["status"], "WORK_ORDER_READY_DREAM_PACKET_REQUIRED")
+        self.assertEqual(work_order["owner_subagent"], "dreamer")
+        self.assertEqual(work_order["delegated_subagents"], ["memory"])
+        self.assertFalse(work_order["current_packet"]["exists"])
+        self.assertEqual(work_order["blocking_validation"]["first_blocker"]["reason"], "missing_artifact")
+        self.assertIn("fabricate_residue_source_ids", work_order["forbidden_actions"])
+        self.assertEqual(validation["status"], "PASS_DREAM_PACKET_WORK_ORDER")
+        self.assertFalse(validation["packet_exists"])
+        self.assertEqual(validation["live"], "no")
+
+    def test_dream_packet_work_order_validator_rejects_memory_write_policy_gap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            output = run_root / "receipts/dream_packet_work_order.json"
+            work_order = build_dream_packet_work_order(run_root=run_root)
+            work_order["forbidden_actions"].remove("write_memory_without_explicit_authorization")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+
+            validation = validate_dream_packet_work_order(output)
+
+        self.assertEqual(validation["status"], "BLOCKED")
+        self.assertIn("write_memory_without_explicit_authorization", validation["first_blocker"]["reason"])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.storyboard_identity_contract.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "owner", "character_checks", "failure_policy"],
+  "properties": {
+    "schema": {"const": "persona_dream.storyboard_identity_contract.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "owner": {"type": "string"},
+    "character_checks": {"type": "array", "minItems": 1},
+    "failure_policy": {"type": "string"}
+  }
+}

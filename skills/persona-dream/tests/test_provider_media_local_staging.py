@@ -1,0 +1,95 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from stage_provider_media_local_asset import stage_provider_media_local_asset  # noqa: E402
+from validate_provider_media_local_staging import validate_provider_media_local_staging  # noqa: E402
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+class TestProviderMediaLocalStaging(unittest.TestCase):
+    def test_stages_locked_bytes_without_authorizing_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo_root = root / "repo"
+            image = root / "panel.png"
+            image.write_bytes(b"panel-bytes")
+            image_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+            work_order = root / "publication_request.json"
+            _write_json(
+                work_order,
+                {
+                    "schema": "persona_dream.provider_media_publication_work_order.v1",
+                    "run_id": "run-id",
+                    "panel_id": "panel_01",
+                    "locked_media": {
+                        "local_path": str(image),
+                        "sha256": image_hash,
+                    },
+                    "proposed_publication": {
+                        "target_repo_path": "skills/persona-dream/provider_media/run-id/panel_01.png",
+                        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run-id/panel_01.png",
+                    },
+                },
+            )
+
+            receipt = stage_provider_media_local_asset(
+                work_order_path=work_order,
+                repo_root=repo_root,
+                created_at="2026-06-28T22:00:00Z",
+            )
+            receipt_path = root / "local_staging_receipt.json"
+            _write_json(receipt_path, receipt)
+            result = validate_provider_media_local_staging(receipt_path)
+
+        self.assertEqual(result["status"], "PASS_PROVIDER_MEDIA_LOCAL_STAGING")
+        self.assertEqual(result["staged_sha256"], image_hash)
+        self.assertIn("provider_readiness", receipt["does_not_authorize"])
+        self.assertIn("validate-provider-media-url", receipt["next_required_probe_command"])
+
+    def test_validation_blocks_when_staged_hash_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            staged = root / "panel.png"
+            staged.write_bytes(b"original")
+            expected = "sha256:" + hashlib.sha256(staged.read_bytes()).hexdigest()
+            receipt_path = root / "local_staging_receipt.json"
+            _write_json(
+                receipt_path,
+                {
+                    "schema": "persona_dream.provider_media_local_staging_receipt.v1",
+                    "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+                    "staged_asset_path": str(staged),
+                    "staged_sha256": expected,
+                    "does_not_authorize": [
+                        "git_push",
+                        "public_upload",
+                        "provider_readiness",
+                        "direct_kling_submit",
+                        "paid_provider_call",
+                    ],
+                    "next_required_probe_command": "./run.sh validate-provider-media-url --url https://example.com/panel.png --expected-sha256 sha256:abc --json",
+                },
+            )
+            staged.write_bytes(b"changed")
+
+            result = validate_provider_media_local_staging(receipt_path)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("staged_sha256_mismatch", result["first_blocker"]["reason"])
+
+
+if __name__ == "__main__":
+    unittest.main()

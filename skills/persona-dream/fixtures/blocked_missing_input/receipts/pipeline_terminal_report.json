@@ -1,0 +1,13 @@
+{
+  "schema_id": "schemas/pipeline_terminal_report.schema.json",
+  "run_id": "blocked-missing-input-fixture",
+  "status": "BLOCKED_MISSING_INPUT",
+  "terminal_gate": "input",
+  "live_provider_call_made": false,
+  "receipt_paths": [
+    "receipts/stage_receipt.json",
+    "receipts/pipeline_paid_call_approval_receipt.json",
+    "receipts/provider_readiness_receipt.json",
+    "receipts/kling_submit_gate_receipt.json"
+  ]
+}

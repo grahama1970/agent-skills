@@ -1,0 +1,163 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+import hashlib
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from write_panel_repair_work_order import build_panel_repair_work_order  # noqa: E402
+from validate_panel_repair_work_order import validate_panel_repair_work_order  # noqa: E402
+
+
+FIXTURES = ROOT / "scripts/fixtures"
+
+
+class TestWritePanelRepairWorkOrder(unittest.TestCase):
+    def _write_storyboard_panel_fixture(self, run_root: Path) -> Path:
+        (run_root / "artifacts").mkdir(parents=True)
+        (run_root / "receipts").mkdir(parents=True)
+        image = run_root / "artifacts/panel_001_storyboard_contract.png"
+        image.write_bytes(b"storyboard-panel-contract")
+        image_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+        ledger = run_root / "artifacts/panel_continuity_and_repair_ledger.json"
+        ledger.write_text(json.dumps([{"panel": 1, "visual_review_status": "PENDING"}]) + "\n", encoding="utf-8")
+        panel_work_order = run_root / "artifacts/panel_001_work_order.json"
+        panel_work_order.write_text(json.dumps({"panel_id": "panel_001"}) + "\n", encoding="utf-8")
+        receipt = run_root / "receipts/storyboard_panel_receipt.json"
+        receipt.write_text(
+            json.dumps(
+                {
+                    "schema": "persona_dream.storyboard_panel_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_001",
+                    "status": "PANEL_READY_FOR_SOURCE_REVIEW",
+                    "timing": {"start_s": 0.0, "end_s": 7.5},
+                    "beat": "Embry and Horus review source evidence under a void-world patio sky.",
+                    "image": {
+                        "path": "artifacts/panel_001_storyboard_contract.png",
+                        "sha256": image_hash,
+                        "width": 1280,
+                        "height": 720,
+                    },
+                    "required_visible_entities": ["character_horus", "character_embry"],
+                    "required_props": ["tea_service", "sparta_laptop"],
+                    "required_environment": ["void_world_patio"],
+                    "required_dynamic_behaviors": ["tea steam curls", "screen glow reflects"],
+                    "continuity_ledger": "artifacts/panel_continuity_and_repair_ledger.json",
+                    "work_order": "artifacts/panel_001_work_order.json",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return receipt
+
+    def test_valid_fixture_work_order_records_final_gate_pass(self) -> None:
+        receipt = FIXTURES / "panel_repair_gate_valid.json"
+
+        work_order = build_panel_repair_work_order(
+            run_root=ROOT,
+            panel_id="panel_01",
+            panel_repair_gate_receipt=receipt,
+            created_at="2026-06-28T20:40:00Z",
+        )
+
+        self.assertEqual(work_order["schema"], "persona_dream.panel_repair_work_order.v1")
+        self.assertEqual(work_order["owner_subagent"], "persona-dream-panel-repair-gate")
+        self.assertEqual(work_order["delegated_subagents"], ["panel-creator", "panel-reviewer"])
+        self.assertEqual(work_order["final_gate_validation"]["status"], "PASS")
+        self.assertEqual(work_order["final_gate_validation"]["errors"], [])
+        self.assertEqual(work_order["live"], "no")
+
+    def test_blocked_receipt_work_order_records_actionable_final_gate_errors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            image = run_root / "panel_001.png"
+            image.write_bytes(b"panel-image")
+            receipt = run_root / "panel_repair_gate_receipt.json"
+            receipt.write_text(
+                json.dumps(
+                    {
+                        "schema": "persona_dream.panel_repair_gate_receipt.v1",
+                        "run_id": "fixture",
+                        "panel_id": "panel_001",
+                        "status": "PASS_LOCAL_PHOTOREAL_PROVIDER_MEDIA_READY",
+                        "script_coverage_status": "PASS",
+                        "post_generation_script_coverage_status": "PASS",
+                        "reference_evidence_status": "PASS",
+                        "visual_review_status": "PASS",
+                        "no_overlay_status": "PASS",
+                        "provider_media_status": "PASS",
+                        "requirement_matrix": "requirement_matrix.json",
+                        "script_coverage_receipt": "script_coverage_receipt.json",
+                        "post_generation_script_coverage_receipt": "post_generation_script_coverage_receipt.json",
+                        "reference_receipt": "reference_receipt.json",
+                        "generation_receipt": "generation_receipt.json",
+                        "visual_review_receipt": "visual_review_receipt.json",
+                        "no_overlay_receipt": "no_overlay_receipt.json",
+                        "provider_media_urls": ["https://blocked.invalid/panel.png"],
+                        "media_hashes": {"panel_001": "sha256:" + ("a" * 64)},
+                        "provider_mode": "std",
+                        "provider_resolution": "720p",
+                        "callback_or_polling_plan": "callback_or_polling_plan.json",
+                        "external_task_id": "fixture-panel-001",
+                        "voice_id_status": "SILENT_SCENE",
+                        "provider_voice_ids": {},
+                        "cost_estimate": "cost_estimate.json",
+                        "provider_packet_status": "PASS_LOCAL_PROVIDER_MEDIA_READY",
+                        "provider_eligibility": False,
+                        "remaining_blockers": ["photoreal_cinematic_panel_regeneration_required"],
+                        "generated_image_path": str(image),
+                        "visual_style_status": "PASS_PHOTOREAL_CINEMATIC",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            work_order = build_panel_repair_work_order(
+                run_root=run_root,
+                panel_id="panel_001",
+                panel_repair_gate_receipt=receipt,
+                created_at="2026-06-28T20:40:00Z",
+            )
+
+        self.assertEqual(work_order["final_gate_validation"]["status"], "FAIL")
+        errors = work_order["final_gate_validation"]["errors"]
+        self.assertIn("--require-provider-eligible requires provider_eligibility=true", errors)
+        self.assertIn("receipt is not provider eligible", errors)
+        self.assertIn("nano_banana_final_panel_generation", work_order["forbidden_actions"])
+        self.assertIn("provider readiness by prose-only rewrite", work_order["forbidden_actions"])
+        self.assertEqual(work_order["current_candidate"]["provider_eligibility"], False)
+        self.assertEqual(work_order["current_candidate"]["sha256"], "sha256:" + __import__("hashlib").sha256(b"panel-image").hexdigest())
+
+    def test_storyboard_receipt_can_create_first_panel_repair_work_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            storyboard_receipt = self._write_storyboard_panel_fixture(run_root)
+
+            work_order = build_panel_repair_work_order(
+                run_root=run_root,
+                panel_id="panel_001",
+                storyboard_panel_receipt=storyboard_receipt,
+                created_at="2026-06-29T21:45:00Z",
+            )
+            work_order_path = run_root / "receipts/panel_repair_work_order.json"
+            work_order_path.write_text(json.dumps(work_order) + "\n", encoding="utf-8")
+            validation = validate_panel_repair_work_order(work_order_path)
+
+        self.assertEqual(work_order["source_paths"]["storyboard_panel_receipt"], str(storyboard_receipt.resolve()))
+        self.assertNotIn("panel_repair_gate_receipt", work_order["source_paths"])
+        self.assertEqual(work_order["final_gate_validation"]["status"], "FAIL")
+        self.assertIn("panel_repair_gate_receipt_missing", work_order["final_gate_validation"]["errors"])
+        self.assertEqual(validation["status"], "PASS_PANEL_REPAIR_WORK_ORDER")
+        self.assertEqual(validation["final_gate_status"], "FAIL")
+
+
+if __name__ == "__main__":
+    unittest.main()

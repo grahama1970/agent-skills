@@ -1,0 +1,536 @@
+steps:
+  - id: memory
+    cmd: ["python3", "skills/persona-dream/scripts/rungm_memory_recall.py"]
+  - id: rung0
+    cmd: ["python3", "skills/persona-dream/scripts/rung0_httpx.py"]
+  - id: rung1
+    cmd: ["python3", "skills/persona-dream/scripts/rung1_while_loop.py"]
+  - id: rung2
+    cmd: ["python3", "skills/persona-dream/scripts/rung2_chutes_as_completed.py"]
+  - id: rung4
+    cmd: ["python3", "skills/persona-dream/scripts/rung4_scillm_batch.py"]
+  - id: rung5
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung5_tool_harness.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung5_tool_harness_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung5_tool_harness_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung5_tool_harness.v1"
+      ok: true
+      scillm_completed: true
+      scillm_run_id_present: true
+      file_hash_matches: true
+      parsed_result.saw_file: true
+      parsed_result.saw_httpx_post: true
+      parsed_result.edited_files: false
+  - id: rung6
+    cmd: ["python3", "skills/persona-dream/scripts/rung6_loop_fixture.py"]
+  - id: rung8_panel_reviewer
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung8_panel_reviewer_readonly.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung8_panel_reviewer_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung8_panel_reviewer_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung8_panel_reviewer.v1"
+      ok: true
+      readonly: true
+      content_manifest_unchanged: true
+      workspace_manifest_unchanged: true
+      returned_hashes_match_sources: true
+      scillm_completed: true
+      scillm_run_id_present: true
+      parsed_panel_reviewer_result.subagent: "panel-reviewer"
+      parsed_panel_reviewer_result.verdict: "INSUFFICIENT_EVIDENCE"
+      parsed_panel_reviewer_result.edited_files: false
+      negative_checks.bad_verdict_rejected: true
+      negative_checks.edited_files_rejected: true
+      negative_checks.missing_files_read_rejected: true
+      negative_checks.content_mutation_rejected: true
+  - id: rung9_panel_decision_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung9_panel_decision_gate.py"
+      - "--input"
+      - "skills/persona-dream/fixtures/rung9_panel_artifact_missing_image.json"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung9_panel_decision_gate_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung9_panel_decision_gate_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung9_panel_decision_gate.v1"
+      ok: true
+      verdict: "INSUFFICIENT_EVIDENCE"
+      promote_allowed: false
+      unresolved_blockers.0.code: "missing_image_artifact"
+      live_call_performed: false
+      paid_call_performed: false
+  - id: rung10_panel_phase_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung10_panel_phase_gate.py"
+      - "--artifact"
+      - "skills/persona-dream/fixtures/rung9_panel_artifact_missing_image.json"
+      - "--reviewer"
+      - "skills/persona-dream/fixtures/rung10_panel_reviewer_receipt_missing_image.json"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung10_panel_phase_gate_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung10_panel_phase_gate_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung10_panel_phase_gate.v1"
+      ok: true
+      linkage_ok: true
+      reviewer_receipt_schema: "persona_dream.panel_reviewer_receipt.v1"
+      reviewer_readonly: true
+      reviewer_verdict: "INSUFFICIENT_EVIDENCE"
+      verdict: "INSUFFICIENT_EVIDENCE"
+      advance_allowed: false
+      unresolved_blockers.0.code: "missing_image_artifact"
+      negative_checks.panel_id_mismatch_rejected: true
+      negative_checks.artifact_revision_mismatch_rejected: true
+      negative_checks.artifact_hash_mismatch_rejected: true
+      negative_checks.reviewer_name_mismatch_rejected: true
+      negative_checks.reviewer_readonly_false_rejected: true
+      negative_checks.reviewer_readonly_missing_rejected: true
+      live_call_performed: false
+      paid_call_performed: false
+  - id: rung11_positive_phase_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung11_positive_phase_gate.py"
+      - "--artifact"
+      - "skills/persona-dream/fixtures/rung11_panel_artifact_valid_image.json"
+      - "--reviewer"
+      - "skills/persona-dream/fixtures/rung11_panel_reviewer_receipt_pass.json"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung11_positive_phase_gate_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung11_positive_phase_gate_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung11_positive_phase_gate.v1"
+      ok: true
+      linkage_ok: true
+      image_artifact_valid: true
+      reviewer_receipt_schema: "persona_dream.panel_reviewer_receipt.v1"
+      reviewer_readonly: true
+      reviewer_verdict: "PASS"
+      verdict: "PASS"
+      advance_allowed: true
+      negative_checks.missing_image_rejected: true
+      negative_checks.image_hash_mismatch_rejected: true
+      negative_checks.artifact_hash_mismatch_rejected: true
+      negative_checks.reviewer_verdict_not_pass_rejected: true
+      negative_checks.reviewer_blocker_rejected: true
+      negative_checks.reviewer_readonly_false_rejected: true
+      live_call_performed: false
+      paid_call_performed: false
+  - id: rung12_shared_phase_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung12_shared_phase_gate.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung12_shared_phase_gate_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung12_shared_phase_gate_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung12_shared_phase_gate.v1"
+      ok: true
+      cases.0.case_id: "missing_image_fail_closed"
+      cases.0.case_ok: true
+      cases.0.verdict: "INSUFFICIENT_EVIDENCE"
+      cases.0.advance_allowed: false
+      cases.0.linkage_ok: true
+      cases.1.case_id: "valid_image_pass"
+      cases.1.case_ok: true
+      cases.1.verdict: "PASS"
+      cases.1.advance_allowed: true
+      cases.1.linkage_ok: true
+      negative_checks.shared_logic_rejects_panel_id_mismatch: true
+      negative_checks.shared_logic_rejects_artifact_hash_mismatch: true
+  - id: rung13_yaml_stop_dry_run
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung13_yaml_stop_dry_run.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung13_yaml_stop_dry_run_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung13_yaml_stop_dry_run_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung13_yaml_stop_dry_run.v1"
+      ok: true
+      pass_returncode: 0
+      pass_marker_ran: true
+      fail_marker_ran: false
+  - id: rung14_receipt_handoff_dry_run
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung14_receipt_handoff_dry_run.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung14_receipt_handoff_dry_run_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung14_receipt_handoff_dry_run_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung14_receipt_handoff_dry_run.v1"
+      ok: true
+      pass_returncode: 0
+      pass_downstream_created: true
+      pass_downstream_consumed_exact_hash: true
+      fail_downstream_created: false
+  - id: rung15_two_phase_chain_dry_run
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung15_two_phase_chain_dry_run.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung15_two_phase_chain_dry_run_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung15_two_phase_chain_dry_run_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung15_two_phase_chain_dry_run.v1"
+      ok: true
+      pass_returncode: 0
+      pass_phase_a_created: true
+      pass_phase_a_advance_allowed: true
+      pass_phase_b_created: true
+      pass_phase_b_advance_allowed: true
+      fail_phase_a_created: true
+      fail_phase_a_advance_allowed: false
+      fail_phase_b_created: false
+  - id: rung16_dreamer_readonly_dry_run
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung16_dreamer_readonly_dry_run.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung16_dreamer_readonly_dry_run_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung16_dreamer_readonly_dry_run_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung16_dreamer_readonly_dry_run.v1"
+      ok: true
+      dreamer_contract_ok: true
+      delegated_runner: "skills/persona-dream/scripts/rung7_yaml_runner.py"
+      direct_scheduler_implemented: false
+      read_only_dry_run: true
+      active_artifact_mutation_performed: false
+      provider_call_performed: false
+      live_call_performed: false
+      paid_call_performed: false
+      pass_returncode: 0
+      pass_parent_step_ids.0: "dream_substrate_gate"
+      pass_parent_step_ids.1: "story_gate"
+      pass_consumed_only_validated_receipts: true
+      fail_parent_failed_step: "dream_substrate_gate"
+      fail_prevented_later_phase: true
+      fail_later_phase_receipt_created: false
+  - id: rung17_dreamer_scillm_readonly_decision
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung17_dreamer_scillm_readonly_decision.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung17_dreamer_scillm_readonly_decision_latest.json"
+      - "--parent-receipt"
+      - ".codex/persona-dream/sanity/rung16_dreamer_readonly_dry_run_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung17_dreamer_scillm_readonly_decision_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung17_dreamer_scillm_readonly_decision.v1"
+      ok: true
+      readonly: true
+      workspace_manifest_unchanged: true
+      parent_receipt_validation.ok: true
+      valid_decision: true
+      scillm_completed: true
+      scillm_run_id_present: true
+      parsed_decision.subagent: "dreamer"
+      parsed_decision.mode: "read_only_next_phase_decision"
+      parsed_decision.decision: "STOP_READ_ONLY_DRY_RUN"
+      parsed_decision.next_phase: "none"
+      parsed_decision.direct_scheduler_implemented: false
+      parsed_decision.provider_call_requested: false
+      parsed_decision.active_artifact_mutation_requested: false
+      parsed_decision.edited_files: false
+      negative_checks.non_object_rejected: true
+      negative_checks.files_read_list_rejected: true
+      negative_checks.parent_hash_mismatch_rejected: true
+      negative_checks.persona_hash_mismatch_rejected: true
+      negative_checks.scheduler_enabled_rejected: true
+      negative_checks.provider_requested_rejected: true
+      negative_checks.mutation_requested_rejected: true
+      negative_checks.edited_files_rejected: true
+      negative_checks.workspace_mutation_rejected: true
+  - id: rung18_dreamer_branch_decision
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung18_dreamer_branch_decision.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung18_dreamer_branch_decision_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung18_dreamer_branch_decision_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung18_dreamer_branch_decision.v1"
+      ok: true
+      advance_result.ok: true
+      advance_result.scillm_invoked: true
+      advance_result.parent_receipt_validation.ok: true
+      advance_result.workspace_manifest_unchanged: true
+      advance_result.valid_decision: true
+      advance_result.scillm_completed: true
+      advance_result.scillm_run_id_present: true
+      advance_result.parsed_decision.subagent: "dreamer"
+      advance_result.parsed_decision.mode: "read_only_branch_decision"
+      advance_result.parsed_decision.decision: "NEXT_PHASE"
+      advance_result.parsed_decision.next_phase: "story"
+      advance_result.parsed_decision.direct_scheduler_implemented: false
+      advance_result.parsed_decision.phase_execution_requested: false
+      advance_result.parsed_decision.provider_call_requested: false
+      advance_result.parsed_decision.active_artifact_mutation_requested: false
+      advance_result.parsed_decision.edited_files: false
+      blocked_result.ok: true
+      blocked_result.scillm_invoked: true
+      blocked_result.parent_receipt_validation.ok: true
+      blocked_result.workspace_manifest_unchanged: true
+      blocked_result.valid_decision: true
+      blocked_result.scillm_completed: true
+      blocked_result.scillm_run_id_present: true
+      blocked_result.parsed_decision.subagent: "dreamer"
+      blocked_result.parsed_decision.mode: "read_only_branch_decision"
+      blocked_result.parsed_decision.decision: "STOP"
+      blocked_result.parsed_decision.next_phase: "none"
+      blocked_result.parsed_decision.direct_scheduler_implemented: false
+      blocked_result.parsed_decision.phase_execution_requested: false
+      blocked_result.parsed_decision.provider_call_requested: false
+      blocked_result.parsed_decision.active_artifact_mutation_requested: false
+      blocked_result.parsed_decision.edited_files: false
+      invalid_parent_result.ok: true
+      invalid_parent_result.parent_receipt_validation.ok: false
+      invalid_parent_result.scillm_invoked: false
+  - id: rung19_decision_to_runner_handoff
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung19_decision_to_runner_handoff.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung19_decision_to_runner_handoff_latest.json"
+      - "--decision-receipt"
+      - ".codex/persona-dream/sanity/rung18_dreamer_branch_decision_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung19_decision_to_runner_handoff_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung19_decision_to_runner_handoff.v1"
+      ok: true
+      advance_decision_validation.ok: true
+      advance_decision_validation.decision: "NEXT_PHASE"
+      advance_decision_validation.next_phase: "story"
+      advance_decision_validation.parent_receipt_path_bound_to_invocation: true
+      advance_handoff.downstream_invoked: true
+      advance_handoff.child_processes.0.role: "yaml_runner"
+      advance_handoff.child_processes.0.returncode: 0
+      advance_handoff.selected_phase: "story"
+      advance_handoff.returncode: 0
+      advance_handoff.parent_receipt_ok: true
+      advance_handoff.parent_step_ids.0: "story_gate"
+      advance_handoff.gate_schema: "persona_dream.rung12_shared_phase_gate.v1"
+      advance_handoff.gate_ok: true
+      advance_handoff.gate_case_id: "valid_image_pass"
+      advance_handoff.gate_advance_allowed: true
+      advance_handoff.receipt_check_ok: true
+      blocked_decision_validation.ok: true
+      blocked_decision_validation.decision: "STOP"
+      blocked_decision_validation.next_phase: "none"
+      stop_handoff.downstream_invoked: false
+      stop_handoff.candidate_parent_receipt_exists: false
+      stop_handoff.candidate_gate_receipt_exists: false
+      invalid_parent_handoff.downstream_invoked: false
+      invalid_parent_handoff.decision.parent_validation_ok: false
+      invalid_parent_handoff.decision.scillm_invoked: false
+      invalid_parent_handoff.candidate_parent_receipt_exists: false
+      invalid_parent_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_handoff.downstream_invoked: false
+      unknown_phase_handoff.candidate_parent_receipt_exists: false
+      unknown_phase_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_allowlisted: false
+  - id: rung20_story_phase_execution_chain
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung20_story_phase_execution_chain.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung20_story_phase_execution_chain_latest.json"
+      - "--decision-receipt"
+      - ".codex/persona-dream/sanity/rung18_dreamer_branch_decision_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung20_story_phase_execution_chain_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung20_story_phase_execution_chain.v1"
+      ok: true
+      advance_decision_validation.ok: true
+      advance_decision_validation.decision: "NEXT_PHASE"
+      advance_decision_validation.next_phase: "story"
+      advance_decision_validation.parent_receipt_path_bound_to_invocation: true
+      advance_handoff.downstream_invoked: true
+      advance_handoff.child_processes.0.role: "yaml_runner"
+      advance_handoff.child_processes.0.returncode: 0
+      advance_handoff.selected_phase: "story"
+      advance_handoff.returncode: 0
+      advance_handoff.parent_receipt_ok: true
+      advance_handoff.parent_step_ids.0: "story_executor"
+      advance_handoff.parent_step_ids.1: "story_gate"
+      advance_handoff.parent_receipt_checks_ok: true
+      advance_handoff.executor_schema: "persona_dream.rung20_story_executor_receipt.v1"
+      advance_handoff.executor_ok: true
+      advance_handoff.executor_readonly: true
+      advance_handoff.gate_schema: "persona_dream.rung12_shared_phase_gate.v1"
+      advance_handoff.gate_ok: true
+      advance_handoff.gate_case_id: "story_executor_pass"
+      advance_handoff.gate_advance_allowed: true
+      advance_handoff.executor_gate_hash_linked: true
+      stop_handoff.downstream_invoked: false
+      stop_handoff.candidate_executor_receipt_exists: false
+      stop_handoff.candidate_parent_receipt_exists: false
+      stop_handoff.candidate_gate_receipt_exists: false
+      invalid_parent_handoff.downstream_invoked: false
+      invalid_parent_handoff.candidate_executor_receipt_exists: false
+      invalid_parent_handoff.candidate_parent_receipt_exists: false
+      invalid_parent_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_handoff.downstream_invoked: false
+      unknown_phase_handoff.candidate_executor_receipt_exists: false
+      unknown_phase_handoff.candidate_parent_receipt_exists: false
+      unknown_phase_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_allowlisted: false
+  - id: rung21_real_story_executor_chain
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung21_real_story_executor_chain.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung21_real_story_executor_chain_latest.json"
+      - "--decision-receipt"
+      - ".codex/persona-dream/sanity/rung18_dreamer_branch_decision_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung21_real_story_executor_chain_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung21_real_story_executor_chain.v1"
+      ok: true
+      advance_decision_validation.ok: true
+      advance_decision_validation.decision: "NEXT_PHASE"
+      advance_decision_validation.next_phase: "story"
+      advance_decision_validation.parent_receipt_path_bound_to_invocation: true
+      advance_handoff.downstream_invoked: true
+      advance_handoff.child_processes.0.role: "yaml_runner"
+      advance_handoff.child_processes.0.returncode: 0
+      advance_handoff.selected_phase: "story"
+      advance_handoff.returncode: 0
+      advance_handoff.parent_receipt_ok: true
+      advance_handoff.parent_step_ids.0: "story_executor"
+      advance_handoff.parent_step_ids.1: "story_gate"
+      advance_handoff.parent_receipt_checks_ok: true
+      advance_handoff.executor_schema: "persona_dream.rung21_story_executor_receipt.v1"
+      advance_handoff.executor_ok: true
+      advance_handoff.executor_readonly: true
+      advance_handoff.executor_workspace_manifest_unchanged: true
+      advance_handoff.executor_execution_isolated: true
+      advance_handoff.story_contract.schema: "persona_dream.story_contract.v1"
+      advance_handoff.gate_schema: "persona_dream.rung12_shared_phase_gate.v1"
+      advance_handoff.gate_ok: true
+      advance_handoff.gate_case_id: "story_executor_pass"
+      advance_handoff.gate_advance_allowed: true
+      advance_handoff.executor_gate_hash_linked: true
+      advance_handoff.negative_checks_ok: true
+      advance_handoff.mutation_probe.detected: true
+      advance_handoff.mutation_probe.cleanup_restored: true
+      stop_handoff.downstream_invoked: false
+      stop_handoff.candidate_executor_receipt_exists: false
+      stop_handoff.candidate_parent_receipt_exists: false
+      stop_handoff.candidate_gate_receipt_exists: false
+      invalid_parent_handoff.downstream_invoked: false
+      invalid_parent_handoff.candidate_executor_receipt_exists: false
+      invalid_parent_handoff.candidate_parent_receipt_exists: false
+      invalid_parent_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_handoff.downstream_invoked: false
+      unknown_phase_handoff.candidate_executor_receipt_exists: false
+      unknown_phase_handoff.candidate_parent_receipt_exists: false
+      unknown_phase_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_allowlisted: false
+  - id: rung22_dreamer_closed_cycle_decision
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung22_dreamer_closed_cycle_decision.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung22_dreamer_closed_cycle_decision_latest.json"
+      - "--story-chain-receipt"
+      - ".codex/persona-dream/sanity/rung21_real_story_executor_chain_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung22_dreamer_closed_cycle_decision_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung22_dreamer_closed_cycle_decision.v1"
+      ok: true
+      successor_validation.ok: true
+      successor_validation.current_phase: "story"
+      successor_validation.next_phase: "voice"
+      valid_result.ok: true
+      valid_result.scillm_invoked: true
+      valid_result.story_gate_receipt_validation.ok: true
+      valid_result.workspace_manifest_unchanged: true
+      valid_result.isolated_workspace_manifest_before_count: 3
+      valid_result.isolated_workspace_manifest_after_count: 3
+      valid_result.valid_decision: true
+      valid_result.scillm_completed: true
+      valid_result.scillm_run_id_present: true
+      valid_result.parsed_decision.subagent: "dreamer"
+      valid_result.parsed_decision.mode: "read_only_closed_cycle_decision"
+      valid_result.parsed_decision.decision: "NEXT_PHASE"
+      valid_result.parsed_decision.next_phase: "voice"
+      valid_result.parsed_decision.direct_scheduler_implemented: false
+      valid_result.parsed_decision.phase_execution_requested: false
+      valid_result.parsed_decision.provider_call_requested: false
+      valid_result.parsed_decision.active_artifact_mutation_requested: false
+      valid_result.parsed_decision.edited_files: false
+      preinvoke_rejections.0.name: "schema_mismatch"
+      preinvoke_rejections.0.ok: true
+      preinvoke_rejections.0.scillm_invoked: false
+      preinvoke_rejections.1.name: "hash_mismatch"
+      preinvoke_rejections.1.ok: true
+      preinvoke_rejections.1.scillm_invoked: false
+      preinvoke_rejections.2.name: "blocked_gate"
+      preinvoke_rejections.2.ok: true
+      preinvoke_rejections.2.scillm_invoked: false
+      preinvoke_rejections.3.name: "advance_disallowed"
+      preinvoke_rejections.3.ok: true
+      preinvoke_rejections.3.scillm_invoked: false
+  - id: rung23_voice_phase_execution_chain
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung23_voice_phase_execution_chain.py"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung23_voice_phase_execution_chain_latest.json"
+      - "--decision-receipt"
+      - ".codex/persona-dream/sanity/rung22_dreamer_closed_cycle_decision_latest.json"
+    receipt: ".codex/persona-dream/sanity/rung23_voice_phase_execution_chain_latest.json"
+    expect_receipt:
+      schema: "persona_dream.rung23_voice_phase_execution_chain.v1"
+      ok: true
+      advance_decision_validation.ok: true
+      advance_decision_validation.decision: "NEXT_PHASE"
+      advance_decision_validation.next_phase: "voice"
+      advance_handoff.downstream_invoked: true
+      advance_handoff.child_processes.0.role: "yaml_runner"
+      advance_handoff.child_processes.0.returncode: 0
+      advance_handoff.selected_phase: "voice"
+      advance_handoff.returncode: 0
+      advance_handoff.parent_receipt_ok: true
+      advance_handoff.parent_step_ids.0: "voice_executor"
+      advance_handoff.parent_step_ids.1: "voice_gate"
+      advance_handoff.parent_receipt_checks_ok: true
+      advance_handoff.executor_schema: "persona_dream.rung23_voice_executor_receipt.v1"
+      advance_handoff.executor_ok: true
+      advance_handoff.executor_readonly: true
+      advance_handoff.voice_handoff_plan.schema: "persona_dream.voice_handoff_plan.v1"
+      advance_handoff.gate_schema: "persona_dream.rung12_shared_phase_gate.v1"
+      advance_handoff.gate_ok: true
+      advance_handoff.gate_case_id: "voice_executor_pass"
+      advance_handoff.gate_advance_allowed: true
+      advance_handoff.executor_gate_hash_linked: true
+      advance_handoff.negative_checks_ok: true
+      stop_handoff.downstream_invoked: false
+      stop_handoff.candidate_executor_receipt_exists: false
+      stop_handoff.candidate_parent_receipt_exists: false
+      stop_handoff.candidate_gate_receipt_exists: false
+      invalid_parent_handoff.downstream_invoked: false
+      invalid_parent_handoff.candidate_executor_receipt_exists: false
+      invalid_parent_handoff.candidate_parent_receipt_exists: false
+      invalid_parent_handoff.candidate_gate_receipt_exists: false
+      stale_parent_handoff.downstream_invoked: false
+      stale_parent_handoff.candidate_executor_receipt_exists: false
+      stale_parent_handoff.candidate_parent_receipt_exists: false
+      stale_parent_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_handoff.downstream_invoked: false
+      unknown_phase_handoff.candidate_executor_receipt_exists: false
+      unknown_phase_handoff.candidate_parent_receipt_exists: false
+      unknown_phase_handoff.candidate_gate_receipt_exists: false
+      unknown_phase_allowlisted: false

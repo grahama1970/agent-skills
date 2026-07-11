@@ -1,0 +1,20 @@
+{
+  "run_id": "provider-ready-dry-run-fixture",
+  "pipeline": "persona-dream-end-to-end-pipeline-P0",
+  "mode": "provider_ready_dry_run",
+  "schema_refs": {
+    "stage_receipt": "schemas/stage_receipt.schema.json",
+    "pipeline_paid_call_approval_receipt": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+    "provider_readiness_receipt": "schemas/provider_readiness_receipt.schema.json",
+    "kling_submit_gate_receipt": "schemas/kling_submit_gate_receipt.schema.json",
+    "pipeline_terminal_report": "schemas/pipeline_terminal_report.schema.json"
+  },
+  "receipt_paths": {
+    "stage_receipt": "receipts/stage_receipt.json",
+    "pipeline_paid_call_approval_receipt": "receipts/pipeline_paid_call_approval_receipt.json",
+    "provider_readiness_receipt": "receipts/provider_readiness_receipt.json",
+    "kling_submit_gate_receipt": "receipts/kling_submit_gate_receipt.json",
+    "pipeline_terminal_report": "receipts/pipeline_terminal_report.json"
+  },
+  "required_inputs": ["character_sheet", "shot_list", "provider_config"]
+}

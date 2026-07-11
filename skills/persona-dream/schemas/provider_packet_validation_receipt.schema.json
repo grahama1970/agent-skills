@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "provider_packet.validation_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "packet_dir", "root", "checks", "passed", "failed", "paid_call_performed", "live_call_performed"],
+  "properties": {
+    "schema": {"const": "provider_packet.validation_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "packet_dir": {"type": "string"},
+    "root": {"type": "string"},
+    "checks": {"type": "array", "minItems": 1},
+    "passed": {"type": "integer"},
+    "failed": {"type": "integer"},
+    "paid_call_performed": {"const": false},
+    "live_call_performed": {"const": false}
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "bridge_receipt_count": 3,
+  "errors": [],
+  "expected_phases": [
+    "02_story",
+    "04_contact_sheets",
+    "06_script"
+  ],
+  "live": true,
+  "media_assets_written_count": 0,
+  "media_edges_written_count": 0,
+  "missing_phases": [
+    "02_story",
+    "04_contact_sheets",
+    "06_script"
+  ],
+  "mocked": false,
+  "observed_phases": [
+    "None"
+  ],
+  "recall_score_counts": {
+    "bm25": 0,
+    "dense": 0,
+    "graph": 0
+  },
+  "schema": "persona_dream.memory_tau_audit.v1",
+  "status": "BLOCKED",
+  "timestamp": "2026-07-04T16:45:46Z"
+}

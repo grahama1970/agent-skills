@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.live_render_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "provider", "model", "output_mp4", "ffprobe", "frame_sheet"],
+  "properties": {
+    "schema": {"const": "persona_dream.live_render_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"enum": ["LIVE_RENDER_SUBMITTED", "LIVE_RENDER_ACCEPTED", "FAILED_AUTOMATED_CHECK", "FAILED_MANUAL_REVIEW"]},
+    "created_at": {"type": "string"},
+    "provider": {"type": "string"},
+    "model": {"type": "string"},
+    "output_mp4": {"type": "string"},
+    "ffprobe": {"type": "string"},
+    "frame_sheet": {"type": "string"}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema_id": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+  "run_id": "blocked-missing-input-fixture",
+  "provider": "kling",
+  "approval_state": "BLOCKED",
+  "live_submission_allowed": false,
+  "dry_run_only": true,
+  "approver": null,
+  "evidence": ["input gate blocks before any paid-call request"]
+}

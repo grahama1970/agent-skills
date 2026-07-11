@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "casting_agent.chosen_reference_inputs.v1",
+  "type": "object",
+  "required": ["schema", "status", "references"],
+  "properties": {
+    "schema": {"const": "casting_agent.chosen_reference_inputs.v1"},
+    "status": {"type": "string"},
+    "references": {"type": "array"}
+  }
+}

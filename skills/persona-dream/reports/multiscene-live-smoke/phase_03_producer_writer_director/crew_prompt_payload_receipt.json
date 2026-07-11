@@ -1,0 +1,509 @@
+{
+  "context_fields_present": {
+    "candidate_pool": true,
+    "core_idea": true,
+    "environment": true,
+    "interaction_matrix": true,
+    "linked_assets": true,
+    "location": true,
+    "memory_recall_evidence": true,
+    "selected_persona_recall_evidence": true,
+    "story_text": true
+  },
+  "created_at": "2026-07-02T18:42:46Z",
+  "live": true,
+  "memory_recall_evidence": {
+    "base_url": "http://127.0.0.1:8601",
+    "collections": [
+      "personas",
+      "persona_memory"
+    ],
+    "created_at": "2026-07-02T18:42:41Z",
+    "roles": {
+      "director": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which director personas in memory fit a kinetic waterline surf scene about Embry and Kai, local etiquette, lava reef danger, female perspective, and embodied autonomy?",
+        "status_code": 200
+      },
+      "producer": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which producer personas in memory fit a grounded Hawaii surf film about Embry and Kai, water logistics, female athlete authenticity, budget feasibility, and production packaging?",
+        "status_code": 200
+      },
+      "scriptwriter": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which writer or scriptwriter personas in memory fit a restrained surf scene with Embry, Kai, sparse dialogue, environment-driven conflict, and physically grounded story structure?",
+        "status_code": 200
+      }
+    },
+    "schema": "persona_dream.crew.memory_recall_evidence.v1",
+    "status": "READY"
+  },
+  "mocked": false,
+  "prompt_payload_schema": "persona_dream.crew_contract_work_order.v1",
+  "provider_live": false,
+  "schema": "dream.crew.prompt_payload_receipt.v1",
+  "selected_persona_recall_evidence": {
+    "base_url": "http://127.0.0.1:8601",
+    "collections": [
+      "personas",
+      "persona_memory"
+    ],
+    "created_at": "2026-07-02T18:42:44Z",
+    "roles": {
+      "director": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/kathryn_bigelow",
+            "key": "kathryn_bigelow",
+            "name": "kathryn_bigelow",
+            "persona_id": "kathryn_bigelow",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines Kathryn Bigelow? Q: What source file defines Kathryn Bigelow? A: Kathryn Bigelow has a source artifact at /mnt/storage12tb/media/personas/directors/kathryn_bigelow.yaml. Source excerpt: # Kathryn Bigelow - Film Director # Known for: The Hurt Locker, Zero Dark Thirty - visceral realism, female protagonists in intense environments # Template: director name: Kathryn Bigelow template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected director persona Kathryn Bigelow (kathryn_bigelow) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      },
+      "producer": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected producer persona Karen Kehela Sherwood (karen_kehela_sherwood) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      },
+      "scriptwriter": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/john_stockwell",
+            "key": "john_stockwell",
+            "name": "john_stockwell",
+            "persona_id": "john_stockwell",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines John Stockwell? Q: What source file defines John Stockwell? A: John Stockwell has a source artifact at /mnt/storage12tb/media/personas/directors/john_stockwell.yaml. Source excerpt: # John Stockwell - Film Director # Known for: Blue Crush - authentic female athletes, Hawaii, determination # Template: director name: John Stockwell template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Authe"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/dan_kieft",
+            "key": "dan_kieft",
+            "name": "dan_kieft",
+            "persona_id": "dan_kieft",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines Dan Kieft? Q: What source file defines Dan Kieft? A: Dan Kieft has a source artifact at /mnt/storage12tb/media/personas/experts/dan_kieft/transcripts/beginner_course.json. Source excerpt: { \"meta\": { \"video_id\": \"RL7FQcw2C6k\", \"language\": \"en\", \"took_ms\": 4100, \"method\": \"proxy\", \"title\": \"How To Create Cinematic AI Videos - AI Filmmaking Beginner Course\", \"channel\": \"Dan Kieft\", \"upload_date\": \"20250807\", \"duration_sec\": 922, \"description\": \"Learn to Create Cinematic AI videos in this AI Filmmaking masterclass\\nAI Tool I used \ud83d\udc49 https://openart.ai/home?ref=filmmaking\\n"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected scriptwriter persona John Stockwell (john_stockwell) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      }
+    },
+    "schema": "persona_dream.crew.selected_persona_recall_evidence.v1",
+    "status": "READY"
+  },
+  "source_work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew-ui-20260702T184400Z/input_crew_contract_work_order.json"
+}

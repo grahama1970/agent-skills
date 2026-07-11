@@ -1,0 +1,323 @@
+{
+  "view": "agent",
+  "ok": true,
+  "grounding_ok": false,
+  "query_text": "Prove every persona-dream pane auto-writes receipts to memory; every Tau creator reviewer loop writes durable artifacts to memory; every UI pane reads from memory instead of stale local JSON; every new media edge is automatically added to Arango graph and Qdrant; every story script contact-sheet generation path runs extract-entities and persists coverage.",
+  "agent_decision": {
+    "safe_to_answer": false,
+    "needs_clarification": true,
+    "needs_retry": false,
+    "suggested_action": "clarify_or_repair",
+    "reason": "no_security_entities",
+    "primary_entity_id": null,
+    "grounding_source": "proof_packet.assertions"
+  },
+  "proof_packet": {
+    "generated_by": "deterministic_extractor",
+    "llm_used": false,
+    "authoritative": true,
+    "query_text": "Prove every persona-dream pane auto-writes receipts to memory; every Tau creator reviewer loop writes durable artifacts to memory; every UI pane reads from memory instead of stale local JSON; every new media edge is automatically added to Arango graph and Qdrant; every story script contact-sheet generation path runs extract-entities and persists coverage.",
+    "primary_entity_id": null,
+    "assertions": [
+      {
+        "id": "assert:unsupported_extract_entities_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:extract_entities",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "extract entities",
+          "span": [
+            0,
+            0
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      },
+      {
+        "id": "assert:unsupported_persona_dream_pane_auto_writes_receipts_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:persona_dream_pane_auto_writes_receipts",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "persona dream pane auto writes receipts",
+          "span": [
+            0,
+            0
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      },
+      {
+        "id": "assert:unsupported_tau_creator_reviewer_loop_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:tau_creator_reviewer_loop",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "Tau creator reviewer loop",
+          "span": [
+            69,
+            94
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      },
+      {
+        "id": "assert:unsupported_durable_artifacts_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:durable_artifacts",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "durable artifacts",
+          "span": [
+            102,
+            119
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      },
+      {
+        "id": "assert:unsupported_ui_pane_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:ui_pane",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "UI pane",
+          "span": [
+            137,
+            144
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      },
+      {
+        "id": "assert:unsupported_new_media_edge_unsupported",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:new_media_edge",
+        "predicate": "does_not_describe_control",
+        "object": null,
+        "status": "failed",
+        "evidence": {
+          "mention": "new media edge",
+          "span": [
+            198,
+            212
+          ],
+          "reason": "out_of_domain",
+          "expected_control_name": null
+        }
+      }
+    ]
+  },
+  "nodes": {
+    "anchors": [],
+    "validated_context": [],
+    "context_terms": [
+      {
+        "id": "domain:memory",
+        "node_kind": "domain_term",
+        "proof_role": "query_context",
+        "status": "extracted",
+        "mention": "memory",
+        "span": [
+          55,
+          61
+        ],
+        "metadata": {
+          "name": "memory",
+          "type": "domain_term",
+          "grounded": true,
+          "exists": true
+        }
+      },
+      {
+        "id": "domain:coverage",
+        "node_kind": "domain_term",
+        "proof_role": "query_context",
+        "status": "extracted",
+        "mention": "coverage",
+        "span": [
+          348,
+          356
+        ],
+        "metadata": {
+          "name": "coverage",
+          "type": "domain_term",
+          "grounded": true,
+          "exists": true
+        }
+      }
+    ],
+    "suppressed": [],
+    "unsupported": [
+      {
+        "id": "unsupported:extract_entities",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "extract entities",
+        "span": [
+          0,
+          0
+        ],
+        "metadata": {
+          "name": "extract entities",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      },
+      {
+        "id": "unsupported:persona_dream_pane_auto_writes_receipts",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "persona dream pane auto writes receipts",
+        "span": [
+          0,
+          0
+        ],
+        "metadata": {
+          "name": "persona dream pane auto writes receipts",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      },
+      {
+        "id": "unsupported:tau_creator_reviewer_loop",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "Tau creator reviewer loop",
+        "span": [
+          69,
+          94
+        ],
+        "metadata": {
+          "name": "Tau creator reviewer loop",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      },
+      {
+        "id": "unsupported:durable_artifacts",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "durable artifacts",
+        "span": [
+          102,
+          119
+        ],
+        "metadata": {
+          "name": "durable artifacts",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      },
+      {
+        "id": "unsupported:ui_pane",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "UI pane",
+        "span": [
+          137,
+          144
+        ],
+        "metadata": {
+          "name": "UI pane",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      },
+      {
+        "id": "unsupported:new_media_edge",
+        "node_kind": "unsupported_term",
+        "proof_role": "none",
+        "status": "unsupported",
+        "mention": "new media edge",
+        "span": [
+          198,
+          212
+        ],
+        "metadata": {
+          "name": "new media edge",
+          "type": "noun_phrase",
+          "grounded": false,
+          "exists": false,
+          "reason": "out_of_domain"
+        }
+      }
+    ]
+  },
+  "candidate_nodes": {
+    "status": "candidate_only",
+    "proof_role": "none",
+    "usable_for": [
+      "suggestions",
+      "related_results",
+      "did_you_mean"
+    ],
+    "not_usable_for": [
+      "grounding",
+      "proof",
+      "approval",
+      "answer_authority",
+      "evidence_gate"
+    ],
+    "requires_user_confirmation": true,
+    "controls": [],
+    "qras": []
+  },
+  "counts": {
+    "anchors": 0,
+    "validated_context": 0,
+    "context_terms": 2,
+    "suppressed": 0,
+    "unsupported": 6,
+    "candidate_controls": 0,
+    "candidate_qras": 0
+  },
+  "agent_contract": {
+    "use_for_grounding": [
+      "proof_packet.assertions"
+    ],
+    "authoritative_paths": [
+      "proof_packet.assertions",
+      "nodes.anchors",
+      "nodes.validated_context",
+      "nodes.suppressed"
+    ],
+    "ignore_for_grounding": [
+      "display_summary",
+      "candidate_nodes",
+      "guess_nodes",
+      "rationale.summary"
+    ],
+    "llm_generated_fields_are_never_authoritative": true
+  }
+}

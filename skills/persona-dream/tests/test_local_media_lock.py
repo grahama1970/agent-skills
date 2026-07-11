@@ -1,0 +1,35 @@
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_local_media_lock import validate_local_media_lock  # noqa: E402
+
+
+class TestLocalMediaLock(unittest.TestCase):
+    def test_one_scene_fixture_hashes_local_media_file(self) -> None:
+        result = validate_local_media_lock(ROOT / "fixtures/one_scene_kling_dry_run")
+
+        self.assertEqual(result["status"], "PASS_LOCAL_MEDIA_LOCK")
+        self.assertEqual(result["provider_accessible"], False)
+        self.assertEqual(result["live_provider_call_made"], False)
+        self.assertEqual(result["media"][0]["local_hash_ok"], True)
+        self.assertIsNone(result["media"][0]["http_hash_ok"])
+
+    def test_one_scene_fixture_hashes_localhost_served_bytes(self) -> None:
+        result = validate_local_media_lock(ROOT / "fixtures/one_scene_kling_dry_run", serve=True)
+
+        self.assertEqual(result["status"], "PASS_LOCAL_MEDIA_LOCK")
+        self.assertEqual(result["provider_accessible"], False)
+        self.assertEqual(result["live"], "no")
+        self.assertEqual(result["media"][0]["local_hash_ok"], True)
+        self.assertEqual(result["media"][0]["http_hash_ok"], True)
+        self.assertTrue(result["media"][0]["served_url"].startswith("http://127.0.0.1:"))
+
+
+if __name__ == "__main__":
+    unittest.main()

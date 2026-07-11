@@ -1,0 +1,247 @@
+schema: persona_dream.phase_dag.v0
+status: draft_contract
+purpose: >
+  Make the persona-dream process explicit as executable phases before adding
+  implementation complexity. This file is a phase map, not a readiness claim.
+
+global_stop_rules:
+  - Do not advance past a phase whose gate returns fail, blocked, or stale.
+  - Do not repair receipts instead of regenerating stale downstream artifacts.
+  - Do not submit to Kling or any paid/live provider from this DAG.
+  - Completion requires unresolved_panel_image_errors == 0.
+  - Completion requires unresolved_panel_text_errors == 0.
+  - Completion requires all_downstream_artifacts_match_current_upstream_revision == true.
+
+phases:
+  - id: idea
+    order: 1
+    label: Idea
+    current_state: implemented
+    source_paths:
+      - pipeline/s01_idea/
+      - schemas/idea_contract.schema.json
+    produces:
+      - idea_contract.json
+    gate:
+      type: contract_schema
+      required: true
+    stale_invalidates:
+      - memories
+      - story
+      - producer
+      - contact_sheets
+      - script
+      - voice
+      - panels
+      - provider_gate
+
+  - id: memories
+    order: 2
+    label: Memories
+    current_state: implemented
+    source_paths:
+      - pipeline/s02_memories/
+      - scripts/run_phase_02_memory_recall.py
+    produces:
+      - residue_links.json
+      - contradiction_report.json
+      - memory_audit_receipt.json
+    gate:
+      type: validate_gate
+      command: ./run.sh validate-gate --gate phase-02 --output gate-phase-02.json
+      required: true
+    repair_owner: dba-auditor
+    stale_invalidates:
+      - story
+      - producer
+      - contact_sheets
+      - script
+      - voice
+      - panels
+      - provider_gate
+
+  - id: story
+    order: 3
+    label: Story
+    current_state: implemented
+    source_paths:
+      - pipeline/s03_story/
+      - schemas/story_contract.schema.json
+      - schemas/story_visual_package.schema.json
+    produces:
+      - dream_story.json
+      - story_contract.json
+      - story_visual_package.json
+    gate:
+      type: contract_schema
+      required: true
+    repair_owner: story-writer
+    stale_invalidates:
+      - producer
+      - contact_sheets
+      - script
+      - voice
+      - panels
+      - provider_gate
+
+  - id: producer
+    order: 4
+    label: Producer
+    current_state: intended
+    source_paths:
+      - SKILL.md
+    produces:
+      - technique_selection.json
+      - script_dna_selection.json
+      - shot_bible.json
+    gate:
+      type: missing_runner
+      required: true
+      missing: deterministic producer/look-lock phase runner
+    repair_owner: producer
+    stale_invalidates:
+      - contact_sheets
+      - script
+      - voice
+      - panels
+      - provider_gate
+
+  - id: contact_sheets
+    order: 5
+    label: Contact Sheets
+    current_state: implemented
+    source_paths:
+      - skills/contact-sheet/
+      - scripts/contact_sheet.py
+      - scripts/validate_phase_05_contact_sheet_gate.py
+      - schemas/contact_sheet_work_order.schema.json
+    produces:
+      - contact_sheets.json
+      - reference_artifacts_lock.json
+      - phase_05_contact_sheet_gate.json
+    gate:
+      type: validate_gate
+      command: ./run.sh validate-gate --gate phase-05 --output gate-phase-05.json
+      required: true
+    stale_invalidates:
+      - script
+      - voice
+      - panels
+      - provider_gate
+
+  - id: script
+    order: 6
+    label: Script
+    current_state: intended
+    source_paths:
+      - schemas/timed_beats.schema.json
+      - SKILL.md
+    produces:
+      - timed_transcript.json
+      - timed_beats.json
+      - entity_environment_script_table.json
+    gate:
+      type: missing_runner
+      required: true
+      missing: deterministic script phase runner with per-panel entity environment coverage
+    repair_owner: script-writer
+    stale_invalidates:
+      - voice
+      - panels
+      - provider_gate
+
+  - id: voice
+    order: 7
+    label: Voice
+    current_state: implemented
+    source_paths:
+      - pipeline/s04_voice/
+      - voice_clone_candidates/
+      - docs/PHASE_05_AUTONOMOUS_VOICE_SELECTION_CONTRACT.md
+      - schemas/voice_candidate_bundle.schema.json
+      - schemas/voice_selection_receipt.schema.json
+    produces:
+      - voice_candidate_bundle.json
+      - voice_selection_receipt.json
+      - voice_handoff_plan.json
+      - voice_provider_readiness_receipt.json
+    gate:
+      type: validate_gate
+      command: ./run.sh validate-gate --gate voice-clone --output gate-voice-clone.json
+      required: true
+    repair_owner: voice-lane
+    stale_invalidates:
+      - provider_gate
+
+  - id: panels
+    order: 8
+    label: Panels
+    current_state: partially_implemented
+    source_paths:
+      - pipeline/s05_panels/
+      - scripts/create_panel.py
+      - scripts/panel_review_check.py
+      - scripts/validate_panel_interaction_gate.py
+      - schemas/panel_repair_gate_receipt.schema.json
+    produces:
+      - panel_continuity_and_repair_ledger.json
+      - panel_repair_gate_receipts/
+      - storyboard_board_receipt.json
+    gate:
+      type: bounded_loop
+      required: true
+      loop_owner: panel-repair-gate
+      worker_sequence:
+        - panel-creator
+        - panel-reviewer
+      pass_predicates:
+        - unresolved_panel_image_errors == 0
+        - unresolved_panel_text_errors == 0
+    repair_owner: panel-repair-gate
+    stale_invalidates:
+      - provider_gate
+
+  - id: provider_gate
+    order: 9
+    label: Gate Status
+    current_state: implemented
+    source_paths:
+      - pipeline/s06_gate/
+      - scripts/validate_gate.py
+      - schemas/readiness_receipt.schema.json
+      - schemas/provider_packet_validation_receipt.schema.json
+    produces:
+      - provider_readiness_receipt.json
+      - provider_request_dry_run.json
+    gate:
+      type: validate_gate
+      command: ./run.sh validate-gate --gate all --output gate-all.json
+      required: true
+    hard_blockers:
+      - unresolved_panel_image_errors != 0
+      - unresolved_panel_text_errors != 0
+      - all_downstream_artifacts_match_current_upstream_revision != true
+
+  - id: export_to_kling
+    order: 10
+    label: Export to Kling
+    current_state: blocked_by_policy
+    source_paths:
+      - pipeline/s07_movie/
+      - schemas/kling_scene_payloads.schema.json
+    produces:
+      - kling_submission_receipt.json
+      - movie_receipt.json
+    gate:
+      type: human_or_provider_authorization
+      required: true
+    preconditions:
+      - provider_gate == PASS
+      - paid_call_authorized == true
+
+execution_contract:
+  runner_shape: sequential_dag
+  node_rule: each phase consumes current upstream hashes and writes a receipt
+  failure_rule: failed phase blocks all downstream phases
+  repair_rule: repairable failures enter exactly one bounded loop owned by the phase gate
+  promotion_rule: only dreamer promotes staged successful outputs into the active manifest

@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_review_tau_adapter.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "timeout_s": 120
+}

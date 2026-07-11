@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.panel_repair_gate_receipt.v1",
+  "title": "Persona Dream Panel Repair Gate Receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "panel_id",
+    "status",
+    "script_coverage_status",
+    "post_generation_script_coverage_status",
+    "reference_evidence_status",
+    "visual_review_status",
+    "no_overlay_status",
+    "provider_media_status",
+    "requirement_matrix",
+    "script_coverage_receipt",
+    "post_generation_script_coverage_receipt",
+    "reference_receipt",
+    "generation_receipt",
+    "visual_review_receipt",
+    "no_overlay_receipt",
+    "provider_media_urls",
+    "provider_media_probe_receipt",
+    "media_hashes",
+    "provider_mode",
+    "provider_resolution",
+    "callback_or_polling_plan",
+    "external_task_id",
+    "voice_id_status",
+    "provider_voice_ids",
+    "cost_estimate",
+    "provider_packet_status",
+    "provider_eligibility",
+    "remaining_blockers"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.panel_repair_gate_receipt.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "panel_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirement_matrix": {
+      "type": "string",
+      "minLength": 1
+    },
+    "script_coverage_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "post_generation_script_coverage_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reference_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "visual_review_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "no_overlay_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS_PANEL_REVIEWED",
+        "HUMAN_ACCEPTED_WITH_WAIVER",
+        "BLOCKED_UNREVIEWED_GENERATION",
+        "BLOCKED_PENDING_INDEPENDENT_VERIFICATION",
+        "BLOCKED_SCRIPT_COVERAGE",
+        "BLOCKED_REFERENCE_EVIDENCE",
+        "BLOCKED_VISUAL_CONTRADICTION",
+        "BLOCKED_OVERLAY_OR_COMPOSITE",
+        "BLOCKED_MAX_ATTEMPTS",
+        "BLOCKED_ARTIFACT_INACCESSIBLE",
+        "BLOCKED_PROVIDER_MEDIA_URLS",
+        "BLOCKED_HUMAN_REVIEW_REQUIRED"
+      ]
+    },
+    "script_coverage_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "post_generation_script_coverage_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "reference_evidence_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "visual_review_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "no_overlay_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "provider_media_status": {
+      "enum": ["PASS", "FAIL", "WAIVED"]
+    },
+    "provider_media_urls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^https?://"
+      }
+    },
+    "provider_media_probe_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "media_hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:"
+      }
+    },
+    "provider_mode": {
+      "enum": ["std", "pro", "4k"]
+    },
+    "provider_resolution": {
+      "type": "string",
+      "minLength": 1
+    },
+    "callback_or_polling_plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "external_task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "voice_id_status": {
+      "enum": [
+        "PROVIDER_VOICE_ID_READY",
+        "SILENT_SCENE",
+        "BLOCKED_MISSING_PROVIDER_VOICE_ID"
+      ]
+    },
+    "provider_voice_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["provider", "voice_id", "source_receipt"],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "minLength": 1
+          },
+          "voice_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_receipt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hash": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "cost_estimate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider_packet_status": {
+      "enum": [
+        "BLOCKED_PROVIDER_GATE",
+        "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+        "PROVIDER_READY"
+      ]
+    },
+    "provider_eligibility": {
+      "type": "boolean"
+    },
+    "remaining_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,159 @@
+{
+  "agent_contract": {
+    "authoritative_paths": [
+      "proof_packet.assertions",
+      "nodes.anchors",
+      "nodes.validated_context",
+      "nodes.suppressed"
+    ],
+    "ignore_for_grounding": [
+      "display_summary",
+      "candidate_nodes",
+      "guess_nodes",
+      "rationale.summary"
+    ],
+    "llm_generated_fields_are_never_authoritative": true,
+    "use_for_grounding": [
+      "proof_packet.assertions"
+    ]
+  },
+  "agent_decision": {
+    "grounding_source": "proof_packet.assertions",
+    "needs_clarification": true,
+    "needs_retry": true,
+    "primary_entity_id": null,
+    "reason": "fabricated_id",
+    "safe_to_answer": false,
+    "suggested_action": "clarify_or_repair"
+  },
+  "candidate_nodes": {
+    "controls": [],
+    "not_usable_for": [
+      "grounding",
+      "proof",
+      "approval",
+      "answer_authority",
+      "evidence_gate"
+    ],
+    "proof_role": "none",
+    "qras": [],
+    "requires_user_confirmation": true,
+    "status": "candidate_only",
+    "usable_for": [
+      "suggestions",
+      "related_results",
+      "did_you_mean"
+    ]
+  },
+  "counts": {
+    "anchors": 0,
+    "candidate_controls": 0,
+    "candidate_qras": 0,
+    "context_terms": 1,
+    "suppressed": 0,
+    "unsupported": 2,
+    "validated_context": 0
+  },
+  "grounding_ok": false,
+  "nodes": {
+    "anchors": [],
+    "context_terms": [
+      {
+        "id": "domain:requirements",
+        "mention": "requirements",
+        "metadata": {
+          "exists": true,
+          "grounded": true,
+          "name": "requirements",
+          "type": "domain_term"
+        },
+        "node_kind": "domain_term",
+        "proof_role": "query_context",
+        "span": [
+          2,
+          14
+        ],
+        "status": "extracted"
+      }
+    ],
+    "suppressed": [],
+    "unsupported": [
+      {
+        "id": "unresolved:home_graham_workspace_experiments_agent_skills_skills_persona_dream_reports_pipeline_complete_phase_04_contact_sheets_contact_sheet_requirements_json",
+        "mention": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json",
+        "metadata": {
+          "exists": false,
+          "grounded": false,
+          "name": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json",
+          "reason": "fabricated_id",
+          "type": "unresolved"
+        },
+        "node_kind": "unresolved_term",
+        "proof_role": "none",
+        "span": [
+          18,
+          168
+        ],
+        "status": "unresolved"
+      },
+      {
+        "id": "unresolved:persona_dream",
+        "mention": "persona dream",
+        "metadata": {
+          "exists": false,
+          "grounded": false,
+          "name": "persona dream",
+          "reason": "not_in_corpus",
+          "type": "unresolved"
+        },
+        "node_kind": "unresolved_term",
+        "proof_role": "none",
+        "status": "unresolved"
+      }
+    ],
+    "validated_context": []
+  },
+  "ok": true,
+  "proof_packet": {
+    "assertions": [
+      {
+        "evidence": {
+          "expected_control_name": null,
+          "mention": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json",
+          "reason": "fabricated_id",
+          "span": [
+            18,
+            168
+          ]
+        },
+        "id": "assert:unresolved_home_graham_workspace_experiments_agent_skills_skills_persona_dream_reports_pipeline_complete_phase_04_contact_sheets_contact_sheet_requirements_json_unsupported",
+        "object": null,
+        "predicate": "does_not_describe_control",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "status": "failed",
+        "subject": "unresolved:home_graham_workspace_experiments_agent_skills_skills_persona_dream_reports_pipeline_complete_phase_04_contact_sheets_contact_sheet_requirements_json"
+      },
+      {
+        "evidence": {
+          "expected_control_name": null,
+          "mention": "persona dream",
+          "reason": "not_in_corpus",
+          "span": null
+        },
+        "id": "assert:unresolved_persona_dream_unsupported",
+        "object": null,
+        "predicate": "does_not_describe_control",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "status": "failed",
+        "subject": "unresolved:persona_dream"
+      }
+    ],
+    "authoritative": true,
+    "generated_by": "deterministic_extractor",
+    "llm_used": false,
+    "primary_entity_id": null,
+    "query_text": "{\"requirements\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json\"}"
+  },
+  "query_text": "{\"requirements\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json\"}",
+  "view": "agent"
+}

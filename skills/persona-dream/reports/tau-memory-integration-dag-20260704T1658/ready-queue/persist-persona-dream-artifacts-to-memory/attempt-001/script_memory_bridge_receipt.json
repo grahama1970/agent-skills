@@ -1,0 +1,66 @@
+{
+  "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_contract.json",
+  "artifact_memory_key": "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+  "asset_upsert_result": {
+    "updated": 14
+  },
+  "collection": "persona_memory",
+  "created_at": "2026-07-04T17:03:19Z",
+  "documents_written": [
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_entity_coverage"
+  ],
+  "edge_upsert_result": {
+    "updated": 14
+  },
+  "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+  "live": true,
+  "media_assets_written": [
+    "embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+    "embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+    "embry-kai-sick-day_asset_kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+    "embry-kai-sick-day_asset_embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+    "embry-kai-sick-day_asset_embry_media_asset__assets_character_sheet_montage_jpg",
+    "embry-kai-sick-day_asset_kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+    "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+    "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+    "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+    "embry-kai-sick-day_asset_asset-9",
+    "embry-kai-sick-day_asset_asset-10",
+    "embry-kai-sick-day_asset_asset-11",
+    "embry-kai-sick-day_asset_asset-12",
+    "embry-kai-sick-day_asset_asset-13"
+  ],
+  "media_edges_written": [
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png_0",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png_1",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png_2",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png_3",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_character_sheet_montage_jpg_4",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png_5",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4_6",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg_7",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav_8",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-9_9",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-10_10",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-11_11",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-12_12",
+    "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-13_13"
+  ],
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "recall_probe": {
+    "count": 8,
+    "query": "persona-dream 06_script script_contract embry-kai-sick-day persona_dream.script_contract.v1 {\"asset_usage\": [{\"asset_id\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\", \"title\": \"Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby.\", \"use_in_story\": \"v",
+    "score_counts": {
+      "bm25": 8,
+      "dense": 8,
+      "graph": 4
+    }
+  },
+  "schema": "persona_dream.memory_bridge_receipt.v1",
+  "status": "PASS",
+  "upsert_result": {
+    "updated": 2
+  }
+}

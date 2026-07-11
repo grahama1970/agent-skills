@@ -1,0 +1,16 @@
+{
+  "schema": "persona_dream.panel_reviewer_receipt.v1",
+  "panel_id": "panel-fixture-missing-image",
+  "artifact_revision": "fixture-001",
+  "artifact_receipt_sha256": "f99f0884afab98c6b39f26d570d116fa93ae7070f710d24a44384a0f32f2fbd8",
+  "reviewer": "panel-reviewer",
+  "reviewer_verdict": "INSUFFICIENT_EVIDENCE",
+  "reviewer_readonly": true,
+  "unresolved_blockers": [
+    {
+      "code": "missing_image_artifact",
+      "severity": "blocking",
+      "message": "No image artifact was available for visual review."
+    }
+  ]
+}

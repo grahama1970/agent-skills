@@ -1,0 +1,195 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from pipeline_loop_status import build_pipeline_loop_status  # noqa: E402
+from write_one_scene_kling_review_packet import install_one_scene_kling_review_packet  # noqa: E402
+
+
+PNG_BYTES = b"\x89PNG\r\n\x1a\nfixture"
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+def _write_provider_media_rungs(run_root: Path, image: Path, panel_hash: str, repair_receipt: Path) -> None:
+    _write_json(
+        run_root / "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+        {
+            "schema": "persona_dream.provider_media_publication_work_order.v1",
+            "status": "WORK_ORDER_READY_PUBLIC_UPLOAD_AUTH_REQUIRED",
+            "authorization_required": [
+                "public_upload_of_panel_image",
+                "git_commit_and_push_or_equivalent_public_asset_publish",
+            ],
+            "forbidden_actions": [
+                "direct_kling_submit",
+                "paid_provider_call",
+                "nano_banana_final_panel_generation",
+                "gemini_final_panel_generation",
+                "provider_readiness_without_live_url_probe",
+                "hash_or_receipt_rewrite_without_matching_public_fetch",
+            ],
+            "source_paths": {
+                "run_root": str(run_root),
+                "panel_repair_gate_receipt": str(repair_receipt),
+                "provider_media_probe_receipt": str(
+                    run_root
+                    / "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_fixture/provider_media_url_probe_receipt.json"
+                ),
+                "panel_image": str(image),
+            },
+            "locked_media": {"local_path": str(image), "sha256": panel_hash, "bytes": image.stat().st_size},
+            "proposed_publication": {
+                "method": "git_raw_asset_after_authorized_commit_push",
+                "target_repo_path": f"skills/persona-dream/provider_media/{run_root.name}/panel_01.png",
+                "proposed_url": f"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/{run_root.name}/panel_01.png",
+                "rollback_path": str(run_root / "rollback"),
+            },
+            "verification_commands": [
+                "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run/panel_01.png --expected-sha256 "
+                + panel_hash
+                + " --json",
+                "./run.sh validate-panel-repair-gate <panel_repair_gate_receipt> --require-provider-eligible",
+            ],
+        },
+    )
+    _write_json(
+        run_root / "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+        {
+            "schema": "persona_dream.provider_media_local_staging_receipt.v1",
+            "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+            "staged_asset_path": str(image),
+            "staged_sha256": panel_hash,
+            "does_not_authorize": [
+                "git_push",
+                "public_upload",
+                "provider_readiness",
+                "direct_kling_submit",
+                "paid_provider_call",
+            ],
+            "next_required_probe_command": "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/panel.png --expected-sha256 "
+            + panel_hash
+            + " --json",
+        },
+    )
+    _write_json(
+        run_root / "receipts/provider_media_publication_preflight.json",
+        {
+            "schema": "persona_dream.provider_media_publication_preflight_validation.v1",
+            "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+            "first_blocker": {
+                "phase": "provider_media_publication_authorization",
+                "reason": "public_upload_or_git_push_authorization_required",
+            },
+            "preflight_ready": True,
+            "staged_asset_path": str(image),
+            "target_repo_path": f"skills/persona-dream/provider_media/{run_root.name}/panel_01.png",
+            "proposed_url": f"https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/{run_root.name}/panel_01.png",
+            "locked_sha256": panel_hash,
+            "staged_sha256": panel_hash,
+            "mocked": "yes",
+            "live": "no",
+        },
+    )
+    _write_json(
+        run_root
+        / "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_fixture/provider_media_url_probe_receipt.json",
+        {
+            "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+            "status": "BLOCKED",
+            "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/panel.png",
+            "expected_sha256": panel_hash,
+            "observed_sha256": None,
+            "http_status": None,
+            "blockers": ["fetch_failed:HTTP Error 404: Not Found"],
+            "mocked": "no",
+            "live": "yes",
+        },
+    )
+
+
+class TestPipelineLoopStatus(unittest.TestCase):
+    def test_publication_authorization_blocker_maps_to_provider_media_loop(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            image = run_root / "storyboard/panel_01.png"
+            image.parent.mkdir(parents=True)
+            image.write_bytes(PNG_BYTES)
+            panel_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+            source_receipt = run_root / "work/panel_source_receipt.json"
+            repair_receipt = run_root / "work/panel_repair_gate_receipt.json"
+            _write_json(
+                source_receipt,
+                {
+                    "schema": "persona_dream.panel_source_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_01",
+                    "status": "BLOCKED",
+                    "image_path": "storyboard/panel_01.png",
+                    "sha256": panel_hash,
+                    "producer": {
+                        "kind": "subagent",
+                        "name": "persona-dream-panel-repair-gate",
+                        "receipt": str(repair_receipt),
+                    },
+                    "photoreal_status": "UNKNOWN",
+                    "nano_banana_fallback_used": False,
+                    "final_panel_eligible": False,
+                    "blockers": ["provider_eligibility_not_true"],
+                },
+            )
+            _write_json(
+                repair_receipt,
+                {
+                    "schema": "persona_dream.panel_repair_gate_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_01",
+                    "status": "BLOCKED_PROVIDER_MEDIA_URLS",
+                    "provider_media_status": "FAIL",
+                    "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+                    "provider_eligibility": False,
+                    "remaining_blockers": ["provider_media_url_missing"],
+                },
+            )
+            install_one_scene_kling_review_packet(
+                run_root=run_root,
+                panel_source_receipt=source_receipt,
+                panel_repair_gate_receipt=repair_receipt,
+            )
+            _write_provider_media_rungs(run_root, image, panel_hash, repair_receipt)
+
+            result = build_pipeline_loop_status(
+                run_root=run_root,
+                direction="backward",
+                generated_at="2026-06-28T23:00:00Z",
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["active_loop"]["loop"], "provider_media_loop")
+        self.assertEqual(result["active_loop"]["phase"], "provider_media_publication_authorization")
+        self.assertIs(result["active_loop"]["external_action_required"], True)
+        self.assertIn("public_upload_of_panel_image", result["active_loop"]["requires_authorization"])
+        self.assertGreaterEqual(len(result["loop_backlog"]), 2)
+        self.assertEqual(result["loop_backlog"][0]["sequence"], 1)
+        self.assertEqual(result["loop_backlog"][0]["phase"], "provider_media_publication_authorization")
+        self.assertEqual(result["loop_backlog"][0]["loop"], "provider_media_loop")
+        self.assertIs(result["loop_backlog"][0]["external_action_required"], True)
+        self.assertTrue(any(item["phase"] == "panel_source_receipt" for item in result["loop_backlog"]))
+        self.assertIs(result["policy"]["kling_call_allowed"], False)
+        self.assertIs(result["policy"]["nano_banana_final_panel_allowed"], False)
+        self.assertIn("External authorization is required", result["stop_condition"])
+
+
+if __name__ == "__main__":
+    unittest.main()

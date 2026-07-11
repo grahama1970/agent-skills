@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-06-30T12:20:41Z",
+  "submitted_at": "2026-06-30T12:17:50Z",
+  "last_browser_observation_at": "2026-06-30T12:20:41Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.raw.md",
+  "next_expected_artifact": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260630T121746Z:3d3260bd>>>",
+  "prepared_prompt_is_transport_proof": false
+}

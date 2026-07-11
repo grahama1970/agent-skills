@@ -1,0 +1,14 @@
+{
+  "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+  "status": "BLOCKED",
+  "url": "https://assets.example.com/persona-dream/panel_01_attempt_02.png",
+  "expected_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "observed_sha256": null,
+  "http_status": null,
+  "content_length": null,
+  "blockers": ["fetch_failed:fixture"],
+  "mocked": "yes",
+  "live": "no",
+  "exercised": "fixture failed provider media probe contract",
+  "unverified": "public provider accessibility, Kling provider fetch behavior, provider task submission"
+}

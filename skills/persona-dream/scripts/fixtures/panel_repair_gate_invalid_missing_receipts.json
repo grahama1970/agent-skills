@@ -1,0 +1,35 @@
+{
+  "schema": "persona_dream.panel_repair_gate_receipt.v1",
+  "run_id": "fixture-non-horus-dream",
+  "panel_id": "panel_04",
+  "status": "PASS_PANEL_REVIEWED",
+  "script_coverage_status": "PASS",
+  "post_generation_script_coverage_status": "PASS",
+  "reference_evidence_status": "PASS",
+  "visual_review_status": "PASS",
+  "no_overlay_status": "PASS",
+  "provider_media_status": "PASS",
+  "requirement_matrix": "panel_repair_gate_artifacts/does-not-exist-requirement-matrix.json",
+  "script_coverage_receipt": "panel_repair_gate_artifacts/does-not-exist-script.json",
+  "post_generation_script_coverage_receipt": "panel_repair_gate_artifacts/does-not-exist-post-generation.json",
+  "reference_receipt": "panel_repair_gate_artifacts/does-not-exist-reference.json",
+  "generation_receipt": "panel_repair_gate_artifacts/does-not-exist-generation.json",
+  "visual_review_receipt": "panel_repair_gate_artifacts/does-not-exist-visual.json",
+  "no_overlay_receipt": "panel_repair_gate_artifacts/does-not-exist-overlay.json",
+  "provider_media_urls": [
+    "https://storage.example.invalid/persona-dream/panel_04.png"
+  ],
+  "media_hashes": {
+    "panel": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "provider_mode": "std",
+  "provider_resolution": "720p",
+  "callback_or_polling_plan": "panel_repair_gate_artifacts/callback_or_polling_plan.json",
+  "external_task_id": "fixture-non-horus-dream-panel-04",
+  "voice_id_status": "SILENT_SCENE",
+  "provider_voice_ids": {},
+  "cost_estimate": "panel_repair_gate_artifacts/cost_estimate.json",
+  "provider_packet_status": "PROVIDER_READY",
+  "provider_eligibility": true,
+  "remaining_blockers": []
+}

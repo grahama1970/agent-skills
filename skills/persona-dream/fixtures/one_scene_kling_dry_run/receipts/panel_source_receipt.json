@@ -1,0 +1,21 @@
+{
+  "schema": "persona_dream.panel_source_receipt.v1",
+  "run_id": "one_scene_kling_dry_run",
+  "panel_id": "panel_001",
+  "status": "BLOCKED",
+  "image_path": "artifacts/panel_001_reference.png",
+  "sha256": "sha256:4e7dfb8fcb858fd282b927980324fe7bcfd32aa35254dd9af0530889b5317c31",
+  "producer": {
+    "kind": "subagent",
+    "name": "panel-creator",
+    "receipt": "missing: real panel-creator generation receipt"
+  },
+  "photoreal_status": "UNKNOWN",
+  "nano_banana_fallback_used": false,
+  "final_panel_eligible": false,
+  "blockers": [
+    "dry-run reference image is a media-lock fixture, not a real subagent-produced final panel",
+    "photoreal panel acceptance has not been established",
+    "report comparison exists only as a reality check"
+  ]
+}

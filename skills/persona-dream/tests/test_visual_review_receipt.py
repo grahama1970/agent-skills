@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+import json
+import hashlib
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_visual_review_receipt import validate_visual_review_receipt  # noqa: E402
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_pass_receipt(root: Path, *, image_bytes: bytes = b"reviewed-panel") -> Path:
+    image = root / "artifacts/panel_001.png"
+    image.parent.mkdir(parents=True, exist_ok=True)
+    image.write_bytes(image_bytes)
+    path = root / "visual_review_receipt.json"
+    path.write_text(
+        json.dumps(
+            {
+                "status": "PASS",
+                "panel_id": "panel_001",
+                "reviewer_source": "panel-reviewer:webgpt-review:fixture",
+                "passed_entities": ["character_horus", "character_embry", "tea_service"],
+                "blocking_findings": [],
+                "checks": {
+                    "characters": "PASS",
+                    "props": "PASS",
+                    "environment": "PASS",
+                    "creatures": "PASS",
+                    "effects": "PASS",
+                    "script_dialogue": "PASS",
+                    "scale": "PASS",
+                    "motion_cues": "PASS",
+                },
+                "reviewed_image_path": "artifacts/panel_001.png",
+                "hash": _sha256(image),
+                "dimensions": {"width": 1280, "height": 720},
+                "timestamp": "2026-06-28T20:00:00Z",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+class TestVisualReviewReceipt(unittest.TestCase):
+    def test_blocked_manual_receipt_reports_visual_review_blocker(self) -> None:
+        result = validate_visual_review_receipt(
+            ROOT / "fixtures/one_scene_kling_dry_run/receipts/visual_review_receipt.json",
+            run_root=ROOT / "fixtures/one_scene_kling_dry_run",
+        )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "visual_review_receipt")
+        self.assertEqual(result["first_blocker"]["reason"], "visual_review_not_accepted:BLOCKED")
+
+    def test_panel_reviewer_pass_receipt_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_pass_receipt(Path(tmp))
+
+            result = validate_visual_review_receipt(path, run_root=Path(tmp))
+
+        self.assertEqual(result["status"], "PASS_VISUAL_REVIEW")
+        self.assertIsNone(result["first_blocker"])
+
+    def test_pass_receipt_requires_all_eight_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_pass_receipt(Path(tmp))
+            receipt = json.loads(path.read_text(encoding="utf-8"))
+            receipt["checks"]["motion_cues"] = "FAIL"
+            path.write_text(json.dumps(receipt) + "\n", encoding="utf-8")
+
+            result = validate_visual_review_receipt(path, run_root=Path(tmp))
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["reason"], "check_not_pass:motion_cues:FAIL")
+
+    def test_reviewer_receipt_rejects_forbidden_owner_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_pass_receipt(Path(tmp))
+            receipt = json.loads(path.read_text(encoding="utf-8"))
+            receipt["generated_image_path"] = "artifacts/panel_001.png"
+            path.write_text(json.dumps(receipt) + "\n", encoding="utf-8")
+
+            result = validate_visual_review_receipt(path, run_root=Path(tmp))
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["reason"], "reviewer_receipt_contains_forbidden_owner_fields")
+
+    def test_pass_receipt_blocks_when_reviewed_image_hash_mismatches(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = _write_pass_receipt(root)
+            (root / "artifacts/panel_001.png").write_bytes(b"changed-after-review")
+
+            result = validate_visual_review_receipt(path, run_root=root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "visual_review_image")
+        self.assertTrue(result["first_blocker"]["reason"].startswith("reviewed_image_hash_mismatch:"))
+
+
+if __name__ == "__main__":
+    unittest.main()

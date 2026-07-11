@@ -1,0 +1,16 @@
+{
+  "schema": "persona_dream.panel_artifact_receipt.v1",
+  "panel_id": "panel-fixture-valid-image",
+  "artifact_revision": "fixture-002",
+  "image_artifact": {
+    "path": "skills/persona-dream/fixtures/rung11_panel_image_fixture.svg",
+    "sha256": "97f96ad3b0a38bcd8645abfe385017df903ac0b20bc30abf0596e6b6c80f0502",
+    "media_type": "image/svg+xml"
+  },
+  "panel_contract": {
+    "requires_image": true,
+    "required_entities": ["character", "prop", "environment"]
+  },
+  "live_call_performed": false,
+  "paid_call_performed": false
+}

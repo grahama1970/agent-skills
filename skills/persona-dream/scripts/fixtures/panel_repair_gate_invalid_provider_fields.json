@@ -1,0 +1,34 @@
+{
+  "schema": "persona_dream.panel_repair_gate_receipt.v1",
+  "run_id": "fixture-non-horus-dream",
+  "panel_id": "panel_02",
+  "status": "PASS_PANEL_REVIEWED",
+  "script_coverage_status": "PASS",
+  "post_generation_script_coverage_status": "PASS",
+  "reference_evidence_status": "PASS",
+  "visual_review_status": "PASS",
+  "no_overlay_status": "PASS",
+  "provider_media_status": "PASS",
+  "requirement_matrix": "/tmp/fixture/panel_requirement_matrix.json",
+  "script_coverage_receipt": "/tmp/fixture/script_coverage_receipt.json",
+  "post_generation_script_coverage_receipt": "/tmp/fixture/post_generation_script_coverage_receipt.json",
+  "reference_receipt": "/tmp/fixture/reference_receipt.json",
+  "generation_receipt": "/tmp/fixture/scillm_generation_receipt.json",
+  "visual_review_receipt": "/tmp/fixture/visual_review_receipt.json",
+  "no_overlay_receipt": "/tmp/fixture/no_overlay_receipt.json",
+  "provider_media_urls": [
+    "/mnt/storage12tb/persona-dream/local-only-panel.png"
+  ],
+  "media_hashes": {
+    "panel": "missing-sha-prefix"
+  },
+  "provider_mode": "4k",
+  "provider_resolution": "4k",
+  "callback_or_polling_plan": "",
+  "external_task_id": "",
+  "voice_id_status": "BLOCKED_MISSING_PROVIDER_VOICE_ID",
+  "cost_estimate": "",
+  "provider_packet_status": "PROVIDER_READY",
+  "provider_eligibility": true,
+  "remaining_blockers": []
+}

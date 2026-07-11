@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "events": "/home/graham/workspace/experiments/agent-skills/.ask_artifacts/webgpt-review/webgpt-review-20260614T021317Z/events.jsonl",
+    "request": "/home/graham/workspace/experiments/agent-skills/.ask_artifacts/webgpt-review/webgpt-review-20260614T021317Z/request.json",
+    "run_dir": "/home/graham/workspace/experiments/agent-skills/.ask_artifacts/webgpt-review/webgpt-review-20260614T021317Z",
+    "status": "/home/graham/workspace/experiments/agent-skills/.ask_artifacts/webgpt-review/webgpt-review-20260614T021317Z/status.json"
+  },
+  "elapsed_ms": 15513,
+  "error": "surf webgpt.submit failed: returncode=126 meta_status=failed failure=submit_failed\nstderr tail: /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh: line 461: /usr/bin/timeout: Argument list too long\nExtractFallback: true\nExtractFallbackReason: submit_failed\nExtractFallbackRaw: /tmp/surf-webgpt-submit-extract-raw.H3xELW.md\nExtractFallbackMeta: /tmp/surf-webgpt-submit-extract-meta.SvFqF8.json\nTab ID: 837352334\nResponseSource: webgpt-extract-fallback\n",
+  "ok": false,
+  "recovery_command": [
+    "./run.sh",
+    "webgpt-review",
+    "--bundle",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/review-code-bundle.md",
+    "--review-type",
+    "code",
+    "--output-root",
+    ".ask_artifacts/webgpt-review",
+    "--timeout",
+    "900",
+    "--json",
+    "--project",
+    "agent-skills-review-code"
+  ],
+  "run_id": "webgpt-review-20260614T021317Z",
+  "schema": "ask.webgpt_review.status.v1",
+  "state": "blocked",
+  "verdict": "BLOCKED"
+}

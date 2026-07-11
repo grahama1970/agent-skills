@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "casting_agent.casting_contract.v1",
+  "type": "object",
+  "required": ["schema", "status", "entities", "source_story_package", "live_calls_performed", "paid_provider_call_performed"],
+  "properties": {
+    "schema": {"const": "casting_agent.casting_contract.v1"},
+    "status": {"type": "string"},
+    "entities": {"type": "array"},
+    "source_story_package": {"type": "string"},
+    "live_calls_performed": {"const": false},
+    "paid_provider_call_performed": {"const": false}
+  }
+}

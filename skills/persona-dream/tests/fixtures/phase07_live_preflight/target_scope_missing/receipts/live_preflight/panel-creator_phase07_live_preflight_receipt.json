@@ -38,7 +38,7 @@
       "fail-closed live preflight ran before provider/reviewer mutation"
     ]
   },
-  "created_at": "2026-07-08T02:34:10.315178+00:00",
+  "created_at": "2026-07-08T13:24:13.492786+00:00",
   "live_image_call_started": false,
   "mocked": false,
   "provider_call_authorized": false,
@@ -48,16 +48,16 @@
     "satisfied": null
   },
   "role": "panel-creator",
-  "run_root": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/target_scope_missing",
+  "run_root": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/target_scope_missing",
   "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
-  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/target_scope_missing/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/target_scope_missing/spine_chain_manifest.v1.json",
   "spine_chain_manifest_sha256": "sha256:0feede00a101ad41c2d9711afeb621c2e2befc6135d422310c51ad11101e4612",
   "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
-  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/target_scope_missing/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
-  "spine_chain_validator_receipt_sha256": "sha256:88800d827e6cf741e35856d41e161d294bf79b7f4c5bd70112155b99f9d84e86",
+  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/target_scope_missing/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:ecf10e3c2903189a1e928816f6907e9d4311f9a2d55ea8053bd550be65edcb47",
   "spine_chain_validator_status": "BLOCKED_SPINE_CHAIN_CONTRACT",
   "status": "BLOCKED_LIVE_PREFLIGHT",
-  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/target_scope_missing/storyboard_packet.json",
+  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/target_scope_missing/storyboard_packet.json",
   "storyboard_packet_sha256": "sha256:78f08b1db57f672d5138fe5162ea03ea78a27a48ea64c9018228cf0e31276ceb",
   "target_manifest_entries": [],
   "target_scope": {

@@ -1,0 +1,10 @@
+{
+  "schema": "persona_dream.panel_reviewer_receipt.v1",
+  "panel_id": "panel-fixture-valid-image",
+  "artifact_revision": "fixture-002",
+  "artifact_receipt_sha256": "cf9e7c0072391461e5ca2ace0d41c6f125ea123d27a1c7b18a97257f142bf771",
+  "reviewer": "panel-reviewer",
+  "reviewer_verdict": "PASS",
+  "reviewer_readonly": true,
+  "unresolved_blockers": []
+}

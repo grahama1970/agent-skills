@@ -27,7 +27,7 @@
       "fail-closed live preflight ran before provider/reviewer mutation"
     ]
   },
-  "created_at": "2026-07-08T02:34:10.258548+00:00",
+  "created_at": "2026-07-08T13:24:13.442224+00:00",
   "live_image_call_started": false,
   "mocked": false,
   "provider_call_authorized": false,
@@ -37,16 +37,16 @@
     "satisfied": null
   },
   "role": "panel-creator",
-  "run_root": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash",
+  "run_root": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/stale_compiled_prompt_hash",
   "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
-  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/stale_compiled_prompt_hash/spine_chain_manifest.v1.json",
   "spine_chain_manifest_sha256": "sha256:36f12e9ecb77b8b3f0dd9ddb7500970c236a85e23ee1405a9e4dc9a005714d75",
   "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
-  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
-  "spine_chain_validator_receipt_sha256": "sha256:e4e808230ee01d23519cf3106f75999f8faf2e4072660f098789ddd4b93b236c",
+  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/stale_compiled_prompt_hash/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:fa3930891a1e9d8e456bfa1d72b19914870514dd431b5f8b957df793c2f40db9",
   "spine_chain_validator_status": "BLOCKED_SPINE_CHAIN_CONTRACT",
   "status": "BLOCKED_LIVE_PREFLIGHT",
-  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/stale_compiled_prompt_hash/storyboard_packet.json",
+  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/stale_compiled_prompt_hash/storyboard_packet.json",
   "storyboard_packet_sha256": "sha256:a8eab1ba2eacd857808b92f0b6b6eba211587d3898f595958e28ef942e1885b7",
   "target_manifest_entries": [
     {

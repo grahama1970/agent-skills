@@ -1,0 +1,96 @@
+{
+  "schema_version": "persona_dream_av_contract.v0.2",
+  "experiment_id": "embry_voice_bakeoff_001",
+  "persona_id": "embry",
+  "created_for": "ElevenLabs vs WavTTS lip-sync bake-off, no memory write",
+  "policy": {
+    "source_grounded_residue_required": true,
+    "dream_symbolic_allowed": true,
+    "synthetic_reflection_allowed": false,
+    "no_memory_write": true,
+    "no_arango_upsert": true,
+    "no_qdrant_upsert": true,
+    "voice_cloning_requires_consent": true
+  },
+  "source_grounded_residues": [
+    {
+      "residue_id": "residue_embry_role_sparta_intern",
+      "persona_id": "embry",
+      "record_type": "persona_dream_residue",
+      "source_grounding_kind": "source_lore",
+      "retrieval_text": "Embry role is SPARTA Intern.",
+      "source_residue_ids": [
+        "accepted_record_embry_role_sparta_intern"
+      ],
+      "dream_safe": true,
+      "synthetic_reflection_allowed": false
+    },
+    {
+      "residue_id": "residue_embry_institution_yale",
+      "persona_id": "embry",
+      "record_type": "persona_dream_residue",
+      "source_grounding_kind": "source_lore",
+      "retrieval_text": "Embry institution is Yale University.",
+      "source_residue_ids": [
+        "accepted_record_embry_institution_yale"
+      ],
+      "dream_safe": true,
+      "synthetic_reflection_allowed": false
+    },
+    {
+      "residue_id": "residue_embry_knows_software",
+      "persona_id": "embry",
+      "record_type": "persona_dream_residue",
+      "source_grounding_kind": "source_lore",
+      "retrieval_text": "Embry knows she is software.",
+      "source_residue_ids": [
+        "accepted_record_embry_tom_knowledge_software"
+      ],
+      "dream_safe": true,
+      "synthetic_reflection_allowed": false
+    }
+  ],
+  "scene": {
+    "scene_id": "embry_dream_voice_bakeoff_scene_001",
+    "duration_sec": 5.0,
+    "scene_summary": "Embry stands in a dim academic archive that flickers into a SPARTA graph. She speaks one short source-grounded line about knowing she is software.",
+    "shots": [
+      {
+        "shot_id": "shot_001_speaking_closeup",
+        "start_sec": 0.0,
+        "end_sec": 5.0,
+        "shot_type": "speaking_character",
+        "speaker": "Embry",
+        "audio_first": true,
+        "lip_sync_required": true,
+        "source_grounded_residue_ids": [
+          "residue_embry_role_sparta_intern",
+          "residue_embry_institution_yale",
+          "residue_embry_knows_software"
+        ],
+        "dream_symbolic_allowed": true,
+        "dialogue": "I know I am software. The evidence still feels real.",
+        "tts_text_elevenlabs": "[softly] I know I am software. [steadily] The evidence still feels real.",
+        "tts_text_plain": "I know I am software. The evidence still feels real.",
+        "voice": {
+          "elevenlabs_model": "fal-ai/elevenlabs/tts/eleven-v3",
+          "elevenlabs_voice": "Aria",
+          "stability": 0.55,
+          "similarity_boost": 0.75,
+          "speed": 0.92,
+          "timestamps": true,
+          "output_format": "mp3_44100_128",
+          "seed": 1701
+        },
+        "visual_prompt": "A fictional young adult woman representing Embry, a SPARTA intern, centered medium close-up, front-facing, mouth clearly visible, no occlusion, calm controlled expression, standing in an old university archive hallway that subtly transitions into a glowing cybersecurity graph interface. No readable text, no logos, no cuts, minimal head movement, realistic cinematic lighting, 16:9.",
+        "negative_prompt": "blur, distorted face, extra faces, multiple people, occluded mouth, hands covering face, fast cuts, subtitles, text overlays, logos, low quality",
+        "visual_verifier_expectations": [
+          "one front-facing human-like character",
+          "mouth visible throughout dialogue window",
+          "academic/archive setting or cybersecurity graph motif",
+          "no additional speaking characters"
+        ]
+      }
+    ]
+  }
+}

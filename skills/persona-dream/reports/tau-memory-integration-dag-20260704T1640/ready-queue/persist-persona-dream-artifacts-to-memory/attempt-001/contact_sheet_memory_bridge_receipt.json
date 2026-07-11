@@ -1,0 +1,32 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_build_receipt.json",
+  "artifact_memory_key": "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f",
+  "asset_upsert_result": null,
+  "collection": "persona_memory",
+  "created_at": "2026-07-04T16:45:46Z",
+  "documents_written": [
+    "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f",
+    "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f_entity_coverage"
+  ],
+  "edge_upsert_result": null,
+  "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+  "live": true,
+  "media_assets_written": [],
+  "media_edges_written": [],
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "recall_probe": {
+    "count": 8,
+    "query": "persona-dream 04_contact_sheets contact_sheet_build_receipt embry-kai-sick-day persona_dream.phase_04_contact_sheet_build_receipt.v1 {\"requirements\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json\"}",
+    "score_counts": {
+      "bm25": 8,
+      "dense": 8,
+      "graph": 4
+    }
+  },
+  "schema": "persona_dream.memory_bridge_receipt.v1",
+  "status": "PASS",
+  "upsert_result": {
+    "updated": 2
+  }
+}

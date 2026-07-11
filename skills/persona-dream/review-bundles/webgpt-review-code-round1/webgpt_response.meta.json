@@ -1,0 +1,80 @@
+{
+  "status": "completed",
+  "failure": null,
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/webgpt-submit-prompt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/webgpt_submitted_prompt.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/webgpt_response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/webgpt_response.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.OVY64h.log",
+  "sentinel": "<<<WEBGPT_DONE:20260614T022106Z:734cd11b>>>",
+  "requested_tab_id": "837352334",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": null,
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837352334",
+    "tab": {
+      "id": "837352334",
+      "title": "Agentic Research - Boris Loop",
+      "url": "https://chatgpt.com/g/g-p-6a281654ec48819181f5c359c11d9561/c/6a2a9c75-c55c-83ea-932e-02a65a7fea61"
+    },
+    "chatgpt_tabs_count": 12,
+    "expected_url": "https://chatgpt.com/g/g-p-6a281654ec48819181f5c359c11d9561/c/6a2a9c75-c55c-83ea-932e-02a65a7fea61",
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837352334"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "expected_url_matches_tab",
+        "ok": true,
+        "detail": "expected_url matched tab 837352334"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "verified"
+      }
+    ]
+  },
+  "stable_polls": 3,
+  "timeout_s": 900,
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": false,
+  "clean_contamination_markers": [],
+  "raw_chars": 6821,
+  "clean_chars": 6777,
+  "controlled_tab_id": "837352334",
+  "controlled_tab_id_mismatch": false,
+  "no_activate": true,
+  "tab_was_created": false,
+  "activated": false,
+  "focused_window_before": 837350430,
+  "focused_window_after": 837350430,
+  "active_tab_before": 837352482,
+  "active_tab_after": 837352482,
+  "focus_changed": false,
+  "focus_stolen_mid_submit": false,
+  "focus_invariant_ok": true,
+  "transport_degraded": false,
+  "recovered_output": false,
+  "focus_mid_log": "/tmp/surf-webgpt-focus-mid.jwdLVG.log",
+  "response_source": "assistant-dom",
+  "page_text_contains_sentinel": true,
+  "document_hidden_at_completion": true,
+  "visibility_state_at_completion": "hidden",
+  "background_hidden_polls": 517,
+  "background_poll_count": 517,
+  "started_at": "2026-06-14T02:21:06Z",
+  "finished_at": "2026-06-14T02:25:12Z"
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.stage_status_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "root", "blocking_stage_ids", "live_calls_performed", "paid_provider_call_performed", "stages"],
+  "properties": {
+    "schema": {"const": "persona_dream.stage_status_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "root": {"type": "string"},
+    "blocking_stage_ids": {"type": "array"},
+    "live_calls_performed": {"const": false},
+    "paid_provider_call_performed": {"const": false},
+    "stages": {"type": "array", "minItems": 1}
+  }
+}

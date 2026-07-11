@@ -1,0 +1,10 @@
+{
+  "created_at": "2026-07-02T18:42:47Z",
+  "crew_contract": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/multiscene-live-smoke/phase_03_producer_writer_director/crew_contract.json",
+  "errors": [],
+  "live": true,
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.validate_crew_contract.v1",
+  "status": "PASS_CREW_CONTRACT"
+}

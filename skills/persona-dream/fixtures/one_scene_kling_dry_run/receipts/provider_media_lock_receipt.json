@@ -1,0 +1,16 @@
+{
+  "schema": "persona_dream.provider_media_lock_receipt.v1",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "status": "LOCAL_MEDIA_LOCK_READY",
+  "provider_accessible": false,
+  "live_provider_call_made": false,
+  "media": [
+    {
+      "id": "panel_001_reference",
+      "role": "storyboard_panel_reference",
+      "local_path": "artifacts/panel_001_reference.png",
+      "url_path": "/artifacts/panel_001_reference.png",
+      "sha256": "sha256:4e7dfb8fcb858fd282b927980324fe7bcfd32aa35254dd9af0530889b5317c31"
+    }
+  ]
+}

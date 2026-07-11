@@ -1,0 +1,27 @@
+{
+  "bridge_receipt_count": 3,
+  "errors": [],
+  "expected_phases": [
+    "02_story",
+    "04_contact_sheets",
+    "06_script"
+  ],
+  "live": true,
+  "media_assets_written_count": 14,
+  "media_edges_written_count": 14,
+  "missing_phases": [],
+  "mocked": false,
+  "observed_phases": [
+    "02_story",
+    "04_contact_sheets",
+    "06_script"
+  ],
+  "recall_score_counts": {
+    "bm25": 24,
+    "dense": 24,
+    "graph": 12
+  },
+  "schema": "persona_dream.memory_tau_audit.v1",
+  "status": "PASS",
+  "timestamp": "2026-07-04T17:03:23Z"
+}

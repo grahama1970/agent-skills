@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.layout_validation.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "manual_review_required", "nonuniform_scaling_detected", "assets"],
+  "properties": {
+    "schema": {"const": "persona_dream.layout_validation.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "manual_review_required": {"type": "boolean"},
+    "nonuniform_scaling_detected": {"type": "boolean"},
+    "assets": {"type": "array", "minItems": 1}
+  }
+}

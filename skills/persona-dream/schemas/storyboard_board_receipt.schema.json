@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.storyboard_board_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "path", "sha256", "width", "height", "aspect_ratio", "expected_panel_count", "actual_panel_count", "beat_to_panel_map", "manual_review_required"],
+  "properties": {
+    "schema": {"const": "persona_dream.storyboard_board_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "path": {"type": "string"},
+    "sha256": {"type": "string"},
+    "width": {"type": "integer"},
+    "height": {"type": "integer"},
+    "aspect_ratio": {"type": "string"},
+    "expected_panel_count": {"type": "integer"},
+    "actual_panel_count": {"type": "integer"},
+    "beat_to_panel_map": {"type": "array", "minItems": 1},
+    "manual_review_required": {"type": "boolean"}
+  }
+}

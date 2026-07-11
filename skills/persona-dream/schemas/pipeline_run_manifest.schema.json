@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/pipeline_run_manifest.schema.json",
+  "title": "P0 Pipeline Run Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "pipeline",
+    "mode",
+    "schema_refs",
+    "receipt_paths",
+    "required_inputs"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pipeline": {
+      "const": "persona-dream-end-to-end-pipeline-P0"
+    },
+    "mode": {
+      "enum": ["blocked_fixture", "provider_ready_dry_run", "one_scene_kling_dry_run", "live"]
+    },
+    "schema_refs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^schemas/.+\\.schema\\.json$"
+      },
+      "required": [
+        "stage_receipt",
+        "pipeline_paid_call_approval_receipt",
+        "provider_readiness_receipt",
+        "kling_submit_gate_receipt",
+        "pipeline_terminal_report"
+      ]
+    },
+    "receipt_paths": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^receipts/.+\\.json$"
+      },
+      "required": [
+        "stage_receipt",
+        "pipeline_paid_call_approval_receipt",
+        "provider_readiness_receipt",
+        "kling_submit_gate_receipt",
+        "pipeline_terminal_report"
+      ]
+    },
+    "required_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

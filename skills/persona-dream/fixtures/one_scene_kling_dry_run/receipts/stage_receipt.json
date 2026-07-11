@@ -1,0 +1,10 @@
+{
+  "schema_id": "schemas/stage_receipt.schema.json",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "stage": "one_scene_terminal_call_packet",
+  "inputs_complete": true,
+  "missing_inputs": [],
+  "evidence": [
+    "one-scene fixture includes symbolic dream, story, storyboard, review, media URL, media hash, and paid-call gate inputs"
+  ]
+}

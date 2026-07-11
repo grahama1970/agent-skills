@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "mode": "polling",
+  "poll_endpoint": "https://api.example.invalid/tasks/{task_id}"
+}

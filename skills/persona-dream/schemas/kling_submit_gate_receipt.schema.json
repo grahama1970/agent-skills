@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/kling_submit_gate_receipt.schema.json",
+  "title": "P0 Kling Submit Gate Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "provider",
+    "attempted_live_submit",
+    "decision",
+    "reason",
+    "evidence"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/kling_submit_gate_receipt.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "const": "kling"
+    },
+    "attempted_live_submit": {
+      "const": false
+    },
+    "decision": {
+      "enum": [
+        "BLOCKED_MISSING_INPUT",
+        "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+        "LIVE_SUBMITTABLE",
+        "NOT_SUBMITTED"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

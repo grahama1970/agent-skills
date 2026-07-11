@@ -1,0 +1,9 @@
+{
+  "schema": "persona_dream.phase_successors.v1",
+  "contract_version": "rung22.fixture.v1",
+  "successors": {
+    "story": [
+      "voice"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/run/story_contract.json",
+  "artifact_memory_key": "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+  "asset_upsert_result": null,
+  "collection": "persona_memory",
+  "created_at": "2026-07-04T16:54:55Z",
+  "documents_written": [
+    "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+    "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53_entity_coverage"
+  ],
+  "edge_upsert_result": null,
+  "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+  "live": true,
+  "media_assets_written": [],
+  "media_edges_written": [],
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "recall_probe": {
+    "count": 8,
+    "query": "persona-dream 02_story story_contract embry-kai-sick-day persona_dream.story_contract.v1 {\"story\": \"{\\n  \\\"story\\\": \\\"Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.\\\",\\n  \\\"panel_coun",
+    "score_counts": {
+      "bm25": 8,
+      "dense": 8,
+      "graph": 4
+    }
+  },
+  "schema": "persona_dream.memory_bridge_receipt.v1",
+  "status": "PASS",
+  "upsert_result": {
+    "updated": 2
+  }
+}

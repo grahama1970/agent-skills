@@ -1,0 +1,178 @@
+{
+  "bundle": "persona-dream-end-to-end-pipeline-P0-corrected-solution.zip",
+  "corrected_for": "preserve legacy schemas/paid_call_approval_receipt.schema.json by moving P0 approval receipt schema to schemas/pipeline_paid_call_approval_receipt.schema.json",
+  "files": [
+    {
+      "bytes": 4075,
+      "path": "ARCHITECTURE.md",
+      "sha256": "022c2d132c5a752936025788e10b0c9af4f322b86ac9aebe46560312f6a03146"
+    },
+    {
+      "bytes": 575,
+      "path": "COMMANDS.md",
+      "sha256": "983c36d96161ab54bf5cce28c544b0f019be1fb7d4a3d2bb8b6f177afb83c93f"
+    },
+    {
+      "bytes": 347,
+      "path": "fixtures/blocked_missing_input/receipts/kling_submit_gate_receipt.json",
+      "sha256": "6ec8912be4a06024026f846be8aa188bdbd5c6b4c491a1324ff501e392b72f0d"
+    },
+    {
+      "bytes": 322,
+      "path": "fixtures/blocked_missing_input/receipts/pipeline_paid_call_approval_receipt.json",
+      "sha256": "5954dbe23bfe6c438032d994cb308df634dc545dbafc6123f21a52daee3b2ac1"
+    },
+    {
+      "bytes": 424,
+      "path": "fixtures/blocked_missing_input/receipts/pipeline_terminal_report.json",
+      "sha256": "fd38f27252650d8b989e720915f0f497406f8b0cd4989c9e78e656f0032a41ca"
+    },
+    {
+      "bytes": 382,
+      "path": "fixtures/blocked_missing_input/receipts/provider_readiness_receipt.json",
+      "sha256": "978c921b85b7f012b7dd1c1207ba166bc19f167ac61b7100418d73c28a1b9c09"
+    },
+    {
+      "bytes": 284,
+      "path": "fixtures/blocked_missing_input/receipts/stage_receipt.json",
+      "sha256": "bc6a17bd47a17003a2ac722fec92b9fad43ed5b7bcb431dfd7a07eab74cd7440"
+    },
+    {
+      "bytes": 1035,
+      "path": "fixtures/blocked_missing_input/run_manifest.json",
+      "sha256": "a7ebfa1f16e92aa7a887f6dbd10197bd781f3643216d100009dc42f396d23fe5"
+    },
+    {
+      "bytes": 457,
+      "path": "fixtures/provider_ready_dry_run/receipts/kling_submit_gate_receipt.json",
+      "sha256": "c3f753710b0054239b3b1c7c68169ac7369feed7c2c232bea8e9973cdfda8ad1"
+    },
+    {
+      "bytes": 329,
+      "path": "fixtures/provider_ready_dry_run/receipts/pipeline_paid_call_approval_receipt.json",
+      "sha256": "d56f91f09f6cb923c9f5068b34ec23f303c0f71ceb4a8124133371a67bfed399"
+    },
+    {
+      "bytes": 439,
+      "path": "fixtures/provider_ready_dry_run/receipts/pipeline_terminal_report.json",
+      "sha256": "be20ad051dd9beff65058e8ee107703828cfd50ae55fd1e113ae9bcbd4a66e96"
+    },
+    {
+      "bytes": 401,
+      "path": "fixtures/provider_ready_dry_run/receipts/provider_readiness_receipt.json",
+      "sha256": "eecae0832ce912ce0c1e1f7d87350010fa901ff24aa7e1bfbd968b37c5307821"
+    },
+    {
+      "bytes": 262,
+      "path": "fixtures/provider_ready_dry_run/receipts/stage_receipt.json",
+      "sha256": "79eff226945552dd8301dcb67e27f9c9f2ebe812b63ab22f0f8ff08f782287eb"
+    },
+    {
+      "bytes": 1043,
+      "path": "fixtures/provider_ready_dry_run/run_manifest.json",
+      "sha256": "21c20035a7eac36e45b2c139390ec5dff4bfb539c9c0f065a8a3dedf2a618188"
+    },
+    {
+      "bytes": 614,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/kling_submit_gate_receipt.json",
+      "sha256": "3d35a2bbf6ba853c7fc83bb6b08cad206508c08c29579e9f85d0f1235c6d5a64"
+    },
+    {
+      "bytes": 7005,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/kling_scene_packet.json",
+      "sha256": "57c54206469215218012540a5445ea4c72bcbdc00513bf490de5b3a08a486f53"
+    },
+    {
+      "bytes": 1398,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/one_scene_kling_call_contract.json",
+      "sha256": "e845244ab3469ddbf4eeb6468ca16303cf25f9dfb43f1f59e73c9234c5f7c86d"
+    },
+    {
+      "bytes": 391,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/pipeline_paid_call_approval_receipt.json",
+      "sha256": "59f100bd744e43f9eed54341384c1761e93fa677142123651859ac0a62104ca0"
+    },
+    {
+      "bytes": 491,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/pipeline_terminal_report.json",
+      "sha256": "3f5ba7ca52818a7802fa2bc73b38553954aaf9e0859d35f82659b8eda91cc4de"
+    },
+    {
+      "bytes": 515,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/provider_readiness_receipt.json",
+      "sha256": "e0731478c5d78086d40895aa032eac475f24d677b2fd1a55ef55d9a40334fddc"
+    },
+    {
+      "bytes": 344,
+      "path": "fixtures/one_scene_kling_dry_run/receipts/stage_receipt.json",
+      "sha256": "ad4ef858f82ecf71ca035715c3b642ffead4f2054cafaee85ef0c980e47f7529"
+    },
+    {
+      "bytes": 1470,
+      "path": "fixtures/one_scene_kling_dry_run/run_manifest.json",
+      "sha256": "58c89aa0d4f235fc4ee74bc65617cb4ff361cc631a7bdeb39398a0b1402ddc02"
+    },
+    {
+      "bytes": 463,
+      "path": "prompt_improvements.md",
+      "sha256": "9014fd2df2ce943c9119954dc6e32573cb9c9daeb5a4099a037ca948967120ee"
+    },
+    {
+      "bytes": 1010,
+      "path": "schemas/kling_submit_gate_receipt.schema.json",
+      "sha256": "3604e5f6deb969fe83280ed5f460147159e7e02bb0a94005c645b2d1e5710d76"
+    },
+    {
+      "bytes": 4704,
+      "path": "schemas/kling_scene_packet.schema.json",
+      "sha256": "61a5b6fdb5bfc6a400d68f8dfcffeba66dc19d1caabae59c219d54f81f752802"
+    },
+    {
+      "bytes": 2900,
+      "path": "schemas/one_scene_kling_call_contract.schema.json",
+      "sha256": "1bf320d81c4c2e1a9422f506fadad48dd1617b797c874d67bede63b1a4abd4b3"
+    },
+    {
+      "bytes": 1857,
+      "path": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+      "sha256": "968a2e8f82afc82a5e0ef2622a5ceea7787d3f70816ef4ae4ad683f48569d604"
+    },
+    {
+      "bytes": 1528,
+      "path": "schemas/pipeline_run_manifest.schema.json",
+      "sha256": "3d99e7afdee55ed5baba9d2381b4da1dcb83abce3ec2c0f0fc4813cc1cbf0f20"
+    },
+    {
+      "bytes": 1059,
+      "path": "schemas/pipeline_terminal_report.schema.json",
+      "sha256": "201358238d911e0c441e55f193a80739e7a0187d4505eba07b96b297e662f0f6"
+    },
+    {
+      "bytes": 1251,
+      "path": "schemas/provider_readiness_receipt.schema.json",
+      "sha256": "3e6ab41d09d8bd8abb15d0a3aef2d55f9755027607d2f727984bddb3f413e57f"
+    },
+    {
+      "bytes": 1516,
+      "path": "schemas/stage_receipt.schema.json",
+      "sha256": "ada01ef6707714338609a398bff5a36182d8eeae5df3ab29e5725cb5f8b02c28"
+    },
+    {
+      "bytes": 7520,
+      "path": "scripts/validate_pipeline_spine.py",
+      "sha256": "2931cccb5566a7350e713869b32414bedc0a756accb9d8844dbdac78b1e753fa"
+    },
+    {
+      "bytes": 1504,
+      "path": "scripts/verify_manifest.py",
+      "sha256": "a6b568ae1bd7829da59ccb33e3fb4bca0b23e72857f6a80a964ca6acc7cabaeb"
+    },
+    {
+      "bytes": 4970,
+      "path": "tests/test_pipeline_spine.py",
+      "sha256": "e10499d24c7a259bf4e11a6ed034dbf0d048520155f36033e6c54a30ebf072a4"
+    }
+  ],
+  "legacy_schema_path_untouched": true,
+  "pipeline": "persona-dream-end-to-end-pipeline-P0"
+}

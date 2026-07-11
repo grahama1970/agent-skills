@@ -1,0 +1,18 @@
+{
+  "bundle": {
+    "attach_file": "",
+    "bytes": 145678,
+    "delivery": "inline_text",
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/webgpt-review-code-round1/review-code-bundle.md"
+  },
+  "create_tab": false,
+  "instructions": "",
+  "project": "agent-skills-review-code",
+  "review_type": "code",
+  "rounds": 1,
+  "run_id": "webgpt-review-20260614T021317Z",
+  "schema": "ask.webgpt_review.request.v1",
+  "tab_id": "",
+  "timeout_seconds": 900.0,
+  "url": ""
+}

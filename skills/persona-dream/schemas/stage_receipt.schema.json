@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/stage_receipt.schema.json",
+  "title": "P0 Stage Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "stage",
+    "inputs_complete",
+    "missing_inputs",
+    "evidence"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/stage_receipt.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs_complete": {
+      "type": "boolean"
+    },
+    "missing_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "inputs_complete": {
+            "const": false
+          }
+        },
+        "required": ["inputs_complete"]
+      },
+      "then": {
+        "properties": {
+          "missing_inputs": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "inputs_complete": {
+            "const": true
+          }
+        },
+        "required": ["inputs_complete"]
+      },
+      "then": {
+        "properties": {
+          "missing_inputs": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
+}

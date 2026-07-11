@@ -1,0 +1,1208 @@
+{
+  "created_at": "2026-07-04T14:46:46.728479+00:00",
+  "mocked": "no",
+  "live": "yes",
+  "source": "memory daemon http://127.0.0.1:8601",
+  "inventory": {
+    "persona_memory": {
+      "status_code": 200,
+      "count": 11,
+      "returned": 11
+    },
+    "persona_memory_edges": {
+      "status_code": 200,
+      "count": 4,
+      "returned": 4
+    },
+    "tom_edges": {
+      "status_code": 200,
+      "count": 0,
+      "returned": 0
+    },
+    "persona_dream_visual_assets": {
+      "status_code": 200,
+      "count": 5,
+      "returned": 5
+    }
+  },
+  "checks": [
+    {
+      "name": "01_idea_media",
+      "request": {
+        "q": "Embry Kai surfing Big Island video sound contact sheet memory graph",
+        "collections": [
+          "persona_memory",
+          "persona_memory_edges",
+          "tom_edges"
+        ],
+        "k": 12,
+        "limit": 12,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.366,
+      "item_count": 12,
+      "items": [
+        {
+          "_key": "persona_dream_phase_04_contact_receipt_supports_phase_06_script",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "supports_script_visual_assets",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 19.189558029174805,
+            "dense": 0.28275532,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 15.481420516967773,
+            "dense": 0.3763236,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 15.170120239257812,
+            "dense": 0.47804964,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 6.571482181549072,
+            "dense": 0.34799188,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_2",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 6.503262996673584,
+            "dense": 0.4583879,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_uses_phase_02_story_matrix",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "uses_interaction_matrix",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 4.070925712585449,
+            "dense": 0.15992825,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_uses_phase_03_crew_contract",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "uses_crew_contract",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 4.070925712585449,
+            "dense": 0.12945102,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_03_crew_uses_phase_02_story_matrix",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "uses_story_interaction_matrix",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 4.070925712585449,
+            "dense": 0.13447678,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 168.738037109375,
+            "dense": 0.7220994,
+            "graph": 0.4776473898425048
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 168.1126708984375,
+            "dense": 0.6713954,
+            "graph": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "02_story_matrix",
+      "request": {
+        "q": "Phase 02 story interaction matrix Embry Kai Kahaluʻu heat humidity lava reef surfboard June swell",
+        "collections": [
+          "persona_memory"
+        ],
+        "k": 12,
+        "limit": 12,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.244,
+      "item_count": 12,
+      "items": [
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+          "_source": "persona_memory",
+          "title": "Lava reef contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.9230769230769231,
+            "graph": 0.0,
+            "dense": 0.6071404,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Kai Akana surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 1.0,
+            "graph": 0.9076761765247331,
+            "dense": 0.5386077,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+          "_source": "persona_memory",
+          "title": "June swell contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.7692307692307693,
+            "graph": 0.0,
+            "dense": 0.6487319,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.8461538461538461,
+            "graph": 0.9076761765247331,
+            "dense": 0.5877551,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+          "_source": "persona_memory",
+          "title": "Kona Coast contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.6923076923076923,
+            "graph": 0.0,
+            "dense": 0.6007637,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Embry surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.6153846153846154,
+            "graph": 0.0,
+            "dense": 0.5759944,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 06 Script Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.3076923076923077,
+            "graph": 1.0,
+            "dense": 0.72262955,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Kai surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.5384615384615384,
+            "graph": 0.0,
+            "dense": 0.5847069,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry and Kai looking for waves on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.38461538461538464,
+            "graph": 0.9262213560371404,
+            "dense": 0.6265379,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry barrel wave surfing reference",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.46153846153846156,
+            "graph": 0.9076761765247331,
+            "dense": 0.5626508,
+            "freshness": 0.06013898980588408
+          }
+        }
+      ]
+    },
+    {
+      "name": "02_story_edges",
+      "request": {
+        "q": "phase 02 story interaction matrix contains seed Embry Kai surfboard lava reef",
+        "collections": [
+          "persona_memory_edges"
+        ],
+        "k": 12,
+        "limit": 12,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.191,
+      "item_count": 8,
+      "items": [
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_5",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 82.95023345947266,
+            "dense": 0.82021195,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 80.08296966552734,
+            "dense": 0.8323488,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_2",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 76.96570587158203,
+            "dense": 0.82533836,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 73.62696075439453,
+            "dense": 0.7417004,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 70.4222640991211,
+            "dense": 0.7238283,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_6",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 66.361083984375,
+            "dense": 0.74626434,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_4",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "contains_interaction_row",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 66.361083984375,
+            "dense": 0.71609604,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_uses_phase_02_story_matrix",
+          "_source": "persona_memory_edges",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": "uses_interaction_matrix",
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 54.959877014160156,
+            "dense": 0.4960479,
+            "weight": 0.7,
+            "graph": 0.3887417987987634
+          }
+        }
+      ]
+    },
+    {
+      "name": "03_crew_contract",
+      "request": {
+        "q": "Phase 03 crew contract producer scriptwriter director Kathryn Bigelow Karen Kehela Sherwood John Stockwell",
+        "collections": [
+          "persona_memory"
+        ],
+        "k": 10,
+        "limit": 10,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.239,
+      "item_count": 8,
+      "items": [
+        {
+          "_key": "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 03 Crew Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 1.0,
+            "graph": 0.7704755475223978,
+            "dense": 0.51097965,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 06 Script Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.6666666666666666,
+            "graph": 1.0,
+            "dense": 0.27129668,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_04_contact_sheet_build_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 04 Contact Sheet Build Receipt - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.3333333333333333,
+            "graph": 0.0,
+            "dense": 0.22501549,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_4",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 9.47824764251709,
+            "dense": 0.2537675,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_5",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 9.437902450561523,
+            "dense": 0.14941794,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_6",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 9.306418418884277,
+            "dense": 0.22900876,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_1",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 9.081626892089844,
+            "dense": 0.22266285,
+            "graph": 0.3887417987987634
+          }
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_0",
+          "_source": "persona_memory",
+          "title": null,
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 9.011536598205566,
+            "dense": 0.22140017,
+            "graph": 0.3887417987987634
+          }
+        }
+      ]
+    },
+    {
+      "name": "04_contact_sheets_assets",
+      "request": {
+        "q": "contact_sheet_kai_surfboard contact_sheet_june_swell contact_sheet_lava_reef contact_sheet_kona_coast contact_sheet_embry_surfboard",
+        "collections": [
+          "persona_dream_visual_assets"
+        ],
+        "k": 10,
+        "limit": 10,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.124,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "name": "04_contact_sheet_receipt",
+      "request": {
+        "q": "Phase 04 contact sheet build receipt Kai surfboard June Swell Lava Reef Kona Coast",
+        "collections": [
+          "persona_memory"
+        ],
+        "k": 10,
+        "limit": 10,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.352,
+      "item_count": 10,
+      "items": [
+        {
+          "_key": "persona_dream_phase_04_contact_sheet_build_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 04 Contact Sheet Build Receipt - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 1.0,
+            "graph": 0.8797789467305344,
+            "dense": 0.7842061,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+          "_source": "persona_memory",
+          "title": "Kona Coast contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.9166666666666666,
+            "graph": 0.0,
+            "dense": 0.6737785,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+          "_source": "persona_memory",
+          "title": "June swell contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.8333333333333334,
+            "graph": 0.0,
+            "dense": 0.6422534,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+          "_source": "persona_memory",
+          "title": "Lava reef contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.75,
+            "graph": 0.0,
+            "dense": 0.659438,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Kai surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.6666666666666666,
+            "graph": 0.0,
+            "dense": 0.6920811,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Embry surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.5833333333333334,
+            "graph": 0.0,
+            "dense": 0.6352532,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Kai Akana surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.5,
+            "graph": 0.9076761765247331,
+            "dense": 0.55771136,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.4166666666666667,
+            "graph": 0.9076761765247331,
+            "dense": 0.48922965,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 03 Crew Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.3333333333333333,
+            "graph": 0.9724063285720452,
+            "dense": 0.517924,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 06 Script Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.25,
+            "graph": 1.0,
+            "dense": 0.5487716,
+            "freshness": 0.06013898980588408
+          }
+        }
+      ]
+    },
+    {
+      "name": "06_script_contract",
+      "request": {
+        "q": "Phase 06 script contract hot humid Embry Kai lava reef interaction matrix coverage entity environment script table",
+        "collections": [
+          "persona_memory"
+        ],
+        "k": 10,
+        "limit": 10,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.275,
+      "item_count": 10,
+      "items": [
+        {
+          "_key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 06 Script Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 1.0,
+            "graph": 1.0,
+            "dense": 0.68026364,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+          "_source": "persona_memory",
+          "title": "Lava reef contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.9,
+            "graph": 0.0,
+            "dense": 0.5485482,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+          "_source": "persona_memory",
+          "title": "Kona Coast contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.7,
+            "graph": 0.0,
+            "dense": 0.5153824,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Kai Akana surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.8,
+            "graph": 0.9076761765247331,
+            "dense": 0.35156938,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Embry surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.6,
+            "graph": 0.0,
+            "dense": 0.458475,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+          "_source": "persona_memory",
+          "title": "Kai surfboard contact sheet",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.5,
+            "graph": 0.0,
+            "dense": 0.424338,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 03 Crew Contract - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.2,
+            "graph": 0.9724063285720452,
+            "dense": 0.5901531,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry barrel wave surfing reference",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.4,
+            "graph": 0.9076761765247331,
+            "dense": 0.3899113,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "_source": "persona_memory",
+          "title": "Embry surfing on the Big Island",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.3,
+            "graph": 0.9076761765247331,
+            "dense": 0.43870747,
+            "freshness": 0.06013898980588408
+          }
+        },
+        {
+          "_key": "persona_dream_phase_04_contact_sheet_build_embry_kai_kahaluu_2024",
+          "_source": "persona_memory",
+          "title": "Persona Dream Phase 04 Contact Sheet Build Receipt - Embry/Kai Kahaluʻu 2024",
+          "kind": null,
+          "phase": null,
+          "asset_id": null,
+          "relationship_type": null,
+          "tom_state_type": null,
+          "semantic_sync_state": null,
+          "qdrant_point_id": null,
+          "scores": {
+            "bm25": 0.1,
+            "graph": 0.8797789467305344,
+            "dense": 0.514722,
+            "freshness": 0.06013898980588408
+          }
+        }
+      ]
+    },
+    {
+      "name": "tom_media_grounding",
+      "request": {
+        "q": "tom media grounding Embry Kai surfing audio video image persona memory",
+        "collections": [
+          "tom_edges"
+        ],
+        "k": 12,
+        "limit": 12,
+        "tags": [
+          "persona-dream"
+        ]
+      },
+      "status_code": 200,
+      "elapsed_seconds": 0.208,
+      "item_count": 0,
+      "items": []
+    }
+  ],
+  "summary": {
+    "persona_memory_count": 11,
+    "persona_memory_edges_count": 4,
+    "tom_edges_count": 0,
+    "persona_dream_visual_assets_count": 5,
+    "checks": {
+      "01_idea_media_bm25": true,
+      "01_idea_media_graph": true,
+      "02_story_matrix_key": false,
+      "02_story_matrix_dense": true,
+      "02_story_edges_key": true,
+      "03_crew_contract_kind": false,
+      "04_contact_sheet_assets_all": false,
+      "04_contact_sheet_receipt_kind": false,
+      "06_script_contract_kind": false,
+      "tom_edges_returned": false
+    },
+    "asset_hits": {
+      "contact_sheet_june_swell": false,
+      "contact_sheet_embry_surfboard": false,
+      "contact_sheet_kai_surfboard": false,
+      "contact_sheet_lava_reef": false,
+      "contact_sheet_kona_coast": false
+    }
+  }
+}

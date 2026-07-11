@@ -1,0 +1,12 @@
+{
+  "schema_id": "schemas/kling_submit_gate_receipt.schema.json",
+  "run_id": "provider-ready-dry-run-fixture",
+  "provider": "kling",
+  "attempted_live_submit": false,
+  "decision": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "reason": "dry-run provider payload is ready, but live paid submission is not approved",
+  "evidence": [
+    "provider_readiness_receipt.ready_for_dry_run=true",
+    "pipeline_paid_call_approval_receipt.live_submission_allowed=false"
+  ]
+}

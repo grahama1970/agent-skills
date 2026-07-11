@@ -1,0 +1,363 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from write_one_scene_kling_review_packet import install_one_scene_kling_review_packet  # noqa: E402
+from write_panel_comparison_status import build_panel_comparison_status  # noqa: E402
+
+
+PNG_BYTES = b"\x89PNG\r\n\x1a\nfixture"
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+class TestWritePanelComparisonStatus(unittest.TestCase):
+    def test_status_reports_public_probe_blocker_from_receipts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            image = run_root / "storyboard/panel_01.png"
+            image.parent.mkdir(parents=True)
+            image.write_bytes(PNG_BYTES)
+            panel_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+            source_receipt = run_root / "work/panel_source_receipt.json"
+            repair_receipt = run_root / "work/panel_repair_gate_receipt.json"
+            staging_receipt = run_root / "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json"
+            probe_receipt = run_root / "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_fixture/provider_media_url_probe_receipt.json"
+            publication_work_order = run_root / "storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json"
+            publication_preflight_receipt = run_root / "receipts/provider_media_publication_preflight.json"
+            publication_authorization_receipt = run_root / "receipts/provider_media_publication_authorization.json"
+            publication_authorization_template = run_root / "receipts/provider_media_publication_authorization_template.json"
+            loop_run_receipt = run_root / "receipts/pipeline_loop_run.json"
+            evidence_bundle_receipt = run_root / "receipts/pipeline_evidence_bundle_validation.json"
+            _write_json(
+                source_receipt,
+                {
+                    "schema": "persona_dream.panel_source_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_01",
+                    "status": "BLOCKED",
+                    "image_path": "storyboard/panel_01.png",
+                    "sha256": panel_hash,
+                    "producer": {
+                        "kind": "subagent",
+                        "name": "persona-dream-panel-repair-gate",
+                        "receipt": str(repair_receipt),
+                    },
+                    "photoreal_status": "UNKNOWN",
+                    "nano_banana_fallback_used": False,
+                    "final_panel_eligible": False,
+                    "blockers": ["provider_eligibility_not_true"],
+                },
+            )
+            _write_json(
+                repair_receipt,
+                {
+                    "schema": "persona_dream.panel_repair_gate_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_01",
+                    "status": "BLOCKED_PROVIDER_MEDIA_URLS",
+                    "provider_media_status": "FAIL",
+                    "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+                    "provider_eligibility": False,
+                    "remaining_blockers": ["provider_media_url_missing"],
+                },
+            )
+            install_one_scene_kling_review_packet(
+                run_root=run_root,
+                panel_source_receipt=source_receipt,
+                panel_repair_gate_receipt=repair_receipt,
+            )
+            _write_json(
+                staging_receipt,
+                {
+                    "schema": "persona_dream.provider_media_local_staging_receipt.v1",
+                    "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+                    "staged_asset_path": str(image),
+                    "target_repo_path": "skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "staged_sha256": panel_hash,
+                    "does_not_authorize": [
+                        "git_push",
+                        "public_upload",
+                        "provider_readiness",
+                        "direct_kling_submit",
+                        "paid_provider_call",
+                    ],
+                    "next_required_probe_command": "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png --expected-sha256 "
+                    + panel_hash
+                    + " --json",
+                },
+            )
+            _write_json(
+                probe_receipt,
+                {
+                    "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+                    "status": "BLOCKED",
+                    "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "expected_sha256": panel_hash,
+                    "observed_sha256": None,
+                    "http_status": None,
+                    "blockers": ["fetch_failed:HTTP Error 404: Not Found"],
+                    "mocked": "no",
+                    "live": "yes",
+                },
+            )
+            _write_json(
+                publication_work_order,
+                {
+                    "schema": "persona_dream.provider_media_publication_work_order.v1",
+                    "status": "WORK_ORDER_READY_PUBLIC_UPLOAD_AUTH_REQUIRED",
+                    "authorization_required": [
+                        "public_upload_of_panel_image",
+                        "git_commit_and_push_or_equivalent_public_asset_publish",
+                    ],
+                    "forbidden_actions": [
+                        "direct_kling_submit",
+                        "paid_provider_call",
+                        "nano_banana_final_panel_generation",
+                        "gemini_final_panel_generation",
+                        "provider_readiness_without_live_url_probe",
+                        "hash_or_receipt_rewrite_without_matching_public_fetch",
+                    ],
+                    "source_paths": {
+                        "run_root": str(run_root),
+                        "panel_repair_gate_receipt": str(repair_receipt),
+                        "provider_media_probe_receipt": str(probe_receipt),
+                        "panel_image": str(image),
+                    },
+                    "locked_media": {
+                        "local_path": str(image),
+                        "sha256": panel_hash,
+                        "bytes": image.stat().st_size,
+                    },
+                    "proposed_publication": {
+                        "method": "git_raw_asset_after_authorized_commit_push",
+                        "target_repo_path": "skills/persona-dream/provider_media/fixture/panel_01.png",
+                        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                        "rollback_path": str(run_root / "rollback"),
+                    },
+                    "verification_commands": [
+                        "./run.sh validate-provider-media-url --url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png --expected-sha256 "
+                        + panel_hash
+                        + " --json",
+                        "./run.sh validate-panel-repair-gate <panel_repair_gate_receipt> --require-provider-eligible",
+                    ],
+                },
+            )
+            _write_json(
+                loop_run_receipt,
+                {
+                    "schema": "persona_dream.pipeline_loop_run.v1",
+                    "generated_at": "2026-06-28T22:30:00Z",
+                    "run_root": str(run_root),
+                    "direction": "backward",
+                    "status": "BLOCKED",
+                    "stop_reason": "external_action_required",
+                    "active_loop": {
+                        "loop": "provider_media_loop",
+                        "phase": "provider_media_publication_authorization",
+                        "blocker": "authorization_receipt_required",
+                        "default_repair": "Supply an explicit authorization receipt for the exact staged asset, locked SHA-256, target repo path, and proposed public URL before any public upload or git push.",
+                        "validator": "validate-provider-media-publication-authorization",
+                        "external_action_required": True,
+                    },
+                    "iterations": [
+                        {
+                            "iteration": 1,
+                            "status": "BLOCKED",
+                            "active_loop": {
+                                "loop": "provider_media_loop",
+                                "phase": "provider_media_publication_authorization",
+                                "blocker": "authorization_receipt_required",
+                                "default_repair": "Supply an explicit authorization receipt for the exact staged asset, locked SHA-256, target repo path, and proposed public URL before any public upload or git push.",
+                                "validator": "validate-provider-media-publication-authorization",
+                                "external_action_required": True,
+                            },
+                            "first_blocker": {"phase": "provider_media_publication_authorization"},
+                            "phase_count": 11,
+                        }
+                    ],
+                    "policy": {
+                        "implicit_local_repair_allowed": False,
+                        "kling_call_allowed": False,
+                        "nano_banana_final_panel_allowed": False,
+                        "public_upload_allowed_without_explicit_authorization": False,
+                    },
+                    "live": "no",
+                    "mocked": "no",
+                },
+            )
+            _write_json(
+                publication_preflight_receipt,
+                {
+                    "schema": "persona_dream.provider_media_publication_preflight_validation.v1",
+                    "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+                    "first_blocker": {
+                        "phase": "provider_media_publication_authorization",
+                        "reason": "public_upload_or_git_push_authorization_required",
+                    },
+                    "preflight_ready": True,
+                    "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "target_repo_path": "skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "locked_sha256": panel_hash,
+                    "staged_sha256": panel_hash,
+                    "live": "no",
+                    "mocked": "no",
+                },
+            )
+            _write_json(
+                publication_authorization_receipt,
+                {
+                    "schema": "persona_dream.provider_media_publication_authorization_validation.v1",
+                    "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+                    "first_blocker": {
+                        "phase": "provider_media_publication_authorization",
+                        "reason": "authorization_receipt_required",
+                    },
+                    "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "target_repo_path": "skills/persona-dream/provider_media/fixture/panel_01.png",
+                    "locked_sha256": panel_hash,
+                    "live": "no",
+                    "mocked": "no",
+                },
+            )
+            _write_json(
+                publication_authorization_template,
+                {
+                    "schema": "persona_dream.provider_media_publication_authorization_template.v1",
+                    "status": "DRAFT_NOT_AUTHORIZATION",
+                    "first_blocker": {
+                        "phase": "provider_media_publication_authorization",
+                        "reason": "authorization_receipt_required",
+                    },
+                    "target_record": {
+                        "locked_sha256": panel_hash,
+                        "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_01.png",
+                    },
+                    "suggested_authorization_receipt": {
+                        "schema": "persona_dream.provider_media_publication_authorization.v1",
+                        "status": "AUTHORIZED_PUBLICATION",
+                    },
+                    "live": "no",
+                    "mocked": "no",
+                },
+            )
+            _write_json(
+                evidence_bundle_receipt,
+                {
+                    "schema": "persona_dream.pipeline_evidence_bundle_validation.v1",
+                    "status": "BLOCKED",
+                    "first_blocker": {
+                        "phase": "provider_media_publication_authorization",
+                        "reason": "authorization_receipt_required",
+                    },
+                    "phase_backlog": [{"phase": "provider_media_publication_authorization", "status": "BLOCKED"}],
+                    "validations": {
+                        "run_root_backward": {"status": "BLOCKED"},
+                        "pipeline_loop_run": {"status": "PASS_PIPELINE_LOOP_RUN_RECEIPT"},
+                        "provider_media_public_handoff": {"status": "BLOCKED"},
+                        "provider_media_publication_authorization": {
+                            "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION"
+                        },
+                        "panel_comparison_report": {"status": "PASS_PANEL_COMPARISON_REPORT"},
+                    },
+                    "next_action": "Provide an explicit publication authorization receipt.",
+                    "live": "yes",
+                    "mocked": "no",
+                },
+            )
+
+            status = build_panel_comparison_status(
+                run_root=run_root,
+                panel_id="panel_01",
+                panel_repair_gate_receipt=repair_receipt,
+                local_staging_receipt=staging_receipt,
+                public_probe_receipt=probe_receipt,
+                publication_work_order=publication_work_order,
+                provider_media_publication_preflight_receipt=publication_preflight_receipt,
+                provider_media_publication_authorization_receipt=publication_authorization_receipt,
+                provider_media_publication_authorization_template=publication_authorization_template,
+                pipeline_loop_run_receipt=loop_run_receipt,
+                pipeline_evidence_bundle_receipt=evidence_bundle_receipt,
+                generated_at="2026-06-28T22:30:00Z",
+            )
+
+        self.assertEqual(status["status"], "BLOCKED")
+        self.assertEqual(status["first_blocker"]["phase"], "provider_media_publication_authorization")
+        self.assertEqual(status["active_loop"]["loop"], "provider_media_loop")
+        self.assertEqual(status["active_loop"]["phase"], "provider_media_publication_authorization")
+        self.assertIs(status["active_loop"]["external_action_required"], True)
+        self.assertEqual(status["loop_backlog"][0]["phase"], "provider_media_publication_authorization")
+        self.assertEqual(status["loop_backlog"][0]["loop"], "provider_media_loop")
+        self.assertIs(status["loop_backlog"][0]["external_action_required"], True)
+        self.assertTrue(any(item["phase"] == "panel_source_receipt" for item in status["loop_backlog"]))
+        self.assertEqual(status["loop_model"]["shape"], "serial_pipeline_of_fail_closed_while_loops")
+        self.assertEqual(status["loop_run"]["validation_status"], "PASS_PIPELINE_LOOP_RUN_RECEIPT")
+        self.assertEqual(status["loop_run"]["stop_reason"], "external_action_required")
+        self.assertEqual(status["loop_run"]["iteration_count"], 1)
+        self.assertIs(status["loop_run"]["policy"]["kling_call_allowed"], False)
+        self.assertEqual(status["backward_validator"]["first_blocker"]["phase"], "provider_media_publication_authorization")
+        self.assertEqual(status["updated_at"], "2026-06-28T22:30:00Z")
+        self.assertEqual(status["receipts"]["provider_media_local_staging"]["status"], "PASS_PROVIDER_MEDIA_LOCAL_STAGING")
+        self.assertEqual(status["receipts"]["provider_media_public_probe"]["status"], "BLOCKED")
+        self.assertEqual(status["receipts"]["provider_media_public_handoff"]["status"], "BLOCKED")
+        self.assertEqual(
+            status["receipts"]["provider_media_public_handoff"]["first_blocker"]["phase"],
+            "provider_media_public_probe",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_public_handoff"]["work_order_validation_status"],
+            "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_public_handoff"]["local_staging_validation_status"],
+            "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_publication_preflight"]["status"],
+            "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_publication_preflight"]["first_blocker"]["phase"],
+            "provider_media_publication_authorization",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_publication_authorization"]["status"],
+            "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_publication_authorization"]["first_blocker"]["reason"],
+            "authorization_receipt_required",
+        )
+        self.assertEqual(
+            status["receipts"]["provider_media_publication_authorization_template"]["status"],
+            "DRAFT_NOT_AUTHORIZATION",
+        )
+        self.assertEqual(status["receipts"]["pipeline_evidence_bundle"]["status"], "BLOCKED")
+        self.assertEqual(
+            status["receipts"]["pipeline_evidence_bundle"]["first_blocker"]["phase"],
+            "provider_media_publication_authorization",
+        )
+        self.assertEqual(
+            status["receipts"]["pipeline_evidence_bundle"]["validation_statuses"]["panel_comparison_report"],
+            "PASS_PANEL_COMPARISON_REPORT",
+        )
+        self.assertEqual(status["receipts"]["pipeline_evidence_bundle"]["phase_backlog_count"], 1)
+        self.assertIn("publication authorization receipt", status["next_action"])
+        self.assertIs(status["policy"]["kling_call_allowed"], False)
+        self.assertIs(status["policy"]["nano_banana_final_panel_allowed"], False)
+
+
+if __name__ == "__main__":
+    unittest.main()

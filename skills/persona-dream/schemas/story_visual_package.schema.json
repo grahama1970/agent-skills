@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.story_visual_package.v1",
+  "type": "object",
+  "required": ["schema", "story_id", "story", "keyed_entities"],
+  "properties": {
+    "schema": {"const": "persona_dream.story_visual_package.v1"},
+    "story_id": {"type": "string"},
+    "story": {"type": "object"},
+    "keyed_entities": {"type": "object"}
+  }
+}

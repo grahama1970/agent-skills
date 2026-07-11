@@ -1,0 +1,78 @@
+{
+  "active_goal_hash": "sha256:persona-dream-memory-integration-required",
+  "alerts": [
+    {
+      "code": "cycle_detected",
+      "evidence": {},
+      "message": "Bounded ready-queue scheduler requires an acyclic DAG contract.",
+      "severity": "BLOCK"
+    }
+  ],
+  "artifacts": [],
+  "command_spec_root": null,
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1558.json",
+  "contract_sha256": "sha256:33a2e30b51a47da0d98f9451fcca6221483929fbe2c5a0725ef8e680e10895e1",
+  "dag_id": "persona-dream-memory-integration",
+  "dispatches": [],
+  "edge_count": 5,
+  "entry_node": "collect-persona-dream-artifacts",
+  "errors": [],
+  "execution": "project_agent_dag_bounded_ready_queue",
+  "execution_seconds": 0.0,
+  "live": true,
+  "max_concurrency": 2,
+  "max_observed_concurrency": 0,
+  "max_steps": 6,
+  "mocked": false,
+  "node_artifacts": {},
+  "node_attempts": {},
+  "node_count": 5,
+  "observed_edges": [],
+  "ok": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "GitHub mutation or ticket closure.",
+      "Mutating branch safety.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Bounded ready-queue scheduler preflight checked acyclicity, local-only execution, provider branches, and mutating branches."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1558",
+  "scheduler": "bounded-ready-queue",
+  "scheduler_events": [],
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [],
+  "status": "BLOCKED",
+  "target": {
+    "allowed_paths": [
+      "skills/persona-dream/**",
+      "agents/story-writer/**",
+      "agents/story-reviewer/**",
+      "agents/script-writer/**",
+      "agents/script-reviewer/**",
+      "agents/contact-sheet-writer/**",
+      "agents/contact-sheet-reviewer/**",
+      "agents/contact-sheet-builder/**",
+      "agents/contact-sheet-build-reviewer/**"
+    ],
+    "forbidden_paths": [
+      "/home/graham/workspace/experiments/tau/**",
+      "/home/graham/workspace/experiments/pi-mono/**"
+    ],
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream memory integration"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-04T16:31:50Z",
+  "verdict": "CYCLE_DETECTED"
+}

@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_panel_repair_work_order import validate_panel_repair_work_order  # noqa: E402
+from write_panel_repair_work_order import build_panel_repair_work_order  # noqa: E402
+
+
+FIXTURES = ROOT / "scripts/fixtures"
+
+
+def _make_work_order(tmp: Path) -> dict:
+    candidate = tmp / "panel_01_attempt_02.png"
+    candidate.write_bytes(b"fixture image bytes")
+    work_order = build_panel_repair_work_order(
+        run_root=ROOT,
+        panel_id="panel_01",
+        panel_repair_gate_receipt=FIXTURES / "panel_repair_gate_valid.json",
+        created_at="2026-06-28T20:40:00Z",
+    )
+    work_order["current_candidate"]["image_path"] = str(candidate)
+    work_order["current_candidate"]["sha256"] = "sha256:" + ("0" * 64)
+    return work_order
+
+
+class TestValidatePanelRepairWorkOrder(unittest.TestCase):
+    def test_generated_fixture_work_order_passes_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            out = tmp_path / "request.json"
+            work_order = _make_work_order(tmp_path)
+            out.write_text(json.dumps(work_order) + "\n", encoding="utf-8")
+
+            result = validate_panel_repair_work_order(out)
+
+        self.assertEqual(result["status"], "PASS_PANEL_REPAIR_WORK_ORDER")
+        self.assertEqual(result["owner_subagent"], "persona-dream-panel-repair-gate")
+        self.assertEqual(result["final_gate_status"], "PASS")
+        self.assertEqual(result["live"], "no")
+
+    def test_work_order_blocks_when_forbidden_fallback_policy_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            out = tmp_path / "request.json"
+            work_order = _make_work_order(tmp_path)
+            work_order["forbidden_actions"].remove("nano_banana_final_panel_generation")
+            out.write_text(json.dumps(work_order) + "\n", encoding="utf-8")
+
+            result = validate_panel_repair_work_order(out)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "panel_repair_work_order")
+        self.assertIn("nano_banana_final_panel_generation", result["first_blocker"]["reason"])
+
+    def test_work_order_blocks_when_required_source_path_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            out = tmp_path / "request.json"
+            work_order = _make_work_order(tmp_path)
+            work_order["source_paths"]["panel_repair_agent_contract"] = "/tmp/does-not-exist"
+            out.write_text(json.dumps(work_order) + "\n", encoding="utf-8")
+
+            result = validate_panel_repair_work_order(out)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["reason"], "missing_source_path:panel_repair_agent_contract")
+
+
+if __name__ == "__main__":
+    unittest.main()

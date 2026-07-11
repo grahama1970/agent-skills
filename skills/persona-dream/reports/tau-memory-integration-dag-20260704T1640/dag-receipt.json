@@ -1,0 +1,181 @@
+{
+  "active_goal_hash": "sha256:persona-dream-memory-integration-required",
+  "alerts": [
+    {
+      "code": "command_failed",
+      "evidence": {
+        "errors": [
+          "command exited 2"
+        ],
+        "node_id": "persist-persona-dream-artifacts-to-memory"
+      },
+      "message": "Ready-queue node dispatch did not pass.",
+      "severity": "BLOCK"
+    }
+  ],
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/compiled-command-specs/memory/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/compiled-command-specs/project-or-harness-verifier/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/contact_sheet_memory_bridge_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/dispatch-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/script_memory_bridge_receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/story_memory_bridge_receipt.json"
+  ],
+  "command_spec_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/compiled-command-specs",
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1640.json",
+  "contract_sha256": "sha256:9b21a49393a17b655bb53a21d6bc5cef384c647443e80140272af6964fe9386e",
+  "dag_id": "persona-dream-memory-integration",
+  "dispatches": [
+    {
+      "artifacts": [],
+      "command_results": [
+        {
+          "command": [
+            "python3",
+            "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_tau_adapter.py"
+          ],
+          "exit_code": 2,
+          "stderr": "",
+          "stdout": "{\"context\": {\"artifacts\": [\"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json\", \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json\"], \"summary\": \"persona-dream memory integration bridge executed through Tau memory node.\"}, \"github\": {\"repo\": \"grahama1970/agent-skills\", \"target\": \"skills/persona-dream memory integration\"}, \"goal\": {\"goal_hash\": \"sha256:persona-dream-memory-integration-required\", \"goal_id\": \"persona-dream-memory-integration\", \"goal_version\": 1}, \"next_agent\": {\"executor\": \"local\", \"name\": \"project-or-harness-verifier\", \"reason\": \"Review memory receipts before returning to human.\"}, \"previous_subagent\": \"memory\", \"rationale\": \"The memory node is responsible for durable /upsert writes through the memory daemon.\", \"required_evidence\": [\"persona-dream-memory-tau-audit.json status PASS\", \"memory bridge receipts mocked=false live=true\"], \"result\": {\"evidence\": [{\"kind\": \"persona_dream_memory_tau_receipt\", \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json\"}, {\"kind\": \"persona_dream_memory_tau_audit\", \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json\"}], \"status\": \"BLOCKED\", \"summary\": \"Memory bridge receipts did not satisfy required evidence.\"}, \"schema\": \"tau.agent_handoff.v1\", \"stop_condition\": \"Stop at verifier or human after receipt review.\"}\n",
+          "timed_out": false,
+          "timeout_s": 240.0
+        }
+      ],
+      "errors": [
+        "command exited 2"
+      ],
+      "live": false,
+      "mocked": true,
+      "ok": false,
+      "receipt_dir": null,
+      "response_projection": null,
+      "runner": "command",
+      "schema": "tau.agent_handoff_dispatch_receipt.v1",
+      "selected_agent": "memory",
+      "start_projection": {
+        "comment": {
+          "body": "## Tau Agent Handoff\n\n- Result: `DAG_NODE_READY`\n- Summary: Dependencies are satisfied for DAG node persist-persona-dream-artifacts-to-memory.\n- Next agent: `memory`\n- Executor: `local`\n- Stop condition: Stop at a terminal DAG node or any fail-closed invariant violation.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1640.json\"\n    ],\n    \"summary\": \"Dispatch ready DAG node persist-persona-dream-artifacts-to-memory.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream memory integration\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:persona-dream-memory-integration-required\",\n    \"goal_id\": \"persona-dream-memory-integration\",\n    \"goal_version\": 1\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"memory\",\n    \"reason\": \"Ready node for DAG persona-dream-memory-integration.\"\n  },\n  \"previous_subagent\": \"human\",\n  \"rationale\": \"The DAG contract is the authoritative workflow and immutable goal boundary.\",\n  \"required_evidence\": [\n    \"story memory_bridge_receipt mocked=false live=true\",\n    \"script memory_bridge_receipt mocked=false live=true\",\n    \"contact-sheet memory_bridge_receipt mocked=false live=true\",\n    \"media asset vertices written through memory /upsert\",\n    \"TOM/media grounding edges written through memory /upsert\",\n    \"entity_context.json for story/script/contact-sheet artifacts\",\n    \"no direct ArangoDB or Qdrant writes\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"kind\": \"dag_contract\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1640.json\",\n        \"schema\": \"tau.dag_contract.v1\",\n        \"sha256\": \"sha256:9b21a49393a17b655bb53a21d6bc5cef384c647443e80140272af6964fe9386e\"\n      }\n    ],\n    \"status\": \"DAG_NODE_READY\",\n    \"summary\": \"Dependencies are satisfied for DAG node persist-persona-dream-artifacts-to-memory.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Stop at a terminal DAG node or any fail-closed invariant violation.\"\n}\n```\n"
+        },
+        "dry_run": true,
+        "errors": [],
+        "labels": {
+          "add": [
+            "agent-work",
+            "next:memory",
+            "executor:local"
+          ],
+          "remove": []
+        },
+        "next_agent": "memory",
+        "ok": true,
+        "schema": "tau.agent_handoff_projection_receipt.v1",
+        "target": {
+          "repo": "grahama1970/agent-skills",
+          "target": "skills/persona-dream memory integration"
+        }
+      },
+      "status": "BLOCKED",
+      "stop_reason": "command_failed"
+    }
+  ],
+  "edge_count": 2,
+  "entry_node": "persist-persona-dream-artifacts-to-memory",
+  "errors": [
+    "command exited 2"
+  ],
+  "execution": "project_agent_dag_bounded_ready_queue",
+  "execution_seconds": 45.495468,
+  "live": true,
+  "max_concurrency": 2,
+  "max_observed_concurrency": 1,
+  "max_steps": 6,
+  "mocked": false,
+  "node_artifacts": {
+    "persist-persona-dream-artifacts-to-memory": [
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/contact_sheet_memory_bridge_receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/dispatch-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/script_memory_bridge_receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/story_memory_bridge_receipt.json"
+    ]
+  },
+  "node_attempts": {
+    "persist-persona-dream-artifacts-to-memory": 1
+  },
+  "node_count": 3,
+  "observed_edges": [],
+  "ok": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "GitHub mutation or ticket closure.",
+      "Mutating branch safety.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Bounded ready-queue scheduler preflight checked acyclicity, local-only execution, provider branches, and mutating branches.",
+      "Ready nodes were dispatched by the bounded ready-queue scheduler.",
+      "Independent ready nodes can run concurrently when dependencies are satisfied.",
+      "Each dispatched node used the real local command subprocess runner.",
+      "Node evidence and reviewer verdicts were checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1640",
+  "scheduler": "bounded-ready-queue",
+  "scheduler_events": [
+    {
+      "agent": "memory",
+      "attempt": 1,
+      "event": "node_started",
+      "node_id": "persist-persona-dream-artifacts-to-memory",
+      "ts": "2026-07-04T16:45:01Z"
+    },
+    {
+      "agent": "memory",
+      "attempt": 1,
+      "event": "node_completed",
+      "node_id": "persist-persona-dream-artifacts-to-memory",
+      "ok": false,
+      "ts": "2026-07-04T16:45:46Z"
+    }
+  ],
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [
+    "memory"
+  ],
+  "status": "BLOCKED",
+  "target": {
+    "allowed_paths": [
+      "skills/persona-dream/**",
+      "agents/story-writer/**",
+      "agents/story-reviewer/**",
+      "agents/script-writer/**",
+      "agents/script-reviewer/**",
+      "agents/contact-sheet-writer/**",
+      "agents/contact-sheet-reviewer/**",
+      "agents/contact-sheet-builder/**",
+      "agents/contact-sheet-build-reviewer/**"
+    ],
+    "forbidden_paths": [
+      "/home/graham/workspace/experiments/tau/**",
+      "/home/graham/workspace/experiments/pi-mono/**"
+    ],
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream memory integration"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-04T16:45:46Z",
+  "verdict": "COMMAND_FAILED"
+}

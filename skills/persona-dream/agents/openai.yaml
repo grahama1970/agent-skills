@@ -1,0 +1,4 @@
+interface:
+  display_name: "Persona Dream"
+  short_description: "Turn persona memory residue into dream packets"
+  default_prompt: "Generate a receipt-backed persona dream packet from memory residue."

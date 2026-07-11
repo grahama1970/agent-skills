@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.manual_review_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "reviewed_artifacts", "decision"],
+  "properties": {
+    "schema": {"const": "persona_dream.manual_review_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"enum": ["ACCEPTED_MANUAL", "FAILED_MANUAL_REVIEW", "BLOCKED"]},
+    "created_at": {"type": "string"},
+    "reviewed_artifacts": {"type": "array", "minItems": 1},
+    "decision": {"type": "string"}
+  }
+}

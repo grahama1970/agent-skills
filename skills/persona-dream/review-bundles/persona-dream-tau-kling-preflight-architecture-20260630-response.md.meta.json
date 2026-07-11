@@ -1,0 +1,71 @@
+{
+  "status": "failed",
+  "failure": "submit_failed",
+  "chatgpt_ready_error": null,
+  "exit_code": 1,
+  "input": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630.md",
+  "submitted_output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.md.submitted.md",
+  "output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.md",
+  "raw_output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.qXxYt3.log",
+  "sentinel": "<<<WEBGPT_DONE:20260630T121244Z:bfb9a45e>>>",
+  "requested_tab_id": null,
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837357216",
+    "tab": {
+      "id": "837357216",
+      "title": "ChatGPT",
+      "url": "https://chatgpt.com/"
+    },
+    "chatgpt_tabs_count": 26,
+    "expected_url": null,
+    "expected_title": null,
+    "source": "create-tab",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837357216"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "allowed"
+      }
+    ]
+  },
+  "roundtrip_preflight_required": false,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight": null,
+  "controlled_tab_id": null,
+  "conversation_url": null,
+  "response_source": null,
+  "response_timed_out": null,
+  "timeout_error": null,
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 0,
+  "clean_chars": 0,
+  "raw_response_advisory": false,
+  "extract_fallback_used": false,
+  "extract_fallback_reason": null,
+  "extract_fallback_raw": null,
+  "extract_fallback_meta": null,
+  "started_at": "2026-06-30T12:12:48Z",
+  "finished_at": "2026-06-30T12:12:48Z",
+  "proof_status": "delivery_not_proven",
+  "agent_diagnosis": "Surf invoked ChatGPT but did not produce a current sentinel-bearing assistant response.",
+  "agent_action": "Check stderr_log, receipt, and raw_output. If receipt.status is prepared_prompt, treat as not delivered; if submitted_to_chatgpt, recover with webgpt.extract using this sentinel or rerun deliberately.",
+  "submitted_to_chatgpt": false
+}

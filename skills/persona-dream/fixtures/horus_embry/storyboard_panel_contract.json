@@ -1,0 +1,26 @@
+{
+  "schema": "persona_dream.storyboard_panel_contract.v1",
+  "look_lock": "ALEXA 65 large-format sci-fi chamber drama. 35mm/50mm lens family. Cold directional void light from camera right. Desaturated cold-blue high-contrast grade with warm tea-table accents. Void haze. Controlled restrained camera movement.",
+  "characters": {
+    "horus": "Horus Lupercal: bald, pale, 11.5ft Primarch scale, black-and-gold armor.",
+    "embry": "Embry Lawson: young woman, dark brown low ponytail, olive eyes, subtle nose scar, gray fieldwear, human scale."
+  },
+  "props": "round patio table, umbrella (weathered, wind response), tea service (steam rising), SPARTA laptop.",
+  "environment": "void-world terrace, stone railing, cold horizon.",
+  "creatures": "Tyranids at distance (chitin carapace, scything talons).",
+  "effects": "Tzeentch sky-eye (blue-violet, vertical pupil, blinking).",
+  "output_size": "1536x1024",
+  "aspect_ratio": "16:9",
+  "panels": {
+    "01": {"shot": "Wide establishing shot. Void horizon, tiny patio table, umbrella. Tzeentch sky-eye blinks above. Horus seated, Embry opposite. Tyranids at distance.", "characters": ["horus", "embry"]},
+    "02": {"shot": "Medium shot on Horus. 11.5ft Primarch scale fills frame. One armored hand near teacup. Tea steam curl around gauntlet. Scalp pores visible.", "characters": ["horus"]},
+    "03": {"shot": "Medium shot on Embry. Opens SPARTA Explorer on monitor_sparta false-green gates. Screen glow on face. Tea steam crosses sightline.", "characters": ["embry"]},
+    "04": {"shot": "Background wide. Tyranids run/play at distance. Stone railing in foreground. Sky-eye watches above.", "characters": []},
+    "05": {"shot": "Insert detail. Tea cups, handwritten notes, source refs cards. Steam rising, paper corners lifting. Sky-eye glint ripples on tea.", "characters": []},
+    "06": {"shot": "MCU on Horus. Evidence card held, paper flexes. Steam past cheek. Brow tightens, dry smile before dialogue.", "characters": ["horus"]},
+    "07": {"shot": "Reverse MCU on Embry. Taps source_refs. Thumb pause on laptop edge. Shoulders drop. Tea steam curls between camera and face.", "characters": ["embry"]},
+    "08": {"shot": "Shared screen insert. SPARTA Explorer shows monitor_sparta.py. Horus/Embry reflected in glass.", "characters": []},
+    "09": {"shot": "Wide background motion. Tyranids cross behind umbrella. Sky-eye blinks. Umbrella strains in gust.", "characters": ["horus", "embry"]},
+    "10": {"shot": "Closing two-shot. Umbrella canopy pulls camera-left. Steam thins/dissipates. Sky-eye dims. Horus/Embry lean over notes.", "characters": ["horus", "embry"]}
+  }
+}

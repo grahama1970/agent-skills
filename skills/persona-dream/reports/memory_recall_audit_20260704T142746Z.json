@@ -1,0 +1,4752 @@
+{
+  "contract_notes": [
+    "Used memory daemon HTTP /list and /recall only; no raw ArangoDB or Qdrant queries.",
+    "Paginated /list in 500-row pages to avoid oversized endpoint calls.",
+    "Natural-language /recall probes were used for persona-memory proof gates.",
+    "Direct /list existence and qdrant metadata do not prove recall ranking; recall failures are listed separately."
+  ],
+  "generated_at": "20260704T142746Z",
+  "live": true,
+  "memory_base_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "panes": {
+    "01_idea": {
+      "direct_expected": [
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": "/mnt/storage12tb/media/personas/embry/assets/surfing/embry_surfing_big_island_2024.png",
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "f40c6a5a-29cf-5eb9-a2d8-862887cc2a4a",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai_akana",
+            "persona-dream",
+            "memory-residue",
+            "surf",
+            "big-island",
+            "kahaluu-bay",
+            "media-asset",
+            "media:image"
+          ],
+          "title": "Embry surfing on the Big Island"
+        },
+        {
+          "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": "/mnt/storage12tb/media/personas/embry/assets/surfing/embry_barrel_wave_big_island_2024.png",
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "f63622ab-e40a-53b7-8f81-8897c1a5023a",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai_akana",
+            "persona-dream",
+            "memory-residue",
+            "surf",
+            "big-island",
+            "kahaluu-bay",
+            "media-asset",
+            "media:image"
+          ],
+          "title": "Embry barrel wave surfing reference"
+        },
+        {
+          "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": "/mnt/storage12tb/media/personas/shared/embry_kai/assets/surfing/embry_and_kai_looking_for_waves_big_island_2024.png",
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "de8205b8-a092-5d90-9483-2d748de6374c",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai_akana",
+            "persona-dream",
+            "memory-residue",
+            "surf",
+            "big-island",
+            "kahaluu-bay",
+            "media-asset",
+            "media:image"
+          ],
+          "title": "Embry and Kai looking for waves on the Big Island"
+        },
+        {
+          "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "09d2636c-dc22-5a57-8a2d-c9c80d2bc584",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai_akana",
+            "persona-dream",
+            "memory-residue",
+            "surf",
+            "big-island",
+            "kahaluu-bay",
+            "media-asset",
+            "media:video"
+          ],
+          "title": "Nazare big wave drone video reference"
+        },
+        {
+          "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "c6743feb-57d3-5819-a25a-c735c1f847d9",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai_akana",
+            "persona-dream",
+            "memory-residue",
+            "surf",
+            "big-island",
+            "kahaluu-bay",
+            "media-asset",
+            "media:audio"
+          ],
+          "title": "Ocean raw surfing audio two minute reference"
+        }
+      ],
+      "failures": [],
+      "recall": {
+        "confidence": 0.947,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.7029191,
+              "freshness": 0.06013898980588408,
+              "graph": 1.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry and Kai looking for waves on the Big Island"
+          },
+          {
+            "_key": "embry_media_asset__assets_character_sheet_montage_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 0.8620689655172413,
+              "dense": 0.6697977,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry character sheet montage"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 0.9310344827586207,
+              "dense": 0.5722798,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kona Coast contact sheet"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 0.7586206896551724,
+              "dense": 0.7130901,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Nazare big wave drone video keyframe"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 0.9655172413793104,
+              "dense": 0.48684055,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "June swell contact sheet"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 0.896551724137931,
+              "dense": 0.55367184,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana surfing on the Big Island"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 0.8275862068965517,
+              "dense": 0.6139784,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:audio"
+            ],
+            "title": "Ocean raw surfing audio two minute reference"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 0.7931034482758621,
+              "dense": 0.56834555,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai surfboard contact sheet"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 9,
+            "scores": {
+              "bm25": 0.7241379310344828,
+              "dense": 0.5750764,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana character sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 10,
+            "scores": {
+              "bm25": 0.6896551724137931,
+              "dense": 0.59774876,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry barrel wave surfing reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 11,
+            "scores": {
+              "bm25": 0.5862068965517241,
+              "dense": 0.6685662,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfing on the Big Island"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 12,
+            "scores": {
+              "bm25": 0.6551724137931034,
+              "dense": 0.5656566,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfboard contact sheet"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 13,
+            "scores": {
+              "bm25": 0.5517241379310345,
+              "dense": 0.5955689,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:video"
+            ],
+            "title": "Nazare big wave drone video reference"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 14,
+            "scores": {
+              "bm25": 0.6206896551724138,
+              "dense": 0.48428935,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Lava reef contact sheet"
+          },
+          {
+            "_key": "embry_batch02_preference_embry_music_processing_preference_lines_202_213_cbc22ff871",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 15,
+            "scores": {
+              "bm25": 0.5172413793103449,
+              "dense": 0.42852086,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_surfboard_questions_lines_196_200_860ddacea5",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 16,
+            "scores": {
+              "bm25": 0.41379310344827586,
+              "dense": 0.48931414,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_first_day_questions_lines_53_56_eaeb48bf63",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 17,
+            "scores": {
+              "bm25": 0.4482758620689655,
+              "dense": 0.39131904,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_preference_embry_hawaiian_private_practice_preference_lines_160_172_e45f500d3a",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 18,
+            "scores": {
+              "bm25": 0.4827586206896552,
+              "dense": 0.30863532,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_unpacked_boxes_questions_lines_100_104_355c9041aa",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 19,
+            "scores": {
+              "bm25": 0.3793103448275862,
+              "dense": 0.40108263,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B2_engaged_listening_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 20,
+            "scores": {
+              "bm25": 0.27586206896551724,
+              "dense": 0.4705719,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B2 engaged listening (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B5_genuine_smile_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 21,
+            "scores": {
+              "bm25": 0.2413793103448276,
+              "dense": 0.46300793,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B5 genuine smile (assets / casting)."
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_instagram_after_kai_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 22,
+            "scores": {
+              "bm25": 0.3103448275862069,
+              "dense": 0.36811823,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_G1_fullbody_standing_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 23,
+            "scores": {
+              "bm25": 0.20689655172413793,
+              "dense": 0.46614766,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: G1 fullbody standing (assets / casting)."
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_lunch_places_questions_lines_136_139_8c1c41362c",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 24,
+            "scores": {
+              "bm25": 0.3448275862068966,
+              "dense": 0.31848675,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B4_focused_serious_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 25,
+            "scores": {
+              "bm25": 0.1724137931034483,
+              "dense": 0.46008414,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B4 focused serious (assets / casting)."
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What persona-dream memory residue assets for Embry and Kai surfing on the Big Island include the linked images, video, sound, and text used by Phase 01 Idea?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175269,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 8,
+          "threshold": 0.3,
+          "took_ms": 510,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "q": "What persona-dream memory residue assets for Embry and Kai surfing on the Big Island include the linked images, video, sound, and text used by Phase 01 Idea?",
+          "tags": [
+            "persona:embry"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "PASS"
+    },
+    "02_story_matrix": {
+      "direct_expected": [
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_matrix",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "1bd59db5-d07a-5a2e-b436-77cf3a7f2b47",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix",
+            "script_source",
+            "extract_entities_source",
+            "location:kahaluu_bay",
+            "topic:surfing"
+          ],
+          "title": null
+        }
+      ],
+      "failures": [
+        "recall_missing_key:persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024"
+      ],
+      "recall": {
+        "confidence": 0.952,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.646673,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kona Coast contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 0.8928571428571429,
+              "dense": 0.648016,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "June swell contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 0.9642857142857143,
+              "dense": 0.5516371,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfboard contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 0.9285714285714286,
+              "dense": 0.54600334,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai surfboard contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 0.8571428571428571,
+              "dense": 0.5759864,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Lava reef contact sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 0.7857142857142857,
+              "dense": 0.5840359,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfing on the Big Island"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 0.8214285714285714,
+              "dense": 0.50529397,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana surfing on the Big Island"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 0.7142857142857143,
+              "dense": 0.60393727,
+              "freshness": 0.06013898980588408,
+              "graph": 1.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry and Kai looking for waves on the Big Island"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 9,
+            "scores": {
+              "bm25": 0.75,
+              "dense": 0.53463376,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry barrel wave surfing reference"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 10,
+            "scores": {
+              "bm25": 0.6785714285714286,
+              "dense": 0.5620222,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:audio"
+            ],
+            "title": "Ocean raw surfing audio two minute reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_character_sheet_montage_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 11,
+            "scores": {
+              "bm25": 0.5714285714285714,
+              "dense": 0.5400976,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry character sheet montage"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 12,
+            "scores": {
+              "bm25": 0.5357142857142857,
+              "dense": 0.5269557,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana character sheet"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 13,
+            "scores": {
+              "bm25": 0.5,
+              "dense": 0.5214605,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:video"
+            ],
+            "title": "Nazare big wave drone video reference"
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_instagram_after_kai_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 14,
+            "scores": {
+              "bm25": 0.6071428571428571,
+              "dense": 0.31434998,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved."
+          },
+          {
+            "_key": "embry_batch02_preference_embry_marcus_avoidance_preference_lines_81_91_570fe4ad35",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 15,
+            "scores": {
+              "bm25": 0.6428571428571429,
+              "dense": 0.26310736,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_surfboard_questions_lines_196_200_860ddacea5",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 16,
+            "scores": {
+              "bm25": 0.42857142857142855,
+              "dense": 0.43938515,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 17,
+            "scores": {
+              "bm25": 0.32142857142857145,
+              "dense": 0.5247854,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Nazare big wave drone video keyframe"
+          },
+          {
+            "_key": "embry_batch02_preference_embry_music_processing_preference_lines_202_213_cbc22ff871",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 18,
+            "scores": {
+              "bm25": 0.39285714285714285,
+              "dense": 0.3410288,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_preference_embry_knitting_love_language_preference_lines_174_186_7adec8e863",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 19,
+            "scores": {
+              "bm25": 0.4642857142857143,
+              "dense": 0.23485272,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_preference_embry_hawaiian_private_practice_preference_lines_160_172_e45f500d3a",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 20,
+            "scores": {
+              "bm25": 0.2857142857142857,
+              "dense": 0.30104226,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 21,
+            "scores": {
+              "bm25": 0.25,
+              "dense": 0.3374219,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch for comfort."
+          },
+          {
+            "_key": "embry_batch02_preference_embry_true_crime_hidden_preference_lines_241_252_842864ab05",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 22,
+            "scores": {
+              "bm25": 0.35714285714285715,
+              "dense": 0.20900388,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_unpacked_boxes_questions_lines_100_104_355c9041aa",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 23,
+            "scores": {
+              "bm25": 0.17857142857142858,
+              "dense": 0.3225635,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_okafor_questions_lines_76_79_8c2d68dfbb",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 24,
+            "scores": {
+              "bm25": 0.21428571428571427,
+              "dense": 0.2796973,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_first_day_questions_lines_53_56_eaeb48bf63",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 25,
+            "scores": {
+              "bm25": 0.14285714285714285,
+              "dense": 0.31668213,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What Phase 02 interaction matrix explains Embry, Kai, surfboards, June swell, lava reef, Kona Coast, heat, humidity, and environment behavior for the persona-dream script pipeline?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175269,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 1,
+          "threshold": 0.3,
+          "took_ms": 483,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "q": "What Phase 02 interaction matrix explains Embry, Kai, surfboards, June swell, lava reef, Kona Coast, heat, humidity, and environment behavior for the persona-dream script pipeline?",
+          "tags": [
+            "persona:embry",
+            "interaction_matrix"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "FAIL"
+    },
+    "02_story_matrix_edges": {
+      "direct_expected": [
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "155065d1-60c4-55eb-a72d-906e12e7438c",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "dafffc3d-e4c1-5496-aa1e-4fd6c79a5d55",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_2",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "e3ebe0bb-a309-5aab-820f-bbb207b50adf",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "2449bf5f-a2f6-512e-b295-595bc7a98514",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_4",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "8eb6de7b-7107-5d07-a008-eb6568da4383",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_5",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "ac4337ff-95be-5f6c-ace1-37f0f6ae713f",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        },
+        {
+          "_key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_6",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": "persona_dream_interaction_edge",
+          "persona_id": "embry",
+          "phase": "02_story",
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "9fd3fbfb-3543-5496-89f1-c9957b320fee",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona-dream",
+            "phase:02_story",
+            "interaction_matrix_edge"
+          ],
+          "title": null
+        }
+      ],
+      "failures": [
+        "recall_missing_prefix:persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_"
+      ],
+      "recall": {
+        "confidence": 0.0,
+        "errors": [],
+        "found": false,
+        "items": [],
+        "meta": {
+          "collections_filter": [
+            "persona_memory_edges"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "Which graph edges connect the Phase 02 persona-dream story interaction matrix to its seed rows for Embry and Kai at Kahalu\u02bbu Bay?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175269,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "threshold": 0.3,
+          "took_ms": 211,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory_edges"
+          ],
+          "k": 25,
+          "q": "Which graph edges connect the Phase 02 persona-dream story interaction matrix to its seed rows for Embry and Kai at Kahalu\u02bbu Bay?",
+          "tags": [
+            "persona:embry",
+            "interaction_matrix"
+          ]
+        },
+        "should_scan": true,
+        "status_code": 200
+      },
+      "status": "FAIL"
+    },
+    "03_crew": {
+      "direct_expected": [],
+      "failures": [
+        "direct_missing_kind:persona_dream_phase_03_crew_contract",
+        "recall_missing_kind:persona_dream_phase_03_crew_contract"
+      ],
+      "recall": {
+        "confidence": 0.96,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 0.96,
+              "dense": 0.17968702,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana character sheet"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.12927401,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:video"
+            ],
+            "title": "Nazare big wave drone video reference"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 0.92,
+              "dense": 0.11700277,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kona Coast contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.15982968,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "June swell contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 0.84,
+              "dense": 0.13341992,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Lava reef contact sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_character_sheet_montage_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 0.6,
+              "dense": 0.26785016,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry character sheet montage"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 0.76,
+              "dense": 0.14639294,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai surfboard contact sheet"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 0.88,
+              "dense": 0.04931892,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana surfing on the Big Island"
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_okafor_questions_lines_76_79_8c2d68dfbb",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 9,
+            "scores": {
+              "bm25": 0.72,
+              "dense": 0.12883309,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 10,
+            "scores": {
+              "bm25": 0.56,
+              "dense": 0.21360126,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Nazare big wave drone video keyframe"
+          },
+          {
+            "_key": "embry_batch02_preference_embry_true_crime_hidden_preference_lines_241_252_842864ab05",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 11,
+            "scores": {
+              "bm25": 0.64,
+              "dense": 0.13207573,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 12,
+            "scores": {
+              "bm25": 0.68,
+              "dense": 0.098299414,
+              "freshness": 0.06013898980588408,
+              "graph": 1.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry and Kai looking for waves on the Big Island"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 13,
+            "scores": {
+              "bm25": 0.52,
+              "dense": 0.1356647,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfboard contact sheet"
+          },
+          {
+            "_key": "embry_batch02_preference_embry_music_processing_preference_lines_202_213_cbc22ff871",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 14,
+            "scores": {
+              "bm25": 0.36,
+              "dense": 0.20155689,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_brandon_interview_questions_lines_44_47_9f7435bc84",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 15,
+            "scores": {
+              "bm25": 0.28,
+              "dense": 0.20936981,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 16,
+            "scores": {
+              "bm25": 0.48,
+              "dense": 0.076347575,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfing on the Big Island"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 17,
+            "scores": {
+              "bm25": 0.4,
+              "dense": 0.10569021,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:audio"
+            ],
+            "title": "Ocean raw surfing audio two minute reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 18,
+            "scores": {
+              "bm25": 0.44,
+              "dense": 0.07356574,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry barrel wave surfing reference"
+          },
+          {
+            "_key": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 19,
+            "scores": {
+              "bm25": 0.32,
+              "dense": 0.13977346,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap"
+            ],
+            "title": "Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck."
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_first_day_questions_lines_53_56_eaeb48bf63",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 20,
+            "scores": {
+              "bm25": 0.24,
+              "dense": 0.17441683,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_unpacked_boxes_questions_lines_100_104_355c9041aa",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 21,
+            "scores": {
+              "bm25": 0.2,
+              "dense": 0.1240434,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_expense_report_questions_lines_123_127_efe1fb9187",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 22,
+            "scores": {
+              "bm25": 0.12,
+              "dense": 0.1542133,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 23,
+            "scores": {
+              "bm25": 0.08,
+              "dense": 0.16579458,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch for comfort."
+          },
+          {
+            "_key": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 24,
+            "scores": {
+              "bm25": 0.04,
+              "dense": 0.16495168,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap"
+            ],
+            "title": "The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk."
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_instagram_after_kai_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 25,
+            "scores": {
+              "bm25": 0.16,
+              "dense": 0.074741535,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved."
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What Phase 03 persona-dream crew contract selected producer, scriptwriter, director, rationales, and source story interaction matrix coverage?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175270,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 8,
+          "threshold": 0.3,
+          "took_ms": 295,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "q": "What Phase 03 persona-dream crew contract selected producer, scriptwriter, director, rationales, and source story interaction matrix coverage?",
+          "tags": [
+            "persona:embry"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "FAIL"
+    },
+    "04_contact_sheets": {
+      "direct_expected": [
+        {
+          "_key": "4c4787d389f39cf33d65f19ca4ad7520",
+          "asset_id": "contact_sheet_embry_surfboard",
+          "entity_id": "contact_sheet_embry_surfboard",
+          "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
+          "kind": "persona_dream_visual_asset",
+          "persona_id": null,
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "9c10913f-2273-588f-b9d6-1d70f94aa428",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "contact-sheet",
+            "contact_sheet_embry_surfboard",
+            "object",
+            "persona-dream",
+            "visual-asset"
+          ],
+          "title": "Embry Surfboard Contact Sheet"
+        },
+        {
+          "_key": "519e557c4a9fdaab3a95e8c0fbc0db83",
+          "asset_id": "contact_sheet_kai_surfboard",
+          "entity_id": "contact_sheet_kai_surfboard",
+          "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
+          "kind": "persona_dream_visual_asset",
+          "persona_id": null,
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "5b8535ea-77d9-5c8a-8a65-1f648a066c29",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "contact-sheet",
+            "contact_sheet_kai_surfboard",
+            "object",
+            "persona-dream",
+            "visual-asset"
+          ],
+          "title": "Kai Surfboard Contact Sheet"
+        },
+        {
+          "_key": "bf846ae444d588d6365abe5f8eaa9b1c",
+          "asset_id": "contact_sheet_june_swell",
+          "entity_id": "contact_sheet_june_swell",
+          "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
+          "kind": "persona_dream_visual_asset",
+          "persona_id": null,
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "1ee72f81-b99a-5140-af1e-ac31bf459b73",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "contact-sheet",
+            "contact_sheet_june_swell",
+            "environment",
+            "persona-dream",
+            "visual-asset"
+          ],
+          "title": "June Swell Contact Sheet"
+        },
+        {
+          "_key": "f1455b584d104628ec7e8dc3f34f253e",
+          "asset_id": "contact_sheet_lava_reef",
+          "entity_id": "contact_sheet_lava_reef",
+          "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
+          "kind": "persona_dream_visual_asset",
+          "persona_id": null,
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "ebb08642-ebdc-549c-9d78-95e724135734",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "contact-sheet",
+            "contact_sheet_lava_reef",
+            "environment",
+            "persona-dream",
+            "visual-asset"
+          ],
+          "title": "Lava Reef Contact Sheet"
+        },
+        {
+          "_key": "31b6117a2bd1e739e35b7da50ca7f3c9",
+          "asset_id": "contact_sheet_kona_coast",
+          "entity_id": "contact_sheet_kona_coast",
+          "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
+          "kind": "persona_dream_visual_asset",
+          "persona_id": null,
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "9907df1a-4cd2-53ed-8f9f-6b682e1af1cb",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "contact-sheet",
+            "contact_sheet_kona_coast",
+            "environment",
+            "persona-dream",
+            "visual-asset"
+          ],
+          "title": "Kona Coast Contact Sheet"
+        }
+      ],
+      "failures": [
+        "recall_missing_asset_id:contact_sheet_embry_surfboard",
+        "recall_missing_asset_id:contact_sheet_kai_surfboard",
+        "recall_missing_asset_id:contact_sheet_june_swell",
+        "recall_missing_asset_id:contact_sheet_lava_reef",
+        "recall_missing_asset_id:contact_sheet_kona_coast"
+      ],
+      "recall": {
+        "confidence": 0.0,
+        "errors": [],
+        "found": false,
+        "items": [],
+        "meta": {
+          "collections_filter": [
+            "persona_dream_visual_assets"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "Which Phase 04 persona-dream contact sheet visual assets exist for Embry surfboard, Kai surfboard, June swell, lava reef, and Kona Coast?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175270,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "threshold": 0.3,
+          "took_ms": 77,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_dream_visual_assets"
+          ],
+          "k": 25,
+          "q": "Which Phase 04 persona-dream contact sheet visual assets exist for Embry surfboard, Kai surfboard, June swell, lava reef, and Kona Coast?",
+          "tags": [
+            "persona-dream",
+            "contact-sheet"
+          ]
+        },
+        "should_scan": true,
+        "status_code": 200
+      },
+      "status": "FAIL"
+    },
+    "05_voices": {
+      "direct_expected": [],
+      "failures": [],
+      "recall": {
+        "confidence": 0.878,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "embry_media_asset__teaser_project_audio_horus_horus_05_countermeasures_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 0.9743589743589743,
+              "dense": 0.52066463,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:audio",
+              "asset_dir:horus",
+              "asset_dir:teaser_project",
+              "asset_root:media_personas_embry",
+              "media_type:audio",
+              "modality:audio",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry audio media asset: horus 05 countermeasures (teaser_project / audio / horus)."
+          },
+          {
+            "_key": "embry_media_asset__voice_refs_steinfeld_clips_steinfeld_05_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 0.9230769230769231,
+              "dense": 0.56345785,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:clips",
+              "asset_dir:steinfeld",
+              "asset_dir:voice_refs",
+              "asset_root:media_personas_embry",
+              "media_type:audio",
+              "modality:audio",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry audio media asset: steinfeld 05 (voice_refs / steinfeld / clips)."
+          },
+          {
+            "_key": "embry_media_asset__voice_refs_stewart_clips_stewart_05_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 0.8974358974358975,
+              "dense": 0.5365273,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:clips",
+              "asset_dir:stewart",
+              "asset_dir:voice_refs",
+              "asset_root:media_personas_embry",
+              "media_type:audio",
+              "modality:audio",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry audio media asset: stewart 05 (voice_refs / stewart / clips)."
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.35072646,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:audio"
+            ],
+            "title": "Ocean raw surfing audio two minute reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_v2_A5_profile_left_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 0.8205128205128205,
+              "dense": 0.4870438,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting_v2",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A5 profile left (assets / casting_v2)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_A3_threequarter_left_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 0.7948717948717948,
+              "dense": 0.42631647,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A3 threequarter left (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B3_explaining_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 0.7692307692307693,
+              "dense": 0.4489249,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B3 explaining (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B2_engaged_listening_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 0.7435897435897436,
+              "dense": 0.4694519,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B2 engaged listening (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 9,
+            "scores": {
+              "bm25": 0.9487179487179487,
+              "dense": 0.23918217,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry barrel wave surfing reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B5_genuine_smile_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 10,
+            "scores": {
+              "bm25": 0.6923076923076923,
+              "dense": 0.47678882,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B5 genuine smile (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_v2_A4_profile_right_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 11,
+            "scores": {
+              "bm25": 0.717948717948718,
+              "dense": 0.44993424,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting_v2",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A4 profile right (assets / casting_v2)."
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 12,
+            "scores": {
+              "bm25": 0.8461538461538461,
+              "dense": 0.307791,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfboard contact sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_D1_whiteboard_presenting_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 13,
+            "scores": {
+              "bm25": 0.6666666666666666,
+              "dense": 0.43591306,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: D1 whiteboard presenting (assets / casting)."
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 14,
+            "scores": {
+              "bm25": 0.8717948717948718,
+              "dense": 0.23258398,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kona Coast contact sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_C2_desk_working_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 15,
+            "scores": {
+              "bm25": 0.6410256410256411,
+              "dense": 0.4257311,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: C2 desk working (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_E1_workshop_hardware_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 16,
+            "scores": {
+              "bm25": 0.5897435897435898,
+              "dense": 0.41808707,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: E1 workshop hardware (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B1_neutral_resting_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 17,
+            "scores": {
+              "bm25": 0.5641025641025641,
+              "dense": 0.43437338,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B1 neutral resting (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_D2_whiteboard_listening_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 18,
+            "scores": {
+              "bm25": 0.5384615384615384,
+              "dense": 0.45926392,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: D2 whiteboard listening (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_C1_desk_wide_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 19,
+            "scores": {
+              "bm25": 0.5128205128205128,
+              "dense": 0.42332006,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: C1 desk wide (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B4_focused_serious_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 20,
+            "scores": {
+              "bm25": 0.46153846153846156,
+              "dense": 0.41851068,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B4 focused serious (assets / casting)."
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 21,
+            "scores": {
+              "bm25": 0.6153846153846154,
+              "dense": 0.25731674,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Lava reef contact sheet"
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_B6_tired_working_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 22,
+            "scores": {
+              "bm25": 0.4358974358974359,
+              "dense": 0.41900748,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: B6 tired working (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_A4_profile_right_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 23,
+            "scores": {
+              "bm25": 0.38461538461538464,
+              "dense": 0.4511901,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A4 profile right (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_A2_threequarter_right_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 24,
+            "scores": {
+              "bm25": 0.358974358974359,
+              "dense": 0.42813343,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A2 threequarter right (assets / casting)."
+          },
+          {
+            "_key": "embry_media_asset__assets_casting_v2_A3_threequarter_left_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 25,
+            "scores": {
+              "bm25": 0.3333333333333333,
+              "dense": 0.43570682,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:assets",
+              "asset_dir:casting_v2",
+              "asset_root:media_personas_embry",
+              "media_type:image",
+              "modality:image",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry image media asset: A3 threequarter left (assets / casting_v2)."
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What Phase 05 persona-dream voice evidence exists for Embry and Kai Chatterbox voice references, demo voice playback, tone controls, and selected voice receipts?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175271,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 8,
+          "threshold": 0.3,
+          "took_ms": 672,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "q": "What Phase 05 persona-dream voice evidence exists for Embry and Kai Chatterbox voice references, demo voice playback, tone controls, and selected voice receipts?",
+          "tags": [
+            "persona:embry"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "PASS"
+    },
+    "06_script": {
+      "direct_expected": [],
+      "failures": [
+        "direct_missing_kind:persona_dream_phase_06_script_contract",
+        "recall_missing_kind:persona_dream_phase_06_script_contract"
+      ],
+      "recall": {
+        "confidence": 0.947,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.22345497,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Nazare big wave drone video keyframe"
+          },
+          {
+            "_key": "embry_media_asset__assets_character_sheet_montage_jpg",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 0.84,
+              "dense": 0.2864959,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry character sheet montage"
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_okafor_questions_lines_76_79_8c2d68dfbb",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 0.96,
+              "dense": 0.18189208,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 0.88,
+              "dense": 0.19495347,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kona Coast contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 0.68,
+              "dense": 0.28305635,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "June swell contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_kai_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.19341004,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai surfboard contact sheet"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 0.72,
+              "dense": 0.21324244,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfboard contact sheet"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 0.92,
+              "dense": 0.069913685,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana surfing on the Big Island"
+          },
+          {
+            "_key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 9,
+            "scores": {
+              "bm25": 0.64,
+              "dense": 0.19603229,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Lava reef contact sheet"
+          },
+          {
+            "_key": "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "kai_akana",
+            "phase": null,
+            "rank": 10,
+            "scores": {
+              "bm25": 0.6,
+              "dense": 0.21275452,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Kai Akana character sheet"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 11,
+            "scores": {
+              "bm25": 0.76,
+              "dense": 0.11071943,
+              "freshness": 0.06013898980588408,
+              "graph": 1.0
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry and Kai looking for waves on the Big Island"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 12,
+            "scores": {
+              "bm25": 0.52,
+              "dense": 0.14023553,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:audio"
+            ],
+            "title": "Ocean raw surfing audio two minute reference"
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 13,
+            "scores": {
+              "bm25": 0.56,
+              "dense": 0.09635926,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry barrel wave surfing reference"
+          },
+          {
+            "_key": "embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 14,
+            "scores": {
+              "bm25": 0.48,
+              "dense": 0.118117146,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:video"
+            ],
+            "title": "Nazare big wave drone video reference"
+          },
+          {
+            "_key": "embry_batch02_preference_embry_music_processing_preference_lines_202_213_cbc22ff871",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 15,
+            "scores": {
+              "bm25": 0.32,
+              "dense": 0.20099267,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_preference_embry_true_crime_hidden_preference_lines_241_252_842864ab05",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 16,
+            "scores": {
+              "bm25": 0.44,
+              "dense": 0.13053612,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 17,
+            "scores": {
+              "bm25": 0.36,
+              "dense": 0.17259938,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:unresolved_thread"
+            ],
+            "title": "Embry has unpacked boxes whose contents are unknown, and the source leaves unresolved what they contain, the presence of items from specific people, and what opening them would mean."
+          },
+          {
+            "_key": "embry_media_asset__voice_refs_stewart_colbert_interview_wav",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 18,
+            "scores": {
+              "bm25": 0.28,
+              "dense": 0.21506275,
+              "freshness": 0.06013898980588408,
+              "graph": 0.7975721442120743
+            },
+            "tags": [
+              "asset_dir:stewart",
+              "asset_dir:voice_refs",
+              "asset_root:media_personas_embry",
+              "media_type:audio",
+              "modality:audio",
+              "persona:embry",
+              "persona:embry_lawson",
+              "persona_media_asset",
+              "persona_memory",
+              "source:filesystem_media_asset"
+            ],
+            "title": "Embry audio media asset: colbert interview (voice_refs / stewart)."
+          },
+          {
+            "_key": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 19,
+            "scores": {
+              "bm25": 0.4,
+              "dense": 0.11479147,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9799775945657815
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai_akana",
+              "persona-dream",
+              "memory-residue",
+              "surf",
+              "big-island",
+              "kahaluu-bay",
+              "media-asset",
+              "media:image"
+            ],
+            "title": "Embry surfing on the Big Island"
+          },
+          {
+            "_key": "embry_gap_knowledge_gap_brandon_interview_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 20,
+            "scores": {
+              "bm25": 0.24,
+              "dense": 0.18925345,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap"
+            ],
+            "title": "The source identifies questions about Embry's interview with Brandon, including how she performed and why he hired her."
+          },
+          {
+            "_key": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 21,
+            "scores": {
+              "bm25": 0.2,
+              "dense": 0.17004086,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap"
+            ],
+            "title": "The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk."
+          },
+          {
+            "_key": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 22,
+            "scores": {
+              "bm25": 0.08,
+              "dense": 0.17086825,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap"
+            ],
+            "title": "Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck."
+          },
+          {
+            "_key": "embry_gap_preference_rocket_launch_commentators_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 23,
+            "scores": {
+              "bm25": 0.16,
+              "dense": 0.11998849,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference"
+            ],
+            "title": "Embry watches 2AM rocket launches as a guilty pleasure and has opinions about the commentators."
+          },
+          {
+            "_key": "embry_gap_preference_chess_pie_home_recipe_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 24,
+            "scores": {
+              "bm25": 0.12,
+              "dense": 0.121449724,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference"
+            ],
+            "title": "Embry saved her grandmother's chess pie recipe in her phone notes 4 years ago, having typed it out during a phone call; she associates its specific sweetness with the feeling of home."
+          },
+          {
+            "_key": "embry_gap_preference_bachelor_monday_opinions_001",
+            "_source": "persona_memory",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 25,
+            "scores": {
+              "bm25": 0.04,
+              "dense": 0.15843679,
+              "freshness": 0.06013898980588408,
+              "graph": 0.9196322834315271
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:preference"
+            ],
+            "title": "Embry watches the Bachelor franchise on Monday nights, has opinions about the contestants, and engages in a routine that began when Dev got her into it."
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What Phase 06 persona-dream script contract contains the generated script, interaction matrix coverage, entity extraction highlights, and script reviewer pass receipt?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175271,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 8,
+          "threshold": 0.3,
+          "took_ms": 300,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "persona_memory"
+          ],
+          "k": 25,
+          "q": "What Phase 06 persona-dream script contract contains the generated script, interaction matrix coverage, entity extraction highlights, and script reviewer pass receipt?",
+          "tags": [
+            "persona:embry"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "FAIL"
+    },
+    "tom_media_edges": {
+      "direct_expected": [
+        {
+          "_key": "embry_kai_media_tom_edge_188afec947e644747a5a5ee1",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "b55dc225-7d56-5d54-af27-d8177a4bcf18",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:boundary",
+            "tom:goal",
+            "tom:unresolved_thread",
+            "tom:obligation",
+            "tom:ritual"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_380c59e5113554624ea1f2d6",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "f32fae1a-b868-57ce-989b-59406b888984",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:goal",
+            "tom:knowledge_gap",
+            "tom:relationship",
+            "tom:belonging",
+            "tom:boundary"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_636215d9e3a87117a97e6c81",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "836d3e6c-1954-51a9-9994-2c3c3557431e",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:boundary",
+            "tom:goal",
+            "tom:unresolved_thread",
+            "tom:surf_clip",
+            "tom:ritual"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_6f3c915bc7f9b08abeb90717",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "4a973ed9-3a13-50ea-ab03-d63974fc63b4",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:belief",
+            "tom:relationship",
+            "tom:trust",
+            "tom:boundary",
+            "tom:wave_timing"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_7274a6dac6f043a155d16092",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "dec46340-cca9-5698-bafc-4feb1fb54c65",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:belief",
+            "tom:relationship",
+            "tom:trust",
+            "tom:kai_reference"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_7bacbd5d8afacd50c371bc82",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "8dfe89b6-bd32-58f0-9af2-6d5643b148c0",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:boundary",
+            "tom:goal",
+            "tom:relationship",
+            "tom:kai_reference",
+            "tom:ritual"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_b0b363c0acdd54ca88fc26df",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "cabb6b7f-e01b-53ec-b033-368d8c50e02d",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:relationship",
+            "tom:belief",
+            "tom:trust",
+            "tom:private_correction"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_b28cdc9905df1dd1838681fa",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "6df1da20-f698-5233-8e8e-efe1987ab72d",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:belief",
+            "tom:relationship",
+            "tom:trust",
+            "tom:environment",
+            "tom:hazard",
+            "tom:surf_etiquette"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_df08280f7a45a6baaced1def",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "b83bd2ea-930f-55f7-b2b8-5fd6d8271d39",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:boundary",
+            "tom:goal",
+            "tom:relationship",
+            "tom:surf_clip",
+            "tom:kai"
+          ],
+          "title": null
+        },
+        {
+          "_key": "embry_kai_media_tom_edge_e5809c0a6d1d6a45c428c156",
+          "asset_id": null,
+          "entity_id": null,
+          "image_path": null,
+          "kind": null,
+          "persona_id": "embry",
+          "phase": null,
+          "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+          "qdrant_point_id": "2f8dfe5f-c10e-5c8e-89a4-ab224956dc20",
+          "semantic_sync_state": "synced",
+          "tags": [
+            "persona:embry",
+            "persona:kai",
+            "persona:kai_akana",
+            "tom_media_grounding",
+            "persona_dream",
+            "surfing",
+            "big_island",
+            "tom:goal",
+            "tom:knowledge_gap",
+            "tom:relationship",
+            "tom:embry_reference"
+          ],
+          "title": null
+        }
+      ],
+      "failures": [],
+      "recall": {
+        "confidence": 40.421,
+        "errors": [],
+        "found": true,
+        "items": [
+          {
+            "_key": "tom_media_1221daf445de5f2435280693",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 1,
+            "scores": {
+              "bm25": 72.73383331298828,
+              "dense": 0.60195804,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "tom_edges",
+              "persona:embry",
+              "persona:kai_akana",
+              "persona_dream",
+              "media_to_story_memory",
+              "surf_ritual",
+              "video",
+              "kai"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_tom_edge_f969da52e98a2c9c5e68fc6b3f8f",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 2,
+            "scores": {
+              "bm25": 69.66020202636719,
+              "dense": 0.48298797,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "candidate",
+              "tom_observation",
+              "tom_kind:unresolved_thread"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_tom_edge_df08280f7a45a6baaced1def",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 3,
+            "scores": {
+              "bm25": 58.934425354003906,
+              "dense": 0.6496799,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai",
+              "persona:kai_akana",
+              "tom_media_grounding",
+              "persona_dream",
+              "surfing",
+              "big_island",
+              "tom:boundary",
+              "tom:goal",
+              "tom:relationship",
+              "tom:surf_clip",
+              "tom:kai"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_batch02_knowledge_gap_embry_surfboard_questions_lines_196_200_860ddacea5__tom__000__knowledge_gap__person_embry_lawson",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 4,
+            "scores": {
+              "bm25": 56.24510192871094,
+              "dense": 0.454544,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "source_work:embry_story_gaps",
+              "tom:knowledge_gap",
+              "persona_memory",
+              "source-grounded",
+              "batch:persona_memory_gap_generation_20260620T1712",
+              "batch02",
+              "dewey_accepted",
+              "unsloth_training_balance"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_tom_edge_636215d9e3a87117a97e6c81",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 5,
+            "scores": {
+              "bm25": 54.43439483642578,
+              "dense": 0.66235733,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai",
+              "persona:kai_akana",
+              "tom_media_grounding",
+              "persona_dream",
+              "surfing",
+              "big_island",
+              "tom:boundary",
+              "tom:goal",
+              "tom:unresolved_thread",
+              "tom:surf_clip",
+              "tom:ritual"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_tom_edge_ea8375acd2eec32f6227b9b0",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 6,
+            "scores": {
+              "bm25": 53.35699462890625,
+              "dense": 0.71636117,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai",
+              "persona:kai_akana",
+              "tom_media_grounding",
+              "persona_dream",
+              "surfing",
+              "big_island",
+              "tom:belief",
+              "tom:relationship",
+              "tom:trust",
+              "tom:boundary",
+              "tom:surf_timing"
+            ],
+            "title": null
+          },
+          {
+            "_key": "embry_kai_media_tom_edge_b0b363c0acdd54ca88fc26df",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 7,
+            "scores": {
+              "bm25": 53.34898376464844,
+              "dense": 0.6871828,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "persona:embry",
+              "persona:kai",
+              "persona:kai_akana",
+              "tom_media_grounding",
+              "persona_dream",
+              "surfing",
+              "big_island",
+              "tom:relationship",
+              "tom:belief",
+              "tom:trust",
+              "tom:private_correction"
+            ],
+            "title": null
+          },
+          {
+            "_key": "tom_media_6281004019eb0e7e0899e015",
+            "_source": "tom_edges",
+            "asset_id": null,
+            "entity_id": null,
+            "kind": null,
+            "persona_id": "embry",
+            "phase": null,
+            "rank": 8,
+            "scores": {
+              "bm25": 52.380882263183594,
+              "dense": 0.65972316,
+              "graph": 0.3887417987987634,
+              "weight": 0.7
+            },
+            "tags": [
+              "tom_edges",
+              "persona:embry",
+              "persona:kai_akana",
+              "persona_dream",
+              "media_to_story_memory",
+              "surf_ritual",
+              "embry",
+              "kai",
+              "visual"
+            ],
+            "title": null
+          }
+        ],
+        "meta": {
+          "collections_filter": [
+            "tom_edges"
+          ],
+          "k": 25,
+          "memory_first": true,
+          "q": "What Theory-of-Mind media grounding edges relate Embry, Kai, surf images, sound, video, and text memories for the persona-dream surf story?",
+          "runtime_pressure": {
+            "active_workloads": [],
+            "checked_at": 1783175272,
+            "level": "normal",
+            "recommended_action": "No active persisted runtime pressure detected.",
+            "slow_query_risk": false,
+            "sources": []
+          },
+          "scope": "",
+          "supplemental_count": 8,
+          "supplemental_promoted": 8,
+          "threshold": 0.3,
+          "took_ms": 321,
+          "used_dense": true,
+          "used_reranker": false
+        },
+        "request": {
+          "collections": [
+            "tom_edges"
+          ],
+          "k": 25,
+          "q": "What Theory-of-Mind media grounding edges relate Embry, Kai, surf images, sound, video, and text memories for the persona-dream surf story?",
+          "tags": [
+            "persona:embry"
+          ]
+        },
+        "should_scan": false,
+        "status_code": 200
+      },
+      "status": "PASS"
+    }
+  },
+  "schema": "persona_dream.memory_recall_audit.v1",
+  "summary": {
+    "asset_ids": [
+      "contact_sheet_embry_surfboard",
+      "contact_sheet_june_swell",
+      "contact_sheet_kai_surfboard",
+      "contact_sheet_kona_coast",
+      "contact_sheet_lava_reef"
+    ],
+    "pane_status_counts": {
+      "FAIL": 5,
+      "PASS": 3
+    },
+    "persona_dream_visual_assets_total": 5,
+    "persona_memory_edges_persona_dream_count": 29,
+    "persona_memory_edges_total": 13287,
+    "persona_memory_persona_dream_count": 147,
+    "persona_memory_total": 2885,
+    "semantic_sync_counts": {
+      "synced": 203
+    },
+    "tom_edges_persona_dream_count": 22,
+    "tom_edges_total": 2230
+  }
+}

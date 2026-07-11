@@ -1,0 +1,13 @@
+{
+  "schema_id": "schemas/pipeline_terminal_report.schema.json",
+  "run_id": "provider-ready-dry-run-fixture",
+  "status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "terminal_gate": "kling_submit",
+  "live_provider_call_made": false,
+  "receipt_paths": [
+    "receipts/stage_receipt.json",
+    "receipts/pipeline_paid_call_approval_receipt.json",
+    "receipts/provider_readiness_receipt.json",
+    "receipts/kling_submit_gate_receipt.json"
+  ]
+}

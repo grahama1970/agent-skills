@@ -1,0 +1,192 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_panel_source_receipt import validate_panel_source_receipt  # noqa: E402
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+class TestPanelSourceReceipt(unittest.TestCase):
+    def _write_pass_fixture(self, run_root: Path) -> Path:
+        (run_root / "artifacts").mkdir()
+        (run_root / "receipts").mkdir()
+        image = run_root / "artifacts/panel_001.png"
+        image.write_bytes(b"not-a-real-png-but-hashable")
+        producer = run_root / "receipts/panel_creator_receipt.json"
+        producer.write_text(json.dumps({"status": "PASS", "producer": "panel-creator"}) + "\n", encoding="utf-8")
+        receipt = run_root / "receipts/panel_source_receipt.json"
+        receipt.write_text(
+            json.dumps(
+                {
+                    "schema": "persona_dream.panel_source_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_001",
+                    "status": "PASS_PANEL_SOURCE",
+                    "image_path": "artifacts/panel_001.png",
+                    "sha256": _sha256(image),
+                    "producer": {
+                        "kind": "subagent",
+                        "name": "panel-creator",
+                        "receipt": "receipts/panel_creator_receipt.json",
+                    },
+                    "photoreal_status": "PASS_PHOTOREAL_CINEMATIC",
+                    "nano_banana_fallback_used": False,
+                    "final_panel_eligible": True,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return receipt
+
+    def test_blocked_receipt_reports_panel_source_blocker(self) -> None:
+        result = validate_panel_source_receipt(
+            ROOT / "fixtures/one_scene_kling_dry_run/receipts/panel_source_receipt.json",
+            run_root=ROOT / "fixtures/one_scene_kling_dry_run",
+        )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "panel_source_receipt")
+        self.assertIn("panel_source_not_pass:BLOCKED", result["first_blocker"]["reason"])
+
+    def test_blocked_receipt_includes_derivation_blockers_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            (run_root / "receipts").mkdir()
+            receipt = run_root / "receipts/panel_source_receipt.json"
+            receipt.write_text(
+                json.dumps(
+                    {
+                        "schema": "persona_dream.panel_source_receipt.v1",
+                        "run_id": "fixture",
+                        "panel_id": "panel_001",
+                        "status": "BLOCKED",
+                        "image_path": "artifacts/panel_001.png",
+                        "sha256": "sha256:" + ("1" * 64),
+                        "producer": {
+                            "kind": "subagent",
+                            "name": "persona-dream-panel-repair-gate",
+                            "receipt": "receipts/panel_repair_gate_receipt.json",
+                        },
+                        "photoreal_status": "PASS_PHOTOREAL_CINEMATIC",
+                        "nano_banana_fallback_used": False,
+                        "final_panel_eligible": False,
+                        "blockers": [
+                            "repair_gate_status_not_final_reviewed:PASS_LOCAL_PHOTOREAL_PROVIDER_MEDIA_READY",
+                            "provider_eligibility_not_true",
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn(
+            "repair_gate_status_not_final_reviewed:PASS_LOCAL_PHOTOREAL_PROVIDER_MEDIA_READY",
+            result["first_blocker"]["reason"],
+        )
+        self.assertIn("provider_eligibility_not_true", result["first_blocker"]["reason"])
+
+    def test_pass_receipt_requires_matching_image_hash_and_producer_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_pass_fixture(run_root)
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "PASS_PANEL_SOURCE")
+        self.assertIsNone(result["first_blocker"])
+        self.assertEqual(result["live"], "no")
+
+    def test_pass_receipt_blocks_on_hash_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_pass_fixture(run_root)
+            doc = json.loads(receipt.read_text(encoding="utf-8"))
+            doc["sha256"] = "sha256:" + ("0" * 64)
+            receipt.write_text(json.dumps(doc) + "\n", encoding="utf-8")
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "panel_image")
+        self.assertTrue(result["first_blocker"]["reason"].startswith("sha256_mismatch:"))
+
+    def test_pass_receipt_blocks_on_missing_producer_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_pass_fixture(run_root)
+            (run_root / "receipts/panel_creator_receipt.json").unlink()
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "producer_receipt")
+        self.assertEqual(result["first_blocker"]["reason"], "producer_receipt_file_missing")
+
+    def test_pass_receipt_blocks_when_panel_creator_receipt_is_not_passed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_pass_fixture(run_root)
+            (run_root / "receipts/panel_creator_receipt.json").write_text(
+                json.dumps({"status": "BLOCKED", "producer": "panel-creator"}) + "\n",
+                encoding="utf-8",
+            )
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "producer_receipt")
+        self.assertEqual(result["first_blocker"]["reason"], "producer_status_not_pass:BLOCKED")
+
+    def test_pass_receipt_blocks_when_repair_gate_producer_is_not_final_reviewed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_pass_fixture(run_root)
+            doc = json.loads(receipt.read_text(encoding="utf-8"))
+            doc["producer"] = {
+                "kind": "subagent",
+                "name": "persona-dream-panel-repair-gate",
+                "receipt": "receipts/panel_repair_gate_receipt.json",
+            }
+            receipt.write_text(json.dumps(doc) + "\n", encoding="utf-8")
+            (run_root / "receipts/panel_repair_gate_receipt.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "persona_dream.panel_repair_gate_receipt.v1",
+                        "panel_id": "panel_001",
+                        "status": "BLOCKED_PROVIDER_MEDIA_URLS",
+                        "provider_eligibility": False,
+                        "nano_banana_fallback_used": False,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            result = validate_panel_source_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "producer_receipt")
+        self.assertEqual(
+            result["first_blocker"]["reason"],
+            "producer_status_not_final_reviewed:BLOCKED_PROVIDER_MEDIA_URLS",
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

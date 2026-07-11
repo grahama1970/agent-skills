@@ -1,0 +1,15 @@
+steps:
+  - id: story_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung12_shared_phase_gate.py"
+      - "--case"
+      - "valid_image_pass"
+      - "--receipt"
+      - ".codex/persona-dream/sanity/rung19/story_phase_gate.json"
+    receipt: ".codex/persona-dream/sanity/rung19/story_phase_gate.json"
+    expect_receipt:
+      schema: "persona_dream.rung12_shared_phase_gate.v1"
+      ok: true
+      cases.0.case_id: "valid_image_pass"
+      cases.0.advance_allowed: true

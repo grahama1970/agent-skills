@@ -1,0 +1,43 @@
+{
+  "schema": "persona_dream.panel_repair_gate_receipt.v1",
+  "run_id": "fixture-non-horus-dream",
+  "panel_id": "panel_05",
+  "status": "PASS_PANEL_REVIEWED",
+  "script_coverage_status": "PASS",
+  "post_generation_script_coverage_status": "PASS",
+  "reference_evidence_status": "PASS",
+  "visual_review_status": "PASS",
+  "no_overlay_status": "PASS",
+  "provider_media_status": "PASS",
+  "requirement_matrix": "panel_repair_gate_artifacts/requirement_matrix.json",
+  "script_coverage_receipt": "panel_repair_gate_artifacts/script_coverage_receipt.json",
+  "post_generation_script_coverage_receipt": "panel_repair_gate_artifacts/post_generation_script_coverage_receipt.json",
+  "reference_receipt": "panel_repair_gate_artifacts/reference_receipt.json",
+  "generation_receipt": "panel_repair_gate_artifacts/generation_receipt.json",
+  "visual_review_receipt": "panel_repair_gate_artifacts/visual_review_receipt.json",
+  "no_overlay_receipt": "panel_repair_gate_artifacts/no_overlay_receipt.json",
+  "provider_media_urls": [
+    "https://assets.example.com/persona-dream/panel_05.png"
+  ],
+  "provider_media_probe_receipt": "panel_repair_gate_artifacts/provider_media_probe_panel_05.json",
+  "media_hashes": {
+    "panel": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "provider_mode": "std",
+  "provider_resolution": "720p",
+  "callback_or_polling_plan": "panel_repair_gate_artifacts/callback_or_polling_plan.json",
+  "external_task_id": "fixture-non-horus-dream-panel-05",
+  "voice_id_status": "PROVIDER_VOICE_ID_READY",
+  "provider_voice_ids": {
+    "voice_1": {
+      "provider": "kling",
+      "voice_id": "voice_fixture_123",
+      "source_receipt": "panel_repair_gate_artifacts/provider_voice_clone_receipt.json",
+      "hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    }
+  },
+  "cost_estimate": "panel_repair_gate_artifacts/cost_estimate.json",
+  "provider_packet_status": "PROVIDER_READY",
+  "provider_eligibility": true,
+  "remaining_blockers": []
+}

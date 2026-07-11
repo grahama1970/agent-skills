@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Persona-dream DAG node chart choices</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #12151d;
+      --card: #171b26;
+      --border: #2a3142;
+      --text: #f2f4f8;
+      --dim: #9aa3b5;
+      --blue: #4a9eff;
+      --green: #3ecf8e;
+      --amber: #f5b942;
+      --red: #f07178;
+      --mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+      --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 0%, rgba(74, 158, 255, 0.12), transparent 35%), var(--bg);
+      font-family: var(--sans);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+    header { margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+    h1 { margin: 0 0 8px; font-size: 1.65rem; font-weight: 800; }
+    .lede { margin: 0; color: var(--dim); max-width: 78ch; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .pill { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 0.78rem; color: var(--dim); background: rgba(255,255,255,0.03); }
+    .pill strong { color: var(--text); }
+    section { margin-top: 28px; }
+    h2 { margin: 0 0 12px; font-size: 1.1rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .choice { border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.03), var(--card)); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .choice.recommended { border-color: rgba(62, 207, 142, 0.55); }
+    .choice.deprecated { border-color: rgba(240, 113, 120, 0.35); opacity: 0.88; }
+    .choice-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .choice h3 { margin: 0; font-size: 0.98rem; }
+    .badge { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 7px; padding: 3px 7px; white-space: nowrap; }
+    .badge.pick { background: rgba(62, 207, 142, 0.18); color: var(--green); }
+    .badge.alt { background: rgba(74, 158, 255, 0.15); color: var(--blue); }
+    .badge.no { background: rgba(240, 113, 120, 0.15); color: var(--red); }
+    .meta { margin: 0; color: var(--dim); font-size: 0.82rem; }
+    .counts { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; }
+    .counts span { border: 1px solid var(--border); border-radius: 8px; padding: 3px 7px; background: rgba(0,0,0,0.22); }
+    .diagram { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); padding: 12px 10px 8px; overflow-x: auto; }
+    .flow { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 220px; }
+    .row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .node { border-radius: 10px; padding: 7px 10px; font-size: 0.72rem; font-family: var(--mono); border: 1px solid var(--border); background: rgba(255,255,255,0.04); text-align: center; min-width: 108px; }
+    .node.exec { border-color: rgba(74, 158, 255, 0.45); color: #d9e8ff; }
+    .node.bus { border-color: rgba(107, 124, 255, 0.55); color: #dfe3ff; background: rgba(107, 124, 255, 0.08); }
+    .node.ctx { border-color: rgba(199, 146, 234, 0.45); color: #ecd9ff; }
+    .node.verify { border-color: rgba(62, 207, 142, 0.45); color: #d7ffe9; }
+    .arrow { color: var(--dim); font-size: 0.9rem; line-height: 1; }
+    ul.notes { margin: 0; padding-left: 18px; color: var(--dim); font-size: 0.8rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: rgba(255,255,255,0.03); color: var(--dim); font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:last-child td { border-bottom: none; }
+    code { font-family: var(--mono); font-size: 0.78rem; color: #d9e8ff; }
+    .contract { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: rgba(74, 158, 255, 0.06); }
+    .contract p { margin: 0 0 8px; }
+    .contract p:last-child { margin-bottom: 0; }
+    footer { margin-top: 32px; color: var(--dim); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>DAG node chart choices</h1>
+      <p class="lede">Reference for <code>scillm-two-concurrent</code> visualization. The Python proof ladder stores a <strong>minimal execution graph</strong>; the viewer chooses how much to <strong>expand receipts</strong> into a human-readable chart.</p>
+      <div class="pill-row">
+        <span class="pill"><strong>Rung</strong> scillm-two-concurrent</span>
+        <span class="pill"><strong>Viewer</strong> #scillm/dag-harness</span>
+        <span class="pill"><strong>Style</strong> TransportReactFlowDagWorkspace</span>
+      </div>
+    </header>
+
+    <section>
+      <h2>Four representation choices</h2>
+      <div class="grid">
+        <article class="choice">
+          <div class="choice-head"><h3>A — Execution graph only</h3><span class="badge alt">graph.yaml</span></div>
+          <p class="meta">What <code>medium_loop_dag_smoke.py</code> runs: serial topological execution.</p>
+          <div class="counts"><span>nodes: 2</span><span>edges: 1</span></div>
+          <div class="diagram"><div class="flow">
+            <div class="node exec">scillm_two_concurrent_probe</div>
+            <div class="arrow">↓</div>
+            <div class="node verify">verify_scillm_two_concurrent</div>
+          </div></div>
+          <ul class="notes"><li>Correct for scheduler proof.</li><li>Too coarse for concurrency story.</li></ul>
+        </article>
+
+        <article class="choice recommended">
+          <div class="choice-head"><h3>B — Expanded evidence graph</h3><span class="badge pick">adapter</span></div>
+          <p class="meta"><code>personaDreamDagEvidenceAdapter.ts</code> → <code>TransportDagEvidence</code> before layout.</p>
+          <div class="counts"><span>evidence nodes: 5</span><span>evidence edges: 5</span></div>
+          <div class="diagram"><div class="flow">
+            <div class="node exec">scillm_two_concurrent_probe</div>
+            <div class="arrow">↙ ↘</div>
+            <div class="row"><div class="node exec">scillm_probe_01</div><div class="node exec">scillm_probe_02</div></div>
+            <div class="arrow">↘ ↙</div>
+            <div class="node exec">aggregate_receipt</div>
+            <div class="arrow">↓</div>
+            <div class="node verify">verify_scillm_two_concurrent</div>
+          </div></div>
+          <ul class="notes"><li>Two lanes + join + verify in receipt space.</li><li>Side panel: evidence nodes/edges.</li></ul>
+        </article>
+
+        <article class="choice recommended">
+          <div class="choice-head"><h3>C — Transport canvas chart</h3><span class="badge pick">accepted UI</span></div>
+          <p class="meta"><code>TransportReactFlowDagWorkspace</code> adds topology context + fanout/join buses.</p>
+          <div class="counts"><span>canvas nodes: 6</span><span>canvas edges: 6</span></div>
+          <div class="diagram"><div class="flow">
+            <div class="node ctx">topology:context</div>
+            <div class="arrow">↓</div>
+            <div class="node bus">topology:fanout-bus</div>
+            <div class="arrow">↙ ↘</div>
+            <div class="row"><div class="node exec">scillm_probe_01</div><div class="node exec">scillm_probe_02</div></div>
+            <div class="arrow">↘ ↙</div>
+            <div class="node bus">topology:join-bus</div>
+            <div class="arrow">↓</div>
+            <div class="node exec">aggregate_receipt</div>
+          </div></div>
+          <ul class="notes"><li>Matches transport DAG reference.</li><li>Verify terminal in side panel, not post-join card.</li></ul>
+        </article>
+
+        <article class="choice deprecated">
+          <div class="choice-head"><h3>D — Bespoke 7-node chart</h3><span class="badge no">rejected</span></div>
+          <p class="meta">Old bespoke <code>PersonaDreamDagHarness.tsx</code> with custom bus cards.</p>
+          <div class="counts"><span>nodes: 7</span><span>edges: 7</span></div>
+          <div class="diagram"><div class="flow">
+            <div class="node bus">batch_release</div><div class="arrow">↓</div><div class="node bus">fanout_bus</div>
+            <div class="arrow">↙ ↘</div>
+            <div class="row"><div class="node exec">scillm_probe_01</div><div class="node exec">scillm_probe_02</div></div>
+            <div class="arrow">↘ ↙</div><div class="node bus">join_bus</div><div class="arrow">↓</div>
+            <div class="node exec">aggregate_receipt</div><div class="arrow">↓</div>
+            <div class="node verify">verify_scillm_two_concurrent</div>
+          </div></div>
+          <ul class="notes"><li>Clear semantics, wrong styling layer.</li><li>Not the acceptance target.</li></ul>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Counting contract (5 vs 6 vs 7)</h2>
+      <table>
+        <thead><tr><th>Layer</th><th>What counts</th><th>Count</th><th>Where shown</th></tr></thead>
+        <tbody>
+          <tr><td>Execution</td><td><code>graph.yaml</code> scheduler nodes</td><td><strong>2</strong> / <strong>1</strong></td><td>Python ladder only</td></tr>
+          <tr><td>Evidence</td><td>Adapter receipt graph</td><td><strong>5</strong> / <strong>5</strong></td><td>Side panel evidence nodes/edges</td></tr>
+          <tr><td>Canvas</td><td>React Flow incl. topology buses</td><td><strong>6</strong> / <strong>6</strong></td><td>Geometry + CDP screenshot</td></tr>
+          <tr><td>Terminal</td><td>Verify node metadata</td><td><code>verify_scillm_two_concurrent</code></td><td>Side panel terminal field</td></tr>
+          <tr><td>Legacy</td><td>Bespoke buses + verify card</td><td><strong>7</strong> / <strong>7</strong></td><td>Deprecated</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Decision</h2>
+      <div class="contract">
+        <p><strong>Ship B + C together.</strong> Keep execution minimal (A). Expand in adapter (B). Render with transport layout (C).</p>
+        <p>Report counts <em>by layer</em>. Do not mix evidence and canvas numbers in one label.</p>
+        <p>Harness acceptance: parallel lanes, zero overlaps, live rung PASS — not the rejected 7-node bespoke chart.</p>
+      </div>
+    </section>
+
+    <footer>skills/persona-dream/docs/dag-node-chart-choices.html</footer>
+  </div>
+</body>
+</html>

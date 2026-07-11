@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Persona Dream Panel 01 Comparison</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f3ee;
+      --ink: #191919;
+      --muted: #686158;
+      --line: #d8d1c4;
+      --panel: #fffefa;
+      --accent: #24545f;
+      --warn: #8c3f1e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #fbfaf6;
+    }
+
+    main,
+    .header-inner {
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      padding: 28px 0 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 52px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 900px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    main {
+      padding: 24px 0 40px;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .fact,
+    .candidate {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .fact {
+      min-height: 96px;
+      padding: 14px;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .value {
+      display: block;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .notice {
+      margin: 0 0 22px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--warn);
+      background: #fff8ef;
+      color: #3a2b21;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .candidate {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .media {
+      display: grid;
+      place-items: center;
+      min-height: 390px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(45deg, #ece7dd 25%, transparent 25%),
+        linear-gradient(-45deg, #ece7dd 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ece7dd 75%),
+        linear-gradient(-45deg, transparent 75%, #ece7dd 75%);
+      background-color: #f8f5ee;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-size: 24px 24px;
+    }
+
+    .media img {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+    }
+
+    .body {
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      margin: 0 0 14px;
+      color: var(--muted);
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr);
+      gap: 8px 12px;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    dt {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    dd {
+      min-width: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid #b8cbd0;
+      border-radius: 999px;
+      color: var(--accent);
+      background: #eef7f8;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .facts,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .media {
+        min-height: 260px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main,
+      .header-inner {
+        width: min(100vw - 24px, 1440px);
+      }
+
+      dl {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Panel 01 Comparison</h1>
+      <p class="subtitle">
+        Real candidate images gathered from the canonical Persona Dream run. This page is for visual comparison and provenance only; it does not assert final panel acceptance or Kling readiness.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <section class="facts" aria-label="Comparison facts">
+      <div class="fact">
+        <span class="label">Run root</span>
+        <span class="value">/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict</span>
+      </div>
+      <div class="fact">
+        <span class="label">Panel</span>
+        <span class="value">01</span>
+      </div>
+      <div class="fact">
+        <span class="label">Purpose</span>
+        <span class="value">Compare usable real-world panel candidates before the next pipeline step.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Acceptance state</span>
+        <span class="value">Not asserted by this report.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Status source</span>
+        <span class="value">reports/panel-comparison/status.json is generated from current receipts by ./run.sh write-panel-comparison-status.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Backward validator</span>
+        <span class="value">Canonical run-root validation starts from receipts/kling_scene_packet.json, passes local media lock, publication work order, and local staging, then blocks at provider_media_publication_authorization.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Panel 01 candidate gate</span>
+        <span class="value">Latest subagent receipt is still BLOCKED_PROVIDER_MEDIA_URLS. validate-panel-repair-gate fails on placeholder provider media URL state, and --require-provider-eligible also fails because provider_eligibility is false.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Producer lineage gate</span>
+        <span class="value">validate-panel-source now requires a real subagent producer receipt. panel-creator producers must have a passing producer receipt; persona-dream-panel-repair-gate producers must be PASS_PANEL_REVIEWED for the same panel, provider eligible, and free of Nano Banana/Gemini fallback flags.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Visual review image gate</span>
+        <span class="value">validate-visual-review now requires reviewed_image_path and verifies the reviewed image SHA-256 matches the review receipt hash before PASS_VISUAL_REVIEW can feed storyboard or panel-source rungs.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Run-root ladder</span>
+        <span class="value">validate-run-root --direction backward: kling_scene_packet PASS, local_provider_media_lock PASS, provider_media_publication_work_order PASS, provider_media_local_staging PASS, provider_media_publication_authorization BLOCKED. provider_media_public_probe remains downstream and blocked until publication is authorized.</span>
+      </div>
+      <div class="fact">
+        <span class="label">First blocker</span>
+        <span class="value">status.json first_blocker: provider_media_publication_authorization is BLOCKED with authorization_receipt_required. The live provider-media URL probe still returns HTTP 404, but it is now the downstream blocker after authorization.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Active loop</span>
+        <span class="value">provider_media_loop: validate-provider-media-publication-authorization is the active while-loop gate. Repair requires an explicit authorization receipt for the staged PNG, locked SHA-256, target repo path, and proposed public URL.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Authorization template</span>
+        <span class="value">provider_media_publication_authorization_template.json is status DRAFT_NOT_AUTHORIZATION. It packages the exact target record and suggested approval payload, but the template file itself cannot satisfy validate-provider-media-publication-authorization.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Loop run receipt</span>
+        <span class="value">receipts/pipeline_loop_run.json validates as PASS_PIPELINE_LOOP_RUN_RECEIPT with 1 iteration and stop_reason external_action_required. It proves controller policy only; public hosting, live panel generation, and Kling submission remain unverified.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Evidence bundle</span>
+        <span class="value">receipts/pipeline_evidence_bundle_validation.json is the single "where is the pipeline stuck?" artifact. It composes validate-run-root, validate-pipeline-loop-run, validate-provider-media-public-handoff, and validate-panel-comparison-report; current status is BLOCKED at provider_media_publication_authorization with authorization_receipt_required.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Loop backlog</span>
+        <span class="value">status.json loop_backlog keeps the full serial while-loop queue visible: publication authorization, provider media public probe, panel source receipt, panel repair gate, visual review receipt, storyboard panel, story contract, and dream packet. The first blocker controls execution.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Kling packet</span>
+        <span class="value">receipts/kling_scene_packet.json is status BLOCKED with paid_call_authorized false and no live Kling submission.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Provider URL gate</span>
+        <span class="value">Panel repair validation now requires provider_media_probe_receipt before provider eligibility. The current live probe targets the staged GitHub raw URL and is BLOCKED with HTTP 404.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Publication request</span>
+        <span class="value">panel_01_publication_request.json passes validate-provider-media-publication-work-order, but still requires public upload / git push authorization before a URL probe can pass.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Publication preflight</span>
+        <span class="value">provider_media_publication_preflight.json records BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION with preflight_ready true. This proves local work order, staged bytes, URL, and hash parity only; it does not authorize public upload, git push, provider readiness, or Kling.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Publication authorization</span>
+        <span class="value">provider_media_publication_authorization.json records BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION because no authorization receipt has been supplied. It names the exact staged asset, target repo path, proposed public URL, and locked SHA-256; it does not authorize publication by itself.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Local staging</span>
+        <span class="value">panel_01_local_staging_receipt.json now records PASS_PROVIDER_MEDIA_LOCAL_STAGING for skills/persona-dream/provider_media/20260612-horus-embry-storyboard-first-scillm-strict/panel_01.png. This proves local byte/hash parity only; public URL fetch still returns 404.</span>
+      </div>
+      <div class="fact" id="public-handoff">
+        <span class="label">Public handoff</span>
+        <span class="value">validate-provider-media-public-handoff ties the work order, staged PNG, and live probe together. It is BLOCKED at provider_media_public_probe: public_probe_not_pass with HTTP 404.</span>
+      </div>
+      <div class="fact">
+        <span class="label">Subagent run</span>
+        <span class="value">storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/panel_repair_gate_receipt.json</span>
+      </div>
+    </section>
+
+    <p class="notice">
+      The deterministic fixture PNG used by the original dry-run validator is not a production panel. The canonical run-root now has a blocked one-scene Kling review packet that points back to the real Panel 01 candidate and the latest subagent receipt.
+    </p>
+
+    <p class="notice">
+      Nano Banana fallback imagery is non-eligible for final panels. When that fallback is used, the panel stops meeting the photoreal requirement and should be treated as diagnostic/reference material only.
+    </p>
+
+    <section class="grid" aria-label="Panel 01 candidate images">
+      <article class="candidate">
+        <div class="media">
+          <img src="assets/panel_01_attempt_01.png" alt="Panel 01 attempt 01 candidate">
+        </div>
+        <div class="body">
+          <h2>Repair round candidate</h2>
+          <p class="summary"><span class="tag">Real candidate</span> WebGPT panel repair round output with generation, visual review, and repair gate receipts present.</p>
+          <dl>
+            <dt>Local asset</dt>
+            <dd>assets/panel_01_attempt_01.png</dd>
+            <dt>Dimensions</dt>
+            <dd>1280 x 720 RGBA</dd>
+            <dt>SHA-256</dt>
+            <dd>445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783</dd>
+            <dt>Source</dt>
+            <dd>/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/reviews/webgpt-panel-repair-round1/panel_01_panel_01_attempt_01.png</dd>
+            <dt>Receipts</dt>
+            <dd>Latest subagent run panel_01_run_20260628T204331Z returned BLOCKED_PROVIDER_MEDIA_URLS. ./run.sh validate-panel-repair-gate panel_repair_gate_receipt.json now fails on the placeholder provider media URL state; the same command with --require-provider-eligible also fails because provider_eligibility is false and the public media probe has not passed. Canonical validate-run-root --direction backward now passes kling_scene_packet, local_provider_media_lock, provider_media_publication_work_order, and provider_media_local_staging, then blocks at provider_media_publication_authorization because no explicit authorization receipt exists. A provider media publication work order locks this exact image/hash and proposes the GitHub raw URL. The exact bytes have been staged locally at skills/persona-dream/provider_media/20260612-horus-embry-storyboard-first-scillm-strict/panel_01.png with matching sha256, but publication has not been authorized or performed. The downstream live public probe still returns HTTP 404.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="candidate">
+        <div class="media">
+          <img src="assets/panel_01_composited_overlay_failed.png" alt="Panel 01 failed composited overlay reference">
+        </div>
+        <div class="body">
+          <h2>Failed overlay reference</h2>
+          <p class="summary"><span class="tag">Reference</span> Earlier composited storyboard overlay retained for comparison against repaired panel candidates.</p>
+          <dl>
+            <dt>Local asset</dt>
+            <dd>assets/panel_01_composited_overlay_failed.png</dd>
+            <dt>Dimensions</dt>
+            <dd>384 x 540 RGB</dd>
+            <dt>SHA-256</dt>
+            <dd>8b418a98b3447badc6f95af83e85388561d85afb767eb733db7efbaab03eeea8</dd>
+            <dt>Source</dt>
+            <dd>/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/failed_visual_review/panel_01_storyboard_composited_overlay_failed.png</dd>
+            <dt>Receipts</dt>
+            <dd>Reference image from failed visual review folder; no acceptance is inferred from its presence.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="candidate">
+        <div class="media">
+          <img src="assets/panel_01_integrated_tzeentch.png" alt="Panel 01 integrated Tzeentch candidate">
+        </div>
+        <div class="body">
+          <h2>Integrated Tzeentch regeneration</h2>
+          <p class="summary"><span class="tag">Candidate</span> Regenerated storyboard panel candidate with a nearby receipt file, but no summarized status field in the inspected receipt.</p>
+          <dl>
+            <dt>Local asset</dt>
+            <dd>assets/panel_01_integrated_tzeentch.png</dd>
+            <dt>Dimensions</dt>
+            <dd>1024 x 768 RGBA</dd>
+            <dt>SHA-256</dt>
+            <dd>3a6e7b5962a573cd418aa1b76cd4e66e50ec09942cd917dc0b0adb748222efd3</dd>
+            <dt>Source</dt>
+            <dd>/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/regenerated_panels/panel_01_integrated_tzeentch.png</dd>
+            <dt>Receipts</dt>
+            <dd>panel_01_integrated_tzeentch_receipt.json exists; inspected top-level status, verdict, decision, approved, accepted, blockers, and remaining_blockers were null.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="candidate">
+        <div class="media">
+          <img src="assets/panel_01_two_character_repair_attempt3.png" alt="Panel 01 two character repair attempt 3 candidate">
+        </div>
+        <div class="body">
+          <h2>Two-character repair attempt 3</h2>
+          <p class="summary"><span class="tag">Candidate</span> Later regenerated storyboard panel candidate with a nearby receipt file, but no summarized status field in the inspected receipt.</p>
+          <dl>
+            <dt>Local asset</dt>
+            <dd>assets/panel_01_two_character_repair_attempt3.png</dd>
+            <dt>Dimensions</dt>
+            <dd>1536 x 1024 RGBA</dd>
+            <dt>SHA-256</dt>
+            <dd>6a62cc5156f80650cb54fb9961cc2e7d09ff0f1859f119974172ab0b3909f32b</dd>
+            <dt>Source</dt>
+            <dd>/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/regenerated_panels/panel_01_two_character_repair_attempt3.png</dd>
+            <dt>Receipts</dt>
+            <dd>panel_01_two_character_repair_attempt3_receipt.json exists; inspected top-level status, verdict, decision, approved, accepted, blockers, and remaining_blockers were null.</dd>
+          </dl>
+        </div>
+      </article>
+    </section>
+
+    <p class="footer-note">
+      Next useful action: review provider_media_publication_authorization_template.json, then provide a separate explicit provider-media publication authorization receipt for the already-staged exact Panel 01 PNG bytes, locked SHA-256, target repo path, and proposed public URL. After authorization, publish the exact bytes, run validate-provider-media-url, attach the PASS provider_media_probe_receipt to the panel repair receipt, preserve the photoreal review fields, then rerun validate-panel-repair-gate --require-provider-eligible, validate-panel-source, validate-local-media-lock, and validate-run-root --direction backward. Do not call Kling.
+    </p>
+  </main>
+</body>
+</html>

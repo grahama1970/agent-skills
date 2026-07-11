@@ -1,0 +1,12 @@
+{
+  "schema": "persona_dream.panel_artifact_receipt.v1",
+  "panel_id": "panel-fixture-missing-image",
+  "artifact_revision": "fixture-001",
+  "image_artifact": null,
+  "panel_contract": {
+    "requires_image": true,
+    "required_entities": ["character", "prop", "environment"]
+  },
+  "live_call_performed": false,
+  "paid_call_performed": false
+}

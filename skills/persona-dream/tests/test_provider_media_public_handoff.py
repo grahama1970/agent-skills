@@ -1,0 +1,180 @@
+from __future__ import annotations
+
+import json
+import hashlib
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_provider_media_public_handoff import validate_provider_media_public_handoff  # noqa: E402
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+class TestProviderMediaPublicHandoff(unittest.TestCase):
+    def _write_handoff_inputs(
+        self,
+        root: Path,
+        *,
+        probe_status: str,
+        probe_blockers: list[str] | None = None,
+        probe_observed_sha256: str | None = None,
+    ) -> tuple[Path, Path, Path]:
+        run_root = root / "run-root"
+        run_root.mkdir()
+        source_image = root / "panel.png"
+        source_image.write_bytes(b"panel")
+        repair_receipt = root / "panel_repair_gate_receipt.json"
+        probe_receipt = root / "provider_media_url_probe_receipt.json"
+        work_order = root / "publication_request.json"
+        staging = root / "local_staging_receipt.json"
+        target_repo_path = "skills/persona-dream/provider_media/run-root/panel_01.png"
+        proposed_url = f"https://raw.githubusercontent.com/grahama1970/agent-skills/main/{target_repo_path}"
+        locked_sha256 = "sha256:" + hashlib.sha256(source_image.read_bytes()).hexdigest()
+        if probe_observed_sha256 is None and probe_status == "PASS_PROVIDER_MEDIA_URL_PROBE":
+            probe_observed_sha256 = locked_sha256
+
+        _write_json(repair_receipt, {"status": "BLOCKED_PROVIDER_MEDIA_URLS"})
+        _write_json(
+            work_order,
+            {
+                "schema": "persona_dream.provider_media_publication_work_order.v1",
+                "status": "WORK_ORDER_READY_PUBLIC_UPLOAD_AUTH_REQUIRED",
+                "authorization_required": [
+                    "public_upload_of_panel_image",
+                    "git_commit_and_push_or_equivalent_public_asset_publish",
+                ],
+                "forbidden_actions": [
+                    "direct_kling_submit",
+                    "paid_provider_call",
+                    "nano_banana_final_panel_generation",
+                    "gemini_final_panel_generation",
+                    "provider_readiness_without_live_url_probe",
+                    "hash_or_receipt_rewrite_without_matching_public_fetch",
+                ],
+                "source_paths": {
+                    "run_root": str(run_root),
+                    "panel_repair_gate_receipt": str(repair_receipt),
+                    "provider_media_probe_receipt": str(probe_receipt),
+                    "panel_image": str(source_image),
+                },
+                "locked_media": {"local_path": str(source_image), "sha256": locked_sha256},
+                "proposed_publication": {
+                    "target_repo_path": target_repo_path,
+                    "proposed_url": proposed_url,
+                },
+                "verification_commands": [
+                    f"./run.sh validate-provider-media-url --url {proposed_url} --expected-sha256 {locked_sha256} --json",
+                    "./run.sh validate-panel-repair-gate <panel_repair_gate_receipt> --require-provider-eligible",
+                ],
+            },
+        )
+        staged_asset = root / "repo" / target_repo_path
+        staged_asset.parent.mkdir(parents=True)
+        staged_asset.write_bytes(b"panel")
+        _write_json(
+            staging,
+            {
+                "schema": "persona_dream.provider_media_local_staging_receipt.v1",
+                "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+                "staged_asset_path": str(staged_asset),
+                "target_repo_path": target_repo_path,
+                "proposed_url": proposed_url,
+                "staged_sha256": locked_sha256,
+                "does_not_authorize": [
+                    "git_push",
+                    "public_upload",
+                    "provider_readiness",
+                    "direct_kling_submit",
+                    "paid_provider_call",
+                ],
+                "next_required_probe_command": (
+                    f"./run.sh validate-provider-media-url --url {proposed_url} "
+                    f"--expected-sha256 {locked_sha256} --json"
+                ),
+            },
+        )
+        _write_json(
+            probe_receipt,
+            {
+                "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+                "status": probe_status,
+                "url": proposed_url,
+                "expected_sha256": locked_sha256,
+                "observed_sha256": probe_observed_sha256,
+                "http_status": 200 if probe_status == "PASS_PROVIDER_MEDIA_URL_PROBE" else None,
+                "blockers": probe_blockers or [],
+                "live": "yes",
+                "mocked": "no",
+            },
+        )
+        return work_order, staging, probe_receipt
+
+    def test_blocks_when_public_probe_is_not_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work_order, staging, probe = self._write_handoff_inputs(
+                Path(tmp),
+                probe_status="BLOCKED",
+                probe_blockers=["fetch_failed:HTTP Error 404: Not Found"],
+                probe_observed_sha256=None,
+            )
+
+            result = validate_provider_media_public_handoff(
+                work_order_path=work_order,
+                local_staging_receipt_path=staging,
+                public_probe_receipt_path=probe,
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "provider_media_public_probe")
+        self.assertIn("public_probe_not_pass", result["first_blocker"]["reason"])
+        self.assertEqual(result["probe_blockers"], ["fetch_failed:HTTP Error 404: Not Found"])
+        self.assertIn("direct_kling_submit", result["does_not_authorize"])
+
+    def test_passes_when_probe_matches_locked_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work_order, staging, probe = self._write_handoff_inputs(
+                Path(tmp),
+                probe_status="PASS_PROVIDER_MEDIA_URL_PROBE",
+            )
+
+            result = validate_provider_media_public_handoff(
+                work_order_path=work_order,
+                local_staging_receipt_path=staging,
+                public_probe_receipt_path=probe,
+            )
+
+        self.assertEqual(result["status"], "PASS_PROVIDER_MEDIA_PUBLIC_HANDOFF_READY")
+        self.assertEqual(result["first_blocker"], None)
+        self.assertIn("Apply the passing provider media probe", result["next_action"])
+
+    def test_blocks_when_probe_url_does_not_match_work_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_order, staging, probe = self._write_handoff_inputs(
+                root,
+                probe_status="PASS_PROVIDER_MEDIA_URL_PROBE",
+            )
+            probe_doc = json.loads(probe.read_text(encoding="utf-8"))
+            probe_doc["url"] = "https://raw.githubusercontent.com/grahama1970/agent-skills/main/other.png"
+            _write_json(probe, probe_doc)
+
+            result = validate_provider_media_public_handoff(
+                work_order_path=work_order,
+                local_staging_receipt_path=staging,
+                public_probe_receipt_path=probe,
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("probe_url_mismatch", result["first_blocker"]["reason"])
+
+
+if __name__ == "__main__":
+    unittest.main()

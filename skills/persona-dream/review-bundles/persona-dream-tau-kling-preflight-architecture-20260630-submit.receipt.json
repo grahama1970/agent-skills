@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630.md",
+  "submitted_output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-submitted.md",
+  "output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.md",
+  "raw_output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.raw.md",
+  "meta_output": "skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260630T121746Z:3d3260bd>>>",
+  "requested_tab_id": "837356892",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-06-30T12:17:52Z"
+}

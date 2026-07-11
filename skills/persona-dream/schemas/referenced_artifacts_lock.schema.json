@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.referenced_artifacts_lock.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "artifacts"],
+  "properties": {
+    "schema": {"const": "persona_dream.referenced_artifacts_lock.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "artifacts": {"type": "array", "minItems": 1}
+  }
+}

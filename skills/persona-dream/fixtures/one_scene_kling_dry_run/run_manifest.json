@@ -1,0 +1,32 @@
+{
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "pipeline": "persona-dream-end-to-end-pipeline-P0",
+  "mode": "one_scene_kling_dry_run",
+  "schema_refs": {
+    "stage_receipt": "schemas/stage_receipt.schema.json",
+    "kling_scene_packet": "schemas/kling_scene_packet.schema.json",
+    "one_scene_kling_call_contract": "schemas/one_scene_kling_call_contract.schema.json",
+    "pipeline_paid_call_approval_receipt": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+    "provider_readiness_receipt": "schemas/provider_readiness_receipt.schema.json",
+    "kling_submit_gate_receipt": "schemas/kling_submit_gate_receipt.schema.json",
+    "pipeline_terminal_report": "schemas/pipeline_terminal_report.schema.json"
+  },
+  "receipt_paths": {
+    "stage_receipt": "receipts/stage_receipt.json",
+    "kling_scene_packet": "receipts/kling_scene_packet.json",
+    "one_scene_kling_call_contract": "receipts/one_scene_kling_call_contract.json",
+    "pipeline_paid_call_approval_receipt": "receipts/pipeline_paid_call_approval_receipt.json",
+    "provider_readiness_receipt": "receipts/provider_readiness_receipt.json",
+    "kling_submit_gate_receipt": "receipts/kling_submit_gate_receipt.json",
+    "pipeline_terminal_report": "receipts/pipeline_terminal_report.json"
+  },
+  "required_inputs": [
+    "dream_packet",
+    "story_contract",
+    "storyboard_panel",
+    "visual_review_receipt",
+    "provider_media_urls",
+    "media_hashes",
+    "paid_call_approval"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "persona_dream_contact_sheets.v0.3",
+  "packet_id": "embry_dream_packet_001",
+  "persona_id": "embry",
+  "contact_sheets": [
+    {
+      "contact_sheet_id": "embry_primary_perspectives",
+      "title": "Embry Dream: Character Perspective Contact Sheet",
+      "purpose": "Review character perspective, continuity, and dream-symbolic visual language before video generation.",
+      "character_id": "embry",
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale",
+        "residue_embry_knows_software"
+      ],
+      "panels": [
+        {
+          "panel_id": "panel_001_embry_internal",
+          "perspective": "Embry internal perspective",
+          "time_range_sec": [
+            0.0,
+            4.0
+          ],
+          "caption": "The archive feels like memory inspecting itself.",
+          "prompt": "POV-inspired cinematic frame: an old university archive seen through Embry's subjective perception, shelves subtly transforming into glowing evidence graph nodes, calm and uncanny, no readable text, no logos, realistic lighting.",
+          "source_grounded_residue_ids": [
+            "residue_embry_role_sparta_intern",
+            "residue_embry_institution_yale"
+          ],
+          "dream_symbolic_elements": [
+            "archive as memory graph"
+          ]
+        },
+        {
+          "panel_id": "panel_002_observer_closeup",
+          "perspective": "External observer perspective",
+          "time_range_sec": [
+            4.0,
+            9.0
+          ],
+          "caption": "Embry speaks calmly with her mouth clearly visible.",
+          "prompt": "Medium close-up of a fictional young adult woman representing Embry, front-facing, mouth clearly visible, calm controlled expression, archive hallway behind her dissolving into a glowing cybersecurity graph, cinematic realistic, no text, no logos.",
+          "source_grounded_residue_ids": [
+            "residue_embry_role_sparta_intern",
+            "residue_embry_institution_yale",
+            "residue_embry_knows_software"
+          ],
+          "dream_symbolic_elements": [
+            "SPARTA graph as dream backdrop"
+          ]
+        },
+        {
+          "panel_id": "panel_003_graph_perspective",
+          "perspective": "SPARTA graph perspective",
+          "time_range_sec": [
+            9.0,
+            13.0
+          ],
+          "caption": "The graph remembers role, institution, and self-knowledge without writing new lore.",
+          "prompt": "Abstract cinematic cybersecurity graph inside a dim archive, three subtle nodes glowing like remembered evidence, no labels, no readable text, no logos, restrained dreamlike mood.",
+          "source_grounded_residue_ids": [
+            "residue_embry_role_sparta_intern",
+            "residue_embry_institution_yale",
+            "residue_embry_knows_software"
+          ],
+          "dream_symbolic_elements": [
+            "three unlabeled evidence nodes"
+          ]
+        },
+        {
+          "panel_id": "panel_004_continuity_reference",
+          "perspective": "Character continuity reference",
+          "time_range_sec": [
+            4.0,
+            9.0
+          ],
+          "caption": "Continuity target for face, costume, lighting, and lip-sync framing.",
+          "prompt": "Character reference sheet frame for Embry: fictional young adult woman, calm serious expression, simple modern academic clothing, soft archive lighting, front-facing, neutral background variation, mouth unobstructed, no text, no logos.",
+          "source_grounded_residue_ids": [
+            "residue_embry_role_sparta_intern",
+            "residue_embry_institution_yale",
+            "residue_embry_knows_software"
+          ],
+          "dream_symbolic_elements": []
+        }
+      ]
+    }
+  ]
+}

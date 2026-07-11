@@ -1,0 +1,414 @@
+{
+  "acceptance_state": "Not asserted by this report.",
+  "active_loop": {
+    "blocker": "authorization_receipt_required",
+    "default_repair": "Supply an explicit authorization receipt for the exact staged asset, locked SHA-256, target repo path, and proposed public URL before any public upload or git push.",
+    "external_action_required": true,
+    "loop": "provider_media_loop",
+    "path": "receipts/provider_media_publication_authorization.json",
+    "phase": "provider_media_publication_authorization",
+    "requires_authorization": [
+      "public_upload_of_panel_image",
+      "git_commit_and_push_or_equivalent_public_asset_publish"
+    ],
+    "validator": "validate-provider-media-publication-authorization"
+  },
+  "backward_validator": {
+    "first_blocker": {
+      "path": "receipts/provider_media_publication_authorization.json",
+      "phase": "provider_media_publication_authorization",
+      "reason": "authorization_receipt_required"
+    },
+    "live": "no",
+    "mocked": "no",
+    "phase_summary": [
+      {
+        "blocker": null,
+        "phase": "kling_scene_packet",
+        "status": "PASS"
+      },
+      {
+        "blocker": null,
+        "phase": "local_provider_media_lock",
+        "status": "PASS"
+      },
+      {
+        "blocker": null,
+        "phase": "provider_media_publication_work_order",
+        "status": "PASS"
+      },
+      {
+        "blocker": null,
+        "phase": "provider_media_local_staging",
+        "status": "PASS"
+      },
+      {
+        "blocker": "authorization_receipt_required",
+        "phase": "provider_media_publication_authorization",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "provider_media_public_probe_not_pass:fetch_failed:HTTP Error 404: Not Found",
+        "phase": "provider_media_public_probe",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "panel_source_not_pass:BLOCKED:repair_gate_status_not_final_reviewed:BLOCKED_PROVIDER_MEDIA_URLS;provider_media_status_not_pass:FAIL;visual_style_not_photoreal:None;provider_eligibility_not_true",
+        "phase": "panel_source_receipt",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "provider_media_urls must not use localhost or .invalid placeholders;provider_media_probe_receipt: provider media probe receipt status must be PASS_PROVIDER_MEDIA_URL_PROBE;provider_media_probe_receipt: provider media probe URL is not listed in provider_media_urls;provider_media_probe_receipt: provider media probe observed_sha256 does not match expected_sha256;provider_media_probe_receipt: provider media probe http_status must be 200;--require-provider-eligible requires provider_eligibility=true;receipt is not provider eligible",
+        "phase": "panel_repair_gate",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "missing_artifact",
+        "phase": "visual_review_receipt",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "missing_artifact",
+        "phase": "storyboard_panel",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "story_contract_not_accepted:GENERATED_UNREVIEWED",
+        "phase": "story_contract",
+        "status": "BLOCKED"
+      },
+      {
+        "blocker": "missing_artifact",
+        "phase": "dream_packet",
+        "status": "BLOCKED"
+      }
+    ],
+    "status": "BLOCKED"
+  },
+  "exercised": "local receipts, run-root backward validator, publication/staging/probe status extraction",
+  "first_blocker": {
+    "path": "receipts/provider_media_publication_authorization.json",
+    "phase": "provider_media_publication_authorization",
+    "reason": "authorization_receipt_required"
+  },
+  "generated_at": "2026-06-29T00:31:53Z",
+  "live": "no",
+  "loop_backlog": [
+    {
+      "blocker": "authorization_receipt_required",
+      "default_repair": "Supply an explicit authorization receipt for the exact staged asset, locked SHA-256, target repo path, and proposed public URL before any public upload or git push.",
+      "external_action_required": true,
+      "loop": "provider_media_loop",
+      "path": "receipts/provider_media_publication_authorization.json",
+      "phase": "provider_media_publication_authorization",
+      "requires_authorization": [
+        "public_upload_of_panel_image",
+        "git_commit_and_push_or_equivalent_public_asset_publish"
+      ],
+      "sequence": 1,
+      "validator": "validate-provider-media-publication-authorization"
+    },
+    {
+      "blocker": "provider_media_public_probe_not_pass:fetch_failed:HTTP Error 404: Not Found",
+      "default_repair": "Publish the exact staged PNG to the approved stable public URL, rerun validate-provider-media-url, then apply the passing probe.",
+      "external_action_required": true,
+      "loop": "provider_media_loop",
+      "path": "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/provider_media_url_probe_receipt.json",
+      "phase": "provider_media_public_probe",
+      "requires_authorization": [
+        "public_upload_of_panel_image",
+        "git_commit_and_push_or_equivalent_public_asset_publish"
+      ],
+      "sequence": 2,
+      "validator": "validate-provider-media-url"
+    },
+    {
+      "blocker": "panel_source_not_pass:BLOCKED:repair_gate_status_not_final_reviewed:BLOCKED_PROVIDER_MEDIA_URLS;provider_media_status_not_pass:FAIL;visual_style_not_photoreal:None;provider_eligibility_not_true",
+      "default_repair": "Regenerate panel_source_receipt.json from a provider-eligible panel repair gate receipt.",
+      "external_action_required": false,
+      "loop": "panel_source_loop",
+      "path": "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/panel_source_receipt.json",
+      "phase": "panel_source_receipt",
+      "sequence": 3,
+      "validator": "validate-panel-source"
+    },
+    {
+      "blocker": "provider_media_urls must not use localhost or .invalid placeholders;provider_media_probe_receipt: provider media probe receipt status must be PASS_PROVIDER_MEDIA_URL_PROBE;provider_media_probe_receipt: provider media probe URL is not listed in provider_media_urls;provider_media_probe_receipt: provider media probe observed_sha256 does not match expected_sha256;provider_media_probe_receipt: provider media probe http_status must be 200;--require-provider-eligible requires provider_eligibility=true;receipt is not provider eligible",
+      "default_repair": "Run the panel subagent repair loop; reject Nano Banana/Gemini final imagery, repair the exact visual/text blocker, and write a provider-eligible receipt.",
+      "external_action_required": false,
+      "loop": "panel_review_loop",
+      "path": "storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/panel_repair_gate_receipt.json",
+      "phase": "panel_repair_gate",
+      "sequence": 4,
+      "validator": "validate-panel-repair-gate --require-provider-eligible"
+    },
+    {
+      "blocker": "missing_artifact",
+      "default_repair": "Run the visual review subagent against the real panel image and write the eight-check visual review receipt.",
+      "external_action_required": false,
+      "loop": "panel_review_loop",
+      "path": "receipts/visual_review_receipt.json | visual_review_receipt.json",
+      "phase": "visual_review_receipt",
+      "sequence": 5,
+      "validator": "validate-visual-review"
+    },
+    {
+      "blocker": "missing_artifact",
+      "default_repair": "Write or regenerate the storyboard panel receipt linking image, timing, continuity ledger, and panel work order.",
+      "external_action_required": false,
+      "loop": "storyboard_loop",
+      "path": "receipts/storyboard_panel_receipt.json | artifacts/panel_001.json | panel_001.json | storyboard.json",
+      "phase": "storyboard_panel",
+      "sequence": 6,
+      "validator": "validate-storyboard-panel"
+    },
+    {
+      "blocker": "story_contract_not_accepted:GENERATED_UNREVIEWED",
+      "default_repair": "Repair or regenerate the story contract from the current upstream idea/memory revision and mark downstream artifacts stale as needed.",
+      "external_action_required": false,
+      "loop": "story_loop",
+      "path": "story_contract.json",
+      "phase": "story_contract",
+      "sequence": 7,
+      "validator": "validate-story-contract"
+    },
+    {
+      "blocker": "missing_artifact",
+      "default_repair": "Generate or repair the dream packet from current memory residue, contact sheet, frame prompts, and reflection receipts.",
+      "external_action_required": false,
+      "loop": "dream_packet_loop",
+      "path": "dream_packet.json | artifacts/dream_packet.json",
+      "phase": "dream_packet",
+      "sequence": 8,
+      "validator": "validate-dream-packet"
+    }
+  ],
+  "loop_model": {
+    "rule": "validate phase, repair first blocker, write receipt, rebuild report, repeat; convert to DAG only after serial loops are proven.",
+    "shape": "serial_pipeline_of_fail_closed_while_loops"
+  },
+  "loop_run": {
+    "active_loop": {
+      "external_action_required": true,
+      "loop": "provider_media_loop",
+      "phase": "provider_media_publication_authorization"
+    },
+    "exercised": "pipeline-loop receipt schema, iteration list, active-loop consistency, fail-closed policy, stop-reason contract",
+    "exists": true,
+    "iteration_count": 1,
+    "live": "no",
+    "mocked": "no",
+    "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/receipts/pipeline_loop_run.json",
+    "policy": {
+      "implicit_local_repair_allowed": false,
+      "kling_call_allowed": false,
+      "nano_banana_final_panel_allowed": false,
+      "public_upload_allowed_without_explicit_authorization": false
+    },
+    "status": "BLOCKED",
+    "stop_reason": "external_action_required",
+    "unverified": "actual repair execution, public media hosting, live panel subagent generation/review, paid Kling submission",
+    "validation_status": "PASS_PIPELINE_LOOP_RUN_RECEIPT"
+  },
+  "loop_stop_condition": "External authorization is required before this loop can repair the blocker. Do not publish, push, or call Kling without approval.",
+  "mocked": "no",
+  "next_action": "Provide an explicit publication authorization receipt for the exact staged Panel 01 PNG, locked SHA-256, target repo path, and proposed public URL.",
+  "panel_id": "panel_01",
+  "policy": {
+    "kling_call_allowed": false,
+    "nano_banana_final_panel_allowed": false,
+    "requires_public_provider_media_url": true
+  },
+  "receipts": {
+    "panel_repair_gate": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": null,
+      "live": false,
+      "mocked": false,
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/panel_repair_gate_receipt.json",
+      "preflight_ready": null,
+      "provider_eligibility": false,
+      "provider_media_status": "FAIL",
+      "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+      "sha256": null,
+      "status": "BLOCKED_PROVIDER_MEDIA_URLS",
+      "url": null
+    },
+    "pipeline_evidence_bundle": {
+      "exists": true,
+      "first_blocker": {
+        "phase": "provider_media_publication_authorization",
+        "reason": "authorization_receipt_required"
+      },
+      "live": "yes",
+      "mocked": "no",
+      "next_action": "Provide an explicit provider-media publication authorization receipt for the exact staged PNG, locked SHA-256, target repo path, and proposed public URL; then rerun validate-pipeline-evidence-bundle.",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/receipts/pipeline_evidence_bundle_validation.json",
+      "phase_backlog_count": 8,
+      "status": "BLOCKED",
+      "validation_statuses": {
+        "panel_comparison_report": "PASS_PANEL_COMPARISON_REPORT",
+        "pipeline_loop_run": "PASS_PIPELINE_LOOP_RUN_RECEIPT",
+        "provider_media_public_handoff": "BLOCKED",
+        "provider_media_publication_authorization": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+        "provider_media_publication_preflight": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+        "run_root_backward": "BLOCKED"
+      }
+    },
+    "provider_media_local_staging": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": null,
+      "live": "no",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+      "preflight_ready": null,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+      "url": null
+    },
+    "provider_media_public_handoff": {
+      "does_not_authorize": [
+        "git_push",
+        "public_upload",
+        "provider_readiness_without_passed_probe",
+        "direct_kling_submit",
+        "paid_provider_call"
+      ],
+      "exercised": "publication work-order validation, local staging validation, URL/hash agreement, public probe receipt status",
+      "exists": true,
+      "first_blocker": {
+        "phase": "provider_media_public_probe",
+        "reason": "public_probe_not_pass:fetch_failed:HTTP Error 404: Not Found"
+      },
+      "live": "yes",
+      "local_staging_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_local_staging_receipt.json",
+      "local_staging_validation_status": "PASS_PROVIDER_MEDIA_LOCAL_STAGING",
+      "locked_sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "mocked": "no",
+      "probe_blockers": [
+        "fetch_failed:HTTP Error 404: Not Found"
+      ],
+      "probe_http_status": null,
+      "probe_status": "BLOCKED",
+      "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/20260612-horus-embry-storyboard-first-scillm-strict/panel_01.png",
+      "public_probe_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/provider_media_url_probe_receipt.json",
+      "schema": "persona_dream.provider_media_public_handoff_validation.v1",
+      "staged_sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "status": "BLOCKED",
+      "target_repo_path": "skills/persona-dream/provider_media/20260612-horus-embry-storyboard-first-scillm-strict/panel_01.png",
+      "unverified": "public upload authorization, Kling provider fetch behavior, paid-call approval, Kling submission",
+      "work_order": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+      "work_order_validation_status": "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER"
+    },
+    "provider_media_public_probe": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [
+        "fetch_failed:HTTP Error 404: Not Found"
+      ],
+      "exists": true,
+      "first_blocker": null,
+      "live": "yes",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/final_provider_eligibility_work_orders/panel_01_run_20260628T204331Z/provider_media_url_probe_receipt.json",
+      "preflight_ready": null,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "status": "BLOCKED",
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/20260612-horus-embry-storyboard-first-scillm-strict/panel_01.png"
+    },
+    "provider_media_publication_authorization": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": {
+        "phase": "provider_media_publication_authorization",
+        "reason": "authorization_receipt_required"
+      },
+      "live": "no",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/receipts/provider_media_publication_authorization.json",
+      "preflight_ready": null,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+      "url": null
+    },
+    "provider_media_publication_authorization_template": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": {
+        "phase": "provider_media_publication_authorization",
+        "reason": "authorization_receipt_required"
+      },
+      "live": "no",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/receipts/provider_media_publication_authorization_template.json",
+      "preflight_ready": null,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": null,
+      "status": "DRAFT_NOT_AUTHORIZATION",
+      "url": null
+    },
+    "provider_media_publication_preflight": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": {
+        "phase": "provider_media_publication_authorization",
+        "reason": "public_upload_or_git_push_authorization_required"
+      },
+      "live": "no",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/receipts/provider_media_publication_preflight.json",
+      "preflight_ready": true,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": "sha256:445f400f596d1f2690cb5e3b80577dd8c5d717d2ffe09bc6f6e8642514fb8783",
+      "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+      "url": null
+    },
+    "provider_media_publication_work_order": {
+      "authorized_sha256": null,
+      "authorized_url": null,
+      "blockers": [],
+      "exists": true,
+      "first_blocker": null,
+      "live": "no",
+      "mocked": "no",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict/storyboard/panel_repair_gate/provider_media_publication_work_orders/panel_01_publication_request.json",
+      "preflight_ready": null,
+      "provider_eligibility": null,
+      "provider_media_status": null,
+      "provider_packet_status": null,
+      "sha256": null,
+      "status": "WORK_ORDER_READY_PUBLIC_UPLOAD_AUTH_REQUIRED",
+      "url": null
+    }
+  },
+  "run_root": "/mnt/storage12tb/skills/persona-dream/outputs/20260612-horus-embry-storyboard-first-scillm-strict",
+  "schema": "persona_dream.panel_comparison_status.v1",
+  "status": "BLOCKED",
+  "unverified": "public URL reachability if current probe is blocked, Kling provider fetch behavior, paid-call authorization, Kling submission",
+  "updated_at": "2026-06-29T00:31:53Z"
+}

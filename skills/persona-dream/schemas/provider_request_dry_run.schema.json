@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.provider_request_dry_run.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "provider", "model", "paid_call_performed", "live_call_authorized", "duration_s", "prompt_path", "storyboard_board", "scene_directions_path", "scene_payloads_path", "reference_images"],
+  "properties": {
+    "schema": {"const": "persona_dream.provider_request_dry_run.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "provider": {"type": "string"},
+    "model": {"type": "string"},
+    "paid_call_performed": {"const": false},
+    "live_call_authorized": {"const": false},
+    "duration_s": {"type": "number"},
+    "prompt_path": {"type": "string"},
+    "storyboard_board": {"type": "string"},
+    "scene_directions_path": {"type": "string"},
+    "scene_payloads_path": {"type": "string"},
+    "reference_images": {"type": "array", "minItems": 1}
+  }
+}

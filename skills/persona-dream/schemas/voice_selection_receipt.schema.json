@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.voice_selection_receipt.v1",
+  "title": "Persona Dream Voice Selection Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "run_id",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "candidate_bundle_path",
+    "required_characters",
+    "selected_voices",
+    "rejected_candidate_ids",
+    "reviewer_checks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.voice_selection_receipt.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_VOICE_SELECTION",
+        "BLOCKED_VOICE_SELECTION",
+        "BLOCKED_VOICE_SOURCE_DISCOVERY",
+        "PARTIAL_VOICE_SELECTION"
+      ]
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live": {
+      "type": "boolean"
+    },
+    "candidate_bundle_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "selected_voices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/selected_voice"
+      }
+    },
+    "rejected_candidate_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "reviewer_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "all_required_characters_selected",
+        "all_selected_audio_readable",
+        "all_selected_demos_live",
+        "no_selected_demos_mocked",
+        "all_selected_sources_have_provenance",
+        "all_selected_sources_have_rights_notes",
+        "no_selected_overlapping_speakers",
+        "tone_metadata_present"
+      ],
+      "properties": {
+        "all_required_characters_selected": {
+          "type": "boolean"
+        },
+        "all_selected_audio_readable": {
+          "type": "boolean"
+        },
+        "all_selected_demos_live": {
+          "type": "boolean"
+        },
+        "no_selected_demos_mocked": {
+          "type": "boolean"
+        },
+        "all_selected_sources_have_provenance": {
+          "type": "boolean"
+        },
+        "all_selected_sources_have_rights_notes": {
+          "type": "boolean"
+        },
+        "no_selected_overlapping_speakers": {
+          "type": "boolean"
+        },
+        "tone_metadata_present": {
+          "type": "boolean"
+        }
+      }
+    },
+    "blocking_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "selected_voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "character_id",
+        "candidate_id",
+        "selection_rank",
+        "reference_wav_path",
+        "demo_wav_path",
+        "demo_receipt_path",
+        "tone",
+        "rationale"
+      ],
+      "properties": {
+        "character_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selection_rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reference_wav_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "demo_wav_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "demo_receipt_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_voice_id": {
+          "type": ["string", "null"]
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "neutral_warm",
+            "calm_precise",
+            "careful_concerned",
+            "serious_low_energy",
+            "memory_confident",
+            "memory_uncertain",
+            "curious_searching",
+            "playful_light",
+            "relieved",
+            "firm_boundary",
+            "identity_clarification",
+            "one_at_a_time_interrupt",
+            "deflect_calm",
+            "grief_safe",
+            "wait_presence"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS_VOICE_SELECTION"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "blocking_reasons": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["BLOCKED_VOICE_SELECTION", "BLOCKED_VOICE_SOURCE_DISCOVERY", "PARTIAL_VOICE_SELECTION"]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "blocking_reasons": {
+            "minItems": 1
+          }
+        },
+        "required": ["blocking_reasons"]
+      }
+    }
+  ]
+}

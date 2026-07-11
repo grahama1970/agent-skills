@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Validate a dream-packet generation/repair work order."""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+
+REQUIRED_FORBIDDEN_ACTIONS = {
+    "fabricate_residue_source_ids",
+    "treat_about_text_as_residue_without_memory_source",
+    "write_memory_without_explicit_authorization",
+    "mark_dream_packet_pass_without_contact_sheet_png",
+    "rewrite_downstream_story_or_panel_receipts_to_hide_missing_packet",
+    "direct_kling_submit",
+    "direct_paid_provider_call",
+}
+
+
+def _read_json(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ValueError(f"missing file: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid json: {path}: {exc}") from exc
+
+
+def _block(result: dict[str, Any], phase: str, reason: str, path: Path) -> dict[str, Any]:
+    result["status"] = "BLOCKED"
+    result["first_blocker"] = {"phase": phase, "reason": reason, "path": str(path)}
+    return result
+
+
+def _existing_path(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and Path(value).exists()
+
+
+def validate_dream_packet_work_order(work_order_path: Path) -> dict[str, Any]:
+    work_order_path = work_order_path.resolve()
+    work_order = _read_json(work_order_path)
+    if not isinstance(work_order, dict):
+        raise ValueError("dream packet work order must be a JSON object")
+
+    result: dict[str, Any] = {
+        "schema": "persona_dream.dream_packet_work_order_validation.v1",
+        "work_order": str(work_order_path),
+        "status": "PASS_DREAM_PACKET_WORK_ORDER",
+        "first_blocker": None,
+        "mocked": "yes" if "fixtures" in work_order_path.parts else "no",
+        "live": "no",
+        "exercised": "local work-order shape, owner/delegation contract, source path existence, missing-packet policy, forbidden action policy",
+        "unverified": "live memory recall, residue semantic grounding, dreamer subagent execution, contact sheet generation quality, provider/Kling execution",
+    }
+
+    if work_order.get("schema") != "persona_dream.dream_packet_work_order.v1":
+        return _block(result, "dream_packet_work_order", f"wrong_schema:{work_order.get('schema')}", work_order_path)
+    if work_order.get("status") != "WORK_ORDER_READY_DREAM_PACKET_REQUIRED":
+        return _block(result, "dream_packet_work_order", f"work_order_not_ready:{work_order.get('status')}", work_order_path)
+    if work_order.get("owner_subagent") != "dreamer":
+        return _block(result, "dream_packet_work_order", "wrong_owner_subagent", work_order_path)
+    if work_order.get("delegated_subagents") != ["memory"]:
+        return _block(result, "dream_packet_work_order", "wrong_delegated_subagents", work_order_path)
+    if work_order.get("live") != "no":
+        return _block(result, "dream_packet_work_order", "live_must_be_no", work_order_path)
+
+    source_paths = work_order.get("source_paths")
+    if not isinstance(source_paths, dict):
+        return _block(result, "dream_packet_work_order", "missing_source_paths", work_order_path)
+    for field in (
+        "run_root",
+        "persona_dream_skill_contract",
+        "project_knowledge",
+        "dreamer_agent_contract",
+        "memory_agent_contract",
+    ):
+        if not _existing_path(source_paths.get(field)):
+            return _block(result, "dream_packet_work_order_source", f"missing_source_path:{field}", work_order_path)
+
+    current_packet = work_order.get("current_packet")
+    if not isinstance(current_packet, dict) or not isinstance(current_packet.get("exists"), bool):
+        return _block(result, "dream_packet_work_order", "missing_current_packet_state", work_order_path)
+    if not isinstance(current_packet.get("path"), str) or not current_packet["path"]:
+        return _block(result, "dream_packet_work_order", "missing_current_packet_path", work_order_path)
+
+    blocking_validation = work_order.get("blocking_validation")
+    if not isinstance(blocking_validation, dict):
+        return _block(result, "dream_packet_work_order", "missing_blocking_validation", work_order_path)
+    if blocking_validation.get("command") != "./run.sh validate-dream-packet <dream_packet> --run-root <run_root> --json":
+        return _block(result, "dream_packet_work_order", "wrong_validation_command", work_order_path)
+    if not isinstance(blocking_validation.get("first_blocker"), dict):
+        return _block(result, "dream_packet_work_order", "missing_first_blocker", work_order_path)
+
+    required_default_action = work_order.get("required_default_action")
+    if not isinstance(required_default_action, dict) or not isinstance(required_default_action.get("steps"), list):
+        return _block(result, "dream_packet_work_order", "missing_required_default_action_steps", work_order_path)
+    if len(required_default_action["steps"]) < 5:
+        return _block(result, "dream_packet_work_order", "insufficient_required_default_action_steps", work_order_path)
+
+    forbidden_actions = work_order.get("forbidden_actions")
+    if not isinstance(forbidden_actions, list):
+        return _block(result, "dream_packet_work_order", "missing_forbidden_actions", work_order_path)
+    missing_forbidden = sorted(REQUIRED_FORBIDDEN_ACTIONS - set(forbidden_actions))
+    if missing_forbidden:
+        return _block(result, "dream_packet_work_order", "missing_forbidden_actions:" + ",".join(missing_forbidden), work_order_path)
+
+    result["owner_subagent"] = work_order["owner_subagent"]
+    result["packet_exists"] = current_packet["exists"]
+    result["blocker"] = blocking_validation["first_blocker"].get("reason")
+    return result
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("work_order", type=Path)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+
+    try:
+        result = validate_dream_packet_work_order(args.work_order)
+    except Exception as exc:
+        result = {
+            "schema": "persona_dream.dream_packet_work_order_validation.v1",
+            "work_order": str(args.work_order),
+            "status": "BLOCKED",
+            "first_blocker": {"phase": "schema_or_parse", "reason": str(exc), "path": str(args.work_order)},
+            "mocked": "unknown",
+            "live": "no",
+        }
+
+    if args.json:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        blocker = result.get("first_blocker")
+        if blocker:
+            print(f"{result['status']} {blocker['phase']}: {blocker['reason']}")
+        else:
+            print(result["status"])
+    return 0 if result["status"] != "BLOCKED" else 1
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())

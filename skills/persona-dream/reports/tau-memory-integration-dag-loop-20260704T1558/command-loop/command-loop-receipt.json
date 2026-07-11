@@ -1,0 +1,17 @@
+{
+  "artifacts": [],
+  "dispatches": [],
+  "errors": [
+    "step[1]: next_agent.name must be one of ['agent-maintainer', 'approach-owner', 'approach-researcher', 'assurance', 'audiobook-extractor', 'backend-coder', 'battle-scorekeeper', 'book-extraction-verifier', 'book-extractor', 'casting-agent', 'code-reviewer', 'coder', 'contact-sheet-build-reviewer', 'contact-sheet-builder', 'contact-sheet-reviewer', 'contact-sheet-writer', 'crew-reviewer', 'crew-writer', 'cyber-analyst', 'data-analyst', 'dataset-builder', 'dba-auditor', 'dba-auditor-v2', 'debugger', 'designer', 'devops', 'dewey', 'doc-extractor', 'doc-qra', 'dream-reviewer', 'dreamer', 'embry-chatterbox-voice', 'explorer', 'extractor', 'fact-checker', 'fetcher', 'frontend-coder', 'goal-guardian', 'hum', 'human', 'implementation-feasibility-reviewer', 'interaction-manifest-author', 'llm-evaluator', 'mathematics', 'media-explainer', 'memory', 'memory-v5-migration-watcher', 'model-trainer', 'monitor-sparta-supervisor', 'ops-arango', 'orpheus-tts-trainer', 'panel-creator', 'panel-reviewer', 'patch-worker', 'persona-dream-panel-repair-gate', 'petey', 'phatgpt-coder', 'phatgpt-deployer', 'phatgpt-researcher', 'phatgpt-reviewer', 'project-or-harness-verifier', 'prompt-health-auditor', 'prompt-reviewer', 'proof-reader', 'qa-tester', 'qbert', 'qra-auditor', 'qra-extractor', 'readme-maintainer', 'releaser', 'reporter', 'research-auditor', 'researcher', 'review-design-intake', 'review-section-planner', 'reviewer', 'ryan', 'scillm-agent', 'script-reviewer', 'script-writer', 'skill-maintainer', 'story-editor', 'story-reviewer', 'story-writer', 'storyboard-reviewer', 'storyboard-writer', 'tau', 'theorem-prover', 'ui-coder', 'ui-reviewer', 'unsloth-studio', 'ux-coverage-auditor', 'voice-segment-selector', 'watch', 'webgpt-design-escalator', 'webgpt-ticket-author']"
+  ],
+  "live": true,
+  "mocked": false,
+  "ok": false,
+  "receipt_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-loop-20260704T1558/command-loop",
+  "runner": "agent-registry-command-loop",
+  "schema": "tau.agent_handoff_command_loop_receipt.v1",
+  "status": "BLOCKED",
+  "step_count": 1,
+  "stop_reason": "invalid_handoff",
+  "terminal_agent": null
+}

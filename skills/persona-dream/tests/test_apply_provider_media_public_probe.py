@@ -1,0 +1,129 @@
+from __future__ import annotations
+
+import copy
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from apply_provider_media_public_probe import apply_provider_media_public_probe  # noqa: E402
+from validate_panel_repair_gate import validate_receipt  # noqa: E402
+
+
+FIXTURES = ROOT / "scripts/fixtures"
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+def _copy_fixture_tree(target: Path) -> None:
+    artifacts = target / "panel_repair_gate_artifacts"
+    artifacts.mkdir(parents=True)
+    for source in (FIXTURES / "panel_repair_gate_artifacts").glob("*.json"):
+        (artifacts / source.name).write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+
+class TestApplyProviderMediaPublicProbe(unittest.TestCase):
+    def test_blocked_probe_is_not_applied(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _copy_fixture_tree(root)
+            receipt = copy.deepcopy(json.loads((FIXTURES / "panel_repair_gate_valid.json").read_text(encoding="utf-8")))
+            receipt["status"] = "BLOCKED_PROVIDER_MEDIA_URLS"
+            receipt["provider_media_status"] = "FAIL"
+            receipt["provider_media_urls"] = ["https://blocked.invalid/panel.png"]
+            receipt["provider_packet_status"] = "BLOCKED_PROVIDER_GATE"
+            receipt["provider_eligibility"] = False
+            receipt["remaining_blockers"] = ["provider_media_url_missing"]
+            receipt_path = root / "panel_repair_gate_receipt.json"
+            probe_path = root / "provider_media_url_probe_receipt.json"
+            output = root / "panel_repair_gate_receipt.public_media_applied.json"
+            _write_json(receipt_path, receipt)
+            _write_json(
+                probe_path,
+                {
+                    "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+                    "status": "BLOCKED",
+                    "url": "https://raw.githubusercontent.com/example/panel.png",
+                    "expected_sha256": "sha256:" + ("a" * 64),
+                    "observed_sha256": None,
+                    "http_status": None,
+                    "blockers": ["fetch_failed:HTTP Error 404: Not Found"],
+                    "mocked": "no",
+                    "live": "yes",
+                },
+            )
+
+            result = apply_provider_media_public_probe(
+                panel_repair_gate_receipt=receipt_path,
+                provider_media_probe_receipt=probe_path,
+                output=output,
+                created_at="2026-06-28T22:00:00Z",
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("provider_media_probe_not_pass", result["first_blocker"]["reason"])
+        self.assertFalse(output.exists())
+
+    def test_pass_probe_writes_provider_eligible_receipt_when_gate_validates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _copy_fixture_tree(root)
+            receipt = copy.deepcopy(json.loads((FIXTURES / "panel_repair_gate_valid.json").read_text(encoding="utf-8")))
+            receipt["status"] = "BLOCKED_PROVIDER_MEDIA_URLS"
+            receipt["provider_media_status"] = "FAIL"
+            receipt["provider_media_urls"] = ["https://blocked.invalid/panel.png"]
+            receipt["provider_media_probe_receipt"] = "provider_media_url_probe_receipt.json"
+            receipt["provider_packet_status"] = "BLOCKED_PROVIDER_GATE"
+            receipt["provider_eligibility"] = False
+            receipt["remaining_blockers"] = ["provider_media_url_missing"]
+            receipt_path = root / "panel_repair_gate_receipt.json"
+            probe_path = root / "provider_media_url_probe_receipt.json"
+            output = root / "panel_repair_gate_receipt.public_media_applied.json"
+            expected_sha = next(iter(receipt["media_hashes"].values()))
+            public_url = "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run/panel_01.png"
+            _write_json(receipt_path, receipt)
+            _write_json(
+                probe_path,
+                {
+                    "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+                    "status": "PASS_PROVIDER_MEDIA_URL_PROBE",
+                    "url": public_url,
+                    "expected_sha256": expected_sha,
+                    "observed_sha256": expected_sha,
+                    "http_status": 200,
+                    "content_length": 12345,
+                    "blockers": [],
+                    "mocked": "yes",
+                    "live": "no",
+                },
+            )
+
+            result = apply_provider_media_public_probe(
+                panel_repair_gate_receipt=receipt_path,
+                provider_media_probe_receipt=probe_path,
+                output=output,
+                allow_mocked_probe=True,
+                created_at="2026-06-28T22:00:00Z",
+            )
+            patched = json.loads(output.read_text(encoding="utf-8"))
+            errors = validate_receipt(patched, require_provider_eligible=True, base_dir=output.parent)
+
+        self.assertEqual(result["status"], "APPLIED_PROVIDER_MEDIA_PUBLIC_PROBE")
+        self.assertEqual(patched["status"], "PASS_PANEL_REVIEWED")
+        self.assertEqual(patched["provider_media_status"], "PASS")
+        self.assertEqual(patched["provider_media_urls"], [public_url])
+        self.assertEqual(patched["provider_packet_status"], "PROVIDER_READY")
+        self.assertIs(patched["provider_eligibility"], True)
+        self.assertEqual(patched["remaining_blockers"], [])
+        self.assertEqual(errors, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

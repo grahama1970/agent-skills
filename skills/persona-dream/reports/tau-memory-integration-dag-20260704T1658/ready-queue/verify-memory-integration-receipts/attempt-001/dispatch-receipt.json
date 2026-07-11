@@ -1,0 +1,72 @@
+{
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/verify-memory-integration-receipts/attempt-001/persona-dream-memory-review-receipt.json"
+  ],
+  "command_results": [
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_review_tau_adapter.py"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\"context\": {\"artifacts\": [\"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/verify-memory-integration-receipts/attempt-001/persona-dream-memory-review-receipt.json\"], \"summary\": \"persona-dream memory integration verifier finished.\"}, \"github\": {\"repo\": \"grahama1970/agent-skills\", \"target\": \"skills/persona-dream memory integration\"}, \"goal\": {\"goal_hash\": \"sha256:persona-dream-memory-integration-required\", \"goal_id\": \"persona-dream-memory-integration\", \"goal_version\": 1}, \"next_agent\": {\"executor\": \"human\", \"name\": \"human\", \"reason\": \"Human receives Tau DAG receipt and remaining blockers.\"}, \"previous_subagent\": \"project-or-harness-verifier\", \"rationale\": \"Verifier checks live/mock boundaries, recall mode counts, and media edge writes.\", \"required_evidence\": [\"Human reviews dag-receipt.json and memory review receipt.\"], \"result\": {\"evidence\": [{\"kind\": \"persona_dream_memory_review_receipt\", \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/verify-memory-integration-receipts/attempt-001/persona-dream-memory-review-receipt.json\"}, {\"kind\": \"required_evidence\", \"label\": \"live /recall response for story/script/contact-sheet artifacts\"}, {\"kind\": \"required_evidence\", \"label\": \"BM25 score present\"}, {\"kind\": \"required_evidence\", \"label\": \"dense score present\"}, {\"kind\": \"required_evidence\", \"label\": \"graph score present where media/TOM edges are expected\"}], \"status\": \"COMPLETED\", \"summary\": \"Memory integration receipts passed verifier checks.\"}, \"schema\": \"tau.agent_handoff.v1\", \"stop_condition\": \"Human accepts, redirects, or requests another bounded Tau DAG.\"}\n",
+      "timed_out": false,
+      "timeout_s": 120.0
+    }
+  ],
+  "errors": [],
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "receipt_dir": null,
+  "response_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `COMPLETED`\n- Summary: Memory integration receipts passed verifier checks.\n- Next agent: `human`\n- Executor: `human`\n- Stop condition: Human accepts, redirects, or requests another bounded Tau DAG.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/verify-memory-integration-receipts/attempt-001/persona-dream-memory-review-receipt.json\"\n    ],\n    \"summary\": \"persona-dream memory integration verifier finished.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream memory integration\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:persona-dream-memory-integration-required\",\n    \"goal_id\": \"persona-dream-memory-integration\",\n    \"goal_version\": 1\n  },\n  \"next_agent\": {\n    \"executor\": \"human\",\n    \"name\": \"human\",\n    \"reason\": \"Human receives Tau DAG receipt and remaining blockers.\"\n  },\n  \"previous_subagent\": \"project-or-harness-verifier\",\n  \"rationale\": \"Verifier checks live/mock boundaries, recall mode counts, and media edge writes.\",\n  \"required_evidence\": [\n    \"Human reviews dag-receipt.json and memory review receipt.\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"kind\": \"persona_dream_memory_review_receipt\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/verify-memory-integration-receipts/attempt-001/persona-dream-memory-review-receipt.json\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"live /recall response for story/script/contact-sheet artifacts\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"BM25 score present\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"dense score present\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"graph score present where media/TOM edges are expected\"\n      }\n    ],\n    \"status\": \"COMPLETED\",\n    \"summary\": \"Memory integration receipts passed verifier checks.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Human accepts, redirects, or requests another bounded Tau DAG.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:human",
+        "executor:human"
+      ],
+      "remove": []
+    },
+    "next_agent": "human",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream memory integration"
+    }
+  },
+  "runner": "command",
+  "schema": "tau.agent_handoff_dispatch_receipt.v1",
+  "selected_agent": "project-or-harness-verifier",
+  "start_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `DAG_NODE_READY`\n- Summary: Dependencies are satisfied for DAG node verify-memory-integration-receipts.\n- Next agent: `project-or-harness-verifier`\n- Executor: `local`\n- Stop condition: Stop at a terminal DAG node or any fail-closed invariant violation.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1640.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json\",\n      \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json\"\n    ],\n    \"summary\": \"Dispatch ready DAG node verify-memory-integration-receipts.\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"skills/persona-dream memory integration\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:persona-dream-memory-integration-required\",\n    \"goal_id\": \"persona-dream-memory-integration\",\n    \"goal_version\": 1\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"project-or-harness-verifier\",\n    \"reason\": \"Ready node for DAG persona-dream-memory-integration.\"\n  },\n  \"previous_subagent\": \"human\",\n  \"rationale\": \"The DAG contract is the authoritative workflow and immutable goal boundary.\",\n  \"required_evidence\": [\n    \"live /recall response for story/script/contact-sheet artifacts\",\n    \"BM25 score present\",\n    \"dense score present\",\n    \"graph score present where media/TOM edges are expected\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"kind\": \"dag_contract\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_dag_20260704T1640.json\",\n        \"schema\": \"tau.dag_contract.v1\",\n        \"sha256\": \"sha256:9b21a49393a17b655bb53a21d6bc5cef384c647443e80140272af6964fe9386e\"\n      },\n      {\n        \"kind\": \"persona_dream_memory_tau_receipt\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-receipt.json\"\n      },\n      {\n        \"kind\": \"persona_dream_memory_tau_audit\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1658/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"story memory_bridge_receipt mocked=false live=true\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"script memory_bridge_receipt mocked=false live=true\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"contact-sheet memory_bridge_receipt mocked=false live=true\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"media asset vertices written through memory /upsert\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"TOM/media grounding edges written through memory /upsert\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"entity_context.json for story/script/contact-sheet artifacts\"\n      },\n      {\n        \"kind\": \"required_evidence\",\n        \"label\": \"no direct ArangoDB or Qdrant writes\"\n      }\n    ],\n    \"status\": \"DAG_NODE_READY\",\n    \"summary\": \"Dependencies are satisfied for DAG node verify-memory-integration-receipts.\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Stop at a terminal DAG node or any fail-closed invariant violation.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:project-or-harness-verifier",
+        "executor:local"
+      ],
+      "remove": []
+    },
+    "next_agent": "project-or-harness-verifier",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream memory integration"
+    }
+  },
+  "status": "COMPLETED",
+  "stop_reason": "response_consumed"
+}

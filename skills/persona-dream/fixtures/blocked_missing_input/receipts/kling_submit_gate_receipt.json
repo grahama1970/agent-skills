@@ -1,0 +1,9 @@
+{
+  "schema_id": "schemas/kling_submit_gate_receipt.schema.json",
+  "run_id": "blocked-missing-input-fixture",
+  "provider": "kling",
+  "attempted_live_submit": false,
+  "decision": "BLOCKED_MISSING_INPUT",
+  "reason": "required local inputs are missing; provider boundary was not reached",
+  "evidence": ["stage_receipt.inputs_complete=false"]
+}

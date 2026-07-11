@@ -1,0 +1,14 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "residue": [
+    {
+      "source_id": "fixture:memory:embry:false-green",
+      "text": "A false green is worse than a red gate because it teaches the operator to trust unsupported evidence."
+    },
+    {
+      "source_id": "fixture:memory:embry:sparta",
+      "text": "SPARTA evidence must stay read-only until source references and code paths are traceable."
+    }
+  ],
+  "contradictions": []
+}

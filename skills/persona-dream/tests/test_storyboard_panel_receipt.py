@@ -1,0 +1,104 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_storyboard_panel_receipt import validate_storyboard_panel_receipt  # noqa: E402
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+class TestStoryboardPanelReceipt(unittest.TestCase):
+    def _write_fixture(self, run_root: Path) -> Path:
+        (run_root / "artifacts").mkdir()
+        (run_root / "receipts").mkdir()
+        image = run_root / "artifacts/panel_001.png"
+        image.write_bytes(b"storyboard-panel-image")
+        ledger = run_root / "artifacts/panel_continuity_and_repair_ledger.json"
+        ledger.write_text(json.dumps([{"panel": 1, "visual_review_status": "PENDING"}]) + "\n", encoding="utf-8")
+        work_order = run_root / "artifacts/panel_001_work_order.json"
+        work_order.write_text(json.dumps({"panel_id": "panel_001"}) + "\n", encoding="utf-8")
+        receipt = run_root / "receipts/storyboard_panel_receipt.json"
+        receipt.write_text(
+            json.dumps(
+                {
+                    "schema": "persona_dream.storyboard_panel_receipt.v1",
+                    "run_id": "fixture",
+                    "panel_id": "panel_001",
+                    "status": "PANEL_READY_FOR_SOURCE_REVIEW",
+                    "timing": {"start_s": 0.0, "end_s": 0.8},
+                    "beat": "Opening two-character table composition under a void-world sky.",
+                    "image": {
+                        "path": "artifacts/panel_001.png",
+                        "sha256": _sha256(image),
+                        "width": 1280,
+                        "height": 720,
+                    },
+                    "required_visible_entities": ["character_horus", "character_embry"],
+                    "required_props": ["tea_service", "umbrella"],
+                    "required_environment": ["void_world_patio"],
+                    "required_dynamic_behaviors": ["tea steam curls", "umbrella fabric ripples"],
+                    "continuity_ledger": "artifacts/panel_continuity_and_repair_ledger.json",
+                    "work_order": "artifacts/panel_001_work_order.json",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return receipt
+
+    def test_missing_fixture_storyboard_panel_reports_missing_artifact(self) -> None:
+        with self.assertRaises(ValueError):
+            validate_storyboard_panel_receipt(
+                ROOT / "fixtures/one_scene_kling_dry_run/receipts/storyboard_panel_receipt.json",
+                run_root=ROOT / "fixtures/one_scene_kling_dry_run",
+            )
+
+    def test_valid_storyboard_panel_receipt_passes_local_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_fixture(run_root)
+
+            result = validate_storyboard_panel_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "PASS_STORYBOARD_PANEL")
+        self.assertIsNone(result["first_blocker"])
+
+    def test_storyboard_panel_blocks_on_hash_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_fixture(run_root)
+            doc = json.loads(receipt.read_text(encoding="utf-8"))
+            doc["image"]["sha256"] = "sha256:" + ("0" * 64)
+            receipt.write_text(json.dumps(doc) + "\n", encoding="utf-8")
+
+            result = validate_storyboard_panel_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "storyboard_panel_image")
+        self.assertTrue(result["first_blocker"]["reason"].startswith("sha256_mismatch:"))
+
+    def test_storyboard_panel_blocks_on_missing_work_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            receipt = self._write_fixture(run_root)
+            (run_root / "artifacts/panel_001_work_order.json").unlink()
+
+            result = validate_storyboard_panel_receipt(receipt, run_root=run_root)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "work_order")
+        self.assertEqual(result["first_blocker"]["reason"], "missing_artifact")
+
+
+if __name__ == "__main__":
+    unittest.main()

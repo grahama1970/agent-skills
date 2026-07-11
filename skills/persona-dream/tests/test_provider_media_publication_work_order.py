@@ -1,0 +1,96 @@
+from __future__ import annotations
+
+import json
+import hashlib
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_provider_media_publication_work_order import validate_provider_media_publication_work_order  # noqa: E402
+from write_provider_media_publication_work_order import build_provider_media_publication_work_order  # noqa: E402
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+class TestProviderMediaPublicationWorkOrder(unittest.TestCase):
+    def test_generated_publication_work_order_passes_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp) / "run-id"
+            image = run_root / "panel.png"
+            image.parent.mkdir(parents=True)
+            image.write_bytes(b"panel")
+            image_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+            receipt = run_root / "panel_repair_gate_receipt.json"
+            probe = run_root / "provider_media_url_probe_receipt.json"
+            _write_json(
+                receipt,
+                {
+                    "generated_image_path": str(image),
+                    "provider_media_status": "FAIL",
+                    "provider_eligibility": False,
+                    "provider_packet_status": "BLOCKED_PROVIDER_GATE",
+                    "provider_media_urls": ["https://blocked.invalid/panel.png"],
+                    "media_hashes": {"panel_01": image_hash},
+                },
+            )
+            _write_json(probe, {"status": "BLOCKED", "blockers": ["url_host_is_invalid_tld"]})
+            work_order = build_provider_media_publication_work_order(
+                run_root=run_root,
+                panel_id="panel_01",
+                panel_repair_gate_receipt=receipt,
+                provider_media_probe_receipt=probe,
+                created_at="2026-06-28T21:00:00Z",
+            )
+            out = run_root / "publication_request.json"
+            _write_json(out, work_order)
+
+            result = validate_provider_media_publication_work_order(out)
+
+        self.assertEqual(result["status"], "PASS_PROVIDER_MEDIA_PUBLICATION_WORK_ORDER")
+        self.assertEqual(result["current_probe_status"], "BLOCKED")
+        self.assertEqual(result["current_provider_media_status"], "FAIL")
+        self.assertTrue(result["proposed_url"].startswith("https://raw.githubusercontent.com/"))
+
+    def test_blocks_when_public_upload_authorization_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp) / "run-id"
+            image = run_root / "panel.png"
+            image.parent.mkdir(parents=True)
+            image.write_bytes(b"panel")
+            image_hash = "sha256:" + hashlib.sha256(image.read_bytes()).hexdigest()
+            receipt = run_root / "panel_repair_gate_receipt.json"
+            probe = run_root / "provider_media_url_probe_receipt.json"
+            _write_json(
+                receipt,
+                {
+                    "generated_image_path": str(image),
+                    "media_hashes": {"panel_01": image_hash},
+                },
+            )
+            _write_json(probe, {"status": "BLOCKED"})
+            work_order = build_provider_media_publication_work_order(
+                run_root=run_root,
+                panel_id="panel_01",
+                panel_repair_gate_receipt=receipt,
+                provider_media_probe_receipt=probe,
+                created_at="2026-06-28T21:00:00Z",
+            )
+            work_order["authorization_required"].remove("public_upload_of_panel_image")
+            out = run_root / "publication_request.json"
+            _write_json(out, work_order)
+
+            result = validate_provider_media_publication_work_order(out)
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("missing_authorization_required:public_upload_of_panel_image", result["first_blocker"]["reason"])
+
+
+if __name__ == "__main__":
+    unittest.main()

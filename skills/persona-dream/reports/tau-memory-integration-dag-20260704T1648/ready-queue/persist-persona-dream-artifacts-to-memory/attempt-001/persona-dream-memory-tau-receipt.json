@@ -1,0 +1,203 @@
+{
+  "audit_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/persona-dream-memory-tau-audit.json",
+  "bridge_receipts": [
+    {
+      "_adapter_phase": "02_story",
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/run/story_contract.json",
+      "artifact_memory_key": "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+      "asset_upsert_result": null,
+      "collection": "persona_memory",
+      "created_at": "2026-07-04T16:54:55Z",
+      "documents_written": [
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53_entity_coverage"
+      ],
+      "edge_upsert_result": null,
+      "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+      "live": true,
+      "media_assets_written": [],
+      "media_edges_written": [],
+      "memory_url": "http://127.0.0.1:8601",
+      "mocked": false,
+      "recall_probe": {
+        "count": 8,
+        "query": "persona-dream 02_story story_contract embry-kai-sick-day persona_dream.story_contract.v1 {\"story\": \"{\\n  \\\"story\\\": \\\"Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.\\\",\\n  \\\"panel_coun",
+        "score_counts": {
+          "bm25": 8,
+          "dense": 8,
+          "graph": 4
+        }
+      },
+      "schema": "persona_dream.memory_bridge_receipt.v1",
+      "status": "PASS",
+      "upsert_result": {
+        "updated": 2
+      }
+    },
+    {
+      "_adapter_phase": "06_script",
+      "artifact": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_contract.json",
+      "artifact_memory_key": "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+      "asset_upsert_result": {
+        "updated": 14
+      },
+      "collection": "persona_memory",
+      "created_at": "2026-07-04T16:55:16Z",
+      "documents_written": [
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_entity_coverage"
+      ],
+      "edge_upsert_result": {
+        "updated": 14
+      },
+      "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+      "live": true,
+      "media_assets_written": [
+        "embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+        "embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+        "embry-kai-sick-day_asset_kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+        "embry-kai-sick-day_asset_embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png",
+        "embry-kai-sick-day_asset_embry_media_asset__assets_character_sheet_montage_jpg",
+        "embry-kai-sick-day_asset_kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png",
+        "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4",
+        "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg",
+        "embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav",
+        "embry-kai-sick-day_asset_asset-9",
+        "embry-kai-sick-day_asset_asset-10",
+        "embry-kai-sick-day_asset_asset-11",
+        "embry-kai-sick-day_asset_asset-12",
+        "embry-kai-sick-day_asset_asset-13"
+      ],
+      "media_edges_written": [
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png_0",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png_1",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png_2",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_surfing_embry_and_kai_looking_for_waves_big_island_2024_png_3",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_media_asset__assets_character_sheet_montage_jpg_4",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png_5",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_mp4_6",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_nazare_big_wave_drone_video_keyframe_003s_jpg_7",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_embry_kai_media_asset__assets_youtube_ocean_raw_surfing_audio_2min_wav_8",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-9_9",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-10_10",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-11_11",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-12_12",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698_uses_embry-kai-sick-day_asset_asset-13_13"
+      ],
+      "memory_url": "http://127.0.0.1:8601",
+      "mocked": false,
+      "recall_probe": {
+        "count": 8,
+        "query": "persona-dream 06_script script_contract embry-kai-sick-day persona_dream.script_contract.v1 {\"asset_usage\": [{\"asset_id\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\", \"title\": \"Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby.\", \"use_in_story\": \"v",
+        "score_counts": {
+          "bm25": 8,
+          "dense": 8,
+          "graph": 4
+        }
+      },
+      "schema": "persona_dream.memory_bridge_receipt.v1",
+      "status": "PASS",
+      "upsert_result": {
+        "updated": 2
+      }
+    },
+    {
+      "_adapter_phase": "04_contact_sheets",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_build_receipt.json",
+      "artifact_memory_key": "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f",
+      "asset_upsert_result": null,
+      "collection": "persona_memory",
+      "created_at": "2026-07-04T16:55:20Z",
+      "documents_written": [
+        "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f",
+        "embry-kai-sick-day_04_contact_sheets_contact_sheet_build_receipt_96798f85a3207d7f_entity_coverage"
+      ],
+      "edge_upsert_result": null,
+      "entity_context": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/entity_context.json",
+      "live": true,
+      "media_assets_written": [],
+      "media_edges_written": [],
+      "memory_url": "http://127.0.0.1:8601",
+      "mocked": false,
+      "recall_probe": {
+        "count": 8,
+        "query": "persona-dream 04_contact_sheets contact_sheet_build_receipt embry-kai-sick-day persona_dream.phase_04_contact_sheet_build_receipt.v1 {\"requirements\": \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_requirements.json\"}",
+        "score_counts": {
+          "bm25": 8,
+          "dense": 8,
+          "graph": 4
+        }
+      },
+      "schema": "persona_dream.memory_bridge_receipt.v1",
+      "status": "PASS",
+      "upsert_result": {
+        "updated": 2
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_bridge.py",
+        "--phase",
+        "02_story",
+        "--artifact-type",
+        "story_contract",
+        "--artifact",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/run/story_contract.json",
+        "--run-root",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/run",
+        "--receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/story_memory_bridge_receipt.json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_bridge.py",
+        "--phase",
+        "06_script",
+        "--artifact-type",
+        "script_contract",
+        "--artifact",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_contract.json",
+        "--run-root",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run",
+        "--receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/script_memory_bridge_receipt.json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream_memory_bridge.py",
+        "--phase",
+        "04_contact_sheets",
+        "--artifact-type",
+        "contact_sheet_build_receipt",
+        "--artifact",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/contact_sheet_build_receipt.json",
+        "--run-root",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete",
+        "--receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/tau-memory-integration-dag-20260704T1648/ready-queue/persist-persona-dream-artifacts-to-memory/attempt-001/contact_sheet_memory_bridge_receipt.json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    }
+  ],
+  "errors": [],
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.memory_tau_receipt.v1",
+  "status": "PASS",
+  "timestamp": "2026-07-04T16:55:20Z"
+}

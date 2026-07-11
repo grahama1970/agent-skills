@@ -1,6 +1,6 @@
 {
   "blockers": [],
-  "checked_at": "2026-07-08T02:34:10.364574+00:00",
+  "checked_at": "2026-07-08T13:24:13.538677+00:00",
   "claims": {
     "does_not_prove": [
       "provider reference attachment",
@@ -19,7 +19,7 @@
     ]
   },
   "live_image_call_started": false,
-  "manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt/spine_chain_manifest.v1.json",
+  "manifest_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/reviewer_pass_without_validator_receipt/spine_chain_manifest.v1.json",
   "manifest_sha256": "sha256:36f12e9ecb77b8b3f0dd9ddb7500970c236a85e23ee1405a9e4dc9a005714d75",
   "mocked": false,
   "provider_live": false,

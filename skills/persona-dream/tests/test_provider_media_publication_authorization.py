@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from validate_provider_media_publication_authorization import (  # noqa: E402
+    validate_provider_media_publication_authorization,
+)
+from write_provider_media_publication_authorization_template import (  # noqa: E402
+    write_provider_media_publication_authorization_template,
+)
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+def _write_preflight(root: Path) -> Path:
+    preflight = root / "provider_media_publication_preflight.json"
+    _write_json(
+        preflight,
+        {
+            "schema": "persona_dream.provider_media_publication_preflight_validation.v1",
+            "status": "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION",
+            "first_blocker": {
+                "phase": "provider_media_publication_authorization",
+                "reason": "public_upload_or_git_push_authorization_required",
+            },
+            "preflight_ready": True,
+            "staged_asset_path": str(root / "repo/skills/persona-dream/provider_media/run-id/panel_01.png"),
+            "target_repo_path": "skills/persona-dream/provider_media/run-id/panel_01.png",
+            "proposed_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run-id/panel_01.png",
+            "locked_sha256": "sha256:abc123",
+            "next_required_probe_command": (
+                "./run.sh validate-provider-media-url "
+                "--url https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run-id/panel_01.png "
+                "--expected-sha256 sha256:abc123 --json"
+            ),
+        },
+    )
+    return preflight
+
+
+class TestProviderMediaPublicationAuthorization(unittest.TestCase):
+    def test_blocks_without_authorization_receipt_and_emits_concrete_request(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            preflight = _write_preflight(Path(tmp))
+
+            result = validate_provider_media_publication_authorization(preflight_receipt_path=preflight)
+
+        self.assertEqual(result["status"], "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION")
+        self.assertEqual(result["first_blocker"]["reason"], "authorization_receipt_required")
+        self.assertIn("direct_kling_submit", result["does_not_authorize"])
+        self.assertEqual(
+            result["approval_request"]["target_record"]["locked_sha256"],
+            "sha256:abc123",
+        )
+        self.assertEqual(
+            result["approval_request"]["authorization_receipt_template"]["status"],
+            "AUTHORIZED_PUBLICATION",
+        )
+
+    def test_passes_only_when_authorization_matches_preflight_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            preflight = _write_preflight(root)
+            auth = root / "authorization.json"
+            _write_json(
+                auth,
+                {
+                    "schema": "persona_dream.provider_media_publication_authorization.v1",
+                    "status": "AUTHORIZED_PUBLICATION",
+                    "approved_by": "human",
+                    "approved_at": "2026-06-29T00:00:00Z",
+                    "approved_action": "publish_exact_locked_provider_media",
+                    "authorized_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run-id/panel_01.png",
+                    "authorized_sha256": "sha256:abc123",
+                    "authorized_target_repo_path": "skills/persona-dream/provider_media/run-id/panel_01.png",
+                },
+            )
+
+            result = validate_provider_media_publication_authorization(
+                preflight_receipt_path=preflight,
+                authorization_receipt_path=auth,
+            )
+
+        self.assertEqual(result["status"], "PASS_PROVIDER_MEDIA_PUBLICATION_AUTHORIZATION")
+        self.assertIsNone(result["first_blocker"])
+        self.assertIn("validate-provider-media-url", result["next_required_probe_command"])
+
+    def test_blocks_authorization_for_different_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            preflight = _write_preflight(root)
+            auth = root / "authorization.json"
+            _write_json(
+                auth,
+                {
+                    "schema": "persona_dream.provider_media_publication_authorization.v1",
+                    "status": "AUTHORIZED_PUBLICATION",
+                    "approved_by": "human",
+                    "approved_at": "2026-06-29T00:00:00Z",
+                    "approved_action": "publish_exact_locked_provider_media",
+                    "authorized_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/run-id/panel_01.png",
+                    "authorized_sha256": "sha256:different",
+                    "authorized_target_repo_path": "skills/persona-dream/provider_media/run-id/panel_01.png",
+                },
+            )
+
+            result = validate_provider_media_publication_authorization(
+                preflight_receipt_path=preflight,
+                authorization_receipt_path=auth,
+            )
+
+        self.assertEqual(result["status"], "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION")
+        self.assertIn("authorized_sha256_mismatch", result["first_blocker"]["reason"])
+
+    def test_writes_draft_template_that_does_not_authorize_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            preflight = _write_preflight(root)
+
+            template = write_provider_media_publication_authorization_template(
+                preflight_receipt_path=preflight,
+            )
+            template_path = root / "authorization_template.json"
+            _write_json(template_path, template)
+            validation = validate_provider_media_publication_authorization(
+                preflight_receipt_path=preflight,
+                authorization_receipt_path=template_path,
+            )
+
+        self.assertEqual(template["status"], "DRAFT_NOT_AUTHORIZATION")
+        self.assertEqual(
+            template["schema"],
+            "persona_dream.provider_media_publication_authorization_template.v1",
+        )
+        self.assertEqual(
+            template["suggested_authorization_receipt"]["schema"],
+            "persona_dream.provider_media_publication_authorization.v1",
+        )
+        self.assertIn("Do not use this template file", template["operator_instructions"][0])
+        self.assertEqual(validation["status"], "BLOCKED_AWAITING_PUBLICATION_AUTHORIZATION")
+        self.assertIn("wrong_authorization_schema", validation["first_blocker"]["reason"])
+
+
+if __name__ == "__main__":
+    unittest.main()

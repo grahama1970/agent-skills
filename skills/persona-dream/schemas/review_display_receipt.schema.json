@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.review_display_receipt.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "index_html", "interaction_manifest", "artifact_count", "missing_artifacts"],
+  "properties": {
+    "schema": {"const": "persona_dream.review_display_receipt.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "index_html": {"type": "string"},
+    "interaction_manifest": {"type": "string"},
+    "artifact_count": {"type": "integer"},
+    "missing_artifacts": {"type": "array"}
+  }
+}

@@ -18,7 +18,7 @@
       "fail-closed live preflight ran before provider/reviewer mutation"
     ]
   },
-  "created_at": "2026-07-08T02:34:10.371632+00:00",
+  "created_at": "2026-07-08T13:24:13.544842+00:00",
   "live_image_call_started": false,
   "mocked": false,
   "provider_call_authorized": false,
@@ -28,16 +28,16 @@
     "satisfied": false
   },
   "role": "panel-reviewer",
-  "run_root": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt",
+  "run_root": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/reviewer_pass_without_validator_receipt",
   "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
-  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/reviewer_pass_without_validator_receipt/spine_chain_manifest.v1.json",
   "spine_chain_manifest_sha256": "sha256:36f12e9ecb77b8b3f0dd9ddb7500970c236a85e23ee1405a9e4dc9a005714d75",
   "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
-  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt/receipts/live_preflight/panel-reviewer_spine_chain_validator_receipt.json",
-  "spine_chain_validator_receipt_sha256": "sha256:560f68fd9913c0e4bf6ee7d20dda008740bc22e29391f67d96b821c24b762680",
+  "spine_chain_validator_receipt_path": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/reviewer_pass_without_validator_receipt/receipts/live_preflight/panel-reviewer_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:80edc7bf68a565c257767c1e43ad55fca4ba3107ec1a9255a3e1a244e88e79a4",
   "spine_chain_validator_status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
   "status": "BLOCKED_LIVE_PREFLIGHT",
-  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-e1sp4alm/reviewer_pass_without_validator_receipt/storyboard_packet.json",
+  "storyboard_packet": "/tmp/persona-dream-phase07-live-preflight-g2k8kr4n/reviewer_pass_without_validator_receipt/storyboard_packet.json",
   "storyboard_packet_sha256": "sha256:a8eab1ba2eacd857808b92f0b6b6eba211587d3898f595958e28ef942e1885b7",
   "target_manifest_entries": [
     {

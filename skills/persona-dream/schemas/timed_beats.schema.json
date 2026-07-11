@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.timed_beats.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "duration_s", "beats"],
+  "properties": {
+    "schema": {"const": "persona_dream.timed_beats.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "duration_s": {"type": "number"},
+    "beats": {"type": "array", "minItems": 1}
+  }
+}

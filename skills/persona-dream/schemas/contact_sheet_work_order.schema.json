@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "casting_agent.contact_sheet_work_order.v1",
+  "type": "object",
+  "required": ["schema", "status", "downstream_skill", "elements"],
+  "properties": {
+    "schema": {"const": "casting_agent.contact_sheet_work_order.v1"},
+    "status": {"type": "string"},
+    "downstream_skill": {"type": "string"},
+    "elements": {"type": "array"}
+  }
+}

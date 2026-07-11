@@ -1,0 +1,78 @@
+{
+  "schema_version": "persona_dream_project_agent_manifest.v0.1",
+  "bundle_name": "persona_dream_full_bakeoff_agent_bundle",
+  "purpose": "Run source-grounded persona-dream story/contact-sheet/A-V bake-off with ElevenLabs, WavTTS, and optional NAVA.",
+  "hard_rules": [
+    "No memory writes, ArangoDB upserts, or Qdrant upserts.",
+    "No lore invention beyond cited source_grounded_residue_ids and labeled dream-symbolic elements.",
+    "No unconsented voice cloning.",
+    "ElevenLabs and WavTTS lanes must share the same base video.",
+    "NAVA is a joint AV lane and is optional/off by default.",
+    "Manual review is mandatory for lip-sync/visual quality."
+  ],
+  "phases": [
+    {
+      "phase": "smoke_dry_run",
+      "command": "python scripts/run_story_pipeline.py --out-dir runs/embry_agent_smoke_001 --render-contact-sheets --contact-sheet-dry-run",
+      "requires": [
+        "python dependencies"
+      ],
+      "expected_outputs": [
+        "story_assets/dream_packet.json",
+        "story_assets/scenes_script.yaml",
+        "story_assets/contact_sheet_renders/embry_primary_perspectives/contact_sheet.png"
+      ],
+      "external_services": []
+    },
+    {
+      "phase": "elevenlabs_baseline",
+      "command": "python scripts/run_story_pipeline.py --out-dir runs/embry_eleven_baseline_001 --render-contact-sheets --contact-sheet-dry-run --run-bakeoff --skip-wavtts",
+      "requires": [
+        "FAL_KEY or FAL_API_KEY",
+        "ffmpeg"
+      ],
+      "external_services": [
+        "fal.ai ElevenLabs",
+        "fal.ai Kling Video",
+        "fal.ai Whisper"
+      ]
+    },
+    {
+      "phase": "wavtts_bakeoff",
+      "command": "python scripts/run_story_pipeline.py --out-dir runs/embry_wavtts_bakeoff_001 --render-contact-sheets --contact-sheet-dry-run --run-bakeoff --ref-audio /path/to/consented_reference_voice.wav --ref-text \"Exact transcript of the reference audio.\" --confirm-voice-consent",
+      "requires": [
+        "FAL_KEY or FAL_API_KEY",
+        "ffmpeg",
+        "WavTTS CLI",
+        "consented reference voice"
+      ],
+      "external_services": [
+        "fal.ai Kling Video",
+        "fal.ai Whisper"
+      ]
+    },
+    {
+      "phase": "nava_inputs",
+      "command": "python scripts/build_nava_inputs.py --dream-packet runs/embry_story_001/story_assets/dream_packet.json --out-dir runs/embry_story_001/nava_lane --speaker-wav /path/to/consented_reference_voice.wav --first-frame-image /path/to/reference.png",
+      "requires": [
+        "story_assets/dream_packet.json"
+      ],
+      "external_services": []
+    },
+    {
+      "phase": "nava_dry_run",
+      "command": "python scripts/run_nava_local.py --nava-repo ~/src/NAVA --data-file runs/embry_story_001/nava_lane/nava_prompts.jsonl --out-dir runs/embry_story_001/nava_lane/outputs --ckpt NAVA_fp8.safetensors --fp8 --single-gpu --dry-run",
+      "requires": [
+        "NAVA repo"
+      ],
+      "external_services": []
+    }
+  ],
+  "primary_docs": [
+    "README.md",
+    "PROJECT_AGENT_INSTRUCTIONS.md",
+    "docs/PIPELINE.md",
+    "docs/STORY_AND_CONTACT_SHEETS.md",
+    "docs/NAVA_LANE.md"
+  ]
+}

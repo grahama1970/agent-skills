@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "source_id": "fixture:memory:embry:sparta-controls",
+      "scope": "embry-memories",
+      "source": "fixture",
+      "type": "Unresolved Tension",
+      "text": "The SPARTA evidence map shows a fragile control chain where supplier proof and orbital telemetry drift apart.",
+      "scores": {"bm25": 1.0, "graph": 0.6, "dense": 0.5, "freshness": 0.9}
+    },
+    {
+      "source_id": "fixture:memory:embry:qra-review",
+      "scope": "embry-dream-journals",
+      "source": "fixture",
+      "type": "Dream Echo",
+      "text": "A prior dream turned QRA rows into constellations, each claim blinking until a citation anchored it.",
+      "scores": {"bm25": 0.8, "graph": 0.4, "dense": 0.4, "freshness": 0.5}
+    },
+    {
+      "source_id": "fixture:memory:embry:frameworks",
+      "scope": "embry-memories",
+      "source": "fixture",
+      "type": "Framework Motif",
+      "text": "NIST, MITRE, and SPARTA appear as transparent overlays on the same launch console, precise but hard to trust.",
+      "scores": {"bm25": 0.7, "graph": 0.5, "dense": 0.3, "freshness": 0.7}
+    }
+  ]
+}

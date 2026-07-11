@@ -1,0 +1,18 @@
+{
+  "schema_version": "persona_dream_research_bakeoff_smoke_expected.v0.1",
+  "required_story_assets": [
+    "story_assets/dream_packet.json",
+    "story_assets/dream_packet.yaml",
+    "story_assets/short_story.md",
+    "story_assets/scenes_script.json",
+    "story_assets/scenes_script.yaml",
+    "story_assets/contact_sheets.json",
+    "story_assets/contact_sheets.yaml",
+    "story_assets/contact_sheets.html",
+    "story_assets/contact_sheet_renders/embry_primary_perspectives/contact_sheet.png",
+    "story_assets/contact_sheet_renders/embry_primary_perspectives/contact_sheet.html"
+  ],
+  "external_services": [],
+  "memory_writes": false,
+  "default_contact_sheet_backend": "dry_run"
+}

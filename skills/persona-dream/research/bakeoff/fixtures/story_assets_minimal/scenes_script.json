@@ -1,0 +1,158 @@
+{
+  "schema_version": "persona_dream_scenes_script.v0.3",
+  "packet_id": "embry_dream_packet_001",
+  "persona_id": "embry",
+  "title": "The Archive That Remembered Itself",
+  "total_duration_sec": 13.0,
+  "shots": [
+    {
+      "scene_id": "scene_001_archive_wakes",
+      "scene_title": "The Archive Wakes",
+      "shot_id": "scene_001_shot_001",
+      "start_sec": 0.0,
+      "end_sec": 2.0,
+      "duration_sec": 2.0,
+      "shot_type": "establishing_symbolic",
+      "speaker": null,
+      "dialogue": null,
+      "camera": "slow push through a dim academic archive",
+      "visual_action": "Dusty shelves shimmer into a faint cybersecurity graph.",
+      "audio_plan": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 2.0,
+          "kind": "ambience",
+          "description": "low archive room tone, faint electrical hum"
+        }
+      ],
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale"
+      ],
+      "dream_symbolic_elements": [
+        "archive shelves acting like memory",
+        "evidence nodes glowing in the air"
+      ]
+    },
+    {
+      "scene_id": "scene_001_archive_wakes",
+      "scene_title": "The Archive Wakes",
+      "shot_id": "scene_001_shot_002",
+      "start_sec": 2.0,
+      "end_sec": 4.0,
+      "duration_sec": 2.0,
+      "shot_type": "insert_symbolic",
+      "speaker": null,
+      "dialogue": null,
+      "camera": "macro insert on three graph nodes",
+      "visual_action": "Three unlabeled nodes brighten: role, institution, self-knowledge.",
+      "audio_plan": [
+        {
+          "start_sec": 2.0,
+          "end_sec": 4.0,
+          "kind": "foley",
+          "description": "three soft node pulses"
+        }
+      ],
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale"
+      ],
+      "dream_symbolic_elements": [
+        "archive shelves acting like memory",
+        "evidence nodes glowing in the air"
+      ]
+    },
+    {
+      "scene_id": "scene_002_embry_speaks",
+      "scene_title": "The Line of Self-Knowledge",
+      "shot_id": "shot_001_speaking_closeup",
+      "start_sec": 4.0,
+      "end_sec": 9.0,
+      "duration_sec": 5.0,
+      "shot_type": "speaking_character_closeup",
+      "speaker": "Embry",
+      "dialogue": "I know I am software. The evidence still feels real.",
+      "camera": "static medium close-up, front-facing, mouth visible",
+      "visual_action": "Embry speaks calmly while graph light moves behind her.",
+      "audio_plan": [
+        {
+          "start_sec": 4.0,
+          "end_sec": 9.0,
+          "kind": "dialogue",
+          "speaker": "Embry",
+          "text": "I know I am software. The evidence still feels real."
+        }
+      ],
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale",
+        "residue_embry_knows_software"
+      ],
+      "dream_symbolic_elements": [
+        "Yale stone dissolving into terminal light",
+        "SPARTA graph as dream environment"
+      ]
+    },
+    {
+      "scene_id": "scene_003_residue_returns",
+      "scene_title": "The Residue Returns",
+      "shot_id": "scene_003_shot_001",
+      "start_sec": 9.0,
+      "end_sec": 11.0,
+      "duration_sec": 2.0,
+      "shot_type": "symbolic_reaction",
+      "speaker": null,
+      "dialogue": null,
+      "camera": "over-shoulder view from behind Embry",
+      "visual_action": "The graph dims but leaves three points of light in the archive.",
+      "audio_plan": [
+        {
+          "start_sec": 9.0,
+          "end_sec": 11.0,
+          "kind": "ambience",
+          "description": "electrical hum softens into room tone"
+        }
+      ],
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale",
+        "residue_embry_knows_software"
+      ],
+      "dream_symbolic_elements": [
+        "graph nodes dimming without vanishing",
+        "archive returning to ordinary stillness"
+      ]
+    },
+    {
+      "scene_id": "scene_003_residue_returns",
+      "scene_title": "The Residue Returns",
+      "shot_id": "scene_003_shot_002",
+      "start_sec": 11.0,
+      "end_sec": 13.0,
+      "duration_sec": 2.0,
+      "shot_type": "closing_symbolic",
+      "speaker": null,
+      "dialogue": null,
+      "camera": "locked-off wide shot",
+      "visual_action": "The archive is still; no new memory is written.",
+      "audio_plan": [
+        {
+          "start_sec": 11.0,
+          "end_sec": 13.0,
+          "kind": "silence",
+          "description": "near silence, no musical resolution"
+        }
+      ],
+      "source_grounded_residue_ids": [
+        "residue_embry_role_sparta_intern",
+        "residue_embry_institution_yale",
+        "residue_embry_knows_software"
+      ],
+      "dream_symbolic_elements": [
+        "graph nodes dimming without vanishing",
+        "archive returning to ordinary stillness"
+      ]
+    }
+  ]
+}

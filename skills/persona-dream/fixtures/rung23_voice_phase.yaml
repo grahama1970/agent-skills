@@ -1,0 +1,49 @@
+steps:
+  - id: voice_executor
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung23_voice_executor_dry_run.py"
+      - "--run-dir"
+      - "__RUN_DIR__"
+      - "--story-chain-receipt"
+      - "__STORY_CHAIN_RECEIPT__"
+      - "--receipt"
+      - "__RUN_DIR__/voice_executor_receipt.json"
+    receipt: "__RUN_DIR__/voice_executor_receipt.json"
+    expect_receipt:
+      schema: "persona_dream.rung23_voice_executor_receipt.v1"
+      ok: true
+      phase: "voice"
+      executor_readonly: true
+      voice_handoff_plan.schema: "persona_dream.voice_handoff_plan.v1"
+      output_contract.phase: "voice"
+      output_contract.status: "READY_FOR_SHARED_GATE"
+      active_artifact_mutation_performed: false
+      provider_call_performed: false
+      live_call_performed: false
+      paid_call_performed: false
+  - id: voice_gate
+    cmd:
+      - "python3"
+      - "skills/persona-dream/scripts/rung12_shared_phase_gate.py"
+      - "--case"
+      - "voice_executor_pass"
+      - "--voice-executor-receipt"
+      - "__RUN_DIR__/voice_executor_receipt.json"
+      - "--receipt"
+      - "__RUN_DIR__/voice_gate_receipt.json"
+    receipt: "__RUN_DIR__/voice_gate_receipt.json"
+    expect_receipt:
+      schema: "persona_dream.rung12_shared_phase_gate.v1"
+      ok: true
+      cases.0.case_id: "voice_executor_pass"
+      cases.0.executor_receipt_path: "__RUN_DIR__/voice_executor_receipt.json"
+      cases.0.executor_schema: "persona_dream.rung23_voice_executor_receipt.v1"
+      cases.0.phase: "voice"
+      cases.0.verdict: "PASS"
+      cases.0.advance_allowed: true
+      cases.0.executor_readonly: true
+      cases.0.active_artifact_mutation_performed: false
+      cases.0.provider_call_performed: false
+      cases.0.live_call_performed: false
+      cases.0.paid_call_performed: false

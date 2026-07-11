@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "required_entities": ["character_alpha", "environment_beta", "prop_tea"],
+  "forbidden_fixture_keys": ["horus", "embry", "tyranids"]
+}

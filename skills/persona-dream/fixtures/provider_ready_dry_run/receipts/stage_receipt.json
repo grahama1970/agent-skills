@@ -1,0 +1,8 @@
+{
+  "schema_id": "schemas/stage_receipt.schema.json",
+  "run_id": "provider-ready-dry-run-fixture",
+  "stage": "input_intake",
+  "inputs_complete": true,
+  "missing_inputs": [],
+  "evidence": ["fixture includes all required local inputs as symbolic receipts"]
+}

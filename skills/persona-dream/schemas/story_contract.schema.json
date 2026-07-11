@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.story_contract.v1",
+  "type": "object",
+  "required": ["schema", "artifact_id", "status", "created_at", "input_idea_contract", "seed", "story", "target_duration_s", "speaking_characters"],
+  "properties": {
+    "schema": {"const": "persona_dream.story_contract.v1"},
+    "artifact_id": {"type": "string"},
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "input_idea_contract": {"type": "string"},
+    "seed": {"type": "string", "minLength": 1},
+    "story": {"type": "string", "minLength": 1},
+    "target_duration_s": {"type": "number"},
+    "speaking_characters": {"type": "array", "minItems": 1}
+  }
+}

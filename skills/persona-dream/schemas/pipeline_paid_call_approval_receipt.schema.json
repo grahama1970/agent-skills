@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/pipeline_paid_call_approval_receipt.schema.json",
+  "title": "P0 Pipeline Paid-Call Approval Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "provider",
+    "approval_state",
+    "live_submission_allowed",
+    "dry_run_only",
+    "approver",
+    "evidence"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/pipeline_paid_call_approval_receipt.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "const": "kling"
+    },
+    "approval_state": {
+      "enum": ["NOT_REQUESTED", "APPROVED", "DENIED", "BLOCKED"]
+    },
+    "live_submission_allowed": {
+      "type": "boolean"
+    },
+    "dry_run_only": {
+      "type": "boolean"
+    },
+    "approver": {
+      "type": ["string", "null"]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "live_submission_allowed": {
+            "const": true
+          }
+        },
+        "required": ["live_submission_allowed"]
+      },
+      "then": {
+        "properties": {
+          "approval_state": {
+            "const": "APPROVED"
+          },
+          "dry_run_only": {
+            "const": false
+          },
+          "approver": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dry_run_only": {
+            "const": true
+          }
+        },
+        "required": ["dry_run_only"]
+      },
+      "then": {
+        "properties": {
+          "live_submission_allowed": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

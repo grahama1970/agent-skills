@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/pipeline_terminal_report.schema.json",
+  "title": "P0 Pipeline Terminal Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "status",
+    "terminal_gate",
+    "live_provider_call_made",
+    "receipt_paths"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/pipeline_terminal_report.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED_MISSING_INPUT",
+        "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+        "BLOCKED_SCHEMA_INVALID",
+        "BLOCKED_INCONSISTENT_RECEIPTS"
+      ]
+    },
+    "terminal_gate": {
+      "enum": ["input", "paid_call", "kling_submit"]
+    },
+    "live_provider_call_made": {
+      "const": false
+    },
+    "receipt_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^receipts/.+\\.json$"
+      },
+      "uniqueItems": true
+    }
+  }
+}

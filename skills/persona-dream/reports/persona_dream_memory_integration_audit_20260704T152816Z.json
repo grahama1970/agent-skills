@@ -1,0 +1,692 @@
+{
+  "schema": "persona_dream.memory_integration_audit.v1",
+  "generated_at": "2026-07-04T15:28:16.184763+00:00",
+  "mocked": false,
+  "live": true,
+  "memory_url": "http://127.0.0.1:8601",
+  "memory_health": {
+    "status": "ok",
+    "ok": true,
+    "memory_db_connected": true,
+    "sparta_corpus_ok": true,
+    "sparta_controls_count": 12491,
+    "sparta_corpus_required": true
+  },
+  "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/persona_dream_memory_integration_audit_20260704T152816Z.json",
+  "recall_summaries": {
+    "story_script_matrix": {
+      "count": 8,
+      "score_counts": {
+        "bm25": 8,
+        "graph": 8,
+        "dense": 8
+      },
+      "samples": [
+        {
+          "collection": null,
+          "key": "persona_dream_phase_06_script_uses_phase_02_story_matrix",
+          "title": null,
+          "scores": {
+            "bm25": 61.651031494140625,
+            "graph": 0.3887417987987634,
+            "dense": 0.43677953
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1",
+          "title": null,
+          "scores": {
+            "bm25": 55.221282958984375,
+            "graph": 0.3887417987987634,
+            "dense": 0.6505085
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3",
+          "title": null,
+          "scores": {
+            "bm25": 54.24139404296875,
+            "graph": 0.3887417987987634,
+            "dense": 0.62669104
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0",
+          "title": null,
+          "scores": {
+            "bm25": 46.31134796142578,
+            "graph": 0.3887417987987634,
+            "dense": 0.57689
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_2",
+          "title": null,
+          "scores": {
+            "bm25": 45.57453918457031,
+            "graph": 0.3887417987987634,
+            "dense": 0.5721967
+          }
+        }
+      ]
+    },
+    "media_graph": {
+      "count": 8,
+      "score_counts": {
+        "bm25": 8,
+        "graph": 8,
+        "dense": 8
+      },
+      "samples": [
+        {
+          "collection": null,
+          "key": "tom_media_432c8fecfa5319b6c0fe8c40",
+          "title": null,
+          "scores": {
+            "bm25": 140.14822387695312,
+            "graph": 0.3887417987987634,
+            "dense": 0.5622004
+          }
+        },
+        {
+          "collection": null,
+          "key": "tom_media_1221daf445de5f2435280693",
+          "title": null,
+          "scores": {
+            "bm25": 114.53053283691406,
+            "graph": 0.3887417987987634,
+            "dense": 0.5459229
+          }
+        },
+        {
+          "collection": null,
+          "key": "tom_media_256cb1449d1c3efc5ffee311",
+          "title": null,
+          "scores": {
+            "bm25": 114.31881713867188,
+            "graph": 0.3887417987987634,
+            "dense": 0.58044547
+          }
+        },
+        {
+          "collection": null,
+          "key": "tom_media_6281004019eb0e7e0899e015",
+          "title": null,
+          "scores": {
+            "bm25": 92.98810577392578,
+            "graph": 0.3887417987987634,
+            "dense": 0.5849104
+          }
+        },
+        {
+          "collection": null,
+          "key": "tom_media_9379635dd51ed013161abb74",
+          "title": null,
+          "scores": {
+            "bm25": 81.35466003417969,
+            "graph": 0.3887417987987634,
+            "dense": 0.58440864
+          }
+        }
+      ]
+    },
+    "contact_sheets": {
+      "count": 8,
+      "score_counts": {
+        "bm25": 8,
+        "graph": 4,
+        "dense": 8
+      },
+      "samples": [
+        {
+          "collection": null,
+          "key": "persona_dream_visual_asset__contact_sheet_kona_coast_png",
+          "title": null,
+          "scores": {
+            "bm25": 190.76596069335938,
+            "graph": 0.0,
+            "dense": 0.69446117
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_visual_asset__contact_sheet_june_swell_png",
+          "title": null,
+          "scores": {
+            "bm25": 187.3885040283203,
+            "graph": 0.0,
+            "dense": 0.66310686
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_visual_asset__contact_sheet_lava_reef_png",
+          "title": null,
+          "scores": {
+            "bm25": 182.93350219726562,
+            "graph": 0.0,
+            "dense": 0.6732458
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_visual_asset__contact_sheet_embry_surfboard_png",
+          "title": null,
+          "scores": {
+            "bm25": 168.91387939453125,
+            "graph": 0.0,
+            "dense": 0.70114625
+          }
+        },
+        {
+          "collection": null,
+          "key": "persona_dream_phase_04_contact_sheet_build_embry_kai_kahaluu_2024",
+          "title": null,
+          "scores": {
+            "bm25": 126.95423889160156,
+            "graph": 0.46296700124174434,
+            "dense": 0.80473554
+          }
+        }
+      ]
+    }
+  },
+  "source_hit_summary": {
+    "persona_dream_skill": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": 20,
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": 20,
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": 20,
+      "qdrant|index-qdrant|dense": 20,
+      "persona_memory_edges|tom_edges|Arango|graph": 20,
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": 20
+    },
+    "ux_lab": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": 20,
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": 13,
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": 20,
+      "qdrant|index-qdrant|dense": 20,
+      "persona_memory_edges|tom_edges|Arango|graph": 20,
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": 18
+    },
+    "tau": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": 20,
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": 9,
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": 20,
+      "qdrant|index-qdrant|dense": 20,
+      "persona_memory_edges|tom_edges|Arango|graph": 20,
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": 20
+    }
+  },
+  "source_hit_samples": {
+    "persona_dream_skill": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/HANDOFF.md:36: - Memory daemon at `http://127.0.0.1:8601`.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:367: using `/recall`; it does not inspect live git or the filesystem itself. The",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:372: general project state: /recall q=\"what did we work on recently...\" scope=<project>",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:373: project activity: /recall collections=[\"project_activity\"]",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:9: - Agent is persona-dream pipeline that generates cinematic Kling Omni sequences from persona memory. Purpose: test whether an AI agent can autonomously dream about events from memory like a real person. The pipeline must",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:28: - 2026-07-03: Phase 04 Contact Sheets is live-wired but not complete. Tau ran the contact-sheet creator/reviewer/build/reviewer loop with live:true and mocked:false. A real Codex OAuth image generation created and indexe",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:71: story + visual entities + memory/project recalls",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:148: # Live memory recall. Blocks with no_dream if no residue is found.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:151: # Live memory recall biased by an explicit topic from \"$ask <persona> to dream about X\".",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:75: - Persona memory recall.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:93: /recall q=\"<natural-language project question>\" scope=<project>",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:94: /recall q=\"<activity question>\" collections=[\"project_activity\"]",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/README.md:40: - Do not invent memory residue when recall is empty.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:141: exec \"${PYTHON[@]}\" \"${SCRIPT_DIR}/scripts/run_phase_02_memory_recall.py\" \"$@\"",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:54: : Orchestrates the dream/video packet. Owns memory residue recall, story",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:89: `$memory` may recall prior accepted Look Locks and Script DNA selections and",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt-readable.md:15: - persona memory residue recall",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt-readable.md:189: memory recall",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-tau-kling-preflight-architecture-20260630-submitted.md:29: -> Memory Recall",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt.md:40: - live memory recall over persona memories, dreams, dream journals, and operational residue."
+      ],
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:56: -> reflection -> optional memory write receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:164: ./run.sh generate --persona embry --write-memory",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:194: memory_write_receipt.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/README.md:22: | Write an approved reflection back to memory | `./run.sh generate --persona <name> --write-memory` |",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/README.md:33: | `memory_write_receipt.json` | Proof for any memory write-back |",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/README.md:44: - Treat image, video, and memory write receipts as claims until the artifact is",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:71: ./run.sh contact-sheet build --asset-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/research/bakeoff/<ref-run> --index-qdrant --write-memory",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/sanity.sh:13: --no-write-memory",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/sanity.sh:31: \"memory_write_receipt.json\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/sanity.sh:41: receipt = json.loads((out / \"memory_write_receipt.json\").read_text())",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-r1-webgpt-readable.md:54: -> reflection -> optional memory write receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-r1-webgpt-readable.md:101: memory_write_receipt.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-r1-webgpt-readable.md:114: -> reflection -> optional memory write receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt-readable.md:21: - optional memory write receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt-readable.md:65: 17. Store dream reflection and memory write receipt.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt-readable.md:81: - memory write receipt",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-r1-webgpt.md:58: -> optional memory_write_receipt.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-r1-webgpt.md:94: - Memory writeback requires `--write-memory` and writes `memory_write_receipt.json`.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt.md:32: - `memory_write_receipt.json`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/persona-dream-pipeline-r2-webgpt.md:41: - default no-write memory behavior unless `--write-memory` is explicit."
+      ],
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:261: visual_entity_context.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/storyboard_first_fixture.py:911: \"required_skills\": [\"casting-agent\", \"extract-entities\"],",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/contact_sheet.py:693: (asset_root / \"visual_entity_context.json\").write_text(json.dumps(visual_context, indent=2))",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:8: those records through memory, Arango graph, Qdrant, and extract-entities.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:190: r\"extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:328: f\"tau extract-entities/coverage hits={tau_extract_hits}\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145940Z.json:246: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145940Z.json:249: \"kind\": \"persona_dream_interaction_matrix\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145940Z.json:300: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_seed_2\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T142746Z.json:881: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T142746Z.json:885: \"kind\": \"persona_dream_interaction_matrix\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T142746Z.json:896: \"interaction_matrix\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145250Z.json:67: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145250Z.json:85: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T145250Z.json:103: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T144545Z.json:67: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T144545Z.json:85: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/memory_recall_audit_20260704T144545Z.json:103: \"_key\": \"persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_03_producer_writer_director/crew_contract.json:289: \"has_interaction_matrix\": true,",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_03_producer_writer_director/crew_contract.json:587: \"interaction_matrix\": ["
+      ],
+      "qdrant|index-qdrant|dense": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:356: 9. Memory/Qdrant pointers only after accepted visual review",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:451: - Memory/Qdrant accepted references second.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:28: - 2026-07-03: Phase 04 Contact Sheets is live-wired but not complete. Tau ran the contact-sheet creator/reviewer/build/reviewer loop with live:true and mocked:false. A real Codex OAuth image generation created and indexe",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:753: --index-qdrant \\",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:770: and pointers to those files. Qdrant stores named `text_mm` and `image_mm`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:171: 2. Accepted memory/Qdrant visual assets",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:15: contact-sheet Build/amend/retrieve visual reference sheets, memory records, and Qdrant index",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:71: ./run.sh contact-sheet build --asset-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/research/bakeoff/<ref-run> --index-qdrant --write-memory",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:22: -> memory and Qdrant pointers",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:67: and index accepted image paths in memory/Qdrant.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:272: - For Kling, provider inputs are separate panel images, not a dense grid.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/HANDOFF.md:59: 18. **Run metadata moved to sidebar** \u2014 debug info removed from main workspace, condensed into right pane.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/HANDOFF.md:130: - MemoryLinker confidence scores use `Math.random()` \u2014 not real Qdrant scores",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/run_phase_02_memory_recall.py:310: for key in (\"bm25\", \"dense\", \"graph\", \"freshness\"):",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/contact_sheet.py:27: QDRANT_URL = \"http://127.0.0.1:6333\"",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/contact_sheet.py:30: QDRANT_COLLECTION = \"persona_dream_visual_assets_v1\"",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/contact_sheet.py:246: \"visual_qdrant_collection\": QDRANT_COLLECTION,",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:8: those records through memory, Arango graph, Qdrant, and extract-entities.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:125: score_counts = {\"bm25\": 0, \"graph\": 0, \"dense\": 0}",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/audit_memory_integration.py:140: \"scores\": {k: scores.get(k) for k in (\"bm25\", \"graph\", \"dense\")},"
+      ],
+      "persona_memory_edges|tom_edges|Arango|graph": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:36: - best-practices-arangodb",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:489: Use ComfyUI for still-image work only when graph control is the reason:",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:496: human-inspectable graph state",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:84: : Selects the Kling-friendly Director of Photography and Script DNA vocabulary",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:412: - Do not store vector arrays in memory/ArangoDB.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/schemas/kling_scene_packet.schema.json:92: \"required\": [\"index\", \"duration_s\", \"visual_anchor\", \"image_status\", \"voice_status\", \"prompt\", \"dialogue\", \"provider_text\", \"cinematography\"],",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/schemas/kling_scene_packet.schema.json:102: \"cinematography\": {",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/review-bundles/nava-runpod-webgpt-self-contained.md:53: prompt=\"A front-facing medium close-up of Embry in an archive graph environment. Embry says<S>I know I am software. The evidence still feels real.<E>\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/medium_loop_dag_smoke.py:5: an inspectable local-command graph runner used to prove narrow rungs without",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/medium_loop_dag_smoke.py:31: The graph runner validates node identifiers and dependencies, computes a stable",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/medium_loop_dag_smoke.py:34: It executes one graph node at a time by design.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/install_dag_harness_artifacts.py:64: if not (source_dir / \"graph.yaml\").is_file():",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/install_dag_harness_artifacts.py:65: raise FileNotFoundError(f\"Missing graph.yaml in {source_dir}\")",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/export_dag_harness_review_bundle.py:92: \"evidence_nodes\": \"Adapter TransportDagEvidence nodes (e.g. 5 for scillm-two-concurrent expanded graph)\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/export_dag_harness_review_bundle.py:94: \"rule\": \"Side panel 'evidence nodes' counts receipt graph nodes; canvas includes transport topology buses.\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/run_lore_extraction_canary.py:184: \"graph_edges\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/run_lore_extraction_canary.py:218: \"graph_edges\": {\"type\": \"array\"},",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/run_lore_extraction_canary.py:279: \"graph_edges\": [",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream.py:668: \"SPARTA Explorer artifacts appear as holographic cards or table projections\",",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/persona_dream.py:714: (\"shot_02\", \"Embry explains the app\", \"medium on Embry\", \"Embry gestures to holographic SPARTA Explorer panels: Chat, Evidence Workspace, Coverage, QRAs, Controls.\", \"It has to feel like someone sitting with you, not a d"
+      ],
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": [
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:116: - Intended behavior: the human seed becomes an accepted `story_contract.md`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:117: and `story_contract.json` before visual generation.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_ASSESSMENT.md:181: `chosen_reference_inputs.json`, and `contact_sheet_work_order.json`; then",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:12: - 2026-06-30: Current one-scene proof/report state: run root `/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run`; report `",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:28: - 2026-07-03: Phase 04 Contact Sheets is live-wired but not complete. Tau ran the contact-sheet creator/reviewer/build/reviewer loop with live:true and mocked:false. A real Codex OAuth image generation created and indexe",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PROJECT_KNOWLEDGE.md:29: - 2026-07-04: Phase 06 Script has a deterministic Tau script-writer/script-reviewer contract path wired into ux-lab, but it is not yet the full GPT-5.5/Kimi live creator-reviewer loop. Changed files include tau/src/tau_c",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:192: contact_sheet.png",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:741: receipts, and the backend-neutral `contact_sheets.json` contract. Use hosted or",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/SKILL.md:782: packet artifacts exist, that `contact_sheet.png` is a real PNG, and that memory",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:132: - `story_contract.md`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:133: - `story_contract.json`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/PIPELINE_PLAN.md:162: - `contact_sheet_work_order.json`",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/README.md:31: | `contact_sheet.png` | Visual review surface when image frames are produced |",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:103: ./run.sh validate-story-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/story_contract.json --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:104: ./run.sh write-story-contract-work-order --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --story-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/story_contract.json --output /mnt/storage",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh:105: ./run.sh validate-story-contract-work-order /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/receipts/story_contract_work_order.json --json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:137: `gpt_contact_sheet_generation_plan.json`, or provider packets.",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:194: story_contract.md",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/GOAL.md:195: story_contract.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/sanity.sh:29: \"contact_sheet.png\","
+      ]
+    },
+    "ux_lab": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/tau-same-message-visible-tui-mirror-proof.mjs:134: memory_recall_200_seen: memoryRequests.some(",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/tau-same-message-visible-tui-mirror-proof.mjs:135: (request) => request.url.includes(\"/api/memory/recall\") && request.status === 200,",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/tau-live-memory-chat-proof.mjs:19: recall_product_visible: /endpoint\\s+\\/recall/.test(chatText),",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/tau-live-memory-chat-proof.mjs:31: (request) => request.url.includes(\"/api/memory/recall\") && request.status >= 200 && request.status < 300,",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/tau-live-memory-chat-proof.mjs:38: waitFor: \"Tau stopped fail-closed while running /recall.\",",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:9: * ALL /api/memory/* \u2014 proxy to memory daemon (recall, learn, list, etc.)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:79: const MEMORY_HTTP_URL = process.env.MEMORY_HTTP_URL ?? 'http://127.0.0.1:8601'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:1133: { method: 'POST', path: '/api/memory/recall', description: 'BM25 + semantic + graph search across ArangoDB collections', body: { q: 'string', collections: ['sparta_controls','sparta_qra','sparta_relationships','technique",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/tauRoutes.test.ts:1678: visible_assertions: ['Accessing Memory...', 'memory recall started'],",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/design-convergence.ts:7: * 3. Each persona reviews via VLM + /memory recall + their AGENTS.md expertise",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/ChatFab.tsx:64: const res = await fetch(`${API}/api/memory/recall`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/ChatFab.tsx:117: const recallRes = await fetch(`${API}/api/memory/recall`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/ChatFab.tsx:153: const qraRes = await fetch(`${API}/api/memory/recall`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:19: /** Response from daemon /recall endpoint */",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:106: // Fetch controls and relationships via daemon /recall endpoint",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:109: memoryPost<RecallResponse>(\"/recall\", {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useScillmData.ts:4: * Uses /api/memory/recall and computes aggregations client-side.",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaCollections.ts:6: * /recall \u2014 semantic search (BM25 + dense, returns ranked results)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaCollections.ts:42: const res = await fetch(`${API}/recall`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaCollections.ts:47: if (!res.ok) throw new Error(`/recall ${res.status}: ${await res.text()}`);"
+      ],
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:2005: await proxyPost('/upsert', {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:4378: Existing backend persistence uses \\`proxyPost('/upsert', ...)\\` into:",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:4780: await proxyPost('/upsert', {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useBinaryData.ts:263: fetch(`${API}/upsert`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useRegisterAction.ts:48: fetch(`${API}/api/memory/upsert`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:755: solution: 'Batch into chunks of 50, use /upsert with deterministic _keys',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:764: content: \"Based on memory, we've hit this before. The extraction fails when controls have nested sub-controls \u2014 the fix is to flatten the hierarchy using a recursive CTE in AQL before running the extraction pipeline.\\n\\n",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx:1078: fetch(`${API}/api/memory/upsert`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/datalake-explorer/api/client.ts:145: return memoryFetch<StoreResult>(\"/store\", { key, value });",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/scillm/dag-planner/ScillmExecGraphDebugger.tsx:1579: return <ScillmExecGraphDebuggerView graph={graph} baseGraphHash={baseGraphHash} status={status} events={events} connection={connection} enablePlanEditing={enablePlanEditing} nicoProposals={nicoProposals} onAmendPlan={onA",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/tests/server/qraReview.test.ts:46: it('strips Arango internals but preserves _key for /upsert', () => {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/tests/server/qraReview.test.ts:60: it('merges reviewed draft, evidence metadata, and review history for canonical /upsert', () => {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/tests/server/qraReview.test.ts:111: it('persists review by /upsert, strips Arango internals, preserves _key, and returns the refetched document', async () => {"
+      ],
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:5531: const interactionRows = Array.isArray(sourceContext?.interaction_matrix) ? sourceContext.interaction_matrix : []",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:5578: 'entity_environment_script_table.json',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:11627: const entityContext = await proxyPost('/extract-entities', {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/ChatFab.tsx:104: const entRes = await fetch(`${API}/api/extract-entities`, {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/lib/spartaGatewayTurnMapper.ts:8: \"sparta.entities.extracted\": { id: \"extract_entities\", skill: \"extract-entities\", type: \"tool\" },",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/MarkdownRenderer.tsx:42: /** Deterministic spans from /memory /extract-entities. These take precedence over static fallback highlighting. */",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/MarkdownRenderer.tsx:175: // /extract-entities spans are authoritative and are indexed against the",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/EntitySpanViewer.tsx:137: const response = await fetch('/api/extract-entities', {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/spartaChatR6b.ts:30: skill: \"extract-entities\",",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/spartaChatR6b.ts:32: summary: \"/extract-entities\",",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/spartaChatR6b.ts:49: skill: \"extract-entities\",",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx:1213: // \u2500\u2500 ENTITY EXTRACTION via /extract-entities API (BM25 against binary_features_search view) \u2500\u2500",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx:1217: const res = await timedFetch('/api/extract-entities', {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx:1224: console.error(`[extract-entities] API returned ${res.status}: ${errBody.error || errBody.detail || 'unknown'}`)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/tau/TauChatView.tsx:84: detail: 'Live Memory /extract-entities stage ran before recall and selected create-evidence-case.',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/tau/TauChatView.tsx:1072: '| Memory-first routing | live harness receipts preserve `/intent`, `/extract-entities`, `/recall`, and entity packet |',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/QRAsView.tsx:1106: ? `$extract-entities found unsupported term${draftApprovalUnsupportedTerms.length === 1 ? '' : 's'}: ${draftApprovalUnsupportedTerms.slice(0, 3).join(', ')}.`",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/QRAsView.tsx:1110: ? '$extract-entities is still running.'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/QRAsView.tsx:1112: ? '$extract-entities is unavailable; rerun evidence before approval.'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/EvidenceView.tsx:8: const EXTRACT_API = apiUrl('/extract-entities')"
+      ],
+      "qdrant|index-qdrant|dense": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:112: const WATCH_CROP_QDRANT_COLLECTION = process.env.WATCH_CROP_QDRANT_COLLECTION ?? 'watch_track_crop_embeddings_jina_v5_1024'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:116: const WATCH_QDRANT_URL = process.env.WATCH_QDRANT_URL ?? process.env.QDRANT_URL ?? 'http://127.0.0.1:6333'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:300: for (const key of ['detector', 'detection', 'observation', 'box', 'track', 'payload', 'metadata', 'qdrant_payload', 'crop']) {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public/pdf.worker.min.mjs:28: t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(a)}static async#j(e,t,a){const r=\"openjpeg.wasm\";try{this.#E||(this.#_?this.#E=await fetchBinaryData(`${this.#F}${r}`):this.#E=await this.#P.sendWithPromise(\"Fe",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaCollections.ts:6: * /recall \u2014 semantic search (BM25 + dense, returns ranked results)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/pdf-lab/PdfLabProductionWorkflow.tsx:355: qdrant_collection?: string",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/pdf-lab/PdfLabProductionWorkflow.tsx:685: ? 'Visual crop and extracted payload are inspectable; final pass still requires Memory/Qdrant recall QA'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/pdf-lab/PdfLabProductionWorkflow.tsx:699: memoryStatus: 'provenance key only; recall status comes from Memory/Qdrant QA',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/pdf-lab/PdfLabLabelingPage.tsx:908: reason: 'Dense fundamentals page with caption/table-adjacent structure and many paragraph regions.',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/personaplex/PersonaPlexProjectView.tsx:10: dense: number",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/personaplex/PersonaPlexProjectView.tsx:369: <div className=\"mt-1 text-[10px] text-slate-500\">BM25 {row.bm25.toFixed(3)} \u00b7 dense {row.dense.toFixed(3)} \u00b7 graph {row.graph.toFixed(3)}</div>",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/shared-chat/types.ts:18: scores?: { bm25?: number; graph?: number; dense?: number; freshness?: number };",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/ReasoningChain.tsx:315: <ScoreBar label=\"DENSE\" value={item.scores?.dense ?? 0} />",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:285: { problem: 'SPARTA extraction fails on nested control hierarchies', solution: 'Flatten hierarchy before QRA generation \u2014 applied in batch-quality v2', scores: { bm25: 0.92, graph: 0.70, dense: 0.45, freshness: 0.87 } },",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:286: { problem: 'CMMC Level 2 mapping incomplete for SC family', solution: 'Cross-reference NIST 800-171r3 Appendix D with SPARTA countermeasures', scores: { bm25: 0.85, graph: 0.82, dense: 0.38, freshness: 0.72 } },",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:287: { problem: 'Prior assessment session: SPARTA convergence pipeline', solution: 'Fixed grounding threshold bug, PASS rate now 78%. Skills: assess \u2192 dogpile \u2192 plan', scores: { bm25: 0.78, graph: 0.65, dense: 0.31, freshness",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchAnnotationIsland.tsx:722: ? ` Held-out Qdrant: ${payload.auto_suggest_readiness.pass_count ?? 0}/${payload.auto_suggest_readiness.evaluated_count} (${Math.round(Number(payload.auto_suggest_readiness.accuracy ?? 0) * 100)}%) ${payload.auto_suggest",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchAnnotationIsland.tsx:1825: setDetectorStatus(`YOLO candidates loaded; Qdrant suggestion skipped for ${candidate.trackId} because the current video frame is unavailable.`)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchAnnotationIsland.tsx:1852: setDetectorStatus(`YOLO candidates loaded; no Qdrant label suggestion for ${candidate.trackId}.`)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/watch/WatchReportView.tsx:120: qdrant_crop_point_count: number"
+      ],
+      "persona_memory_edges|tom_edges|Arango|graph": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/vite.config.ts:69: '/tmp/nist-corpus-graph-design-review/.plan-iterate/phase-04-7-hyperlink-chip-canary/evidence-artifacts/signoffs'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:593: const rawSummary = evidence.raw_ops_arango_summary && typeof evidence.raw_ops_arango_summary === 'object'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:594: ? evidence.raw_ops_arango_summary as JsonRecord",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:596: const rawNonpassing = Array.isArray(evidence.raw_ops_arango_nonpassing)",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/test-runner.ts:202: 'graph-navigation': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/test-runner.ts:203: 'graph-exploration': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/test-runner.ts:204: 'graph-interaction': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/persona-review-loop.ts:58: 'graph-navigation': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/persona-review-loop.ts:59: 'graph-exploration': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/persona-review-loop.ts:60: 'graph-interaction': 'src/components/binary-explorer/BinaryGraph.tsx',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/design-convergence.ts:213: else if (/layout|zoom|fit/.test(wl)) cat = 'graph-layout'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx:702: description: 'A high-contrast, tactical button with a neon glow effect and monospace typography.',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx:764: name: 'SignalGraph',",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx:1044: { id: 'battle', title: 'Battle Arena', subtitle: 'Arena scenario graph, scores, and Tau handoff proof', date: '2026-06-30', type: 'desktop' as const },",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public/pdf.worker.min.mjs:28: t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(a)}static async#j(e,t,a){const r=\"openjpeg.wasm\";try{this.#E||(this.#_?this.#E=await fetchBinaryData(`${this.#F}${r}`):this.#E=await this.#P.sendWithPromise(\"Fe",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/DesignBoardCanvas.tsx:580: <div className=\"text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1\">TYPOGRAPHY</div>",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:2: import type { GraphEdge, GraphNode } from \"../components/sparta/lemma-graph/LemmaGraph\";",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:26: /** Raw SPARTA control document from ArangoDB */",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaData.ts:41: /** Raw SPARTA relationship from ArangoDB */",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useBinaryData.ts:37: // \u2500\u2500 ArangoDB document shapes \u2500\u2500"
+      ],
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/watch-annotation-clear-segment-live-check.mjs:5: const OUT_JSON = process.env.WATCH_CLEAR_OUT || '/tmp/watch_annotation_clear_segment_live_check.latest.json'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/scripts/watch-annotation-live-interaction-check.mjs:7: const OUT_JSON = process.env.WATCH_INTERACTION_OUT || '/tmp/watch_annotation_live_interaction_check.latest.json'",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:732: async function latestScillmPlanGraph(phaseDir: string, phaseStatus: JsonRecord | null): Promise<{ graphPath: string; readinessPath: string | null } | null> {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:753: const latestReadinessPath = latestGraphPath.replace(/\\.json$/, '-runtime-readiness.json')",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts:791: await latestMatchingFile(evidenceDir, (file) => /^compiled-runtime-graph-request(?:-[a-z0-9]+)?\\.json$/i.test(file))",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/humJobs.ts:430: app.get('/api/hum/jobs/:jobId/runs/latest/status/status.jsonl', async (req: Request, res: Response) => {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/humJobs.ts:441: app.get('/api/hum/jobs/:jobId/runs/latest/review/hum-reviewer-ranking.json', async (req: Request, res: Response) => {",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/humJobs.ts:448: const content = await import('fs/promises').then(fs => fs.readFile(resolve(jobDir, latestRun, 'hum-reviewer-ranking.json'), 'utf-8'))",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public/pdf.worker.min.mjs:28: t)).default()}catch(e){warn(`JpxImage#getJsModule: ${e}`)}e(a)}static async#j(e,t,a){const r=\"openjpeg.wasm\";try{this.#E||(this.#_?this.#E=await fetchBinaryData(`${this.#F}${r}`):this.#E=await this.#P.sendWithPromise(\"Fe",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/lib/subagentMonitor/snapshotToChatMessages.ts:57: return `Latest issue ${issue.issue_id} (${issue.status || \"open\"}): ${issue.symptom || issue.problem || \"see issues.jsonl\"}`;",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/scillm/ScillmDagPlanner.tsx:611: const latest = (await response.json()) as DagSnapshot;",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/hum/HumJobProvider.tsx:99: await api(`/${jobId}/runs/latest/${path}`, { method: 'POST', body: JSON.stringify(data) })",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/hum/api.ts:31: ) => request(`/${jobId}/runs/latest/decisions/source-selection`, { method: \"POST\", body: JSON.stringify(data) }),",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/hum/api.ts:34: request(`/${jobId}/runs/latest/decisions/guide-selection`, { method: \"POST\", body: JSON.stringify(data) }),",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/hum/api.ts:37: request(`/${jobId}/runs/latest/decisions/listening`, { method: \"POST\", body: JSON.stringify(data) }),",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/hack/HackEvolveMonitor.tsx:223: <Field labelText=\"Latest result\" value={<>{exploit.latestResult.replace(\"promotion-tasks/\", \"\")}<code>promotion-tasks/</code> was not emitted for handoff.</>} source=\"anomalies.jsonl + computed\" />",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/pagePurposeContracts.ts:62: \"phase-58-evidence-workspace-production-gates/evidence-artifacts/ui-verification-latest.json\",",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/pagePurposeContracts.ts:285: \"phase-57-monitor-status-rendering-contract/evidence-artifacts/ui-verification-latest.json\","
+      ]
+    },
+    "tau": {
+      "/recall\\b|memory.*recall|MEMORY_URL|127\\.0\\.0\\.1:8601": [
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:57: - 2026-06-29 Tau processed live GitHub issue #40 through its own ticket-driven self-fix repair mode. Issue: `https://github.com/grahama1970/tau/issues/40`; code commit made by Tau self-fix: `608f1b0 Use final self-fix cy",
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:62: - 2026-06-29 Tau has a first live non-mocked coder-reviewer repair loop proof. New command: `tau self-fix coder-reviewer-loop`. Fresh proof: `experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorek",
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:67: - 2026-06-29 Tau has a first live self-fix issue-intake CLI slice at `tau self-fix tick`. Fresh proof is recorded in `experiments/goal-locked-subagents/proofs/self-fix-issue-22-20260629T115315Z/self-fix-receipt.json` wit",
+        "/home/graham/workspace/experiments/tau/README.md:448: -> Memory /intent and /recall before code inspection",
+        "/home/graham/workspace/experiments/tau/README.md:529: -> memory /recall or /clarify or /deflect according to the intent product",
+        "/home/graham/workspace/experiments/tau/docs/configuration.md:120: \"base_url\": \"http://127.0.0.1:8601\",",
+        "/home/graham/workspace/experiments/tau/docs/configuration.md:176: 5. If Memory has relevant recall, Tau includes the recall packet in the help",
+        "/home/graham/workspace/experiments/tau/docker/tau-cron.sh:19: self_fix_memory_base_url=\"${TAU_MEMORY_BASE_URL:-http://127.0.0.1:8601}\"",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_app.py:3815: message=\"memory recall started\",",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_app.py:3816: data={\"memory_stage\": \"recall\"},",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:6: _compact_memory_recall_item,",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:429: compact = _compact_memory_recall_item(doc)",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_adapter.py:130: message=\"memory recall started\",",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_adapter.py:131: data={\"memory_stage\": \"recall\"},",
+        "/home/graham/workspace/experiments/tau/tests/test_self_fix_poll.py:21: memory_base_url=\"http://127.0.0.1:8601\",",
+        "/home/graham/workspace/experiments/tau/tests/test_self_fix_poll.py:71: memory_base_url=\"http://127.0.0.1:8601\",",
+        "/home/graham/workspace/experiments/tau/tests/test_self_fix_ticket_repair.py:77: memory_base_url=\"http://127.0.0.1:8601\",",
+        "/home/graham/workspace/experiments/tau/experiments/loop2-alignment/SPARTA_CHAT_INTERFACE_CONTRACT.md:13: 3. Harness preserves Memory intent, entity packet, and recall packet.",
+        "/home/graham/workspace/experiments/tau/experiments/loop2-alignment/SPARTA_CHAT_INTERFACE_CONTRACT.md:35: | `memory` / `recall` | `Accessing Memory...` |",
+        "/home/graham/workspace/experiments/tau/experiments/loop2-alignment/SPARTA_CHAT_INTERFACE_CONTRACT.md:93: Brave search runs outside Memory when Memory intent or recall requires external"
+      ],
+      "/upsert\\b|/store\\b|write-memory|memory_write_receipt|memory write receipt": [
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/input_dream_packet_work_order.json:7: \"memory_write_receipt is skipped unless write-memory was explicitly requested\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/input_dream_packet_work_order.json:48: \"Keep memory_write_receipt.json skipped unless explicit write-memory authorization is present.\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/tau-same-run-compliance-20260628T222531Z/manifest.json:59: \"POST /api/memory/upsert 200\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T203937Z/input_dream_packet_work_order.json:7: \"memory_write_receipt is skipped unless write-memory was explicitly requested\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T203937Z/input_dream_packet_work_order.json:48: \"Keep memory_write_receipt.json skipped unless explicit write-memory authorization is present.\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-same-message-visible-tui-mirror-20260628T231859Z/browser-proof.json:37: \"url\": \"http://127.0.0.1:3002/api/memory/upsert\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/skill-chat-ui-proof-command-20260628T233232Z/browser-proof.json:37: \"url\": \"http://127.0.0.1:3002/api/memory/upsert\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-repeatable-same-message-tui-mirror-20260628T232614Z/browser-proof.json:37: \"url\": \"http://127.0.0.1:3002/api/memory/upsert\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/skill-e2e-include-chat-ui-20260628T233739Z/browser-proof.json:37: \"url\": \"http://127.0.0.1:3002/api/memory/upsert\","
+      ],
+      "extract-entities|entity_context\\.json|entity_environment_script_table|interaction_matrix": [
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:270: \"interaction_matrix\": [",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:305: \"entity_environment_script_table.json\",",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:360: \"interaction_matrix\": [",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:71: \"Tau experiment harness preserves Memory intent/extract-entities/recall packets\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:98: \"endpoint\": \"/extract-entities\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:378: \"route\": \"/extract-entities\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:183: \"Tau experiment harness preserves Memory intent/extract-entities/recall packets\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:210: \"endpoint\": \"/extract-entities\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:380: \"route\": \"/extract-entities\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-intent.json:143: \"route\": \"/extract-entities\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order_pipeline_complete.json:676: \"interaction_matrix\": [",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order_pipeline_complete.json:835: \"seed\": \"## Role\\nYou are the Phase 02 Story author for Embry OS.\\n\\n## Task\\nGenerate an original 1-panel, 10-second story beat for the Phase 02 Story pane. Return one JSON object that matches the Output Format section ",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order_pipeline_complete.json:844: \"story\": \"{\\n \\\"story\\\": \\\"Embry\\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older w",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order.json:676: \"interaction_matrix\": [",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order.json:835: \"seed\": \"## Role\\nYou are the Phase 02 Story author for Embry OS.\\n\\n## Task\\nGenerate an original 1-panel, 10-second story beat for the Phase 02 Story pane. Return one JSON object that matches the Output Format section ",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-crew-contract-ui-dispatch/crew_contract_work_order.json:844: \"story\": \"{\\n \\\"story\\\": \\\"Embry\\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older w",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-same-message-visible-tui-mirror-20260628T231859Z/cdp-read.json:4: \"text\": \"T\u2019AU EXPERIMENT CHAT\\nReceipt-backed chat shell for T\u2019au loop, Memory, evidence, Watch-style media, and Embry voice.\\n\\nThis is an integration surface inside UX Lab. It reads the T\u2019au-owned UX contract and uses ",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-same-message-visible-tui-mirror-20260628T231859Z/cdp-read.json:601: \"text\": \"Extract entities\\nPASS\\n\\nLive Memory /extract-entities stage ran before recall and selected create-evidence-case.\\n\\nexperiments/loop2-alignment/reliability-stress-20260626T211653Z-extract-hardening/cwe-287-ext",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-same-message-visible-tui-mirror-20260628T231859Z/cdp-read.json:609: \"text\": \"Extract entities\\nPASS\\n\\nLive Memory /extract-entities stage ran before recall and selected create-evidence-case.\\n\\nexperiments/loop2-alignment/reliability-stress-20260626T211653Z-extract-hardening/cwe-287-ext",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-annotation-label-hardening-20260628T230819Z/cdp-read.json:4: \"text\": \"T\u2019AU EXPERIMENT CHAT\\nReceipt-backed chat shell for T\u2019au loop, Memory, evidence, Watch-style media, and Embry voice.\\n\\nThis is an integration surface inside UX Lab. It reads the T\u2019au-owned UX contract and uses "
+      ],
+      "qdrant|index-qdrant|dense": [
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:419: \"qdrant_similarity_requested\": false,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:451: \"dense\": 0.16577566,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:471: \"dense\": 0.1687488,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:41: \"dense\": 0.1619567,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:61: \"dense\": 0.046199944,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:81: \"dense\": 0.1237106,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:16: \"dense\": 0.45380333,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:41: \"dense\": 0.38512456,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:66: \"dense\": 0.4283358,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-intent.json:155: \"dense\"",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-intent.json:245: \"qdrant_similarity_requested\": false,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-28-webgpt-ask-binding-20260629T130506Z/ask-config-doctor.json:92: \"detail\": \"exit=0; used_dense=True; qdrant_item=False; embedding_model=False\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-28-webgpt-ask-binding-20260629T130506Z/ask-config-doctor.json:93: \"name\": \"readiness:qdrant\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-28-webgpt-ask-binding-20260629T130506Z/ask-config-doctor.json:95: \"repair_command\": \"Start/bootstrap Qdrant or the configured vector store using the memory service setup instructions.\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-45-panel-repair-gate-loop-command-dispatch-20260629T2156/memory-recall.json:16: \"dense\": 0.48746163,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-45-panel-repair-gate-loop-command-dispatch-20260629T2156/memory-recall.json:41: \"dense\": 0.5047937,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-45-panel-repair-gate-loop-command-dispatch-20260629T2156/memory-recall.json:67: \"dense\": 0.3894905,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-45-panel-repair-gate-loop-command-dispatch-20260629T2156/memory-intent.json:252: \"qdrant_similarity_requested\": false,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-memory-route-failclosed-20260628T140048Z/research-disabled-harness-receipt.json:327: \"dense\"",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-memory-route-failclosed-20260628T140048Z/research-disabled-harness-receipt.json:404: \"qdrant_similarity_requested\": false,"
+      ],
+      "persona_memory_edges|tom_edges|Arango|graph": [
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:41: - 2026-07-03 Generic Tau DAG runner productization slice added. `src/tau_coding/generic_dag.py` defines `tau.generic_dag_spec.v1`, `tau.generic_dag_node_receipt.v1`, `tau.generic_dag_run_receipt.v1`, and `tau.generic_dag",
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:152: - 2026-07-04 Traycer DAG drift decision: DAG drift should be checked as a second layer above per-subagent trace validation. Slice path should be `tau traycer validate` for one trace/handoff, then `tau traycer chain-valid",
+        "/home/graham/workspace/experiments/tau/tests/test_loop_receipt.py:374: assert written_evidence[\"graph_id\"] == \"loop2:repair-demo\"",
+        "/home/graham/workspace/experiments/tau/tests/test_loop_receipt.py:1597: \"graph_id\": f\"loop2:{node_id}\",",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_adapter.py:293: \"command\": \"git log --oneline --decorate --graph --max-count=8\",",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_adapter.py:298: == \"$ git log --oneline --decorate --graph --max-count=8 (timeout 30s)\"",
+        "/home/graham/workspace/experiments/tau/tests/test_coding_session.py:588: assert evidence[\"graph_id\"] == \"loop2:session-prompt\"",
+        "/home/graham/workspace/experiments/tau/tests/test_resources.py:61: def test_derive_description_uses_first_heading_or_paragraph() -> None:",
+        "/home/graham/workspace/experiments/tau/tests/test_resources.py:63: assert derive_description(\"\\nFirst paragraph\\nMore\") == \"First paragraph\"",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:413: \"arango_data_requested\": false,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:452: \"graph\": 0.3887417987987634,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/deflect-harness-receipt.json:472: \"graph\": 0.0,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:42: \"graph\": 0.3887417987987634,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:62: \"graph\": 0.3887417987987634,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/live-clarify-deflect-memory-routes-20260628T021701Z/clarify-harness-receipt.json:82: \"graph\": 0.3887417987987634,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:18: \"graph\": 0.0",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:43: \"graph\": 0.0",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-recall.json:68: \"graph\": 0.0",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-intent.json:186: \"strategy\": \"graph_traversal\"",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/self-fix-coder-reviewer-battle-scorekeeper-20260629T140321Z/memory-intent.json:218: \"graph_multihop\": 0.2,"
+      ],
+      "/api/tau/dream|latest.*json|story_contract|script_contract|contact_sheet": [
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:70: - 2026-06-29 UX Lab `#tau` now has a real browser-to-PTY proof against the actual `TauTuiApp` proof-mode process, recorded in `experiments/goal-locked-subagents/proofs/ux-lab-real-tui-app-pty-20260629T005557Z/manifest.js",
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:71: - 2026-06-29 UX Lab `#tau` now has a first real browser-to-PTY smoke proof recorded in `experiments/goal-locked-subagents/proofs/ux-lab-real-pty-tui-20260629T003900Z/manifest.json`. The proof is `mocked:false`, `live:tru",
+        "/home/graham/workspace/experiments/tau/PROJECT_KNOWLEDGE.md:72: - 2026-06-28 Tau skill `e2e` can now explicitly include the fresh live chat UI browser proof with `skills/tau/run.sh e2e --include-chat-ui --chat-ui-timeout-s 90`. Fresh proof is recorded in `experiments/goal-locked-suba",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_app.py:4187: path=tmp_path / \"latest-session.jsonl\",",
+        "/home/graham/workspace/experiments/tau/tests/test_tui_app.py:4290: path=tmp_path / \"latest-session.jsonl\",",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:7: _contact_sheet_asset_from_recall_item,",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:9: write_persona_dream_contact_sheet_loop_proof,",
+        "/home/graham/workspace/experiments/tau/tests/test_persona_dream_dream_packet_agent.py:11: write_persona_dream_script_contract_loop_proof,",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-dream-packet-loop-dispatch-20260629T2025/open-issues.json:9: \"body\": \"## Type\\nfeature\\n\\n## Target\\n`/home/graham/workspace/experiments/tau`\\n\\nConcrete areas likely involved:\\n- `experiments/goal-locked-subagents/agent-command-specs/`\\n- `src/tau_coding/cli.py`\\n- `src/tau_codin",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-personaplex-embry-failclosed-20260628T201300Z/manifest.json:90: \"latest_marker\": \"/home/graham/.codex/ui-verification/latest.json\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/issue-41-close-proof.md:72: contact_sheet: contact_sheet.png with PNG signature",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/issue-41-close-proof.md:76: first_blocker.phase: story_contract",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/issue-41-close-proof.md:88: - The pipeline advances past dream_packet to story_contract.",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/input_dream_packet_work_order.json:6: \"contact_sheet points to an existing PNG with a PNG signature\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/input_dream_packet_work_order.json:8: \"validate-run-root --direction backward advances to story_contract or a later concrete blocker\"",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/input_dream_packet_work_order.json:33: \"mark_dream_packet_pass_without_contact_sheet_png\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/manifest.json:24: \"path\": \"story_contract.json | artifacts/story_contract.json\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/manifest.json:25: \"phase\": \"story_contract\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-xterm-resizable-chat-tui-20260628T173200Z/manifest.json:47: \"latest_marker\": \"/home/graham/.codex/ui-verification/latest.json\",",
+        "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/ux-lab-movie-annotation-modal-20260628T214645Z/manifest.json:49: \"ui_verification_marker\": \"/home/graham/.codex/ui-verification/latest.json\""
+      ]
+    }
+  },
+  "checks": [
+    {
+      "id": "current_memory_recall_has_bm25_graph_dense_signals",
+      "status": "PASS",
+      "evidence": [
+        "story_script_matrix: count=8 score_counts={'bm25': 8, 'graph': 8, 'dense': 8}",
+        "media_graph: count=8 score_counts={'bm25': 8, 'graph': 8, 'dense': 8}",
+        "contact_sheets: count=8 score_counts={'bm25': 8, 'graph': 4, 'dense': 8}"
+      ],
+      "missing": []
+    },
+    {
+      "id": "every_pane_automatically_writes_receipts_to_memory",
+      "status": "PARTIAL",
+      "evidence": [
+        "ux_lab memory write hook hits=13",
+        "tau memory write hook hits=9"
+      ],
+      "missing": [
+        "No proof that every pane completion path writes its receipt to memory automatically.",
+        "Need pane-by-pane completion hooks or a shared Tau completion adapter that calls memory /upsert or /store and emits a receipt."
+      ]
+    },
+    {
+      "id": "tau_creator_reviewer_loops_write_durable_artifacts_to_memory",
+      "status": "PARTIAL",
+      "evidence": [
+        "tau memory write hook hits=9"
+      ],
+      "missing": [
+        "Need one live Tau creator/reviewer run per phase showing durable artifact write receipt in memory.",
+        "A Tau JSON proof directory alone is not proof that memory was updated."
+      ]
+    },
+    {
+      "id": "ui_panes_read_from_memory_instead_of_stale_local_json",
+      "status": "PARTIAL",
+      "evidence": [
+        "ux_lab memory recall/read hits=20",
+        "ux_lab local latest/json endpoint hits=18"
+      ],
+      "missing": [
+        "UI still has local/Tau latest JSON read paths; memory-backed reads are not proven as the authoritative source for every pane."
+      ]
+    },
+    {
+      "id": "new_media_edges_auto_added_to_arango_graph_and_qdrant",
+      "status": "PARTIAL",
+      "evidence": [
+        "graph-related source hits=40",
+        "qdrant-related source hits=40",
+        "media_graph recall={'count': 8, 'score_counts': {'bm25': 8, 'graph': 8, 'dense': 8}, 'samples': [{'collection': None, 'key': 'tom_media_432c8fecfa5319b6c0fe8c40', 'title': None, 'scores': {'bm25': 140.14822387695312, 'graph': 0.3887417987987634, 'dense': 0.5622004}}, {'collection': None, 'key': 'tom_media_1221daf445de5f2435280693', 'title': None, 'scores': {'bm25': 114.53053283691406, 'graph': 0.3887417987987634, 'dense': 0.5459229}}, {'collection': None, 'key': 'tom_media_256cb1449d1c3efc5ffee311', 'title': None, 'scores': {'bm25': 114.31881713867188, 'graph': 0.3887417987987634, 'dense': 0.58044547}}, {'collection': None, 'key': 'tom_media_6281004019eb0e7e0899e015', 'title': None, 'scores': {'bm25': 92.98810577392578, 'graph': 0.3887417987987634, 'dense': 0.5849104}}, {'collection': None, 'key': 'tom_media_9379635dd51ed013161abb74', 'title': None, 'scores': {'bm25': 81.35466003417969, 'graph': 0.3887417987987634, 'dense': 0.58440864}}]}"
+      ],
+      "missing": [
+        "Current graph/dense recall exists, but no proof every new asset/media edge is automatically upserted to Arango graph and Qdrant.",
+        "Need a live new-media ingestion canary that creates an edge, then proves BM25 + graph + dense recall."
+      ]
+    },
+    {
+      "id": "generation_paths_use_extract_entities_and_persist_coverage",
+      "status": "PARTIAL",
+      "evidence": [
+        "tau extract-entities/coverage hits=20",
+        "persona-dream extract-entities/coverage hits=20",
+        "story_script_matrix recall={'count': 8, 'score_counts': {'bm25': 8, 'graph': 8, 'dense': 8}, 'samples': [{'collection': None, 'key': 'persona_dream_phase_06_script_uses_phase_02_story_matrix', 'title': None, 'scores': {'bm25': 61.651031494140625, 'graph': 0.3887417987987634, 'dense': 0.43677953}}, {'collection': None, 'key': 'persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_1', 'title': None, 'scores': {'bm25': 55.221282958984375, 'graph': 0.3887417987987634, 'dense': 0.6505085}}, {'collection': None, 'key': 'persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_3', 'title': None, 'scores': {'bm25': 54.24139404296875, 'graph': 0.3887417987987634, 'dense': 0.62669104}}, {'collection': None, 'key': 'persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_0', 'title': None, 'scores': {'bm25': 46.31134796142578, 'graph': 0.3887417987987634, 'dense': 0.57689}}, {'collection': None, 'key': 'persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024_contains_seed_2', 'title': None, 'scores': {'bm25': 45.57453918457031, 'graph': 0.3887417987987634, 'dense': 0.5721967}}]}"
+      ],
+      "missing": [
+        "Need live story/script/contact-sheet generation receipts showing extract-entities execution and persisted coverage records.",
+        "Existing coverage records are not proof every generation path enforces the gate."
+      ]
+    }
+  ],
+  "summary": {
+    "PASS": 1,
+    "PARTIAL": 5,
+    "FAIL": 0
+  },
+  "not_proven": [
+    "every_pane_automatically_writes_receipts_to_memory",
+    "tau_creator_reviewer_loops_write_durable_artifacts_to_memory",
+    "ui_panes_read_from_memory_instead_of_stale_local_json",
+    "new_media_edges_auto_added_to_arango_graph_and_qdrant",
+    "generation_paths_use_extract_entities_and_persist_coverage"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.storyboard_panel_contract.v1",
+  "type": "object",
+  "required": ["schema", "look_lock", "characters", "props", "environment", "panels"],
+  "properties": {
+    "schema": {"const": "persona_dream.storyboard_panel_contract.v1"},
+    "look_lock": {"type": "string", "minLength": 1},
+    "characters": {
+      "type": "object",
+      "additionalProperties": {"type": "string"},
+      "minProperties": 1
+    },
+    "props": {"type": "string"},
+    "environment": {"type": "string"},
+    "creatures": {"type": "string"},
+    "effects": {"type": "string"},
+    "output_size": {"type": "string", "pattern": "^[0-9]+x[0-9]+$", "default": "1536x1024"},
+    "aspect_ratio": {"type": "string", "default": "16:9"},
+    "panels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["shot"],
+        "properties": {
+          "shot": {"type": "string", "minLength": 1},
+          "characters": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "minProperties": 1
+    }
+  }
+}

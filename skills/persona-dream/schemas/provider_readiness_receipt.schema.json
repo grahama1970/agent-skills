@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/provider_readiness_receipt.schema.json",
+  "title": "P0 Provider Readiness Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "run_id",
+    "provider",
+    "ready_for_dry_run",
+    "ready_for_live_submit",
+    "checks",
+    "missing"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "schemas/provider_readiness_receipt.schema.json"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "const": "kling"
+    },
+    "ready_for_dry_run": {
+      "type": "boolean"
+    },
+    "ready_for_live_submit": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": ["PASS", "BLOCKED", "SKIPPED"]
+          }
+        }
+      }
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

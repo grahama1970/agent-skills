@@ -1,0 +1,143 @@
+{
+  "schema": "kling.scene_packet.v1",
+  "run_id": "one-scene-kling-dry-run-fixture",
+  "status": "GENERATED_UNREVIEWED",
+  "provider": "kling",
+  "model": "kling-v3-omni",
+  "mode": "std",
+  "aspect_ratio": "16:9",
+  "duration_s": 5.0,
+  "paid_call_authorized": false,
+  "cost_estimate": {
+    "status": "ESTIMATE_PRESENT_PROVIDER_PRICING_VALIDATION_REQUIRED",
+    "currency": "credits",
+    "duration_s": 5.0,
+    "selected_mode": "std",
+    "rate_credits_per_s": 9,
+    "estimated_credits": 45,
+    "formula": "duration_s * rate_credits_per_s",
+    "docs_checked": [
+      "https://kling.ai/quickstart/klingai-video-3-omni-model-user-guide"
+    ]
+  },
+  "callback_url": null,
+  "polling_plan": "After live submission, persist provider task_id, poll task endpoint with bounded exponential backoff until terminal state, then store raw response, output URL, downloaded video, ffprobe JSON, and frame contact sheet.",
+  "storage_plan": {
+    "download_output_to": "outputs/one_scene_kling_dry_run/kling_output.mp4",
+    "ffprobe_json": "outputs/one_scene_kling_dry_run/ffprobe.json",
+    "frame_contact_sheet": "outputs/one_scene_kling_dry_run/frame_contact_sheet.jpg",
+    "raw_response_json": "outputs/one_scene_kling_dry_run/provider_response.json"
+  },
+  "retry_policy": "On 429 or transient provider error, use bounded exponential backoff with jitter; do not retry in parallel; keep paid_call_authorized false until human approval exists.",
+  "audio_strategy": "native prompt-driven sound; no uploaded music or custom speech audio in this dry-run packet",
+  "image_list": [
+    {
+      "token": "<<<image_1>>>",
+      "path": "artifacts/storyboard_board.png",
+      "role": "storyboard_board",
+      "status": "REFERENCE_LOCK_PENDING",
+      "hash": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "token": "<<<image_2>>>",
+      "path": "artifacts/horus_reference_sheet.png",
+      "role": "character_reference",
+      "status": "REFERENCE_LOCK_PENDING",
+      "hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "token": "<<<image_3>>>",
+      "path": "artifacts/embry_reference_sheet.png",
+      "role": "character_reference",
+      "status": "REFERENCE_LOCK_PENDING",
+      "hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "voice_list": [],
+  "voice_examples": [
+    {
+      "speaker": "Character_Horus_Lupercal",
+      "status": "VOICE_AUDIOBOOK_SOURCE_FOUND_PROVIDER_ID_MISSING",
+      "source": "authoritative audiobook source must be selected and cloned before VOICE_READY"
+    },
+    {
+      "speaker": "Character_Embry",
+      "status": "VOICE_TEXT_ONLY",
+      "source": "no provider voice_id exists for this dry-run packet"
+    }
+  ],
+  "multi_prompt": [
+    {
+      "index": 0,
+      "duration_s": 5.0,
+      "visual_anchor": "artifacts/panel_001.png",
+      "image_status": "REFERENCE_LOCK_PENDING",
+      "voice_status": "NO_DIALOGUE",
+      "prompt": "Panel 1, 5.0s. Character_Horus_Lupercal uses <<<image_2>>> and Character_Embry uses <<<image_3>>>. They stand beside a rain-dark stone patio railing on a void world while a small umbrella prop trembles in the wind. Horus turns his head toward Embry with a slow blink; Embry lowers her shoulders and watches distant thunder. Tea steam curls through cold blue light, the umbrella edge twitches in the rain, and the wet railing catches blue-violet sky reflections. No dialogue. Native sound: low rain, distant thunder, soft cloth movement.",
+      "dialogue": [],
+      "provider_text": "Character_Horus_Lupercal <<<image_2>>> and Character_Embry <<<image_3>>> stand on a rain-dark void-world patio beside a wet stone railing. Medium two-shot, slow dolly push-in for 5 seconds. Horus holds still except for a slow blink and a slight jaw tighten; Embry lowers her shoulders and keeps her gaze on distant thunder. Rain beads on skin and armor, tea steam curls through cold side light, and a small umbrella prop trembles in the wind. Native ambient sound only: low rain, distant thunder, soft cloth movement. No dialogue, no text overlays.",
+      "cinematography": {
+        "shot_size": "medium",
+        "lens": "35mm_cinematic",
+        "camera_mount": "steadicam_or_dolly",
+        "camera_movement": "slow_dolly_push_in",
+        "composition": "two_shot",
+        "focus_behavior": "deep_focus",
+        "lighting": "hard_directional_side_light",
+        "color_grade": "desaturated_cold_blues",
+        "atmosphere": "rain_reflections",
+        "temporal_pacing": "slow_contemplative",
+        "environment_lock": "void_world_patio_stone_railing_rain_umbrella_tea_table",
+        "director_note": "Horus stays calm and protective; Embry is visibly alert but not panicked."
+      }
+    }
+  ],
+  "negative_prompt": [
+    "generic space marine Horus",
+    "long-haired Horus",
+    "cute generic aliens",
+    "text overlays",
+    "logos",
+    "unreviewed references",
+    "extra characters",
+    "face flicker",
+    "warped hands"
+  ],
+  "provider_dry_run_fields": {
+    "model": "kling-v3-omni",
+    "mode": "std",
+    "aspect_ratio": "16:9",
+    "sound": "on",
+    "multi_shot": true,
+    "shot_type": "customize",
+    "image_list": [
+      {"image": "https://example.invalid/persona-dream/storyboard_board.png"},
+      {"image": "https://example.invalid/persona-dream/horus_reference_sheet.png"},
+      {"image": "https://example.invalid/persona-dream/embry_reference_sheet.png"}
+    ],
+    "voice_list": [],
+    "multi_prompt": [
+      {
+        "index": 0,
+        "duration": 5,
+        "prompt": "Character_Horus_Lupercal <<<image_2>>> and Character_Embry <<<image_3>>> stand on a rain-dark void-world patio beside a wet stone railing. Medium two-shot, slow dolly push-in for 5 seconds. Horus holds still except for a slow blink and a slight jaw tighten; Embry lowers her shoulders and keeps her gaze on distant thunder. Rain beads on skin and armor, tea steam curls through cold side light, and a small umbrella prop trembles in the wind. Native ambient sound only: low rain, distant thunder, soft cloth movement. No dialogue, no text overlays."
+      }
+    ],
+    "watermark_info": {"enabled": false},
+    "external_task_id": "persona-dream-one-scene-kling-dry-run-fixture",
+    "callback_url": null
+  },
+  "live_call_block_reason": "Generated-unreviewed dry-run scene packet only: reference image locks are pending, no provider-accessible production media URLs are approved, no human visual acceptance exists, no paid-call approval receipt exists, and no provider voice IDs exist.",
+  "work_backwards_chain": [
+    "terminal provider result receipt",
+    "provider task_id and polling/callback receipt",
+    "mapped provider request body",
+    "kling.scene_packet.v1 review packet",
+    "paid-call approval receipt",
+    "provider media URL and hash lock",
+    "manual visual review receipt",
+    "storyboard panel and reference sheets",
+    "story contract",
+    "dream packet"
+  ]
+}

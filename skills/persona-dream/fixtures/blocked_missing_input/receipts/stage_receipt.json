@@ -1,0 +1,8 @@
+{
+  "schema_id": "schemas/stage_receipt.schema.json",
+  "run_id": "blocked-missing-input-fixture",
+  "stage": "input_intake",
+  "inputs_complete": false,
+  "missing_inputs": ["character_sheet", "provider_config"],
+  "evidence": ["fixture intentionally omits required local inputs"]
+}

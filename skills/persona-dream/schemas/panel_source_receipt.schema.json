@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/panel_source_receipt.schema.json",
+  "title": "Panel Source Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "run_id",
+    "panel_id",
+    "status",
+    "image_path",
+    "sha256",
+    "producer",
+    "photoreal_status",
+    "nano_banana_fallback_used",
+    "final_panel_eligible"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.panel_source_receipt.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "panel_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["PASS_PANEL_SOURCE", "BLOCKED"]
+    },
+    "image_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": {
+          "enum": ["subagent"]
+        },
+        "name": {
+          "enum": ["panel-creator", "persona-dream-panel-repair-gate"]
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "photoreal_status": {
+      "enum": ["PASS_PHOTOREAL_CINEMATIC", "BLOCKED_NON_PHOTOREAL", "UNKNOWN"]
+    },
+    "nano_banana_fallback_used": {
+      "const": false
+    },
+    "final_panel_eligible": {
+      "type": "boolean"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

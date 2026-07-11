@@ -1,0 +1,11 @@
+{
+  "schema": "persona_dream.ux_lab_stage_work_order.v1",
+  "created_at": "2026-06-30T15:04:14.359Z",
+  "status": "REQUESTED",
+  "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/multiscene-live-smoke",
+  "stage_id": "phase_03_producer_writer_director",
+  "action": "rerun",
+  "requested_by": "human",
+  "notes": "",
+  "execution_policy": "project_agent_must_rerun_this_stage_through_the_persona_dream_tau_creator_reviewer_loop_before_downstream_consumers_advance"
+}
