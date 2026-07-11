@@ -53,3 +53,21 @@ BATTLE_HOST=http://127.0.0.1:3012 npm run prove:receipt-replay
 ```
 
 Or run the Battle skill orchestrator: `./run.sh prove-spectator`
+
+
+## Battle audio (UX9 Genesis intro)
+
+Serve the original round-intro MIDI from the spectator public tree:
+
+```bash
+ln -sfn /path/to/agent-skills/skills/battle/spectator/public/battle-audio \
+  /path/to/ux-lab/public/battle-audio
+```
+
+URL:
+
+```text
+/battle-audio/battle-004-round-intro.mid
+```
+
+This is an original CC0-style Battle composition for Genesis-like round intros. It is not a Sega VGM dump.

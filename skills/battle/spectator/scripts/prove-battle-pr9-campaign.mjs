@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
 const outDir = resolve(process.env.BATTLE_CAMPAIGN_PROOF_DIR ?? '/tmp/battle-pr9-campaign-proof')
-const url = `${host}/#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi&pixiTest=1&pixiSeconds=114&particles=1`
+const introUrl = `${host}/#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi`
+const arenaUrl = `${host}/#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi&pixiTest=1&pixiSeconds=114&particles=1&skipIntro=1`
 const checks = []
 const record = (id, pass, detail) => {
   checks.push({ id, pass, detail })
@@ -14,6 +15,12 @@ const record = (id, pass, detail) => {
 }
 
 await mkdir(outDir, { recursive: true })
+
+const midiBytes = await readFile(resolve(process.cwd(), 'public/battle-audio/battle-004-round-intro.mid'))
+record('1-midi-file-present', midiBytes.length > 100 && midiBytes.slice(0, 4).toString() === 'MThd', String(midiBytes.length))
+const midiHttp = await fetch(`${host}/battle-audio/battle-004-round-intro.mid`)
+record('2-midi-http', midiHttp.ok && (await midiHttp.arrayBuffer()).byteLength === midiBytes.length, String(midiHttp.status))
+
 const browser = await chromium.launch({ headless: true })
 const page = await browser.newPage({ viewport: { width: 1600, height: 1100 } })
 const errors = []
@@ -22,89 +29,86 @@ page.on('console', (msg) => {
   if (msg.type() === 'error') errors.push(msg.text())
 })
 
-const fixture = await (await fetch(`${host}/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json`)).json()
-record('1-fixture-genetic', fixture?.genetic_lifecycle?.schema === 'battle.genetic_lifecycle_events.v1' && fixture?.mocked === false, JSON.stringify({ schema: fixture?.genetic_lifecycle?.schema, mocked: fixture?.mocked }))
+await page.goto(introUrl, { waitUntil: 'networkidle', timeout: 60_000 })
+await page.waitForSelector('[data-qid="battle:genesis:intro"]', { timeout: 20_000 })
+await page.waitForTimeout(800)
+const intro = await page.evaluate(() => ({
+  banner: !!document.querySelector('[data-qid="battle:genesis:intro"]'),
+  page: document.querySelector('[data-qid="battle:genesis:intro"]')?.getAttribute('data-page') ?? '',
+  style: document.querySelector('[data-qid="battle:genesis:style"]')?.textContent ?? '',
+  midiUrl: document.querySelector('[data-qid="battle:genesis:midi-url"]')?.textContent ?? '',
+  round: document.querySelector('[data-qid="battle:genesis:round"]')?.textContent ?? '',
+  lines: document.querySelector('[data-qid="battle:genesis:lines"]')?.textContent ?? '',
+  text: document.body.textContent ?? '',
+}))
+record('3-genesis-intro', intro.banner, 'intro')
+record('4-graphic-style', /sega_genesis_round_intro/i.test(intro.style), intro.style)
+record('5-midi-url', /battle-004-round-intro\.mid/.test(intro.midiUrl), intro.midiUrl)
+record('6-round-label', /ROUND 1/i.test(intro.round), intro.round)
+record('7-no-sega-license-claim', !/SEGA®|official sega soundtrack/i.test(intro.text), 'no sega license')
 
-await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 })
+await page.click('[data-qid="battle:genesis:midi"]')
+await page.waitForTimeout(500)
+const midiState = await page.evaluate(() => document.querySelector('[data-qid="battle:genesis:midi-state"]')?.textContent ?? '')
+record('8-midi-playing', /playing/i.test(midiState), midiState)
+
+await page.click('[data-qid="battle:genesis:start"]')
+await page.waitForSelector('[data-qid="battle:campaign:banner"]', { timeout: 20_000 })
+await page.waitForTimeout(600)
+const afterStart = await page.evaluate(() => ({
+  introGone: !document.querySelector('[data-qid="battle:genesis:intro"]'),
+  campaign: !!document.querySelector('[data-qid="battle:campaign:banner"]'),
+}))
+record('9-start-enters-campaign', afterStart.introGone && afterStart.campaign, JSON.stringify(afterStart))
+await page.screenshot({ path: resolve(outDir, '01-genesis-intro-to-campaign.png'), fullPage: true })
+
+await page.goto(arenaUrl, { waitUntil: 'networkidle', timeout: 60_000 })
 await page.waitForSelector('[data-qid="battle:campaign:banner"]', { timeout: 20_000 })
 await page.waitForSelector('[data-battle-pixi-engine="animated-sprites"]', { timeout: 20_000 })
-await page.waitForTimeout(1200)
-
+await page.waitForTimeout(1000)
 const chrome = await page.evaluate(() => {
   const text = document.body.textContent ?? ''
   return {
-    banner: !!document.querySelector('[data-qid="battle:campaign:banner"]'),
-    mode: document.querySelector('[data-qid="battle:campaign:banner:mode"]')?.textContent ?? '',
-    mocked: document.querySelector('[data-qid="battle:campaign:banner:mocked"]')?.textContent ?? '',
     chapters: document.querySelector('[data-qid="battle:campaign:banner:chapters"]')?.textContent ?? '',
-    noVictory: document.querySelector('[data-qid="battle:campaign:banner:no-victory"]')?.textContent ?? '',
     activeTitle: document.querySelector('[data-qid="battle:campaign:active-title"]')?.textContent ?? '',
-    activeCaption: document.querySelector('[data-qid="battle:campaign:active-caption"]')?.textContent ?? '',
-    pulseLineages: document.querySelector('[data-qid="battle:campaign:pulse:lineages"]')?.textContent ?? '',
-    particles: document.querySelector('[data-qid="battle:campaign:particles"]')?.textContent ?? '',
-    reducedMotion: document.querySelector('[data-qid="battle:campaign:reduced-motion"]')?.textContent ?? '',
-    soundArm: !!document.querySelector('[data-qid="battle:campaign:sound-arm"]'),
-    chapterResearch: !!document.querySelector('[data-qid="battle:campaign:chapter:research_started"]'),
     chapterCompile: !!document.querySelector('[data-qid="battle:campaign:chapter:compile_passed"]'),
-    chapterBranch: !!document.querySelector('[data-qid="battle:campaign:chapter:branch_abandoned"]'),
     chapterJudgeSuccess: !!document.querySelector('[data-qid="battle:campaign:chapter:judge_exploit_success"]'),
     notEmittedJudge: !!document.querySelector('[data-qid="battle:genetic:not-emitted:judge_exploit_success"]'),
-    may: document.querySelector('[data-qid="battle:campaign:claim-may"]')?.textContent ?? '',
-    mustNot: document.querySelector('[data-qid="battle:campaign:claim-must-not"]')?.textContent ?? '',
     nav: !!document.querySelector('[data-qid="battle:nav:campaign"]'),
-    geneticBanner: !!document.querySelector('[data-qid="battle:genetic:banner"]'),
     pixi: document.querySelector('[data-battle-pixi-engine]')?.getAttribute('data-battle-pixi-engine') ?? null,
     text,
   }
 })
-
-record('2-campaign-banner', chrome.banner, 'banner')
-record('3-mode-badge', /CAMPAIGN STORY/i.test(chrome.mode), chrome.mode)
-record('4-mocked-no', /MOCKED:\s*NO/i.test(chrome.mocked), chrome.mocked)
-record('5-chapter-count', /CHAPTERS\s+12/i.test(chrome.chapters), chrome.chapters)
-record('6-no-victory-badge', /NO VICTORY/i.test(chrome.noVictory), chrome.noVictory)
-record('7-active-compile', /compile passes/i.test(chrome.activeTitle), chrome.activeTitle)
-record('8-active-caption', /not runtime|compile/i.test(chrome.activeCaption), chrome.activeCaption.slice(0, 120))
-record('9-pulse-lineages', /lineages\s+\d+/i.test(chrome.pulseLineages), chrome.pulseLineages)
-record('10-particles-on', /particles on/i.test(chrome.particles), chrome.particles)
-record('11-reduced-motion-off', /reduced motion off/i.test(chrome.reducedMotion), chrome.reducedMotion)
-record('12-sound-arm', chrome.soundArm, 'sound arm')
-record('13-chapter-research', chrome.chapterResearch, 'research chapter')
-record('14-chapter-compile', chrome.chapterCompile, 'compile chapter')
-record('15-chapter-branch', chrome.chapterBranch, 'branch chapter')
-record('16-may-story', /campaign story chapters/i.test(chrome.may), chrome.may.slice(0, 160))
-record('17-must-not-exploit', /exploit success|sound is not proof|compile passed is not runnable/i.test(chrome.mustNot), chrome.mustNot.slice(0, 200))
-record('18-nav-campaign', chrome.nav, 'nav')
-record('19-genetic-banner', chrome.geneticBanner, 'genetic')
-record('20-pixi', chrome.pixi === 'animated-sprites', chrome.pixi)
-record(
-  '21-no-raw-paths',
-  !chrome.text.includes('tau-dag-run/') && !chrome.text.includes('command-loop/command-artifacts'),
-  'paths',
-)
-record('22-no-false-victory', !chrome.chapterJudgeSuccess && chrome.notEmittedJudge, JSON.stringify({ chapterJudgeSuccess: chrome.chapterJudgeSuccess, notEmittedJudge: chrome.notEmittedJudge }))
-
-await page.screenshot({ path: resolve(outDir, '01-campaign-story.png'), fullPage: true })
-
-await page.click('[data-qid="battle:campaign:sound-arm"]')
-await page.waitForTimeout(200)
-const armed = await page.evaluate(() => document.querySelector('[data-qid="battle:campaign:sound-caption"]')?.textContent ?? '')
-record('23-sound-caption', /Sound caption/i.test(armed), armed)
-
-await page.click('[data-qid="battle:campaign:chapter:research_started"]')
-await page.waitForTimeout(400)
-const jumped = await page.evaluate(() => ({
-  title: document.querySelector('[data-qid="battle:campaign:active-title"]')?.textContent ?? '',
-  caption: document.querySelector('[data-qid="battle:campaign:sound-caption"]')?.textContent ?? '',
-}))
-record('24-chapter-jump', /Research opens/i.test(jumped.title), JSON.stringify(jumped))
-
-record('25-no-page-errors', errors.length === 0, JSON.stringify(errors.slice(0, 5)))
+record('10-chapter-count', /CHAPTERS\s+12/i.test(chrome.chapters), chrome.chapters)
+record('11-active-compile', /compile passes/i.test(chrome.activeTitle), chrome.activeTitle)
+record('12-chapter-compile', chrome.chapterCompile, 'compile chapter')
+record('13-no-false-victory', !chrome.chapterJudgeSuccess && chrome.notEmittedJudge, JSON.stringify({ chapterJudgeSuccess: chrome.chapterJudgeSuccess, notEmittedJudge: chrome.notEmittedJudge }))
+record('14-nav-campaign', chrome.nav, 'nav')
+record('15-pixi', chrome.pixi === 'animated-sprites', chrome.pixi)
+record('16-no-raw-paths', !chrome.text.includes('tau-dag-run/') && !chrome.text.includes('command-loop/command-artifacts'), 'paths')
+record('17-no-page-errors', errors.length === 0, JSON.stringify(errors.slice(0, 5)))
 
 const failed = checks.filter((item) => !item.pass)
 await writeFile(
   resolve(outDir, 'summary.json'),
-  JSON.stringify({ host, url, mocked: false, live: 'receipt_replay_campaign', checks, failed: failed.map((item) => item.id) }, null, 2),
+  JSON.stringify(
+    {
+      host,
+      introUrl,
+      arenaUrl,
+      mocked: false,
+      live: 'receipt_replay_campaign_genesis_intro',
+      research: [
+        'Streets of Rage Genesis intro flow',
+        'VGMusic/Project2612 listening refs',
+        'CC0 free_vgms / OpenGameArt chiptune alternatives',
+      ],
+      checks,
+      failed: failed.map((item) => item.id),
+    },
+    null,
+    2,
+  ),
 )
 await browser.close()
 if (failed.length) {

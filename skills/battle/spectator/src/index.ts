@@ -105,3 +105,7 @@ export {
 export { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
 export { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 export { isBattleCampaignView, battleCampaignFixtureUrl } from "./lib/battle-campaign-registry";
+
+export { BattleGenesisStoryIntro } from "./BattleGenesisStoryIntro";
+export { buildGenesisRoundIntro } from "./lib/battle-genesis-intro";
+export { createGenesisMidiPlayer, loadGenesisRoundIntroMidi, parseMidiBytes } from "./lib/battle-genesis-midi";

@@ -42,5 +42,6 @@ export function battleCampaignPresentationFromUrl(
 			window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 	const mute = params.get("mute") === "1";
 	const particles = !reducedMotion && params.get("particles") !== "0";
-	return { reducedMotion, particles, mute };
+	const skipIntro = params.get("skipIntro") === "1";
+	return { reducedMotion, particles, mute, skipIntro };
 }

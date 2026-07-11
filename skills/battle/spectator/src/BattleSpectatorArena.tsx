@@ -29,8 +29,11 @@ import { isBattlePopulationView } from "./lib/battle-population-registry";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
+import { BattleGenesisStoryIntro } from "./BattleGenesisStoryIntro";
 import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
+import { buildGenesisRoundIntro } from "./lib/battle-genesis-intro";
+import { createGenesisMidiPlayer, loadGenesisRoundIntroMidi } from "./lib/battle-genesis-midi";
 import { BattleLiveTransportBanner } from "./BattleLiveTransportBanner";
 import { useBattleLiveTransport } from "./hooks/useBattleLiveTransport";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
@@ -116,7 +119,7 @@ export function BattleSpectatorArena() {
     if (!lane) return;
     setDeathAnnouncement(hungerGamesDeathCard(lane, typedReceiptFixture ?? undefined));
   }, [initialLanes, receiptReady, receiptReplay, typedReceiptFixture]);
-  const { enabled, arm, play } = useBattleSound();
+  const { enabled, arm, play, getContext } = useBattleSound();
 
   const selectedLane = useMemo(
     () => initialLanes.find((lane) => lane.id === selectedId) ?? initialLanes[0] ?? null,
@@ -157,6 +160,19 @@ export function BattleSpectatorArena() {
     [campaignStory, playheadSeconds],
   );
   const [soundCaption, setSoundCaption] = useState<string | null>(null);
+  const [genesisIntroOpen, setGenesisIntroOpen] = useState(() => !battleCampaignPresentationFromUrl().skipIntro);
+  const [midiPlaying, setMidiPlaying] = useState(false);
+  const midiPlayerRef = useRef<ReturnType<typeof createGenesisMidiPlayer> | null>(null);
+  const genesisIntro = useMemo(
+    () => (campaignView && typedReceiptFixture ? buildGenesisRoundIntro(typedReceiptFixture, campaignStory) : null),
+    [campaignStory, campaignView, typedReceiptFixture],
+  );
+  useEffect(() => {
+    setGenesisIntroOpen(!campaignPresentation.skipIntro);
+    setMidiPlaying(false);
+    midiPlayerRef.current?.stop();
+  }, [campaignPresentation.skipIntro, campaignView, typedReceiptFixture?.battle_id]);
+  useEffect(() => () => midiPlayerRef.current?.stop(), []);
 
   useEffect(() => {
     if (!receiptReplay || !typedReceiptFixture) return;
@@ -263,6 +279,43 @@ export function BattleSpectatorArena() {
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleGeneticLifecycleBanner model={geneticModel} />
+        </div>
+      ) : null}
+      {genesisIntro && genesisIntroOpen ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleGenesisStoryIntro
+            intro={genesisIntro}
+            midiPlaying={midiPlaying}
+            onArmMidi={() => {
+              arm();
+              if (!midiPlayerRef.current) {
+                midiPlayerRef.current = createGenesisMidiPlayer(getContext);
+              }
+              void loadGenesisRoundIntroMidi(genesisIntro.midiUrl).then((song) =>
+                midiPlayerRef.current!.start(song).then(() => {
+                  setMidiPlaying(true);
+                  setSoundCaption("Genesis-style MIDI round intro playing.");
+                }),
+              );
+            }}
+            onStopMidi={() => {
+              midiPlayerRef.current?.stop();
+              setMidiPlaying(false);
+              setSoundCaption("MIDI intro stopped.");
+            }}
+            onSkip={() => {
+              midiPlayerRef.current?.stop();
+              setMidiPlaying(false);
+              setGenesisIntroOpen(false);
+            }}
+            onStartArena={() => {
+              midiPlayerRef.current?.stop();
+              setMidiPlaying(false);
+              setGenesisIntroOpen(false);
+              setPlaying(true);
+              setSoundCaption("Arena entered after Genesis-style round intro.");
+            }}
+          />
         </div>
       ) : null}
       {campaignStory ? (
