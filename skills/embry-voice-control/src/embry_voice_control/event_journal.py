@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
+import hashlib
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -200,6 +201,26 @@ def list_events(path: Path, session_id: str, after_sequence: int = 0) -> list[di
             (session_id, after_sequence),
         ).fetchall()
     return [_row_to_event(row) for row in rows]
+
+
+def session_snapshot(path: Path, session_id: str) -> dict[str, Any]:
+    """Read one session from a single SQLite snapshot transaction."""
+    with connect(path) as connection:
+        connection.execute("BEGIN")
+        rows = connection.execute(
+            "SELECT * FROM events WHERE session_id = ? ORDER BY sequence",
+            (session_id,),
+        ).fetchall()
+        events = [_row_to_event(row) for row in rows]
+        connection.commit()
+    canonical = _canonical_json(events).encode()
+    return {
+        "session_id": session_id,
+        "through_sequence": events[-1]["sequence"] if events else 0,
+        "event_count": len(events),
+        "sha256": "sha256:" + hashlib.sha256(canonical).hexdigest(),
+        "events": events,
+    }
 
 
 def _register_consumer(connection: sqlite3.Connection, consumer_name: str) -> None:
