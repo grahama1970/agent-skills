@@ -12,6 +12,12 @@ type Props = {
 	onRecover?: () => void;
 };
 
+function isLiveAdapterConnected(sseClient: BattleLiveSseClientState | null | undefined): boolean {
+	if (!sseClient) return false;
+	if (sseClient.live !== "local_http_sse_adapter") return false;
+	return ["connecting", "open", "ended", "gap_recovery", "error"].includes(sseClient.status);
+}
+
 export function BattleLiveTransportBanner({
 	mode,
 	model,
@@ -20,6 +26,117 @@ export function BattleLiveTransportBanner({
 	onReturnToLive,
 	onRecover,
 }: Props) {
+	if (mode === "contract" && contractModel && isLiveAdapterConnected(sseClient)) {
+		return (
+			<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live SSE transport">
+				<div className="flex flex-wrap items-center gap-2">
+					<span
+						className="rounded border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
+						data-qid="battle:live:banner:mode"
+					>
+						LIVE SSE ADAPTER
+					</span>
+					<span
+						className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
+						data-qid="battle:live:banner:live-source"
+					>
+						LIVE: LOCAL HTTP SSE
+					</span>
+					<span
+						className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
+						data-qid="battle:live:banner:mocked"
+					>
+						MOCKED: NO
+					</span>
+					<span
+						className="rounded border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100"
+						data-qid="battle:live:banner:sse-connected"
+					>
+						SSE CONNECTED
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
+						status {model?.status ?? sseClient?.status ?? "connecting"}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:seq">
+						seq {model?.appliedSeq ?? sseClient?.lastSeq ?? 0}/{model?.lastSeq ?? "?"}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:sse-client">
+						sse client {sseClient?.status ?? "idle"}
+					</span>
+					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:genetic-count">
+						genetic types {contractModel.geneticEventCount}
+					</span>
+					{model && !model.followLive ? (
+						<button
+							type="button"
+							className="rounded border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-amber-100"
+							data-qid="battle:live:return-to-live"
+							onClick={onReturnToLive}
+						>
+							Return to live
+						</button>
+					) : (
+						<span className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-300/80" data-qid="battle:live:following">
+							Following live cursor
+						</span>
+					)}
+					{(model?.status === "gap_recovery" || sseClient?.status === "gap_recovery") && onRecover ? (
+						<button
+							type="button"
+							className="rounded border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100"
+							data-qid="battle:live:recover-snapshot"
+							onClick={onRecover}
+						>
+							Reload snapshot
+						</button>
+					) : null}
+				</div>
+				<div className="mt-2 grid gap-1 text-[11px] text-slate-300 md:grid-cols-3">
+					<div data-qid="battle:live:battle-id">battle_id: {contractModel.battleId}</div>
+					<div data-qid="battle:live:run-id">run_id: {model?.runId ?? contractModel.runId}</div>
+					<div data-qid="battle:live:sse-endpoint">sse: {contractModel.sseEndpoint}</div>
+					<div data-qid="battle:live:snapshot-endpoint">snapshot: {contractModel.snapshotEndpoint}</div>
+					<div data-qid="battle:live:base-url">base: {sseClient?.baseUrl ?? "n/a"}</div>
+					<div data-qid="battle:live:source">live_source: local_http_sse_adapter</div>
+				</div>
+				<div className="mt-2 grid gap-2 md:grid-cols-2" data-qid="battle:live:claim-boundary">
+					<div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-2" data-qid="battle:live:claim-may">
+						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-300/80">May claim</div>
+						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
+							<li>local http sse adapter executed</li>
+							<li>ordered battle.live_event.v1 stream applied</li>
+							<li>snapshot bootstrap + Last-Event-ID resume supported</li>
+						</ul>
+					</div>
+					<div className="rounded-lg border border-rose-400/20 bg-rose-400/5 p-2" data-qid="battle:live:claim-must-not">
+						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-rose-300/80">Must not claim</div>
+						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
+							{contractModel.mustNotClaim
+								.filter((item) => !["sse_endpoint_implemented", "live_stream_executed"].includes(item))
+								.map((item) => (
+									<li key={item}>{item.replace(/_/g, " ")}</li>
+								))}
+							<li>production deployment</li>
+							<li>websocket endpoint implemented</li>
+						</ul>
+					</div>
+				</div>
+				<div className="mt-2 flex flex-wrap gap-1" data-qid="battle:live:genetic-types">
+					{contractModel.geneticEventTypes.map((item) => (
+						<span key={item} className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-300" data-qid={`battle:live:genetic:${item}`}>
+							{item}
+						</span>
+					))}
+				</div>
+				{model?.error || sseClient?.error ? (
+					<div className="mt-2 rounded border border-rose-400/30 bg-rose-500/10 p-2 text-xs text-rose-100" data-qid="battle:live:error">
+						{model?.error ?? sseClient?.error}
+					</div>
+				) : null}
+			</section>
+		);
+	}
+
 	if (mode === "contract" && contractModel) {
 		return (
 			<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live transport contract">

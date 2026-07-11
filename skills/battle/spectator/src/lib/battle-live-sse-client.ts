@@ -5,11 +5,13 @@ import { applyTransportEvent, type BattleTransportState } from "./battle-transpo
 export type BattleLiveSseClientStatus =
 	| "idle"
 	| "contract_only_blocked"
+	| "adapter_unavailable"
 	| "connecting"
 	| "open"
 	| "gap_recovery"
 	| "error"
-	| "closed";
+	| "closed"
+	| "ended";
 
 export type BattleLiveSseClientState = {
 	status: BattleLiveSseClientStatus;
@@ -17,6 +19,8 @@ export type BattleLiveSseClientState = {
 	lastEventId: string | null;
 	error: string | null;
 	endpoint: string | null;
+	baseUrl: string | null;
+	live: "contract_only" | "local_http_sse_adapter" | null;
 };
 
 export function createIdleLiveSseClientState(): BattleLiveSseClientState {
@@ -26,22 +30,33 @@ export function createIdleLiveSseClientState(): BattleLiveSseClientState {
 		lastEventId: null,
 		error: null,
 		endpoint: null,
+		baseUrl: null,
+		live: null,
 	};
 }
 
 /**
  * Contract-aware SSE planner.
- * While live=contract_only, the client stays armed but must not open EventSource
- * or claim endpoint execution.
+ * Published contracts remain live=contract_only. Executable adapter connection is a
+ * separate runtime probe against the contract endpoint shapes.
  */
-export function planLiveSseClient(contract: BattleLiveTransportContractV1): BattleLiveSseClientState {
-	if (contract.live === "contract_only") {
+export function planLiveSseClient(
+	contract: BattleLiveTransportContractV1,
+	options?: { adapterAvailable?: boolean; baseUrl?: string | null },
+): BattleLiveSseClientState {
+	const endpoint = contract.transport.endpoint;
+	if (!options?.adapterAvailable) {
 		return {
-			status: "contract_only_blocked",
+			status: contract.live === "contract_only" ? "contract_only_blocked" : "adapter_unavailable",
 			lastSeq: 0,
 			lastEventId: null,
-			error: "SSE endpoint shape is defined by contract; endpoint execution is not claimed (live=contract_only).",
-			endpoint: contract.transport.endpoint,
+			error:
+				contract.live === "contract_only"
+					? "SSE endpoint shape is defined by contract; local adapter not connected (live=contract_only)."
+					: "Live SSE adapter unavailable.",
+			endpoint,
+			baseUrl: options?.baseUrl ?? null,
+			live: "contract_only",
 		};
 	}
 	return {
@@ -49,7 +64,9 @@ export function planLiveSseClient(contract: BattleLiveTransportContractV1): Batt
 		lastSeq: 0,
 		lastEventId: null,
 		error: null,
-		endpoint: contract.transport.endpoint,
+		endpoint,
+		baseUrl: options?.baseUrl ?? null,
+		live: "local_http_sse_adapter",
 	};
 }
 
@@ -72,6 +89,10 @@ export function applySseLiveEvent(
 	return applyTransportEvent(state, event);
 }
 
-export function shouldOpenEventSource(contract: BattleLiveTransportContractV1): boolean {
-	return contract.live !== "contract_only" && contract.transport.kind === "sse";
+/** True only when a probed local adapter is available for the contract endpoints. */
+export function shouldOpenEventSource(
+	contract: BattleLiveTransportContractV1,
+	options?: { adapterAvailable?: boolean },
+): boolean {
+	return Boolean(options?.adapterAvailable) && contract.transport.kind === "sse";
 }

@@ -1,6 +1,6 @@
 import type { BattleTimelineControlV1, Lane } from "./battle-types";
 
-export type BattleTransportMode = "file_backed_replay_stream";
+export type BattleTransportMode = "file_backed_replay_stream" | "live_sse_adapter";
 
 export type BattleStreamContractV1 = {
 	schema: "battle.stream_contract.v1";

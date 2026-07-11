@@ -64,8 +64,17 @@ export {
 	parseSseLiveEventData,
 } from "./lib/battle-live-sse-client";
 export {
+	DEFAULT_BATTLE_LIVE_TRANSPORT_BASE,
+	resolveBattleLiveTransportBaseUrl,
+	probeBattleLiveTransportAdapter,
+	fetchBattleLiveSnapshot,
+	buildLiveSseTransportPackage,
+	openBattleLiveSseStream,
+} from "./lib/battle-live-sse-runtime";
+export {
 	applyTransportEvent,
 	bootstrapTransportState,
+	bootstrapLiveTransportState,
 	createIdleTransportState,
 	recoverTransportFromPackage,
 	setTransportFollowLive,

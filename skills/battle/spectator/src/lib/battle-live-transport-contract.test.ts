@@ -91,4 +91,41 @@ describe("UX8 live transport contract", () => {
 		expect(ok?.seq).toBe(1);
 		expect(parseSseLiveEventData("{bad")).toBeNull();
 	});
+
+	it("opens SSE planner when local adapter is available", () => {
+		const contract = loadContract();
+		expect(shouldOpenEventSource(contract, { adapterAvailable: true })).toBe(true);
+		const planned = planLiveSseClient(contract, {
+			adapterAvailable: true,
+			baseUrl: "http://127.0.0.1:18765",
+		});
+		expect(planned.status).toBe("connecting");
+		expect(planned.live).toBe("local_http_sse_adapter");
+		expect(planned.baseUrl).toBe("http://127.0.0.1:18765");
+	});
+
+	it("resolves liveBase from hash", async () => {
+		const { resolveBattleLiveTransportBaseUrl, buildLiveSseTransportPackage } = await import("./battle-live-sse-runtime");
+		expect(
+			resolveBattleLiveTransportBaseUrl("#battle/live?battle=battle-004&liveBase=http://127.0.0.1:19999/"),
+		).toBe("http://127.0.0.1:19999");
+		const pack = buildLiveSseTransportPackage({
+			snapshot: {
+				schema: "battle.snapshot.v1",
+				battle_id: "battle-004",
+				run_id: "run",
+				last_seq: 2,
+				generated_at: "2026-07-11T00:00:00Z",
+				mode: "receipt_replay",
+				events: [],
+				lanes: [],
+			},
+			baseUrl: "http://127.0.0.1:18765",
+			companionFixtureUrl: "/battle-fixtures/x.json",
+		});
+		expect(pack.manifest.mode).toBe("live_sse_adapter");
+		expect(pack.manifest.stream_contract.transport).toBe("sse");
+		expect(pack.manifest.live_source).toBe("local_http_sse_adapter");
+	});
+
 });
