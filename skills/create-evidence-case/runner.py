@@ -472,8 +472,16 @@ EVIDENCE_CASE:
         evidence_case = self._build_evidence_case(
             question, verdict_state, resolved, unresolved, external, extraction_glossary, qra_items, steps,
         )
-        valid_ids = {e["citation_id"] for e in evidence_case.get("prior_qra_evidence", [])}
-        valid_ids |= {e["id"] for e in evidence_case.get("glossary", [])}
+        valid_ids = {
+            value
+            for item in evidence_case.get("prior_qra_evidence", [])
+            if (value := self._citation_id(item.get("citation_id")))
+        }
+        valid_ids |= {
+            value
+            for item in evidence_case.get("glossary", [])
+            if (value := self._citation_id(item.get("id")))
+        }
 
         messages = [{"role": "user", "content": self.RENDER_PROMPT + json.dumps(evidence_case, indent=2)}]
         answer_entities: dict = {}
@@ -504,14 +512,19 @@ EVIDENCE_CASE:
 
                 # Citation validation via /extract-entities on the answer text
                 answer_text = result.get("answer", "")
-                llm_citations = result.get("citations", [])
+                llm_citations = [
+                    value
+                    for citation in result.get("citations", [])
+                    if (value := self._citation_id(citation))
+                ]
                 extracted_ids: set[str] = set()
                 try:
                     answer_entities = collect_entities(answer_text)
                     extracted_ids = {
-                        e.get("canonical_id", "")
-                        for e in answer_entities.get("resolved_entities", [])
-                    } - {""}
+                        value
+                        for entity in answer_entities.get("resolved_entities", [])
+                        if (value := self._citation_id(entity.get("canonical_id")))
+                    }
                 except Exception as exc:
                     logger.warning("Citation extraction failed: {}", exc)
                     extracted_ids = set(llm_citations)  # fall back to declared citations
@@ -576,6 +589,11 @@ EVIDENCE_CASE:
         if not answer:
             return content
         return answer
+
+    @staticmethod
+    def _citation_id(value: Any) -> str:
+        """Return a sortable citation identifier or an empty sentinel."""
+        return value.strip() if isinstance(value, str) else ""
 
     def _build_evidence_case(
         self,
