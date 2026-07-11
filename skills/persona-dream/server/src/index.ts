@@ -5,7 +5,7 @@ import { DreamPathPolicy, dreamContentType } from './paths'
 import { buildRunDetail, collectRuns } from './runs'
 import { enqueueRepairCandidate, FileTauRepairQueue, type TauRepairQueuePort } from './repair'
 import { createPanelPromptBundle } from './bundles'
-import type { DreamResearchPort, VoiceAuditionPort } from './services'
+import { createDefaultResearchPort, createDefaultVoiceAuditionPort, type DreamResearchPort, type VoiceAuditionPort } from './services'
 
 export type PersonaDreamRouterOptions = {
   reportRoots: readonly string[]
@@ -22,6 +22,8 @@ export function createPersonaDreamRouter(options: PersonaDreamRouterOptions): Ex
   const router = Router()
   const roots = [...options.reportRoots, ...options.outputRoots, ...(options.assetRoots ?? [])]
   const policy = new DreamPathPolicy(roots)
+  const research = options.research ?? createDefaultResearchPort()
+  const voiceAudition = options.voiceAudition ?? createDefaultVoiceAuditionPort(options)
 
   router.get('/runs', async (_req, res) => {
     try {
@@ -84,27 +86,23 @@ export function createPersonaDreamRouter(options: PersonaDreamRouterOptions): Ex
     }
   })
 
-  if (options.research) {
-    router.post('/brave-search', async (req, res) => {
-      try {
-        const query = typeof req.body?.query === 'string' ? req.body.query.trim() : ''
-        if (!query) return res.status(400).json({ error: 'query required' })
-        res.json(await options.research!.search(query))
-      } catch (error) {
-        res.status(502).json({ error: error instanceof Error ? error.message : String(error) })
-      }
-    })
-  }
+  router.post('/brave-search', async (req, res) => {
+    try {
+      const query = typeof req.body?.query === 'string' ? req.body.query.trim() : ''
+      if (!query) return res.status(400).json({ error: 'query required' })
+      res.json(await research.search(query))
+    } catch (error) {
+      res.status(502).json({ error: error instanceof Error ? error.message : String(error) })
+    }
+  })
 
-  if (options.voiceAudition) {
-    router.post('/voices/audition', async (req, res) => {
-      try {
-        res.json(await options.voiceAudition!.audition(req.body as Record<string, unknown>))
-      } catch (error) {
-        res.status(503).json({ status: 'error', mocked: false, live: true, error: error instanceof Error ? error.message : String(error) })
-      }
-    })
-  }
+  router.post('/voices/audition', async (req, res) => {
+    try {
+      res.json(await voiceAudition.audition(req.body))
+    } catch (error) {
+      res.status(503).json({ status: 'error', mocked: false, live: true, error: error instanceof Error ? error.message : String(error) })
+    }
+  })
 
   router.post('/stage-work-order', async (req, res) => {
     if (options.repairEnqueueMode !== 'explicit-post-only') {
