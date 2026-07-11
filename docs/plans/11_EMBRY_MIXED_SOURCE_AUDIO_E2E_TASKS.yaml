@@ -1,0 +1,158 @@
+version: 1
+kind: orchestrate-plan
+
+metadata:
+  title: Embry Mixed-Source Audio E2E Campaign
+  goal: Execute 200 counted audio-first conversations and fix failures at the stage where they occur.
+  plan_type: code
+  created: "2026-07-11"
+  primary_persona:
+    name: Graham
+    role: Embry voice-system operator and Horus speaker
+    source: human-approved mixed-source campaign decision
+  compliance_governance:
+    principle: Analyst workbench, not truth engine
+    verdicts: All compliance verdicts default to NEEDS_VERIFICATION
+    human_gate: Compliance officer reviews before status change
+
+repo_root: /home/graham/workspace/experiments/agent-skills
+
+execution:
+  max_concurrency: 1
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+
+capability_overlap:
+  - Extend the existing embry_voice_control.audio_e2e compiler; do not create a second campaign harness.
+  - Reuse event_journal.py, artifact_authority.py, pipewire_playback.py, chat_projection.py, the Memory/Tau lane, and causal Chatterbox rendering.
+  - Reuse the managed RealtimeSTT listener at commit afc70dd; do not add browser microphone authority.
+  - WebGPT architecture source: chatterbox/.ask/embry-200-e2e-runner-response.md.
+
+questions_blockers:
+  - None
+
+lanes:
+  - id: "0"
+    label: Runner
+  - id: "1"
+    label: One case
+  - id: "2"
+    label: Source qualification
+  - id: "3"
+    label: Campaign ladder
+
+tasks:
+  - id: "1"
+    title: Add resumable campaign execution and failure bundles
+    lane: "0"
+    runner: code-runner
+    backend: gpt-5.3-codex
+    mode: iterative
+    depends_on: []
+    cwd: /home/graham/workspace/experiments/agent-skills
+    prompt: >-
+      Extend the existing embry_voice_control.audio_e2e package with run, resume,
+      status, durable stage state, and fix-forward failure bundles. Reuse existing
+      event-spine components. Do not accept typed transcripts or fixture responses.
+      Add run_audio_e2e_rung.sh and qualify_horus_audio_source.py as the supported
+      execution entry points named by subsequent tasks.
+    allowlist:
+      - skills/embry-voice-control/src/embry_voice_control/audio_e2e/__init__.py
+      - skills/embry-voice-control/src/embry_voice_control/audio_e2e/__main__.py
+      - skills/embry-voice-control/src/embry_voice_control/audio_e2e/case_compiler.py
+      - skills/embry-voice-control/src/embry_voice_control/audio_e2e/runner.py
+      - skills/embry-voice-control/tests/audio_e2e/test_case_compiler.py
+      - skills/embry-voice-control/scripts/run_audio_e2e_rung.sh
+      - skills/embry-voice-control/scripts/qualify_horus_audio_source.py
+    read_context:
+      - skills/embry-voice-control/src/embry_voice_control/event_journal.py
+      - skills/embry-voice-control/src/embry_voice_control/artifact_authority.py
+      - skills/embry-voice-control/src/embry_voice_control/pipewire_playback.py
+      - skills/embry-voice-control/proofs/tau/embry-journal-memory-tau-live/scripts/run_journal_memory_tau_proof.py
+    blind_tests:
+      - /mnt/storage12tb/skills/test-lab/embry-audio-e2e-runner-hidden.sh
+    gate: The package tests and test-lab's hidden Python contract both exit zero.
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    definition_of_done:
+      command: test -x skills/embry-voice-control/scripts/run_audio_*_rung.sh && test -f skills/embry-voice-control/scripts/qualify_horus_audio_source.py && PYTHONPATH=skills/embry-voice-control/src /usr/bin/python3 -m embry_voice_control.audio_e2e --help | grep -q bundle-failure && PYTHONPATH=skills/embry-voice-control/src /usr/bin/python3 -m pytest skills/embry-voice-control/tests/audio_*/ -q
+      assertion: exit_code == 0
+
+  - id: "1.1"
+    title: Verify campaign runner locally
+    lane: "0"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["1"]
+    command: uv run --project skills/embry-voice-control --locked --no-sync python -m pytest skills/embry-voice-control/tests/audio_e2e -q
+    tests:
+      - skills/embry-voice-control/tests/audio_e2e
+    definition_of_done:
+      command: uv run --project skills/embry-voice-control --locked --no-sync python -m pytest skills/embry-voice-control/tests/audio_e2e -q
+      assertion: exit_code == 0
+
+  - id: "2"
+    title: Complete one physical two-turn SPARTA case
+    lane: "1"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["1.1"]
+    command: >-
+      skills/embry-voice-control/scripts/run_audio_e2e_rung.sh
+      --count 1 --source-mode physical_live_horus --require-gates all
+    definition_of_done:
+      command: jq -e '.schema == "embry.audio_e2e_case_receipt.v1" and .status == "PASS" and .counted == true and .passed_turn_count == .turn_count and (.failed_gates | length) == 0' /tmp/embry-audio-e2e-single-sparta/run/receipt.json
+      assertion: One physical two-turn case passes listener, speaker, Memory, Tau, Chatterbox, playback, Chat, orb, and replay gates.
+
+  - id: "3"
+    title: Qualify Horus clone on forty held-out sentences
+    lane: "2"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["2"]
+    command: >-
+      skills/embry-voice-control/scripts/qualify_horus_audio_source.py
+      --held-out-count 40 --require-expressive-modes --output /tmp/embry-horus-source-qualification
+    definition_of_done:
+      command: jq -e '.schema == "embry.horus_audio_source_qualification.v1" and .status == "PASS" and .held_out_count >= 40 and .max_wer <= 0.15 and (.failed_gates | length) == 0' /tmp/embry-horus-source-qualification/receipt.json
+      assertion: The pinned clone passes identity, ASR, critical-token, clipping, silence, impostor, and expressive-mode gates.
+
+  - id: "4"
+    title: Run five-case mixed-source canary
+    lane: "3"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["3"]
+    command: skills/embry-voice-control/scripts/run_audio_e2e_rung.sh --count 5 --source-mode qualified_horus_clone --require-gates all --fix-forward-max 3
+    definition_of_done:
+      command: jq -e '.requested_case_count == 5 and .passed_case_count == 5 and .failed_case_count == 0 and .blocked_case_count == 0' /tmp/embry-audio-e2e-5/run/receipt.json
+      assertion: Five stratified cases pass the complete event spine with no substitutions.
+
+  - id: "5"
+    title: Run twenty-five-case mixed-source qualification
+    lane: "3"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["4"]
+    command: skills/embry-voice-control/scripts/run_audio_e2e_rung.sh --count 25 --source-mode qualified_horus_clone --require-gates all --fix-forward-max 3
+    definition_of_done:
+      command: jq -e '.requested_case_count == 25 and .passed_case_count == 25 and .failed_case_count == 0 and .blocked_case_count == 0' /tmp/embry-audio-e2e-25/run/receipt.json
+      assertion: Twenty-five stratified cases pass the complete event spine with no substitutions.
+
+  - id: "6"
+    title: Run two-hundred-case mixed-source campaign
+    lane: "3"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: ["5"]
+    command: skills/embry-voice-control/scripts/run_audio_e2e_rung.sh --count 200 --source-mode qualified_horus_clone --require-gates all --fix-forward-max 3
+    definition_of_done:
+      command: jq -e '.requested_case_count == 200 and .counted_case_count == 200 and .passed_case_count == 200 and .failed_case_count == 0 and .blocked_case_count == 0 and (.failed_gates | length) == 0' /tmp/embry-audio-e2e-200/run/receipt.json
+      assertion: Two hundred counted cases pass with explicit physical and qualified-clone source counts.
