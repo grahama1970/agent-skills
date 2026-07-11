@@ -403,13 +403,13 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
 
   const shellClass = cn(
     "flex min-h-0 flex-1 flex-col overflow-hidden",
-    designView ? "center battle-mockup-panel battle-mockup-center" : "rounded-2xl border-battle-cyan/20",
+    designView ? "center battle-mockup-panel battle-mockup-center" : cn("rounded-2xl border-battle-cyan/20", receiptReplay && "justify-start"),
   );
 
   const timelineBody = (
     <>
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
-      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative min-h-[calc(100%-2.25rem)]", receiptReplay && pixiEngine && "battle-receipt-pixi-rows")}>
+      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")}>
         {!designView ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
         {visibleLanes.map((lane) => (
           <LaneRow

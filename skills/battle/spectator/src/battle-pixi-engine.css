@@ -124,3 +124,21 @@
 [data-lane-row].pixiTrackHidden .battle-track-grid {
   visibility: hidden;
 }
+
+
+/* Sparse receipt races should not leave a giant empty void under two lanes */
+.battle-receipt-pixi-rows {
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+
+/* Receipt race top-align: sparse fixtures should not float in a black void */
+.battle-mockup-center .rows.pixiRowsHost,
+.battle-receipt-pixi-rows {
+  align-content: start;
+}
+.center.battle-mockup-panel,
+.battle-mockup-center {
+  justify-content: flex-start;
+}

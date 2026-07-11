@@ -96,25 +96,52 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
     packet.present && packet.parent_analysis && Object.keys(packet.parent_analysis).length
       ? "inherited parent analysis attached"
       : "inherited parent analysis: not emitted";
+  const material =
+    packet.present ||
+    promotion.present ||
+    Boolean(calibration) ||
+    network.available ||
+    lifecycle.spawnRequestLabel !== "not emitted" ||
+    lifecycle.tauBranchDecisionLabel !== "not emitted" ||
+    lifecycle.childPlanLabel !== "not emitted" ||
+    lifecycle.inheritedProbeLabel !== "not emitted";
+  const [expanded, setExpanded] = useState(material);
 
   return (
-    <section className="m-3 rounded-xl border border-white/10 bg-white/[.025] p-3" data-qid="battle:agent-pane:lifecycle-evidence">
-      <div className="battle-label">Lifecycle evidence</div>
-      <div className="mt-2 grid gap-2 text-xs">
-        <LifecycleLine field="knowledge_packet" value={packet.present ? `${packet.status}${packet.packet_id ? ` · ${packet.packet_id}` : ""}` : "not emitted"} />
-        <LifecycleLine field="child_ack" value={lifecycle.childAckLabel} />
-        <LifecycleLine field="inherited_parent_analysis" value={parentAnalysis} />
-        <LifecycleLine field="tau_branch_decision" value={lifecycle.tauBranchDecisionLabel} />
-        <LifecycleLine field="spawn_request" value={lifecycle.spawnRequestLabel} />
-        <LifecycleLine field="child_inherited_plan" value={lifecycle.childPlanLabel} />
-        <LifecycleLine field="child_inherited_probe" value={lifecycle.inheritedProbeLabel} />
-        <LifecycleLine field="memory_promotion" value={promotion.present ? `${promotion.durable_promoted ? "durable promoted" : "not promoted"} · ${promotion.reason ?? "receipt evaluated"}` : "not emitted"} />
-        <LifecycleLine field="network_summary.available" value={network.available ? "true" : "false"} />
-        <LifecycleLine field="network_summary.full_packet_capture_proven" value={network.full_packet_capture_proven ? "true" : "false"} />
-        <LifecycleLine field="network_summary.reason" value={network.reason ?? "not emitted"} />
-        <LifecycleLine field="packet capture" value={lifecycle.packetCaptureLabel} />
-        <LifecycleLine field="score_calibration" value={calibration ? (calibration.outcome_class ?? "receipt-backed calibration attached") : "not emitted"} />
+    <section className="m-3 rounded-xl border border-white/10 bg-white/[.025] p-3" data-qid="battle:agent-pane:lifecycle-evidence" data-material={material ? "1" : "0"}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="battle-label">Lifecycle evidence</div>
+        <button
+          type="button"
+          className="rounded border border-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
+          data-qid="battle:agent-pane:lifecycle-toggle"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Hide" : "Show"}
+        </button>
       </div>
+      {!material ? (
+        <p className="mt-2 text-xs leading-5 text-slate-500" data-qid="battle:agent-pane:lifecycle-empty">
+          No adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.
+        </p>
+      ) : null}
+      {expanded ? (
+        <div className="mt-2 grid gap-2 text-xs">
+          <LifecycleLine field="knowledge_packet" value={packet.present ? `${packet.status}${packet.packet_id ? ` · ${packet.packet_id}` : ""}` : "not emitted"} />
+          <LifecycleLine field="child_ack" value={lifecycle.childAckLabel} />
+          <LifecycleLine field="inherited_parent_analysis" value={parentAnalysis} />
+          <LifecycleLine field="tau_branch_decision" value={lifecycle.tauBranchDecisionLabel} />
+          <LifecycleLine field="spawn_request" value={lifecycle.spawnRequestLabel} />
+          <LifecycleLine field="child_inherited_plan" value={lifecycle.childPlanLabel} />
+          <LifecycleLine field="child_inherited_probe" value={lifecycle.inheritedProbeLabel} />
+          <LifecycleLine field="memory_promotion" value={promotion.present ? `${promotion.durable_promoted ? "durable promoted" : "not promoted"} · ${promotion.reason ?? "receipt evaluated"}` : "not emitted"} />
+          <LifecycleLine field="network_summary.available" value={network.available ? "true" : "false"} />
+          <LifecycleLine field="network_summary.full_packet_capture_proven" value={network.full_packet_capture_proven ? "true" : "false"} />
+          <LifecycleLine field="network_summary.reason" value={network.reason ?? "not emitted"} />
+          <LifecycleLine field="packet capture" value={lifecycle.packetCaptureLabel} />
+          <LifecycleLine field="score_calibration" value={calibration ? (calibration.outcome_class ?? "receipt-backed calibration attached") : "not emitted"} />
+        </div>
+      ) : null}
     </section>
   );
 }

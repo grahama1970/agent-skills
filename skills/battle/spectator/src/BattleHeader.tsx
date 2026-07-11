@@ -116,8 +116,8 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
   }
 
   return (
-    <header className="relative grid min-h-0 grid-cols-[minmax(0,1fr)_430px] items-center gap-4 overflow-hidden rounded-2xl border border-white/10 bg-battle-panel/80 px-4 py-3 shadow-acrylic backdrop-blur-2xl max-[1500px]:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="grid min-w-0 max-w-[700px] grid-rows-[auto_auto] gap-3 self-stretch max-[1500px]:max-w-[520px]">
+    <header className="relative grid min-h-0 grid-cols-[minmax(0,1.1fr)_minmax(320px,430px)_minmax(0,0.95fr)] items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-battle-panel/80 px-4 py-3 shadow-acrylic backdrop-blur-2xl max-[1500px]:grid-cols-[minmax(0,1fr)_minmax(280px,360px)_minmax(0,0.9fr)]">
+      <div className="grid min-w-0 grid-rows-[auto_auto] gap-3 self-stretch">
         <div className="flex min-w-0 items-center gap-3">
           <div className="shrink-0 rounded-xl border border-battle-red/30 bg-battle-red/10 p-2 text-battle-red shadow-redGlow">
             <Icons.Swords className="h-6 w-6" />
@@ -136,7 +136,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
         </div>
       </div>
 
-      <div className="battle-score-block pointer-events-auto absolute left-1/2 top-1/2 grid h-[84px] w-[430px] -translate-x-1/2 -translate-y-1/2 grid-cols-[1fr_44px_1fr] overflow-hidden rounded-2xl border border-white/10 bg-[rgba(3,8,15,.62)] shadow-acrylic max-[1500px]:w-[390px]">
+      <div className="battle-score-block pointer-events-auto grid h-[84px] w-full grid-cols-[1fr_44px_1fr] overflow-hidden rounded-2xl border border-white/10 bg-[rgba(3,8,15,.62)] shadow-acrylic" data-qid="battle:header:score">
         <ScoreCell label="Red Team" sub="Exploit Agents" value={formatReceiptScore(scoreboard?.red_score)} tone="red" icon={<Icons.Bug className="h-7 w-7" />} align="left" />
         <div className="flex items-center justify-center border-x border-white/10 bg-black/25 text-[11px] font-black tracking-[0.24em] text-slate-500">VS</div>
         <ScoreCell label="Blue Team" sub="Patch Agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="blue" icon={<Icons.Shield className="h-7 w-7" />} align="right" />
