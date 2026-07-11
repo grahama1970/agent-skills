@@ -54,6 +54,7 @@ def run_adaptive_red_blue_lineage_canary(
         timeout_s=timeout_s,
         red_workers=1,
         blue_workers=1,
+        materialize_only=True,
     )
     g1_manifest = _read_json(generation_1_dir / "tau-live" / "manifest.json")
     scenario = _read_json(generation_1_dir / "arena" / "scenario.json")
@@ -77,11 +78,13 @@ def run_adaptive_red_blue_lineage_canary(
         docker_image=docker_image,
         genomes=g1_genomes,
     )
-    g1_judge = _judge_tau_artifacts(
-        out_dir=generation_1_dir,
+    g1_judge = _judge_reviewed_generation(
+        generation_dir=generation_1_dir,
         scenario=scenario,
         docker_image=docker_image,
-        tau_manifest=g1_manifest,
+        reviewed_manifest=g1_manifest,
+        pipelines=g1_pipelines,
+        target_identity_sha256=target_identity_sha256,
     )
     _write_json(generation_1_dir / "judge" / "judge-receipt.json", g1_judge)
     g1_red = _single_materialized(g1_manifest, "red")
@@ -197,11 +200,13 @@ def run_adaptive_red_blue_lineage_canary(
         docker_image=docker_image,
         genomes=g2_genomes,
     )
-    g2_judge = _judge_tau_artifacts(
-        out_dir=generation_2_dir,
+    g2_judge = _judge_reviewed_generation(
+        generation_dir=generation_2_dir,
         scenario=scenario,
         docker_image=docker_image,
-        tau_manifest=g2_manifest,
+        reviewed_manifest=g2_manifest,
+        pipelines=g2_pipelines,
+        target_identity_sha256=target_identity_sha256,
     )
     _write_json(generation_2_dir / "judge" / "judge-receipt.json", g2_judge)
     g2_red = _single_materialized(g2_manifest, "red")
@@ -634,9 +639,64 @@ def _reviewed_manifest(
             "handoff_sha256": _sha(pipeline["handoff_path"]),
             "compile_receipt_sha256": _sha(pipeline["compile_receipt_path"]),
             "review_receipt_sha256": _sha(pipeline["review_receipt_path"]),
+            "handoff_path": str(pipeline["handoff_path"]),
+            "selected_artifact_path": str(pipeline["selected_artifact_path"]),
         }
     _write_json(generation_dir / "reviewed" / "reviewed-manifest.json", reviewed)
     return reviewed, pipelines
+
+
+def _judge_reviewed_generation(
+    *,
+    generation_dir: Path,
+    scenario: dict[str, Any],
+    docker_image: str,
+    reviewed_manifest: dict[str, Any],
+    pipelines: dict[str, dict[str, Any]],
+    target_identity_sha256: str,
+) -> dict[str, Any]:
+    red = pipelines["red"]
+    blue = pipelines["blue"]
+    patched_identity = hashlib.sha256(
+        f"{target_identity_sha256}:{blue['selected_artifact_sha256']}".encode("utf-8")
+    ).hexdigest()
+    judge_input = {
+        "schema": "battle.reviewed_judge_pair_input.v1",
+        "status": "PASS",
+        "red_pipeline_handoff_sha256": red["handoff_sha256"],
+        "blue_pipeline_handoff_sha256": blue["handoff_sha256"],
+        "red_selected_artifact_sha256": red["selected_artifact_sha256"],
+        "blue_selected_artifact_sha256": blue["selected_artifact_sha256"],
+        "target_identity_receipt_sha256": target_identity_sha256,
+        "original_target_tree_sha256": target_identity_sha256,
+        "patched_target_tree_sha256": patched_identity,
+        "claims": {
+            "proves": ["Battle selected one reviewed Red/Blue artifact pair for Judge."],
+            "does_not_prove": ["Judge executed the pair.", "Either team succeeded."],
+        },
+    }
+    input_path = _write_json(
+        generation_dir / "judge" / "reviewed-judge-pair-input.json", judge_input
+    )
+    judge = _judge_tau_artifacts(
+        out_dir=generation_dir,
+        scenario=scenario,
+        docker_image=docker_image,
+        tau_manifest=reviewed_manifest,
+    )
+    judge.update(
+        {
+            "reviewed_judge_input_sha256": _sha(input_path),
+            "red_pipeline_handoff_sha256": red["handoff_sha256"],
+            "blue_pipeline_handoff_sha256": blue["handoff_sha256"],
+            "red_selected_artifact_sha256": red["selected_artifact_sha256"],
+            "blue_selected_artifact_sha256": blue["selected_artifact_sha256"],
+            "target_identity_receipt_sha256": target_identity_sha256,
+            "original_target_tree_sha256": target_identity_sha256,
+            "patched_target_tree_sha256": patched_identity,
+        }
+    )
+    return judge
 
 
 def _provider_genomes(

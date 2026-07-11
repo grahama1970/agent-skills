@@ -43,6 +43,32 @@ def run_team_artifact_pipeline(
     out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     role = "red_exploit" if team == "red" else "blue_patch"
+    provider_payload = _read_json(provider_receipt)
+    materialization_payload = _read_json(materialization_receipt)
+    declared_path = Path(str(materialization_payload.get("path") or "")).resolve()
+    source_sha = _sha(source_artifact)
+    expected_role = "red_exploit" if team == "red" else "blue_patch"
+    input_errors: list[str] = []
+    provider_result = provider_payload.get("result")
+    provider_status = (
+        provider_result.get("status") if isinstance(provider_result, dict) else provider_payload.get("status")
+    )
+    if provider_status != "PASS":
+        input_errors.append("Tau provider/subagent receipt status is not PASS")
+    if materialization_payload.get("status") != "PASS":
+        input_errors.append("Tau materialization receipt status is not PASS")
+    if materialization_payload.get("artifact_type") != expected_role:
+        input_errors.append("Tau materialization artifact_type does not match team role")
+    if declared_path != source_artifact:
+        input_errors.append("Tau materialization path does not match source artifact")
+    if materialization_payload.get("artifact_sha256") != source_sha:
+        input_errors.append("Tau materialization artifact hash does not match source artifact")
+    if materialization_payload.get("artifact_bytes") != source_artifact.stat().st_size:
+        input_errors.append("Tau materialization byte count does not match source artifact")
+    if not materialization_payload.get("scillm_call_receipt_sha256"):
+        input_errors.append("Tau materialization receipt lacks SciLLM call binding")
+    if input_errors:
+        raise ValueError("; ".join(input_errors))
     selected_name = "red_exploit_submission.py" if team == "red" else "app.py"
     selected_path = out_dir / selected_name
     shutil.copyfile(source_artifact, selected_path)
@@ -56,7 +82,11 @@ def run_team_artifact_pipeline(
         "team": team,
         "artifact_role": role,
         "language": "python",
-        "source_artifact_sha256": _sha(source_artifact),
+        "source_artifact_sha256": source_sha,
+        "tau_declared_artifact_sha256": materialization_payload["artifact_sha256"],
+        "tau_declared_artifact_bytes": materialization_payload["artifact_bytes"],
+        "tau_strategy_genome_sha256": materialization_payload.get("strategy_genome_sha256"),
+        "tau_scillm_call_receipt_sha256": materialization_payload["scillm_call_receipt_sha256"],
         "provider_receipt_sha256": _sha(provider_receipt),
         "materialization_receipt_sha256": _sha(materialization_receipt),
         "target_identity_sha256": target_identity_sha256,
@@ -169,6 +199,13 @@ def run_team_artifact_pipeline(
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON root must be an object: {path}")
+    return payload
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:

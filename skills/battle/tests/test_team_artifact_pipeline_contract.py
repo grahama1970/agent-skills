@@ -10,8 +10,8 @@ from battle_skill.team_artifact_pipeline import run_team_artifact_pipeline
 def test_team_artifact_pipeline_binds_red_hashes_through_docker(tmp_path: Path) -> None:
     source = tmp_path / "source.py"
     source.write_text("from app import import_zip\nprint(import_zip)\n", encoding="utf-8")
-    provider = _json(tmp_path / "provider.json", {"schema": "tau.subagent_receipt.v1"})
-    materialized = _json(tmp_path / "materialized.json", {"status": "PASS"})
+    provider = _provider(tmp_path)
+    materialized = _materialized(tmp_path, source, "red_exploit")
 
     result = run_team_artifact_pipeline(
         battle_id="battle-004",
@@ -38,8 +38,8 @@ def test_team_artifact_pipeline_binds_red_hashes_through_docker(tmp_path: Path) 
 def test_team_artifact_pipeline_blocks_blue_without_public_interface(tmp_path: Path) -> None:
     source = tmp_path / "source.py"
     source.write_text("def unrelated():\n    return True\n", encoding="utf-8")
-    provider = _json(tmp_path / "provider.json", {"schema": "tau.subagent_receipt.v1"})
-    materialized = _json(tmp_path / "materialized.json", {"status": "PASS"})
+    provider = _provider(tmp_path)
+    materialized = _materialized(tmp_path, source, "blue_patch")
 
     result = run_team_artifact_pipeline(
         battle_id="battle-004",
@@ -61,3 +61,26 @@ def test_team_artifact_pipeline_blocks_blue_without_public_interface(tmp_path: P
 def _json(path: Path, payload: dict[str, object]) -> Path:
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
+
+
+def _provider(root: Path) -> Path:
+    return _json(
+        root / "provider.json",
+        {"schema": "tau.subagent_receipt.v1", "result": {"status": "PASS"}},
+    )
+
+
+def _materialized(root: Path, source: Path, artifact_type: str) -> Path:
+    return _json(
+        root / "materialized.json",
+        {
+            "schema": "tau.battle_materialized_artifact_receipt.v1",
+            "status": "PASS",
+            "artifact_type": artifact_type,
+            "path": str(source.resolve()),
+            "artifact_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "artifact_bytes": source.stat().st_size,
+            "strategy_genome_sha256": "genome-sha",
+            "scillm_call_receipt_sha256": "call-sha",
+        },
+    )

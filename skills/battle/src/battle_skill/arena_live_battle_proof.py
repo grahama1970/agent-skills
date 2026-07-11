@@ -90,6 +90,7 @@ def run_arena_tau_public_only_proof(
     blue_workers: int = 1,
     spawn_red_child_on_blue_success: bool = False,
     prekill_survival: bool = False,
+    materialize_only: bool = False,
 ) -> dict[str, Any]:
     """Run a bounded public-only Tau worker-matrix proof for one Arena scenario."""
     if spawn_red_child_on_blue_success and prekill_survival:
@@ -179,6 +180,32 @@ def run_arena_tau_public_only_proof(
     validation = _visibility_validation(out_dir=out_dir, tau_manifest=tau_manifest)
     validation_path = _write_json(out_dir / "visibility-validation.json", validation)
     mark_timing("visibility_validation_ready", receipt_id="visibility-validation")
+
+    if materialize_only:
+        status = "PASS" if tau_manifest.get("status") == "PASS" and validation.get("status") == "PASS" else "BLOCKED"
+        receipt = {
+            "schema": RUN_SCHEMA,
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "status": status,
+            "verdict": "MATERIALIZED_NOT_JUDGED",
+            "mocked": False,
+            "live": "brave_search_arena_tau_materialization_only",
+            "agentic": True,
+            "materialize_only": True,
+            "artifacts": {
+                "tau_manifest": str(tau_manifest_path.relative_to(out_dir)),
+                "visibility_validation": str(validation_path.relative_to(out_dir)),
+                "team_public_target": "arena/team-public/target/app.py",
+            },
+            "claims": {
+                "proves": ["Arena and Tau materialized public-only Red and Blue artifacts without running Judge."],
+                "does_not_prove": ["Docker compile passed.", "Judge evaluated the artifacts."],
+            },
+            "created_at": _now(),
+        }
+        _write_json(out_dir / "run-receipt.json", receipt)
+        return receipt
 
     judge = _judge_tau_artifacts(
         out_dir=out_dir,
