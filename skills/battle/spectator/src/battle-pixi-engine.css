@@ -142,3 +142,95 @@
 .battle-mockup-center {
   justify-content: flex-start;
 }
+
+
+/* Receipt + Pixi: slim labels aligned to engine row heights (92/86) */
+.battle-receipt-pixi-lane {
+  display: grid;
+  grid-template-columns: var(--battle-label-w, 290px) minmax(0, 1fr);
+  align-items: stretch;
+  pointer-events: none;
+}
+.battle-receipt-pixi-lane-label {
+  pointer-events: auto;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 10px 0 12px;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(3, 8, 15, 0.82);
+  text-align: left;
+  color: #e2e8f0;
+}
+.battle-receipt-pixi-lane-child .battle-receipt-pixi-lane-label { padding-left: 28px; }
+.battle-receipt-pixi-lane-selected .battle-receipt-pixi-lane-label {
+  background: rgba(57, 242, 120, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(57, 242, 120, 0.22);
+}
+.battle-receipt-pixi-lane-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 77, 92, 0.35);
+  color: #ff6b7a;
+  background: rgba(255, 77, 92, 0.08);
+}
+.battle-receipt-pixi-lane-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.battle-receipt-pixi-lane-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.battle-receipt-pixi-lane-gen {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #8fffb0;
+  white-space: nowrap;
+}
+.battle-receipt-pixi-lane-terminal {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #8fffb0;
+}
+.battle-receipt-pixi-lane-terminal.blue { color: #7ec0ff; }
+.battle-receipt-pixi-lane-terminal.yellow { color: #ffe070; }
+.battle-receipt-pixi-lane-collapse {
+  pointer-events: auto;
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #cbd5e1;
+}
+.battle-receipt-pixi-rows > .battleRaceStageHost { z-index: 6; }

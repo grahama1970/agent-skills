@@ -10,6 +10,7 @@ import { RunnerHud } from "./RunnerHud";
 import { layoutLaneEvents } from "./lib/layout-lane-events";
 import { LaneEventLabel } from "./LaneEventLabel";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
+import { BATTLE_LANE_LABEL_PX, BATTLE_MOCKUP_LANE_ROW_CHILD_PX, BATTLE_MOCKUP_LANE_ROW_ROOT_PX } from "./lib/layout-constants";
 import { partitionMockupLaneEvents } from "./lib/mockup-lane-partition";
 
 type Props = {
@@ -132,10 +133,63 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
     );
   }
 
-  const lineClass = lane.lineColor === "green" ? "battle-line-green" : lane.lineColor === "purple" ? "battle-line-purple" : "battle-line-red";
+  const rowHeightPx = isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
   const terminalVariant = lane.terminal === "blocked" ? "blue" : lane.terminal === "none" ? "yellow" : "green";
-  const isActiveFinisherTarget = activeFinisher?.laneId === lane.id;
   const workerSuffix = lane.name === displayName ? null : lane.name.slice(displayName.length).trim();
+
+  if (hideTrack) {
+    const terminalLabel = lane.terminal === "none" ? "ACTIVE" : lane.terminal.replace(/_/g, " ").toUpperCase();
+    return (
+      <motion.div
+        ref={ref}
+        data-lane-row
+        data-lane-id={lane.id}
+        layout
+        className={cn(
+          "battle-receipt-pixi-lane relative border-b border-white/[.055]",
+          isChild && "battle-receipt-pixi-lane-child",
+          isSelected && "battle-receipt-pixi-lane-selected",
+          isDimmed && "opacity-70",
+        )}
+        style={{ height: rowHeightPx, minHeight: rowHeightPx }}
+      >
+        <button
+          type="button"
+          data-qid={`battle:lane:${lane.id}`}
+          data-qs-action="BATTLE_LANE_SELECT"
+          title={`Select receipt-backed lane ${lane.name}`}
+          onClick={() => onSelect(lane.id)}
+          className="battle-receipt-pixi-lane-label"
+          style={{ width: BATTLE_LANE_LABEL_PX }}
+        >
+          <span className="battle-receipt-pixi-lane-icon" aria-hidden="true">
+            <Icons.Bug className="h-3.5 w-3.5" />
+          </span>
+          <span className="min-w-0">
+            <span className="battle-receipt-pixi-lane-name">{displayName}</span>
+            <span className="battle-receipt-pixi-lane-meta">{workerSuffix ? `${workerSuffix} · ${lane.payloadId}` : lane.payloadId}</span>
+          </span>
+          <span className="battle-receipt-pixi-lane-gen">GEN {lane.generation}</span>
+          <span className={cn("battle-receipt-pixi-lane-terminal", terminalVariant)}>{terminalLabel}</span>
+        </button>
+        {hasChildren ? (
+          <button
+            type="button"
+            data-qid={`battle:lane:collapse:${lane.id}`}
+            data-qs-action="BATTLE_LANE_COLLAPSE"
+            title={isCollapsed ? `Expand child lanes for ${lane.name}` : `Collapse child lanes for ${lane.name}`}
+            className="battle-receipt-pixi-lane-collapse"
+            onClick={() => onToggleCollapse?.()}
+          >
+            <Icons.ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isCollapsed && "-rotate-90")} />
+          </button>
+        ) : null}
+      </motion.div>
+    );
+  }
+
+  const lineClass = lane.lineColor === "green" ? "battle-line-green" : lane.lineColor === "purple" ? "battle-line-purple" : "battle-line-red";
+  const isActiveFinisherTarget = activeFinisher?.laneId === lane.id;
   const laidOut = layoutLaneEvents(lane.events.filter((event) => !isChild || event.x >= lane.xStart - 1), { flipBands: isChild });
   const icons = laidOut.filter((event) => event.labelBand === "none");
   const above = laidOut.filter((event) => event.labelBand === "above");

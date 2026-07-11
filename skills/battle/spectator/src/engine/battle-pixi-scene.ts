@@ -221,8 +221,8 @@ function placePooledMarker(
 		pool[writeIndex] = sprite;
 	}
 	sprite.texture = texture;
-	sprite.x = x;
-	sprite.y = y;
+	sprite.x = Math.round(x);
+	sprite.y = Math.round(y);
 	sprite.alpha = alpha;
 	sprite.scale.set(scale);
 	sprite.visible = true;
@@ -236,12 +236,11 @@ function hideUnusedMarkers(pool: Sprite[], usedCount: number) {
 }
 
 
-/** Keep runners inside the lane band — never fill ~95% of row height. */
+/** Readable in-lane runners — match design row band without 95% pile-up. */
 export function runnerDisplayScale(rowHeightPx: number): number {
 	const framePx = 64;
-	// Compact lane actors — leave room for labels, markers, and playhead chrome.
-	const raw = (Math.max(24, rowHeightPx) * 0.34) / framePx;
-	return Math.max(0.38, Math.min(0.52, raw));
+	const raw = (Math.max(24, rowHeightPx) * 0.78) / framePx;
+	return Math.max(0.65, Math.min(1.15, raw));
 }
 
 function upsertRunnerActor(args: {
@@ -295,8 +294,8 @@ function upsertRunnerActor(args: {
 	} else if (!sprite.playing) {
 		sprite.play();
 	}
-	sprite.x = x;
-	sprite.y = y;
+	sprite.x = Math.round(x);
+	sprite.y = Math.round(y);
 	sprite.scale.set(scale);
 	sprite.alpha = alpha;
 	return sprite;
@@ -463,6 +462,7 @@ function syncEntities(
 			if (eventSeconds > currentSeconds) continue;
 			const mx = secondsToWorldX(eventSeconds, allottedSeconds, contentWidth);
 			const marker = battleSpriteTheme.markerForEvent(event);
+			if (Math.abs(mx - runnerX) < 16) continue;
 			markerWriteIndex = placePooledMarker(
 				layers.markerPool,
 				layers.markers,

@@ -33,6 +33,7 @@ import { activeReceiptBeatAtPlayhead, receiptBeatToEffectCue, type ReceiptBeat }
 import { useBattleReceiptDirector } from "./hooks/useBattleReceiptDirector";
 import { battlePixiTestModeFromUrl } from "./lib/is-battle-pixi-test-mode";
 import { buildRaceEngineInput, buildRaceEngineRowLayout } from "./lib/build-race-engine-input";
+import { BATTLE_LANE_LABEL_PX } from "./lib/layout-constants";
 import { battleTimelineDomain } from "./lib/battle-timeline-domain";
 import type { BattleEffectCue, BattleEvent } from "./lib/battle-types";
 import { BattleRacePixiSpike } from "./engine/BattleRacePixiSpike";
@@ -409,7 +410,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const timelineBody = (
     <>
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
-      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")}>
+      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")} style={receiptReplay && pixiEngine ? { ["--battle-label-w" as string]: `${BATTLE_LANE_LABEL_PX}px` } : undefined}>
         {!designView ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
         {visibleLanes.map((lane) => (
           <LaneRow

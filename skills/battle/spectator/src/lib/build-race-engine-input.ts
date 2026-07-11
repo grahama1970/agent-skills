@@ -10,12 +10,9 @@ import type {
 	BattleTimelineViewportState,
 	Lane,
 } from "./battle-types";
-import { BATTLE_LANE_LABEL_PX } from "./layout-constants";
+import { BATTLE_LANE_LABEL_PX, BATTLE_MOCKUP_LANE_ROW_CHILD_PX, BATTLE_MOCKUP_LANE_ROW_ROOT_PX } from "./layout-constants";
 import { battlePixiTestModeFromUrl } from "./is-battle-pixi-test-mode";
 import { battleTimelineDomain } from "./battle-timeline-domain";
-
-const ROW_H_ROOT = 92;
-const ROW_H_CHILD = 86;
 
 export function battleRaceEngineMode(): BattleRaceEngineMode {
 	if (isBattleDesignView()) return "design_fixture";
@@ -30,7 +27,7 @@ export function buildRaceEngineRowLayout(lanes: Lane[]): BattleRaceEngineRowLayo
 	let top = 0;
 	return lanes.map((lane) => {
 		const isChild = childIds.has(lane.id);
-		const heightPx = isChild ? ROW_H_CHILD : ROW_H_ROOT;
+		const heightPx = isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
 		const layout = { laneId: lane.id, topPx: top, heightPx, isChild };
 		top += heightPx;
 		return layout;
@@ -49,7 +46,7 @@ export function buildDefaultViewportState(
 		currentSeconds,
 		followMode: "scroll_after_threshold",
 		labelWidthPx: BATTLE_LANE_LABEL_PX,
-		rowHeightPx: ROW_H_ROOT,
+		rowHeightPx: BATTLE_MOCKUP_LANE_ROW_ROOT_PX,
 	};
 }
 
