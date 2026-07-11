@@ -35,7 +35,13 @@ def _looks_public_http_url(url: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def validate_provider_media_url(url: str, expected_sha256: str, *, timeout: float = 20.0) -> dict[str, Any]:
+def validate_provider_media_url(
+    url: str,
+    expected_sha256: str,
+    *,
+    expected_content_type: str | None = None,
+    timeout: float = 20.0,
+) -> dict[str, Any]:
     result: dict[str, Any] = {
         "schema": "persona_dream.provider_media_url_probe_receipt.v1",
         "created_at": _now_iso(),
@@ -44,6 +50,9 @@ def validate_provider_media_url(url: str, expected_sha256: str, *, timeout: floa
         "status": "BLOCKED",
         "blockers": [],
         "http_status": None,
+        "final_url": None,
+        "content_type": None,
+        "expected_content_type": expected_content_type,
         "content_length": None,
         "observed_sha256": None,
         "mocked": "no",
@@ -67,6 +76,8 @@ def validate_provider_media_url(url: str, expected_sha256: str, *, timeout: floa
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = response.read()
             result["http_status"] = response.status
+            result["final_url"] = response.geturl()
+            result["content_type"] = response.headers.get_content_type()
             result["content_length"] = len(body)
             result["observed_sha256"] = _sha256_bytes(body)
     except Exception as exc:  # noqa: BLE001 - receipt must capture network failure.
@@ -77,6 +88,10 @@ def validate_provider_media_url(url: str, expected_sha256: str, *, timeout: floa
         result["blockers"].append(f"http_status_not_200:{result['http_status']}")
     if result["observed_sha256"] != expected_sha256:
         result["blockers"].append("sha256_mismatch")
+    if expected_content_type and result["content_type"] != expected_content_type:
+        result["blockers"].append(
+            f"content_type_mismatch:expected={expected_content_type}:observed={result['content_type']}"
+        )
 
     if not result["blockers"]:
         result["status"] = "PASS_PROVIDER_MEDIA_URL_PROBE"
@@ -87,12 +102,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", required=True)
     parser.add_argument("--expected-sha256", required=True)
+    parser.add_argument("--expected-content-type")
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    result = validate_provider_media_url(args.url, args.expected_sha256, timeout=args.timeout)
+    result = validate_provider_media_url(
+        args.url,
+        args.expected_sha256,
+        expected_content_type=args.expected_content_type,
+        timeout=args.timeout,
+    )
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
