@@ -149,7 +149,7 @@ while [[ $# -gt 0 ]]; do
     --no-activate) no_activate=1; shift ;;
     --create-tab) create_tab=1; shift ;;
     --no-remember) no_remember=1; shift ;;
-    --allow-foreground-controlled) allow_foreground_controlled=1; shift ;;
+    --allow-foreground-controlled) allow_foreground_controlled=1; no_activate=1; shift ;;
     --attach-file) attach_file="${2:-}"; shift 2 ;;
     --warn-only) warn_only=1; shift ;;
     --require-attachment) require_attachment="${2:-}"; shift 2 ;;
@@ -334,6 +334,14 @@ elif failure == "roundtrip_preflight_failed":
     proof_status = "not_submitted"
     diagnosis = "The small sentinel roundtrip failed, so Surf blocked the main prompt before submission."
     action = "Inspect roundtrip_preflight_output_dir, repair tab visibility/state, or use a foreground/fresh reviewer tab before retrying."
+elif failure == "stale_cdp_on_explicit_tab":
+    proof_status = "not_submitted"
+    diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
+    action = "Do not create a fallback tab. Release the existing debugger attachment, reload Surf, or rerun deliberately in a foreground/same-tab mode for the same tab."
+elif failure == "concurrent_submit_same_tab":
+    proof_status = "not_submitted"
+    diagnosis = "Another Surf WebGPT submit is already controlling the requested tab."
+    action = "Do not submit a second prompt to the same tab. Wait for the active run to finish, recover with webgpt.extract if needed, or choose a separate verified reviewer tab."
 elif failure == "submit_failed":
     ready_error = str(meta.get("chatgpt_ready_error") or "")
     if ready_error:
@@ -348,6 +356,10 @@ elif failure == "missing_sentinel" or status == "missing_sentinel":
     proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
     diagnosis = "Surf captured response text, but it did not contain the current completion sentinel in assistant output."
     action = "Do not use output as proof. If ChatGPT visibly completed, run webgpt.extract with the exact sentinel; otherwise resubmit to a clean verified tab."
+elif failure == "response_clean_failed":
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "Surf captured a sentinel-bearing response, but clean-output validation rejected trailing assistant text after the terminal sentinel."
+    action = "Do not use output as clean proof. Inspect raw_output and stderr_log; recover with webgpt.extract using the exact sentinel or rerun after fixing the cleaner condition."
 elif failure == "controlled_tab_id_mismatch":
     proof_status = "wrong_tab"
     diagnosis = "The response came from a different tab than the requested controlled tab."
@@ -564,9 +576,7 @@ attempt_extract_fallback() {
     return 1
   fi
   if [[ "$no_activate" -eq 1 && "$reason" == "missing_sentinel" ]]; then
-    "$RUN_SH" tab.activate "$requested_tab_id" >/dev/null 2>&1 || true
-    sleep 2
-    echo "ExtractActivateForRecovery: true" >> "$stderr_log"
+    echo "ExtractFallbackNoActivate: true" >> "$stderr_log"
   fi
   local extract_clean extract_raw extract_meta extract_err
   extract_clean="$(mktemp /tmp/surf-webgpt-submit-extract-clean.XXXXXX.md)"
@@ -694,7 +704,8 @@ if [[ "$advisory_after_s" =~ ^[0-9]+$ && "$advisory_after_s" -gt 0 && "$advisory
 fi
 
 heartbeat_output="$(dirname "$meta_output")/webgpt_heartbeat.json"
-args=(chatgpt --query-file "$submitted_output" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
+submitted_query="$(cat "$submitted_output")"
+args=(chatgpt "$submitted_query" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
@@ -741,6 +752,47 @@ fi
 # written before tab/url discovery so callers can see prompt preparation early;
 # this second write records the actual intended controlled tab when available.
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+
+if [[ -n "${requested_tab_id:-}" ]]; then
+  surf_tab_lock_path="/tmp/surf-webgpt-tab-${requested_tab_id}.lock"
+  exec {surf_tab_lock_fd}>"$surf_tab_lock_path"
+  if ! flock -n "$surf_tab_lock_fd"; then
+    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "$failed_at" "$surf_tab_lock_path" <<'PY'
+import json, pathlib, sys
+(
+    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
+    target_url, model, reasoning, failed_at, lock_path,
+) = sys.argv[1:]
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "concurrent_submit_same_tab",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "lock_path": lock_path,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+    enrich_agent_diagnosis
+    echo "webgpt.submit blocked: another Surf submit is already controlling tab $requested_tab_id; no prompt submitted." >&2
+    exit 9
+  fi
+  cleanup_surf_tab_lock() {
+    rm -f -- "$surf_tab_lock_path"
+  }
+  trap cleanup_surf_tab_lock EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+fi
 
 if [[ -n "${requested_tab_id:-}" ]]; then
   tab_list_text="${tab_list_text:-$("$RUN_SH" tab.list 2>/dev/null || true)}"
@@ -892,17 +944,82 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 # CDP stale connection recovery.
 # Chrome allows one CDP debugger per tab. Killed processes leave a stale
 # connection that blocks subsequent CDP access. When --no-activate is set,
-# we cannot tab.activate (that would foreground). Instead, detect stale CDP
-# and fall back to --create-tab --url <url> which opens a fresh background
-# tab with a clean CDP connection — no foregrounding needed.
+# we cannot tab.activate (that would foreground). For explicit targets, release
+# Surf-owned stale debugger state by reloading the extension, then retry the
+# same tab once. If that still fails, stop before prompt submission; silently
+# changing to a different tab would violate the controlled tab proof contract.
 if [[ -n "${requested_tab_id:-}" ]]; then
   if [[ "$no_activate" -eq 1 ]]; then
-    # --no-activate mode: don't tab.activate. Test CDP first, fall back to fresh tab if stale.
-    cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>/dev/null || true)"
-    if [[ "$cdp_ok" != "cdp-ok" ]]; then
-      echo "webgpt.submit: stale CDP on tab $requested_tab_id; --create-tab fallback" >&2
-      create_tab=1
-      requested_tab_id=""
+    # --no-activate mode: don't tab.activate. Test CDP first; if stale, reload
+    # Surf and retry the same tab once before failing closed.
+    cdp_probe_err="$(mktemp /tmp/surf-webgpt-cdp-probe.XXXXXX.log)"
+    cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>"$cdp_probe_err" || true)"
+    if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
+      cdp_retry_err="$(mktemp /tmp/surf-webgpt-cdp-retry.XXXXXX.log)"
+      "$RUN_SH" extension.reload >/dev/null 2>"$cdp_retry_err" || true
+      for _surf_ping_attempt in $(seq 1 30); do
+        if "$RUN_SH" extension.ping >/dev/null 2>>"$cdp_retry_err"; then
+          break
+        fi
+        sleep 0.5
+      done
+      cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>>"$cdp_retry_err" || true)"
+    fi
+    if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
+      failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      {
+        echo "CDPProbeFailed: true"
+        echo "CDPProbeTabID: $requested_tab_id"
+        echo "CDPProbeStderr: $cdp_probe_err"
+        echo "CDPProbeRetryStderr: ${cdp_retry_err:-}"
+      } >> "$stderr_log"
+      python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$cdp_probe_err" "${cdp_retry_err:-}" "$failed_at" <<'PY'
+import json
+import pathlib
+import sys
+
+(
+    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
+    target_url, model, reasoning, identity_s, cdp_probe_err, cdp_retry_err,
+    failed_at,
+) = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+probe_path = pathlib.Path(cdp_probe_err)
+probe_stderr = probe_path.read_text(encoding="utf-8", errors="replace") if probe_path.exists() else ""
+retry_path = pathlib.Path(cdp_retry_err) if cdp_retry_err else None
+retry_stderr = (
+    retry_path.read_text(encoding="utf-8", errors="replace")
+    if retry_path and retry_path.exists()
+    else ""
+)
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "stale_cdp_on_explicit_tab",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "cdp_probe_stderr": probe_stderr,
+    "cdp_retry_attempted": True,
+    "cdp_retry_stderr": retry_stderr,
+    "submitted_to_chatgpt": False,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n", encoding="utf-8")
+PY
+      enrich_agent_diagnosis
+      echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
+      exit 6
     fi
   else
     # Foreground mode: activate tab to release stale CDP, then clear drafts
@@ -1240,19 +1357,79 @@ PY
   exit 4
 fi
 
-python3 - "$raw_output" "$output" "$sentinel" <<'PY'
-import pathlib, sys
+if ! clean_error="$(python3 - "$raw_output" "$output" "$sentinel" 2>&1 <<'PY'
+import pathlib, re, sys
 raw_path, out_path, sentinel = sys.argv[1:]
 text = pathlib.Path(raw_path).read_text()
 idx = text.rfind(sentinel)
 if idx == -1:
     raise SystemExit("sentinel missing from assistant response")
 after = text[idx + len(sentinel):].strip()
-if after and after.strip(">"):
+if after and not re.fullmatch(r"[>_▌▋▊█|\s]*", after):
     raise SystemExit("assistant response contains text after terminal sentinel")
 clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
+)"; then
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" "$clean_error" <<'PY'
+import json, pathlib, sys
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s, clean_error = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+try:
+    roundtrip = json.loads(roundtrip_s) if roundtrip_s else None
+except Exception:
+    roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
+raw_text = pathlib.Path(raw).read_text() if pathlib.Path(raw).exists() else ""
+out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
+stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
+tab_id = None
+response_source = None
+conversation_url = None
+for line in reversed(stderr_text.splitlines()):
+    if line.startswith("Tab ID:") and tab_id is None:
+        tab_id = line.split(":", 1)[1].strip()
+    elif line.startswith("ResponseSource:") and response_source is None:
+        response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationUrl:") and conversation_url is None:
+        conversation_url = line.split(":", 1)[1].strip()
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "response_clean_failed",
+    "clean_error": clean_error,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "roundtrip_preflight_required": roundtrip_required_s == "1",
+    "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),
+    "roundtrip_preflight_output_dir": roundtrip_dir or None,
+    "roundtrip_preflight": roundtrip,
+    "controlled_tab_id": tab_id,
+    "conversation_url": conversation_url,
+    "response_source": response_source,
+    "raw_contains_sentinel": sentinel in raw_text,
+    "clean_contains_sentinel": sentinel in out_text,
+    "raw_chars": len(raw_text),
+    "clean_chars": len(out_text),
+    "raw_response_advisory": bool(raw_text),
+    "started_at": started,
+    "finished_at": finished,
+}, indent=2) + "\n")
+PY
+  enrich_agent_diagnosis
+  echo "$clean_error" >&2
+  exit 5
+fi
 
 # ── --require-attachment check ──────────────────────────────
 if [[ -n "$require_attachment" && -n "${requested_tab_id:-}" ]]; then

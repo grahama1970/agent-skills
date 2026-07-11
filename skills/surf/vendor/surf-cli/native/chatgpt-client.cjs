@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
@@ -356,11 +356,45 @@ async function waitForPageLoad(cdp, timeoutMs = 45000) {
 async function isCloudflareBlocked(cdp) {
   const title = await evaluate(cdp, "document.title.toLowerCase()");
   if (title && title.includes("just a moment")) return true;
-  const hasScript = await evaluate(
+  const state = await evaluate(
     cdp,
-    `Boolean(document.querySelector('${SELECTORS.cloudflareScript}'))`
+    `(() => {
+      const text = document.body?.innerText || "";
+      const hasChallengeText = /verify you are human|checking your browser|just a moment|cloudflare|turnstile/i.test(text);
+      const hasComposer = Boolean(document.querySelector('${SELECTORS.promptTextarea}'));
+      const hasConversation = Boolean(document.querySelector('${SELECTORS.assistantMessage}'));
+      const hasScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
+      return { hasChallengeText, hasComposer, hasConversation, hasScript };
+    })()`
   );
-  return hasScript;
+  return Boolean(state?.hasChallengeText && !state?.hasComposer && !state?.hasConversation);
+}
+
+async function recoverCloudflareChallenge(cdp, inputCdp, log, options = {}) {
+  const {
+    maxReloads = 1,
+    reloadWaitMs = 2000,
+    pageLoadTimeoutMs = 45000,
+  } = options;
+  if (!(await isCloudflareBlocked(cdp))) return { detected: false, reloads: 0 };
+
+  for (let reloads = 1; reloads <= maxReloads; reloads += 1) {
+    log?.(`Cloudflare challenge detected; hard reloading controlled tab (${reloads}/${maxReloads})`);
+    await inputCdp("Page.reload", { ignoreCache: true });
+    if (reloadWaitMs > 0) await delay(reloadWaitMs);
+    await waitForPageLoad(cdp, pageLoadTimeoutMs);
+    if (!(await isCloudflareBlocked(cdp))) {
+      log?.(`Cloudflare challenge cleared after ${reloads} hard reload(s)`);
+      return { detected: true, reloads, recovered: true };
+    }
+  }
+
+  const error = new Error(
+    `Cloudflare challenge persisted after ${maxReloads} automatic hard reload(s)`,
+  );
+  error.code = "cloudflare_challenge_persisted";
+  error.cloudflareRecovery = { detected: true, reloads: maxReloads, recovered: false };
+  throw error;
 }
 
 async function checkLoginStatus(cdp) {
@@ -1282,9 +1316,7 @@ async function query(options) {
   try {
     await waitForPageLoad(cdp);
     log("Page loaded");
-    if (await isCloudflareBlocked(cdp)) {
-      throw new Error("Cloudflare challenge detected - complete in browser");
-    }
+    await recoverCloudflareChallenge(cdp, inputCdp, log);
     const loginStatus = await checkLoginStatus(cdp);
     if (loginStatus.status !== 200 || loginStatus.hasLoginCta) {
       throw new Error("ChatGPT login required");
@@ -1399,4 +1431,5 @@ module.exports = {
   assertReadyForNewPrompt,
   waitForSubmitAccepted,
   typePrompt,
+  recoverCloudflareChallenge,
 };
