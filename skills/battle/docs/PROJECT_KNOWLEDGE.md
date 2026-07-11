@@ -1,7 +1,7 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-07-09 08:18 by agent
-**Status:** Active development, pending review/commit
+**Last updated:** 2026-07-11 09:35 by agent
+**Status:** Active development
 
 ## Current Understanding
 
@@ -144,6 +144,7 @@
 - BATTLE-004 spectator UX lives in skills/battle/spectator/ (canonical); ux-lab is a thin host on :3002. Phase 1 receipt replay uses battle.normalized_ux_fixture.json only (not stream/events.jsonl yet). Full arena battle is replayed time-compressed at vintage tower-defense pace (Plants vs Zombies readability): lanes, speed-up, scrub, arcade combat feedback.
 - Backend owns actor_visual.variant_id per lane (complexity/strength/durability roster choice) plus sprite_theme; spectator resolves variant_id to Pixi sheets. Sprite look is cosmetic only (proof_scope.cosmetic_identity_only) — block/kill/promote outcomes remain receipt-gated. Block/kill = vintage points burst; Blue miss + exploit survive = evade animation (hit/duck/jump).
 - Playhead authority: timeline_elapsed_axis_model.playhead.current_elapsed_seconds. Child visibility: lineage.spawns[].visible_from_elapsed_seconds (spawn time). Phase 1 PASS = prove-spectator on BATTLE_HOST=http://127.0.0.1:3002 (6 receipt-replay checks + sparse negative + typecheck/vitest).
+- 2026-07-11 Music M1 is on agent-skills@main. Backend commit 7b6823bd4 publishes frozen battle.music_context_packet.v1, battle.music_promotion_receipt.v1, battle.music_schedule_entry.v1, battle.music_schedule.v1, and battle.normalized_music_fixture.v1 contracts; valid/invalid examples; a BATTLE-004 public fixture; and versioned promoted MIDI/OGG assets. The schedule authorizes live_arena_loop from the lifecycle-start receipt and motif:plague_nurgling from a materialized-spawn receipt. Death, victory, and next-arena remain events_not_emitted. create-midi validation, promotion, schedule, receipt, score-packet, and asset hashes are bound. M1 is mocked:no, live:local_deterministic_music_promotion_schedule, composer_live:false. It does not prove live composition, rendering, browser playback, speaker output, musical quality, or Battle outcomes. Frontend consumption is on main in commit 2c94d8e97. Next backend rung is Music M2: live music-composer score-packet authorship, deterministic MIDI-to-OGG render receipt, deadline/fallback evidence, and promotion through the existing M1 contracts.
 
 ## Recent Decisions
 
@@ -183,6 +184,7 @@
 | 2026-07-07 | Backend chooses runner variant_id; UX maps via sprite_theme | Exploit visual identity must be receipt-backed roster choice, not hardcoded lane-id map on receipt routes. |
 | 2026-07-09 | Add exploit combiner proof before full genetic Battle engine. | The next backend rung should prove generated exploit specimens, bad-code capture, Docker run receipts, target-contact observations, and runnable-unproven scoring before live Tau generation, child materialization, packet capture, or exploit-success claims. |
 | 2026-07-09 | Add fixture-backed Spawn Architect proof before live Tau child execution. | PR2 should prove only the DAG birth contract: spawn-policy decision, child knowledge packet, `tau.dag_contract.v1` child exploit-synthesis DAG, private-artifact exclusions, conservative normalized events, and explicit `tau_execution=deferred_to_pr3`. It must not claim child execution, live exploit generation, compilation, target contact, Blue detection, or exploit success. |
+| 2026-07-11 | Separate music asset promotion from playback authorization | Promotion proves validated hash-bound asset eligibility; only a Battle schedule entry bound to an authoritative receipt grants playback permission and timing. Music and animation never become Battle outcome authority. |
 
 ## Open Questions
 
