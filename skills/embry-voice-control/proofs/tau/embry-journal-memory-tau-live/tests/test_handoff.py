@@ -90,9 +90,12 @@ def test_emits_one_bounded_persistent_handoff(tmp_path: Path) -> None:
     assert handoff["result"]["status"] == "COMPLETED"
     assert handoff["context"]["source_event"]["event_id"] == "evt-final"
     persistent = json.loads((tmp_path / "artifacts" / "persistent_subagent_receipt.json").read_text())
+    plan = json.loads((tmp_path / "artifacts" / "tau-turn-plan.json").read_text())
     assert persistent["tick_index"] == 1
     assert persistent["tick_budget"] == 1
     assert persistent["unbounded_autonomy_allowed"] is False
+    assert plan["display_text_sha256"] == hashlib.sha256(plan["display_text"].encode()).hexdigest()
+    assert plan["tts_render_text_sha256"] == hashlib.sha256(plan["tts_render_text"].encode()).hexdigest()
 
 
 def test_rejects_tampered_input_packet(tmp_path: Path) -> None:

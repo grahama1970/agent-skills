@@ -1,4 +1,9 @@
-from embry_voice_control.embry_chat import build_tau_response_plan, chunk_tone_arc, split_speakable_text
+from embry_voice_control.embry_chat import (
+    build_tau_response_plan,
+    chunk_tone_arc,
+    normalize_tts_text,
+    split_speakable_text,
+)
 
 
 def test_grounded_compliance_memory_answer_is_used() -> None:
@@ -41,3 +46,14 @@ def test_long_answer_uses_concerned_confident_happy_arc() -> None:
     assert tones[0] == "careful_concerned"
     assert set(tones[1:-1]) == {"memory_confident"}
     assert tones[-1] == "playful_light"
+
+
+def test_tts_expands_domain_acronyms_without_changing_display_answer() -> None:
+    answer = "A SPARTA QRA must pass rapidfuzz token_set_ratio >= 0.6."
+    spoken = normalize_tts_text(answer)
+
+    assert "SPARTA" not in spoken
+    assert "QRA" not in spoken
+    assert "Space Attack Research and Tactic Analysis" in spoken
+    assert "question, reasoning, and answer" in spoken
+    assert "at least zero point six" in spoken

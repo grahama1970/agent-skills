@@ -81,7 +81,7 @@ def main() -> int:
         "route_reason": response_plan["route_reason"],
         "memory_result_classification": response_plan["memory_result_classification"],
         "display_text": answer_text,
-        "display_text_sha256": tts_sha256,
+        "display_text_sha256": hashlib.sha256(answer_text.encode()).hexdigest(),
         "answer_text": answer_text,
         "answer_text_sha256": hashlib.sha256(answer_text.encode()).hexdigest(),
         "tts_render_text": tts_render_text,

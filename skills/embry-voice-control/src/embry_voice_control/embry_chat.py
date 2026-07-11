@@ -185,6 +185,19 @@ def chunk_tone_arc(chunk_count: int) -> list[str]:
     return ["careful_concerned", *(["memory_confident"] * (chunk_count - 2)), "playful_light"]
 
 
+def normalize_tts_text(text: str) -> str:
+    """Expand known domain acronyms and machine notation for speech."""
+    replacements = {
+        "SPARTA": "Space Attack Research and Tactic Analysis",
+        "QRA": "question, reasoning, and answer",
+    }
+    spoken = text
+    for acronym, expansion in replacements.items():
+        spoken = re.sub(rf"\b{acronym}\b", expansion, spoken, flags=re.IGNORECASE)
+    spoken = spoken.replace("rapidfuzz token_set_ratio >= 0.6", "a fuzzy token-set ratio of at least zero point six")
+    return spoken
+
+
 def build_tau_response_plan(
     *,
     turn_text: str,
@@ -221,7 +234,7 @@ def build_tau_response_plan(
         route_taken = "memory_miss_no_static_answer"
         answer_text = "I do not have enough grounded memory for that yet."
         route_reason = "memory_miss_no_allowed_fallback_in_this_rung"
-    tts_render_text = answer_text
+    tts_render_text = normalize_tts_text(answer_text)
     return {
         "subagent": "embry-chat",
         "memory_first": True,
