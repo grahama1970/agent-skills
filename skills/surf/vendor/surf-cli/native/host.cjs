@@ -12,6 +12,7 @@ const kimiTabClient = require("./kimi-tab-client.cjs");
 const geminiClient = require("./gemini-client.cjs");
 const perplexityClient = require("./perplexity-client.cjs");
 const { mapToolToMessage, mapComputerAction, formatToolContent } = require("./host-helpers.cjs");
+const { KeyedRequestQueue } = require("./ai-request-queue.cjs");
 
 const SOCKET_PATH = "/tmp/surf.sock";
 
@@ -50,29 +51,10 @@ function resizeImage(filePath, maxSize) {
   }
 }
 
-const aiRequestQueue = [];
-let aiRequestInProgress = false;
+const aiRequestQueue = new KeyedRequestQueue(2000);
 
-function queueAiRequest(handler) {
-  return new Promise((resolve, reject) => {
-    aiRequestQueue.push({ handler, resolve, reject });
-    processAiQueue();
-  });
-}
-
-async function processAiQueue() {
-  if (aiRequestInProgress || aiRequestQueue.length === 0) return;
-  aiRequestInProgress = true;
-  const { handler, resolve, reject } = aiRequestQueue.shift();
-  try {
-    const result = await handler();
-    resolve(result);
-  } catch (err) {
-    reject(err);
-  } finally {
-    aiRequestInProgress = false;
-    setTimeout(processAiQueue, 2000);
-  }
+function queueAiRequest(handler, key = "global") {
+  return aiRequestQueue.enqueue(key, handler);
 }
 const LOG_FILE = "/tmp/surf-host.log";
 const AUTH_FILE = path.join(os.homedir(), ".pi", "agent", "auth.json");
@@ -450,6 +432,7 @@ function handleToolRequest(msg, socket) {
   if (extensionMsg.type === "CHATGPT_QUERY") {
     const { query, model, reasoning, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
 
+    const chatgptQueueKey = `chatgpt:${targetTabId || extensionMsg.tabId || "auto"}`;
     queueAiRequest(async () => {
       let pageContext = null;
       if (withPage) {
@@ -615,7 +598,7 @@ function handleToolRequest(msg, socket) {
       });
       
       return result;
-    }).then((result) => {
+    }, chatgptQueueKey).then((result) => {
       sendToolResponse(socket, originalId, {
         response: result.response,
         model: result.model,
