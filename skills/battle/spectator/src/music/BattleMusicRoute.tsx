@@ -6,6 +6,7 @@ import { useBattleScore } from "../hooks/useBattleScore";
 import { promotedEntriesDueAtPlayhead } from "../lib/battle-normalized-music-fixture";
 import { BattleMusicSchedulePanel } from "./BattleMusicSchedulePanel";
 import "../proof-card/battle-proof-card.css";
+import "./battle-music.css";
 
 export function BattleMusicRoute() {
 	const { viewModel, error, loading } = useBattleMusicFixture();
@@ -13,24 +14,41 @@ export function BattleMusicRoute() {
 	const score = useBattleScore(getContext);
 	const [playheadSeconds, setPlayheadSeconds] = useState(0);
 	const [activeMusicId, setActiveMusicId] = useState<string | null>(null);
+	const [playbackNote, setPlaybackNote] = useState(
+		"Playback status: idle — no speaker-output claim.",
+	);
 	const firedRef = useRef(new Set<string>());
 
 	const maxSeconds = useMemo(() => {
 		if (!viewModel?.promotedEntries.length) return 120;
-		return Math.max(...viewModel.promotedEntries.map((entry) => entry.atSeconds)) + 5;
+		return Math.max(30, Math.max(...viewModel.promotedEntries.map((entry) => entry.atSeconds)) + 8);
 	}, [viewModel]);
 
 	useEffect(() => {
 		firedRef.current = new Set();
 		setPlayheadSeconds(0);
 		setActiveMusicId(null);
+		setPlaybackNote("Playback status: idle — no speaker-output claim.");
 		score.stopAll();
 	}, [viewModel?.fixtureId, score.stopAll]);
+
+	const seek = useCallback((seconds: number) => {
+		const next = Math.max(0, Math.min(maxSeconds, seconds));
+		setPlayheadSeconds(next);
+		for (const id of [...firedRef.current]) {
+			const entry = viewModel?.promotedEntries.find((item) => item.id === id);
+			if (entry && entry.atSeconds > next + 0.001) firedRef.current.delete(id);
+		}
+	}, [maxSeconds, viewModel?.promotedEntries]);
 
 	const playDue = useCallback(async () => {
 		if (!viewModel) return;
 		arm();
 		const due = promotedEntriesDueAtPlayhead(viewModel, playheadSeconds, firedRef.current);
+		if (!due.length) {
+			setPlaybackNote(`Playback status: armed at t=${playheadSeconds.toFixed(2)}s — no new due promoted entries. Speaker output unproven.`);
+			return;
+		}
 		for (const entry of due) {
 			firedRef.current.add(entry.id);
 			await score.playPromotedUrl(entry.oggUrl, {
@@ -39,6 +57,9 @@ export function BattleMusicRoute() {
 				label: entry.musicId,
 			});
 			setActiveMusicId(entry.musicId);
+			setPlaybackNote(
+				`Playback status: browser decode requested for ${entry.musicId} (promoted). Decode≠heard; speaker output unproven.`,
+			);
 		}
 	}, [arm, playheadSeconds, score, viewModel]);
 
@@ -63,7 +84,7 @@ export function BattleMusicRoute() {
 	}
 
 	return (
-		<div className="battle-proof-card h-full overflow-auto p-4" data-qid="battle:music:route">
+		<div className="battle-proof-card battle-music-route h-full overflow-auto p-4" data-qid="battle:music:route">
 			<BattleProofNav />
 			<div className="mx-auto mt-3 max-w-[1100px] space-y-3">
 				<header>
@@ -72,38 +93,16 @@ export function BattleMusicRoute() {
 						Receipt-backed promoted playback only. Music never authorizes Battle truth. Actor-focus previews stay outside this schedule.
 					</p>
 					<div className="mt-1 text-[11px] text-slate-500" data-qid="battle:music:route-meta">
-						{viewModel.route} · mocked:false · composer_live:false
+						{viewModel.route} · mocked:false · composer_live:false · speaker_output:unproven
 					</div>
 				</header>
-				<label className="flex items-center gap-3 text-[11px] uppercase tracking-[0.08em] text-slate-400">
-					Playhead
-					<input
-						data-qid="battle:music:playhead-input"
-						type="range"
-						min={0}
-						max={maxSeconds}
-						step={0.1}
-						value={playheadSeconds}
-						onChange={(event) => setPlayheadSeconds(Number(event.target.value))}
-						className="w-full"
-					/>
-				</label>
-				<button
-					type="button"
-					className="rounded border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em]"
-					data-qid="battle:music:seek-spawn"
-					onClick={() => {
-						const motif = viewModel.promotedEntries.find((entry) => entry.musicId.startsWith("motif:"));
-						if (motif) setPlayheadSeconds(motif.atSeconds);
-					}}
-				>
-					Seek spawn motif
-				</button>
 				<BattleMusicSchedulePanel
 					model={viewModel}
 					playheadSeconds={playheadSeconds}
+					maxSeconds={maxSeconds}
 					armed={enabled}
 					activeMusicId={activeMusicId}
+					playbackNote={playbackNote}
 					onArm={() => {
 						arm();
 						void playDue();
@@ -112,7 +111,14 @@ export function BattleMusicRoute() {
 					onStop={() => {
 						score.stopAll();
 						setActiveMusicId(null);
+						setPlaybackNote("Playback status: stopped — no speaker-output claim.");
 					}}
+					onSeek={seek}
+					onSeekSpawn={() => {
+						const motif = viewModel.promotedEntries.find((entry) => entry.musicId.startsWith("motif:"));
+						if (motif) seek(motif.atSeconds);
+					}}
+					onResetPlayhead={() => seek(0)}
 				/>
 			</div>
 		</div>

@@ -96,3 +96,32 @@ ln -sfn <agent-skills>/skills/battle/spectator/public/battle-fixtures/battle-004
 ```
 
 `public/battle-audio` should already cover promoted OGGs when it points at the spectator `battle-audio` tree.
+
+
+## Music M2 readiness (deferred — backend)
+
+UX will consume live music only via public contracts, never composer/create-midi working dirs:
+
+```text
+battle.live_event.v1 carrying normalized schedule entries
+  OR refreshed battle.normalized_music_fixture.v1
++ /battle-audio/promoted/v1/<promotion-id>/
+```
+
+Required for M2 UX turn-on:
+- `composer_live` may be true only when promotion/schedule receipts say so
+- death/victory/next-arena remain NOT_EMITTED without authorizing receipts
+- schedule entries keep `playback_class: promoted`
+- actor-focus stays `local_preview` / `semantic_authority: false`
+
+UX will not implement Music Director execution.
+
+## Audio production pass (deferred — content)
+
+Replace provisional GM/TimGM6mb OGGs in-place under the same promoted URLs:
+
+```text
+/battle-audio/promoted/v1/<promotion-id>/*.ogg
+```
+
+Bindings, schedule entry IDs, and receipt authorization must not change. MIDI remains source material. Until that pass lands, assets remain provisional renders; UX must not claim final mix or speaker-mastered production.

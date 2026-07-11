@@ -50,6 +50,9 @@ const chrome = await page.evaluate(() => {
   const entryNodes = [...document.querySelectorAll('[data-qid^="battle:music:entry:"]')]
   return {
     banner: !!document.querySelector('[data-qid="battle:music:banner"]'),
+    scrubber: !!document.querySelector('[data-qid="battle:music:scrubber"]'),
+    noSpeaker: /NO SPEAKER CLAIM/i.test(document.querySelector('[data-qid="battle:music:no-speaker-claim"]')?.textContent ?? ''),
+    disclaimer: /speaker|headphone|Decode/i.test(document.querySelector('[data-qid="battle:music:disclaimer"]')?.textContent ?? ''),
     nav: !!document.querySelector('[data-qid="battle:nav:music"]'),
     composerLive: document.querySelector('[data-qid="battle:music:composer-live"]')?.textContent ?? '',
     present: [...document.querySelectorAll('[data-qid^="battle:music:present:"]')].map((n) => n.textContent),
@@ -65,13 +68,16 @@ const chrome = await page.evaluate(() => {
   }
 })
 record('10-banner', chrome.banner, 'banner')
+record('10b-scrubber', chrome.scrubber, 'scrubber')
+record('10c-no-speaker-badge', chrome.noSpeaker, 'no speaker')
+record('10d-disclaimer', chrome.disclaimer, 'disclaimer')
 record('11-nav', chrome.nav, 'nav')
 record('12-composer-live-false', /composer_live:false/i.test(chrome.composerLive), chrome.composerLive)
 record('13-entries-ui', chrome.entries.length === 2, JSON.stringify(chrome.entries))
 record('14-promoted-only', chrome.entries.every((e) => e.playbackClass === 'promoted' && e.oggUrl?.startsWith('/battle-audio/promoted/v1/')), JSON.stringify(chrome.entries))
 record('15-present-loop-motif', chrome.present.some((t) => /live_arena_loop/.test(t)) && chrome.present.some((t) => /motif:plague_nurgling/.test(t)), JSON.stringify(chrome.present))
 record('16-not-emitted-terminal', chrome.notEmitted.some((t) => /exploit_death_stinger/.test(t)) && chrome.notEmitted.some((t) => /exploit_victory_stinger/.test(t)), JSON.stringify(chrome.notEmitted))
-record('17-claim-boundary', /assets_promoted/.test(chrome.may) && /audio_played|speaker_output|victory/.test(chrome.mustNot), JSON.stringify({ may: chrome.may, mustNot: chrome.mustNot }))
+record('17-claim-boundary', /assets_promoted/.test(chrome.may) && /speaker_output|speaker|victory/i.test(chrome.mustNot), JSON.stringify({ may: chrome.may, mustNot: chrome.mustNot }))
 
 await page.click('[data-qid="battle:music:arm"]')
 await page.waitForTimeout(500)
