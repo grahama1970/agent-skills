@@ -1,0 +1,148 @@
+import json
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+from sprite_atlas.contracts import Anchor, AnimationRow, AtlasSpec, NormalizationSpec, Profile
+from sprite_atlas.frame_repair import (
+    analyze_required_frames,
+    apply_frame_patches,
+    build_repair_plan,
+    extract_named_frames,
+    pack_named_frames,
+    validate_named_frames,
+)
+from sprite_atlas.receipts import write_json
+
+
+def _profile() -> Profile:
+    return Profile(
+        schema="sprite_atlas.profile.v1",
+        profile_id="test-profile",
+        atlas=AtlasSpec(2, 1, 16, 16),
+        output_format="png",
+        output_mode="RGBA",
+        background="transparent",
+        scale_mode="nearest_neighbor",
+        anchor=Anchor(0.5, 0.85),
+        normalization=NormalizationSpec(),
+        animations=(AnimationRow("run", 0, 2, True),),
+    )
+
+
+def _valid_frame() -> Image.Image:
+    image = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    ImageDraw.Draw(image).rectangle((3, 3, 12, 12), fill=(80, 140, 30, 255))
+    return image
+
+
+def test_plan_identifies_exact_missing_named_frame(tmp_path: Path):
+    profile = _profile()
+    atlas = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
+    atlas.alpha_composite(_valid_frame(), (0, 0))
+    atlas_path = tmp_path / "atlas.png"
+    profile_path = tmp_path / "profile.json"
+    atlas.save(atlas_path)
+    profile_path.write_text("{}", encoding="utf-8")
+
+    frames = analyze_required_frames(atlas, profile)
+    assert frames[0]["state"] == "present"
+    assert frames[1]["state"] == "missing"
+    assert frames[1]["path"] == "run/001.png"
+
+    plan = build_repair_plan(
+        image=atlas, atlas_path=atlas_path, profile=profile, profile_path=profile_path, sprite_id="runner"
+    )
+    assert [frame["path"] for frame in plan["repair_frames"]] == ["run/001.png"]
+
+
+def test_extract_and_apply_named_frame_patch(tmp_path: Path):
+    profile = _profile()
+    source = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
+    source.alpha_composite(_valid_frame(), (0, 0))
+    atlas_path = tmp_path / "atlas.png"
+    profile_path = tmp_path / "profile.json"
+    atlas_path.parent.mkdir(parents=True, exist_ok=True)
+    source.save(atlas_path)
+    profile_path.write_text("{}", encoding="utf-8")
+    named = tmp_path / "frames"
+    index = extract_named_frames(image=source, profile=profile, output_dir=named)
+    assert index["frame_count"] == 2
+    assert (named / "run/001.png").is_file()
+    assert validate_named_frames(frames_dir=named, profile=profile)["passed"] is False
+
+    plan = build_repair_plan(
+        image=source, atlas_path=atlas_path, profile=profile, profile_path=profile_path, sprite_id="runner"
+    )
+    patch_dir = tmp_path / "patches"
+    (patch_dir / "run").mkdir(parents=True)
+    _valid_frame().save(patch_dir / "run/001.png")
+    job = tmp_path / "job"
+    job.mkdir()
+    write_json(job / "frame-repair-plan.json", plan)
+    receipt = apply_frame_patches(
+        source_atlas=atlas_path,
+        profile=profile,
+        profile_path=profile_path,
+        sprite_id="runner",
+        repair_plan=plan,
+        patch_dir=patch_dir,
+        job_dir=job,
+    )
+    assert receipt["status"] == "PASS_FRAME_PATCH"
+    assert receipt["validation_passed"] is True
+    assert json.loads((job / "validation.json").read_text(encoding="utf-8"))["passed"] is True
+    assert json.loads((job / "frame-validation-index.json").read_text(encoding="utf-8"))["passed"] is True
+    assert pack_named_frames(frames_dir=job / "frames", profile=profile).size == (32, 16)
+
+
+def test_apply_patch_fails_closed_when_planned_frame_is_missing(tmp_path: Path):
+    profile = _profile()
+    source = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
+    source.alpha_composite(_valid_frame(), (0, 0))
+    atlas_path = tmp_path / "atlas.png"
+    profile_path = tmp_path / "profile.json"
+    source.save(atlas_path)
+    profile_path.write_text("{}", encoding="utf-8")
+    plan = build_repair_plan(
+        image=source, atlas_path=atlas_path, profile=profile, profile_path=profile_path, sprite_id="runner"
+    )
+    receipt = apply_frame_patches(
+        source_atlas=atlas_path,
+        profile=profile,
+        profile_path=profile_path,
+        sprite_id="runner",
+        repair_plan=plan,
+        patch_dir=tmp_path / "patches",
+        job_dir=tmp_path / "job",
+    )
+    assert receipt["status"] == "BLOCKED_FRAME_PATCH_INVALID"
+    assert receipt["errors"] == [{"path": "run/001.png", "reason": "missing_patch_file"}]
+
+
+def test_apply_patch_rejects_art_touching_profile_edge_guard(tmp_path: Path):
+    profile = _profile()
+    source = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
+    source.alpha_composite(_valid_frame(), (0, 0))
+    atlas_path = tmp_path / "atlas.png"
+    profile_path = tmp_path / "profile.json"
+    source.save(atlas_path)
+    profile_path.write_text("{}", encoding="utf-8")
+    plan = build_repair_plan(
+        image=source, atlas_path=atlas_path, profile=profile, profile_path=profile_path, sprite_id="runner"
+    )
+    patch_dir = tmp_path / "patches"
+    (patch_dir / "run").mkdir(parents=True)
+    touching = Image.new("RGBA", (16, 16), (80, 140, 30, 255))
+    touching.save(patch_dir / "run/001.png")
+    receipt = apply_frame_patches(
+        source_atlas=atlas_path,
+        profile=profile,
+        profile_path=profile_path,
+        sprite_id="runner",
+        repair_plan=plan,
+        patch_dir=patch_dir,
+        job_dir=tmp_path / "job",
+    )
+    assert receipt["status"] == "BLOCKED_FRAME_PATCH_INVALID"
+    assert receipt["errors"][0]["reason"] == "edge_guard_violated"
