@@ -545,7 +545,7 @@ const CANONICAL_PHASES = [
   { id: '07', label: 'Storyboard', icon: Layout, legacyIds: ['phase_07_storyboard'] },
   { id: '08', label: 'Media Lock', icon: Grid, legacyIds: ['phase_08_panels_environment', 'media-lock', 'panels'] },
   { id: '09', label: 'Video Provider', icon: Package, legacyIds: ['phase_09_kling_optimized_packet', 'video-provider', 'kling-packet'] },
-  { id: '10', label: 'Review Gate', icon: ShieldCheck, legacyIds: ['phase_10_creator_reviewer_gate'] },
+  { id: '10', label: 'Provider Distillation', icon: ShieldCheck, legacyIds: ['phase_10_provider_contract', 'phase_10_creator_reviewer_gate'] },
   { id: '11', label: 'Provider Return', icon: Play, legacyIds: ['phase_11_kling_response'] },
 ] as const
 
@@ -565,7 +565,9 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
   const normalized: DreamStage[] = []
   let ideaMemorySplitCount = 0
   for (const canonical of CANONICAL_PHASES) {
-    const matching = backendStages.filter((s) => (canonical.legacyIds as readonly string[]).includes(s.id))
+    const matching = (canonical.legacyIds as readonly string[])
+      .map((legacyId) => backendStages.find((s) => s.id === legacyId))
+      .filter((stage): stage is DreamStage => Boolean(stage))
     if (matching.length === 0) {
       normalized.push(createMissingStage(canonical.id, canonical.label))
       continue
@@ -604,6 +606,9 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
       if (canonical.id === '09') {
         stage.summary = 'Provider-neutral video scene packet, selected provider routing, prompt, locks, and media staging receipts.'
       }
+      if (canonical.id === '10') {
+        stage.summary = 'Provider distillation contract, panel-level payload projection, field mapping, omitted context, media publication plan, and live-readiness receipts.'
+      }
       if (canonical.id === '11') {
         stage.summary = 'Provider API response, task id, polling receipts, downloaded media, frame sheets, and post-provider review.'
       }
@@ -637,7 +642,7 @@ const phaseShortLabels: Record<string, string> = {
   '07': 'Storyboard',
   '08': 'Media Lock',
   '09': 'Video Provider',
-  '10': 'Review Gate',
+  '10': 'Provider Distillation',
   '11': 'Provider Return',
 }
 
@@ -654,12 +659,17 @@ const dreamPhaseHashAliases: Record<string, string> = {
   'kling-packet': '09',
   'video-provider': '09',
   review: '10',
+  distillation: '10',
+  'provider-contract': '10',
   return: '11',
 }
 
-const dreamPhaseHashById = Object.fromEntries(
-  Object.entries(dreamPhaseHashAliases).map(([slug, id]) => [id, slug])
-) as Record<string, string>
+const dreamPhaseHashById = {
+  ...Object.fromEntries(
+    Object.entries(dreamPhaseHashAliases).map(([slug, id]) => [id, slug])
+  ),
+  '10': 'distillation',
+} as Record<string, string>
 
 function activeDreamPhaseFromLocation(): string {
   if (typeof window === 'undefined') return ''
