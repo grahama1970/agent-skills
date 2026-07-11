@@ -88,4 +88,7 @@ echo "19/19 PR5 population route proof"
 echo "XX/XX PR6 genetic Pixi lifecycle proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr6-genetic-pixi)
 
+echo "XX/XX PR8 live transport proof"
+(cd "$SPECTATOR_DIR" && npm run prove:pr8-live-transport)
+
 echo "BATTLE_PROVE_SPECTATOR_PASS"

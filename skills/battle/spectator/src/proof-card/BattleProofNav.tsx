@@ -5,6 +5,7 @@ import { isBattleSynthesisView } from "../lib/battle-synthesis-registry";
 import { isBattleCompileView } from "../lib/battle-compile-registry";
 import { isBattleRuntimeView } from "../lib/battle-runtime-registry";
 import { isBattlePopulationView } from "../lib/battle-population-registry";
+import { isBattleLiveView } from "../lib/battle-transport-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
@@ -13,12 +14,14 @@ export function BattleProofNav() {
 	const onCompile = isBattleCompileView(hash);
 	const onRuntime = isBattleRuntimeView(hash);
 	const onPopulation = isBattlePopulationView(hash);
+	const onLive = isBattleLiveView(hash);
 	const onRace =
 		!onProof &&
 		!onSynthesis &&
 		!onCompile &&
 		!onRuntime &&
 		!onPopulation &&
+		!onLive &&
 		(isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
 
 	return (
@@ -32,6 +35,13 @@ export function BattleProofNav() {
 				data-qid="battle:nav:genetic"
 			>
 				Genetic Pixi
+			</a>
+			<a
+				href="#battle/live?engine=pixi&fixture=battle-004-parent-spawn"
+				aria-current={onLive ? "page" : undefined}
+				data-qid="battle:nav:live"
+			>
+				Live Transport
 			</a>
 			<a href="#battle/proof?fixture=battle-004-pr3b" aria-current={onProof ? "page" : undefined} data-qid="battle:nav:proof">
 				Research & Genome Proof

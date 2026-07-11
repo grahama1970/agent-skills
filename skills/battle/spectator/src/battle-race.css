@@ -542,3 +542,10 @@
   border-radius: 12px;
   padding: 10px 12px;
 }
+
+.battle-live-transport-banner {
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  background: rgba(8, 20, 28, 0.78);
+  border-radius: 12px;
+  padding: 10px 12px;
+}

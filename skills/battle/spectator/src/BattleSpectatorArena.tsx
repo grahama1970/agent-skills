@@ -28,6 +28,8 @@ import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 import { isBattlePopulationView } from "./lib/battle-population-registry";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
+import { BattleLiveTransportBanner } from "./BattleLiveTransportBanner";
+import { useBattleLiveTransport } from "./hooks/useBattleLiveTransport";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
 import { useBattleSound } from "./hooks/useBattleSound";
@@ -58,13 +60,20 @@ export function BattleSpectatorArena() {
   }, []);
 
   const { isReceiptRoute, fixture: receiptFixture, error: receiptError, loading: receiptLoading } = useReceiptReplayFixture();
-  const receiptReplay = isReceiptRoute;
-  const typedReceiptFixture = receiptFixture as BattleNormalizedUxFixture | null;
-  const receiptReady = !receiptReplay || Boolean(typedReceiptFixture);
+  const liveTransport = useBattleLiveTransport();
+  const receiptReplay = isReceiptRoute && !liveTransport.isLiveRoute;
+  const liveReplay = liveTransport.isLiveRoute;
+  const typedReceiptFixture = (
+    liveReplay ? liveTransport.companion : receiptFixture
+  ) as BattleNormalizedUxFixture | null;
+  const streamReady = !liveReplay || Boolean(typedReceiptFixture);
+  const receiptReady = (!receiptReplay || Boolean(typedReceiptFixture)) && streamReady;
+  const transportLoading = liveReplay && liveTransport.loading;
+  const transportError = liveReplay ? liveTransport.error : null;
 
   const designView = isBattleDesignView();
-  const mockupShell = designView || receiptReplay;
-  const receiptChrome = receiptReplay && !designView;
+  const mockupShell = designView || receiptReplay || liveReplay;
+  const receiptChrome = (receiptReplay || liveReplay) && !designView;
   const initialLanes = useMemo(() => (receiptReady ? battleLanesForView(undefined, typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const battleEvents = useMemo(() => (receiptReady ? battleEventsForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
   const leaderboard = useMemo(() => (receiptReady ? battleLeaderboardForView(typedReceiptFixture) : []), [routeEpoch, receiptReady, typedReceiptFixture]);
@@ -89,8 +98,14 @@ export function BattleSpectatorArena() {
 
   useEffect(() => {
     if (!typedReceiptFixture) return;
+    if (liveReplay && liveTransport.model?.followLive) {
+      const liveSeconds = liveTransport.model.liveSeconds;
+      setPlayheadSeconds((prev) => (Math.abs(prev - liveSeconds) < 0.001 ? prev : liveSeconds));
+      return;
+    }
+    if (liveReplay) return;
     setPlayheadSeconds(battleTimelineDomain(typedReceiptFixture, false).currentSeconds);
-  }, [typedReceiptFixture]);
+  }, [typedReceiptFixture, liveReplay, liveTransport.model?.followLive, liveTransport.model?.liveSeconds]);
 
   useEffect(() => {
     if (!receiptReplay || !receiptReady || !battleHungerGamesDeathDemoFromUrl()) return;
@@ -155,6 +170,18 @@ export function BattleSpectatorArena() {
     if (cue.soundCue && cue.soundCue !== "none") playCue(cue.soundCue);
   }, []);
 
+  const handlePlayheadSeconds = useCallback((seconds: number) => {
+    setPlayheadSeconds(seconds);
+  }, []);
+
+  const handleUserScrubSeconds = useCallback(
+    (seconds: number) => {
+      if (!liveReplay) return;
+      liveTransport.scrubToSeconds(seconds);
+    },
+    [liveReplay, liveTransport.scrubToSeconds],
+  );
+
   const tickerEvents = useMemo(() => {
     if (!receiptReplay || !typedReceiptFixture) return battleEvents;
     return replayTickerEventsForPlayhead(battleEvents, typedReceiptFixture, initialLanes, playheadSeconds);
@@ -172,8 +199,8 @@ export function BattleSpectatorArena() {
     });
   }
 
-  if (receiptReplay && receiptLoading) {
-    return <div className="grid h-full place-items-center text-slate-300">Loading receipt replay fixture…</div>;
+  if ((receiptReplay && receiptLoading) || transportLoading) {
+    return <div className="grid h-full place-items-center text-slate-300">{liveReplay ? "Loading live transport package…" : "Loading receipt replay fixture…"}</div>;
   }
   if (receiptReplay && !receiptReady && !receiptLoading && !receiptError) {
     return <div className="grid h-full place-items-center text-red-300">BATTLE RECEIPT BLOCKED: fixture missing</div>;
@@ -183,10 +210,31 @@ export function BattleSpectatorArena() {
     return <div className="grid h-full place-items-center text-red-300">BATTLE RECEIPT BLOCKED: {receiptError}</div>;
   }
 
+  if (liveReplay && transportError) {
+    return (
+      <div className="grid h-full place-items-center text-red-300" data-qid="battle:live:blocked">
+        BATTLE LIVE TRANSPORT BLOCKED: {transportError.title} — {transportError.detail}
+      </div>
+    );
+  }
+
+  if (liveReplay && !receiptReady && !transportLoading && !transportError) {
+    return <div className="grid h-full place-items-center text-red-300">BATTLE LIVE TRANSPORT BLOCKED: companion fixture missing</div>;
+  }
+
   return (
     <div className={cn("h-full min-h-0 overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
       <Toaster theme="dark" richColors position="top-right" />
-      {(receiptReplay || mockupShell) ? <BattleProofNav /> : null}
+      {(receiptReplay || liveReplay || mockupShell) ? <BattleProofNav /> : null}
+      {liveTransport.model ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleLiveTransportBanner
+            model={liveTransport.model}
+            onReturnToLive={liveTransport.returnToLive}
+            onRecover={liveTransport.recoverFromGap}
+          />
+        </div>
+      ) : null}
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleGeneticLifecycleBanner model={geneticModel} />
@@ -226,7 +274,7 @@ export function BattleSpectatorArena() {
           }
         >
           <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
-          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={setPlayheadSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
+          <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           {selectedLane ? <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} /> : null}
         </div>
 

@@ -3,6 +3,7 @@ import type { BlueFinisherState, Lane } from "./lib/battle-types";
 import { activeBattleFixture, battleBluePatchActionsForView } from "./lib/battle-data";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { isBattleReceiptReplayView, lanesVisibleAtPlayhead, secondsFromOverlayTrackPointer, secondsFromTimelinePointer } from "./lib/battle-receipt-replay";
+import { isBattleLiveView } from "./lib/battle-transport-registry";
 import { mockupAllottedSeconds, mockupBlueStripStats, mockupClockFromTrackPct, mockupOverviewMarks, mockupPlayheadSeconds, mockupTimelineTicks } from "./lib/mockup-design-fixture";
 import { BlueControlStrip } from "./BlueControlStrip";
 import { Card } from "./ui/card";
@@ -53,13 +54,14 @@ type Props = {
   onReplayCue?: (cue: BattleEffectCue) => void;
   onReceiptBeat?: (beat: ReceiptBeat) => void;
   onPlayheadSeconds?: (seconds: number) => void;
+  onUserScrubSeconds?: (seconds: number) => void;
   highlightReel?: boolean;
   onHighlightReelChange?: (enabled: boolean) => void;
   highlightJumpToken?: number;
   onPlayingChange?: (playing: boolean) => void;
 };
 
-export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onReceiptBeat, onPlayheadSeconds, highlightReel = false, onHighlightReelChange, highlightJumpToken = 0, onPlayingChange }: Props) {
+export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onReceiptBeat, onPlayheadSeconds, onUserScrubSeconds, highlightReel = false, onHighlightReelChange, highlightJumpToken = 0, onPlayingChange }: Props) {
   useRegisterAction("battle:timeline:scroll", { action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom:out", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
@@ -71,7 +73,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const [zoom, setZoom] = useState(1);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(lanes.filter((lane) => lane.children?.length && lane.expanded === false).map((lane) => lane.id)));
   const designView = isBattleDesignView();
-  const receiptReplay = isBattleReceiptReplayView();
+  const receiptReplay = isBattleReceiptReplayView() || isBattleLiveView();
   const pixiEngine = isBattlePixiEngine();
   const fixture = useMemo(
     () => activeBattleFixture(receiptFixture ?? undefined),
@@ -183,8 +185,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
               allotted,
             );
       setPlayheadSeconds(next);
+      onUserScrubSeconds?.(next);
     },
-    [allotted, contentWidth, fixture.battle_timeline_control?.controls?.can_scrub, receiptReplay, scrollMetrics.scrollLeft],
+    [allotted, contentWidth, fixture.battle_timeline_control?.controls?.can_scrub, onUserScrubSeconds, receiptReplay, scrollMetrics.scrollLeft],
   );
 
   const onOverlayScrubPointer = useCallback(

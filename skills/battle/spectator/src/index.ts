@@ -41,6 +41,24 @@ export {
 	battlePopulationFixtureUrl,
 	isBattlePopulationView,
 } from "./lib/battle-population-registry";
+export {
+	BATTLE_LIVE_TRANSPORT_STREAMS,
+	battleLiveTransportFixtureKey,
+	battleLiveTransportStreamBaseUrl,
+	battleLiveTransportCompanionFixtureUrl,
+	isBattleLiveView,
+	isRegisteredLiveTransportFixture,
+} from "./lib/battle-transport-registry";
+export { loadBattleTransportPackage } from "./lib/battle-transport-loader";
+export {
+	applyTransportEvent,
+	bootstrapTransportState,
+	createIdleTransportState,
+	recoverTransportFromPackage,
+	setTransportFollowLive,
+	setTransportCursorSeconds,
+	transportViewModel,
+} from "./lib/battle-transport-reducer";
 export { BattleProofCardRoute } from "./proof-card/BattleProofCardRoute";
 export { BattleProofCardView } from "./BattleProofCardView";
 export { BattleSynthesisRoute } from "./synthesis/BattleSynthesisRoute";
