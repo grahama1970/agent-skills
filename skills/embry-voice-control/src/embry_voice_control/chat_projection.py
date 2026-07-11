@@ -106,6 +106,7 @@ def build_turn_chat_projection(
     tau_plan_event = _one(events, "tau.turn_plan.completed")
     tau_tick = _one(events, "tau.persistent_tick.completed")
     render = _one(events, "chatterbox.voice_render.completed")
+    playback_events = [event for event in events if event["type"] in {"playback.requested", "playback.started", "playback.ended"}]
     entity_events = [event for event in events if event["type"] == "entities.extraction.completed"]
     entities_by_role = {event["payload"].get("target_role"): event for event in entity_events}
     if set(entities_by_role) != {"user", "assistant"}:
@@ -212,5 +213,35 @@ def build_turn_chat_projection(
             "audio_sha256": audio_hash,
         },
     }
+    if playback_events:
+        playback_by_type = {event["type"]: event for event in playback_events}
+        if set(playback_by_type) != {"playback.requested", "playback.started", "playback.ended"}:
+            raise RuntimeError("playback_projection_incomplete")
+        requested = playback_by_type["playback.requested"]
+        started = playback_by_type["playback.started"]
+        ended = playback_by_type["playback.ended"]
+        if not (
+            requested["causation_id"] == render["event_id"]
+            and started["causation_id"] == requested["event_id"]
+            and ended["causation_id"] == started["event_id"]
+            and requested["sequence"] < started["sequence"] < ended["sequence"]
+        ):
+            raise RuntimeError("playback_projection_lineage_invalid")
+        authority_ids = {
+            event["payload"].get("playback_authority_id") or event["payload"].get("authority_id")
+            for event in (requested, started, ended)
+        }
+        if len(authority_ids) != 1 or None in authority_ids:
+            raise RuntimeError("playback_projection_authority_mismatch")
+        projection["playback"] = {
+            "authority_id": authority_ids.pop(),
+            "state": "idle",
+            "final_state_reason": "playback.ended",
+            "events": [
+                {"event_id": event["event_id"], "type": event["type"], "sequence": event["sequence"], "created_at": event["created_at"]}
+                for event in (requested, started, ended)
+            ],
+        }
+        projection["required_event_ids"].extend(event["event_id"] for event in (requested, started, ended))
     projection["projection_sha256"] = "sha256:" + hashlib.sha256(_canonical(projection)).hexdigest()
     return projection
