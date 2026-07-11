@@ -1,0 +1,9 @@
+{
+  "panel_id": "panel_001",
+  "requirements": [
+    "single panel image exists",
+    "visual review receipt exists"
+  ],
+  "schema": "persona_dream.requirement_matrix_receipt.v1",
+  "status": "PASS"
+}

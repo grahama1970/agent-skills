@@ -1,0 +1,13 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_08_media_lock/storyboard_media_lock_manifest.json": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd"
+  },
+  "phaseId": "08",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

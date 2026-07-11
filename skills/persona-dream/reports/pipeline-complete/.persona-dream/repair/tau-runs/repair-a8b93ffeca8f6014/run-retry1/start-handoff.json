@@ -1,0 +1,68 @@
+{
+  "context": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/dag-contract.json"
+    ],
+    "dag_agent_role": "coder",
+    "dag_node_id": "repair-installer",
+    "summary": "Dispatch DAG contract persona-dream-repair-a8b93ffeca8f6014.",
+    "tau_dag_node": {
+      "agent": "coder",
+      "context": {},
+      "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+      "executor": "local",
+      "goal": {
+        "goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+        "goal_id": "persona-dream-pipeline-complete-repair",
+        "goal_version": 1
+      },
+      "node_id": "repair-installer",
+      "required_evidence": [
+        "repair_revision_manifest"
+      ],
+      "target": {
+        "allowed_paths": [
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/**",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/**",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/**"
+        ],
+        "repo": "grahama1970/agent-skills",
+        "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+      }
+    }
+  },
+  "github": {
+    "repo": "grahama1970/agent-skills",
+    "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+  },
+  "goal": {
+    "goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+    "goal_id": "persona-dream-pipeline-complete-repair",
+    "goal_version": 1
+  },
+  "next_agent": {
+    "executor": "local",
+    "name": "repair-installer",
+    "reason": "Entry node for DAG persona-dream-repair-a8b93ffeca8f6014 using role coder."
+  },
+  "previous_subagent": "human",
+  "rationale": "The DAG contract is the authoritative workflow and immutable goal boundary.",
+  "required_evidence": [
+    "repair_revision_manifest",
+    "revision_promotion_receipt"
+  ],
+  "result": {
+    "evidence": [
+      {
+        "kind": "dag_contract",
+        "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/dag-contract.json",
+        "schema": "tau.dag_contract.v1",
+        "sha256": "sha256:266a4f03fbd648bbf2cb8b634441bebebc95a25e316c46d9d5b2a3b7fcb0f3cf"
+      }
+    ],
+    "status": "DAG_DISPATCH_REQUESTED",
+    "summary": "Tau is dispatching entry node repair-installer."
+  },
+  "schema": "tau.agent_handoff.v1",
+  "stop_condition": "Stop at a terminal DAG node or any fail-closed invariant violation."
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "persona_dream.tau_repair_queue_item.v1",
+  "status": "QUEUED",
+  "queuedAt": "2026-07-11T15:16:04.145Z",
+  "workOrderPath": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/work-orders/repair-a8b93ffeca8f6014.json",
+  "workOrder": {
+    "schemaVersion": "persona_dream.repair_work_order.v1",
+    "workOrderId": "repair-a8b93ffeca8f6014",
+    "dedupKey": "a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+    "runId": "pipeline-complete",
+    "runRoot": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+    "sourceRevisionId": "rev_0001",
+    "targetRevisionId": "rev_repair_a8b93ffeca8f",
+    "createdAt": "2026-07-11T15:16:04.145Z",
+    "detection": {
+      "earliestStalePhase": "01",
+      "selectedThroughPhase": "10",
+      "phaseRange": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10"
+      ],
+      "reasons": [
+        {
+          "phaseId": "01",
+          "code": "dream_request"
+        },
+        {
+          "phaseId": "01",
+          "code": "residue_links"
+        }
+      ]
+    },
+    "policy": {
+      "maxAttemptsPerPhase": 3,
+      "forbiddenSideEffects": [
+        "external_network",
+        "public_media_publication",
+        "paid_provider_call",
+        "provider_submission",
+        "human_acceptance_fabrication"
+      ],
+      "stopBeforePhase": "11"
+    },
+    "status": "REQUESTED"
+  }
+}

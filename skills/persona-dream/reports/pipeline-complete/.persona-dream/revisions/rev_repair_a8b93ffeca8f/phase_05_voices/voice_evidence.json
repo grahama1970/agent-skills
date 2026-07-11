@@ -1,0 +1,34 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "provider voice IDs, public audio URLs, or live provider readiness"
+    ],
+    "proves": [
+      "the exact Embry and Kai surf-line Chatterbox audition WAV hashes match their live receipts"
+    ]
+  },
+  "items": [
+    {
+      "answer_text_sha256": "1781704f9dbefedf5fa751d1795042f46f010ac1700f262c0dc2856ff62b0e74",
+      "character": "embry",
+      "expected_wav_sha256": "sha256:67cd2cb426ff69d2fc687953e9640c9d2c3d25d8385867b89cc3d69ad6c9dbd9",
+      "hash_match": true,
+      "live": true,
+      "mocked": false,
+      "receipt_sha256": "sha256:10963f96e17bc9e8ccb9fd69ee5d9aebe498ece127144c7213e9cdc92d61a755",
+      "wav_sha256": "sha256:67cd2cb426ff69d2fc687953e9640c9d2c3d25d8385867b89cc3d69ad6c9dbd9"
+    },
+    {
+      "answer_text_sha256": "1f956389b26986e6bd190bbf96b48e48543547bf4617ab0c0eca0071cb8cacd4",
+      "character": "kai",
+      "expected_wav_sha256": "sha256:cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4",
+      "hash_match": true,
+      "live": true,
+      "mocked": false,
+      "receipt_sha256": "sha256:f960eae052941ccc0dadea1b054e9dc3c51e500ea32527a6e51d019f4b877a19",
+      "wav_sha256": "sha256:cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4"
+    }
+  ],
+  "schema": "persona_dream.voice_evidence.v1",
+  "status": "PASS_VOICE_EVIDENCE_REBOUND"
+}

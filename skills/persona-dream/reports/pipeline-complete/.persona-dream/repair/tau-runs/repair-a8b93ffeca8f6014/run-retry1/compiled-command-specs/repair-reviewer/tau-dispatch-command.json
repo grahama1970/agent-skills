@@ -1,0 +1,38 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--project",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
+    "python",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/execute_local_pipeline_repair.py",
+    "review",
+    "--work-order",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/work-orders/repair-a8b93ffeca8f6014.json",
+    "--tau-handoff"
+  ],
+  "tau_dag_node": {
+    "agent": "reviewer",
+    "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+    "executor": "local",
+    "goal": {
+      "goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+      "goal_id": "persona-dream-pipeline-complete-repair",
+      "goal_version": 1
+    },
+    "node_id": "repair-reviewer",
+    "required_evidence": [
+      "revision_promotion_receipt"
+    ],
+    "target": {
+      "allowed_paths": [
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/**",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/**",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/**"
+      ],
+      "repo": "grahama1970/agent-skills",
+      "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+    }
+  },
+  "timeout_s": 300
+}

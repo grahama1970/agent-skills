@@ -1,0 +1,36 @@
+{
+  "actor": null,
+  "command_policy": null,
+  "created_at": "2026-07-11T15:25:29Z",
+  "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+  "data_boundary": null,
+  "environment": {
+    "generated": true,
+    "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/environment-manifest.json",
+    "schema": "tau.environment_manifest.v1",
+    "sha256": "sha256:b4455b70f4dedbb0dfc053f89bfb64030b38b53ca274d0282cd26f945caf8749",
+    "source_kind": "generated"
+  },
+  "goal": {
+    "goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+    "goal_id": "persona-dream-pipeline-complete-repair",
+    "goal_version": 1
+  },
+  "policy_profile": null,
+  "production_authority": false,
+  "regulated_data_authorized": false,
+  "required_gates": [],
+  "resolved_inputs": {
+    "actor_access_manifest": false,
+    "command_policy": false,
+    "data_boundary": false,
+    "environment_manifest": true,
+    "policy_profile": false
+  },
+  "run_id": "persona-dream-repair-a8b93ffeca8f6014",
+  "schema": "tau.security_context.v1",
+  "security_context_sha256": "sha256:239ecc7ff2fc28d06e7584730ed46c6a147b3c8d9faa64b4d000884142ab71de",
+  "security_mode": "development",
+  "security_mode_explicit": false,
+  "security_mode_requested": null
+}

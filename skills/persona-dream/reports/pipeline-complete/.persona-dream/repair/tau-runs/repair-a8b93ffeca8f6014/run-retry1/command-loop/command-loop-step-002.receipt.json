@@ -1,0 +1,82 @@
+{
+  "artifacts": [],
+  "command_results": [
+    {
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/execute_local_pipeline_repair.py",
+        "review",
+        "--work-order",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/work-orders/repair-a8b93ffeca8f6014.json",
+        "--tau-handoff"
+      ],
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/compiled-command-specs/repair-reviewer/tau-dispatch-command.json",
+      "command_spec_sha256": "sha256:d9d9848c2af5415ce77b5512dd3b8d7417a517292a7086c9a8c18a8ccd012219",
+      "exit_code": 0,
+      "stderr": "warning: `VIRTUAL_ENV=.venv` does not match the project environment path `/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/.venv` and will be ignored; use `--active` to target the active environment instead\n",
+      "stdout": "{\"context\": {\"artifacts\": [\"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/revision_promotion_rev_repair_a8b93ffeca8f.json\"], \"summary\": \"PASS_LOCAL_REVISION_REVIEW_AND_PROMOTION\"}, \"github\": {\"repo\": \"grahama1970/agent-skills\", \"target\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete\"}, \"goal\": {\"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\", \"goal_id\": \"persona-dream-pipeline-complete-repair\", \"goal_version\": 1}, \"next_agent\": {\"executor\": \"human\", \"name\": \"human\", \"reason\": \"Continue through the bounded repair DAG.\"}, \"previous_subagent\": \"repair-reviewer\", \"rationale\": \"The immutable Persona Dream repair DAG controls promotion.\", \"required_evidence\": [\"revision_promotion_receipt\"], \"result\": {\"evidence\": [{\"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\", \"kind\": \"revision_promotion_receipt\", \"path\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/revision_promotion_rev_repair_a8b93ffeca8f.json\"}], \"status\": \"PASS\", \"summary\": \"PASS_LOCAL_REVISION_REVIEW_AND_PROMOTION\"}, \"schema\": \"tau.agent_handoff.v1\", \"stop_condition\": \"Stop at human or any local validation failure.\"}\n",
+      "timed_out": false,
+      "timeout_s": 300.0,
+      "timeout_s_source": "command_spec"
+    }
+  ],
+  "errors": [],
+  "live": true,
+  "loop_step": 2,
+  "mocked": false,
+  "ok": true,
+  "receipt_dir": null,
+  "response_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `PASS`\n- Summary: PASS_LOCAL_REVISION_REVIEW_AND_PROMOTION\n- Next agent: `human`\n- Executor: `human`\n- Stop condition: Stop at human or any local validation failure.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/revision_promotion_rev_repair_a8b93ffeca8f.json\"\n    ],\n    \"summary\": \"PASS_LOCAL_REVISION_REVIEW_AND_PROMOTION\"\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\",\n    \"goal_id\": \"persona-dream-pipeline-complete-repair\",\n    \"goal_version\": 1\n  },\n  \"next_agent\": {\n    \"executor\": \"human\",\n    \"name\": \"human\",\n    \"reason\": \"Continue through the bounded repair DAG.\"\n  },\n  \"previous_subagent\": \"repair-reviewer\",\n  \"rationale\": \"The immutable Persona Dream repair DAG controls promotion.\",\n  \"required_evidence\": [\n    \"revision_promotion_receipt\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\",\n        \"kind\": \"revision_promotion_receipt\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/revision_promotion_rev_repair_a8b93ffeca8f.json\"\n      }\n    ],\n    \"status\": \"PASS\",\n    \"summary\": \"PASS_LOCAL_REVISION_REVIEW_AND_PROMOTION\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Stop at human or any local validation failure.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:human",
+        "executor:human"
+      ],
+      "remove": []
+    },
+    "next_agent": "human",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+    }
+  },
+  "runner": "command",
+  "schema": "tau.agent_handoff_dispatch_receipt.v1",
+  "selected_agent": "repair-reviewer",
+  "start_projection": {
+    "comment": {
+      "body": "## Tau Agent Handoff\n\n- Result: `PASS`\n- Summary: REUSED_FROZEN_REVISION\n- Next agent: `repair-reviewer`\n- Executor: `local`\n- Stop condition: Stop at human or any local validation failure.\n\n<!-- tau-agent-handoff:v1 -->\n```json\n{\n  \"context\": {\n    \"artifacts\": [\n      \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_manifest.json\"\n    ],\n    \"dag_agent_role\": \"reviewer\",\n    \"dag_node_id\": \"repair-reviewer\",\n    \"summary\": \"REUSED_FROZEN_REVISION\",\n    \"tau_dag_node\": {\n      \"agent\": \"reviewer\",\n      \"dag_id\": \"persona-dream-repair-a8b93ffeca8f6014\",\n      \"executor\": \"local\",\n      \"goal\": {\n        \"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\",\n        \"goal_id\": \"persona-dream-pipeline-complete-repair\",\n        \"goal_version\": 1\n      },\n      \"node_id\": \"repair-reviewer\",\n      \"required_evidence\": [\n        \"revision_promotion_receipt\"\n      ],\n      \"target\": {\n        \"allowed_paths\": [\n          \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/**\",\n          \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/**\",\n          \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/**\"\n        ],\n        \"repo\": \"grahama1970/agent-skills\",\n        \"target\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete\"\n      }\n    }\n  },\n  \"github\": {\n    \"repo\": \"grahama1970/agent-skills\",\n    \"target\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete\"\n  },\n  \"goal\": {\n    \"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\",\n    \"goal_id\": \"persona-dream-pipeline-complete-repair\",\n    \"goal_version\": 1\n  },\n  \"next_agent\": {\n    \"executor\": \"local\",\n    \"name\": \"repair-reviewer\",\n    \"reason\": \"Continue through the bounded repair DAG.\"\n  },\n  \"previous_subagent\": \"repair-installer\",\n  \"rationale\": \"The immutable Persona Dream repair DAG controls promotion.\",\n  \"required_evidence\": [\n    \"repair_revision_manifest\"\n  ],\n  \"result\": {\n    \"evidence\": [\n      {\n        \"goal_hash\": \"sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff\",\n        \"kind\": \"repair_revision_manifest\",\n        \"path\": \"/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_manifest.json\"\n      }\n    ],\n    \"status\": \"PASS\",\n    \"summary\": \"REUSED_FROZEN_REVISION\"\n  },\n  \"schema\": \"tau.agent_handoff.v1\",\n  \"stop_condition\": \"Stop at human or any local validation failure.\"\n}\n```\n"
+    },
+    "dry_run": true,
+    "errors": [],
+    "labels": {
+      "add": [
+        "agent-work",
+        "next:repair-reviewer",
+        "executor:local"
+      ],
+      "remove": []
+    },
+    "next_agent": "repair-reviewer",
+    "ok": true,
+    "schema": "tau.agent_handoff_projection_receipt.v1",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+    }
+  },
+  "status": "COMPLETED",
+  "stop_reason": "response_consumed"
+}

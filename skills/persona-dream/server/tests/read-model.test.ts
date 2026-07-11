@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import test from 'node:test'
 import { DreamPathPolicy } from '../src/paths'
 import { buildRunDetail } from '../src/runs'
+import { enqueueRepairCandidate, FileTauRepairQueue, promoteRevision, writeRepairAttempt } from '../src/repair'
 
 test('path policy rejects prefix collisions and outside files', () => {
   const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-path-'))
@@ -48,5 +49,78 @@ test('repair-enabled revision exposes one deterministic earliest repair candidat
   assert.equal(first.repairCandidate?.enqueueAllowed, true)
   assert.equal(first.repairCandidate?.dedupKey, second.repairCandidate?.dedupKey)
   assert.deepEqual(first.repairCandidate?.phaseRange, ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('repair enqueue deduplicates work order and file-backed Tau queue item', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-enqueue-'))
+  writeFileSync(resolve(root, 'status.json'), JSON.stringify({ status: 'PASS' }))
+  writeFileSync(resolve(root, 'dream_revision_manifest.v1.json'), JSON.stringify({ active_revision_id: 'rev_0007', repair_enabled: true }))
+  const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
+  const queue = new FileTauRepairQueue()
+  const first = await enqueueRepairCandidate(detail, queue)
+  const second = await enqueueRepairCandidate(detail, queue)
+  assert.equal(first.reused, false)
+  assert.equal(second.reused, true)
+  assert.equal(first.workOrder.workOrderId, second.workOrder.workOrderId)
+  assert.equal(first.queueReceiptPath, second.queueReceiptPath)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('attempt four is blocked and failed target cannot promote', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-promotion-'))
+  assert.throws(() => writeRepairAttempt(root, {
+    schemaVersion: 'persona_dream.repair_attempt.v1',
+    workOrderId: 'repair-1',
+    phaseId: '03',
+    attemptNumber: 4 as 3,
+    status: 'FAILED_REPAIR_PHASE',
+    startedAt: new Date(0).toISOString(),
+    completedAt: new Date(0).toISOString(),
+    inputHashes: {},
+    outputHashes: {},
+    gateReceipts: [],
+    blockers: ['test'],
+  }), /BLOCKED_REPAIR_MAX_ATTEMPTS/)
+  mkdirSync(resolve(root, '.persona-dream', 'state'), { recursive: true })
+  writeFileSync(resolve(root, '.persona-dream', 'state', 'active_revision.json'), JSON.stringify({ runId: 'run', revisionId: 'rev_0001' }))
+  writeFileSync(resolve(root, 'target.json'), JSON.stringify({ revisionId: 'rev_0002', status: 'BLOCKED' }))
+  assert.throws(() => promoteRevision({ runRoot: root, expectedSourceRevisionId: 'rev_0001', targetRevisionId: 'rev_0002', targetManifestPath: resolve(root, 'target.json') }), /BLOCKED_REPAIR_TARGET_REVISION_NOT_ACCEPTED/)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('run detail reads only the atomically promoted revision', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-active-revision-'))
+  const revisionRoot = resolve(root, '.persona-dream', 'revisions', 'rev_0002')
+  mkdirSync(resolve(root, '.persona-dream', 'state'), { recursive: true })
+  mkdirSync(revisionRoot, { recursive: true })
+  writeFileSync(resolve(root, 'status.json'), JSON.stringify({ status: 'PASS' }))
+  writeFileSync(resolve(root, 'dream_revision_manifest.v1.json'), JSON.stringify({ active_revision_id: 'rev_0001', repair_enabled: true }))
+  writeFileSync(resolve(root, 'dream_request.json'), JSON.stringify({ stale: true }))
+  const fixtureFiles = {
+    'phase_01': ['dream_request.json', 'residue_links.json'],
+    'phase_02': ['story_contract.json'],
+    'phase_03': ['crew_contract.json', 'crew_gate_receipt.json'],
+    'phase_04': ['contact_sheet_requirements.json', 'contact_sheet_manifest.json', 'contact_sheet_gate_receipt.json'],
+    'phase_05': ['voice_evidence.json'],
+    'phase_06': ['script_contract.json'],
+    'phase_07': ['storyboard_packet.json'],
+    'phase_08': ['media_lock.json'],
+    'phase_09': ['video_provider_scorecard.json', 'provider_final_gate.json'],
+    'phase_10': ['panel_distillation_contract.json', 'provider_schema_receipt.json'],
+  }
+  for (const [directory, filenames] of Object.entries(fixtureFiles)) {
+    mkdirSync(resolve(revisionRoot, directory), { recursive: true })
+    for (const filename of filenames) writeFileSync(resolve(revisionRoot, directory, filename), '{}')
+  }
+  writeFileSync(resolve(root, '.persona-dream', 'state', 'active_revision.json'), JSON.stringify({
+    runId: 'run', revisionId: 'rev_0002', revisionRoot,
+    revisionManifestSha256: 'sha256:test',
+  }))
+  const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
+  assert.equal(detail.activeRevision?.revisionId, 'rev_0002')
+  assert.equal(detail.earliestIssue, undefined)
+  assert.equal(detail.repairCandidate, undefined)
+  assert.ok(detail.stages.every((stage) => stage.effectiveState === 'accepted_current'))
   rmSync(root, { recursive: true, force: true })
 })

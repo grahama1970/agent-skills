@@ -1,0 +1,15 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--project",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
+    "python",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/execute_local_pipeline_repair.py",
+    "review",
+    "--work-order",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/work-orders/repair-a8b93ffeca8f6014.json",
+    "--tau-handoff"
+  ],
+  "timeout_s": 300
+}

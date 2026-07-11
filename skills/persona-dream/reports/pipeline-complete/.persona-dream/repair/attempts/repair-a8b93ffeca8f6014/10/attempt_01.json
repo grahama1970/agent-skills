@@ -1,0 +1,24 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_10_provider_contract/final_provider_payload_by_panel.json": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+    "phase_10_provider_contract/manifest.json": "sha256:9fbfe243d5e36778a95bd3cbe4da92dcff6f26fca46f070070319d6d0d27e679",
+    "phase_10_provider_contract/panel_distillation_contract.json": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "phase_10_provider_contract/panel_distillation_review_receipt.json": "sha256:75ad0e61750b2fb25dae97a2d4bb3e047d980f51a495b99820123769b16532bb",
+    "phase_10_provider_contract/phase10_provider_contract_receipt.json": "sha256:dd361e9e4b67e22c9396c373c0f9045c7577f4077c86eb6a3a1db46cccb90eb6",
+    "phase_10_provider_contract/phase10_reproducibility_receipt.json": "sha256:27a61dfde85e52c5c809d2c975e902666b5d330716f91868f4a7e14dda771ea2",
+    "phase_10_provider_contract/provider_media_github_raw_canary_probe_receipt.json": "sha256:1fab015861f7bc9a4e5a879b9709a596629c1c5e40326978aa058716a36276b4",
+    "phase_10_provider_contract/provider_media_probe_receipt.json": "sha256:8fe8166996c61983bd28f02185b3421172dcb384df242258e7f3d501b3d68e00",
+    "phase_10_provider_contract/provider_media_publication_receipt.json": "sha256:e61a198b8e498f98b39d215138171343a2a185c88885cf55cbeaac936e690304",
+    "phase_10_provider_contract/provider_payload_field_mapping.json": "sha256:e1579093f33b534cccf92821bfe4b5ff876c37b210b3c032504a44bf488ceb73",
+    "phase_10_provider_contract/provider_payload_omitted_context.json": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
+    "phase_10_provider_contract/provider_schema_receipt.json": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "phaseId": "10",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "persona_dream.repair_source_manifest.v1",
+  "run_id": "pipeline-complete",
+  "source_revision_id": "rev_0001",
+  "entries": [
+    {
+      "phase_id": "01",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_request.json",
+      "destination": "phase_01_idea/dream_request.json"
+    },
+    {
+      "phase_id": "01",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/residue_links.json",
+      "destination": "phase_01_idea/residue_links.json"
+    },
+    {
+      "phase_id": "01",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json",
+      "destination": "phase_01_idea/dream_packet.json"
+    },
+    {
+      "phase_id": "01",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/contradiction_report.json",
+      "destination": "phase_01_idea/contradiction_report.json"
+    },
+    {
+      "phase_id": "02",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json",
+      "destination": "phase_02_story/story_contract.json"
+    },
+    {
+      "phase_id": "02",
+      "source": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/validate_story_contract.json",
+      "destination": "phase_02_story/receipts/validate_story_contract.json"
+    },
+    {
+      "phase_id": "03",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/multiscene-live-smoke/phase_03_producer_writer_director/crew_contract.json",
+      "destination": "phase_03_crew/crew_contract.json"
+    },
+    {
+      "phase_id": "03",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/multiscene-live-smoke/phase_03_producer_writer_director/crew_prompt_payload_receipt.json",
+      "destination": "phase_03_crew/crew_prompt_payload_receipt.json"
+    },
+    {
+      "phase_id": "04",
+      "source": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts",
+      "destination": "phase_04_contact_sheets/source_artifacts"
+    },
+    {
+      "phase_id": "05",
+      "source": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-58-01-589Z-embry-91a98c923f0b.json",
+      "destination": "phase_05_voices/embry_voice_audition.json"
+    },
+    {
+      "phase_id": "05",
+      "source": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-58-01-589Z-embry-91a98c923f0b.wav",
+      "destination": "phase_05_voices/embry_voice_audition.wav"
+    },
+    {
+      "phase_id": "05",
+      "source": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-49-53-184Z-kai-12af9cef1db6.json",
+      "destination": "phase_05_voices/kai_voice_audition.json"
+    },
+    {
+      "phase_id": "05",
+      "source": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-49-53-184Z-kai-12af9cef1db6.wav",
+      "destination": "phase_05_voices/kai_voice_audition.wav"
+    },
+    {
+      "phase_id": "06",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/phase_06_script",
+      "destination": "phase_06_script"
+    },
+    {
+      "phase_id": "07",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau",
+      "destination": "phase_07_storyboard_live_tau"
+    },
+    {
+      "phase_id": "08",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/phase_09_video_provider/storyboard_media_lock_manifest.json",
+      "destination": "phase_08_media_lock/storyboard_media_lock_manifest.json"
+    },
+    {
+      "phase_id": "09",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/phase_09_video_provider",
+      "destination": "phase_09_video_provider"
+    },
+    {
+      "phase_id": "10",
+      "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract",
+      "destination": "phase_10_provider_contract"
+    }
+  ]
+}

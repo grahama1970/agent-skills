@@ -1,0 +1,17 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_05_voices/embry_voice_audition.json": "sha256:10963f96e17bc9e8ccb9fd69ee5d9aebe498ece127144c7213e9cdc92d61a755",
+    "phase_05_voices/embry_voice_audition.wav": "sha256:67cd2cb426ff69d2fc687953e9640c9d2c3d25d8385867b89cc3d69ad6c9dbd9",
+    "phase_05_voices/kai_voice_audition.json": "sha256:f960eae052941ccc0dadea1b054e9dc3c51e500ea32527a6e51d019f4b877a19",
+    "phase_05_voices/kai_voice_audition.wav": "sha256:cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4",
+    "phase_05_voices/voice_evidence.json": "sha256:c31a5c560035a35a108029408445d64b2a0224dc62003e9782fba03637cc166a"
+  },
+  "phaseId": "05",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

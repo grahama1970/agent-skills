@@ -1,0 +1,9 @@
+{
+  "activePointerPath": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/active_revision.json",
+  "expectedSourceRevisionId": "rev_0001",
+  "schemaVersion": "persona_dream.revision_promotion_receipt.v1",
+  "status": "PASS_REVISION_PROMOTION",
+  "targetManifestPath": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_manifest.json",
+  "targetManifestSha256": "sha256:31436766ed937f0682f9316af2ea258f44edaa4cb53d15078aafab69d1cc99bd",
+  "targetRevisionId": "rev_repair_a8b93ffeca8f"
+}

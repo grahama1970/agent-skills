@@ -566,6 +566,11 @@ function normalizeToCanonicalPhases(backendStages: DreamStage[]): DreamStage[] {
   const normalized: DreamStage[] = []
   let ideaMemorySplitCount = 0
   for (const canonical of CANONICAL_PHASES) {
+    const canonicalStage = backendStages.find((stage) => stage.id === canonical.id)
+    if (canonicalStage) {
+      normalized.push({ ...canonicalStage, title: canonical.label })
+      continue
+    }
     const matching = (canonical.legacyIds as readonly string[])
       .map((legacyId) => backendStages.find((s) => s.id === legacyId))
       .filter((stage): stage is DreamStage => Boolean(stage))
@@ -1640,6 +1645,13 @@ class PipelineErrorBoundary extends React.Component {
   }
 }
 
+function rebindProviderContractAssetPath(path: string, revisionRoot: string | null): string {
+  if (!revisionRoot) return path
+  const phaseIndex = path.indexOf('/phase_07_storyboard_live_tau/')
+  if (phaseIndex < 0) return path
+  return `${revisionRoot}${path.slice(phaseIndex)}`
+}
+
 function ProviderContractPanel({ stage }: { stage: DreamStage }) {
   const contractArtifacts = useMemo(() => {
     const byRole = new Map<string, DreamArtifact>()
@@ -1650,6 +1662,11 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
     return [...byRole.entries()].map(([role, artifact]) => ({ role, artifact }))
   }, [stage.artifacts])
   const [loaded, setLoaded] = useState<LoadedVideoArtifact[]>([])
+  const revisionRoot = useMemo(() => {
+    const marker = '/phase_10_provider_contract/'
+    const artifactPath = stage.artifacts.find((artifact) => artifact.path.includes(marker))?.path
+    return artifactPath ? artifactPath.slice(0, artifactPath.indexOf(marker)) : null
+  }, [stage.artifacts])
 
   useEffect(() => {
     let cancelled = false
@@ -1719,7 +1736,7 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
         ...start,
         panel_id: panel.panel_id,
         frame_role: 'start_frame',
-        local_path: start.absolute_path ?? start.relative_path,
+        local_path: rebindProviderContractAssetPath(String(start.absolute_path ?? start.relative_path ?? ''), revisionRoot),
         media_lock_status: start.status,
         identity_continuity_status: start.identity_continuity_status ?? 'NOT_RECORDED',
         publication_status: start.provider_accessible_url ? 'PUBLISHED' : publicationReceipt?.status,
@@ -1729,7 +1746,7 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
         ...end,
         panel_id: panel.panel_id,
         frame_role: 'end_frame',
-        local_path: end.absolute_path ?? end.relative_path,
+        local_path: rebindProviderContractAssetPath(String(end.absolute_path ?? end.relative_path ?? ''), revisionRoot),
         media_lock_status: end.status,
         identity_continuity_status: end.identity_continuity_status ?? 'NOT_RECORDED',
         publication_status: end.provider_accessible_url ? 'PUBLISHED' : publicationReceipt?.status,

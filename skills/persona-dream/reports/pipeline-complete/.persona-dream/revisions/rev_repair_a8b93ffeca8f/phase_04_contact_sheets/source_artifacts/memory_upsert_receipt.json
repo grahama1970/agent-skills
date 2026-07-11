@@ -1,0 +1,8 @@
+{
+  "collection": "persona_dream_visual_assets",
+  "inserted": 4,
+  "updated": 1,
+  "errors": [],
+  "total": 5,
+  "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_visual_assets_20260703T132633459679Z_65675_126869764572864.jsonl"
+}

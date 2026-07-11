@@ -1,0 +1,21 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_09_video_provider/kling_scene_packet.json": "sha256:6b291363446be09a20cb407408793aa8ec99fc71dbe09548c689fc450035cbdf",
+    "phase_09_video_provider/provider_final_gate_receipt.json": "sha256:644d3308490cf1c8fd134cf97e7213d44a79a07dca26b207ead808d5befc869b",
+    "phase_09_video_provider/provider_payload_mapping_receipt.json": "sha256:4ceffaf26fb1ac00d6e75803563b34a24e1fc615498f235a3e945e4fc24975d6",
+    "phase_09_video_provider/provider_registry_refresh_receipt.v1.json": "sha256:b68b83e75b99e31759c32ab301309c1e80a90f2ef3b1e0933126747ae6d8d666",
+    "phase_09_video_provider/storyboard_media_lock_manifest.json": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+    "phase_09_video_provider/video_provider_packet/provider_payload_mapping_receipt.json": "sha256:b8d565403b478060e2b4c7cd282d6049964c1f8f12737b92f6da472035024854",
+    "phase_09_video_provider/video_provider_packet/video_provider_packet.json": "sha256:7544a6cccd61e3e1da20572e23340120bfe4fccd896e00577b2ba371be218fb7",
+    "phase_09_video_provider/video_provider_scorecard.v1.json": "sha256:d25eecc3be9f9dc198c9f99c941249bd737e1ac6750cfb3f2110c53158d095f3",
+    "phase_09_video_provider/video_scene_contract.v1.json": "sha256:78573cec7d8a42687315af8e498351e269ed8160c0b5b180a427c9a6039d1206"
+  },
+  "phaseId": "09",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

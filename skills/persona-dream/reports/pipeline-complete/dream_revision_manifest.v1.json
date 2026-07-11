@@ -1,0 +1,30 @@
+{
+  "schema": "persona_dream.revision_state.v1",
+  "run_id": "pipeline-complete",
+  "active_revision_id": "rev_0001",
+  "pipeline_complete": true,
+  "repair_enabled": true,
+  "historical": false,
+  "fixture": false,
+  "selected_through_phase": "10",
+  "status": "ACTIVE_INCOMPLETE_REPAIR_REQUIRED",
+  "source_hashes": {
+    "status_json": "sha256:9f4614ae73f3f4d5767aeba9d88a5b6e2e479637e3dfe960d59be0fdbbc01bc3",
+    "validation_json": "sha256:10260c47d50a4550af19d9401ad615ab005916e52cf36e363d8baebe7601c4df",
+    "phase01_dream_packet": "sha256:30986188437c5deaf42a10afda3e6476e1fe04deb17303d90f253a10a733336d",
+    "phase02_story_contract": "sha256:d449f2126cff74250cfd09f82b47482db4cc589410dca0c1369ccf303a8fb8c2",
+    "phase03_crew_contract_candidate": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+    "phase04_reference_asset_manifest_candidate": "sha256:209171d7ec48c4ff7f31149549ac87f89fa7bd36bcabe066ff9e5607bb457295"
+  },
+  "claims": {
+    "proves": [
+      "the selected run has an explicit active revision and repair policy",
+      "candidate Phase 01 through Phase 04 source artifacts are hash-bound for repair review"
+    ],
+    "does_not_prove": [
+      "Phase 01 through Phase 04 are installed or accepted in this run root",
+      "candidate source artifacts share accepted lineage until repair validation passes",
+      "external publication, provider readiness, paid authorization, or provider submission"
+    ]
+  }
+}

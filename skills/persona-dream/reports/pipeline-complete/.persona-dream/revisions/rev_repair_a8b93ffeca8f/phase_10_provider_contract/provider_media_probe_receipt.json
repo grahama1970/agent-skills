@@ -1,0 +1,21 @@
+{
+  "assets_probed": 0,
+  "assets_required": 8,
+  "blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_EXTERNAL_PROBE_NOT_RUN"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "external URL fetchability"
+    ],
+    "proves": [
+      "probe gap is explicitly receipted"
+    ]
+  },
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live": false,
+  "mocked": false,
+  "schema_version": "persona-dream.provider-media-probe-receipt.v1",
+  "status": "BLOCKED_PROVIDER_MEDIA_PROBE_NOT_RUN"
+}

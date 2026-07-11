@@ -1,0 +1,14 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_02_story/receipts/validate_story_contract.json": "sha256:9e8e91cb66bc3d9d572b70c9f25ca2ac30bc3b1e2acdc218ba0f8ae3d278b36d",
+    "phase_02_story/story_contract.json": "sha256:d449f2126cff74250cfd09f82b47482db4cc589410dca0c1369ccf303a8fb8c2"
+  },
+  "phaseId": "02",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

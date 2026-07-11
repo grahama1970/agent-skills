@@ -109,3 +109,17 @@ export type PersonaDreamRepairWorkOrder = {
   }
   status: 'REQUESTED'
 }
+
+export type RepairAttemptReceipt = {
+  schemaVersion: 'persona_dream.repair_attempt.v1'
+  workOrderId: string
+  phaseId: string
+  attemptNumber: 1 | 2 | 3
+  status: 'PASS_REPAIR_PHASE' | 'BLOCKED_REPAIR_PHASE' | 'FAILED_REPAIR_PHASE'
+  startedAt: string
+  completedAt: string
+  inputHashes: Record<string, string>
+  outputHashes: Record<string, string>
+  gateReceipts: DreamArtifactRef[]
+  blockers: string[]
+}

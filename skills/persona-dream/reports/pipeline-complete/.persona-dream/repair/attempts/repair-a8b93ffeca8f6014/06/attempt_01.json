@@ -1,0 +1,19 @@
+{
+  "attemptNumber": 1,
+  "blockers": [],
+  "gateReceipts": [],
+  "inputHashes": {},
+  "outputHashes": {
+    "phase_06_script/entity_environment_script_table.json": "sha256:01655698db24e61bc47fc5ebccf7e8c9a50264f2c75ad7a4058a8425c69ebf54",
+    "phase_06_script/phase_06_script_install_receipt.json": "sha256:e37c89a85198b40a4d45b38c843c7b09a719adfefe1d2e5cf8533bb2bd3a05ed",
+    "phase_06_script/receipts/validate_script_contract.json": "sha256:8fa2a17a759b8cc570d1d6a001e6959396bdfc3f7e99f611cf5f7484b5daabe6",
+    "phase_06_script/script-reviewer-verdict.json": "sha256:542ed4ec783b78de7375855ee36188b8b9a6e280ec841e9ca6c45160c1a0125a",
+    "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+    "phase_06_script/script_dispatch_receipt.json": "sha256:d54130bbb9949159794b0d89f40e619e6d18d0eee7036fb47a724efa0c5223e5",
+    "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b"
+  },
+  "phaseId": "06",
+  "schemaVersion": "persona_dream.repair_attempt.v1",
+  "status": "PASS_REPAIR_PHASE",
+  "workOrderId": "repair-a8b93ffeca8f6014"
+}

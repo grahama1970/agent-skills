@@ -1,0 +1,39 @@
+{
+  "artifact_id": "dream-run_story_contract",
+  "created_at": "2026-06-29T21:10:05Z",
+  "downstream_invalidated": {
+    "panels": true,
+    "provider_packets": true,
+    "reason": "New accepted story contract requires downstream regeneration.",
+    "storyboard": true
+  },
+  "input_idea_contract": "Review or regenerate the story contract from the current upstream idea/memory revision before any downstream storyboard, panel, provider, or Kling claim.",
+  "review_evidence": {
+    "basis": "Derived directly from accepted dream_packet frame prompts and residue ids.",
+    "forbidden_actions_observed": {
+      "kling": false,
+      "paid_provider": false,
+      "panel_generation": false,
+      "public_upload": false
+    },
+    "review_status": "ACCEPTED_AUTOMATED",
+    "reviewed_by": "tau.story-writer",
+    "source_ids": [
+      "embry_age15_19_b01_memory_012",
+      "embry_age19_23_b01_memory_002",
+      "embry_age23_current_b01_memory_040"
+    ]
+  },
+  "schema": "persona_dream.story_contract.v1",
+  "seed": "Synthetic dream for Embry.  The requested dream topic is Tau issue 41 dream packet creator reviewer loop.Memory residue gathers around embry, yale, review, evidence, asks, contact. Bridge tones: Fragility, Precision. Core tension: No direct opposition surfaced; the dream follows unresolved residue.. Render as symbolic images, not factual claims.",
+  "source_paths": {
+    "dream_packet": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/dream_packet.json",
+    "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-43-persona-dream-story-contract-loop-20260629T2114/input_story_contract_work_order.json"
+  },
+  "speaking_characters": [
+    "Embry"
+  ],
+  "status": "ACCEPTED_AUTOMATED",
+  "story": "Synthetic dream for Embry.  The requested dream topic is Tau issue 41 dream packet creator reviewer loop.Memory residue gathers around embry, yale, review, evidence, asks, contact. Bridge tones: Fragility, Precision. Core tension: No direct opposition surfaced; the dream follows unresolved residue.. Render as symbolic images, not factual claims.\n\nBeat 1: Embry dream frame, persona_memory_record, topic: Tau issue 41 dream packet creator reviewer loop, During an early Yale design review, Embry responds competently to a technical challenge but later tells Kai only that the review went fine, beginning a pattern of protecting relati, symbolic, cinematic still, contact sheet frame, bridge tone: Precision\n\nBeat 2: Embry dream frame, persona_memory_record, topic: Tau issue 41 dream packet creator reviewer loop, On the next call, Embry offers a stricter contact schedule while Kai asks for evidence that she wants spontaneous emotional contact.\nEmbry proposes Tuesday and Thursday calls with , symbolic, cinematic still, contact sheet frame, bridge tone: Fragility\n\nBeat 3: Embry dream frame, persona_memory_record, topic: Tau issue 41 dream packet creator reviewer loop, Embry discovers a discrepancy in a SPARTA review trail that may be harmless, procedural, or evidence that someone bypassed a control.\nShe can explain the technical mismatch but not, symbolic, cinematic still, contact sheet frame, bridge tone: Fragility, Precision",
+  "target_duration_s": 15.0
+}

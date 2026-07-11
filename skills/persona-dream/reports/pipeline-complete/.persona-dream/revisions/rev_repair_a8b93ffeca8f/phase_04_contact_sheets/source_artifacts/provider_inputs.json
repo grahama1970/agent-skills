@@ -1,0 +1,210 @@
+{
+  "schema": "persona_dream.provider_inputs.v1",
+  "created_at_utc": "2026-07-03T13:26:34.550637+00:00",
+  "timing_source": null,
+  "provider_lanes": [
+    "kling_3_0_o3_omni",
+    "seedance_2_0",
+    "elevenlabs_kling_lipsync_control"
+  ],
+  "assembly_rule": "scene binding -> reference assets -> base scene prompt -> provider-specific input contract",
+  "timed_shots": [],
+  "scenes": [
+    {
+      "scene_id": "void_tea_dialogue",
+      "scene_title": "Void Tea Dialogue",
+      "base_scene_prompt": "Horus and Embry sit at a patio table under a simple umbrella in a surreal void-world tea setting. Use the character reference sheets for identity continuity, the void tea terrace and void world sheets for place continuity, and keep the Tyranid-like creatures as distant background motion only. The scene is quiet, intimate, and source-grounded; no new lore, no subtitles, no readable text.",
+      "reference_images": [],
+      "reference_assets": [],
+      "dialogue_contract": {
+        "source": "timed_transcript_or_scene_script",
+        "exact_dialogue_required": true,
+        "exact_dialogue": null,
+        "note": "Provider runners must fill exact_dialogue from the accepted timed script before calling paid media APIs."
+      },
+      "negative_constraints": [
+        "no unsupported persona lore",
+        "no readable text, subtitles, logos, or watermarks",
+        "no extra speaking characters",
+        "do not treat dream symbolism as factual memory writes",
+        "keep character identity anchored to the supplied reference sheets"
+      ],
+      "provider_inputs": {
+        "kling_3_0_o3_omni": {
+          "lane_role": "default_joint_audio_video",
+          "input_mode": "native_av_with_reference_images",
+          "prompt": "Horus and Embry sit at a patio table under a simple umbrella in a surreal void-world tea setting. Use the character reference sheets for identity continuity, the void tea terrace and void world sheets for place continuity, and keep the Tyranid-like creatures as distant background motion only. The scene is quiet, intimate, and source-grounded; no new lore, no subtitles, no readable text. Use the supplied reference images as continuity anchors. Generate synchronized speech and video only after exact_dialogue is supplied.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "seedance_2_0": {
+          "lane_role": "second_native_audio_video_challenger",
+          "input_mode": "native_av_with_reference_images_when_available",
+          "prompt": "Horus and Embry sit at a patio table under a simple umbrella in a surreal void-world tea setting. Use the character reference sheets for identity continuity, the void tea terrace and void world sheets for place continuity, and keep the Tyranid-like creatures as distant background motion only. The scene is quiet, intimate, and source-grounded; no new lore, no subtitles, no readable text. Preserve the same reference-image identity and scene contract used by the Kling lane so provider differences, not prompt drift, are being compared.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "elevenlabs_kling_lipsync_control": {
+          "lane_role": "voice_control_lipsync_baseline",
+          "input_mode": "tts_audio_plus_shared_base_video",
+          "base_video_prompt": "Horus and Embry sit at a patio table under a simple umbrella in a surreal void-world tea setting. Use the character reference sheets for identity continuity, the void tea terrace and void world sheets for place continuity, and keep the Tyranid-like creatures as distant background motion only. The scene is quiet, intimate, and source-grounded; no new lore, no subtitles, no readable text.",
+          "reference_images": [],
+          "requires_shared_base_video": true,
+          "requires_exact_dialogue": true,
+          "note": "ElevenLabs and any WavTTS comparison must use the same accepted base video."
+        }
+      },
+      "timed_shots": [],
+      "selected_timed_shot": null
+    },
+    {
+      "scene_id": "sparta_archive_dialogue",
+      "scene_title": "SPARTA Archive Dialogue",
+      "base_scene_prompt": "Horus and Embry speak in the SPARTA archive evidence room. Use the archive location sheet, character sheets, and SPARTA hologram/receipt prop kit. The tone is restrained and work-focused, with visible faces for dialogue and no invented dashboard claims, logos, subtitles, or readable text.",
+      "reference_images": [],
+      "reference_assets": [],
+      "dialogue_contract": {
+        "source": "timed_transcript_or_scene_script",
+        "exact_dialogue_required": true,
+        "exact_dialogue": null,
+        "note": "Provider runners must fill exact_dialogue from the accepted timed script before calling paid media APIs."
+      },
+      "negative_constraints": [
+        "no unsupported persona lore",
+        "no readable text, subtitles, logos, or watermarks",
+        "no extra speaking characters",
+        "do not treat dream symbolism as factual memory writes",
+        "keep character identity anchored to the supplied reference sheets"
+      ],
+      "provider_inputs": {
+        "kling_3_0_o3_omni": {
+          "lane_role": "default_joint_audio_video",
+          "input_mode": "native_av_with_reference_images",
+          "prompt": "Horus and Embry speak in the SPARTA archive evidence room. Use the archive location sheet, character sheets, and SPARTA hologram/receipt prop kit. The tone is restrained and work-focused, with visible faces for dialogue and no invented dashboard claims, logos, subtitles, or readable text. Use the supplied reference images as continuity anchors. Generate synchronized speech and video only after exact_dialogue is supplied.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "seedance_2_0": {
+          "lane_role": "second_native_audio_video_challenger",
+          "input_mode": "native_av_with_reference_images_when_available",
+          "prompt": "Horus and Embry speak in the SPARTA archive evidence room. Use the archive location sheet, character sheets, and SPARTA hologram/receipt prop kit. The tone is restrained and work-focused, with visible faces for dialogue and no invented dashboard claims, logos, subtitles, or readable text. Preserve the same reference-image identity and scene contract used by the Kling lane so provider differences, not prompt drift, are being compared.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "elevenlabs_kling_lipsync_control": {
+          "lane_role": "voice_control_lipsync_baseline",
+          "input_mode": "tts_audio_plus_shared_base_video",
+          "base_video_prompt": "Horus and Embry speak in the SPARTA archive evidence room. Use the archive location sheet, character sheets, and SPARTA hologram/receipt prop kit. The tone is restrained and work-focused, with visible faces for dialogue and no invented dashboard claims, logos, subtitles, or readable text.",
+          "reference_images": [],
+          "requires_shared_base_video": true,
+          "requires_exact_dialogue": true,
+          "note": "ElevenLabs and any WavTTS comparison must use the same accepted base video."
+        }
+      },
+      "timed_shots": [],
+      "selected_timed_shot": null
+    },
+    {
+      "scene_id": "sparta_graph_room_dialogue",
+      "scene_title": "SPARTA Graph Room Dialogue",
+      "base_scene_prompt": "Horus and Embry discuss source-grounded evidence in the SPARTA graph room. Use the graph room sheet for spatial continuity and the character sheets for identity. Abstract graph shapes may appear, but there must be no readable text, no fake operational status, and no unsupported persona lore.",
+      "reference_images": [],
+      "reference_assets": [],
+      "dialogue_contract": {
+        "source": "timed_transcript_or_scene_script",
+        "exact_dialogue_required": true,
+        "exact_dialogue": null,
+        "note": "Provider runners must fill exact_dialogue from the accepted timed script before calling paid media APIs."
+      },
+      "negative_constraints": [
+        "no unsupported persona lore",
+        "no readable text, subtitles, logos, or watermarks",
+        "no extra speaking characters",
+        "do not treat dream symbolism as factual memory writes",
+        "keep character identity anchored to the supplied reference sheets"
+      ],
+      "provider_inputs": {
+        "kling_3_0_o3_omni": {
+          "lane_role": "default_joint_audio_video",
+          "input_mode": "native_av_with_reference_images",
+          "prompt": "Horus and Embry discuss source-grounded evidence in the SPARTA graph room. Use the graph room sheet for spatial continuity and the character sheets for identity. Abstract graph shapes may appear, but there must be no readable text, no fake operational status, and no unsupported persona lore. Use the supplied reference images as continuity anchors. Generate synchronized speech and video only after exact_dialogue is supplied.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "seedance_2_0": {
+          "lane_role": "second_native_audio_video_challenger",
+          "input_mode": "native_av_with_reference_images_when_available",
+          "prompt": "Horus and Embry discuss source-grounded evidence in the SPARTA graph room. Use the graph room sheet for spatial continuity and the character sheets for identity. Abstract graph shapes may appear, but there must be no readable text, no fake operational status, and no unsupported persona lore. Preserve the same reference-image identity and scene contract used by the Kling lane so provider differences, not prompt drift, are being compared.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "elevenlabs_kling_lipsync_control": {
+          "lane_role": "voice_control_lipsync_baseline",
+          "input_mode": "tts_audio_plus_shared_base_video",
+          "base_video_prompt": "Horus and Embry discuss source-grounded evidence in the SPARTA graph room. Use the graph room sheet for spatial continuity and the character sheets for identity. Abstract graph shapes may appear, but there must be no readable text, no fake operational status, and no unsupported persona lore.",
+          "reference_images": [],
+          "requires_shared_base_video": true,
+          "requires_exact_dialogue": true,
+          "note": "ElevenLabs and any WavTTS comparison must use the same accepted base video."
+        }
+      },
+      "timed_shots": [],
+      "selected_timed_shot": null
+    },
+    {
+      "scene_id": "memory_terminal_reflection",
+      "scene_title": "Memory Terminal Reflection",
+      "base_scene_prompt": "Horus and Embry stand near a memory terminal in a quiet reflective scene. Use the memory terminal environment sheet and SPARTA receipt prop sheet as continuity anchors. The scene should feel like persona memory residue being inspected, not written back; no memory upserts are depicted.",
+      "reference_images": [],
+      "reference_assets": [],
+      "dialogue_contract": {
+        "source": "timed_transcript_or_scene_script",
+        "exact_dialogue_required": true,
+        "exact_dialogue": null,
+        "note": "Provider runners must fill exact_dialogue from the accepted timed script before calling paid media APIs."
+      },
+      "negative_constraints": [
+        "no unsupported persona lore",
+        "no readable text, subtitles, logos, or watermarks",
+        "no extra speaking characters",
+        "do not treat dream symbolism as factual memory writes",
+        "keep character identity anchored to the supplied reference sheets"
+      ],
+      "provider_inputs": {
+        "kling_3_0_o3_omni": {
+          "lane_role": "default_joint_audio_video",
+          "input_mode": "native_av_with_reference_images",
+          "prompt": "Horus and Embry stand near a memory terminal in a quiet reflective scene. Use the memory terminal environment sheet and SPARTA receipt prop sheet as continuity anchors. The scene should feel like persona memory residue being inspected, not written back; no memory upserts are depicted. Use the supplied reference images as continuity anchors. Generate synchronized speech and video only after exact_dialogue is supplied.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "seedance_2_0": {
+          "lane_role": "second_native_audio_video_challenger",
+          "input_mode": "native_av_with_reference_images_when_available",
+          "prompt": "Horus and Embry stand near a memory terminal in a quiet reflective scene. Use the memory terminal environment sheet and SPARTA receipt prop sheet as continuity anchors. The scene should feel like persona memory residue being inspected, not written back; no memory upserts are depicted. Preserve the same reference-image identity and scene contract used by the Kling lane so provider differences, not prompt drift, are being compared.",
+          "reference_images": [],
+          "requires_exact_dialogue": true,
+          "requires_duration_target": true
+        },
+        "elevenlabs_kling_lipsync_control": {
+          "lane_role": "voice_control_lipsync_baseline",
+          "input_mode": "tts_audio_plus_shared_base_video",
+          "base_video_prompt": "Horus and Embry stand near a memory terminal in a quiet reflective scene. Use the memory terminal environment sheet and SPARTA receipt prop sheet as continuity anchors. The scene should feel like persona memory residue being inspected, not written back; no memory upserts are depicted.",
+          "reference_images": [],
+          "requires_shared_base_video": true,
+          "requires_exact_dialogue": true,
+          "note": "ElevenLabs and any WavTTS comparison must use the same accepted base video."
+        }
+      },
+      "timed_shots": [],
+      "selected_timed_shot": null
+    }
+  ]
+}

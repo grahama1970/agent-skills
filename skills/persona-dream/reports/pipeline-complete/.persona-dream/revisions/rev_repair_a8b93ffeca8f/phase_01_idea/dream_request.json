@@ -1,0 +1,18 @@
+{
+  "about": "Tau issue 41 dream packet creator reviewer loop",
+  "created_at": "2026-06-29T20:43:21Z",
+  "duration_seconds": 30,
+  "fixture": null,
+  "frames": 3,
+  "limit": 4,
+  "mode": "static_dream",
+  "persona": {
+    "display_name": "Embry",
+    "id": "embry"
+  },
+  "run_id": "issue-41-persona-dream-dream-packet-loop-20260629T204320Z",
+  "scene": null,
+  "schema": "persona_dream.request.v1",
+  "secondary_persona": null,
+  "write_memory": false
+}

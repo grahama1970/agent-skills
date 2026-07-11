@@ -1,0 +1,180 @@
+{
+  "items": [
+    {
+      "persona_id": "embry",
+      "persona_ids": [
+        "embry"
+      ],
+      "record_type": "candidate_persona_memory",
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 86.1221923828125,
+        "dense": 0.0,
+        "graph": 0.44823469662140936
+      },
+      "source": "persona_memory",
+      "source_id": "embry_age15_19_b01_memory_012",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b01_candidates.jsonl",
+      "source_quote": "A reviewer asks why Embry's materials model excludes a failure mode she assumed was negligible. She feels the room narrow, requests the raw measurements, and shows how she will rerun the analysis rather than defend the assumption. That night Kai asks how the review went. Embry says she found one thing to fix and changes the subject before mentioning that she froze for several seconds or wondered whether she belonged there.",
+      "synthetic": false,
+      "text": "During an early Yale design review, Embry responds competently to a technical challenge but later tells Kai only that the review went fine, beginning a pattern of protecting relationships through controlled omission.\nA reviewer asks why Embry's materials model excludes a failure mode she assumed was negligible. She feels the room narrow, requests the raw measurements, and shows how she will rerun the analysis rather than defend the assumption. That night Kai asks how the review went. Embry says she found one thing to fix and changes the subject before mentioning that she froze for several seconds or wondered whether she belonged there.\npeople: Embry Lawson, James, kai; places: Yale, yale candidate design review; organizations: SpaceX, Yale; concepts: belonging, loyalty with controlled omission, work as emotional refuge\nSetting: Yale, yale candidate design review. Situation: During an early Yale design review, Embry responds competently to a technical challenge but later tells Kai only that the review went fine, beginning a pattern of protecting relationships through controlled omission. Trigger: A reviewer identifies an omitted failure mode in public. Stakes: She requests evidence,",
+      "type": "persona_memory_record"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [
+        "embry"
+      ],
+      "record_type": "candidate_persona_memory",
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 80.34256744384766,
+        "dense": 0.0,
+        "graph": 0.44823469662140936
+      },
+      "source": "persona_memory",
+      "source_id": "embry_age19_23_b01_memory_002",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age19_23_b01_candidates.normalized.jsonl",
+      "source_quote": "Embry proposes Tuesday and Thursday calls with a ten-minute buffer. Kai says, 'I asked whether you wanted to talk to me, not when you could.' She hears accusation in the sentence and opens her calendar again instead of answering the question.",
+      "synthetic": false,
+      "text": "On the next call, Embry offers a stricter contact schedule while Kai asks for evidence that she wants spontaneous emotional contact.\nEmbry proposes Tuesday and Thursday calls with a ten-minute buffer. Kai says, 'I asked whether you wanted to talk to me, not when you could.' She hears accusation in the sentence and opens her calendar again instead of answering the question.\npeople: Embry Lawson, Kai; concepts: repair\nSetting: age band 19-23. Situation: On the next call, Embry offers a stricter contact schedule while Kai asks for evidence that she wants spontaneous emotional contact. Trigger: Kai distinguishes availability from desire. Stakes: State shifts from 'Reliable scheduling is a sufficient demonstration of care.' to 'She glimpses that Kai may experience the same schedule as evidence of distance.'.\nEmotions: guilt, uncertainty. Intensity: 5/5. Regulation: scheduling and maintenance planning. Conflict: Embry and Kai: The mismatch becomes explicit but remains unresolved.\nTheory of mind: belief: Embry: She glimpses that Kai may experience the same schedule as evidence of distance. Trigger: Kai distinguishes availability from desire. Consequence: State shifts from 'Reliable schedu",
+      "type": "persona_memory_record"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [
+        "embry"
+      ],
+      "record_type": "candidate_persona_memory",
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 72.22074127197266,
+        "dense": 0.0,
+        "graph": 0.44823469662140936
+      },
+      "source": "persona_memory",
+      "source_id": "embry_age23_current_b01_memory_040",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age23_current_b01_candidates.jsonl",
+      "source_quote": "She can explain the technical mismatch but not the human reason behind it. Reporting it could protect the project, implicate a colleague unfairly, or expose that her own controls were less complete than she believed.",
+      "synthetic": false,
+      "text": "Embry discovers a discrepancy in a SPARTA review trail that may be harmless, procedural, or evidence that someone bypassed a control.\nShe can explain the technical mismatch but not the human reason behind it. Reporting it could protect the project, implicate a colleague unfairly, or expose that her own controls were less complete than she believed.\npeople: Embry Lawson; places: Yale; organizations: SPARTA, Yale; concepts: Fragility, Precision, privacy, work as emotional refuge\nSetting: Yale. Situation: Embry discovers a discrepancy in a SPARTA review trail that may be harmless, procedural, or evidence that someone bypassed a control. Trigger: A mismatch between a recorded decision, a later configuration, and the expected handoff. Stakes: Embry faces a present-tense version of the Yale problem: incomplete evidence, multiple loyalties, and pressure to narrate motive.\nEmotions: guilt, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: The discrepancy remains open because facts about state are clearer than facts about intent.\nTheory of mind: unresolved_thread: The discrepancy remains open because facts about state are clearer than facts abo",
+      "type": "persona_memory_record"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [
+        "embry"
+      ],
+      "record_type": "candidate_persona_memory",
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 65.63189697265625,
+        "dense": 0.0,
+        "graph": 0.44823469662140936
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Moana viewing three weeks ago: Embry couldn't finish the film, turned it off at the grandmother scene because its themes 'hit too hard,' and the question of what she can watch for comfort remains unresolved.",
+      "type": "persona_memory_record"
+    }
+  ],
+  "recall_receipts": [
+    {
+      "accepted_count": 8,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 47.916,
+      "count": 8,
+      "discarded_persona_mismatch_count": 0,
+      "found": true,
+      "k": 32,
+      "persona_id": "embry",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence Tau issue 41 dream packet creator reviewer loop",
+      "scope": "persona-dream",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "recent unresolved themes persona memory SPARTA NIST MITRE evidence Tau issue 41 dream packet creator reviewer loop",
+      "scope": "embry-memories",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "recent dream motif visual surreal recurring image Tau issue 41 dream packet creator reviewer loop",
+      "scope": "embry-dreams",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "collections": null,
+      "confidence": 18.657,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "dream reflection mood unresolved image feeling Tau issue 41 dream packet creator reviewer loop",
+      "scope": "embry-dream-journals",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "embry recent task failure contradiction insight Tau issue 41 dream packet creator reviewer loop",
+      "scope": "operational",
+      "should_scan": false,
+      "status": "ok"
+    }
+  ],
+  "run_id": "issue-41-persona-dream-dream-packet-loop-20260629T204320Z",
+  "schema": "persona_dream.residue_links.v1"
+}

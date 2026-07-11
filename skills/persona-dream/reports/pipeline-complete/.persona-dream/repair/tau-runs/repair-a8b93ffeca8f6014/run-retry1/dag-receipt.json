@@ -1,0 +1,96 @@
+{
+  "active_goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+  "alerts": [],
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/security-context-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/start-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/command-loop/command-loop-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/command-loop/command-loop-step-001.receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/command-loop/command-loop-step-002.receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/compiled-command-specs/repair-installer/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/compiled-command-specs/repair-reviewer/tau-dispatch-command.json"
+  ],
+  "capability_decision_receipt": null,
+  "command_loop_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/command-loop/command-loop-receipt.json",
+  "containment_gate_receipts": {},
+  "contract_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/dag-contract.json",
+  "contract_sha256": "sha256:266a4f03fbd648bbf2cb8b634441bebebc95a25e316c46d9d5b2a3b7fcb0f3cf",
+  "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+  "edge_count": 2,
+  "entry_node": "repair-installer",
+  "errors": [],
+  "evidence_case_gate_receipt": null,
+  "evidence_validation_receipt": null,
+  "execution": "project_agent_dag_via_handoff_command_loop",
+  "live": true,
+  "max_steps": 3,
+  "memory_intent_gate_receipt": null,
+  "mocked": false,
+  "node_attempts": {
+    "repair-installer": 1,
+    "repair-reviewer": 1
+  },
+  "node_count": 3,
+  "observed_edges": [
+    {
+      "from_agent": "coder",
+      "from_node": "repair-installer",
+      "to_agent": "reviewer",
+      "to_node": "repair-reviewer"
+    },
+    {
+      "from_agent": "reviewer",
+      "from_node": "repair-reviewer",
+      "to_agent": "human",
+      "to_node": "human"
+    }
+  ],
+  "ok": true,
+  "progress_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/dag-progress.json",
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "Parallel DAG scheduling.",
+      "GitHub mutation or ticket closure.",
+      "Unbounded autonomous operation.",
+      "Successful secure execution when the selected sandbox backend is unavailable."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Entry node was compiled into a tau.agent_handoff.v1 start handoff.",
+      "Node routing used the development command-loop subprocess runner.",
+      "Observed edges and retry counts were checked against the DAG contract.",
+      "Reviewer verdict evidence was checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_receipt.v1",
+  "security_context_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/security-context-receipt.json",
+  "security_context_sha256": "sha256:239ecc7ff2fc28d06e7584730ed46c6a147b3c8d9faa64b4d000884142ab71de",
+  "security_mode": "development",
+  "selected_agents": [
+    "repair-installer",
+    "repair-reviewer"
+  ],
+  "status": "PASS",
+  "target": {
+    "allowed_paths": [
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/**",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/**",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/**"
+    ],
+    "repo": "grahama1970/agent-skills",
+    "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-11T15:25:29Z",
+  "verdict": "PASS",
+  "zero_trust_preflight_receipt": null
+}

@@ -1,0 +1,58 @@
+{
+  "accepted": true,
+  "auth_repair_required": false,
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "This reviewer receipt does not by itself prove live provider image generation; use storyboard_frame_generation_receipt.json and accepted_frame metadata for provider evidence.",
+      "No downstream video provider submission occurred."
+    ],
+    "proves": [
+      "Tau dispatched the Phase 07 panel-reviewer node.",
+      "The storyboard packet includes accepted storyboard frame evidence for each panel.",
+      "Each accepted panel has script action, start/end frame evidence, camera, lighting, acting beats, production notes, references, and coverage seeds.",
+      "Phase 04 object/location/environment references are attached as references only, not accepted panel frames."
+    ]
+  },
+  "created_at": "2026-07-07T21:24:18.634672+00:00",
+  "duration_seconds": 10,
+  "entity_coverage": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/storyboard_entity_coverage.json",
+  "live": true,
+  "mocked": false,
+  "panel_count": 4,
+  "per_panel": [
+    {
+      "blockers": [],
+      "panel_id": "sb_001",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_002",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_003",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "panel_id": "sb_004",
+      "status": "PASS"
+    }
+  ],
+  "provider_calls": {
+    "image": false,
+    "kling": false,
+    "paid": false,
+    "route": true
+  },
+  "provider_route_receipt": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/panel-reviewer_provider_route_receipt.json",
+  "reference_coverage": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/receipts/storyboard_reference_coverage.json",
+  "role": "panel-reviewer",
+  "schema": "persona_dream.storyboard_review_verdict.v1",
+  "status": "PASS_PANEL_REVIEWED",
+  "storyboard_packet": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T204134Z-sequential-storyboard/work/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:3a9f8a45c1556703a64e9cc08aa80db605691918d728534d48b67d8110962a44"
+}

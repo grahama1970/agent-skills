@@ -1,0 +1,79 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+  "goal": {
+    "goal_id": "persona-dream-pipeline-complete-repair",
+    "goal_version": 1,
+    "goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff"
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+    "allowed_paths": [
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/**",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/**",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/state/**"
+    ]
+  },
+  "entry_node": "repair-installer",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 300,
+    "max_total_attempts": 3
+  },
+  "nodes": [
+    {
+      "id": "repair-installer",
+      "agent": "coder",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/command-specs/repair-installer/tau-dispatch-command.json",
+      "required_evidence": [
+        "repair_revision_manifest"
+      ]
+    },
+    {
+      "id": "repair-reviewer",
+      "agent": "reviewer",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/command-specs/repair-reviewer/tau-dispatch-command.json",
+      "required_evidence": [
+        "revision_promotion_receipt"
+      ]
+    },
+    {
+      "id": "human",
+      "agent": "human",
+      "executor": "human"
+    }
+  ],
+  "edges": [
+    {
+      "from": "repair-installer",
+      "to": "repair-reviewer"
+    },
+    {
+      "from": "repair-reviewer",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "repair_revision_manifest",
+    "revision_promotion_receipt"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff",
+    "branch_target_divergence",
+    "branch_goal_hash_divergence"
+  ]
+}

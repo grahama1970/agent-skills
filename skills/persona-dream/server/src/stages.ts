@@ -42,10 +42,15 @@ function requirementPresent(requirement: string, files: string[]): boolean {
   return files.some((path) => new RegExp(normalized, 'i').test(path))
 }
 
-export function projectStages(runRoot: string, files: string[], selectedThroughPhase = '10'): DreamPhaseProjection[] {
+export function projectStages(
+  runRoot: string,
+  files: string[],
+  selectedThroughPhase = '10',
+  declaredRevisionId?: string,
+): DreamPhaseProjection[] {
   const revisionPath = `${runRoot}/dream_revision_manifest.v1.json`
   const revision = existsSync(revisionPath) ? readJson(revisionPath) : null
-  const activeRevisionId = typeof revision?.active_revision_id === 'string' ? revision.active_revision_id : undefined
+  const activeRevisionId = declaredRevisionId ?? (typeof revision?.active_revision_id === 'string' ? revision.active_revision_id : undefined)
   let earliestIssue: string | undefined
 
   return PHASES.map((phase) => {

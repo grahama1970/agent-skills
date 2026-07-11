@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-07-04T13:37:51Z",
+  "errors": [],
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.validate_script_contract.v1",
+  "script_contract": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_contract.json",
+  "status": "PASS_SCRIPT_CONTRACT"
+}

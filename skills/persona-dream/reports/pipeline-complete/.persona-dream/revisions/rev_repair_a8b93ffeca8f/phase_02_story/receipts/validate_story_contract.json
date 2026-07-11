@@ -1,0 +1,16 @@
+{
+  "artifact_id": "dream-run_story_contract",
+  "contract": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/story_contract.json",
+  "exercised": "local story contract schema, accepted status, positive duration, nonempty story, nonempty speaking characters",
+  "first_blocker": null,
+  "live": "no",
+  "mocked": "no",
+  "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
+  "schema": "persona_dream.story_contract_validation.v1",
+  "speaking_characters": [
+    "Embry"
+  ],
+  "status": "PASS_STORY_CONTRACT",
+  "target_duration_s": 15.0,
+  "unverified": "live memory grounding, Look Lock/Script DNA execution, storyboard generation, panel visual review, provider/Kling execution"
+}

@@ -1,0 +1,110 @@
+{
+  "active_goal_hash": "sha256:a8b93ffeca8f6014fda3572916f787f606e4814f74cd8fe9a5ea1b66249ea3ff",
+  "active_subagents": [],
+  "completed_subagents": [
+    {
+      "agent": "coder",
+      "node_id": "repair-installer"
+    },
+    {
+      "agent": "reviewer",
+      "node_id": "repair-reviewer"
+    }
+  ],
+  "dag_id": "persona-dream-repair-a8b93ffeca8f6014",
+  "entry_node": "repair-installer",
+  "event_count": 5,
+  "events": [
+    {
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/compiled-command-specs/repair-installer/tau-dispatch-command.json",
+      "event": "step_started",
+      "loop_step": 1,
+      "selected_agent": "repair-installer",
+      "status": "RUNNING",
+      "ts": "2026-07-11T15:25:29Z"
+    },
+    {
+      "event": "step_completed",
+      "loop_step": 1,
+      "ok": true,
+      "selected_agent": "repair-installer",
+      "status": "COMPLETED",
+      "stop_reason": "response_consumed",
+      "ts": "2026-07-11T15:25:29Z"
+    },
+    {
+      "command_spec_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1/compiled-command-specs/repair-reviewer/tau-dispatch-command.json",
+      "event": "step_started",
+      "loop_step": 2,
+      "selected_agent": "repair-reviewer",
+      "status": "RUNNING",
+      "ts": "2026-07-11T15:25:29Z"
+    },
+    {
+      "event": "step_completed",
+      "loop_step": 2,
+      "ok": true,
+      "selected_agent": "repair-reviewer",
+      "status": "COMPLETED",
+      "stop_reason": "response_consumed",
+      "ts": "2026-07-11T15:25:29Z"
+    },
+    {
+      "event": "loop_waiting",
+      "loop_step": 2,
+      "selected_agent": "human",
+      "status": "WAITING",
+      "stop_reason": "next_agent_is_human",
+      "ts": "2026-07-11T15:25:29Z"
+    }
+  ],
+  "last_event": {
+    "event": "loop_waiting",
+    "loop_step": 2,
+    "selected_agent": "human",
+    "status": "WAITING",
+    "stop_reason": "next_agent_is_human",
+    "ts": "2026-07-11T15:25:29Z"
+  },
+  "live": true,
+  "mocked": false,
+  "node_count": 3,
+  "node_progress": [
+    {
+      "agent": "coder",
+      "attempt": 1,
+      "last_event_at": "2026-07-11T15:25:29Z",
+      "node_id": "repair-installer",
+      "status": "COMPLETED"
+    },
+    {
+      "agent": "reviewer",
+      "attempt": 1,
+      "last_event_at": "2026-07-11T15:25:29Z",
+      "node_id": "repair-reviewer",
+      "status": "COMPLETED"
+    }
+  ],
+  "ok": true,
+  "proof_scope": {
+    "does_not_prove": [
+      "The active subprocess will finish successfully.",
+      "Provider/model semantic quality.",
+      "Final DAG acceptance before dag-receipt.json is written."
+    ],
+    "proves": [
+      "Tau has written a durable local progress artifact for this DAG run.",
+      "Operators can inspect active and completed subagents before the final DAG receipt exists."
+    ]
+  },
+  "provider_live": false,
+  "run_dir": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/repair/tau-runs/repair-a8b93ffeca8f6014/run-retry1",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_progress.v1",
+  "status": "PASS",
+  "terminal_nodes": [
+    "human"
+  ],
+  "updated_at": "2026-07-11T15:25:29Z",
+  "verdict": "PASS"
+}

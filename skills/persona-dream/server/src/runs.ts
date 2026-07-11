@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import type { DreamRunDetailResponse } from '../../contracts/src/index'
@@ -65,10 +65,20 @@ export async function collectRuns(reportRoots: readonly string[], outputRoots: r
 
 export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: string): Promise<DreamRunDetailResponse> {
   const runRoot = policy.resolveDirectory(requestedRoot)
-  const files = await listFiles(runRoot)
-  const stages = projectStages(runRoot, files)
   const revision = readJson(resolve(runRoot, 'dream_revision_manifest.v1.json'))
-  const sourceRevisionId = typeof revision?.active_revision_id === 'string' ? revision.active_revision_id : ''
+  const pointerPath = resolve(runRoot, '.persona-dream', 'state', 'active_revision.json')
+  const pointer = readJson(pointerPath)
+  const declaredRevisionRoot = typeof pointer?.revisionRoot === 'string' ? pointer.revisionRoot : ''
+  const evidenceRoot = declaredRevisionRoot && existsSync(declaredRevisionRoot)
+    ? policy.resolveDirectory(realpathSync(declaredRevisionRoot))
+    : runRoot
+  const sourceRevisionId = typeof pointer?.revisionId === 'string'
+    ? pointer.revisionId
+    : typeof revision?.active_revision_id === 'string'
+      ? revision.active_revision_id
+      : ''
+  const files = await listFiles(evidenceRoot)
+  const stages = projectStages(evidenceRoot, files, '10', sourceRevisionId || undefined)
   const earliest = stages.find((stage) => ['missing', 'malformed', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
   const repairEnabled = Boolean(revision?.repair_enabled === true || revision?.pipeline_complete === true)
   const phaseRange = earliest ? stages.filter((stage) => Number(stage.id) >= Number(earliest.id) && Number(stage.id) <= 10).map((stage) => stage.id) : []
@@ -89,13 +99,16 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
     mocked: false,
     live: false,
     runRoot,
-    stageReportPath: existsSync(resolve(runRoot, 'pipeline_stage_report.json')) ? resolve(runRoot, 'pipeline_stage_report.json') : undefined,
+    stageReportPath: existsSync(resolve(evidenceRoot, 'pipeline_stage_report.json')) ? resolve(evidenceRoot, 'pipeline_stage_report.json') : undefined,
     stages,
     sourceGroupedStages: [],
     runId: basename(runRoot),
     runKind: revision?.fixture === true ? 'fixture' : revision?.historical === true ? 'historical' : 'active',
     repairEnabled,
-    activeRevision: sourceRevisionId ? { revisionId: sourceRevisionId } : undefined,
+    activeRevision: sourceRevisionId ? {
+      revisionId: sourceRevisionId,
+      manifestSha256: typeof pointer?.revisionManifestSha256 === 'string' ? pointer.revisionManifestSha256 : undefined,
+    } : undefined,
     earliestIssue: earliest ? { phaseId: earliest.id, kind: earliest.evidence.state === 'malformed' ? 'malformed' : 'missing', reasons: [...earliest.evidence.missingIds, ...earliest.evidence.malformedIds] } : undefined,
     repairCandidate: candidate,
   }
