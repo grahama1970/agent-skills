@@ -402,7 +402,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   );
 
   const shellClass = cn(
-    "flex min-h-0 flex-1 flex-col overflow-hidden",
+    "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
     designView ? "center battle-mockup-panel battle-mockup-center" : cn("rounded-2xl border-battle-cyan/20", receiptReplay && "justify-start"),
   );
 

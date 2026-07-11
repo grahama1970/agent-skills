@@ -388,7 +388,7 @@ export function BattleSpectatorArena() {
         className={cn(
           "mx-auto grid h-full min-h-0",
           mockupShell
-            ? "battle-mockup-shell max-w-[1672px] w-full min-w-0 gap-2.5 overflow-x-hidden"
+            ? "battle-mockup-shell"
             : "max-w-[1920px] grid-rows-[142px_minmax(0,1fr)_34px_56px] gap-2.5"
         )}
         style={
@@ -405,7 +405,7 @@ export function BattleSpectatorArena() {
           className={cn(
             "grid min-h-0",
             mockupShell
-              ? "battle-mockup-main min-w-0 grid-cols-[var(--battle-left-rail)_minmax(0,1fr)_var(--battle-agent-pane)] gap-2.5 overflow-hidden"
+              ? "battle-mockup-main"
               : "grid-cols-[240px_minmax(0,1fr)_385px] gap-3"
           )}
           style={
@@ -417,14 +417,14 @@ export function BattleSpectatorArena() {
               : undefined
           }
         >
-          <div className="min-h-0 min-w-0 overflow-hidden">
+          <div className="h-full min-h-0 min-w-0 overflow-hidden">
             <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
           </div>
-          <div className="min-h-0 min-w-0 overflow-hidden">
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           </div>
           {selectedLane ? (
-            <div className="min-h-0 min-w-0 overflow-hidden">
+            <div className="h-full min-h-0 min-w-0 overflow-hidden">
               <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />
             </div>
           ) : null}

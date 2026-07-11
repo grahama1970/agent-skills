@@ -127,7 +127,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
             <p className="mt-1 truncate text-sm font-medium text-slate-400">{`${cwe} · ${family} · autonomous exploit agents evolve under pressure · fastest proven crash wins`}</p>
           </div>
         </div>
-        <div className="grid min-h-[45px] grid-cols-[.75fr_1.4fr_1.25fr_.7fr_.9fr] overflow-hidden rounded-lg border border-white/10 bg-black/10">
+        <div className="battle-receipt-facts overflow-hidden rounded-lg border border-white/10 bg-black/10" data-qid="battle:header:facts">
           <Fact label="Arena" value={arenaLabel} title={scenario?.scenario_id ?? arenaLabel} />
           <Fact label="Objective" value="Prevent archive path traversal" />
           <Fact label="Target" value={`POST ${endpoint}`} />

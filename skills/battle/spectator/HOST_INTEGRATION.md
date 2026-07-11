@@ -125,3 +125,18 @@ Replace provisional GM/TimGM6mb OGGs in-place under the same promoted URLs:
 ```
 
 Bindings, schedule entry IDs, and receipt authorization must not change. MIDI remains source material. Until that pass lands, assets remain provisional renders; UX must not claim final mix or speaker-mastered production.
+
+
+## Critical layout rule (do not regress)
+
+Critical spectator geometry (**header**, **facts row**, **main rails**, **score block**) must live in **real CSS classes** in `battle-race.css` / `battle-proof-card.css`.
+
+Do **not** trust Tailwind arbitrary utilities (`grid-cols-[…]`, `max-w-[…]`) for those paths until proven live with `getComputedStyle` — the `@agent-skills/battle-spectator` alias can leave arbitrary classes unscanned, collapsing grids to one column (score/title collision).
+
+Gate regressions with:
+
+```bash
+npm run prove:layout-geometry
+```
+
+That prove asserts column counts, no score/title overlap, no nav collisions, race card fills center height, and Difficulty is unclipped. `mocked: no`, `live: yes`.
