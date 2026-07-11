@@ -1,0 +1,9 @@
+from embry_voice_control.pipewire_playback import authority_identity
+
+
+def test_authority_is_deterministic_and_sink_bound():
+    args = dict(session_id="s", turn_id="t", render_event_id="r", artifact_id="a", audio_sha256="h")
+    first = authority_identity(**args, sink_node_name="jabra")
+    assert first == authority_identity(**args, sink_node_name="jabra")
+    assert first != authority_identity(**args, sink_node_name="other")
+    assert first["stream_node_name"].startswith("embry.playback.")
