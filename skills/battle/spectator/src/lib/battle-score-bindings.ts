@@ -7,7 +7,8 @@ import type { ReceiptBeat } from "./battle-receipt-beats";
 import type { BattleScoreCueId } from "./battle-music-catalog";
 
 const TERMINAL_KINDS = new Set(["kill_impact", "killed"]);
-const VICTORY_KINDS = new Set(["judge_exploit_success", "genome_promoted"]);
+/** Judge-confirmed exploit success only — genome_promoted must not authorize victory music. */
+const VICTORY_KINDS = new Set(["judge_exploit_success"]);
 const ENTRANCE_KINDS = new Set(["spawn"]);
 const LIFECYCLE_KINDS = new Set(["research_started"]);
 const ARENA_TRANSITION_KINDS = new Set(["scenario_loaded"]);
@@ -47,7 +48,7 @@ export function scoreTriggerForEffectCue(cue: BattleEffectCue): BattleScoreTrigg
 	if (kind === "killed" || kind === "kill_impact") {
 		return { kind: "cue", cueId: "exploit_death_stinger", reason: `effect:${kind}` };
 	}
-	if (kind === "judge_exploit_success" || kind === "genome_promoted") {
+	if (kind === "judge_exploit_success") {
 		return { kind: "cue", cueId: "exploit_victory_stinger", reason: `effect:${kind}` };
 	}
 	if (kind === "spawn") {

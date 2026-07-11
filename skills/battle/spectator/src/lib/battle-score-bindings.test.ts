@@ -53,8 +53,7 @@ describe("battle-score-bindings fail-closed", () => {
 	it("maps Judge-backed success to victory stinger only", () => {
 		const success = scoreTriggerForReceiptBeat(beat({ kind: "judge_exploit_success" }));
 		expect(success && success.kind === "cue" ? success.cueId : null).toBe("exploit_victory_stinger");
-		const promoted = scoreTriggerForReceiptBeat(beat({ kind: "genome_promoted" }));
-		expect(promoted && promoted.kind === "cue" ? promoted.cueId : null).toBe("exploit_victory_stinger");
+		expect(scoreTriggerForReceiptBeat(beat({ kind: "genome_promoted" }))).toBeNull();
 		expect(scoreTriggerForReceiptBeat(beat({ kind: "compile_passed" }))).toBeNull();
 		expect(scoreTriggerForReceiptBeat(beat({ kind: "target_contact_unproven" }))).toBeNull();
 	});

@@ -80,7 +80,8 @@ function soundForKind(kind: ReceiptBeatKind, laneEvent?: LaneEvent): SoundCue {
 	if (isGeneticLaneEventKind(kind)) {
 		if (kind === "compile_failed" || kind === "method_rejected" || kind === "branch_abandoned") return "retry_tick";
 		if (kind === "genome_selected" || kind === "method_added") return "mutate_chirp";
-		if (kind === "judge_exploit_success" || kind === "genome_promoted") return "victory_hit";
+		if (kind === "judge_exploit_success") return "victory_hit";
+		if (kind === "genome_promoted") return "scan_ping";
 		return "scan_ping";
 	}
 	return "none";

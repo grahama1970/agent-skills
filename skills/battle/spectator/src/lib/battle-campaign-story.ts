@@ -107,8 +107,9 @@ export function soundCueForGeneticEventType(eventType: GeneticEventType): SoundC
 		case "judge_pending":
 			return "scan_ping";
 		case "judge_exploit_success":
-		case "genome_promoted":
 			return "victory_hit";
+		case "genome_promoted":
+			return "scan_ping";
 		default:
 			return "scan_ping";
 	}
