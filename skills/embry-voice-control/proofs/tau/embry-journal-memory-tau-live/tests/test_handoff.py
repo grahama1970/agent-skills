@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -18,9 +19,14 @@ def _write_json(path: Path, value: dict) -> str:
 
 def _start_handoff(tmp_path: Path) -> dict:
     receipt_locators = {}
-    for name in ("source_event_claim", "speaker_resolution", "memory_intent"):
+    for name in ("source_event_claim", "speaker_resolution", "memory_intent", "memory_answer"):
         path = tmp_path / f"{name}.json"
-        digest = _write_json(path, {"schema": name, "ok": True})
+        response = {}
+        if name == "memory_intent":
+            response = {"action": "QUERY"}
+        elif name == "memory_answer":
+            response = {"can_answer": False, "answer_type": "insufficient_memory_evidence"}
+        digest = _write_json(path, {"schema": name, "ok": True, "request": {"q": "Hey Embry, what is the capital of France?"}, "response": response})
         receipt_locators[name] = {"path": str(path), "sha256": digest}
 
     packet = {
@@ -37,8 +43,14 @@ def _start_handoff(tmp_path: Path) -> dict:
             "journal": {"session_journal_sha256_at_claim": "sha256:journal"},
             "goal": {"goal_id": "goal", "goal_version": 1, "goal_hash": "sha256:goal"},
         },
+        "turn_text": "What is the capital of France?",
         "receipts": receipt_locators,
     }
+    claim_path = Path(receipt_locators["source_event_claim"]["path"])
+    receipt_locators["source_event_claim"]["sha256"] = _write_json(
+        claim_path,
+        {"source_event": {"payload": {"text": "Hey Embry, what is the capital of France?"}}},
+    )
     packet_path = tmp_path / "input-packet.json"
     packet_sha256 = _write_json(packet_path, packet)
     return {
@@ -59,12 +71,13 @@ def _start_handoff(tmp_path: Path) -> dict:
 
 
 def _run(tmp_path: Path, handoff: dict) -> subprocess.CompletedProcess[str]:
+    command_spec = json.loads((LANE / "command-specs/embry-memory-tau/tau-dispatch-command.json").read_text())
     return subprocess.run(
-        [sys.executable, str(SCRIPT)],
+        command_spec["command"],
         input=json.dumps(handoff),
         text=True,
         capture_output=True,
-        env={"TAU_HANDOFF_COMMAND_ARTIFACT_DIR": str(tmp_path / "artifacts")},
+        env={**os.environ, "TAU_HANDOFF_COMMAND_ARTIFACT_DIR": str(tmp_path / "artifacts"), "VIRTUAL_ENV": "/home/graham/workspace/experiments/tau/.venv"},
         check=False,
     )
 
