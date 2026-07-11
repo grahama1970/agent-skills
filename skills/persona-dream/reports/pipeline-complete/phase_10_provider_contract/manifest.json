@@ -1,5 +1,5 @@
 {
-  "artifact_count": 9,
+  "artifact_count": 10,
   "artifacts": [
     {
       "bytes": 5027,
@@ -78,6 +78,7 @@
     ]
   },
   "generated_at": "2026-07-11T01:22:52.620661Z",
+  "listed_artifact_count_excluding_manifest": 9,
   "route_aliases": [
     "#dream/review",
     "#dream/provider-contract"
