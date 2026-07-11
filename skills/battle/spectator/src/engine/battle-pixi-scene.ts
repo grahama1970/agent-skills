@@ -475,47 +475,23 @@ function syncEntities(
 
 			if (event.kind === "blue_blast") continue;
 
-			if (input.mode === "design_fixture") {
-				const effect = battleSpriteTheme.effectForEvent(event);
-				if (!effect || disableParticles || !effect.texture) continue;
-				if (!pixiAllowsTerminalEffect(event, validationGate, input.mode)) continue;
+			const effect = battleSpriteTheme.effectForEvent(event);
+			if (effect && !disableParticles && effect.texture && pixiAllowsTerminalEffect(event, validationGate, input.mode)) {
 				const alpha = Math.max(0.12, 1 - (currentSeconds - eventSeconds) / (effect.durationMs / 1000));
-				if (alpha <= 0.12) continue;
-				const burstScale = Math.min(1.15, 1 + effect.intensity * 0.2);
-				markerWriteIndex = placePooledMarker(
-					layers.markerPool,
-					layers.markers,
-					markerWriteIndex,
-					textureFromAtlas(effect.texture, markerAtlas),
-					mx,
-					y,
-					alpha,
-					burstScale,
-				);
+				if (alpha > 0.12) {
+					const burstScale = Math.min(1.15, 1 + effect.intensity * 0.2);
+					markerWriteIndex = placePooledMarker(
+						layers.markerPool,
+						layers.markers,
+						markerWriteIndex,
+						textureFromAtlas(effect.texture, markerAtlas),
+						mx,
+						y,
+						alpha,
+						burstScale,
+					);
+				}
 			}
-		}
-
-		// Full character sheets are design-fixture only until art is clean enough for receipt chrome.
-		// Receipt/live use compact atlas tokens so lanes stay readable.
-		const allowCharacterRunners = input.mode === "design_fixture";
-		if (!allowCharacterRunners) {
-			const existing = runnerMap.get(lane.id);
-			if (existing) {
-				existing.sprite.destroy();
-				runnerMap.delete(lane.id);
-			}
-			const token = row.isChild ? "runner-child" : "runner-parent";
-			markerWriteIndex = placePooledMarker(
-				layers.markerPool,
-				layers.markers,
-				markerWriteIndex,
-				textureFromAtlas(token, markerAtlas),
-				runnerX,
-				y,
-				1,
-				0.9,
-			);
-			continue;
 		}
 
 		const variantId = spriteIdForLane(lane, spriteTheme);

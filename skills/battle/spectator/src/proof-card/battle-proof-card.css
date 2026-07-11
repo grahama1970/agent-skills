@@ -183,10 +183,15 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 40;
+  z-index: 80;
   display: grid;
   gap: 4px;
   min-width: 220px;
+  max-width: min(280px, calc(100vw - 24px));
+  max-height: min(360px, calc(100vh - 96px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px;
   border-radius: 12px;
   border: 1px solid rgba(90, 173, 255, 0.18);
