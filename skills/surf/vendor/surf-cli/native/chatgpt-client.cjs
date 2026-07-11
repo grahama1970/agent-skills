@@ -520,12 +520,27 @@ async function assertReadyForNewPrompt(cdp) {
     err.chatgptPageState = state;
     throw err;
   }
-  if (state?.stoppedThinkingCount > 0 || state?.tailContainsStoppedThinking) {
-    const err = new Error("ChatGPT page is in a stopped-generation state before submit; retry in a clean conversation or use a fresh reviewer tab");
-    err.chatgptPageState = state;
-    throw err;
-  }
   return state;
+}
+
+async function attemptOptionalSelection(kind, requested, selector, log, onUnavailable) {
+  if (!requested) {
+    return { requested: null, selected: null, status: null, error: null };
+  }
+  try {
+    const selected = await selector(requested);
+    return { requested, selected, status: "selected", error: null };
+  } catch (error) {
+    const message = error?.message || String(error);
+    if (onUnavailable) await onUnavailable().catch(() => {});
+    log?.(`${kind} selection unavailable for ${requested}; preserving current browser setting: ${message}`);
+    return {
+      requested,
+      selected: null,
+      status: "unavailable_using_current",
+      error: message,
+    };
+  }
 }
 
 async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
@@ -1074,6 +1089,7 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const heartbeatFile = options.heartbeatFile || null;
   const hiddenRecoveryPolls = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_POLLS || "25", 10);
   const hiddenRecoveryIdleMs = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_IDLE_MS || "30000", 10);
+  const stableStallMs = Number.parseInt(process.env.SURF_WEBGPT_STABLE_STALL_MS || "0", 10);
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -1181,6 +1197,31 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       hiddenRecoveryUsed,
       pollCount,
     });
+    if (
+      sentinel
+      && stableStallMs > 0
+      && currentLength > 0
+      && !hasAssistantSentinel
+      && stableCycles >= requiredStableCycles
+      && stableMs >= stableStallMs
+    ) {
+      const error = new Error(`Stable assistant response stalled without sentinel after ${stableMs}ms`);
+      error.partialResponse = {
+        text: currentText,
+        messageId: snapshot.messageId || null,
+        turnIndex: snapshot.turnIndex,
+        sentinel,
+        hasSentinel: false,
+        source: snapshot.source || "assistant-dom",
+        pageTextContainsSentinel: pageHasSentinel,
+        documentHiddenAtCompletion: snapshot.documentHidden === true,
+        visibilityStateAtCompletion: snapshot.visibilityState || null,
+        backgroundHiddenPolls: hiddenPolls,
+        backgroundPollCount: pollCount,
+        hiddenRecoveryUsed,
+      };
+      throw error;
+    }
     // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
     // is focused, even after the assistant message is complete. In --no-activate mode we
     // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
@@ -1328,28 +1369,14 @@ async function query(options) {
     }
     await assertReadyForNewPrompt(cdp);
     log("Prompt ready");
-    if (model) {
-      const selectedLabel = await selectModel(cdp, model);
-      log(`Selected model: ${selectedLabel}`);
-    }
-    let selectedReasoning = null;
-    let reasoningSelectionStatus = reasoning ? "not_requested" : null;
-    let reasoningSelectionError = null;
-    if (reasoning) {
-      reasoningSelectionStatus = "requested";
-      try {
-        selectedReasoning = await selectReasoning(cdp, reasoning);
-        reasoningSelectionStatus = "selected";
-        log(`Selected reasoning: ${selectedReasoning}`);
-      } catch (err) {
-        reasoningSelectionError = err?.message || String(err);
-        if (!reasoningSelectionError.includes("Reasoning selector button not found")) {
-          throw err;
-        }
-        reasoningSelectionStatus = "selector_unavailable";
-        log(`Reasoning selector unavailable for ${reasoning}; continuing with current ChatGPT setting`);
-      }
-    }
+    const modelSelection = await attemptOptionalSelection(
+      "Model", model, (value) => selectModel(cdp, value), log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+    );
+    const reasoningSelection = await attemptOptionalSelection(
+      "Reasoning", reasoning, (value) => selectReasoning(cdp, value), log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+    );
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
       log(`File attached: ${file}`);
@@ -1389,12 +1416,16 @@ async function query(options) {
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
-      model: model || "current",
-      reasoning: selectedReasoning || reasoning || null,
-      requestedReasoning: reasoning || null,
-      selectedReasoning: selectedReasoning || null,
-      reasoningSelectionStatus,
-      reasoningSelectionError,
+      model: modelSelection.selected || "current",
+      requestedModel: modelSelection.requested,
+      selectedModel: modelSelection.selected,
+      modelSelectionStatus: modelSelection.status,
+      modelSelectionError: modelSelection.error,
+      reasoning: reasoningSelection.selected || null,
+      requestedReasoning: reasoningSelection.requested,
+      selectedReasoning: reasoningSelection.selected,
+      reasoningSelectionStatus: reasoningSelection.status,
+      reasoningSelectionError: reasoningSelection.error,
       tabId,
       controlledTabId: tabId,
       conversationUrl,
@@ -1432,4 +1463,6 @@ module.exports = {
   waitForSubmitAccepted,
   typePrompt,
   recoverCloudflareChallenge,
+  attemptOptionalSelection,
+  waitForResponse,
 };

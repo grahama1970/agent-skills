@@ -2568,6 +2568,14 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (data.requestedModel) console.error(`RequestedModel: ${data.requestedModel}`);
+    if (data.selectedModel) console.error(`SelectedModel: ${data.selectedModel}`);
+    if (data.modelSelectionStatus) console.error(`ModelSelectionStatus: ${data.modelSelectionStatus}`);
+    if (data.modelSelectionError) console.error(`ModelSelectionError: ${data.modelSelectionError}`);
+    if (data.requestedReasoning) console.error(`RequestedReasoning: ${data.requestedReasoning}`);
+    if (data.selectedReasoning) console.error(`SelectedReasoning: ${data.selectedReasoning}`);
+    if (data.reasoningSelectionStatus) console.error(`ReasoningSelectionStatus: ${data.reasoningSelectionStatus}`);
+    if (data.reasoningSelectionError) console.error(`ReasoningSelectionError: ${data.reasoningSelectionError}`);
     const meta = [data.model || 'unknown'];
     if (data.reasoning) meta.push(data.reasoning);
     meta.push(`${((data.tookMs || 0) / 1000).toFixed(1)}s`);

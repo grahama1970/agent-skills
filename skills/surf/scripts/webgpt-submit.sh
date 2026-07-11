@@ -1560,6 +1560,10 @@ requested_reasoning_observed = None
 selected_reasoning = None
 reasoning_selection_status = None
 reasoning_selection_error = None
+requested_model_observed = None
+selected_model = None
+model_selection_status = None
+model_selection_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -1603,6 +1607,14 @@ for line in reversed(stderr_text.splitlines()):
         reasoning_selection_status = line.split(":", 1)[1].strip()
     elif line.startswith("ReasoningSelectionError:") and reasoning_selection_error is None:
         reasoning_selection_error = line.split(":", 1)[1].strip()
+    elif line.startswith("RequestedModel:") and requested_model_observed is None:
+        requested_model_observed = line.split(":", 1)[1].strip()
+    elif line.startswith("SelectedModel:") and selected_model is None:
+        selected_model = line.split(":", 1)[1].strip()
+    elif line.startswith("ModelSelectionStatus:") and model_selection_status is None:
+        model_selection_status = line.split(":", 1)[1].strip()
+    elif line.startswith("ModelSelectionError:") and model_selection_error is None:
+        model_selection_error = line.split(":", 1)[1].strip()
     if (
         tab_id is not None
         and activated is not None
@@ -1689,6 +1701,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
     "requested_model": model or None,
+    "observed_requested_model": requested_model_observed,
+    "selected_model": selected_model,
+    "model_selection_status": model_selection_status,
+    "model_selection_error": model_selection_error,
     "requested_reasoning": reasoning or None,
     "observed_requested_reasoning": requested_reasoning_observed,
     "selected_reasoning": selected_reasoning,
