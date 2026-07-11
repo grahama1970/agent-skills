@@ -1,0 +1,44 @@
+{
+  "schema": "sprite_atlas.profile.v1",
+  "profile_id": "battle-pixijs-runtime-64-v1",
+  "atlas": {
+    "columns": 8,
+    "rows": 14,
+    "frame_width": 64,
+    "frame_height": 64,
+    "margin": 0,
+    "spacing": 0
+  },
+  "output": {
+    "format": "png",
+    "mode": "RGBA",
+    "background": "transparent",
+    "scale_mode": "nearest_neighbor"
+  },
+  "anchor": {
+    "x": 0.5,
+    "y": 0.85
+  },
+  "normalization": {
+    "edge_guard_px": 1,
+    "baseline_tolerance_px": 2,
+    "body_scale_tolerance_ratio": 0.08,
+    "allow_per_frame_scaling": false
+  },
+  "animations": [
+    {"name": "idle", "row": 0, "frames": 4, "loop": true},
+    {"name": "walk", "row": 1, "frames": 6, "loop": true},
+    {"name": "run", "row": 2, "frames": 8, "loop": true},
+    {"name": "research", "row": 3, "frames": 6, "loop": false},
+    {"name": "payload", "row": 4, "frames": 6, "loop": false},
+    {"name": "mutate", "row": 5, "frames": 6, "loop": false},
+    {"name": "handoff", "row": 6, "frames": 6, "loop": false},
+    {"name": "spawn", "row": 7, "frames": 8, "loop": false},
+    {"name": "blocked", "row": 8, "frames": 6, "loop": false},
+    {"name": "hit", "row": 9, "frames": 3, "loop": false},
+    {"name": "killed", "row": 10, "frames": 8, "loop": false},
+    {"name": "victory", "row": 11, "frames": 8, "loop": true},
+    {"name": "promoted", "row": 12, "frames": 8, "loop": true},
+    {"name": "fastest_crash", "row": 13, "frames": 8, "loop": false}
+  ]
+}
