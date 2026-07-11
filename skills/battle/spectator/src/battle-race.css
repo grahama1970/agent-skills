@@ -571,3 +571,30 @@
 .battle-mockup-main > * {
   min-width: 0;
 }
+
+
+/* Receipt header: real CSS grid — do not depend on Tailwind scanning spectator arbitrary classes */
+.battle-receipt-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 420px) minmax(260px, 0.9fr);
+  align-items: center;
+  gap: 12px;
+}
+.battle-receipt-header > * {
+  min-width: 0;
+}
+.battle-receipt-score {
+  width: 100%;
+  max-width: 420px;
+  justify-self: center;
+  grid-template-columns: 1fr 44px 1fr;
+  position: static;
+}
+@media (max-width: 1500px) {
+  .battle-receipt-header {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px) minmax(220px, 0.85fr);
+  }
+  .battle-receipt-score {
+    max-width: 340px;
+  }
+}
