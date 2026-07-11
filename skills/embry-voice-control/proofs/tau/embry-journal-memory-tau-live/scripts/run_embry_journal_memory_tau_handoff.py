@@ -9,7 +9,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from embry_voice_control.embry_chat import build_tau_response_plan, chunk_tone_arc, split_speakable_text
+from embry_voice_control.embry_chat import (
+    build_tau_response_plan,
+    chunk_tone_arc,
+    split_speakable_with_emotion_close,
+)
 
 
 def canonical(value: Any) -> bytes:
@@ -63,7 +67,7 @@ def main() -> int:
     answer_text = str(response_plan["answer_text"])
     tts_render_text = str(response_plan["tts_render_text"])
     tts_sha256 = hashlib.sha256(tts_render_text.encode()).hexdigest()
-    speakable_texts = split_speakable_text(tts_render_text, max_chars=180)
+    speakable_texts = split_speakable_with_emotion_close(tts_render_text, max_chars=180)
     chunk_tones = chunk_tone_arc(len(speakable_texts))
     plan_seed = canonical({"source_event_id": source["event_id"], "source_event_sequence": source["sequence"], "memory_intent_sha256": receipts["memory_intent"]["sha256"], "memory_answer_sha256": receipts["memory_answer"]["sha256"], "goal_hash": start["goal"]["goal_hash"], "tts_render_text_sha256": tts_sha256})
     turn_plan = {

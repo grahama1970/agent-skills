@@ -174,6 +174,18 @@ def split_speakable_text(text: str, max_chars: int = 300) -> list[str]:
     return chunks
 
 
+def split_speakable_with_emotion_close(text: str, max_chars: int = 300) -> list[str]:
+    """Keep a terminal paralinguistic cue and its closing sentence together."""
+    marker = text.rfind(" [")
+    if marker <= 0:
+        return split_speakable_text(text, max_chars=max_chars)
+    body = text[:marker].strip()
+    closing = text[marker:].strip()
+    if len(closing) > max_chars:
+        raise ValueError("emotion_close_exceeds_max_chars")
+    return [*split_speakable_text(body, max_chars=max_chars), closing]
+
+
 def chunk_tone_arc(chunk_count: int) -> list[str]:
     """Return a bounded concerned-to-confident-to-happy delivery arc."""
     if chunk_count <= 0:
@@ -235,6 +247,8 @@ def build_tau_response_plan(
         answer_text = "I do not have enough grounded memory for that yet."
         route_reason = "memory_miss_no_allowed_fallback_in_this_rung"
     tts_render_text = normalize_tts_text(answer_text)
+    if route_taken == "memory_answer":
+        tts_render_text += " [chuckle] I got that one right. Nice."
     return {
         "subagent": "embry-chat",
         "memory_first": True,

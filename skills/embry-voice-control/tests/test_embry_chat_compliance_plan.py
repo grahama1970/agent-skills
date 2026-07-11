@@ -3,6 +3,7 @@ from embry_voice_control.embry_chat import (
     chunk_tone_arc,
     normalize_tts_text,
     split_speakable_text,
+    split_speakable_with_emotion_close,
 )
 
 
@@ -15,7 +16,10 @@ def test_grounded_compliance_memory_answer_is_used() -> None:
 
     assert plan["route_taken"] == "memory_answer"
     assert plan["route_reason"] == "compliance_grounded_memory_answer"
-    assert plan["tts_render_text"] == "Use source-grounded, verified evidence."
+    assert plan["tts_render_text"] == (
+        "Use source-grounded, verified evidence. "
+        "[chuckle] I got that one right. Nice."
+    )
 
 
 def test_compliance_memory_miss_remains_fail_closed() -> None:
@@ -57,3 +61,11 @@ def test_tts_expands_domain_acronyms_without_changing_display_answer() -> None:
     assert "Space Attack Research and Tactic Analysis" in spoken
     assert "question, reasoning, and answer" in spoken
     assert "at least zero point six" in spoken
+
+
+def test_emotion_close_remains_in_final_chunk() -> None:
+    text = ("grounded evidence " * 30).strip() + " [chuckle] I got that one right. Nice."
+    chunks = split_speakable_with_emotion_close(text, max_chars=180)
+
+    assert chunks[-1] == "[chuckle] I got that one right. Nice."
+    assert all(len(chunk) <= 180 for chunk in chunks)
