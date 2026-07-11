@@ -28,6 +28,9 @@ import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 import { isBattlePopulationView } from "./lib/battle-population-registry";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
+import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
+import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
+import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
 import { BattleLiveTransportBanner } from "./BattleLiveTransportBanner";
 import { useBattleLiveTransport } from "./hooks/useBattleLiveTransport";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
@@ -143,6 +146,17 @@ export function BattleSpectatorArena() {
     () => (typedReceiptFixture ? geneticLifecycleViewModel(typedReceiptFixture) : null),
     [typedReceiptFixture],
   );
+  const campaignView = isBattleCampaignView();
+  const campaignPresentation = battleCampaignPresentationFromUrl();
+  const campaignStory = useMemo(
+    () => (campaignView && typedReceiptFixture ? buildCampaignStory(typedReceiptFixture) : null),
+    [campaignView, typedReceiptFixture],
+  );
+  const activeCampaignChapter = useMemo(
+    () => campaignChapterAtPlayhead(campaignStory, playheadSeconds),
+    [campaignStory, playheadSeconds],
+  );
+  const [soundCaption, setSoundCaption] = useState<string | null>(null);
 
   useEffect(() => {
     if (!receiptReplay || !typedReceiptFixture) return;
@@ -163,12 +177,20 @@ export function BattleSpectatorArena() {
   }, [initialLanes, playheadSeconds, receiptBeats, receiptReplay, typedReceiptFixture]);
 
   const handleReceiptBeat = useCallback((beat: ReceiptBeat) => {
-    if (beat.react.soundCue && beat.react.soundCue !== "none") playCue(beat.react.soundCue);
-  }, []);
+    if (campaignPresentation.mute) return;
+    if (beat.react.soundCue && beat.react.soundCue !== "none") {
+      playCue(beat.react.soundCue);
+      setSoundCaption(soundCaptionForCue(beat.react.soundCue, beat.kind as never));
+    }
+  }, [campaignPresentation.mute]);
 
   const handleReplayCue = useCallback((cue: BattleEffectCue) => {
-    if (cue.soundCue && cue.soundCue !== "none") playCue(cue.soundCue);
-  }, []);
+    if (campaignPresentation.mute) return;
+    if (cue.soundCue && cue.soundCue !== "none") {
+      playCue(cue.soundCue);
+      setSoundCaption(soundCaptionForCue(cue.soundCue));
+    }
+  }, [campaignPresentation.mute]);
 
   const handlePlayheadSeconds = useCallback((seconds: number) => {
     setPlayheadSeconds(seconds);
@@ -241,6 +263,27 @@ export function BattleSpectatorArena() {
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleGeneticLifecycleBanner model={geneticModel} />
+        </div>
+      ) : null}
+      {campaignStory ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleCampaignStoryPanel
+            story={campaignStory}
+            activeChapter={activeCampaignChapter}
+            soundCaption={soundCaption}
+            soundEnabled={enabled}
+            reducedMotion={campaignPresentation.reducedMotion}
+            particles={campaignPresentation.particles}
+            onArmSound={() => {
+              arm();
+              setSoundCaption("Sound armed for receipt-backed campaign cues.");
+            }}
+            onSelectChapter={(chapter) => {
+              setPlayheadSeconds(chapter.atSeconds);
+              setPlaying(false);
+              setSoundCaption(chapter.soundCaption);
+            }}
+          />
         </div>
       ) : null}
       <div

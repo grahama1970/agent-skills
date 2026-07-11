@@ -64,17 +64,8 @@ export {
 	parseSseLiveEventData,
 } from "./lib/battle-live-sse-client";
 export {
-	DEFAULT_BATTLE_LIVE_TRANSPORT_BASE,
-	resolveBattleLiveTransportBaseUrl,
-	probeBattleLiveTransportAdapter,
-	fetchBattleLiveSnapshot,
-	buildLiveSseTransportPackage,
-	openBattleLiveSseStream,
-} from "./lib/battle-live-sse-runtime";
-export {
 	applyTransportEvent,
 	bootstrapTransportState,
-	bootstrapLiveTransportState,
 	createIdleTransportState,
 	recoverTransportFromPackage,
 	setTransportFollowLive,
@@ -110,3 +101,7 @@ export {
 	loadBattleRuntimeViewFixture,
 	loadBattlePopulationViewFixture,
 } from "./lib/battle-view-fixture-loader";
+
+export { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
+export { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
+export { isBattleCampaignView, battleCampaignFixtureUrl } from "./lib/battle-campaign-registry";
