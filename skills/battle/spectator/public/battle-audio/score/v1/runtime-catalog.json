@@ -1,0 +1,156 @@
+{
+  "schema": "battle.music_runtime_catalog.v1",
+  "provisional_gm_render": true,
+  "production_intro": "death_clock_overture",
+  "legacy_intro_midi": "/battle-audio/legacy/battle-004-round-intro.mid",
+  "legacy_intro_selectable": false,
+  "cues": {
+    "death_clock_overture": {
+      "id": "death_clock_overture",
+      "ogg": "/battle-audio/score/v1/battle_intro_death_clock_overture.ogg",
+      "midi": "/battle-audio/score/midi/cues/battle_intro_death_clock_overture.mid",
+      "loop": false,
+      "duration_seconds": 46.9375
+    },
+    "exploit_death_stinger": {
+      "id": "exploit_death_stinger",
+      "ogg": "/battle-audio/score/v1/exploit_death_stinger.ogg",
+      "midi": "/battle-audio/score/midi/cues/exploit_death_stinger.mid",
+      "loop": false,
+      "duration_seconds": 2.82
+    },
+    "exploit_victory_stinger": {
+      "id": "exploit_victory_stinger",
+      "ogg": "/battle-audio/score/v1/exploit_victory_stinger.ogg",
+      "midi": "/battle-audio/score/midi/cues/exploit_victory_stinger.mid",
+      "loop": false,
+      "duration_seconds": 4.9138
+    },
+    "next_battle_arena": {
+      "id": "next_battle_arena",
+      "ogg": "/battle-audio/score/v1/next_battle_arena_level.ogg",
+      "midi": "/battle-audio/score/midi/cues/next_battle_arena_level.mid",
+      "loop": false,
+      "duration_seconds": 19.2857
+    },
+    "live_arena_loop": {
+      "id": "live_arena_loop",
+      "ogg": "/battle-audio/score/v1/battle_started_background_loop.ogg",
+      "midi": "/battle-audio/score/midi/cues/battle_started_background_loop.mid",
+      "loop": true,
+      "duration_seconds": 30.0
+    }
+  },
+  "motifs": {
+    "blue_lizard": {
+      "sprite_id": "blue_lizard",
+      "midi": "/battle-audio/score/midi/character_motifs/blue_lizard.mid",
+      "ogg": "/battle-audio/score/v1/motifs/blue_lizard.ogg",
+      "duration_seconds": 2.8378,
+      "bpm": 148,
+      "meter": null
+    },
+    "green_horn": {
+      "sprite_id": "green_horn",
+      "midi": "/battle-audio/score/midi/character_motifs/green_horn.mid",
+      "ogg": "/battle-audio/score/v1/motifs/green_horn.ogg",
+      "duration_seconds": 7.1429,
+      "bpm": 84,
+      "meter": null
+    },
+    "nurgling": {
+      "sprite_id": "nurgling",
+      "midi": "/battle-audio/score/midi/character_motifs/nurgling.mid",
+      "ogg": "/battle-audio/score/v1/motifs/nurgling.ogg",
+      "duration_seconds": 3.6364,
+      "bpm": 132,
+      "meter": null
+    },
+    "purple_horn_imp": {
+      "sprite_id": "purple_horn_imp",
+      "midi": "/battle-audio/score/midi/character_motifs/purple_horn_imp.mid",
+      "ogg": "/battle-audio/score/v1/motifs/purple_horn_imp.ogg",
+      "duration_seconds": 2.5,
+      "bpm": 144,
+      "meter": null
+    },
+    "red_human": {
+      "sprite_id": "red_human",
+      "midi": "/battle-audio/score/midi/character_motifs/red_human.mid",
+      "ogg": "/battle-audio/score/v1/motifs/red_human.ogg",
+      "duration_seconds": 4.1379,
+      "bpm": 116,
+      "meter": null
+    },
+    "skull_horn": {
+      "sprite_id": "skull_horn",
+      "midi": "/battle-audio/score/midi/character_motifs/skull_horn.mid",
+      "ogg": "/battle-audio/score/v1/motifs/skull_horn.ogg",
+      "duration_seconds": 9.4737,
+      "bpm": 76,
+      "meter": null
+    },
+    "slug_demon": {
+      "sprite_id": "slug_demon",
+      "midi": "/battle-audio/score/midi/character_motifs/slug_demon.mid",
+      "ogg": "/battle-audio/score/v1/motifs/slug_demon.ogg",
+      "duration_seconds": 10.0,
+      "bpm": 72,
+      "meter": null
+    },
+    "typhus": {
+      "sprite_id": "typhus",
+      "midi": "/battle-audio/score/midi/character_motifs/typhus.mid",
+      "ogg": "/battle-audio/score/v1/motifs/typhus.ogg",
+      "duration_seconds": 6.8182,
+      "bpm": 88,
+      "meter": null
+    },
+    "crimson_chainsword_berserker": {
+      "sprite_id": "crimson_chainsword_berserker",
+      "midi": "/battle-audio/score/midi/character_motifs/crimson_chainsword_berserker.mid",
+      "ogg": "/battle-audio/score/v1/motifs/crimson_chainsword_berserker.ogg",
+      "duration_seconds": 2.6923,
+      "bpm": 156,
+      "meter": null
+    },
+    "crimson_hornbreaker": {
+      "sprite_id": "crimson_hornbreaker",
+      "midi": "/battle-audio/score/midi/character_motifs/crimson_hornbreaker.mid",
+      "ogg": "/battle-audio/score/v1/motifs/crimson_hornbreaker.ogg",
+      "duration_seconds": 4.6154,
+      "bpm": 104,
+      "meter": null
+    },
+    "crimson_chainsaw_demon": {
+      "sprite_id": "crimson_chainsaw_demon",
+      "midi": "/battle-audio/score/midi/character_motifs/crimson_chainsaw_demon.mid",
+      "ogg": "/battle-audio/score/v1/motifs/crimson_chainsaw_demon.ogg",
+      "duration_seconds": 2.9268,
+      "bpm": 164,
+      "meter": null
+    },
+    "plague_nurgling": {
+      "sprite_id": "plague_nurgling",
+      "midi": "/battle-audio/score/midi/character_motifs/plague_nurgling.mid",
+      "ogg": "/battle-audio/score/v1/motifs/plague_nurgling.ogg",
+      "duration_seconds": 3.913,
+      "bpm": 138,
+      "meter": null
+    }
+  },
+  "bindings": {
+    "intro_title": "death_clock_overture",
+    "confirmed_exploit_terminal": "exploit_death_stinger",
+    "confirmed_exploit_success": "exploit_victory_stinger",
+    "accepted_arena_transition": "next_battle_arena",
+    "battle_lifecycle_started": "live_arena_loop",
+    "actor_focus_or_entrance": "sprite_motif"
+  },
+  "fail_closed": true,
+  "must_not_infer_from_animation_alone": [
+    "death",
+    "victory",
+    "arena_progression"
+  ]
+}

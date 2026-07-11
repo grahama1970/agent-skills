@@ -1,0 +1,53 @@
+{
+  "versions": {
+    "mido": "1.3.3",
+    "pretty-midi": "0.2.11",
+    "pyfluidsynth": "1.3.4",
+    "python-rtmidi": null,
+    "pygame": null
+  },
+  "midi": "/mnt/data/battle_music_package/cues/battle_intro_death_clock_overture.mid",
+  "soundfont": "/usr/share/sounds/sf2/TimGM6mb.sf2",
+  "mido_parse": {
+    "ok": true,
+    "iterations": 50,
+    "seconds": 0.5421998929999745,
+    "duration": 46.9375,
+    "produces_audio": false,
+    "role": "canonical SMF I/O and timed port playback"
+  },
+  "pretty_midi_parse": {
+    "ok": true,
+    "seconds": 0.008787054999970678,
+    "duration": 46.9375,
+    "role": "composition/analysis API"
+  },
+  "pretty_midi_sine": {
+    "ok": true,
+    "seconds": 0.1734811420000142,
+    "rms": 0.11360591639810326,
+    "production_timbre": false
+  },
+  "pyfluidsynth": {
+    "ok": true,
+    "seconds": 1.422721819000003,
+    "audio_seconds": 47.93750566893424,
+    "rms": 0.1371987554234555,
+    "peak": 1.0,
+    "produces_audio": true,
+    "soundfont": true,
+    "role": "in-process deterministic SoundFont render/playback"
+  },
+  "decision": {
+    "best_single_python_playback_binding": "pyfluidsynth",
+    "best_midi_file_and_port_api": "mido with python-rtmidi",
+    "best_battle_pipeline": "mido for authoring/validation + pretty-midi/pyfluidsynth for render; ship OGG/WAV to Pixi/WebAudio",
+    "criteria": [
+      "audible output without an external MIDI device",
+      "SoundFont instrument control",
+      "offline deterministic render",
+      "Linux support",
+      "non-silent proof"
+    ]
+  }
+}

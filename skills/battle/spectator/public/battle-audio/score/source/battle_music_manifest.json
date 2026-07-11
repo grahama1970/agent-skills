@@ -1,0 +1,311 @@
+{
+  "schema": "battle.music_package.v1",
+  "generated_utc": "2026-07-11T11:18:05Z",
+  "originality": "All melodies, rhythms, harmonies and arrangements in this package are newly composed for Battle; no copyrighted theme is transcribed or quoted.",
+  "core_hook": {
+    "key_center": "D",
+    "pitch_language": "D minor with Eb Phrygian color and C# dominant tension",
+    "rhythm_16th_units_bar_1": [
+      3,
+      1,
+      4,
+      2,
+      2,
+      4
+    ],
+    "rhythm_16th_units_bar_2": [
+      2,
+      2,
+      6,
+      2,
+      4
+    ],
+    "contour": "repeat \u2192 rise \u2192 step down \u2192 leap up \u2192 step down; second bar descends home"
+  },
+  "cues": [
+    {
+      "filename": "battle_intro_death_clock_overture.mid",
+      "title": "Battle \u2014 Death Clock Overture",
+      "category": "main cue",
+      "bpm": 96,
+      "key": "D minor / Phrygian inflection",
+      "time_signatures": [
+        "4/4",
+        "7/8 malfunction bar",
+        "4/4"
+      ],
+      "bars_or_form": "19-bar overture",
+      "purpose": "Title/opening sequence with death clock, snare roll, horn, theme and spawn chirp",
+      "duration_seconds": 46.9375,
+      "sha256": "36980a9553f30ff7fd3526a6016a00ce4fdc4354d746e5f67168cfad37d3e179"
+    },
+    {
+      "filename": "exploit_death_stinger.mid",
+      "title": "Battle \u2014 Exploit Death Stinger",
+      "category": "stinger",
+      "bpm": 100,
+      "key": "D minor with chromatic collapse",
+      "time_signatures": [
+        "7/8",
+        "4/4 receipt tail"
+      ],
+      "bars_or_form": "one impact + tail",
+      "purpose": "Exploit killed; clock omits its final expected tick",
+      "duration_seconds": 2.82,
+      "sha256": "95cfc2c302a60ba782b5e2ac2aba6a45f97ce30d27b4ad601233cf3ff930a4a1"
+    },
+    {
+      "filename": "exploit_victory_stinger.mid",
+      "title": "Battle \u2014 Exploit Victory Stinger",
+      "category": "stinger",
+      "bpm": 132,
+      "key": "D minor resolving to a brief D-major flash",
+      "time_signatures": [
+        "4/4"
+      ],
+      "bars_or_form": "3-bar fanfare",
+      "purpose": "Exploit breakthrough/victory with a cheeky receipt chirp",
+      "duration_seconds": 4.9138,
+      "sha256": "d3c7bd3ccd29d2fb17d5f8bb90dab1a5622c85f48a932815d060bceb3bf3f3ac"
+    },
+    {
+      "filename": "next_battle_arena_level.mid",
+      "title": "Battle \u2014 Next Arena Level",
+      "category": "transition cue",
+      "bpm": 112,
+      "key": "D minor, rising sequence, A7(b9) handoff",
+      "time_signatures": [
+        "5/4 x2",
+        "4/4"
+      ],
+      "bars_or_form": "2 machinery bars + 6 rising bars + handoff",
+      "purpose": "Loads the next arena and deliberately hands tension into the live loop",
+      "duration_seconds": 19.2857,
+      "sha256": "a2410cb724fd8318f9fdde40a2c6e0e18780236a18f70a85a9703c2801c7eb88"
+    },
+    {
+      "filename": "battle_started_background_loop.mid",
+      "title": "Battle \u2014 Live Arena Loop",
+      "category": "background loop",
+      "bpm": 128,
+      "key": "D minor with Dorian/Phrygian color and A7(b9)",
+      "time_signatures": [
+        "4/4 with 3+3+2 accent grouping"
+      ],
+      "bars_or_form": "16-bar exact loop",
+      "purpose": "Background combat music after the battle starts; hook fragments leave room for UI event stingers",
+      "duration_seconds": 30.0,
+      "sha256": "9c2c7534352117b3067a41257716b7fc6b84962511eb2b82468dfddc646ca255"
+    },
+    {
+      "filename": "battle_character_motif_reel.mid",
+      "title": "Battle \u2014 Sprite Character Motif Reel",
+      "category": "audition reel",
+      "bpm": 120,
+      "key": "D-centered shared vocabulary",
+      "time_signatures": [
+        "mixed; marked per sprite"
+      ],
+      "bars_or_form": "12 sequential motifs",
+      "purpose": "Audition all canonical sprite motifs in manifest order",
+      "duration_seconds": 64.5,
+      "sha256": "4f643f31807e2c9b145ebaec9befff1420f71815eee6ff4d0638fd4d2e4285b8"
+    }
+  ],
+  "character_motifs": [
+    {
+      "filename": "blue_lizard.mid",
+      "title": "Blue Lizard \u2014 Chromatic Scamper",
+      "category": "character motif",
+      "bpm": 148,
+      "key": "Dm",
+      "time_signatures": [
+        "7/8"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "fast, slippery, slightly smug",
+      "duration_seconds": 2.8378,
+      "sha256": "ad022da4227bbac5b1d4049d03f4b1174663ebb1b00d57dcf894360cadc8c8f8",
+      "sprite_id": "blue_lizard"
+    },
+    {
+      "filename": "green_horn.mid",
+      "title": "Green Horn \u2014 Lopsided Herald",
+      "category": "character motif",
+      "bpm": 84,
+      "key": "Dm",
+      "time_signatures": [
+        "5/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "ceremonial, heavy, one beat too long",
+      "duration_seconds": 7.1429,
+      "sha256": "d609e2168cffcdd59e93ae9bb7236692465845fc0d9ffe0aad9ae9c689093a76",
+      "sprite_id": "green_horn"
+    },
+    {
+      "filename": "nurgling.mid",
+      "title": "Nurgling \u2014 Bog Bounce",
+      "category": "character motif",
+      "bpm": 132,
+      "key": "Dm",
+      "time_signatures": [
+        "4/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "bouncy, grubby, lovable nuisance",
+      "duration_seconds": 3.6364,
+      "sha256": "5a069658b509760974c6d671ab6f227245abd00fa08025d15e92f51c93fd1f45",
+      "sprite_id": "nurgling"
+    },
+    {
+      "filename": "purple_horn_imp.mid",
+      "title": "Purple Horn Imp \u2014 Tritone Wink",
+      "category": "character motif",
+      "bpm": 144,
+      "key": "Dm",
+      "time_signatures": [
+        "6/8"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "mischievous, crystalline, tritone-based",
+      "duration_seconds": 2.5,
+      "sha256": "928d2ed54d2c0af3a52467cad1adc948f21e20517ae3ea08d4651ab1ae6764a4",
+      "sprite_id": "purple_horn_imp"
+    },
+    {
+      "filename": "red_human.mid",
+      "title": "Red Human \u2014 Determined March",
+      "category": "character motif",
+      "bpm": 116,
+      "key": "Dm",
+      "time_signatures": [
+        "4/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "direct, human, disciplined",
+      "duration_seconds": 4.1379,
+      "sha256": "8bac6bf8c08aec6cd7a02e7fa5979c6c2b14d4fd165c737498d38b6d4603a55e",
+      "sprite_id": "red_human"
+    },
+    {
+      "filename": "skull_horn.mid",
+      "title": "Skull Horn \u2014 Empty Fifths",
+      "category": "character motif",
+      "bpm": 76,
+      "key": "Dm",
+      "time_signatures": [
+        "3/2"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "hollow, ancient, open-fifth menace",
+      "duration_seconds": 9.4737,
+      "sha256": "af2c7b2e8810528be904a0c8986a71143e631413cb534c100a0a5a81078029cf",
+      "sprite_id": "skull_horn"
+    },
+    {
+      "filename": "slug_demon.mid",
+      "title": "Slug Demon \u2014 Viscous Triplet",
+      "category": "character motif",
+      "bpm": 72,
+      "key": "Dm",
+      "time_signatures": [
+        "12/8"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "slow, viscous, triplet drag",
+      "duration_seconds": 10.0,
+      "sha256": "9c8d5d4c5111283cbdd24ecf9482e487c624d8c8616ac54bb1b317b4289881d3",
+      "sprite_id": "slug_demon"
+    },
+    {
+      "filename": "typhus.mid",
+      "title": "Typhus \u2014 Five-Step Siege",
+      "category": "character motif",
+      "bpm": 88,
+      "key": "Dm",
+      "time_signatures": [
+        "5/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "siege-engine weight in 5/4",
+      "duration_seconds": 6.8182,
+      "sha256": "b22c8cc5eed2db575cc68ddf4d318220f7b2a20cda85e9b65f27b5af274f86b7",
+      "sprite_id": "typhus"
+    },
+    {
+      "filename": "crimson_chainsword_berserker.mid",
+      "title": "Crimson Chainsword Berserker \u2014 Seven-Blade Charge",
+      "category": "character motif",
+      "bpm": 156,
+      "key": "Dm",
+      "time_signatures": [
+        "7/8"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "fast, serrated, 7/8 charge",
+      "duration_seconds": 2.6923,
+      "sha256": "49e3837c9de44dfbf215bad0de1a6edb79973a0693d42d78615168f725bc22d6",
+      "sprite_id": "crimson_chainsword_berserker"
+    },
+    {
+      "filename": "crimson_hornbreaker.mid",
+      "title": "Crimson Hornbreaker \u2014 Blunt Impact",
+      "category": "character motif",
+      "bpm": 104,
+      "key": "Dm",
+      "time_signatures": [
+        "4/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "blunt, square, impact-first",
+      "duration_seconds": 4.6154,
+      "sha256": "2ebfa6de25abe6c8dcf74e6298e409305dba2b85ec8f03ee428898ec6617e8be",
+      "sprite_id": "crimson_hornbreaker"
+    },
+    {
+      "filename": "crimson_chainsaw_demon.mid",
+      "title": "Crimson Chainsaw Demon \u2014 Ratchet Engine",
+      "category": "character motif",
+      "bpm": 164,
+      "key": "Dm",
+      "time_signatures": [
+        "4/4"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "chainsaw-like ratchet without losing the beat",
+      "duration_seconds": 2.9268,
+      "sha256": "822c1855c2753823a3c94d281edb920aaeed32ccb3c5d6256c4266b6b4896af7",
+      "sprite_id": "crimson_chainsaw_demon"
+    },
+    {
+      "filename": "plague_nurgling.mid",
+      "title": "Plague Nurgling \u2014 Nine-Eighth Wobble",
+      "category": "character motif",
+      "bpm": 138,
+      "key": "Dm",
+      "time_signatures": [
+        "9/8"
+      ],
+      "bars_or_form": "2-bar identity cell",
+      "purpose": "infectious wobble in 9/8",
+      "duration_seconds": 3.913,
+      "sha256": "55c97f42d276fe503454395387e7504ffc2c2cf30f460de07aa7613b04ca162f",
+      "sprite_id": "plague_nurgling"
+    }
+  ],
+  "canonical_sprite_order": [
+    "blue_lizard",
+    "green_horn",
+    "nurgling",
+    "purple_horn_imp",
+    "red_human",
+    "skull_horn",
+    "slug_demon",
+    "typhus",
+    "crimson_chainsword_berserker",
+    "crimson_hornbreaker",
+    "crimson_chainsaw_demon",
+    "plague_nurgling"
+  ]
+}

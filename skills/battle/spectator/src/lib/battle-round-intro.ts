@@ -1,7 +1,8 @@
 import type { BattleNormalizedUxFixture } from "./battle-types";
 import type { CampaignStoryViewModel } from "./battle-campaign-story";
+import { BATTLE_LEGACY_GENESIS_INTRO_MIDI, BATTLE_SCORE_CUES } from "./battle-music-catalog";
 
-export type GenesisIntroPage = {
+export type BattleRoundIntroPage = {
 	id: string;
 	kind: "logo" | "crawl" | "round" | "ready";
 	eyebrow: string;
@@ -9,15 +10,21 @@ export type GenesisIntroPage = {
 	footer?: string;
 };
 
-export type GenesisIntroViewModel = {
-	schema: "battle.genesis_round_intro.v1";
+export type BattleRoundIntroViewModel = {
+	schema: "battle.death_clock_round_intro.v1";
 	battleId: string;
 	fixtureId: string;
 	roundLabel: string;
 	scenarioTitle: string;
-	midiUrl: string;
-	pages: GenesisIntroPage[];
-	graphicStyle: "sega_genesis_round_intro";
+	/** Production intro audio — provisional GM OGG. */
+	audioUrl: string;
+	audioCueId: "death_clock_overture";
+	provisionalGmRender: true;
+	/** Legacy Genesis MIDI path — reference only; not selectable in production UI. */
+	legacyGenesisMidiUrl: string;
+	legacyIntroSelectable: false;
+	pages: BattleRoundIntroPage[];
+	graphicStyle: "death_clock_round_intro";
 	researchRefs: string[];
 	claimBoundary: {
 		mayClaim: string[];
@@ -26,14 +33,13 @@ export type GenesisIntroViewModel = {
 };
 
 /**
- * @deprecated Legacy / reference only — production intro is buildBattleRoundIntro (Death Clock).
- * Build a Streets-of-Rage-inspired intro sequence (logo → premise crawl → ROUND → PRESS START)
- * with Battle receipt-backed scenario text. Original prose — not a SoR transcript.
+ * Round intro gate: logo → premise crawl → ROUND → PRESS START.
+ * Production music is Death Clock Overture (OGG). Genesis MIDI is legacy only.
  */
-export function buildGenesisRoundIntro(
+export function buildBattleRoundIntro(
 	fixture: BattleNormalizedUxFixture,
 	story?: CampaignStoryViewModel | null,
-): GenesisIntroViewModel {
+): BattleRoundIntroViewModel {
 	const scenario = fixture.scenario;
 	const title = scenario?.title ?? "Battle Arena";
 	const entry = scenario?.public_entrypoint ?? "/api";
@@ -44,13 +50,13 @@ export function buildGenesisRoundIntro(
 		? `${story.chapterCount} genetic chapters await after the gate.`
 		: "Receipt-backed genetic chapters await after the gate.";
 
-	const pages: GenesisIntroPage[] = [
+	const pages: BattleRoundIntroPage[] = [
 		{
 			id: "logo",
 			kind: "logo",
-			eyebrow: "16-BIT SPECTATOR",
+			eyebrow: "DEATH CLOCK",
 			lines: ["BATTLE", "ARENA"],
-			footer: "ORIGINAL INTRO · NOT A SEGA DUMP",
+			footer: "ORIGINAL SCORE · PROVISIONAL GM RENDER",
 		},
 		{
 			id: "crawl",
@@ -72,41 +78,47 @@ export function buildGenesisRoundIntro(
 			kind: "round",
 			eyebrow: title.toUpperCase(),
 			lines: ["ROUND 1", "FIGHT FOR THE RECEIPT"],
-			footer: "GENESIS-STYLE ROUND GATE",
+			footer: "DEATH CLOCK ROUND GATE",
 		},
 		{
 			id: "ready",
 			kind: "ready",
 			eyebrow: "PLAYER 1",
 			lines: ["PRESS START", "ENTER THE ARENA"],
-			footer: "MIDI INTRO ARMED ON START",
+			footer: "OVERTURE ARMED ON PLAY",
 		},
 	];
 
 	return {
-		schema: "battle.genesis_round_intro.v1",
+		schema: "battle.death_clock_round_intro.v1",
 		battleId,
 		fixtureId: story?.fixtureId ?? "battle-004-pr6-genetic-pixi",
 		roundLabel: "ROUND 1",
 		scenarioTitle: title,
-		midiUrl: "/battle-audio/legacy/battle-004-round-intro.mid",
+		audioUrl: BATTLE_SCORE_CUES.death_clock_overture.ogg,
+		audioCueId: "death_clock_overture",
+		provisionalGmRender: true,
+		legacyGenesisMidiUrl: BATTLE_LEGACY_GENESIS_INTRO_MIDI,
+		legacyIntroSelectable: false,
 		pages,
-		graphicStyle: "sega_genesis_round_intro",
+		graphicStyle: "death_clock_round_intro",
 		researchRefs: [
-			"Streets of Rage Genesis intro flow (logo → premise → title)",
-			"VGMusic / Project2612 listening references (not redistributed)",
-			"CC0 Mega Drive packs: Safety Stoat free_vgms",
+			"Battle music style guide v1 — Death Clock Overture",
+			"Streets of Rage-inspired intro flow (logo → premise → title) as UX pacing only",
+			"GM / TimGM6mb provisional render — not final synth mix",
 		],
 		claimBoundary: {
 			mayClaim: [
-				"genesis_style_round_intro_presented",
-				"original_midi_intro_playable",
+				"death_clock_round_intro_presented",
+				"provisional_gm_overture_playable",
 				"scenario_premise_from_normalized_fixture",
 			],
 			mustNotClaim: [
 				"sega_licensed_assets",
 				"commercial_vgm_redistribution",
 				"intro_music_proves_exploit_success",
+				"gm_render_is_final_mix",
+				"legacy_genesis_midi_is_production_intro",
 			],
 		},
 	};

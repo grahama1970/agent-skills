@@ -33,6 +33,7 @@ export function battleCampaignPresentationFromUrl(
 	reducedMotion: boolean;
 	particles: boolean;
 	mute: boolean;
+	skipIntro: boolean;
 } {
 	const params = battleHashSearchParams(hash);
 	const reducedMotion =

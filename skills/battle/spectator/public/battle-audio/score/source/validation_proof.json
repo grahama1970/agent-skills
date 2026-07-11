@@ -1,0 +1,132 @@
+{
+  "ok": true,
+  "count": 18,
+  "files": [
+    {
+      "file": "character_motifs/blue_lizard.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 28,
+      "seconds": 2.8378
+    },
+    {
+      "file": "character_motifs/crimson_chainsaw_demon.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 45,
+      "seconds": 2.9268
+    },
+    {
+      "file": "character_motifs/crimson_chainsword_berserker.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 32,
+      "seconds": 2.6923
+    },
+    {
+      "file": "character_motifs/crimson_hornbreaker.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 21,
+      "seconds": 4.6154
+    },
+    {
+      "file": "character_motifs/green_horn.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 16,
+      "seconds": 7.1429
+    },
+    {
+      "file": "character_motifs/nurgling.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 27,
+      "seconds": 3.6364
+    },
+    {
+      "file": "character_motifs/plague_nurgling.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 30,
+      "seconds": 3.913
+    },
+    {
+      "file": "character_motifs/purple_horn_imp.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 20,
+      "seconds": 2.5
+    },
+    {
+      "file": "character_motifs/red_human.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 24,
+      "seconds": 4.1379
+    },
+    {
+      "file": "character_motifs/skull_horn.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 16,
+      "seconds": 9.4737
+    },
+    {
+      "file": "character_motifs/slug_demon.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 21,
+      "seconds": 10.0
+    },
+    {
+      "file": "character_motifs/typhus.mid",
+      "ok": true,
+      "tracks": 4,
+      "notes": 20,
+      "seconds": 6.8182
+    },
+    {
+      "file": "cues/battle_character_motif_reel.mid",
+      "ok": true,
+      "tracks": 37,
+      "notes": 300,
+      "seconds": 64.5
+    },
+    {
+      "file": "cues/battle_intro_death_clock_overture.mid",
+      "ok": true,
+      "tracks": 10,
+      "notes": 531,
+      "seconds": 46.9375
+    },
+    {
+      "file": "cues/battle_started_background_loop.mid",
+      "ok": true,
+      "tracks": 10,
+      "notes": 450,
+      "seconds": 30.0
+    },
+    {
+      "file": "cues/exploit_death_stinger.mid",
+      "ok": true,
+      "tracks": 10,
+      "notes": 22,
+      "seconds": 2.82
+    },
+    {
+      "file": "cues/exploit_victory_stinger.mid",
+      "ok": true,
+      "tracks": 10,
+      "notes": 62,
+      "seconds": 4.9138
+    },
+    {
+      "file": "cues/next_battle_arena_level.mid",
+      "ok": true,
+      "tracks": 10,
+      "notes": 150,
+      "seconds": 19.2857
+    }
+  ]
+}

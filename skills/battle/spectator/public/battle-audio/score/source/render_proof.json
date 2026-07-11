@@ -1,0 +1,59 @@
+{
+  "soundfont": "/usr/share/sounds/sf2/TimGM6mb.sf2",
+  "renders": [
+    {
+      "midi": "cues/battle_intro_death_clock_overture.mid",
+      "preview": "previews/battle_intro_death_clock_overture.ogg",
+      "render_seconds": 2.4949,
+      "audio_seconds": 47.9375,
+      "peak": 1.0,
+      "rms": 0.137199,
+      "non_silent": true
+    },
+    {
+      "midi": "cues/exploit_death_stinger.mid",
+      "preview": "previews/exploit_death_stinger.ogg",
+      "render_seconds": 0.7307,
+      "audio_seconds": 3.82,
+      "peak": 1.0,
+      "rms": 0.133254,
+      "non_silent": true
+    },
+    {
+      "midi": "cues/exploit_victory_stinger.mid",
+      "preview": "previews/exploit_victory_stinger.ogg",
+      "render_seconds": 1.3941,
+      "audio_seconds": 5.9138,
+      "peak": 1.0,
+      "rms": 0.155527,
+      "non_silent": true
+    },
+    {
+      "midi": "cues/next_battle_arena_level.mid",
+      "preview": "previews/next_battle_arena_level.ogg",
+      "render_seconds": 1.5491,
+      "audio_seconds": 20.2857,
+      "peak": 1.0,
+      "rms": 0.141522,
+      "non_silent": true
+    },
+    {
+      "midi": "cues/battle_started_background_loop.mid",
+      "preview": "previews/battle_started_background_loop.ogg",
+      "render_seconds": 1.8932,
+      "audio_seconds": 31.0,
+      "peak": 1.0,
+      "rms": 0.120185,
+      "non_silent": true
+    },
+    {
+      "midi": "cues/battle_character_motif_reel.mid",
+      "preview": "previews/battle_character_motif_reel.ogg",
+      "render_seconds": 1.6822,
+      "audio_seconds": 64.5,
+      "peak": 1.0,
+      "rms": 0.112125,
+      "non_silent": true
+    }
+  ]
+}
