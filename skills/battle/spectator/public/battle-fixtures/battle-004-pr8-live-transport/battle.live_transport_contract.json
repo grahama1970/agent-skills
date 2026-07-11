@@ -1,0 +1,129 @@
+{
+  "authority": "backend_receipts_to_normalized_snapshot_and_events_to_renderer",
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "compile_passed_is_not_runnable": true,
+    "live_contract_is_not_endpoint_execution": true,
+    "may_claim": [
+      "backend_live_transport_contract_published",
+      "sse_endpoint_shape_defined",
+      "initial_snapshot_endpoint_shape_defined",
+      "event_ordering_semantics_defined",
+      "reconnect_semantics_defined",
+      "gap_semantics_defined",
+      "raw_path_boundary_defined"
+    ],
+    "must_not_claim": [
+      "sse_endpoint_implemented",
+      "websocket_endpoint_implemented",
+      "live_stream_executed",
+      "live_genetic_events_emitted",
+      "exploit_success",
+      "blue_detection",
+      "blue_kill",
+      "blue_block",
+      "judge_success_without_judge_receipt",
+      "packet_level_behavior",
+      "memory_promotion"
+    ],
+    "target_contact_is_not_exploit_success": true
+  },
+  "event_stream": {
+    "genetic_event_types_when_live": [
+      "research_started",
+      "research_receipt_materialized",
+      "genome_selected",
+      "method_added",
+      "method_rejected",
+      "code_author_started",
+      "specimen_materialized",
+      "compile_failed",
+      "repair_started",
+      "repair_materialized",
+      "compile_passed",
+      "target_contact_unproven",
+      "judge_pending",
+      "judge_exploit_success",
+      "genome_promoted",
+      "branch_abandoned"
+    ],
+    "id_field": "event_id",
+    "immutable_receipt_refs_required": true,
+    "normalized_event_only": true,
+    "ordered_by": "seq",
+    "receipt_ref_field": "payload.receipt_id",
+    "schema": "battle.live_event.v1",
+    "seq_field": "seq",
+    "terminal_outcome_rules": {
+      "blue_block": "emit only with Blue/Judge receipt",
+      "genome_promoted": "emit only with memory/promotion receipt",
+      "judge_exploit_success": "emit only with Judge exploit-success receipt"
+    }
+  },
+  "frontend_handoff": {
+    "route": "#battle/live?engine=pixi&battle=battle-004",
+    "snapshot_endpoint": "/battle/live/battle-004/snapshot",
+    "sse_endpoint": "/battle/live/battle-004/events",
+    "stop_condition": "frontend can implement SSE client against this contract without reading raw backend runtime paths"
+  },
+  "gap_semantics": {
+    "client_must_not_interpolate_missing_events": true,
+    "gap_detection": "non_contiguous_seq",
+    "gap_response": "fail_closed_and_refetch_snapshot",
+    "snapshot_resync_required": true
+  },
+  "generated_at": "2026-07-11T01:30:00Z",
+  "initial_snapshot": {
+    "endpoint": "/battle/live/battle-004/snapshot",
+    "method": "GET",
+    "purpose": "Initial state before consuming ordered SSE events.",
+    "schema": "battle.snapshot.v1"
+  },
+  "live": "contract_only",
+  "mocked": false,
+  "raw_path_boundary": {
+    "frontend_must_not_read": [
+      "tau-dag-run/**",
+      "command-loop/command-artifacts/**",
+      "provider workspace directories",
+      "Docker mount paths",
+      "raw stdout/stderr paths",
+      "Judge oracle internals"
+    ],
+    "transport_must_not_emit": [
+      "tau-dag-run/**",
+      "command-loop/command-artifacts/**",
+      "provider workspace directories",
+      "Docker mount paths",
+      "raw stdout/stderr paths",
+      "Judge oracle internals"
+    ]
+  },
+  "reconnect": {
+    "duplicate_policy": "client_deduplicates_by_seq_and_event_id",
+    "last_event_id_header": "Last-Event-ID",
+    "resume_from": "next_seq_after_last_acknowledged",
+    "server_may_send_snapshot_required": true
+  },
+  "run_id": "battle-004-pr8-live-transport",
+  "schema": "battle.live_transport_contract.v1",
+  "source_contracts": {
+    "event_schema": "battle.live_event.v1",
+    "file_backed_manifest_schema": "battle.transport_manifest.v1",
+    "genetic_lifecycle_schema": "battle.genetic_lifecycle_events.v1",
+    "snapshot_schema": "battle.snapshot.v1"
+  },
+  "status": "CONTRACT_PUBLISHED",
+  "transport": {
+    "content_type": "text/event-stream",
+    "endpoint": "/battle/live/battle-004/events",
+    "event_schema": "battle.live_event.v1",
+    "kind": "sse",
+    "line_format": {
+      "data": "battle.live_event.v1 JSON",
+      "event": "battle.live_event",
+      "id": "seq"
+    },
+    "method": "GET"
+  }
+}

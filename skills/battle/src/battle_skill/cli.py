@@ -1209,6 +1209,50 @@ def validate_ux_handoff_summary(
     console.print_json(data=report)
 
 
+@app.command("publish-live-transport-contract")
+def publish_live_transport_contract(
+    out: Path = typer.Option(..., "--out", help="Output directory for battle.live_transport_contract.json."),
+    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+):
+    """Publish the UX8 SSE live transport contract."""
+    from .live_transport_contract import publish_live_transport_contract as _publish
+
+    contract = _publish(out_dir=out, public_out_dir=public_out, generated_at=generated_at)
+    console.print_json(
+        data={
+            "status": contract.get("status"),
+            "schema": contract.get("schema"),
+            "battle_id": contract.get("battle_id"),
+            "run_id": contract.get("run_id"),
+            "live": contract.get("live"),
+            "snapshot_endpoint": contract.get("initial_snapshot", {}).get("endpoint"),
+            "sse_endpoint": contract.get("transport", {}).get("endpoint"),
+            "out": str(out / "battle.live_transport_contract.json"),
+            "public_out": str(public_out / "battle.live_transport_contract.json") if public_out else None,
+            "must_not_claim": contract.get("claim_boundary", {}).get("must_not_claim"),
+        }
+    )
+
+
+@app.command("validate-live-transport-contract")
+def validate_live_transport_contract(
+    contract: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.live_transport_contract.v1 JSON contract.",
+    ),
+):
+    """Validate a UX8 live transport contract."""
+    from .live_transport_contract import validate_live_transport_contract_path
+
+    report = validate_live_transport_contract_path(contract)
+    console.print_json(data=report)
+
+
 @app.command("export-ux-handoff-summary")
 def export_ux_handoff_summary(
     summary: Path = typer.Argument(

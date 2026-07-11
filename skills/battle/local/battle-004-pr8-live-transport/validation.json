@@ -1,0 +1,13 @@
+{
+  "battle_id": "battle-004",
+  "genetic_event_type_count": 16,
+  "live": "contract_only",
+  "mocked": false,
+  "raw_paths_forbidden": true,
+  "run_id": "battle-004-pr8-live-transport",
+  "schema": "battle.live_transport_contract_validation.v1",
+  "snapshot_endpoint": "/battle/live/battle-004/snapshot",
+  "sse_endpoint": "/battle/live/battle-004/events",
+  "status": "PASS",
+  "transport": "sse"
+}

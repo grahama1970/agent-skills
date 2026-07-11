@@ -205,6 +205,7 @@ promoted; failed mutations remain searchable negative evidence.
 | PR4 runtime/Judge fixture | `./run.sh normalize-runtime-judge-fixture /tmp/battle-004-combiner --out local/battle-004-pr4-runtime-judge --public-out spectator/public/battle-fixtures/battle-004-pr4-runtime-judge` | UX-safe Docker specimen runtime summaries, container policy, exit/stdout/stderr summaries, target-contact-unproven state, and explicit Judge NOT_RUN progression | Exploit success, Blue outcome, Judge success, packet behavior, memory promotion, or target contact as exploit proof |
 | PR5 population fixture | `./run.sh normalize-population-fixture /tmp/battle-004-combiner --out local/battle-004-pr5-population --public-out spectator/public/battle-fixtures/battle-004-pr5-population` | UX-safe specimen cards, generation axis, receipt-backed parent-child lineage, fitness vectors, novelty, and selection labels from combiner receipts | Full autonomous population engine, live Tau code generation, provider-authored specimens, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
 | PR6 genetic Pixi fixture | `./run.sh normalize-genetic-pixi-fixture . --out local/battle-004-pr6-genetic-pixi --public-out spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi` | UX-safe ordered genetic lifecycle events inside the existing Pixi replay fixture contract, with present/not-emitted event vocabulary and claim boundaries | Live transport, Judge-confirmed exploit success, Blue outcome, packet behavior, memory promotion, or victory semantics for research/code/compile/target-contact events |
+| PR8 live transport contract | `./run.sh publish-live-transport-contract --out local/battle-004-pr8-live-transport --public-out spectator/public/battle-fixtures/battle-004-pr8-live-transport` | UX-safe SSE snapshot/event contract with event id, sequence, reconnect, gap handling, receipt refs, genetic event vocabulary, and raw-path boundaries | Implemented SSE/WebSocket endpoint, live stream execution, live genetic events, exploit success, Blue outcome, Judge success, packet behavior, or memory promotion |
 
 Battle v0 remains the safer first rung to run when checking the artifact
 contract. The combiner and Spawn Architect rungs are the current backend proof
@@ -383,6 +384,41 @@ show victory, kill, containment, exploit success, Blue outcome, packet behavior,
 or memory promotion from research, genome, code, compile, target-contact, or
 pending-Judge events. Compile pass is not runnable proof. Target contact is not
 exploit proof.
+
+The UX8 live transport contract publishes the backend-owned shape for the first
+SSE live surface without claiming that a live endpoint has executed.
+
+Route: `#battle/live?engine=pixi&battle=battle-004`.
+
+```text
+local/battle-004-pr8-live-transport/battle.live_transport_contract.json
+spectator/public/battle-fixtures/battle-004-pr8-live-transport/battle.live_transport_contract.json
+```
+
+UX8 should consume this contract as the authoritative transport surface. It
+must not read `tau-dag-run/**`, `command-loop/command-artifacts/**`, provider
+workspace directories, raw combiner paths, Docker mount paths, raw
+stdout/stderr paths, or Judge internals. The field map is:
+
+```text
+schema = battle.live_transport_contract.v1
+route = frontend_handoff.route
+snapshot endpoint = initial_snapshot.endpoint
+snapshot schema = initial_snapshot.schema
+SSE endpoint = event_stream.endpoint
+event schema = event_stream.event_schema
+ordering = event_stream.ordering.seq_field / event_stream.ordering.event_id_field
+receipt reference = event_stream.ordering.receipt_ref_field
+reconnect = reconnect.header / reconnect.resume_from
+gap handling = gap_semantics.on_gap
+genetic event vocabulary = frontend_handoff.genetic_event_types
+claim banner = claim_boundary
+```
+
+This contract is `live: contract_only`. It allows the frontend to implement the
+SSE client against stable backend semantics, but it explicitly does not prove
+that `/battle/live/battle-004/snapshot` or `/battle/live/battle-004/events`
+exists, that a stream was executed, or that any live genetic event was emitted.
 
 ## Claim Boundaries
 

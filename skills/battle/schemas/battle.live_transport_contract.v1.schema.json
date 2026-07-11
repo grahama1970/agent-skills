@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/battle/schemas/battle.live_transport_contract.v1.schema.json",
+  "title": "Battle Live Transport Contract",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "battle_id",
+    "run_id",
+    "status",
+    "mocked",
+    "live",
+    "authority",
+    "transport",
+    "initial_snapshot",
+    "event_stream",
+    "reconnect",
+    "gap_semantics",
+    "raw_path_boundary",
+    "claim_boundary",
+    "frontend_handoff"
+  ],
+  "properties": {
+    "schema": {
+      "const": "battle.live_transport_contract.v1"
+    },
+    "battle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["CONTRACT_PUBLISHED"]
+    },
+    "mocked": {
+      "const": false
+    },
+    "live": {
+      "const": "contract_only"
+    },
+    "authority": {
+      "const": "backend_receipts_to_normalized_snapshot_and_events_to_renderer"
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "endpoint", "content_type", "event_schema"],
+      "properties": {
+        "kind": {
+          "const": "sse"
+        },
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_type": {
+          "const": "text/event-stream"
+        },
+        "event_schema": {
+          "const": "battle.live_event.v1"
+        }
+      }
+    },
+    "initial_snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["endpoint", "schema"],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "const": "battle.snapshot.v1"
+        }
+      }
+    },
+    "event_stream": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "ordered_by",
+        "id_field",
+        "seq_field",
+        "receipt_ref_field",
+        "genetic_event_types_when_live"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.live_event.v1"
+        },
+        "ordered_by": {
+          "const": "seq"
+        },
+        "id_field": {
+          "const": "event_id"
+        },
+        "seq_field": {
+          "const": "seq"
+        },
+        "receipt_ref_field": {
+          "const": "payload.receipt_id"
+        },
+        "genetic_event_types_when_live": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "reconnect": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["last_event_id_header", "resume_from", "duplicate_policy"],
+      "properties": {
+        "last_event_id_header": {
+          "const": "Last-Event-ID"
+        },
+        "resume_from": {
+          "const": "next_seq_after_last_acknowledged"
+        },
+        "duplicate_policy": {
+          "const": "client_deduplicates_by_seq_and_event_id"
+        }
+      }
+    },
+    "gap_semantics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["gap_detection", "gap_response", "snapshot_resync_required"],
+      "properties": {
+        "gap_detection": {
+          "const": "non_contiguous_seq"
+        },
+        "gap_response": {
+          "const": "fail_closed_and_refetch_snapshot"
+        },
+        "snapshot_resync_required": {
+          "const": true
+        }
+      }
+    },
+    "raw_path_boundary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["frontend_must_not_read", "transport_must_not_emit"],
+      "properties": {
+        "frontend_must_not_read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transport_must_not_emit": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "claim_boundary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["may_claim", "must_not_claim"],
+      "properties": {
+        "may_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "frontend_handoff": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["route", "snapshot_endpoint", "sse_endpoint", "stop_condition"],
+      "properties": {
+        "route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot_endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sse_endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stop_condition": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -879,6 +879,73 @@ receipt exist. Compile pass is not runnable proof. Target contact is not exploit
 proof. `judge_pending` in this fixture means Judge success is not emitted and
 `judge_verified_exploits` remains `0`.
 
+## UX8 Live Transport Contract Handoff
+
+Normalized live transport contract:
+
+```text
+schema = battle.live_transport_contract.v1
+local path = skills/battle/local/battle-004-pr8-live-transport/battle.live_transport_contract.json
+public URL = /battle-fixtures/battle-004-pr8-live-transport/battle.live_transport_contract.json
+route = #battle/live?engine=pixi&battle=battle-004
+snapshot endpoint = /battle/live/battle-004/snapshot
+SSE endpoint = /battle/live/battle-004/events
+event schema = battle.live_event.v1
+snapshot schema = battle.snapshot.v1
+```
+
+Generation and validation:
+
+```bash
+./run.sh publish-live-transport-contract \
+  --out local/battle-004-pr8-live-transport \
+  --public-out spectator/public/battle-fixtures/battle-004-pr8-live-transport \
+  --generated-at 2026-07-11T01:30:00Z
+./run.sh validate-live-transport-contract local/battle-004-pr8-live-transport/battle.live_transport_contract.json
+./run.sh validate-live-transport-contract spectator/public/battle-fixtures/battle-004-pr8-live-transport/battle.live_transport_contract.json
+```
+
+UX8 should consume only this backend-published contract when implementing the
+SSE client. Do not read Tau runtime, command-loop, provider workspace, raw
+combiner, Docker mount, raw stdout/stderr, or Judge-internal paths.
+
+Renderer/client field mapping:
+
+```text
+route = frontend_handoff.route
+snapshot endpoint = initial_snapshot.endpoint
+snapshot schema = initial_snapshot.schema
+SSE endpoint = event_stream.endpoint
+SSE content type = event_stream.content_type
+event schema = event_stream.event_schema
+sequence field = event_stream.ordering.seq_field
+event id field = event_stream.ordering.event_id_field
+receipt reference field = event_stream.ordering.receipt_ref_field
+reconnect header = reconnect.header
+resume field = reconnect.resume_from
+gap policy = gap_semantics.on_gap
+expected gap behavior = gap_semantics.client_action
+genetic event vocabulary = frontend_handoff.genetic_event_types
+claim banner = claim_boundary
+```
+
+This is a contract-only backend handoff:
+
+```text
+live = contract_only
+mocked = false
+may claim = backend live transport contract published, endpoint shape defined,
+  ordering/reconnect/gap semantics defined, raw path boundary defined
+must not claim = SSE endpoint implemented, WebSocket endpoint implemented,
+  live stream executed, live genetic events emitted, exploit success,
+  Blue detection/kill/block, Judge success without Judge receipt,
+  packet-level behavior, memory promotion
+```
+
+The next backend slice, if frontend needs an executable live proof, is the
+actual SSE server/adapter that emits `battle.snapshot.v1` and ordered
+`battle.live_event.v1` records using this contract.
+
 ## Next UX Agent Contract
 
 The UX agent should consume:

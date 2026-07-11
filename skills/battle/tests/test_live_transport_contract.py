@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import jsonschema
+import pytest
+
+from battle_skill.live_transport_contract import (
+    GENETIC_EVENT_TYPES,
+    publish_live_transport_contract,
+    validate_live_transport_contract,
+)
+
+
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+
+def _schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+
+
+def test_live_transport_contract_publishes_sse_snapshot_and_gap_semantics(tmp_path: Path) -> None:
+    out = tmp_path / "local" / "battle-004-pr8-live-transport"
+    public = tmp_path / "public" / "battle-004-pr8-live-transport"
+
+    contract = publish_live_transport_contract(
+        out_dir=out,
+        public_out_dir=public,
+        generated_at="2026-07-11T01:30:00Z",
+    )
+
+    jsonschema.validate(contract, _schema("battle.live_transport_contract.v1.schema.json"))
+    report = validate_live_transport_contract(contract)
+    assert report["status"] == "PASS"
+    assert contract["schema"] == "battle.live_transport_contract.v1"
+    assert contract["status"] == "CONTRACT_PUBLISHED"
+    assert contract["mocked"] is False
+    assert contract["live"] == "contract_only"
+    assert contract["transport"]["kind"] == "sse"
+    assert contract["transport"]["endpoint"] == "/battle/live/battle-004/events"
+    assert contract["transport"]["content_type"] == "text/event-stream"
+    assert contract["initial_snapshot"]["endpoint"] == "/battle/live/battle-004/snapshot"
+    assert contract["initial_snapshot"]["schema"] == "battle.snapshot.v1"
+    assert contract["event_stream"]["ordered_by"] == "seq"
+    assert contract["event_stream"]["receipt_ref_field"] == "payload.receipt_id"
+    assert set(contract["event_stream"]["genetic_event_types_when_live"]) == set(GENETIC_EVENT_TYPES)
+    assert contract["reconnect"]["last_event_id_header"] == "Last-Event-ID"
+    assert contract["gap_semantics"]["gap_response"] == "fail_closed_and_refetch_snapshot"
+    assert contract["gap_semantics"]["snapshot_resync_required"] is True
+    assert "sse_endpoint_implemented" in contract["claim_boundary"]["must_not_claim"]
+    assert "live_stream_executed" in contract["claim_boundary"]["must_not_claim"]
+    assert contract["frontend_handoff"]["route"] == "#battle/live?engine=pixi&battle=battle-004"
+    assert _sha256(out / "battle.live_transport_contract.json") == _sha256(public / "battle.live_transport_contract.json")
+
+    leak_scan_payload = json.loads(json.dumps(contract))
+    leak_scan_payload["raw_path_boundary"] = {}
+    serialized = json.dumps(leak_scan_payload, sort_keys=True)
+    for marker in ["tau-dag-run/", "command-loop/", "command-artifacts/", "/tmp/", "/home/", "provider-workspace"]:
+        assert marker not in serialized
+
+
+def test_live_transport_contract_rejects_forbidden_claim() -> None:
+    contract = publish_live_transport_contract(out_dir=Path("/tmp/live-contract-test-unwritten"))
+    contract["claim_boundary"]["may_claim"].append("sse_endpoint_implemented")
+
+    with pytest.raises(ValueError, match="forbidden"):
+        validate_live_transport_contract(contract)
+
+
+def test_live_transport_contract_rejects_raw_path_leak() -> None:
+    contract = publish_live_transport_contract(out_dir=Path("/tmp/live-contract-test-unwritten-2"))
+    contract["frontend_handoff"]["debug"] = "/tmp/tau-dag-run/command-loop/command-artifacts/raw.json"
+
+    with pytest.raises(ValueError, match="forbidden marker"):
+        validate_live_transport_contract(contract)
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
