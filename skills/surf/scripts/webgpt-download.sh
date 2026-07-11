@@ -78,7 +78,7 @@ fi
 # ChatGPT download buttons have empty textContent — only aria-label has the
 # filename. surf click with a string does text matching, so use the CSS
 # attribute selector instead.
-button_aria="$(echo "$buttons_json" | python3 -c "import json,sys; data=json.load(sys.stdin); print(data[0].get('aria') or data[0].get('text') or '')" 2>/dev/null || true)"
+button_aria="$(echo "$buttons_json" | python3 -c "import json,sys; data=json.load(sys.stdin); data=json.loads(data) if isinstance(data, str) else data; print(data[0].get('aria') or data[0].get('text') or '')" 2>/dev/null || true)"
 
 if [[ -z "$button_aria" ]]; then
   echo "Error: Could not parse button aria-label from match" >&2
@@ -96,18 +96,40 @@ before_files=$(ls -1 "$downloads_dir" 2>/dev/null || true)
 # textContent is empty (ChatGPT download buttons use aria-label only).
 click_js="
 const match = '${match,,}';
-const btn = Array.from(document.querySelectorAll('button')).find(e => {
+const btn = Array.from(document.querySelectorAll('a,button,[role=button]')).find(e => {
   const label = (e.getAttribute('aria-label') || e.textContent || '').toLowerCase();
   return label.includes(match);
 });
-if (btn) { btn.click(); 'clicked'; } else { 'no-match'; }
+if (btn) { btn.click(); return 'clicked'; } else { return 'no-match'; }
 "
 click_out=$("$RUN_SH" js "$click_js" "${tab_args[@]}" 2>/dev/null || true)
+if [[ "$click_out" == \"*\" ]]; then
+  click_out="${click_out#\"}"
+  click_out="${click_out%\"}"
+fi
 
 if [[ "$click_out" != "clicked" ]]; then
   echo "Error: Could not find or click download button" >&2
   echo "  Try: surf click 'button' (find ref via surf read --tab-id \$TAB)" >&2
   exit 4
+fi
+
+sleep 1
+dialog_download_js="
+const dialog = document.querySelector('[role=dialog]');
+const download = dialog && Array.from(dialog.querySelectorAll('button')).find(e =>
+  (e.getAttribute('aria-label') || '').toLowerCase() === 'download'
+);
+if (download) { download.click(); return 'clicked'; }
+return 'no-dialog-download';
+"
+dialog_download_out=$("$RUN_SH" js "$dialog_download_js" "${tab_args[@]}" 2>/dev/null || true)
+if [[ "$dialog_download_out" == \"*\" ]]; then
+  dialog_download_out="${dialog_download_out#\"}"
+  dialog_download_out="${dialog_download_out%\"}"
+fi
+if [[ "$dialog_download_out" == "clicked" ]]; then
+  echo "Clicked artifact dialog Download button" >&2
 fi
 
 echo "Waiting for download to appear in: $downloads_dir" >&2
