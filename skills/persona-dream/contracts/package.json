@@ -1,0 +1,6 @@
+{
+  "name": "@agent-skills/persona-dream-contracts",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts"
+}

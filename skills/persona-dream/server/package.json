@@ -1,0 +1,9 @@
+{
+  "name": "@agent-skills/persona-dream-server",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "peerDependencies": {
+    "express": ">=5"
+  }
+}
