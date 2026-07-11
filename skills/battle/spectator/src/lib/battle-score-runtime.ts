@@ -15,24 +15,29 @@ export type BattleScoreRuntime = {
 	arm: () => AudioContext;
 	playCue: (cueId: BattleScoreCueId) => Promise<void>;
 	playMotif: (spriteId: string) => Promise<boolean>;
+	/** Fail-closed: only /battle-audio/promoted/v1/ URLs. */
+	playPromotedUrl: (
+		url: string,
+		opts?: { loop?: boolean; asLoop?: boolean; label?: string; gain?: number },
+	) => Promise<void>;
 	startLoop: () => Promise<void>;
 	stopLoop: () => void;
 	stopAll: () => void;
 	isLoopPlaying: () => boolean;
-	activeCueId: () => BattleScoreCueId | "motif" | null;
+	activeCueId: () => BattleScoreCueId | "motif" | "promoted" | null;
 };
 
 type Voice = {
 	source: AudioBufferSourceNode;
 	gain: GainNode;
-	cueId: BattleScoreCueId | "motif";
+	cueId: BattleScoreCueId | "motif" | "promoted";
 };
 
 export function createBattleScoreRuntime(getContext: () => AudioContext): BattleScoreRuntime {
 	const buffers = new Map<string, AudioBuffer>();
 	let loopVoice: Voice | null = null;
 	let overlayVoice: Voice | null = null;
-	let active: BattleScoreCueId | "motif" | null = null;
+	let active: BattleScoreCueId | "motif" | "promoted" | null = null;
 	let loopGainNode: GainNode | null = null;
 
 	const decode = async (url: string): Promise<AudioBuffer> => {
@@ -72,7 +77,7 @@ export function createBattleScoreRuntime(getContext: () => AudioContext): Battle
 
 	const playBuffer = async (
 		url: string,
-		cueId: BattleScoreCueId | "motif",
+		cueId: BattleScoreCueId | "motif" | "promoted",
 		opts: { loop?: boolean; gain?: number; asLoop?: boolean } = {},
 	) => {
 		const ctx = getContext();
@@ -128,6 +133,16 @@ export function createBattleScoreRuntime(getContext: () => AudioContext): Battle
 			if (!spec) return false;
 			await playBuffer(spec.ogg, "motif", { loop: false, gain: 0.62 });
 			return true;
+		},
+		async playPromotedUrl(url, opts = {}) {
+			if (!url.startsWith("/battle-audio/promoted/v1/")) {
+				throw new Error(`refusing non-promoted audio URL: ${url}`);
+			}
+			await playBuffer(url, "promoted", {
+				loop: Boolean(opts.loop),
+				gain: opts.gain ?? 0.7,
+				asLoop: Boolean(opts.asLoop),
+			});
 		},
 		async startLoop() {
 			await this.playCue("live_arena_loop");

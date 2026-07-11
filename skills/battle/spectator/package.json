@@ -33,7 +33,8 @@
     "prove:pr6-genetic-pixi": "node scripts/prove-battle-pr6-genetic-pixi.mjs",
     "prove:pr8-live-transport": "node scripts/prove-battle-pr8-live-transport.mjs",
     "prove:pr9-campaign": "node scripts/prove-battle-pr9-campaign.mjs",
-    "prove:score-package": "node scripts/prove-battle-score-package.mjs"
+    "prove:score-package": "node scripts/prove-battle-score-package.mjs",
+    "prove:music-m1": "node scripts/prove-battle-music-m1.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

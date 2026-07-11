@@ -158,9 +158,10 @@
     "input_alias": "battle_started_background_loop maps to live_arena_loop; public outputs use live_arena_loop",
     "playback_class_promoted": "authoritative schedule entries require playback_class:promoted",
     "actor_focus": "local_preview only; semantic_authority:false; outside battle.music_schedule.v1",
-    "m1_status": "provisional_gm_render catalog playback until normalized_music_fixture published"
+    "m1_status": "normalized_music_fixture published; #battle/music consumes promoted schedule"
   },
   "input_aliases": {
     "battle_started_background_loop": "live_arena_loop"
-  }
+  },
+  "m1_fixture": "/battle-fixtures/battle-004-music-runtime/battle.normalized_music_fixture.json"
 }

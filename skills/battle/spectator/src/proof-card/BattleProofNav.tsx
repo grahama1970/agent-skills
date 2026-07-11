@@ -7,6 +7,7 @@ import { isBattleRuntimeView } from "../lib/battle-runtime-registry";
 import { isBattlePopulationView } from "../lib/battle-population-registry";
 import { isBattleLiveView } from "../lib/battle-transport-registry";
 import { isBattleCampaignView } from "../lib/battle-campaign-registry";
+import { isBattleMusicView } from "../lib/battle-music-registry";
 
 export function BattleProofNav() {
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
@@ -17,6 +18,7 @@ export function BattleProofNav() {
 	const onPopulation = isBattlePopulationView(hash);
 	const onLive = isBattleLiveView(hash);
 	const onCampaign = isBattleCampaignView(hash);
+	const onMusic = isBattleMusicView(hash);
 	const onRace =
 		!onProof &&
 		!onSynthesis &&
@@ -24,6 +26,7 @@ export function BattleProofNav() {
 		!onRuntime &&
 		!onPopulation &&
 		!onLive &&
+		!onMusic &&
 		(isBattleReceiptReplayView() || isBattleDesignView() || hash.startsWith("#battle"));
 
 	return (
@@ -44,6 +47,13 @@ export function BattleProofNav() {
 				data-qid="battle:nav:campaign"
 			>
 				Campaign Story
+			</a>
+			<a
+				href="#battle/music?fixture=battle-004-music-runtime"
+				aria-current={onMusic ? "page" : undefined}
+				data-qid="battle:nav:music"
+			>
+				Music Schedule
 			</a>
 			<a
 				href="#battle/live?engine=pixi&battle=battle-004"

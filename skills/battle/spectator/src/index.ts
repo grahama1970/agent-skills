@@ -105,6 +105,10 @@ export {
 export { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
 export { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 export { isBattleCampaignView, battleCampaignFixtureUrl } from "./lib/battle-campaign-registry";
+export { isBattleMusicView, battleMusicFixtureUrl } from "./lib/battle-music-registry";
+export { loadBattleMusicFixture } from "./lib/battle-music-loader";
+export { buildMusicScheduleViewModel, validateNormalizedMusicFixture } from "./lib/battle-normalized-music-fixture";
+export { BattleMusicRoute } from "./music/BattleMusicRoute";
 
 export { BattleRoundStoryIntro } from "./BattleRoundStoryIntro";
 export { buildBattleRoundIntro } from "./lib/battle-round-intro";

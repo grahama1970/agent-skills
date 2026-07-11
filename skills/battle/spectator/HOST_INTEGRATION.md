@@ -71,3 +71,28 @@ URL:
 ```
 
 This is an original CC0-style Battle composition for Genesis-like round intros. It is not a Sega VGM dump.
+
+## Music M1 fixture
+
+Public normalized music fixture:
+
+```text
+/battle-fixtures/battle-004-music-runtime/battle.normalized_music_fixture.json
+```
+
+Route: `#battle/music?fixture=battle-004-music-runtime`
+
+Promoted assets:
+
+```text
+/battle-audio/promoted/v1/<promotion-id>/
+```
+
+If the host serves `public/battle-fixtures` via per-fixture symlinks (ux-lab), add:
+
+```bash
+ln -sfn <agent-skills>/skills/battle/spectator/public/battle-fixtures/battle-004-music-runtime \
+  <ux-lab>/public/battle-fixtures/battle-004-music-runtime
+```
+
+`public/battle-audio` should already cover promoted OGGs when it points at the spectator `battle-audio` tree.

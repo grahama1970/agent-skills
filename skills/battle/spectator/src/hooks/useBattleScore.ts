@@ -4,7 +4,7 @@ import { createBattleScoreRuntime, type BattleScoreRuntime } from "../lib/battle
 
 export function useBattleScore(getContext: () => AudioContext) {
 	const runtimeRef = useRef<BattleScoreRuntime | null>(null);
-	const [activeCueId, setActiveCueId] = useState<BattleScoreCueId | "motif" | null>(null);
+	const [activeCueId, setActiveCueId] = useState<BattleScoreCueId | "motif" | "promoted" | null>(null);
 	const [loopPlaying, setLoopPlaying] = useState(false);
 
 	const ensure = useCallback(() => {
@@ -44,6 +44,16 @@ export function useBattleScore(getContext: () => AudioContext) {
 		[ensure, refresh],
 	);
 
+	const playPromotedUrl = useCallback(
+		async (url: string, opts?: { loop?: boolean; asLoop?: boolean; label?: string; gain?: number }) => {
+			const rt = ensure();
+			rt.arm();
+			await rt.playPromotedUrl(url, opts);
+			refresh();
+		},
+		[ensure, refresh],
+	);
+
 	const startLoop = useCallback(async () => {
 		await playCue("live_arena_loop");
 	}, [playCue]);
@@ -60,10 +70,11 @@ export function useBattleScore(getContext: () => AudioContext) {
 			loopPlaying,
 			playCue,
 			playMotif,
+			playPromotedUrl,
 			startLoop,
 			stopAll,
 			ensure,
 		}),
-		[activeCueId, ensure, loopPlaying, playCue, playMotif, startLoop, stopAll],
+		[activeCueId, ensure, loopPlaying, playCue, playMotif, playPromotedUrl, startLoop, stopAll],
 	);
 }

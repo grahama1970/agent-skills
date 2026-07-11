@@ -26,6 +26,8 @@ import { BattleRuntimeRoute } from "./runtime/BattleRuntimeRoute";
 import { isBattleRuntimeView } from "./lib/battle-runtime-registry";
 import { BattlePopulationRoute } from "./population/BattlePopulationRoute";
 import { isBattlePopulationView } from "./lib/battle-population-registry";
+import { isBattleMusicView } from "./lib/battle-music-registry";
+import { BattleMusicRoute } from "./music/BattleMusicRoute";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
@@ -55,6 +57,7 @@ import "./battle-mockup-elements.css";
 type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
 
 export function BattleSpectatorArena() {
+  if (isBattleMusicView()) return <BattleMusicRoute />;
   if (isBattlePopulationView()) return <BattlePopulationRoute />;
   if (isBattleRuntimeView()) return <BattleRuntimeRoute />;
   if (isBattleCompileView()) return <BattleCompileRoute />;
