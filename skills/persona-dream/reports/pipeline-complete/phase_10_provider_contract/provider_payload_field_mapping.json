@@ -1,0 +1,61 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "live schema validation or submission"
+    ],
+    "proves": [
+      "provider field mapping is explicit and inspectable"
+    ]
+  },
+  "endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "mappings": [
+    {
+      "provider_field": "input.multi_prompt[].prompt",
+      "source": "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json panels[].shot + phase_06_script/timed_transcript.json",
+      "status": "MAPPED"
+    },
+    {
+      "provider_field": "input.multi_prompt[].duration",
+      "source": "panel time ranges; mapped 2.5s panels to integer seconds 2/3/2/3",
+      "status": "MAPPED_WITH_DISTILLATION"
+    },
+    {
+      "provider_field": "input.start_image_url",
+      "source": "phase_09_video_provider/storyboard_media_lock_manifest.json start_frame assets",
+      "status": "MAPPED_AS_LIVE_BLOCKER"
+    },
+    {
+      "provider_field": "input.end_image_url",
+      "source": "phase_09_video_provider/storyboard_media_lock_manifest.json end_frame assets",
+      "status": "MAPPED_AS_LIVE_BLOCKER"
+    },
+    {
+      "provider_field": "input.elements",
+      "source": "phase_07_storyboard_live_tau references and phase_09_video_provider/kling_scene_packet.json element_list",
+      "status": "MAPPED_AS_LIVE_BLOCKER"
+    },
+    {
+      "provider_field": "input.generate_audio",
+      "source": "phase_06_script/timed_transcript.json dialogue and voice state",
+      "status": "MAPPED_DISABLED_DRY_RUN"
+    },
+    {
+      "provider_field": "input.negative_prompt",
+      "source": "storyboard identity/readability constraints and Kling packet do_not_change rules",
+      "status": "MAPPED"
+    },
+    {
+      "provider_field": "input.shot_type",
+      "source": "fal schema default customize plus storyboard multi-panel sequence",
+      "status": "MAPPED"
+    },
+    {
+      "provider_field": "input.cfg_scale",
+      "source": "fal schema default",
+      "status": "MAPPED_DEFAULT"
+    }
+  ],
+  "schema_version": "persona-dream.provider-payload-field-mapping.v1",
+  "status": "PASS_FIELD_MAPPING_DRY_RUN_WITH_LIVE_BLOCKERS"
+}
