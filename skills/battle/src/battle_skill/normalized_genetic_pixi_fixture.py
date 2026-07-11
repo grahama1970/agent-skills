@@ -136,6 +136,14 @@ def validate_normalized_genetic_pixi_fixture(fixture: dict[str, Any]) -> dict[st
         errors.append("genetic_lifecycle.route must point to the UX7 Pixi receipt route")
     if genetic.get("fixture_url") != PUBLIC_FIXTURE_URL:
         errors.append("genetic_lifecycle.fixture_url must point to the published public fixture")
+    if genetic.get("evidence_mode") != "composite_demonstration_fixture":
+        errors.append("genetic_lifecycle.evidence_mode must disclose composite demonstration provenance")
+    if genetic.get("causal_continuity_proven") is not False:
+        errors.append("genetic_lifecycle.causal_continuity_proven must be false for the PR6 composite")
+    if genetic.get("source_run_count") != 4:
+        errors.append("genetic_lifecycle.source_run_count must disclose all four source fixtures")
+    if genetic.get("timeline_source") != "synthetic_presentation_order":
+        errors.append("genetic_lifecycle.timeline_source must disclose synthetic presentation timing")
     present = set(genetic.get("present_event_types", []))
     not_emitted = set(genetic.get("not_emitted_event_types", []))
     if present | not_emitted != set(REQUIRED_EVENT_TYPES):
@@ -399,6 +407,10 @@ def _genetic_lifecycle_contract(*, events: list[dict[str, Any]], sources: dict[s
     return {
         "schema": GENETIC_LIFECYCLE_SCHEMA,
         "fixture_id": FIXTURE_ID,
+        "evidence_mode": "composite_demonstration_fixture",
+        "causal_continuity_proven": False,
+        "source_run_count": 4,
+        "timeline_source": "synthetic_presentation_order",
         "route": FIXTURE_ROUTE,
         "fixture_url": PUBLIC_FIXTURE_URL,
         "required_event_types": REQUIRED_EVENT_TYPES,

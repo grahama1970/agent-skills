@@ -49,7 +49,12 @@ COMMAND_SPEC_ROOT = "command-specs/child-exploit-dag"
 COMMAND_SPEC_FILENAME = "tau-dispatch-command.json"
 
 
-def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[str, Any], spawn_policy_decision: dict[str, Any]) -> dict[str, Any]:
+def build_child_exploit_tau_dag(
+    *,
+    battle_id: str,
+    child_knowledge_packet: dict[str, Any],
+    spawn_policy_decision: dict[str, Any],
+) -> dict[str, Any]:
     goal_text = f"{battle_id}: child exploit synthesis DAG birth contract for {child_knowledge_packet['child_lane_id']}"
     goal_hash = "sha256:" + hashlib.sha256(goal_text.encode("utf-8")).hexdigest()
     return {
@@ -72,21 +77,65 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             "forbidden_inputs": FORBIDDEN_INPUTS,
         },
         "entry_node": "lineage-summarizer",
-        "terminal_nodes": ["battle-handoff-writer", "blocked"],
+        "terminal_nodes": ["human", "blocked"],
         "limits": {
             "resume": True,
             "default_timeout_seconds": 240,
             "max_total_attempts": 8,
         },
         "nodes": [
-            _node("lineage-summarizer", "lineage-planner", "summarize-parent-knowledge", ["child_knowledge_packet.json"]),
-            _node("research-scout", "researcher", "source-bearing-security-research", ["research_receipts.json", "candidate_methods.json"], max_attempts=2),
-            _node("method-combiner", "strategy-combiner", "exploit-method-selection", ["exploit_genome.json", "combination_rationale.md"]),
-            _node("exploit-code-author", "coder", "exploit-specimen-code", ["exploit_specimen.py", "specimen.json"]),
-            _node("compile-repair", "compiler-repairer", "compile-and-repair", ["compile_receipt.json", "repaired_exploit_specimen.py"], max_attempts=3),
-            _node("artifact-reviewer", "reviewer", "claim-boundary-review", ["review_receipt.json"]),
-            _node("battle-handoff-writer", "handoff-writer", "battle-exploit-runner-handoff", ["battle_exploit_handoff.json"]),
-            _node("blocked", "blocked", "terminal-blocked-report", ["blocked_report.json"], command_spec=False),
+            _node(
+                "lineage-summarizer",
+                "lineage-planner",
+                "summarize-parent-knowledge",
+                ["child_knowledge_packet.json"],
+            ),
+            _node(
+                "research-scout",
+                "researcher",
+                "source-bearing-security-research",
+                ["research_receipts.json", "candidate_methods.json"],
+                max_attempts=2,
+            ),
+            _node(
+                "method-combiner",
+                "strategy-combiner",
+                "exploit-method-selection",
+                ["exploit_genome.json", "combination_rationale.md"],
+            ),
+            _node(
+                "exploit-code-author",
+                "coder",
+                "exploit-specimen-code",
+                ["exploit_specimen.py", "specimen.json"],
+            ),
+            _node(
+                "compile-repair",
+                "compiler-repairer",
+                "compile-and-repair",
+                ["compile_receipt.json", "repaired_exploit_specimen.py"],
+                max_attempts=3,
+            ),
+            _node(
+                "artifact-reviewer",
+                "reviewer",
+                "claim-boundary-review",
+                ["review_receipt.json"],
+            ),
+            _node(
+                "battle-handoff-writer",
+                "handoff-writer",
+                "battle-exploit-runner-handoff",
+                ["battle_exploit_runner_handoff.json"],
+            ),
+            _node("human", "human", "terminal-human-review", [], command_spec=False),
+            _node(
+                "blocked",
+                "blocked",
+                "terminal-blocked-report",
+                ["blocked_report.json"],
+                command_spec=False,
+            ),
         ],
         "edges": [
             {"from": "lineage-summarizer", "to": "research-scout"},
@@ -95,9 +144,22 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             {"from": "exploit-code-author", "to": "compile-repair"},
             {"from": "compile-repair", "to": "artifact-reviewer"},
             {"from": "artifact-reviewer", "to": "battle-handoff-writer"},
-            {"from": "compile-repair", "to": "research-scout", "condition": "compile_failed_twice_requires_new_research"},
-            {"from": "compile-repair", "to": "blocked", "condition": "compile_failed_no_repair_adapter"},
-            {"from": "artifact-reviewer", "to": "blocked", "condition": "forbidden_claim_or_private_input_leak"},
+            {"from": "battle-handoff-writer", "to": "human"},
+            {
+                "from": "compile-repair",
+                "to": "research-scout",
+                "condition": "compile_failed_twice_requires_new_research",
+            },
+            {
+                "from": "compile-repair",
+                "to": "blocked",
+                "condition": "compile_failed_no_repair_adapter",
+            },
+            {
+                "from": "artifact-reviewer",
+                "to": "blocked",
+                "condition": "forbidden_claim_or_private_input_leak",
+            },
         ],
         "required_evidence": [
             "child_knowledge_packet",
@@ -114,8 +176,14 @@ def build_child_exploit_tau_dag(*, battle_id: str, child_knowledge_packet: dict[
             *BATTLE_FAIL_CLOSED_ON,
         ],
         "claims": {
-            "proves": ["Spawn Architect authored a Tau child exploit-synthesis DAG contract."],
-            "does_not_prove": ["Tau executed the DAG.", "A child exploit specimen was generated.", "Exploit success."],
+            "proves": [
+                "Spawn Architect authored a Tau child exploit-synthesis DAG contract."
+            ],
+            "does_not_prove": [
+                "Tau executed the DAG.",
+                "A child exploit specimen was generated.",
+                "Exploit success.",
+            ],
         },
         "spawn_policy": {
             "decision": spawn_policy_decision["decision"],
@@ -150,18 +218,31 @@ def validate_child_exploit_tau_dag(dag: dict[str, Any]) -> dict[str, Any]:
     for invariant in TAU_FAIL_CLOSED_ON:
         if invariant not in (dag.get("fail_closed_on") or []):
             errors.append(f"child DAG missing Tau invariant {invariant}")
-    forbidden_inputs = (((dag.get("target") or {}).get("forbidden_inputs")) if isinstance(dag.get("target"), dict) else []) or []
+    forbidden_inputs = (
+        ((dag.get("target") or {}).get("forbidden_inputs"))
+        if isinstance(dag.get("target"), dict)
+        else []
+    ) or []
     for forbidden in FORBIDDEN_INPUTS:
         if forbidden not in forbidden_inputs:
             errors.append(f"child DAG missing forbidden input {forbidden}")
     serialized = json.dumps(dag, sort_keys=True)
-    for forbidden_literal in ("arena/private/actual", "hidden-ground-truth.json:", "hidden-vulnerability-ledger.json:", "judge/oracle/source.py"):
+    for forbidden_literal in (
+        "arena/private/actual",
+        "hidden-ground-truth.json:",
+        "hidden-vulnerability-ledger.json:",
+        "judge/oracle/source.py",
+    ):
         if forbidden_literal in serialized:
             errors.append(f"child DAG references private artifact {forbidden_literal}")
     proves = " ".join((dag.get("claims") or {}).get("proves", [])).lower()
     if "exploit success" in proves or "exploited" in proves:
         errors.append("child DAG claims exploit success")
-    edge_pairs = [(edge.get("from"), edge.get("to")) for edge in dag.get("edges", []) if isinstance(edge, dict)]
+    edge_pairs = [
+        (edge.get("from"), edge.get("to"))
+        for edge in dag.get("edges", [])
+        if isinstance(edge, dict)
+    ]
     for left, right in zip(REQUIRED_ROUTE, REQUIRED_ROUTE[1:], strict=False):
         if (left, right) not in edge_pairs:
             errors.append(f"child DAG missing route edge {left}->{right}")
@@ -171,12 +252,20 @@ def validate_child_exploit_tau_dag(dag: dict[str, Any]) -> dict[str, Any]:
     for node_id in REQUIRED_ROUTE:
         node = _node_by_id(dag, node_id)
         if node.get("agent") != node_id:
-            errors.append(f"child DAG node {node_id} agent must match node id for Tau command dispatch")
+            errors.append(
+                f"child DAG node {node_id} agent must match node id for Tau command dispatch"
+            )
         command_spec = node.get("command_spec")
         if command_spec != f"{COMMAND_SPEC_ROOT}/{node_id}":
             errors.append(f"child DAG node {node_id} missing command_spec")
-    if not any(edge.get("condition") == "compile_failed_twice_requires_new_research" for edge in dag.get("edges", []) if isinstance(edge, dict)):
-        errors.append("child DAG missing research refresh after repeated compile failure")
+    if not any(
+        edge.get("condition") == "compile_failed_twice_requires_new_research"
+        for edge in dag.get("edges", [])
+        if isinstance(edge, dict)
+    ):
+        errors.append(
+            "child DAG missing research refresh after repeated compile failure"
+        )
 
     return {
         "schema": CHILD_DAG_SUMMARY_SCHEMA,
@@ -189,8 +278,16 @@ def validate_child_exploit_tau_dag(dag: dict[str, Any]) -> dict[str, Any]:
         "forbidden_inputs": FORBIDDEN_INPUTS,
         "tau_execution": "deferred_to_pr3",
         "claims": {
-            "proves": ["Battle validated child DAG shape, route, private boundary, and claim boundary."] if not errors else [],
-            "does_not_prove": ["Tau executed the DAG.", "A child exploit ran.", "Exploit success."],
+            "proves": [
+                "Battle validated child DAG shape, route, private boundary, and claim boundary."
+            ]
+            if not errors
+            else [],
+            "does_not_prove": [
+                "Tau executed the DAG.",
+                "A child exploit ran.",
+                "Exploit success.",
+            ],
         },
     }
 

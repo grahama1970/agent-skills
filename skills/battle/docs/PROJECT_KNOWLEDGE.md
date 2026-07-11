@@ -393,6 +393,42 @@ non_claim=Only the first private ledger vulnerability was replayed; the second s
 
 ## Non-Claims
 
+## Adaptive Red/Blue Lineage Canary (2026-07-11)
+
+```text
+command=./run.sh adaptive-red-blue-lineage-canary battle-004 --out /tmp/battle-004-adaptive-red-blue-lineage-v5 --run-id battle-004-adaptive-red-blue-20260711T153000Z --timeout-s 300
+receipt=/tmp/battle-004-adaptive-red-blue-lineage-v5/adaptive-lineage-chain-receipt.json
+status=PASS
+mocked=false
+live=tau_scillm_docker_judge_two_generation_red_blue
+fixture_fallback_used=false
+generation_1.tau_status=PASS
+generation_1.judge_verdict=BLUE_SUCCESS
+generation_1.judged_pair_count=1
+generation_2.tau_status=PASS
+generation_2.judge_verdict=BLUE_SUCCESS
+generation_2.judged_pair_count=1
+red_research.method=brave-search
+red_research.external_tool_called=true
+red_research.source_count=5
+blue_research.method=brave-search
+blue_research.external_tool_called=true
+blue_research.source_count=5
+red_inheritance.status=PASS
+blue_inheritance.status=PASS
+red_child_artifact_changed=true
+blue_child_artifact_changed=true
+selection.status=PASS
+selection.improvement_claimed=false
+judge_verified_exploits=0
+```
+
+This closes the bounded two-generation lineage evaluation rung for both teams.
+It does not prove improvement, high-throughput genetic search, multiple
+vulnerabilities, or durable memory promotion. PR6 remains a four-source
+composite demonstration with synthetic presentation timing and is not the
+normalized projection of this run.
+
 Battle v0 does not prove:
 
 - real Red agent behavior

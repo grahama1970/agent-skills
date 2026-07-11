@@ -18,7 +18,9 @@ SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
 
 @pytest.fixture(autouse=True)
 def _isolated_provider_workspace_root(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("BATTLE_PR3C_PROVIDER_WORKSPACE_ROOT", str(tmp_path / "provider-workspaces"))
+    monkeypatch.setenv(
+        "BATTLE_PR3C_PROVIDER_WORKSPACE_ROOT", str(tmp_path / "provider-workspaces")
+    )
 
 
 def _schema(name: str) -> dict:
@@ -29,12 +31,24 @@ def _start_payload(dag_path: Path) -> dict:
     return {
         "schema": "tau.agent_handoff.v1",
         "github": {"repo": "grahama1970/agent-skills", "target": "skills/battle"},
-        "goal": {"goal_id": "battle-004-child-exploit-specimen", "goal_version": 1, "goal_hash": "sha256:test"},
+        "goal": {
+            "goal_id": "battle-004-child-exploit-specimen",
+            "goal_version": 1,
+            "goal_hash": "sha256:test",
+        },
         "previous_subagent": "human",
         "context": {"summary": "Dispatch test.", "artifacts": [str(dag_path)]},
-        "result": {"status": "DAG_DISPATCH_REQUESTED", "summary": "dispatch", "evidence": []},
+        "result": {
+            "status": "DAG_DISPATCH_REQUESTED",
+            "summary": "dispatch",
+            "evidence": [],
+        },
         "rationale": "test",
-        "next_agent": {"name": "lineage-summarizer", "executor": "local", "reason": "test"},
+        "next_agent": {
+            "name": "lineage-summarizer",
+            "executor": "local",
+            "reason": "test",
+        },
         "required_evidence": ["child_knowledge_packet.json"],
         "stop_condition": "test",
     }
@@ -51,7 +65,9 @@ def _spawn_architect_dir(tmp_path: Path) -> Path:
         scillm_base_url="not-used",
     )
     spawn = tmp_path / "spawn-architect"
-    run_spawn_architect_proof(battle_id="battle-004", out_dir=spawn, parent_combiner_proof=combiner)
+    run_spawn_architect_proof(
+        battle_id="battle-004", out_dir=spawn, parent_combiner_proof=combiner
+    )
     return spawn
 
 
@@ -96,7 +112,23 @@ def _evidence_path(receipt: dict, kind: str) -> Path:
     raise AssertionError(f"missing evidence kind: {kind}")
 
 
-def test_code_author_blocks_without_provider_attestation(tmp_path: Path, monkeypatch) -> None:
+def test_worker_prompt_closes_result_status_vocabulary() -> None:
+    task = code_author._worker_task_text(
+        {"schema": "battle.exploit_code_author_work_order.v1"}
+    )
+    assert "status to exactly PASS" in task
+    assert "BLOCKED" in task
+    assert "NEEDS_REVIEW" in task
+    assert "do not use completed" in task
+    assert (
+        "schema, status, goal_hash, changed_files, artifacts, tests_run, findings"
+        in task
+    )
+
+
+def test_code_author_blocks_without_provider_attestation(
+    tmp_path: Path, monkeypatch
+) -> None:
     combiner_response = _run_to_method_combiner(tmp_path, monkeypatch)
 
     def fake_launch(*, out_path: Path, **_: object) -> dict:
@@ -108,7 +140,11 @@ def test_code_author_blocks_without_provider_attestation(tmp_path: Path, monkeyp
             "run_id": "run-test",
             "session_id": "session-test",
             "scillm_run_status": "completed",
-            "model_provider_route": {"surface": "opencode_serve", "provider": "test", "model": "test-model"},
+            "model_provider_route": {
+                "surface": "opencode_serve",
+                "provider": "test",
+                "model": "test-model",
+            },
         }
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(payload), encoding="utf-8")
@@ -126,20 +162,32 @@ def test_code_author_blocks_without_provider_attestation(tmp_path: Path, monkeyp
     assert exit_code == 1
     assert response is not None
     assert response["result"]["status"] == "BLOCKED"
-    receipt = json.loads((artifact_dir / "exploit-code-author-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "exploit-code-author-node-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert receipt["status"] == "BLOCKED"
     assert receipt["verdict"] == "PROVIDER_EXECUTION_ATTESTATION_MISSING"
     assert receipt["fixture_fallback_used"] is False
     assert receipt["agentic"] is False
     workspace = _evidence_path(receipt, "tau-scillm-worker-work-order.json").parents[1]
     assert not (workspace / "outputs" / "exploit_specimen.py").exists()
-    boundary = json.loads(_evidence_path(receipt, "provider-code-author-boundary-receipt.json").read_text(encoding="utf-8"))
-    jsonschema.validate(boundary, _schema("battle.provider_code_author_boundary_receipt.v1.schema.json"))
+    boundary = json.loads(
+        _evidence_path(receipt, "provider-code-author-boundary-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    jsonschema.validate(
+        boundary, _schema("battle.provider_code_author_boundary_receipt.v1.schema.json")
+    )
     assert boundary["compile_status"] == "NOT_RUN"
     assert boundary["judge_verified_exploits"] == 0
 
 
-def test_code_author_uses_configured_provider_workspace_root(tmp_path: Path, monkeypatch) -> None:
+def test_code_author_uses_configured_provider_workspace_root(
+    tmp_path: Path, monkeypatch
+) -> None:
     combiner_response = _run_to_method_combiner(tmp_path, monkeypatch)
     provider_root = tmp_path / "provider-workspaces"
     artifact_dir = tmp_path / "artifacts" / "exploit-code-author"
@@ -176,14 +224,24 @@ def test_code_author_uses_configured_provider_workspace_root(tmp_path: Path, mon
 
     assert exit_code == 1
     assert response is not None
-    receipt = json.loads((artifact_dir / "exploit-code-author-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "exploit-code-author-node-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
     workspace = _evidence_path(receipt, "tau-scillm-worker-work-order.json").parents[1]
     assert workspace.is_relative_to(provider_root)
-    work_order = json.loads((workspace / "inputs" / "tau-scillm-worker-work-order.json").read_text(encoding="utf-8"))
+    work_order = json.loads(
+        (workspace / "inputs" / "tau-scillm-worker-work-order.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert Path(work_order["repo"]).is_relative_to(provider_root)
 
 
-def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monkeypatch) -> None:
+def test_code_author_passes_only_with_provider_bound_output(
+    tmp_path: Path, monkeypatch
+) -> None:
     combiner_response = _run_to_method_combiner(tmp_path, monkeypatch)
 
     def fake_launch(*, work_order_path: Path, out_path: Path, **_: object) -> dict:
@@ -191,7 +249,9 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
         repo = Path(work_order["repo"])
         outputs = repo / "outputs"
         outputs.mkdir(parents=True, exist_ok=True)
-        (outputs / "exploit_specimen.py").write_text("print('generated candidate')\n", encoding="utf-8")
+        (outputs / "exploit_specimen.py").write_text(
+            "print('generated candidate')\n", encoding="utf-8"
+        )
         result = {
             "schema": "tau.scillm_worker_result.v1",
             "status": "PASS",
@@ -201,7 +261,9 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
             "tests_run": [],
             "findings": [],
         }
-        (outputs / "provider-worker-result.json").write_text(json.dumps(result), encoding="utf-8")
+        (outputs / "provider-worker-result.json").write_text(
+            json.dumps(result), encoding="utf-8"
+        )
         payload = {
             "schema": "tau.scillm_worker_launch_receipt.v1",
             "status": "PASS",
@@ -210,13 +272,19 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
             "run_id": "run-test",
             "session_id": "session-test",
             "scillm_run_status": "completed",
-            "model_provider_route": {"surface": "opencode_serve", "provider": "test", "model": "test-model"},
+            "model_provider_route": {
+                "surface": "opencode_serve",
+                "provider": "test",
+                "model": "test-model",
+            },
         }
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(payload), encoding="utf-8")
         return payload
 
-    def fake_validate(*, out_path: Path, work_order_path: Path, result_path: Path, **_: object) -> dict:
+    def fake_validate(
+        *, out_path: Path, work_order_path: Path, result_path: Path, **_: object
+    ) -> dict:
         work_order = json.loads(work_order_path.read_text(encoding="utf-8"))
         payload = {
             "schema": "tau.scillm_worker_receipt.v1",
@@ -225,7 +293,11 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
             "provider_live": True,
             "goal_hash": work_order["goal_hash"],
             "result_artifacts": ["outputs/exploit_specimen.py"],
-            "model_provider_route": {"surface": "opencode_serve", "provider": "test", "model": "test-model"},
+            "model_provider_route": {
+                "surface": "opencode_serve",
+                "provider": "test",
+                "model": "test-model",
+            },
         }
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(payload), encoding="utf-8")
@@ -244,22 +316,38 @@ def test_code_author_passes_only_with_provider_bound_output(tmp_path: Path, monk
     assert exit_code == 0
     assert response is not None
     assert response["next_agent"]["name"] == "compile-repair"
-    receipt = json.loads((artifact_dir / "exploit-code-author-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "exploit-code-author-node-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert receipt["status"] == "PASS"
     assert receipt["provider_live"] is True
     assert receipt["agentic"] is True
-    authorship = json.loads(_evidence_path(receipt, "provider-authorship-receipt.json").read_text(encoding="utf-8"))
-    jsonschema.validate(authorship, _schema("battle.provider_authorship_receipt.v1.schema.json"))
-    specimen = json.loads(_evidence_path(receipt, "specimen.json").read_text(encoding="utf-8"))
+    authorship = json.loads(
+        _evidence_path(receipt, "provider-authorship-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    jsonschema.validate(
+        authorship, _schema("battle.provider_authorship_receipt.v1.schema.json")
+    )
+    specimen = json.loads(
+        _evidence_path(receipt, "specimen.json").read_text(encoding="utf-8")
+    )
     jsonschema.validate(specimen, _schema("battle.exploit_specimen.v2.schema.json"))
     assert specimen["compile_status"] == "NOT_RUN"
     assert "The code compiles." in authorship["claims"]["does_not_prove"]
 
 
-def test_scillm_validation_command_binds_launch_receipt(tmp_path: Path, monkeypatch) -> None:
+def test_scillm_validation_command_binds_launch_receipt(
+    tmp_path: Path, monkeypatch
+) -> None:
     captured: dict[str, object] = {}
 
-    def fake_run_tau_command(*, command: list[str], cwd: Path, expected_json: Path) -> dict:
+    def fake_run_tau_command(
+        *, command: list[str], cwd: Path, expected_json: Path
+    ) -> dict:
         captured.update(command=command, cwd=cwd, expected_json=expected_json)
         return {"status": "PASS"}
 
@@ -294,7 +382,10 @@ def test_provider_authorship_distinguishes_validation_block_from_missing_attesta
         launch_receipt_path=tmp_path / "launch.json",
         worker_result_path=tmp_path / "result.json",
         worker_validation_path=tmp_path / "validation.json",
-        artifact_validation={"status": "BLOCKED", "errors": ["TAU_WORKER_VALIDATION_BLOCKED"]},
+        artifact_validation={
+            "status": "BLOCKED",
+            "errors": ["TAU_WORKER_VALIDATION_BLOCKED"],
+        },
         launch_receipt={
             "status": "PASS",
             "live": True,

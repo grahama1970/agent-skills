@@ -1095,3 +1095,41 @@ motifs remain `local_preview` behavior outside this schedule. The fixture does
 not expose composer, create-midi, Tau, provider, or host working paths. It does
 not prove browser playback, speaker output, live composer execution, death,
 victory, arena transition, exploit success, Blue outcome, or Judge success.
+
+## Adaptive Red/Blue Lineage Canary
+
+The backend now has a bounded continuous-campaign canary:
+
+```text
+./run.sh adaptive-red-blue-lineage-canary battle-004 \
+  --out /tmp/battle-004-adaptive-red-blue-lineage-v5 \
+  --run-id battle-004-adaptive-red-blue-20260711T153000Z \
+  --timeout-s 300
+```
+
+Live receipt:
+
+```text
+/tmp/battle-004-adaptive-red-blue-lineage-v5/adaptive-lineage-chain-receipt.json
+```
+
+That receipt records two simultaneous Red/Blue generations against one target,
+one Docker Judge pair per generation, evidence-backed spawn decisions, inherited
+knowledge acknowledgements, two Tau-gated Brave research receipts, changed Red
+and Blue child hashes, and deterministic selection. Both generations returned
+`BLUE_SUCCESS`; the selection ties retain Generation 1 and do not claim child
+improvement.
+
+The existing PR6 Pixi fixture remains a composite demonstration. Its
+`genetic_lifecycle` object now declares:
+
+```text
+evidence_mode = composite_demonstration_fixture
+causal_continuity_proven = false
+source_run_count = 4
+timeline_source = synthetic_presentation_order
+```
+
+Frontend must not present PR6 as the normalized projection of the adaptive
+lineage canary. A dedicated receipt-continuous projection remains the next UX
+handoff.

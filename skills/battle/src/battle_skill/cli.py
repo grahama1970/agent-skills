@@ -18,6 +18,7 @@ Based on research into:
 - Microsoft PyRIT multi-turn orchestration
 - DeepTeam async batch processing
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,13 +28,19 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from .config import BATTLES_DIR, REPORTS_DIR, OVERNIGHT_ROUNDS, OVERNIGHT_CHECKPOINT_INTERVAL
+from .config import (
+    BATTLES_DIR,
+    REPORTS_DIR,
+    OVERNIGHT_ROUNDS,
+    OVERNIGHT_CHECKPOINT_INTERVAL,
+)
 from .state import BattleState, TwinMode
 from loguru import logger
 
 # Memory + Taxonomy integration (graceful degradation)
 try:
     from .memory_integration import recall_prior_battles, learn_battle
+
     _HAS_MEMORY_INTEGRATION = True
 except ImportError:
     _HAS_MEMORY_INTEGRATION = False
@@ -47,7 +54,9 @@ def _write_ux_transport_artifacts(*, out: Path, battle_id: str) -> dict:
     from .battle_event_adapter import generate_fixture_files, generate_transport_files
 
     normalized_path = out / "battle.normalized_ux_fixture.json"
-    fixture = generate_fixture_files(proof_dir=out, battle_id=battle_id, out=normalized_path)
+    fixture = generate_fixture_files(
+        proof_dir=out, battle_id=battle_id, out=normalized_path
+    )
     transport = generate_transport_files(fixture=fixture, out_dir=out / "stream")
     return {
         "schema": "battle.ux_transport_artifacts.v1",
@@ -59,16 +68,33 @@ def _write_ux_transport_artifacts(*, out: Path, battle_id: str) -> dict:
 
 @app.command()
 def battle(
-    target: str = typer.Argument(".", help="Target directory, firmware file, or Docker image"),
+    target: str = typer.Argument(
+        ".", help="Target directory, firmware file, or Docker image"
+    ),
     rounds: int = typer.Option(100, help="Maximum number of rounds"),
-    overnight: bool = typer.Option(False, help="Run as overnight job (1000 rounds, checkpoints every 50)"),
+    overnight: bool = typer.Option(
+        False, help="Run as overnight job (1000 rounds, checkpoints every 50)"
+    ),
     checkpoint_interval: int = typer.Option(10, help="Checkpoint every N rounds"),
-    mode: str = typer.Option(None, help="Digital twin mode: git_worktree, docker, qemu, copy"),
-    docker_image: str = typer.Option(None, help="Docker image for container battles (e.g., nginx:latest)"),
-    qemu_machine: str = typer.Option(None, help="QEMU machine type (e.g., arm, riscv64, x86_64)"),
-    chaos: bool = typer.Option(False, "--chaos", help="Enable novel exploit brainstorming (Red Team)"),
-    profile: str = typer.Option("hobbyist", help="Threat profile: script-kiddie, hobbyist, organized-crime, state-actor"),
-    model: str = typer.Option("gpt-5.2-codex", help="AI model to use for research and brainstorming"),
+    mode: str = typer.Option(
+        None, help="Digital twin mode: git_worktree, docker, qemu, copy"
+    ),
+    docker_image: str = typer.Option(
+        None, help="Docker image for container battles (e.g., nginx:latest)"
+    ),
+    qemu_machine: str = typer.Option(
+        None, help="QEMU machine type (e.g., arm, riscv64, x86_64)"
+    ),
+    chaos: bool = typer.Option(
+        False, "--chaos", help="Enable novel exploit brainstorming (Red Team)"
+    ),
+    profile: str = typer.Option(
+        "hobbyist",
+        help="Threat profile: script-kiddie, hobbyist, organized-crime, state-actor",
+    ),
+    model: str = typer.Option(
+        "gpt-5.2-codex", help="AI model to use for research and brainstorming"
+    ),
 ):
     """
     Start a Red vs Blue team battle.
@@ -96,7 +122,9 @@ def battle(
     if overnight:
         rounds = OVERNIGHT_ROUNDS
         checkpoint_interval = OVERNIGHT_CHECKPOINT_INTERVAL
-        console.print(f"[yellow]Overnight mode: {rounds} rounds, checkpoints every {checkpoint_interval}[/yellow]")
+        console.print(
+            f"[yellow]Overnight mode: {rounds} rounds, checkpoints every {checkpoint_interval}[/yellow]"
+        )
 
     # Parse mode
     twin_mode = None
@@ -105,7 +133,9 @@ def battle(
             twin_mode = TwinMode(mode)
         except ValueError:
             console.print(f"[red]Invalid mode: {mode}[/red]")
-            console.print(f"[yellow]Valid modes: {', '.join(m.value for m in TwinMode)}[/yellow]")
+            console.print(
+                f"[yellow]Valid modes: {', '.join(m.value for m in TwinMode)}[/yellow]"
+            )
             raise typer.Exit(1)
 
     # Handle Docker image as target
@@ -122,7 +152,9 @@ def battle(
         try:
             prior = recall_prior_battles(str(target_path))
             if prior:
-                console.print(f"[dim]Recalled prior battle context ({len(prior)} chars)[/dim]")
+                console.print(
+                    f"[dim]Recalled prior battle context ({len(prior)} chars)[/dim]"
+                )
         except Exception as e:
             logger.error("Battle memory recall failed: {}", e)
 
@@ -134,7 +166,7 @@ def battle(
         docker_image=docker_image,
         chaos=chaos,
         profile=profile,
-        model=model
+        model=model,
     )
     state = orchestrator.run(checkpoint_interval)
 
@@ -143,15 +175,24 @@ def battle(
         try:
             learn_battle(
                 target=str(target_path),
-                red_findings=[f.description if hasattr(f, 'description') else str(f) for f in (state.all_findings or [])[:10]],
-                blue_defenses=[p.description if hasattr(p, 'description') else str(p) for p in (state.all_patches or []) if hasattr(p, 'verified') and p.verified][:10],
-                winner="Red Team" if state.red_total_score > state.blue_total_score else "Blue Team",
+                red_findings=[
+                    f.description if hasattr(f, "description") else str(f)
+                    for f in (state.all_findings or [])[:10]
+                ],
+                blue_defenses=[
+                    p.description if hasattr(p, "description") else str(p)
+                    for p in (state.all_patches or [])
+                    if hasattr(p, "verified") and p.verified
+                ][:10],
+                winner="Red Team"
+                if state.red_total_score > state.blue_total_score
+                else "Blue Team",
                 lessons=[],
                 battle_id=state.battle_id,
                 rounds=state.current_round,
                 red_score=state.red_total_score,
                 blue_score=state.blue_total_score,
-                tdsr=state.tdsr if hasattr(state, 'tdsr') else 0.0,
+                tdsr=state.tdsr if hasattr(state, "tdsr") else 0.0,
             )
         except Exception as e:
             logger.error("Battle memory learn failed: {}", e)
@@ -184,7 +225,9 @@ def run_battle_fixture_command(fixture: str, out: Optional[Path]) -> None:
 
 @app.command("battle-fixture")
 def battle_fixture(
-    fixture: str = typer.Argument("battle-001", help="Fixture name under skills/battle/fixtures/"),
+    fixture: str = typer.Argument(
+        "battle-001", help="Fixture name under skills/battle/fixtures/"
+    ),
     out: Optional[Path] = typer.Option(None, help="Artifact output directory"),
 ):
     """Run one deterministic Battle fixture with Red/Blue/Judge receipts."""
@@ -193,7 +236,9 @@ def battle_fixture(
 
 @app.command("arena-subagent-proof")
 def arena_subagent_proof(
-    battle_id: str = typer.Argument("battle-004", help="Battle ID for the Arena proof."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Battle ID for the Arena proof."
+    ),
     out: Path = typer.Option(..., help="Artifact output directory."),
     prior_scoreboard: Optional[Path] = typer.Option(
         None,
@@ -229,7 +274,9 @@ def arena_subagent_proof(
 
 @app.command("arena-battle-proof")
 def arena_battle_proof(
-    battle_id: str = typer.Argument("battle-005", help="Battle ID for the Arena Battle proof."),
+    battle_id: str = typer.Argument(
+        "battle-005", help="Battle ID for the Arena Battle proof."
+    ),
     out: Path = typer.Option(..., help="Artifact output directory."),
     prior_scoreboard: Optional[Path] = typer.Option(
         None,
@@ -280,7 +327,9 @@ def arena_battle_proof(
 
 @app.command("arena-tau-public-only-proof")
 def arena_tau_public_only_proof(
-    battle_id: str = typer.Argument("battle-004", help="Battle ID for the Tau public-only proof."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Battle ID for the Tau public-only proof."
+    ),
     out: Path = typer.Option(..., help="Artifact output directory."),
     query: str = typer.Option(
         "OWASP file upload zip slip path traversal vulnerability",
@@ -321,7 +370,9 @@ def arena_tau_public_only_proof(
 
     import datetime as _dt
 
-    run_id = f"arena-tau-public-only-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    run_id = (
+        f"arena-tau-public-only-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    )
     result = run_arena_tau_public_only_proof(
         out_dir=out,
         battle_id=battle_id,
@@ -344,7 +395,9 @@ def arena_tau_public_only_proof(
 
 @app.command("arena-parent-spawn-proof")
 def arena_parent_spawn_proof(
-    battle_id: str = typer.Argument("battle-004", help="Canonical Battle ID for the parent-spawn proof."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Canonical Battle ID for the parent-spawn proof."
+    ),
     out: Path = typer.Option(..., help="Artifact output directory."),
     query: str = typer.Option(
         "OWASP file upload zip slip path traversal vulnerability",
@@ -381,7 +434,9 @@ def arena_parent_spawn_proof(
     import datetime as _dt
     import json as _json
 
-    run_id = f"arena-parent-spawn-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    run_id = (
+        f"arena-parent-spawn-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    )
     result = run_arena_tau_public_only_proof(
         out_dir=out,
         battle_id=battle_id,
@@ -396,7 +451,9 @@ def arena_parent_spawn_proof(
         spawn_red_child_on_blue_success=True,
     )
     if result.get("status") != "FAIL":
-        result["ux_transport_artifacts"] = _write_ux_transport_artifacts(out=out, battle_id=battle_id)
+        result["ux_transport_artifacts"] = _write_ux_transport_artifacts(
+            out=out, battle_id=battle_id
+        )
     print(_json.dumps(result, indent=2, sort_keys=True))
     if result.get("status") == "FAIL":
         raise typer.Exit(1)
@@ -404,7 +461,9 @@ def arena_parent_spawn_proof(
 
 @app.command("arena-prekill-survival-proof")
 def arena_prekill_survival_proof(
-    battle_id: str = typer.Argument("battle-004", help="Canonical Battle ID for the pre-kill survival proof."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Canonical Battle ID for the pre-kill survival proof."
+    ),
     out: Path = typer.Option(..., help="Artifact output directory."),
     query: str = typer.Option(
         "OWASP file upload zip slip path traversal vulnerability",
@@ -441,7 +500,9 @@ def arena_prekill_survival_proof(
     import datetime as _dt
     import json as _json
 
-    run_id = f"arena-prekill-survival-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    run_id = (
+        f"arena-prekill-survival-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    )
     result = run_arena_prekill_survival_proof(
         out_dir=out,
         battle_id=battle_id,
@@ -461,12 +522,24 @@ def arena_prekill_survival_proof(
 
 @app.command("validate-ux-contract")
 def validate_ux_contract(
-    fixture: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True, help="Normalized Battle UX fixture JSON."),
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Normalized Battle UX fixture JSON.",
+    ),
 ):
     """Validate backend JSON values and fail-closed UX guardrails."""
     import json as _json
 
-    from .ux_contract_validator import DEFAULT_SCHEMA_PATH, ContractError, validate_fixture, validate_fixture_schema
+    from .ux_contract_validator import (
+        DEFAULT_SCHEMA_PATH,
+        ContractError,
+        validate_fixture,
+        validate_fixture_schema,
+    )
 
     payload = _json.loads(fixture.read_text(encoding="utf-8"))
     try:
@@ -480,10 +553,16 @@ def validate_ux_contract(
             "status": "PASS",
             "fixture": str(fixture),
             "schema": payload.get("schema"),
-            "ux_contract_schema": payload.get("ux_contract", {}).get("schema") if isinstance(payload.get("ux_contract"), dict) else None,
+            "ux_contract_schema": payload.get("ux_contract", {}).get("schema")
+            if isinstance(payload.get("ux_contract"), dict)
+            else None,
             "json_schema": str(DEFAULT_SCHEMA_PATH),
-            "lineage_mode": payload.get("lineage", {}).get("mode") if isinstance(payload.get("lineage"), dict) else None,
-            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count") if isinstance(payload.get("scoreboard"), dict) else None,
+            "lineage_mode": payload.get("lineage", {}).get("mode")
+            if isinstance(payload.get("lineage"), dict)
+            else None,
+            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count")
+            if isinstance(payload.get("scoreboard"), dict)
+            else None,
             "mocked": payload.get("mocked"),
             "live_source": payload.get("live_source"),
         }
@@ -500,7 +579,9 @@ def generate_ux_transport(
         readable=True,
         help="Battle proof directory containing run-receipt, scoreboard, and Tau/Arena/Judge artifacts.",
     ),
-    battle_id: str = typer.Option("battle-004", help="Expected Battle id for the generated fixture."),
+    battle_id: str = typer.Option(
+        "battle-004", help="Expected Battle id for the generated fixture."
+    ),
     out: Optional[Path] = typer.Option(
         None,
         "--out",
@@ -519,7 +600,9 @@ def generate_ux_transport(
 
     fixture_path = fixture_out or (proof_dir / "battle.normalized_ux_fixture.json")
     stream_dir = out or (proof_dir / "stream")
-    fixture = generate_fixture_files(proof_dir=proof_dir, battle_id=battle_id, out=fixture_path)
+    fixture = generate_fixture_files(
+        proof_dir=proof_dir, battle_id=battle_id, out=fixture_path
+    )
     result = generate_transport_files(fixture=fixture, out_dir=stream_dir)
     result["normalized_fixture"] = str(fixture_path)
     print(_json.dumps(result, indent=2, sort_keys=True))
@@ -549,11 +632,17 @@ def validate_ux_transport(
 
 @app.command("export-semantic-outcome-matrix")
 def export_semantic_outcome_matrix(
-    out: Path = typer.Option(..., "--out", help="Output Battle semantic outcome matrix JSON path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output Battle semantic outcome matrix JSON path."
+    ),
 ):
     """Export deterministic Battle outcome scoring and sprite-profile calibration."""
     from .battle_event_adapter import write_semantic_outcome_matrix
-    from .ux_contract_validator import ContractError, validate_semantic_outcome_matrix, validate_semantic_outcome_matrix_schema
+    from .ux_contract_validator import (
+        ContractError,
+        validate_semantic_outcome_matrix,
+        validate_semantic_outcome_matrix_schema,
+    )
 
     out.parent.mkdir(parents=True, exist_ok=True)
     matrix = write_semantic_outcome_matrix(out=out)
@@ -587,7 +676,10 @@ def validate_semantic_outcome_matrix_command(
     ),
 ):
     """Validate deterministic Battle outcome scoring and sprite-profile calibration."""
-    from .ux_contract_validator import ContractError, validate_semantic_outcome_matrix_path
+    from .ux_contract_validator import (
+        ContractError,
+        validate_semantic_outcome_matrix_path,
+    )
 
     try:
         report = validate_semantic_outcome_matrix_path(matrix)
@@ -599,11 +691,17 @@ def validate_semantic_outcome_matrix_command(
 
 @app.command("export-exploit-lifecycle-dag")
 def export_exploit_lifecycle_dag(
-    out: Path = typer.Option(..., "--out", help="Output Battle exploit lifecycle DAG JSON path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output Battle exploit lifecycle DAG JSON path."
+    ),
 ):
     """Export deterministic exploit lifecycle DAG contract."""
     from .battle_event_adapter import write_exploit_lifecycle_dag
-    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_dag, validate_exploit_lifecycle_dag_schema
+    from .ux_contract_validator import (
+        ContractError,
+        validate_exploit_lifecycle_dag,
+        validate_exploit_lifecycle_dag_schema,
+    )
 
     out.parent.mkdir(parents=True, exist_ok=True)
     dag = write_exploit_lifecycle_dag(out=out)
@@ -638,7 +736,10 @@ def validate_exploit_lifecycle_dag_command(
     ),
 ):
     """Validate deterministic exploit lifecycle DAG contract."""
-    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_dag_path
+    from .ux_contract_validator import (
+        ContractError,
+        validate_exploit_lifecycle_dag_path,
+    )
 
     try:
         report = validate_exploit_lifecycle_dag_path(dag)
@@ -658,7 +759,9 @@ def export_exploit_lifecycle_receipts(
         readable=True,
         help="Live BATTLE-004 proof directory containing exploit-lifecycle-receipts.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output Battle exploit lifecycle receipts JSON path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output Battle exploit lifecycle receipts JSON path."
+    ),
 ):
     """Export live Tau exploit lifecycle receipts from an existing proof directory."""
     import json as _json
@@ -681,7 +784,9 @@ def export_exploit_lifecycle_receipts(
         console.print(f"[red]Battle exploit lifecycle receipts invalid:[/red]\n{exc}")
         raise typer.Exit(1) from exc
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
     console.print_json(
         data={
@@ -712,7 +817,10 @@ def validate_exploit_lifecycle_receipts_command(
     ),
 ):
     """Validate live Tau exploit lifecycle receipt bundle."""
-    from .ux_contract_validator import ContractError, validate_exploit_lifecycle_receipts_path
+    from .ux_contract_validator import (
+        ContractError,
+        validate_exploit_lifecycle_receipts_path,
+    )
 
     try:
         report = validate_exploit_lifecycle_receipts_path(receipts)
@@ -724,12 +832,33 @@ def validate_exploit_lifecycle_receipts_command(
 
 @app.command("exploit-combiner-proof")
 def exploit_combiner_proof(
-    battle_id: str = typer.Argument("battle-004", help="Battle id for the fixture-backed combiner proof."),
-    out: Path = typer.Option(..., "--out", help="Output directory for exploit combiner artifacts."),
-    max_attempts: int = typer.Option(4, "--max-attempts", min=1, help="Maximum fixture specimens to materialize and run."),
-    docker_image: str = typer.Option("python:3.12-slim", "--docker-image", help="Docker image used to run specimen code."),
-    model: str = typer.Option("gpt-5.5", "--model", help="Future Tau model request, recorded but not used by PR1 fixture proof."),
-    scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url", help="Future scillm endpoint, recorded but not used by PR1 fixture proof."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Battle id for the fixture-backed combiner proof."
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Output directory for exploit combiner artifacts."
+    ),
+    max_attempts: int = typer.Option(
+        4,
+        "--max-attempts",
+        min=1,
+        help="Maximum fixture specimens to materialize and run.",
+    ),
+    docker_image: str = typer.Option(
+        "python:3.12-slim",
+        "--docker-image",
+        help="Docker image used to run specimen code.",
+    ),
+    model: str = typer.Option(
+        "gpt-5.5",
+        "--model",
+        help="Future Tau model request, recorded but not used by PR1 fixture proof.",
+    ),
+    scillm_base_url: str = typer.Option(
+        "http://localhost:4001",
+        "--scillm-base-url",
+        help="Future scillm endpoint, recorded but not used by PR1 fixture proof.",
+    ),
 ):
     """Run fixture-backed exploit specimen combiner proof without claiming exploit success."""
     from .exploit_combiner import run_exploit_combiner_proof
@@ -742,7 +871,9 @@ def exploit_combiner_proof(
         model=model,
         scillm_base_url=scillm_base_url,
     )
-    scoreboard = receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
+    scoreboard = (
+        receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
+    )
     console.print_json(
         data={
             "status": receipt.get("status"),
@@ -764,8 +895,12 @@ def exploit_combiner_proof(
 
 @app.command("spawn-architect-proof")
 def spawn_architect_proof(
-    battle_id: str = typer.Argument("battle-004", help="Battle id for the fixture-backed Spawn Architect proof."),
-    out: Path = typer.Option(..., "--out", help="Output directory for Spawn Architect artifacts."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Battle id for the fixture-backed Spawn Architect proof."
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Output directory for Spawn Architect artifacts."
+    ),
     parent_combiner_proof: Path = typer.Option(
         ...,
         "--parent-combiner-proof",
@@ -782,8 +917,12 @@ def spawn_architect_proof(
         out_dir=out,
         parent_combiner_proof=parent_combiner_proof,
     )
-    scoreboard = receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
-    validation = receipt.get("validation") if isinstance(receipt.get("validation"), dict) else {}
+    scoreboard = (
+        receipt.get("scoreboard") if isinstance(receipt.get("scoreboard"), dict) else {}
+    )
+    validation = (
+        receipt.get("validation") if isinstance(receipt.get("validation"), dict) else {}
+    )
     console.print_json(
         data={
             "status": receipt.get("status"),
@@ -793,22 +932,59 @@ def spawn_architect_proof(
             "proof_mode": receipt.get("proof_mode"),
             "agentic": receipt.get("agentic"),
             "tau_execution": receipt.get("tau_execution"),
-            "spawn_policy_decision": (receipt.get("spawn_policy") or {}).get("decision") if isinstance(receipt.get("spawn_policy"), dict) else None,
+            "spawn_policy_decision": (receipt.get("spawn_policy") or {}).get("decision")
+            if isinstance(receipt.get("spawn_policy"), dict)
+            else None,
             "dag_id": validation.get("dag_id"),
             "private_boundary_passed": validation.get("private_boundary_passed"),
             "child_tau_dags_validated": scoreboard.get("child_tau_dags_validated"),
             "live_tau_executions": scoreboard.get("live_tau_executions"),
-            "child_exploits_materialized": scoreboard.get("child_exploits_materialized"),
+            "child_exploits_materialized": scoreboard.get(
+                "child_exploits_materialized"
+            ),
             "judge_verified_exploits": scoreboard.get("judge_verified_exploits"),
             "verdict": scoreboard.get("verdict"),
         }
     )
 
 
+@app.command("adaptive-red-blue-lineage-canary")
+def adaptive_red_blue_lineage_canary(
+    battle_id: str = typer.Argument("battle-004"),
+    out: Path = typer.Option(..., "--out"),
+    run_id: str = typer.Option(..., "--run-id"),
+    docker_image: str = typer.Option("python:3.12-slim", "--docker-image"),
+    model: str = typer.Option("gpt-5.5", "--model"),
+    scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
+    timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
+):
+    """Run simultaneous Red/Blue parent and child generations through Tau, Docker, and Judge."""
+    import json as _json
+
+    from .adaptive_red_blue_lineage_canary import run_adaptive_red_blue_lineage_canary
+
+    receipt = run_adaptive_red_blue_lineage_canary(
+        battle_id=battle_id,
+        out_dir=out,
+        run_id=run_id,
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+    )
+    print(_json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt.get("status") == "FAIL":
+        raise typer.Exit(1)
+
+
 @app.command("live-tau-child-dag-canary")
 def live_tau_child_dag_canary(
-    battle_id: str = typer.Argument("battle-004", help="Battle id for the live Tau child DAG canary."),
-    out: Path = typer.Option(..., "--out", help="Output directory for live Tau canary artifacts."),
+    battle_id: str = typer.Argument(
+        "battle-004", help="Battle id for the live Tau child DAG canary."
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Output directory for live Tau canary artifacts."
+    ),
     spawn_architect_proof: Path = typer.Option(
         ...,
         "--spawn-architect-proof",
@@ -821,7 +997,12 @@ def live_tau_child_dag_canary(
         "--tau-root",
         help="Existing local Tau runtime checkout.",
     ),
-    timeout_seconds: int = typer.Option(900, "--timeout-seconds", min=30, help="Timeout for the real Tau DAG invocation."),
+    timeout_seconds: int = typer.Option(
+        900,
+        "--timeout-seconds",
+        min=30,
+        help="Timeout for the real Tau DAG invocation.",
+    ),
 ):
     """Attempt PR3 live Tau child DAG execution without fixture fallback."""
     import json as _json
@@ -850,7 +1031,9 @@ def live_tau_child_dag_canary(
                 "tau_receipt_status": receipt.get("tau_receipt_status"),
                 "reason": receipt.get("reason"),
                 "missing_tau_artifacts": receipt.get("missing_tau_artifacts"),
-                "judge_verified_exploits": (receipt.get("scoreboard") or {}).get("judge_verified_exploits"),
+                "judge_verified_exploits": (receipt.get("scoreboard") or {}).get(
+                    "judge_verified_exploits"
+                ),
             },
             indent=2,
             sort_keys=True,
@@ -868,12 +1051,16 @@ def normalize_proof_card_fixture(
         readable=True,
         help="PR3b live Tau canary directory or live-tau-child-dag-canary-receipt.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output battle.normalized_proof_card_fixture.json path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output battle.normalized_proof_card_fixture.json path."
+    ),
 ):
     """Normalize backend PR3b receipts into a stable proof-card fixture for UX."""
     from .proof_card_fixture import normalize_pr3b_proof_card_fixture
 
-    fixture = normalize_pr3b_proof_card_fixture(live_tau_canary=live_tau_canary, out=out)
+    fixture = normalize_pr3b_proof_card_fixture(
+        live_tau_canary=live_tau_canary, out=out
+    )
     console.print_json(
         data={
             "status": fixture.get("status"),
@@ -926,12 +1113,22 @@ def normalize_music_fixture_command(
         public_audio_root=public_audio_root,
         generated_at=generated_at,
     )
-    console.print_json(data={"status": fixture["status"], "schema": fixture["schema"], "fixture_id": fixture["fixture_id"], "events_present": fixture["events_present"], "events_not_emitted": fixture["events_not_emitted"]})
+    console.print_json(
+        data={
+            "status": fixture["status"],
+            "schema": fixture["schema"],
+            "fixture_id": fixture["fixture_id"],
+            "events_present": fixture["events_present"],
+            "events_not_emitted": fixture["events_not_emitted"],
+        }
+    )
 
 
 @app.command("validate-music-fixture")
 def validate_music_fixture_command(
-    fixture: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+    fixture: Path = typer.Argument(
+        ..., exists=True, file_okay=True, dir_okay=False, readable=True
+    ),
 ):
     """Validate a normalized Battle music fixture."""
     from .normalized_music_fixture import validate_normalized_music_fixture_path
@@ -947,9 +1144,19 @@ def normalize_synthesis_fixture(
         readable=True,
         help="PR3c live Tau canary directory or live-tau-child-dag-canary-receipt.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_synthesis_fixture.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for battle.normalized_synthesis_fixture.json.",
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Normalize backend PR3c provider authorship receipts into a stable synthesis fixture for UX."""
     from .normalized_synthesis_fixture import normalize_pr3c_synthesis_fixture
@@ -967,7 +1174,9 @@ def normalize_synthesis_fixture(
             "fixture_kind": fixture.get("fixture_kind"),
             "battle_id": fixture.get("battle_id"),
             "out": str(out / "battle.normalized_synthesis_fixture.json"),
-            "public_out": str(public_out / "battle.normalized_synthesis_fixture.json") if public_out else None,
+            "public_out": str(public_out / "battle.normalized_synthesis_fixture.json")
+            if public_out
+            else None,
             "node_status": fixture.get("node_status"),
             "provider_live": fixture.get("provider_live"),
             "execution_boundary": fixture.get("execution_boundary"),
@@ -1003,9 +1212,19 @@ def normalize_compile_fixture(
         readable=True,
         help="PR3d live Tau canary directory or live-tau-child-dag-canary-receipt.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_compile_fixture.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for battle.normalized_compile_fixture.json.",
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Normalize backend PR3d compile-repair receipts into a stable compile fixture for UX."""
     from .normalized_compile_fixture import normalize_pr3d_compile_fixture
@@ -1023,7 +1242,9 @@ def normalize_compile_fixture(
             "fixture_kind": fixture.get("fixture_kind"),
             "battle_id": fixture.get("battle_id"),
             "out": str(out / "battle.normalized_compile_fixture.json"),
-            "public_out": str(public_out / "battle.normalized_compile_fixture.json") if public_out else None,
+            "public_out": str(public_out / "battle.normalized_compile_fixture.json")
+            if public_out
+            else None,
             "node_status": fixture.get("node_status"),
             "compile": fixture.get("compile"),
             "repair": fixture.get("repair"),
@@ -1060,12 +1281,24 @@ def normalize_runtime_judge_fixture(
         readable=True,
         help="Combiner/runtime proof directory or run-receipt.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_runtime_judge_fixture.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for battle.normalized_runtime_judge_fixture.json.",
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Normalize backend runtime and Judge boundary receipts into a stable UX fixture."""
-    from .normalized_runtime_judge_fixture import normalize_runtime_judge_fixture as _normalize
+    from .normalized_runtime_judge_fixture import (
+        normalize_runtime_judge_fixture as _normalize,
+    )
 
     fixture = _normalize(
         proof_dir=proof_dir,
@@ -1080,7 +1313,11 @@ def normalize_runtime_judge_fixture(
             "fixture_kind": fixture.get("fixture_kind"),
             "battle_id": fixture.get("battle_id"),
             "out": str(out / "battle.normalized_runtime_judge_fixture.json"),
-            "public_out": str(public_out / "battle.normalized_runtime_judge_fixture.json") if public_out else None,
+            "public_out": str(
+                public_out / "battle.normalized_runtime_judge_fixture.json"
+            )
+            if public_out
+            else None,
             "runtime_summary": fixture.get("runtime", {}).get("summary"),
             "judge": fixture.get("judge"),
             "may_claim": fixture.get("claim_boundary", {}).get("may_claim"),
@@ -1101,7 +1338,9 @@ def validate_runtime_judge_fixture(
     ),
 ):
     """Validate a normalized runtime/Judge fixture."""
-    from .normalized_runtime_judge_fixture import validate_normalized_runtime_judge_fixture_path
+    from .normalized_runtime_judge_fixture import (
+        validate_normalized_runtime_judge_fixture_path,
+    )
 
     report = validate_normalized_runtime_judge_fixture_path(fixture)
     console.print_json(data=report)
@@ -1115,12 +1354,24 @@ def normalize_population_fixture(
         readable=True,
         help="Combiner/population proof directory or run-receipt.json.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_population_fixture.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for battle.normalized_population_fixture.json.",
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Normalize backend specimen population receipts into a stable UX fixture."""
-    from .normalized_population_fixture import normalize_population_fixture as _normalize
+    from .normalized_population_fixture import (
+        normalize_population_fixture as _normalize,
+    )
 
     fixture = _normalize(
         proof_dir=proof_dir,
@@ -1135,7 +1386,9 @@ def normalize_population_fixture(
             "fixture_kind": fixture.get("fixture_kind"),
             "battle_id": fixture.get("battle_id"),
             "out": str(out / "battle.normalized_population_fixture.json"),
-            "public_out": str(public_out / "battle.normalized_population_fixture.json") if public_out else None,
+            "public_out": str(public_out / "battle.normalized_population_fixture.json")
+            if public_out
+            else None,
             "campaign": fixture.get("campaign"),
             "specimen_count": len(fixture.get("specimen_cards", [])),
             "generation_count": len(fixture.get("generation_axis", [])),
@@ -1158,7 +1411,9 @@ def validate_population_fixture(
     ),
 ):
     """Validate a normalized population fixture."""
-    from .normalized_population_fixture import validate_normalized_population_fixture_path
+    from .normalized_population_fixture import (
+        validate_normalized_population_fixture_path,
+    )
 
     report = validate_normalized_population_fixture_path(fixture)
     console.print_json(data=report)
@@ -1172,12 +1427,22 @@ def normalize_genetic_pixi_fixture(
         readable=True,
         help="Battle skill directory containing PR3c/PR3d/PR4/PR5 normalized source fixtures.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.normalized_ux_fixture.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output directory for battle.normalized_ux_fixture.json."
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Normalize genetic lifecycle receipts into a Pixi replay UX fixture."""
-    from .normalized_genetic_pixi_fixture import normalize_genetic_pixi_fixture as _normalize
+    from .normalized_genetic_pixi_fixture import (
+        normalize_genetic_pixi_fixture as _normalize,
+    )
 
     fixture = _normalize(
         source_dir=source_dir,
@@ -1194,7 +1459,9 @@ def normalize_genetic_pixi_fixture(
             "battle_id": fixture.get("battle_id"),
             "route": genetic.get("route"),
             "out": str(out / "battle.normalized_ux_fixture.json"),
-            "public_out": str(public_out / "battle.normalized_ux_fixture.json") if public_out else None,
+            "public_out": str(public_out / "battle.normalized_ux_fixture.json")
+            if public_out
+            else None,
             "present_event_types": genetic.get("present_event_types"),
             "not_emitted_event_types": genetic.get("not_emitted_event_types"),
             "must_not_claim": genetic.get("claim_boundary", {}).get("must_not_claim"),
@@ -1214,7 +1481,9 @@ def validate_genetic_pixi_fixture(
     ),
 ):
     """Validate a normalized genetic lifecycle Pixi fixture."""
-    from .normalized_genetic_pixi_fixture import validate_normalized_genetic_pixi_fixture_path
+    from .normalized_genetic_pixi_fixture import (
+        validate_normalized_genetic_pixi_fixture_path,
+    )
 
     report = validate_normalized_genetic_pixi_fixture_path(fixture)
     console.print_json(data=report)
@@ -1244,14 +1513,24 @@ def validate_ux_handoff_summary(
 
 @app.command("publish-live-transport-contract")
 def publish_live_transport_contract(
-    out: Path = typer.Option(..., "--out", help="Output directory for battle.live_transport_contract.json."),
-    public_out: Optional[Path] = typer.Option(None, "--public-out", help="Optional public fixture directory for spectator consumption."),
-    generated_at: Optional[str] = typer.Option(None, "--generated-at", help="Optional deterministic generated_at timestamp."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output directory for battle.live_transport_contract.json."
+    ),
+    public_out: Optional[Path] = typer.Option(
+        None,
+        "--public-out",
+        help="Optional public fixture directory for spectator consumption.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
 ):
     """Publish the UX8 SSE live transport contract."""
     from .live_transport_contract import publish_live_transport_contract as _publish
 
-    contract = _publish(out_dir=out, public_out_dir=public_out, generated_at=generated_at)
+    contract = _publish(
+        out_dir=out, public_out_dir=public_out, generated_at=generated_at
+    )
     console.print_json(
         data={
             "status": contract.get("status"),
@@ -1262,7 +1541,9 @@ def publish_live_transport_contract(
             "snapshot_endpoint": contract.get("initial_snapshot", {}).get("endpoint"),
             "sse_endpoint": contract.get("transport", {}).get("endpoint"),
             "out": str(out / "battle.live_transport_contract.json"),
-            "public_out": str(public_out / "battle.live_transport_contract.json") if public_out else None,
+            "public_out": str(public_out / "battle.live_transport_contract.json")
+            if public_out
+            else None,
             "must_not_claim": contract.get("claim_boundary", {}).get("must_not_claim"),
         }
     )
@@ -1289,7 +1570,9 @@ def validate_live_transport_contract(
 @app.command("serve-live-transport")
 def serve_live_transport(
     fixture: Path = typer.Option(
-        Path("spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"),
+        Path(
+            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
+        ),
         "--fixture",
         exists=True,
         file_okay=True,
@@ -1297,12 +1580,17 @@ def serve_live_transport(
         readable=True,
         help="Normalized Battle UX fixture used as the live transport source.",
     ),
-    battle_id: str = typer.Option("battle-004", "--battle-id", help="Battle id for the live endpoints."),
+    battle_id: str = typer.Option(
+        "battle-004", "--battle-id", help="Battle id for the live endpoints."
+    ),
     host: str = typer.Option("127.0.0.1", "--host", help="HTTP bind host."),
     port: int = typer.Option(8765, "--port", help="HTTP bind port."),
 ):
     """Serve executable UX8 snapshot/SSE endpoints from a normalized fixture."""
-    from .live_transport_server import build_live_transport_source, serve_live_transport as _serve
+    from .live_transport_server import (
+        build_live_transport_source,
+        serve_live_transport as _serve,
+    )
 
     source = build_live_transport_source(fixture_path=fixture, battle_id=battle_id)
     console.print_json(
@@ -1335,7 +1623,9 @@ def serve_live_transport(
 @app.command("prove-live-transport-server")
 def prove_live_transport_server(
     fixture: Path = typer.Option(
-        Path("spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"),
+        Path(
+            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
+        ),
         "--fixture",
         exists=True,
         file_okay=True,
@@ -1343,8 +1633,14 @@ def prove_live_transport_server(
         readable=True,
         help="Normalized Battle UX fixture used as the live transport source.",
     ),
-    battle_id: str = typer.Option("battle-004", "--battle-id", help="Battle id for the live endpoints."),
-    out: Path = typer.Option(..., "--out", help="Output directory for the executable live transport proof receipt."),
+    battle_id: str = typer.Option(
+        "battle-004", "--battle-id", help="Battle id for the live endpoints."
+    ),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the executable live transport proof receipt.",
+    ),
 ):
     """Prove UX8 snapshot/SSE endpoints execute locally and preserve claim boundaries."""
     from .live_transport_server import prove_live_transport_server as _prove
@@ -1363,12 +1659,19 @@ def export_ux_handoff_summary(
         readable=True,
         help="Battle backend UX JSON handoff summary to refresh from current fixture JSON.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output refreshed Battle backend UX handoff summary JSON path."),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output refreshed Battle backend UX handoff summary JSON path.",
+    ),
 ):
     """Refresh fixture-derived fields in the backend UX handoff summary."""
     import json as _json
 
-    from .ux_contract_validator import ContractError, export_handoff_summary_from_current_fixtures
+    from .ux_contract_validator import (
+        ContractError,
+        export_handoff_summary_from_current_fixtures,
+    )
 
     try:
         payload = export_handoff_summary_from_current_fixtures(summary)
@@ -1377,10 +1680,20 @@ def export_ux_handoff_summary(
         raise typer.Exit(1) from exc
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    parent = payload.get("authoritative_parent_spawn_fixture") if isinstance(payload.get("authoritative_parent_spawn_fixture"), dict) else {}
-    timeline = parent.get("timeline") if isinstance(parent.get("timeline"), dict) else {}
-    playhead = timeline.get("playhead") if isinstance(timeline.get("playhead"), dict) else {}
+    out.write_text(
+        _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    parent = (
+        payload.get("authoritative_parent_spawn_fixture")
+        if isinstance(payload.get("authoritative_parent_spawn_fixture"), dict)
+        else {}
+    )
+    timeline = (
+        parent.get("timeline") if isinstance(parent.get("timeline"), dict) else {}
+    )
+    playhead = (
+        timeline.get("playhead") if isinstance(timeline.get("playhead"), dict) else {}
+    )
     console.print_json(
         data={
             "status": "PASS",
@@ -1388,7 +1701,9 @@ def export_ux_handoff_summary(
             "schema": payload.get("schema"),
             "battle_id": payload.get("battle_id"),
             "parent_spawn_status": parent.get("status"),
-            "child_spawn_count": parent.get("scoreboard", {}).get("child_spawn_count") if isinstance(parent.get("scoreboard"), dict) else None,
+            "child_spawn_count": parent.get("scoreboard", {}).get("child_spawn_count")
+            if isinstance(parent.get("scoreboard"), dict)
+            else None,
             "playhead_current_x": playhead.get("current_x"),
             "mocked": parent.get("mocked"),
             "live_source": parent.get("live_source"),
@@ -1415,7 +1730,10 @@ def resolve_ux_renderer_fixture(
     """Resolve the normalized JSON fixture the UX renderer should load."""
     import json as _json
 
-    from .ux_contract_validator import ContractError, resolve_renderer_fixture_from_summary_path
+    from .ux_contract_validator import (
+        ContractError,
+        resolve_renderer_fixture_from_summary_path,
+    )
 
     try:
         payload = resolve_renderer_fixture_from_summary_path(summary)
@@ -1425,7 +1743,9 @@ def resolve_ux_renderer_fixture(
 
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        out.write_text(
+            _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
     console.print_json(data=payload)
 
@@ -1455,7 +1775,9 @@ def validate_ux_renderer_fixture_resolution(
         validate_renderer_fixture_resolution_schema(payload)
         validate_renderer_fixture_resolution(payload)
     except (_json.JSONDecodeError, ContractError) as exc:
-        console.print(f"[red]Battle UX renderer fixture resolution invalid:[/red]\n{exc}")
+        console.print(
+            f"[red]Battle UX renderer fixture resolution invalid:[/red]\n{exc}"
+        )
         raise typer.Exit(1) from exc
 
     console.print_json(
@@ -1491,7 +1813,10 @@ def export_ux_renderer_bundle(
     """Export one self-contained backend JSON bundle for the UX renderer."""
     import json as _json
 
-    from .ux_contract_validator import ContractError, export_renderer_bundle_from_resolution_path
+    from .ux_contract_validator import (
+        ContractError,
+        export_renderer_bundle_from_resolution_path,
+    )
 
     try:
         payload = export_renderer_bundle_from_resolution_path(resolution)
@@ -1500,18 +1825,34 @@ def export_ux_renderer_bundle(
         raise typer.Exit(1) from exc
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     console.print_json(
         data={
             "status": "PASS",
             "out": str(out),
             "schema": payload.get("schema"),
-            "battle_id": payload.get("fixture", {}).get("battle_id") if isinstance(payload.get("fixture"), dict) else None,
+            "battle_id": payload.get("fixture", {}).get("battle_id")
+            if isinstance(payload.get("fixture"), dict)
+            else None,
             "normalized_fixture_source": payload.get("normalized_fixture_source"),
-            "fixture_key": payload.get("resolution", {}).get("fixture_key") if isinstance(payload.get("resolution"), dict) else None,
-            "child_spawn_count": payload.get("resolution", {}).get("fixture_child_spawn_count") if isinstance(payload.get("resolution"), dict) else None,
-            "playhead_current_x": payload.get("resolution", {}).get("fixture_playhead_current_x") if isinstance(payload.get("resolution"), dict) else None,
-            "mocked": payload.get("resolution", {}).get("mocked") if isinstance(payload.get("resolution"), dict) else None,
+            "fixture_key": payload.get("resolution", {}).get("fixture_key")
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "child_spawn_count": payload.get("resolution", {}).get(
+                "fixture_child_spawn_count"
+            )
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "playhead_current_x": payload.get("resolution", {}).get(
+                "fixture_playhead_current_x"
+            )
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "mocked": payload.get("resolution", {}).get("mocked")
+            if isinstance(payload.get("resolution"), dict)
+            else None,
         }
     )
 
@@ -1544,12 +1885,26 @@ def validate_ux_renderer_bundle(
             "status": "PASS",
             "bundle": str(bundle),
             "schema": payload.get("schema"),
-            "battle_id": payload.get("fixture", {}).get("battle_id") if isinstance(payload.get("fixture"), dict) else None,
+            "battle_id": payload.get("fixture", {}).get("battle_id")
+            if isinstance(payload.get("fixture"), dict)
+            else None,
             "normalized_fixture_source": payload.get("normalized_fixture_source"),
-            "fixture_key": payload.get("resolution", {}).get("fixture_key") if isinstance(payload.get("resolution"), dict) else None,
-            "child_spawn_count": payload.get("resolution", {}).get("fixture_child_spawn_count") if isinstance(payload.get("resolution"), dict) else None,
-            "playhead_current_x": payload.get("resolution", {}).get("fixture_playhead_current_x") if isinstance(payload.get("resolution"), dict) else None,
-            "mocked": payload.get("resolution", {}).get("mocked") if isinstance(payload.get("resolution"), dict) else None,
+            "fixture_key": payload.get("resolution", {}).get("fixture_key")
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "child_spawn_count": payload.get("resolution", {}).get(
+                "fixture_child_spawn_count"
+            )
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "playhead_current_x": payload.get("resolution", {}).get(
+                "fixture_playhead_current_x"
+            )
+            if isinstance(payload.get("resolution"), dict)
+            else None,
+            "mocked": payload.get("resolution", {}).get("mocked")
+            if isinstance(payload.get("resolution"), dict)
+            else None,
         }
     )
 
@@ -1564,12 +1919,17 @@ def export_ux_renderer_values(
         readable=True,
         help="Battle UX renderer bundle JSON.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output compact renderer values JSON path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output compact renderer values JSON path."
+    ),
 ):
     """Export compact backend-owned values for the UX renderer."""
     import json as _json
 
-    from .ux_contract_validator import ContractError, export_renderer_values_from_bundle_path
+    from .ux_contract_validator import (
+        ContractError,
+        export_renderer_values_from_bundle_path,
+    )
 
     try:
         payload = export_renderer_values_from_bundle_path(bundle)
@@ -1578,7 +1938,9 @@ def export_ux_renderer_values(
         raise typer.Exit(1) from exc
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     console.print_json(
         data={
             "status": "PASS",
@@ -1587,9 +1949,14 @@ def export_ux_renderer_values(
             "battle_id": payload.get("battle_id"),
             "source_bundle": payload.get("source_bundle"),
             "source_fixture": payload.get("source_fixture"),
-            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count") if isinstance(payload.get("scoreboard"), dict) else None,
-            "playhead_current_x": payload.get("timeline", {}).get("playhead", {}).get("current_x")
-            if isinstance(payload.get("timeline"), dict) and isinstance(payload.get("timeline", {}).get("playhead"), dict)
+            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count")
+            if isinstance(payload.get("scoreboard"), dict)
+            else None,
+            "playhead_current_x": payload.get("timeline", {})
+            .get("playhead", {})
+            .get("current_x")
+            if isinstance(payload.get("timeline"), dict)
+            and isinstance(payload.get("timeline", {}).get("playhead"), dict)
             else None,
             "mocked": payload.get("mocked"),
         }
@@ -1627,9 +1994,14 @@ def validate_ux_renderer_values(
             "battle_id": payload.get("battle_id"),
             "source_bundle": payload.get("source_bundle"),
             "source_fixture": payload.get("source_fixture"),
-            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count") if isinstance(payload.get("scoreboard"), dict) else None,
-            "playhead_current_x": payload.get("timeline", {}).get("playhead", {}).get("current_x")
-            if isinstance(payload.get("timeline"), dict) and isinstance(payload.get("timeline", {}).get("playhead"), dict)
+            "child_spawn_count": payload.get("scoreboard", {}).get("child_spawn_count")
+            if isinstance(payload.get("scoreboard"), dict)
+            else None,
+            "playhead_current_x": payload.get("timeline", {})
+            .get("playhead", {})
+            .get("current_x")
+            if isinstance(payload.get("timeline"), dict)
+            and isinstance(payload.get("timeline", {}).get("playhead"), dict)
             else None,
             "mocked": payload.get("mocked"),
         }
@@ -1646,12 +2018,17 @@ def export_ux_data_contract_index(
         readable=True,
         help="Battle UX handoff summary JSON.",
     ),
-    out: Path = typer.Option(..., "--out", help="Output UX data contract index JSON path."),
+    out: Path = typer.Option(
+        ..., "--out", help="Output UX data contract index JSON path."
+    ),
 ):
     """Export the backend-owned source index for UX renderer data."""
     import json as _json
 
-    from .ux_contract_validator import ContractError, export_ux_data_contract_index_from_summary_path
+    from .ux_contract_validator import (
+        ContractError,
+        export_ux_data_contract_index_from_summary_path,
+    )
 
     try:
         payload = export_ux_data_contract_index_from_summary_path(summary)
@@ -1660,19 +2037,29 @@ def export_ux_data_contract_index(
         raise typer.Exit(1) from exc
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(_json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        _json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     console.print_json(
         data={
             "status": "PASS",
             "out": str(out),
             "schema": payload.get("schema"),
             "battle_id": payload.get("battle_id"),
-            "authoritative_renderer_values": payload.get("authoritative_renderer_values"),
-            "authoritative_normalized_fixture": payload.get("authoritative_normalized_fixture"),
-            "child_spawn_count": payload.get("receipt_backed_values", {}).get("child_spawn_count")
+            "authoritative_renderer_values": payload.get(
+                "authoritative_renderer_values"
+            ),
+            "authoritative_normalized_fixture": payload.get(
+                "authoritative_normalized_fixture"
+            ),
+            "child_spawn_count": payload.get("receipt_backed_values", {}).get(
+                "child_spawn_count"
+            )
             if isinstance(payload.get("receipt_backed_values"), dict)
             else None,
-            "playhead_current_x": payload.get("receipt_backed_values", {}).get("playhead_current_x")
+            "playhead_current_x": payload.get("receipt_backed_values", {}).get(
+                "playhead_current_x"
+            )
             if isinstance(payload.get("receipt_backed_values"), dict)
             else None,
             "mocked": payload.get("mocked"),
@@ -1709,12 +2096,20 @@ def validate_ux_data_contract_index(
             "index": str(index),
             "schema": payload.get("schema"),
             "battle_id": payload.get("battle_id"),
-            "authoritative_renderer_values": payload.get("authoritative_renderer_values"),
-            "authoritative_normalized_fixture": payload.get("authoritative_normalized_fixture"),
-            "child_spawn_count": payload.get("receipt_backed_values", {}).get("child_spawn_count")
+            "authoritative_renderer_values": payload.get(
+                "authoritative_renderer_values"
+            ),
+            "authoritative_normalized_fixture": payload.get(
+                "authoritative_normalized_fixture"
+            ),
+            "child_spawn_count": payload.get("receipt_backed_values", {}).get(
+                "child_spawn_count"
+            )
             if isinstance(payload.get("receipt_backed_values"), dict)
             else None,
-            "playhead_current_x": payload.get("receipt_backed_values", {}).get("playhead_current_x")
+            "playhead_current_x": payload.get("receipt_backed_values", {}).get(
+                "playhead_current_x"
+            )
             if isinstance(payload.get("receipt_backed_values"), dict)
             else None,
             "mocked": payload.get("mocked"),
@@ -1724,15 +2119,29 @@ def validate_ux_data_contract_index(
 
 @app.command("generate-ux-fixture")
 def generate_ux_fixture(
-    input_dir: Path = typer.Option(..., "--input", exists=True, file_okay=False, dir_okay=True, readable=True, help="Battle proof directory."),
-    battle_id: str = typer.Option(..., "--battle-id", help="Expected Battle id for the generated fixture."),
+    input_dir: Path = typer.Option(
+        ...,
+        "--input",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Battle proof directory.",
+    ),
+    battle_id: str = typer.Option(
+        ..., "--battle-id", help="Expected Battle id for the generated fixture."
+    ),
     out: Path = typer.Option(..., "--out", help="Output normalized JSON fixture path."),
-    ts_out: Optional[Path] = typer.Option(None, "--ts-out", help="Optional generated TypeScript module path."),
+    ts_out: Optional[Path] = typer.Option(
+        None, "--ts-out", help="Optional generated TypeScript module path."
+    ),
 ):
     """Generate and validate normalized Battle UX JSON from proof receipts."""
     from .battle_event_adapter import generate_fixture_files
 
-    fixture = generate_fixture_files(proof_dir=input_dir, battle_id=battle_id, out=out, ts_out=ts_out)
+    fixture = generate_fixture_files(
+        proof_dir=input_dir, battle_id=battle_id, out=out, ts_out=ts_out
+    )
     console.print_json(
         data={
             "status": "PASS",
@@ -1740,9 +2149,15 @@ def generate_ux_fixture(
             "out": str(out),
             "ts_out": str(ts_out) if ts_out else None,
             "schema": fixture.get("schema"),
-            "ux_contract_schema": fixture.get("ux_contract", {}).get("schema") if isinstance(fixture.get("ux_contract"), dict) else None,
-            "lineage_mode": fixture.get("lineage", {}).get("mode") if isinstance(fixture.get("lineage"), dict) else None,
-            "child_spawn_count": fixture.get("scoreboard", {}).get("child_spawn_count") if isinstance(fixture.get("scoreboard"), dict) else None,
+            "ux_contract_schema": fixture.get("ux_contract", {}).get("schema")
+            if isinstance(fixture.get("ux_contract"), dict)
+            else None,
+            "lineage_mode": fixture.get("lineage", {}).get("mode")
+            if isinstance(fixture.get("lineage"), dict)
+            else None,
+            "child_spawn_count": fixture.get("scoreboard", {}).get("child_spawn_count")
+            if isinstance(fixture.get("scoreboard"), dict)
+            else None,
             "mocked": fixture.get("mocked"),
             "live_source": fixture.get("live_source"),
         }
@@ -1771,14 +2186,16 @@ def status():
         try:
             state = BattleState.load(battle_file.stem)
             if state:
-                leader = "Red" if state.red_total_score > state.blue_total_score else "Blue"
+                leader = (
+                    "Red" if state.red_total_score > state.blue_total_score else "Blue"
+                )
                 table.add_row(
                     state.battle_id,
                     state.status,
                     f"{state.current_round}/{state.max_rounds}",
                     f"{state.red_total_score:.1f}",
                     f"{state.blue_total_score:.1f}",
-                    leader
+                    leader,
                 )
         except Exception as e:
             logger.error("Battle status load failed for {}: {}", battle_file, e)

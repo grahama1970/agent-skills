@@ -1485,8 +1485,9 @@
       "ts": 126.0
     }
   ],
-  "generated_at": "2026-07-10T22:20:00Z",
+  "generated_at": "2026-07-11T15:00:00Z",
   "genetic_lifecycle": {
+    "causal_continuity_proven": false,
     "claim_boundary": {
       "compile_passed_is_not_runnable": true,
       "may_claim": [
@@ -1531,6 +1532,7 @@
       "receipt_id": "payload.receipt_id and evidence.receipt_id",
       "specimen_id": "payload.specimen_id"
     },
+    "evidence_mode": "composite_demonstration_fixture",
     "fixture_id": "battle-004-pr6-genetic-pixi",
     "fixture_url": "/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
     "not_emitted_event_types": [
@@ -1597,7 +1599,9 @@
       "population": "local/battle-004-pr5-population/battle.normalized_population_fixture.json",
       "runtime_judge": "local/battle-004-pr4-runtime-judge/battle.normalized_runtime_judge_fixture.json",
       "synthesis": "local/battle-004-pr3c-synthesis/battle.normalized_synthesis_fixture.json"
-    }
+    },
+    "source_run_count": 4,
+    "timeline_source": "synthetic_presentation_order"
   },
   "lane_activity_timeline_model": {
     "lane_count": 2,

@@ -20,12 +20,24 @@ def _start_payload(dag_path: Path) -> dict:
     return {
         "schema": "tau.agent_handoff.v1",
         "github": {"repo": "grahama1970/agent-skills", "target": "skills/battle"},
-        "goal": {"goal_id": "battle-004-child-exploit-specimen", "goal_version": 1, "goal_hash": "sha256:test"},
+        "goal": {
+            "goal_id": "battle-004-child-exploit-specimen",
+            "goal_version": 1,
+            "goal_hash": "sha256:test",
+        },
         "previous_subagent": "human",
         "context": {"summary": "Dispatch test.", "artifacts": [str(dag_path)]},
-        "result": {"status": "DAG_DISPATCH_REQUESTED", "summary": "dispatch", "evidence": []},
+        "result": {
+            "status": "DAG_DISPATCH_REQUESTED",
+            "summary": "dispatch",
+            "evidence": [],
+        },
         "rationale": "test",
-        "next_agent": {"name": "lineage-summarizer", "executor": "local", "reason": "test"},
+        "next_agent": {
+            "name": "lineage-summarizer",
+            "executor": "local",
+            "reason": "test",
+        },
         "required_evidence": ["child_knowledge_packet.json"],
         "stop_condition": "test",
     }
@@ -42,11 +54,15 @@ def _spawn_architect_dir(tmp_path: Path) -> Path:
         scillm_base_url="not-used",
     )
     spawn = tmp_path / "spawn-architect"
-    run_spawn_architect_proof(battle_id="battle-004", out_dir=spawn, parent_combiner_proof=combiner)
+    run_spawn_architect_proof(
+        battle_id="battle-004", out_dir=spawn, parent_combiner_proof=combiner
+    )
     return spawn
 
 
-def test_lineage_summarizer_adapter_emits_handoff_and_receipts(tmp_path: Path, monkeypatch) -> None:
+def test_lineage_summarizer_adapter_emits_handoff_and_receipts(
+    tmp_path: Path, monkeypatch
+) -> None:
     spawn = _spawn_architect_dir(tmp_path)
     artifact_dir = tmp_path / "artifacts" / "lineage-summarizer"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "lineage-summarizer")
@@ -61,12 +77,18 @@ def test_lineage_summarizer_adapter_emits_handoff_and_receipts(tmp_path: Path, m
     assert response["previous_subagent"] == "lineage-summarizer"
     assert response["next_agent"]["name"] == "research-scout"
     assert (artifact_dir / "lineage_summary.json").exists()
-    receipt = json.loads((artifact_dir / "lineage-summarizer-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "lineage-summarizer-node-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert receipt["status"] == "PASS"
     assert receipt["fixture_fallback_used"] is False
 
 
-def test_research_scout_adapter_blocks_without_fake_research(tmp_path: Path, monkeypatch) -> None:
+def test_research_scout_adapter_blocks_without_fake_research(
+    tmp_path: Path, monkeypatch
+) -> None:
     artifact_dir = tmp_path / "artifacts" / "research-scout"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "research-scout")
     response, exit_code = run_node(
@@ -77,14 +99,18 @@ def test_research_scout_adapter_blocks_without_fake_research(tmp_path: Path, mon
 
     assert response is None
     assert exit_code == 1
-    receipt = json.loads((artifact_dir / "research-scout-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "research-scout-node-receipt.json").read_text(encoding="utf-8")
+    )
     assert receipt["status"] == "BLOCKED"
     assert receipt["verdict"] == "RESEARCH_SOURCE_INPUT_MISSING"
     assert receipt["fixture_fallback_used"] is False
     assert not (artifact_dir / "research_receipts.json").exists()
 
 
-def test_research_scout_adapter_writes_tau_validated_source_receipts(tmp_path: Path, monkeypatch) -> None:
+def test_research_scout_adapter_writes_tau_validated_source_receipts(
+    tmp_path: Path, monkeypatch
+) -> None:
     spawn = _spawn_architect_dir(tmp_path)
     lineage_dir = tmp_path / "artifacts" / "lineage-summarizer"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "lineage-summarizer")
@@ -107,11 +133,19 @@ def test_research_scout_adapter_writes_tau_validated_source_receipts(tmp_path: P
     assert exit_code == 0
     assert response is not None
     assert response["next_agent"]["name"] == "method-combiner"
-    research = json.loads((research_dir / "research_receipts.json").read_text(encoding="utf-8"))
-    tau_receipt = json.loads((research_dir / "research-source-receipt.json").read_text(encoding="utf-8"))
-    methods = json.loads((research_dir / "candidate_methods.json").read_text(encoding="utf-8"))
+    research = json.loads(
+        (research_dir / "research_receipts.json").read_text(encoding="utf-8")
+    )
+    tau_receipt = json.loads(
+        (research_dir / "research-source-receipt.json").read_text(encoding="utf-8")
+    )
+    methods = json.loads(
+        (research_dir / "candidate_methods.json").read_text(encoding="utf-8")
+    )
     assert research["schema"] == "battle.child_research_receipts.v1"
-    jsonschema.validate(research, _schema("battle.child_research_receipts.v1.schema.json"))
+    jsonschema.validate(
+        research, _schema("battle.child_research_receipts.v1.schema.json")
+    )
     assert research["status"] == "PASS"
     assert research["fixture_fallback_used"] is False
     assert research["provider_live"] is False
@@ -120,13 +154,17 @@ def test_research_scout_adapter_writes_tau_validated_source_receipts(tmp_path: P
     assert tau_receipt["status"] == "PASS"
     assert tau_receipt["review_required"] is True
     assert methods["schema"] == "battle.child_candidate_methods.v1"
-    jsonschema.validate(methods, _schema("battle.child_candidate_methods.v1.schema.json"))
+    jsonschema.validate(
+        methods, _schema("battle.child_candidate_methods.v1.schema.json")
+    )
     assert methods["status"] == "PASS"
     proves = " ".join(research["claims"]["proves"]).lower()
     assert "exploit success" not in proves
 
 
-def test_method_combiner_writes_source_backed_genome_without_code(tmp_path: Path, monkeypatch) -> None:
+def test_method_combiner_writes_source_backed_genome_without_code(
+    tmp_path: Path, monkeypatch
+) -> None:
     spawn = _spawn_architect_dir(tmp_path)
     lineage_dir = tmp_path / "artifacts" / "lineage-summarizer"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "lineage-summarizer")
@@ -159,7 +197,9 @@ def test_method_combiner_writes_source_backed_genome_without_code(tmp_path: Path
     assert exit_code == 0
     assert response is not None
     assert response["next_agent"]["name"] == "exploit-code-author"
-    genome = json.loads((combiner_dir / "exploit_genome.json").read_text(encoding="utf-8"))
+    genome = json.loads(
+        (combiner_dir / "exploit_genome.json").read_text(encoding="utf-8")
+    )
     assert genome["schema"] == "battle.child_exploit_genome.v1"
     jsonschema.validate(genome, _schema("battle.child_exploit_genome.v1.schema.json"))
     assert genome["status"] == "PASS"
@@ -169,7 +209,9 @@ def test_method_combiner_writes_source_backed_genome_without_code(tmp_path: Path
     assert "Any exploit code was generated." in genome["claims"]["does_not_prove"]
 
 
-def test_compile_repair_follows_prior_node_receipt_external_code_artifact(tmp_path: Path, monkeypatch) -> None:
+def test_compile_repair_follows_prior_node_receipt_external_code_artifact(
+    tmp_path: Path, monkeypatch
+) -> None:
     external_workspace = tmp_path / "provider-workspace" / "outputs"
     external_workspace.mkdir(parents=True)
     code_path = external_workspace / "exploit_specimen.py"
@@ -184,7 +226,9 @@ def test_compile_repair_follows_prior_node_receipt_external_code_artifact(tmp_pa
         "verdict": "PASS",
         "evidence": [{"kind": "exploit_specimen.py", "path": str(code_path)}],
     }
-    (code_author_dir / "exploit-code-author-node-receipt.json").write_text(json.dumps(code_author_receipt), encoding="utf-8")
+    (code_author_dir / "exploit-code-author-node-receipt.json").write_text(
+        json.dumps(code_author_receipt), encoding="utf-8"
+    )
 
     artifact_dir = tmp_path / "artifacts" / "compile-repair"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "compile-repair")
@@ -193,7 +237,12 @@ def test_compile_repair_follows_prior_node_receipt_external_code_artifact(tmp_pa
         start_payload={
             **_start_payload(tmp_path / "child-exploit-dag.yaml"),
             "previous_subagent": "exploit-code-author",
-            "context": {"summary": "code author passed", "artifacts": [str(code_author_dir / "exploit-code-author-node-receipt.json")]},
+            "context": {
+                "summary": "code author passed",
+                "artifacts": [
+                    str(code_author_dir / "exploit-code-author-node-receipt.json")
+                ],
+            },
             "result": {"status": "PASS", "summary": "code", "evidence": []},
         },
         artifact_dir=artifact_dir,
@@ -203,20 +252,28 @@ def test_compile_repair_follows_prior_node_receipt_external_code_artifact(tmp_pa
     assert response is not None
     assert response["previous_subagent"] == "compile-repair"
     assert response["next_agent"]["name"] == "artifact-reviewer"
-    compile_receipt = json.loads((artifact_dir / "compile_receipt.json").read_text(encoding="utf-8"))
-    node_receipt = json.loads((artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8"))
+    compile_receipt = json.loads(
+        (artifact_dir / "compile_receipt.json").read_text(encoding="utf-8")
+    )
+    node_receipt = json.loads(
+        (artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8")
+    )
     assert compile_receipt["status"] == "PASS"
     assert compile_receipt["runtime_status"] == "NOT_RUN"
     assert compile_receipt["target_contact"] == "NOT_RUN"
     assert compile_receipt["judge_status"] == "NOT_RUN"
     assert node_receipt["status"] == "PASS"
-    assert (artifact_dir / "repaired_exploit_specimen.py").read_text(encoding="utf-8") == code_path.read_text(encoding="utf-8")
+    assert (artifact_dir / "repaired_exploit_specimen.py").read_text(
+        encoding="utf-8"
+    ) == code_path.read_text(encoding="utf-8")
     proves = " ".join(compile_receipt["claims"]["proves"]).lower()
     assert "runs" not in proves
     assert "exploit" not in proves
 
 
-def test_compile_repair_blocks_semantically_when_prior_code_artifact_missing(tmp_path: Path, monkeypatch) -> None:
+def test_compile_repair_blocks_semantically_when_prior_code_artifact_missing(
+    tmp_path: Path, monkeypatch
+) -> None:
     artifact_dir = tmp_path / "artifacts" / "compile-repair"
     monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "compile-repair")
     response, exit_code = run_node(
@@ -229,7 +286,88 @@ def test_compile_repair_blocks_semantically_when_prior_code_artifact_missing(tmp
     assert response is not None
     assert response["result"]["status"] == "BLOCKED"
     assert response["next_agent"]["name"] == "blocked"
-    receipt = json.loads((artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8"))
+    receipt = json.loads(
+        (artifact_dir / "compile-repair-node-receipt.json").read_text(encoding="utf-8")
+    )
     assert receipt["status"] == "BLOCKED"
     assert receipt["verdict"] == "UPSTREAM_CODE_ARTIFACT_MISSING"
     assert receipt["fixture_fallback_used"] is False
+
+
+def test_artifact_review_and_battle_handoff_bind_selected_code_hash(
+    tmp_path: Path, monkeypatch
+) -> None:
+    upstream = tmp_path / "artifacts" / "upstream"
+    upstream.mkdir(parents=True)
+    code = upstream / "repaired_exploit_specimen.py"
+    code.write_text("print('provider candidate')\n", encoding="utf-8")
+    import hashlib
+
+    selected_sha = hashlib.sha256(code.read_bytes()).hexdigest()
+    artifacts = {
+        "provider-authorship-receipt.json": {
+            "schema": "battle.provider_authorship_receipt.v1",
+            "status": "PASS",
+            "provider_live": True,
+            "agentic": True,
+        },
+        "exploit_genome.json": {
+            "schema": "battle.child_exploit_genome.v1",
+            "status": "PASS",
+        },
+        "research_receipts.json": {
+            "schema": "battle.child_research_receipts.v1",
+            "status": "PASS",
+        },
+        "compile_receipt.json": {
+            "schema": "battle.child_compile_receipt.v1",
+            "status": "PASS",
+            "live": "docker_python_compile",
+            "selected_code_sha256": selected_sha,
+        },
+    }
+    paths = [code]
+    for name, payload in artifacts.items():
+        path = upstream / name
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        paths.append(path)
+
+    reviewer_dir = tmp_path / "artifacts" / "artifact-reviewer"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "artifact-reviewer")
+    review_response, review_exit = run_node(
+        node_id="artifact-reviewer",
+        start_payload={
+            **_start_payload(tmp_path / "child-exploit-dag.yaml"),
+            "context": {
+                "summary": "compile passed",
+                "artifacts": [str(path) for path in paths],
+            },
+            "result": {"status": "PASS", "summary": "compile", "evidence": []},
+        },
+        artifact_dir=reviewer_dir,
+    )
+    assert review_exit == 0
+    assert review_response is not None
+    assert review_response["result"]["status"] == "PASS"
+    assert review_response["next_agent"]["name"] == "battle-handoff-writer"
+    review = json.loads((reviewer_dir / "review_receipt.json").read_text())
+    assert review["checks"]["compile_passed_in_docker"] is True
+    assert review["selected_code_sha256"] == selected_sha
+
+    handoff_dir = tmp_path / "artifacts" / "battle-handoff-writer"
+    monkeypatch.setenv("TAU_HANDOFF_SELECTED_AGENT", "battle-handoff-writer")
+    handoff_response, handoff_exit = run_node(
+        node_id="battle-handoff-writer",
+        start_payload=review_response,
+        artifact_dir=handoff_dir,
+    )
+    assert handoff_exit == 0
+    assert handoff_response is not None
+    assert handoff_response["result"]["status"] == "PASS"
+    assert handoff_response["next_agent"]["name"] == "human"
+    handoff = json.loads(
+        (handoff_dir / "battle_exploit_runner_handoff.json").read_text()
+    )
+    assert handoff["status"] == "PASS"
+    assert handoff["selected_code_sha256"] == selected_sha
+    assert handoff["allowed_runner"] == "battle_docker_exploit_runner"
