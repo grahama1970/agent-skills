@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/round-1/02_response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/round-1/02_response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-extract-stderr.KznodK.log",
+  "sentinel": null,
+  "requested_tab_id": "837356310",
+  "controlled_tab_id": "837356310",
+  "response_source": "assistant-dom",
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 9,
+  "clean_chars": 9,
+  "started_at": "2026-06-24T18:32:05Z",
+  "finished_at": "2026-06-24T18:32:05Z"
+}

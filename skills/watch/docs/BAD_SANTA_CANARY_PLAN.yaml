@@ -1,0 +1,53 @@
+version: 1
+kind: watch-canary-plan
+metadata:
+  title: "Bad Santa 10-minute Watch Canary"
+  goal: "Make Watch answer extraction-first movie questions, verify with Brave, and fail closed on missing or wrong evidence."
+  primary_persona:
+    name: "Watch operator"
+    role: "Developer validating video extraction and recall quality"
+  governance_report: "/mnt/storage12tb/skills/governance/reports/f7431746ade2e0a4/20260618T132235Z/report.json"
+capability_overlap:
+  - "/memory provides intent, recall, clarify, deflect, answer; Watch must call memory HTTP and read items."
+  - "/brave-search provides raw public corroboration; Watch must not use it as primary video evidence."
+  - "/scillm provides VLM/audio/model calls; Watch should store model receipts when image or audio descriptions are generated."
+  - "Existing Watch scripts already handle frames, transcript, QRA upsert, report generation, and failure-mode sanity."
+acceptance_gate:
+  source: "/mnt/storage12tb/media/movies/Bad Santa (2003)/Bad.Santa.Unrated.2003.BRRip.XvidHD.720p-NPW.avi"
+  segment: "00:00-10:00"
+  must_pass:
+    - "Recall questions use collection watch_content and stable media title/key filtering."
+    - "Wrong-video recall hits are marked as hard failures even when /recall returns found=true."
+    - "Answers come from extracted transcript/frame/audio/scene evidence first."
+    - "Brave Search is recorded as corroboration or discrepancy only."
+    - "Appearance questions require stored frame/VLM descriptions; transcript-only evidence is insufficient."
+    - "Reports show explicit not_analyzed/missing status instead of hallucinated image or sound descriptions."
+    - "Failure-mode sanity covers missing transcript, corrupt file, missing QRA, Whisper failure, wrong-video recall, and missing image descriptions."
+tasks:
+  - id: "1"
+    title: "Media-scoped watch memory recall"
+    runner: "local"
+    backend: ""
+    mode: "edit"
+    depends_on: []
+    definition_of_done:
+      command: "cd skills/watch && uv run python scripts/failure_modes_sanity.py"
+      assertion: "Wrong-video recall is rejected and existing failure checks pass."
+  - id: "2"
+    title: "Visual evidence status in scene reports"
+    runner: "local"
+    backend: ""
+    mode: "edit"
+    depends_on: ["1"]
+    definition_of_done:
+      command: "cd skills/watch && ./sanity.sh"
+      assertion: "Scene element rows expose visual_description/source/status without guessing."
+  - id: "3"
+    title: "Bad Santa extraction-first canary runner"
+    runner: "local"
+    backend: ""
+    mode: "edit"
+    depends_on: ["1", "2"]
+    definition_of_done:
+      command: "cd skills/watch && uv run python scripts/bad_santa_canary.py --offline"
+      assertion: "Canary emits pass/fail JSON and identifies missing visual extraction as pending/failing, not verified."

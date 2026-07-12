@@ -1,0 +1,814 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_keyframe_annotation.schema.json",
+  "title": "Watch Keyframe Annotation",
+  "description": "Human-authored Watch keyframe annotation persisted in the existing Arango collection watch_keyframe_annotations. Interpolated boxes are derived at runtime from these keyframes and the interpolation metadata; every interpolated frame is not stored as canonical annotation data.",
+  "type": "object",
+  "required": [
+    "schema",
+    "kind",
+    "asset_uid",
+    "row_index",
+    "character_name",
+    "bbox",
+    "bbox_format",
+    "keyframe_time_seconds",
+    "source"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch_keyframe_annotation.v1"
+    },
+    "kind": {
+      "const": "watch_keyframe_annotation"
+    },
+    "annotation_uid": {
+      "type": "string",
+      "description": "Stable keyframe annotation identifier. Prefer the Arango _key when available."
+    },
+    "annotation_track_id": {
+      "type": "string",
+      "description": "Optional grouping key for keyframes that belong to the same character box track in an asset/row/segment."
+    },
+    "character_instance_id": {
+      "type": "string",
+      "description": "Optional stable ID for a specific visible character instance when multiple instances of the same character/name may exist."
+    },
+    "status": {
+      "type": "string",
+      "examples": [
+        "approved_reference_candidate"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "default": "watch"
+    },
+    "source": {
+      "type": "string",
+      "examples": [
+        "ux-lab.watch",
+        "watch.annotation_api"
+      ]
+    },
+    "receipt_path": {
+      "type": "string"
+    },
+    "receipt_id": {
+      "type": "string"
+    },
+    "asset_uid": {
+      "type": "string"
+    },
+    "asset_title": {
+      "type": "string"
+    },
+    "media_slug": {
+      "type": "string"
+    },
+    "movie_metadata": {
+      "type": "object",
+      "description": "Movie-level metadata copied onto the annotation so actor/character evidence remains queryable without dereferencing the report.",
+      "properties": {
+        "asset_uid": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "release_year": {
+          "type": "integer"
+        },
+        "edition": {
+          "type": "string"
+        },
+        "media_slug": {
+          "type": "string"
+        },
+        "source_video_path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "row_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timecode": {
+      "type": "string"
+    },
+    "movie_segment": {
+      "type": "string",
+      "description": "Human-readable segment label, for example 01:36-02:00."
+    },
+    "segment_start_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "segment_end_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "character_name": {
+      "type": "string"
+    },
+    "actor_name": {
+      "type": "string"
+    },
+    "canonical_name": {
+      "type": "string"
+    },
+    "entity_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "entity_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actor_metadata": {
+      "type": "object",
+      "description": "Actor/character metadata used by identity verification and recall.",
+      "properties": {
+        "character_name": {
+          "type": "string"
+        },
+        "actor_name": {
+          "type": "string"
+        },
+        "character_entity_id": {
+          "type": "string"
+        },
+        "actor_entity_id": {
+          "type": "string"
+        },
+        "domain_source": {
+          "type": "string"
+        },
+        "domain_source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "bbox": {
+      "$ref": "#/$defs/normalized_xyxy"
+    },
+    "bbox_norm": {
+      "$ref": "#/$defs/normalized_xyxy"
+    },
+    "bbox_format": {
+      "const": "normalized_xyxy"
+    },
+    "bbox_dimensions": {
+      "type": "object",
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "left": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "top": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "frame_path": {
+      "type": "string"
+    },
+    "video_clip_path": {
+      "type": "string"
+    },
+    "frame_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "keyframe_time_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "keyframe_time_basis": {
+      "enum": [
+        "media_seconds",
+        "segment_seconds"
+      ],
+      "default": "media_seconds",
+      "description": "Coordinate system for keyframe_time_seconds. Runtime code must not rely on this default being materialized by validation."
+    },
+    "keyframe_source": {
+      "type": "string",
+      "examples": [
+        "scene_marker_image",
+        "paused_video_frame"
+      ]
+    },
+    "interpolation": {
+      "type": "object",
+      "description": "Runtime interpolation policy. The player computes derived boxes from stored keyframes using this policy.",
+      "required": [
+        "type",
+        "version",
+        "applies_to",
+        "bbox_format",
+        "time_basis",
+        "runtime_only"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "linear",
+            "bezier_spline",
+            "catmull_rom_spline",
+            "hold_previous",
+            "none"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "examples": [
+            "watch_bbox_interpolation.v1"
+          ]
+        },
+        "applies_to": {
+          "const": "bbox"
+        },
+        "bbox_format": {
+          "const": "normalized_xyxy"
+        },
+        "time_basis": {
+          "enum": [
+            "segment_seconds",
+            "media_seconds"
+          ]
+        },
+        "runtime_only": {
+          "type": "boolean",
+          "const": true
+        },
+        "source_keyframe_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Keyframe annotation IDs used by the runtime interpolation algorithm."
+        },
+        "source_keyframe_order": {
+          "enum": [
+            "array_order",
+            "keyframe_time_seconds_ascending"
+          ],
+          "default": "keyframe_time_seconds_ascending",
+          "description": "How the runtime orders source_keyframe_ids before interpolation. Runtime code must not rely on this default being materialized by validation."
+        },
+        "extrapolation": {
+          "enum": [
+            "none",
+            "clamp",
+            "hold_previous",
+            "hold_nearest"
+          ],
+          "default": "hold_previous",
+          "description": "Behavior before the first source keyframe or after the last source keyframe."
+        },
+        "clamp_bbox_to_unit_interval": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether derived normalized bbox coordinates are clamped into [0, 1]. Runtime code must not rely on this default being materialized by validation."
+        },
+        "params": {
+          "type": "object",
+          "description": "Optional algorithm-specific parameters such as Bezier control points, easing, or clamp rules.",
+          "properties": {
+            "catmull_rom_alpha": {
+              "type": "number"
+            },
+            "catmull_rom_tension": {
+              "type": "number"
+            },
+            "bezier_handle_mode": {
+              "enum": [
+                "auto",
+                "explicit",
+                "none"
+              ]
+            },
+            "boundary_mode": {
+              "enum": [
+                "natural",
+                "clamped",
+                "mirror",
+                "hold"
+              ]
+            },
+            "control_points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/normalized_xyxy"
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "scene_context_refs": {
+      "type": "object",
+      "description": "Pointers into watch_content for what is happening in the scene. These are source references, not copied transcript authority.",
+      "properties": {
+        "watch_content_key": {
+          "type": "string"
+        },
+        "watch_content_collection": {
+          "type": "string",
+          "default": "watch_content"
+        },
+        "watch_content_revision": {
+          "type": "string"
+        },
+        "watch_content_hash": {
+          "type": "string"
+        },
+        "time_window_start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "time_window_end_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "srt_text_field": {
+          "type": "string"
+        },
+        "srt_cue_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "whisper_text_field": {
+          "type": "string"
+        },
+        "whisper_segment_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audio_audit_text_field": {
+          "type": "string"
+        },
+        "visual_description_field": {
+          "type": "string"
+        },
+        "scene_marker_frame_field": {
+          "type": "string"
+        },
+        "scene_marker_frame_id": {
+          "type": "string"
+        },
+        "scene_marker_time_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_ref": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "scene_context_summary": {
+      "type": "string",
+      "description": "Short recall-friendly summary of the SRT/Whisper/visual context for this annotation."
+    },
+    "detector_observation_ref": {
+      "type": "object",
+      "description": "Optional link to the YoloAnalytics/watch_track_observations detection that the human identity label applies to. Human keyframes remain valid when no detector match exists.",
+      "properties": {
+        "collection": {
+          "const": "watch_track_observations"
+        },
+        "key": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "detector_name": {
+          "type": "string"
+        },
+        "detector_class": {
+          "type": "string"
+        },
+        "detector_confidence": {
+          "type": "number"
+        },
+        "track_id": {
+          "type": "string"
+        },
+        "human_bbox_iou_with_detector_bbox": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "link_quality": {
+          "enum": [
+            "candidate",
+            "confident",
+            "manual",
+            "none"
+          ],
+          "description": "Application policy: IoU >= 0.75 is confident; 0.50 <= IoU < 0.75 is candidate; IoU < 0.50 is not auto-linked unless manually overridden."
+        },
+        "time_delta_seconds": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "training_role": {
+      "type": "object",
+      "description": "Identity-layer training metadata. Draft annotations must not be used for agent matching until explicitly approved by the application.",
+      "properties": {
+        "label_type": {
+          "enum": [
+            "positive",
+            "negative",
+            "ignore"
+          ]
+        },
+        "target_entity_id": {
+          "type": "string"
+        },
+        "target_entity_kind": {
+          "enum": [
+            "character",
+            "actor",
+            "object_instance",
+            "object_class"
+          ]
+        },
+        "identity_scope": {
+          "enum": [
+            "asset_character",
+            "movie_character",
+            "series_character",
+            "actor_global",
+            "asset_object",
+            "object_instance",
+            "object_class"
+          ]
+        },
+        "usable_for_agent_matching": {
+          "type": "boolean",
+          "description": "Application default: false for human_draft; true only after human approval or explicit rejected-negative capture."
+        },
+        "review_state": {
+          "enum": [
+            "human_draft",
+            "human_approved",
+            "human_rejected",
+            "human_corrected",
+            "agent_suggested",
+            "agent_propagated",
+            "ignore"
+          ]
+        },
+        "example_weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Application default: 0.0 for human_draft, 1.0 for human-approved positive or human-rejected negative examples."
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "negative_identity_refs": {
+      "type": "array",
+      "description": "Optional explicit negative identity examples, for future human-rejected false positives or commonly confused entities.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target_entity_id": {
+            "type": "string"
+          },
+          "target_entity_kind": {
+            "enum": [
+              "character",
+              "actor",
+              "object_instance",
+              "object_class"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "source_observation_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "adjustment_events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/adjustment_event"
+      }
+    },
+    "intended_use": {
+      "type": "string"
+    },
+    "lifecycle_status": {
+      "type": "string",
+      "examples": [
+        "current",
+        "superseded"
+      ]
+    },
+    "retrieval_text": {
+      "type": "string"
+    },
+    "problem": {
+      "type": "string"
+    },
+    "solution": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "qdrant_collection": {
+      "type": "string"
+    },
+    "qdrant_point_id": {
+      "type": "string"
+    },
+    "qdrant_image_collection": {
+      "type": "string"
+    },
+    "qdrant_image_vector_name": {
+      "type": "string"
+    },
+    "qdrant_image_point_id": {
+      "type": "string"
+    },
+    "qdrant_refs": {
+      "type": "object",
+      "description": "Pointer metadata only. Raw vector arrays must not be stored in Arango.",
+      "properties": {
+        "track_observation_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reference_image_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "crop_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qdrant_point_ref"
+          }
+        },
+        "reference_image_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qdrant_point_ref"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "embedding_model": {
+      "type": "string"
+    },
+    "embedding_version": {
+      "type": "string"
+    },
+    "text_hash": {
+      "type": "string"
+    },
+    "semantic_sync_state": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "embedding"
+        ]
+      },
+      {
+        "required": [
+          "embeddings"
+        ]
+      },
+      {
+        "required": [
+          "vector"
+        ]
+      },
+      {
+        "required": [
+          "vectors"
+        ]
+      },
+      {
+        "required": [
+          "raw_vector"
+        ]
+      },
+      {
+        "required": [
+          "jina_embedding"
+        ]
+      }
+    ]
+  },
+  "$defs": {
+    "normalized_xyxy": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "adjustment_event": {
+      "type": "object",
+      "required": [
+        "type",
+        "boxId",
+        "timestampSeconds",
+        "bbox",
+        "createdAt"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "draw",
+            "move",
+            "resize",
+            "delete",
+            "promote"
+          ]
+        },
+        "boxId": {
+          "type": "string"
+        },
+        "characterName": {
+          "type": "string"
+        },
+        "actorName": {
+          "type": "string"
+        },
+        "timestampSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timecode": {
+          "type": "string"
+        },
+        "bbox": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/normalized_xyxy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bboxDimensions": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "qdrant_point_ref": {
+      "type": "object",
+      "required": [
+        "collection",
+        "point_id",
+        "modality"
+      ],
+      "properties": {
+        "collection": {
+          "type": "string"
+        },
+        "point_id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "vector_name": {
+          "type": "string"
+        },
+        "payload_key": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "integer"
+        },
+        "modality": {
+          "enum": [
+            "person_crop",
+            "object_crop",
+            "face_crop",
+            "body_crop",
+            "mask_crop",
+            "reference_image"
+          ]
+        },
+        "source": {
+          "enum": [
+            "human_keyframe_crop",
+            "detector_track_crop",
+            "reference_image",
+            "agent_observation_crop"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
