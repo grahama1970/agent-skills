@@ -1,0 +1,35 @@
+from __future__ import annotations
+
+import subprocess
+import time
+from pathlib import Path
+
+
+RUNNER = Path(__file__).resolve().parents[1] / "scripts" / "run-immutable-shell.sh"
+
+
+def test_running_script_isolated_from_concurrent_source_rewrite(tmp_path: Path) -> None:
+    script = tmp_path / "long-submit.sh"
+    script.write_text(
+        "#!/usr/bin/env bash\nset -euo pipefail\necho started\nsleep 1\necho original-finalizer\n",
+        encoding="utf-8",
+    )
+    script.chmod(0o755)
+
+    proc = subprocess.Popen(
+        ["bash", str(RUNNER), str(script)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    time.sleep(0.2)
+    script.write_text(
+        "#!/usr/bin/env bash\nset -euo pipefail\necho rewritten\nund_watcher\n",
+        encoding="utf-8",
+    )
+    stdout, stderr = proc.communicate(timeout=5)
+
+    assert proc.returncode == 0, stderr
+    assert stdout.splitlines() == ["started", "original-finalizer"]
+    assert "und_watcher" not in stderr
+    assert not list(tmp_path.glob(".long-submit.sh.snapshot.*"))

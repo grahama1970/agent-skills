@@ -475,7 +475,7 @@ if [[ "$1" == "vendor.status" ]]; then
 fi
 
 if [[ "$1" == "webgpt.submit" ]]; then
-    exec "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
+    exec "$SKILL_DIR/scripts/run-immutable-shell.sh" "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
 
 if [[ "$1" == "gemini.submit" ]]; then
