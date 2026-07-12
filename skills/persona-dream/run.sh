@@ -382,6 +382,9 @@ case "$COMMAND" in
   write-phase11-dry-run-bundle)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_dry_run_bundle.py" "$@"
     ;;
+  write-cognitive-loop-dry-run)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_cognitive_loop_dry_run.py" "$@"
+    ;;
   tailscale-funnel-publication-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;
