@@ -225,6 +225,22 @@ duplicate clarification, exhausted rounds, or renderer failure stops dependent
 nodes. WebGPT advice and a rendered diagram remain claims/artifacts, not proof
 that the architecture is correct or implemented.
 
+If Surf submitted the prompt but timed out before capturing a response that is
+now visibly complete, add the exact sentinel from that same round:
+
+```json
+"configuration": {
+  "tab_id": "HUMAN_SUPPLIED_TAB_ID",
+  "expected_url": "HUMAN_SUPPLIED_CONVERSATION_URL",
+  "recovery_sentinel": "<<<WEBGPT_DONE:EXACT_ROUND_MARKER>>>",
+  "timeout_seconds": 300
+}
+```
+
+Rerun the same DAG. Tau preflights the exact tab/URL and calls `webgpt.extract`;
+it does not resubmit or consume another round. Never copy a sentinel from a
+different tab, prompt, or review round.
+
 ### GitHub Apply-Gate Lane
 
 GitHub transport is dry-run by default. Live mutation requires explicit apply
