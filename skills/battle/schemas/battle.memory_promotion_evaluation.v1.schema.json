@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.memory_promotion_evaluation.v1",
+  "type": "object",
+  "required": ["schema", "evaluation_id", "status", "battle_id", "run_id", "policy_id", "policy_mode", "selection_receipt_sha256", "evaluations", "claims"],
+  "properties": {
+    "schema": {"const": "battle.memory_promotion_evaluation.v1"},
+    "status": {"const": "PASS"},
+    "policy_mode": {"const": "evaluate_only"},
+    "evaluations": {"type": "array", "minItems": 2, "maxItems": 2}
+  },
+  "additionalProperties": true
+}

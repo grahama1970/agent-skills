@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.fitness_vector.v1",
+  "type": "object",
+  "required": ["schema", "fitness_id", "status", "battle_id", "run_id", "team", "generation", "policy_id", "policy_sha256", "observation_receipt_sha256", "components", "selection_key", "claims"],
+  "properties": {
+    "schema": {"const": "battle.fitness_vector.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "generation": {"enum": [1, 2]},
+    "selection_key": {"type": "array", "minItems": 4},
+    "components": {"type": "object"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

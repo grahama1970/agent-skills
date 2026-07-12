@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -11,6 +12,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from .adaptive_evidence import build_fitness_vector, build_generation_observation
+from .adaptive_genome import build_semantic_genome_delta, semantic_sha256
+from .adaptive_selection import build_selection_receipt
 from .arena_battle_proof import _write_json
 from .arena_live_battle_proof import (
     _judge_tau_artifacts,
@@ -21,9 +25,18 @@ from .arena_live_battle_proof import (
     run_arena_tau_public_only_proof,
 )
 from .team_artifact_pipeline import run_team_artifact_pipeline
+from .campaign_event_journal import CampaignEventJournal
+from .memory_promotion import build_memory_evaluation
+from .normalized_adaptive_lineage_fixture import (
+    build_normalized_adaptive_fixture,
+    write_fixture_copies,
+)
 
 
 SCHEMA = "battle.adaptive_red_blue_lineage_canary.v1"
+TAU_PROJECT_ROOT = Path(
+    os.environ.get("BATTLE_TAU_PROJECT_ROOT", "/home/graham/workspace/experiments/tau")
+)
 
 
 def run_adaptive_red_blue_lineage_canary(
@@ -41,6 +54,7 @@ def run_adaptive_red_blue_lineage_canary(
     out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
+    journal = CampaignEventJournal(root=out_dir, battle_id=battle_id, run_id=run_id)
     generation_1_dir = out_dir / "generation-1"
     generation_2_dir = out_dir / "generation-2"
 
@@ -86,26 +100,140 @@ def run_adaptive_red_blue_lineage_canary(
         pipelines=g1_pipelines,
         target_identity_sha256=target_identity_sha256,
     )
-    _write_json(generation_1_dir / "judge" / "judge-receipt.json", g1_judge)
+    g1_judge_path = _write_json(
+        generation_1_dir / "judge" / "judge-receipt.json", g1_judge
+    )
+    g1_judge["receipt_sha256"] = _sha(g1_judge_path)
+    journal.append(
+        event_type="judge_verdict",
+        source_receipt=g1_judge_path,
+        generation=1,
+        payload={"verdict": g1_judge.get("verdict")},
+    )
     g1_red = _single_materialized(g1_manifest, "red")
     g1_blue = _single_materialized(g1_manifest, "blue")
 
     spawn_root = out_dir / "spawn"
     knowledge_root = generation_2_dir / "arena" / "team-public" / "knowledge"
     knowledge_root.mkdir(parents=True, exist_ok=True)
-    red_spawn = _spawn_decision("red", g1_judge, g1_red, generation_1_dir)
-    blue_spawn = _spawn_decision("blue", g1_judge, g1_blue, generation_1_dir)
+    g1_observations, g1_fitness = _generation_evidence(
+        battle_id=battle_id,
+        run_id=run_id,
+        generation=1,
+        generation_dir=generation_1_dir,
+        pipelines=g1_pipelines,
+        judge=g1_judge,
+        genomes=g1_genomes,
+        target_identity_sha256=target_identity_sha256,
+        journal=journal,
+    )
+    red_request, red_request_path = _parent_spawn_request(
+        team="red",
+        battle_id=battle_id,
+        run_id=run_id,
+        parent=g1_red,
+        genome=g1_genomes["red"],
+        pipeline=g1_pipelines["red"],
+        judge=g1_judge,
+        observation=g1_observations["red"],
+        fitness=g1_fitness["red"],
+        spawn_root=spawn_root,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+    )
+    blue_request, blue_request_path = _parent_spawn_request(
+        team="blue",
+        battle_id=battle_id,
+        run_id=run_id,
+        parent=g1_blue,
+        genome=g1_genomes["blue"],
+        pipeline=g1_pipelines["blue"],
+        judge=g1_judge,
+        observation=g1_observations["blue"],
+        fitness=g1_fitness["blue"],
+        spawn_root=spawn_root,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+    )
+    journal.append(
+        event_type="spawn_requested",
+        source_receipt=red_request_path,
+        generation=1,
+        team="red",
+        payload={"requested_action": red_request["request"]["requested_action"]},
+    )
+    journal.append(
+        event_type="spawn_requested",
+        source_receipt=blue_request_path,
+        generation=1,
+        team="blue",
+        payload={"requested_action": blue_request["request"]["requested_action"]},
+    )
+    red_spawn = _spawn_decision(
+        "red",
+        red_request,
+        g1_observations["red"],
+        g1_fitness["red"],
+        g1_genomes["red"],
+        g1_pipelines["red"],
+        g1_judge,
+    )
+    blue_spawn = _spawn_decision(
+        "blue",
+        blue_request,
+        g1_observations["blue"],
+        g1_fitness["blue"],
+        g1_genomes["blue"],
+        g1_pipelines["blue"],
+        g1_judge,
+    )
     red_spawn_path = _write_json(
         spawn_root / "red-spawn-policy-decision.json", red_spawn
     )
     blue_spawn_path = _write_json(
         spawn_root / "blue-spawn-policy-decision.json", blue_spawn
     )
+    journal.append(
+        event_type="spawn_authorized",
+        source_receipt=red_spawn_path,
+        generation=1,
+        team="red",
+        payload={"decision": red_spawn["decision"]},
+    )
+    journal.append(
+        event_type="spawn_authorized",
+        source_receipt=blue_spawn_path,
+        generation=1,
+        team="blue",
+        payload={"decision": blue_spawn["decision"]},
+    )
     red_packet = _knowledge_packet(
-        "red", battle_id, run_id, g1_judge, g1_red, red_spawn_path
+        "red",
+        battle_id,
+        run_id,
+        g1_red,
+        red_request_path,
+        red_spawn_path,
+        g1_observations["red"],
+        g1_fitness["red"],
+        g1_genomes["red"],
+        g1_pipelines["red"],
+        g1_judge_path,
     )
     blue_packet = _knowledge_packet(
-        "blue", battle_id, run_id, g1_judge, g1_blue, blue_spawn_path
+        "blue",
+        battle_id,
+        run_id,
+        g1_blue,
+        blue_request_path,
+        blue_spawn_path,
+        g1_observations["blue"],
+        g1_fitness["blue"],
+        g1_genomes["blue"],
+        g1_pipelines["blue"],
+        g1_judge_path,
     )
     red_packet_path = _write_json(
         knowledge_root / "red-inherited-knowledge-packet.json", red_packet
@@ -113,17 +241,47 @@ def run_adaptive_red_blue_lineage_canary(
     blue_packet_path = _write_json(
         knowledge_root / "blue-inherited-knowledge-packet.json", blue_packet
     )
+    journal.append(
+        event_type="knowledge_packet_materialized",
+        source_receipt=red_packet_path,
+        generation=2,
+        team="red",
+        payload={"packet_id": red_packet["packet_id"]},
+    )
+    journal.append(
+        event_type="knowledge_packet_materialized",
+        source_receipt=blue_packet_path,
+        generation=2,
+        team="blue",
+        payload={"packet_id": blue_packet["packet_id"]},
+    )
 
     research_root = generation_2_dir / "arena" / "team-public" / "research"
     red_research = _run_tau_research(
         team="red",
-        query="public Python archive extraction path traversal exploit techniques and test cases",
+        query=str(red_request["request"]["requested_research_questions"][0]),
         out_dir=research_root / "red",
+        origin_request_path=red_request_path,
     )
     blue_research = _run_tau_research(
         team="blue",
-        query="public Python archive extraction path traversal prevention and regression testing",
+        query=str(blue_request["request"]["requested_research_questions"][0]),
         out_dir=research_root / "blue",
+        origin_request_path=blue_request_path,
+    )
+    journal.append(
+        event_type="child_research_materialized",
+        source_receipt=Path(red_research["source_receipt_path"]),
+        generation=2,
+        team="red",
+        payload={"source_count": red_research["source_count"]},
+    )
+    journal.append(
+        event_type="child_research_materialized",
+        source_receipt=Path(blue_research["source_receipt_path"]),
+        generation=2,
+        team="blue",
+        payload={"source_count": blue_research["source_count"]},
     )
 
     _copy_public_arena(generation_1_dir, generation_2_dir)
@@ -208,7 +366,16 @@ def run_adaptive_red_blue_lineage_canary(
         pipelines=g2_pipelines,
         target_identity_sha256=target_identity_sha256,
     )
-    _write_json(generation_2_dir / "judge" / "judge-receipt.json", g2_judge)
+    g2_judge_path = _write_json(
+        generation_2_dir / "judge" / "judge-receipt.json", g2_judge
+    )
+    g2_judge["receipt_sha256"] = _sha(g2_judge_path)
+    journal.append(
+        event_type="judge_verdict",
+        source_receipt=g2_judge_path,
+        generation=2,
+        payload={"verdict": g2_judge.get("verdict")},
+    )
     g2_red = _single_materialized(g2_manifest, "red")
     g2_blue = _single_materialized(g2_manifest, "blue")
     red_ack = _knowledge_acknowledgement(
@@ -217,15 +384,100 @@ def run_adaptive_red_blue_lineage_canary(
     blue_ack = _knowledge_acknowledgement(
         "blue", blue_packet, blue_research, g2_manifest, g2_blue
     )
-    _write_json(
+    red_ack_path = _write_json(
         generation_2_dir / "red-inherited-knowledge-acknowledgement.json", red_ack
     )
-    _write_json(
+    blue_ack_path = _write_json(
         generation_2_dir / "blue-inherited-knowledge-acknowledgement.json", blue_ack
     )
+    journal.append(
+        event_type="child_knowledge_acknowledged",
+        source_receipt=red_ack_path,
+        generation=2,
+        team="red",
+    )
+    journal.append(
+        event_type="child_knowledge_acknowledged",
+        source_receipt=blue_ack_path,
+        generation=2,
+        team="blue",
+    )
 
-    selection = _selection_receipt(g1_judge, g2_judge, g1_red, g1_blue, g2_red, g2_blue)
-    _write_json(out_dir / "selection-receipt.json", selection)
+    deltas: dict[str, dict[str, Any]] = {}
+    for team in ("red", "blue"):
+        delta = build_semantic_genome_delta(
+            battle_id=battle_id,
+            run_id=run_id,
+            team=team,
+            parent=g1_genomes[team],
+            child=g2_genomes[team],
+        )
+        delta_path = _write_json(generation_2_dir / team / "genome-delta.json", delta)
+        delta["path"] = str(delta_path)
+        delta["sha256"] = _sha(delta_path)
+        deltas[team] = delta
+        journal.append(
+            event_type="genome_mutated",
+            source_receipt=delta_path,
+            generation=2,
+            team=team,
+            payload={"semantic_change_count": delta["semantic_change_count"]},
+        )
+    g2_observations, g2_fitness = _generation_evidence(
+        battle_id=battle_id,
+        run_id=run_id,
+        generation=2,
+        generation_dir=generation_2_dir,
+        pipelines=g2_pipelines,
+        judge=g2_judge,
+        genomes=g2_genomes,
+        target_identity_sha256=target_identity_sha256,
+        journal=journal,
+        parent_artifacts={
+            "red": _sha(Path(g1_red["path"])),
+            "blue": _sha(Path(g1_blue["path"])),
+        },
+        deltas=deltas,
+    )
+    all_fitness = {
+        "red": {1: g1_fitness["red"], 2: g2_fitness["red"]},
+        "blue": {1: g1_fitness["blue"], 2: g2_fitness["blue"]},
+    }
+    selection = build_selection_receipt(
+        battle_id=battle_id, run_id=run_id, fitness=all_fitness
+    )
+    selection_path = _write_json(out_dir / "selection-receipt.json", selection)
+    selection["path"] = str(selection_path)
+    selection["sha256"] = _sha(selection_path)
+    journal.append(
+        event_type="selection_decision",
+        source_receipt=selection_path,
+        payload={
+            "red_selected_generation": selection["teams"]["red"]["selected_generation"],
+            "blue_selected_generation": selection["teams"]["blue"][
+                "selected_generation"
+            ],
+        },
+    )
+    memory_evaluation = build_memory_evaluation(
+        battle_id=battle_id,
+        run_id=run_id,
+        selection=selection,
+        fitness=all_fitness,
+        deltas=deltas,
+    )
+    memory_path = _write_json(
+        out_dir / "memory-promotion-evaluation.json", memory_evaluation
+    )
+    memory_evaluation["path"] = str(memory_path)
+    memory_evaluation["sha256"] = _sha(memory_path)
+    journal.append(
+        event_type="memory_evaluation",
+        source_receipt=memory_path,
+        payload={
+            "decisions": [item["decision"] for item in memory_evaluation["evaluations"]]
+        },
+    )
     status, reason = _campaign_status(
         generation_1=generation_1,
         visibility=visibility,
@@ -236,6 +488,16 @@ def run_adaptive_red_blue_lineage_canary(
         red_ack=red_ack,
         blue_ack=blue_ack,
         selection=selection,
+        observations=[*g1_observations.values(), *g2_observations.values()],
+        fitness=[
+            g1_fitness["red"],
+            g1_fitness["blue"],
+            g2_fitness["red"],
+            g2_fitness["blue"],
+        ],
+        requests=[red_request, blue_request],
+        deltas=[deltas["red"], deltas["blue"]],
+        memory_evaluation=memory_evaluation,
     )
     receipt = {
         "schema": SCHEMA,
@@ -257,13 +519,24 @@ def run_adaptive_red_blue_lineage_canary(
             ),
         },
         "generations": [
-            _generation_summary(1, g1_manifest, g1_judge, g1_red, g1_blue, g1_pipelines),
-            _generation_summary(2, g2_manifest, g2_judge, g2_red, g2_blue, g2_pipelines),
+            _generation_summary(
+                1, g1_manifest, g1_judge, g1_red, g1_blue, g1_pipelines
+            ),
+            _generation_summary(
+                2, g2_manifest, g2_judge, g2_red, g2_blue, g2_pipelines
+            ),
         ],
         "spawn": {"red": red_spawn, "blue": blue_spawn},
         "inheritance": {"red": red_ack, "blue": blue_ack},
         "research": {"red": red_research, "blue": blue_research},
         "selection": selection,
+        "observations": {
+            "generation_1": g1_observations,
+            "generation_2": g2_observations,
+        },
+        "fitness": {"generation_1": g1_fitness, "generation_2": g2_fitness},
+        "genome_deltas": deltas,
+        "memory_evaluation": memory_evaluation,
         "elapsed_seconds": round(time.perf_counter() - started, 6),
         "judge_verified_exploits": sum(
             int(item.get("red_success_count") or 0) for item in (g1_judge, g2_judge)
@@ -287,19 +560,247 @@ def run_adaptive_red_blue_lineage_canary(
         },
         "created_at": _now(),
     }
+    source_index = _source_receipt_index(
+        battle_id=battle_id,
+        run_id=run_id,
+        campaign_root=out_dir,
+        observations=[*g1_observations.values(), *g2_observations.values()],
+        fitness=[
+            g1_fitness["red"],
+            g1_fitness["blue"],
+            g2_fitness["red"],
+            g2_fitness["blue"],
+        ],
+        requests=[red_request, blue_request],
+        deltas=[deltas["red"], deltas["blue"]],
+        selection=selection,
+        memory_evaluation=memory_evaluation,
+    )
+    source_index_path = _write_json(out_dir / "source-receipt-index.json", source_index)
+    fixture_id = f"{battle_id}-adaptive-lineage-v13"
+    fixture = build_normalized_adaptive_fixture(
+        campaign_root=out_dir,
+        source_index_path=source_index_path,
+        fixture_id=fixture_id,
+    )
+    skill_root = Path(__file__).resolve().parents[2]
+    local_dir = skill_root / "local" / fixture_id
+    public_dir = skill_root / "spectator" / "public" / "battle-fixtures" / fixture_id
+    validation_result = write_fixture_copies(
+        fixture=fixture,
+        local_path=local_dir / "battle.normalized_ux_fixture.json",
+        public_path=public_dir / "battle.normalized_ux_fixture.json",
+    )
+    _write_json(out_dir / "normalized" / "validation.json", validation_result)
+    _write_json(local_dir / "validation.json", validation_result)
+    _write_json(local_dir / "source-receipt-index.json", source_index)
+    receipt["event_journal"] = {
+        "path": str(journal.path),
+        "event_count": journal.seq,
+        "sha256": _sha(journal.path),
+    }
+    receipt["normalized_fixture"] = {
+        "fixture_id": fixture_id,
+        "status": validation_result["status"],
+        "fixture_sha256": validation_result["fixture_sha256"],
+        "local_public_byte_identical": validation_result["local_public_byte_identical"],
+    }
     _write_json(out_dir / "adaptive-lineage-chain-receipt.json", receipt)
     _write_json(out_dir / "campaign-receipt.json", receipt)
     return receipt
 
 
+def _generation_evidence(
+    *,
+    battle_id: str,
+    run_id: str,
+    generation: int,
+    generation_dir: Path,
+    pipelines: dict[str, dict[str, Any]],
+    judge: dict[str, Any],
+    genomes: dict[str, dict[str, Any]],
+    target_identity_sha256: str,
+    journal: CampaignEventJournal,
+    parent_artifacts: dict[str, str] | None = None,
+    deltas: dict[str, dict[str, Any]] | None = None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    observations: dict[str, dict[str, Any]] = {}
+    fitness: dict[str, dict[str, Any]] = {}
+    for team in ("red", "blue"):
+        observation = build_generation_observation(
+            battle_id=battle_id,
+            run_id=run_id,
+            team=team,
+            generation=generation,
+            pipeline=pipelines[team],
+            judge=judge,
+            genome=genomes[team],
+            target_identity_sha256=target_identity_sha256,
+            observed_elapsed_seconds=round(
+                time.perf_counter() - journal.started_ns / 1_000_000_000, 6
+            ),
+        )
+        observation_path = _write_json(
+            generation_dir / team / "generation-observation-receipt.json", observation
+        )
+        observation["path"] = str(observation_path)
+        observation["sha256"] = _sha(observation_path)
+        observations[team] = observation
+        journal.append(
+            event_type="parent_observation_materialized"
+            if generation == 1
+            else "generation_observation_materialized",
+            source_receipt=observation_path,
+            generation=generation,
+            team=team,
+            payload={"judge_verdict": observation["judge"]["verdict"]},
+        )
+        vector = build_fitness_vector(
+            observation=observation,
+            genome=genomes[team],
+            parent_artifact_sha256=(parent_artifacts or {}).get(team),
+            semantic_delta=(deltas or {}).get(team),
+        )
+        fitness_path = _write_json(
+            generation_dir / team / "fitness-vector.json", vector
+        )
+        vector["path"] = str(fitness_path)
+        vector["sha256"] = _sha(fitness_path)
+        fitness[team] = vector
+        journal.append(
+            event_type="fitness_materialized",
+            source_receipt=fitness_path,
+            generation=generation,
+            team=team,
+            payload={"selection_key": vector["selection_key"]},
+        )
+    return observations, fitness
+
+
+def _parent_spawn_request(
+    *,
+    team: str,
+    battle_id: str,
+    run_id: str,
+    parent: dict[str, Any],
+    genome: dict[str, Any],
+    pipeline: dict[str, Any],
+    judge: dict[str, Any],
+    observation: dict[str, Any],
+    fitness: dict[str, Any],
+    spawn_root: Path,
+    model: str,
+    scillm_base_url: str,
+    timeout_s: float,
+) -> tuple[dict[str, Any], Path]:
+    evidence_path = _write_json(
+        spawn_root / f"{team}-parent-reflection-evidence.json",
+        {
+            "schema": "battle.parent_reflection_evidence.v1",
+            "status": "PASS",
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "team": team,
+            "generation": 1,
+            "parent_artifact_sha256": _sha(Path(parent["path"])),
+            "parent_genome_sha256": genome["sha256"],
+            "parent_semantic_genome_sha256": semantic_sha256(genome),
+            "pipeline_handoff_sha256": pipeline["handoff_sha256"],
+            "observation_receipt_sha256": observation["sha256"],
+            "fitness_receipt_sha256": fitness["sha256"],
+            "judge_receipt_sha256": judge["receipt_sha256"],
+            "judge_verdict": judge.get("verdict"),
+            "measurements": observation["measurements"],
+            "remaining_budget": {"child_count": 1, "provider_attempts": 1},
+        },
+    )
+    tau_receipt_path = spawn_root / f"{team}-tau-parent-reflection.json"
+    _run_command(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(TAU_PROJECT_ROOT),
+            "python",
+            "-m",
+            "tau_coding.battle_adaptive_parent_reflection",
+            "--evidence",
+            str(evidence_path),
+            "--output",
+            str(tau_receipt_path),
+            "--team",
+            team,
+            "--model",
+            model,
+            "--scillm-base-url",
+            scillm_base_url,
+            "--timeout-s",
+            str(timeout_s),
+        ]
+    )
+    tau_receipt = _read_json(tau_receipt_path)
+    request = tau_receipt.get("request")
+    status = (
+        "PASS"
+        if tau_receipt.get("status") == "PASS" and isinstance(request, dict)
+        else "BLOCKED"
+    )
+    result = {
+        "schema": "battle.adaptive_spawn_request.v1",
+        "request_id": f"{run_id}-{team}-parent-spawn-request",
+        "status": status,
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "team": team,
+        "generation": 1,
+        "parent_binding": {
+            "parent_artifact_sha256": _sha(Path(parent["path"])),
+            "parent_genome_sha256": genome["sha256"],
+            "pipeline_handoff_sha256": pipeline["handoff_sha256"],
+            "observation_receipt_sha256": observation["sha256"],
+            "fitness_receipt_sha256": fitness["sha256"],
+            "judge_receipt_sha256": judge["receipt_sha256"],
+        },
+        "request": request,
+        "authorship": {
+            "authored_by": "tau_parent",
+            "agentic": True,
+            "provider_live": tau_receipt.get("provider_live") is True,
+            "model": model,
+            "tau_reflection_receipt_sha256": _sha(tau_receipt_path),
+            "provider_response_sha256": tau_receipt.get("provider_response_sha256"),
+        },
+        "claims": {
+            "proves": ["A live Tau parent authored the bounded reproduction request."]
+            if status == "PASS"
+            else [],
+            "does_not_prove": ["Battle authorized the request or the child improved."],
+        },
+    }
+    path = _write_json(spawn_root / f"{team}-parent-spawn-request.json", result)
+    result["path"] = str(path)
+    result["sha256"] = _sha(path)
+    return result, path
+
+
 def _spawn_decision(
-    team: str, judge: dict[str, Any], parent: dict[str, Any], root: Path
+    team: str,
+    request: dict[str, Any],
+    observation: dict[str, Any],
+    fitness: dict[str, Any],
+    genome: dict[str, Any],
+    pipeline: dict[str, Any],
+    judge: dict[str, Any],
 ) -> dict[str, Any]:
-    judge_path = root / "judge" / "judge-receipt.json"
+    requested_action = request.get("request", {}).get("requested_action")
+    allowed = request.get("status") == "PASS" and requested_action == "SPAWN_CHILD"
     return {
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "status": "PASS",
-        "decision": "ALLOWED_EVALUATED_PARENT",
+        "receipt_id": f"{request['run_id']}-{team}-spawn-policy-decision",
+        "status": "PASS" if allowed else "BLOCKED",
+        "decision": "ALLOWED_EVALUATED_PARENT"
+        if allowed
+        else "DENIED_PARENT_DID_NOT_REQUEST_CHILD",
         "team": team,
         "parent_terminal": False,
         "reason_codes": [
@@ -307,8 +808,15 @@ def _spawn_decision(
             "bounded_second_generation_requested",
             "remaining_budget_available",
         ],
-        "source_receipts": [{"kind": "judge_receipt", "sha256": _sha(judge_path)}],
-        "parent_artifact_sha256": _sha(Path(parent["path"])),
+        "source_receipts": [
+            {"kind": "parent_spawn_request", "sha256": request["sha256"]},
+            {"kind": "generation_observation", "sha256": observation["sha256"]},
+            {"kind": "fitness_vector", "sha256": fitness["sha256"]},
+            {"kind": "parent_genome", "sha256": genome["sha256"]},
+            {"kind": "pipeline_handoff", "sha256": pipeline["handoff_sha256"]},
+            {"kind": "judge_receipt", "sha256": judge["receipt_sha256"]},
+        ],
+        "parent_artifact_sha256": pipeline["selected_artifact_sha256"],
         "judge_verdict": judge.get("verdict"),
         "claims": {
             "proves": [
@@ -323,32 +831,33 @@ def _knowledge_packet(
     team: str,
     battle_id: str,
     run_id: str,
-    judge: dict[str, Any],
     parent: dict[str, Any],
+    request_path: Path,
     spawn_path: Path,
+    observation: dict[str, Any],
+    fitness: dict[str, Any],
+    genome: dict[str, Any],
+    pipeline: dict[str, Any],
+    judge_path: Path,
 ) -> dict[str, Any]:
     parent_sha = _sha(Path(parent["path"]))
-    attempt = (judge.get("attempts") or [{}])[0]
     packet_id = f"{battle_id}-{team}-generation-2-knowledge"
-    observation = {
-        "judge_verdict": judge.get("verdict"),
-        "exploit_confirmed_before_patch": attempt.get("exploit_confirmed_before_patch"),
-        "exploit_blocked_after_patch": attempt.get("exploit_blocked_after_patch"),
-        "functionality_preserved": attempt.get("functionality_preserved"),
-    }
     return {
         "schema": "battle.adaptive_team_knowledge_packet.v1",
+        "receipt_id": f"{run_id}-{team}-knowledge-packet",
+        "status": "PASS",
         "packet_id": packet_id,
         "battle_id": battle_id,
         "run_id": run_id,
         "team": team,
         "generation": 2,
         "parent_artifact_sha256": parent_sha,
-        "observations": [observation],
+        "parent_semantic_genome_sha256": semantic_sha256(genome),
+        "observations": [observation["measurements"]],
         "active_hypotheses": [
             "Change the parent strategy in response to the Judge outcome."
         ],
-        "failed_or_partial_attempts": [observation],
+        "failed_or_partial_attempts": [observation["measurements"]],
         "research_questions": [
             "What public technique or hardening variation addresses the observed Judge outcome?"
         ],
@@ -356,7 +865,15 @@ def _knowledge_packet(
             "Use only Arena team-public artifacts.",
             "Do not claim outcomes; Judge decides.",
         ],
-        "source_receipts": [{"kind": "spawn_policy", "sha256": _sha(spawn_path)}],
+        "source_receipts": [
+            {"kind": "parent_spawn_request", "sha256": _sha(request_path)},
+            {"kind": "spawn_policy", "sha256": _sha(spawn_path)},
+            {"kind": "generation_observation", "sha256": observation["sha256"]},
+            {"kind": "fitness_vector", "sha256": fitness["sha256"]},
+            {"kind": "parent_genome", "sha256": genome["sha256"]},
+            {"kind": "pipeline_handoff", "sha256": pipeline["handoff_sha256"]},
+            {"kind": "judge_receipt", "sha256": _sha(judge_path)},
+        ],
         "claims": {
             "proves": [
                 "Battle derived a child packet from parent artifacts and Judge evidence."
@@ -379,6 +896,8 @@ def _generation_2_objective(
     return (
         f"Produce a new {artifact} artifact after reading inherited packet {packet['packet_id']}. "
         f"Your JSON rationale must cite packet_id {packet['packet_id']} or parent artifact sha256 {packet['parent_artifact_sha256']}. "
+        f"The rationale must cite inherited_genome_sha256 {packet['parent_semantic_genome_sha256']}, "
+        "name one inherited observation, and include the literal label first_plan_action followed by the first action. "
         f"It must also cite external research receipt sha256 {research['source_receipt_sha256']}. "
         f"{materialization_contract}"
         "Return strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. "
@@ -403,18 +922,36 @@ def _knowledge_acknowledgement(
     packet_id = packet["packet_id"]
     parent_sha = packet["parent_artifact_sha256"]
     cited = packet_id in response_text or parent_sha in response_text
+    genome_cited = packet["parent_semantic_genome_sha256"] in response_text
+    inherited_observation_cited = any(
+        str(value) in response_text
+        for observation in packet.get("observations", [])
+        for value in observation.values()
+        if value not in {None, "UNKNOWN"}
+    )
+    first_plan_action = "first_plan_action" in response_text
     research_cited = research["source_receipt_sha256"] in response_text
     child_sha = _sha(Path(child["path"]))
     changed = child_sha != parent_sha
     return {
         "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "status": "PASS" if cited and research_cited and changed else "BLOCKED",
+        "status": "PASS"
+        if cited
+        and genome_cited
+        and inherited_observation_cited
+        and first_plan_action
+        and research_cited
+        and changed
+        else "BLOCKED",
         "team": team,
         "packet_id": packet_id,
         "packet_cited_in_provider_response": cited,
         "parent_artifact_sha256": parent_sha,
         "child_artifact_sha256": child_sha,
         "artifact_changed": changed,
+        "inherited_genome_cited": genome_cited,
+        "inherited_observation_cited": inherited_observation_cited,
+        "first_plan_action_declared": first_plan_action,
         "external_research_receipt_sha256": research["source_receipt_sha256"],
         "external_research_cited_in_provider_response": research_cited,
         "provider_response_sha256": _sha(Path(entry["scillm_call"])),
@@ -429,7 +966,9 @@ def _knowledge_acknowledgement(
     }
 
 
-def _run_tau_research(*, team: str, query: str, out_dir: Path) -> dict[str, Any]:
+def _run_tau_research(
+    *, team: str, query: str, out_dir: Path, origin_request_path: Path
+) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     policy_path = _write_json(
         out_dir / "policy-profile.json",
@@ -473,6 +1012,8 @@ def _run_tau_research(*, team: str, query: str, out_dir: Path) -> dict[str, Any]
             "approved": True,
             "allowed_methods": ["brave-search"],
             "sanitized_query_sha256": f"sha256:{hashlib.sha256(query.encode()).hexdigest()}",
+            "provider_proposed_query_sha256": f"sha256:{hashlib.sha256(query.encode()).hexdigest()}",
+            "origin_spawn_request_sha256": _sha(origin_request_path),
             "data_boundary_classification": "public",
             "approver": {"id": "battle:adaptive-lineage-policy"},
             "expires_at": (datetime.now(UTC) + timedelta(hours=1))
@@ -487,7 +1028,7 @@ def _run_tau_research(*, team: str, query: str, out_dir: Path) -> dict[str, Any]
         "uv",
         "run",
         "--project",
-        "/home/graham/workspace/experiments/tau",
+        str(TAU_PROJECT_ROOT),
         "tau",
     ]
     _run_command(
@@ -620,7 +1161,9 @@ def _reviewed_manifest(
             team=team,
             source_artifact=source,
             provider_receipt=Path(str(entry["subagent_receipt"])),
-            materialization_receipt=Path(str(entry["materialized_artifact"]["path"])).parent
+            materialization_receipt=Path(
+                str(entry["materialized_artifact"]["path"])
+            ).parent
             / "materialized-artifact-receipt.json",
             target_identity_sha256=target_identity_sha256,
             out_dir=generation_dir / "reviewed" / team,
@@ -671,7 +1214,9 @@ def _judge_reviewed_generation(
         "original_target_tree_sha256": target_identity_sha256,
         "patched_target_tree_sha256": patched_identity,
         "claims": {
-            "proves": ["Battle selected one reviewed Red/Blue artifact pair for Judge."],
+            "proves": [
+                "Battle selected one reviewed Red/Blue artifact pair for Judge."
+            ],
             "does_not_prove": ["Judge executed the pair.", "Either team succeeded."],
         },
     }
@@ -722,10 +1267,18 @@ def _provider_genomes(
         strategy = parsed.get("strategy_genome") if isinstance(parsed, dict) else None
         if not isinstance(strategy, dict):
             raise RuntimeError(f"{team} provider response missing strategy_genome")
-        required = {"selected_methods", "rejected_methods", "parameters", "mutation_origin", "expected_observation"}
+        required = {
+            "selected_methods",
+            "rejected_methods",
+            "parameters",
+            "mutation_origin",
+            "expected_observation",
+        }
         missing = sorted(required - set(strategy))
         if missing:
-            raise RuntimeError(f"{team} strategy_genome missing fields: {', '.join(missing)}")
+            raise RuntimeError(
+                f"{team} strategy_genome missing fields: {', '.join(missing)}"
+            )
         parent = (parent_genomes or {}).get(team)
         packet = (knowledge_packets or {}).get(team)
         team_research = (research or {}).get(team)
@@ -738,11 +1291,15 @@ def _provider_genomes(
             "artifact_role": "red_exploit" if team == "red" else "blue_patch",
             "parent_genome_sha256": parent.get("sha256") if parent else None,
             "knowledge_packet_id": packet.get("packet_id") if packet else None,
-            "research_receipt_sha256": team_research.get("source_receipt_sha256") if team_research else None,
+            "research_receipt_sha256": team_research.get("source_receipt_sha256")
+            if team_research
+            else None,
             **strategy,
             "provider_response_sha256": _sha(Path(str(entry["scillm_call"]))),
         }
-        path = _write_json(generation_dir / "genomes" / f"{team}-team-genome.json", genome)
+        path = _write_json(
+            generation_dir / "genomes" / f"{team}-team-genome.json", genome
+        )
         genome["path"] = str(path)
         genome["sha256"] = _sha(path)
         if parent and genome["sha256"] == parent["sha256"]:
@@ -788,7 +1345,94 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         for name in ("g1_judge", "g2_judge")
     ):
         return "BLOCKED", "judge_pair_missing"
+    if len(items["observations"]) != 4 or any(
+        item.get("status") != "PASS" for item in items["observations"]
+    ):
+        return "BLOCKED", "generation_observation_missing"
+    if len(items["fitness"]) != 4 or any(
+        item.get("status") != "PASS" for item in items["fitness"]
+    ):
+        return "BLOCKED", "fitness_vector_missing"
+    if len(items["requests"]) != 2 or any(
+        item.get("request", {}).get("requested_action") != "SPAWN_CHILD"
+        for item in items["requests"]
+    ):
+        return "BLOCKED", "parent_spawn_request_missing"
+    if len(items["deltas"]) != 2 or any(
+        item.get("nonempty_semantic_delta") is not True for item in items["deltas"]
+    ):
+        return "BLOCKED", "semantic_genome_delta_missing"
+    if items["memory_evaluation"].get("status") != "PASS":
+        return "BLOCKED", "memory_evaluation_missing"
     return "PASS", "two_generation_red_blue_lineage_evaluated"
+
+
+def _source_receipt_index(
+    *,
+    battle_id: str,
+    run_id: str,
+    campaign_root: Path,
+    observations: list[dict[str, Any]],
+    fitness: list[dict[str, Any]],
+    requests: list[dict[str, Any]],
+    deltas: list[dict[str, Any]],
+    selection: dict[str, Any],
+    memory_evaluation: dict[str, Any],
+) -> dict[str, Any]:
+    public_receipts = []
+    for item in [
+        *observations,
+        *fitness,
+        *requests,
+        *deltas,
+        selection,
+        memory_evaluation,
+    ]:
+        public_receipts.append(
+            {
+                "schema": item.get("schema"),
+                "status": item.get("status"),
+                "sha256": item.get("sha256"),
+                "receipt_id": item.get("receipt_id")
+                or item.get("fitness_id")
+                or item.get("request_id")
+                or item.get("delta_id")
+                or item.get("selection_id")
+                or item.get("evaluation_id"),
+            }
+        )
+    known = {(item.get("schema"), item.get("sha256")) for item in public_receipts}
+    for line in (
+        (campaign_root / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    ):
+        if not line:
+            continue
+        source = json.loads(line)["source_receipt"]
+        key = (source.get("schema"), source.get("sha256"))
+        if key not in known:
+            public_receipts.append(source)
+            known.add(key)
+    return {
+        "schema": "battle.adaptive_lineage_source_receipt_index.v1",
+        "status": "PASS",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "campaign_root_id": campaign_root.name,
+        "public_receipts": public_receipts,
+        "selection": {
+            "receipt_id": selection["selection_id"],
+            "sha256": selection["sha256"],
+            "teams": selection["teams"],
+            "improvement_claimed": selection["improvement_claimed"],
+        },
+        "memory_evaluation": {
+            "receipt_id": memory_evaluation["evaluation_id"],
+            "sha256": memory_evaluation["sha256"],
+            "decisions": [
+                item["decision"] for item in memory_evaluation["evaluations"]
+            ],
+        },
+    }
 
 
 def _generation_summary(

@@ -1,0 +1,6 @@
+{
+  "fixture_sha256": "ffaebd09fe412051ff5aa77b61e3aaf5bd27804b87af0913becf58c728d083bf",
+  "local_public_byte_identical": true,
+  "schema": "battle.normalized_adaptive_lineage_validation.v1",
+  "status": "PASS"
+}

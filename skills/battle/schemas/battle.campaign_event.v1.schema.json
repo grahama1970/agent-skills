@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.campaign_event.v1",
+  "type": "object",
+  "required": ["schema", "seq", "event_id", "battle_id", "run_id", "campaign_clock_id", "event_type", "timing", "source_receipt", "payload", "claims"],
+  "properties": {
+    "schema": {"const": "battle.campaign_event.v1"},
+    "seq": {"type": "integer", "minimum": 1},
+    "timing": {"type": "object", "required": ["observed_monotonic_ns", "elapsed_seconds", "committed_at"]},
+    "source_receipt": {"type": "object", "required": ["schema", "sha256"]},
+    "payload": {"type": "object"}
+  },
+  "additionalProperties": true
+}

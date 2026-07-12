@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.adaptive_spawn_request.v1",
+  "type": "object",
+  "required": ["schema", "request_id", "status", "battle_id", "run_id", "team", "generation", "parent_binding", "request", "authorship", "claims"],
+  "properties": {
+    "schema": {"const": "battle.adaptive_spawn_request.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "request": {
+      "type": "object",
+      "required": ["requested_action", "rationale", "reason_codes", "proposed_child_mission", "requested_research_questions", "requested_mutation_directions", "expected_observation", "requested_budget"],
+      "properties": {"requested_action": {"enum": ["SPAWN_CHILD", "CONTINUE_PARENT", "STOP"]}}
+    },
+    "authorship": {"type": "object", "required": ["authored_by", "agentic", "provider_live"]}
+  },
+  "additionalProperties": true
+}

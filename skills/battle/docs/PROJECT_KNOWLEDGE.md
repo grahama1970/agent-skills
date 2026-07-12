@@ -1,6 +1,6 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-07-11 09:35 by agent
+**Last updated:** 2026-07-12 16:34 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -428,6 +428,46 @@ It does not prove improvement, high-throughput genetic search, multiple
 vulnerabilities, or durable memory promotion. PR6 remains a four-source
 composite demonstration with synthetic presentation timing and is not the
 normalized projection of this run.
+
+## Adaptive Policy and Continuous Projection V13 (2026-07-12)
+
+The fresh non-mocked V13 run closes the next bounded adaptive-policy rung:
+
+```text
+run=/tmp/battle-004-adaptive-red-blue-lineage-v13
+status=PASS
+mocked=false
+agentic=true
+fixture_fallback_used=false
+generation_observations=4
+fitness_vectors=4
+tau_parent_spawn_requests=2
+tau_parent_requested_action=SPAWN_CHILD (Red and Blue)
+provider_live_parent_reflections=true (Red and Blue)
+semantic_genome_deltas=2
+semantic_genome_deltas_nonempty=true (Red and Blue)
+selection_fitness_receipt_hashes=4
+selection.improvement_claimed=false
+memory_evaluation.status=PASS
+memory_decisions=NO_PROMOTION,NO_PROMOTION
+campaign_events=24
+campaign_event_sequence=monotonic
+normalized_fixture=battle-004-adaptive-lineage-v13
+local_public_fixture_byte_identical=true
+judge_verified_exploits=0
+```
+
+The campaign receipt is committed only after the normalized fixture passes its
+JSON Schema and local/public byte-identity gate. The journal is receipt-first:
+Battle writes and hashes a source receipt before appending its event. The
+normalizer consumes only `events.jsonl` and the explicit source-receipt index;
+it does not scan Tau, provider, Docker, Judge, or Arena-private directories.
+
+This rung proves two provider-parent reproduction requests and two semantic
+strategy mutations in one receipt-continuous campaign. It does not prove child
+performance improvement, Judge-confirmed Red exploit success, durable memory
+write/recall, population-scale evolution, multiple vulnerabilities, or
+production readiness.
 
 Battle v0 does not prove:
 

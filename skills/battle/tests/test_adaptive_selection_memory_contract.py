@@ -1,0 +1,36 @@
+"""Selection binds four fitness receipts and memory evaluation stays non-promoting."""
+
+from battle_skill.adaptive_selection import build_selection_receipt
+from battle_skill.memory_promotion import build_memory_evaluation
+
+
+def _fitness(team: str, generation: int, key: list[int]) -> dict:
+    return {
+        "team": team,
+        "generation": generation,
+        "selection_key": key,
+        "sha256": f"{team}{generation}".ljust(64, "0"),
+        "judge_receipt_sha256": "j" * 64,
+    }
+
+
+def test_selection_and_memory_evaluation() -> None:
+    fitness = {
+        "red": {1: _fitness("red", 1, [1]), 2: _fitness("red", 2, [2])},
+        "blue": {1: _fitness("blue", 1, [2]), 2: _fitness("blue", 2, [2])},
+    }
+    selection = build_selection_receipt(
+        battle_id="battle-004", run_id="run", fitness=fitness
+    )
+    selection["sha256"] = "s" * 64
+    deltas = {"red": {"sha256": "r" * 64}, "blue": {"sha256": "b" * 64}}
+    memory = build_memory_evaluation(
+        battle_id="battle-004",
+        run_id="run",
+        selection=selection,
+        fitness=fitness,
+        deltas=deltas,
+    )
+    assert selection["teams"]["red"]["selected_generation"] == 2
+    assert selection["teams"]["blue"]["selected_generation"] == 1
+    assert {item["decision"] for item in memory["evaluations"]} == {"NO_PROMOTION"}

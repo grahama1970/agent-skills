@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.generation_observation_receipt.v1",
+  "type": "object",
+  "required": ["schema", "receipt_id", "status", "battle_id", "run_id", "team", "generation", "artifact", "judge", "measurements", "claims"],
+  "properties": {
+    "schema": {"const": "battle.generation_observation_receipt.v1"},
+    "status": {"enum": ["PASS", "FAIL", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "generation": {"enum": [1, 2]},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "battle_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "artifact": {"type": "object"},
+    "judge": {"type": "object"},
+    "measurements": {"type": "object"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

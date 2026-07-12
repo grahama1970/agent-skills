@@ -1,0 +1,226 @@
+{
+  "battle_id": "battle-004",
+  "campaign_root_id": "battle-004-adaptive-red-blue-lineage-v13",
+  "memory_evaluation": {
+    "decisions": [
+      "NO_PROMOTION",
+      "NO_PROMOTION"
+    ],
+    "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-memory-evaluation",
+    "sha256": "bfe63d19882ef6f9d8ecd9c715f671e522013104ec57564557f355f12d223aa6"
+  },
+  "public_receipts": [
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-observation",
+      "schema": "battle.generation_observation_receipt.v1",
+      "sha256": "78fc93f98d81f8fb72147448074cd7a7eece9d50f2cd5c2347dc5466af385bb6",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-observation",
+      "schema": "battle.generation_observation_receipt.v1",
+      "sha256": "df3570931f988c80a72647e769924eb8eab09396131ded0b3acb71868af67e63",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-observation",
+      "schema": "battle.generation_observation_receipt.v1",
+      "sha256": "317de695abcaf72c38eb2eccc7e68970d3dec35e7412b81f677b638389d7ddb0",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-observation",
+      "schema": "battle.generation_observation_receipt.v1",
+      "sha256": "ba18de7ad1a0d5ee05a738cb7e6860a6a346549258f3265638416abf0856e7ff",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-fitness",
+      "schema": "battle.fitness_vector.v1",
+      "sha256": "6a74bed467712120fd6cc5b69663dc3cbd48a1610e64f0a22aeeac99b6800510",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-fitness",
+      "schema": "battle.fitness_vector.v1",
+      "sha256": "65112d90ac84e9e79c7f41ce14e269054f9a3391d0632af9784959fdc35e33c8",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-fitness",
+      "schema": "battle.fitness_vector.v1",
+      "sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-fitness",
+      "schema": "battle.fitness_vector.v1",
+      "sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-parent-spawn-request",
+      "schema": "battle.adaptive_spawn_request.v1",
+      "sha256": "d88df30ac4704e367b32bd62bc2dcb8d85c0c9dc76c290914840c6a2f3072670",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-parent-spawn-request",
+      "schema": "battle.adaptive_spawn_request.v1",
+      "sha256": "80224c8fe47650b78fded13cc3631b6ad60649c96f06e6222fc3d68525d4fe8c",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-g2-delta",
+      "schema": "battle.semantic_genome_delta.v1",
+      "sha256": "059643ca7d7f2f556b537a17e77b8347134463a32531a115acad4fdc46af5229",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-g2-delta",
+      "schema": "battle.semantic_genome_delta.v1",
+      "sha256": "d37259a338f0ba09fd8a4ed4e193662a4ce68772af5bf9867d1223682a8b89e7",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-selection",
+      "schema": "battle.adaptive_selection_receipt.v1",
+      "sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-memory-evaluation",
+      "schema": "battle.memory_promotion_evaluation.v1",
+      "sha256": "bfe63d19882ef6f9d8ecd9c715f671e522013104ec57564557f355f12d223aa6",
+      "status": "PASS"
+    },
+    {
+      "receipt_id": null,
+      "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+      "sha256": "e69ec6a291e5f2b79f0524777328ce39b1f6e763ed3e773c3755f882d7262ec2",
+      "status": "PASS",
+      "verdict": "BLUE_SUCCESS"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-spawn-policy-decision",
+      "schema": "battle.adaptive_spawn_policy_decision.v1",
+      "sha256": "abad5cd4c7ebdd7f52a0d304c5fcc57be5dc8e7f6019dc7ad1350b786aeeffc7",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-spawn-policy-decision",
+      "schema": "battle.adaptive_spawn_policy_decision.v1",
+      "sha256": "ac2f5b31c87136dce78ac8b988c0c1fdf53d8ca550e9c6a59a868708291d0152",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-knowledge-packet",
+      "schema": "battle.adaptive_team_knowledge_packet.v1",
+      "sha256": "b95bdda4037f9e7a394555fbfad8b8e6a9730a39dbad0cabbc0059fea727b424",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-knowledge-packet",
+      "schema": "battle.adaptive_team_knowledge_packet.v1",
+      "sha256": "bf37e0aec0188ffb6afbe130f3e6689f406823be01df0dd71dc83cf1b8bcafc0",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "tau.external_research_receipt.v1",
+      "sha256": "d70081a73a999ca643e07627d4c76bfdc8b4778b804c5dc4df23e487beb1fd32",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "tau.external_research_receipt.v1",
+      "sha256": "f73c3fd90a282de13784239ed0d610704547b425c14b5d36b3c2b360624330b9",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+      "sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+      "status": "PASS",
+      "verdict": "BLUE_SUCCESS"
+    },
+    {
+      "receipt_id": null,
+      "schema": "battle.inherited_knowledge_acknowledgement.v1",
+      "sha256": "30ed377848531571b655557df7c918f2254dcbe5019985bebf315534837a7f3d",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "battle.inherited_knowledge_acknowledgement.v1",
+      "sha256": "f29b43efeb87f3b22735488ec0588f47438c2a4ffa8875d638e63eacfb20fb73",
+      "status": "PASS",
+      "verdict": null
+    }
+  ],
+  "run_id": "battle-004-adaptive-red-blue-lineage-v13",
+  "schema": "battle.adaptive_lineage_source_receipt_index.v1",
+  "selection": {
+    "improvement_claimed": false,
+    "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-selection",
+    "sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+    "teams": {
+      "blue": {
+        "component_comparison": [
+          {
+            "component": "selection_key",
+            "generation_1": [
+              2,
+              1,
+              0,
+              -1
+            ],
+            "generation_2": [
+              2,
+              1,
+              1,
+              -1
+            ]
+          }
+        ],
+        "generation_1_fitness_receipt_sha256": "65112d90ac84e9e79c7f41ce14e269054f9a3391d0632af9784959fdc35e33c8",
+        "generation_2_fitness_receipt_sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": null
+      },
+      "red": {
+        "component_comparison": [
+          {
+            "component": "selection_key",
+            "generation_1": [
+              1,
+              1,
+              0,
+              -1
+            ],
+            "generation_2": [
+              1,
+              1,
+              1,
+              -1
+            ]
+          }
+        ],
+        "generation_1_fitness_receipt_sha256": "6a74bed467712120fd6cc5b69663dc3cbd48a1610e64f0a22aeeac99b6800510",
+        "generation_2_fitness_receipt_sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": null
+      }
+    }
+  },
+  "status": "PASS"
+}

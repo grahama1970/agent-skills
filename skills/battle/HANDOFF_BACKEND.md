@@ -1133,3 +1133,40 @@ timeline_source = synthetic_presentation_order
 Frontend must not present PR6 as the normalized projection of the adaptive
 lineage canary. A dedicated receipt-continuous projection remains the next UX
 handoff.
+
+## Adaptive Lineage V13 Frontend Handoff
+
+Schema: `battle.normalized_adaptive_lineage_fixture.v1`
+
+Fixture ID and public URL:
+
+```text
+battle-004-adaptive-lineage-v13
+/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json
+```
+
+Recommended route:
+
+```text
+#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13
+```
+
+Renderer field map:
+
+```text
+ordered campaign events: events[]
+source playhead: events[].elapsed_seconds
+spawn requests/decisions: spawn_requested / spawn_authorized
+inheritance: knowledge_packet_materialized / child_knowledge_acknowledged
+research: child_research_materialized
+semantic mutation: genome_mutated
+selection: selection
+memory policy: memory_evaluation
+claim boundary: claim_boundary
+```
+
+This is the first single-run causal adaptive-lineage projection. PR6 remains a
+composite demonstration. Frontend must consume only this public fixture, never
+raw Tau/provider/Docker/Judge/Arena paths. `improvement_claimed` is false and
+`judge_verified_exploits` remains zero; semantic novelty is not performance or
+exploit-success evidence.

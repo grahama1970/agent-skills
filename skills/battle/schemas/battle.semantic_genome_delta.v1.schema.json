@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.semantic_genome_delta.v1",
+  "type": "object",
+  "required": ["schema", "delta_id", "status", "battle_id", "run_id", "team", "parent_semantic_sha256", "child_semantic_sha256", "semantic_change_count", "nonempty_semantic_delta", "claims"],
+  "properties": {
+    "schema": {"const": "battle.semantic_genome_delta.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "semantic_change_count": {"type": "integer", "minimum": 0},
+    "nonempty_semantic_delta": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

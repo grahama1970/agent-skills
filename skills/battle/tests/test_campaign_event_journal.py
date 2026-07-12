@@ -1,0 +1,23 @@
+"""Campaign journal commits only existing receipt-backed events."""
+
+import json
+
+import pytest
+
+from battle_skill.campaign_event_journal import CampaignEventJournal
+
+
+def test_journal_is_monotonic_and_hash_bound(tmp_path) -> None:
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text(
+        json.dumps({"schema": "x.v1", "status": "PASS", "receipt_id": "r1"})
+    )
+    journal = CampaignEventJournal(
+        root=tmp_path / "run", battle_id="battle-004", run_id="run"
+    )
+    first = journal.append(event_type="first", source_receipt=receipt)
+    second = journal.append(event_type="second", source_receipt=receipt)
+    assert [first["seq"], second["seq"]] == [1, 2]
+    assert second["timing"]["elapsed_seconds"] >= first["timing"]["elapsed_seconds"]
+    with pytest.raises(ValueError):
+        journal.append(event_type="missing", source_receipt=tmp_path / "missing.json")

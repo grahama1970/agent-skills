@@ -12,6 +12,7 @@ def test_generation_two_objectives_bind_inheritance_research_and_materialization
     packet = {
         "packet_id": "battle-004-red-generation-2-knowledge",
         "parent_artifact_sha256": "parent-sha",
+        "parent_semantic_genome_sha256": "semantic-sha",
     }
     research = {"source_receipt_sha256": "research-sha"}
 
@@ -21,6 +22,8 @@ def test_generation_two_objectives_bind_inheritance_research_and_materialization
     for objective in (red, blue):
         assert packet["packet_id"] in objective
         assert packet["parent_artifact_sha256"] in objective
+        assert packet["parent_semantic_genome_sha256"] in objective
+        assert "first_plan_action" in objective
         assert research["source_receipt_sha256"] in objective
         assert "public target only" in objective
     assert "from app import import_zip" in red
@@ -38,6 +41,14 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
         "red_ack": {"status": "PASS"},
         "blue_ack": {"status": "PASS"},
         "selection": {"status": "PASS"},
+        "observations": [{"status": "PASS"}] * 4,
+        "fitness": [{"status": "PASS"}] * 4,
+        "requests": [
+            {"request": {"requested_action": "SPAWN_CHILD"}},
+            {"request": {"requested_action": "SPAWN_CHILD"}},
+        ],
+        "deltas": [{"nonempty_semantic_delta": True}] * 2,
+        "memory_evaluation": {"status": "PASS"},
     }
 
     assert _campaign_status(**values) == (

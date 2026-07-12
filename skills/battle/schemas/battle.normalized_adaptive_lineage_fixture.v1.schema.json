@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.normalized_adaptive_lineage_fixture.v1",
+  "type": "object",
+  "required": ["schema", "fixture_id", "battle_id", "run_id", "proof_mode", "causal_continuity_proven", "campaign", "events", "receipt_refs", "selection", "memory_evaluation", "claim_boundary", "provenance"],
+  "properties": {
+    "schema": {"const": "battle.normalized_adaptive_lineage_fixture.v1"},
+    "proof_mode": {"const": "receipt_backed_fixture"},
+    "causal_continuity_proven": {"const": true},
+    "events": {"type": "array", "minItems": 1},
+    "provenance": {"type": "object", "required": ["raw_paths_redacted", "source_run_count", "source_proof_id"]}
+  },
+  "additionalProperties": true
+}

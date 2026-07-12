@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.adaptive_selection_receipt.v1",
+  "type": "object",
+  "required": ["schema", "selection_id", "status", "battle_id", "run_id", "policy_id", "policy_sha256", "teams", "improvement_claimed", "claims"],
+  "properties": {
+    "schema": {"const": "battle.adaptive_selection_receipt.v1"},
+    "status": {"const": "PASS"},
+    "teams": {"type": "object", "required": ["red", "blue"]},
+    "improvement_claimed": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

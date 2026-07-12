@@ -1,0 +1,37 @@
+"""Semantic genome delta excludes metadata-only changes."""
+
+from battle_skill.adaptive_genome import build_semantic_genome_delta
+
+
+def test_semantic_delta_blocks_metadata_only_change() -> None:
+    strategy = {
+        "selected_methods": ["a"],
+        "rejected_methods": [],
+        "parameters": {},
+        "mutation_origin": "parent",
+        "expected_observation": "x",
+    }
+    parent = {**strategy, "sha256": "p" * 64, "run_id": "g1"}
+    child = {**strategy, "sha256": "c" * 64, "run_id": "g2"}
+    delta = build_semantic_genome_delta(
+        battle_id="battle-004", run_id="run", team="red", parent=parent, child=child
+    )
+    assert delta["status"] == "BLOCKED"
+    assert delta["nonempty_semantic_delta"] is False
+
+
+def test_semantic_delta_accepts_method_change() -> None:
+    parent = {
+        "selected_methods": ["a"],
+        "rejected_methods": [],
+        "parameters": {},
+        "mutation_origin": "parent",
+        "expected_observation": "x",
+        "sha256": "p" * 64,
+    }
+    child = {**parent, "selected_methods": ["a", "b"], "sha256": "c" * 64}
+    delta = build_semantic_genome_delta(
+        battle_id="battle-004", run_id="run", team="red", parent=parent, child=child
+    )
+    assert delta["status"] == "PASS"
+    assert delta["added_methods"] == ["b"]
