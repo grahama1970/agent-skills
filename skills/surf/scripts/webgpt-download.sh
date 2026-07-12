@@ -62,9 +62,26 @@ if [[ -n "$tab_id" ]]; then
   tab_args=(--tab-id "$tab_id")
 fi
 
-# 1. Find download buttons matching the pattern via JS
+# Encode user input before embedding it in JavaScript.
+match_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$match")"
+
+# 1. Find artifact controls matching the pattern via JS
 echo "Searching for download button matching: $match" >&2
-find_js="return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=button]')).filter(e => { const t = (e.textContent || e.getAttribute('aria-label') || '').toLowerCase(); return t.includes('${match,,}'); }).map(e => ({ text: e.textContent?.trim().slice(0, 120), aria: e.getAttribute('aria-label') || '', href: e.href || e.getAttribute('href') || '', download: e.getAttribute('download') || '' })), null, 2)"
+find_js="
+const match = ${match_json}.toLowerCase();
+return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=button]')).filter(e => {
+  const text = [e.textContent, e.getAttribute('aria-label'), e.getAttribute('title'),
+    e.getAttribute('download'), e.getAttribute('href')].filter(Boolean).join(' ').toLowerCase();
+  return text.includes(match);
+}).map(e => ({
+  text: e.textContent?.trim().slice(0, 120),
+  aria: e.getAttribute('aria-label') || '',
+  title: e.getAttribute('title') || '',
+  href: e.href || e.getAttribute('href') || '',
+  download: e.getAttribute('download') || '',
+  role: e.getAttribute('role') || '',
+  tag: e.tagName
+})), null, 2)"
 
 buttons_json="$("$RUN_SH" js "$find_js" "${tab_args[@]}" 2>/dev/null || true)"
 
@@ -95,9 +112,10 @@ before_files=$(ls -1 "$downloads_dir" 2>/dev/null || true)
 # pattern, then click it programmatically. This works regardless of whether
 # textContent is empty (ChatGPT download buttons use aria-label only).
 click_js="
-const match = '${match,,}';
+const match = ${match_json}.toLowerCase();
 const btn = Array.from(document.querySelectorAll('a,button,[role=button]')).find(e => {
-  const label = (e.getAttribute('aria-label') || e.textContent || '').toLowerCase();
+  const label = [e.getAttribute('aria-label'), e.getAttribute('title'), e.textContent,
+    e.getAttribute('download'), e.getAttribute('href')].filter(Boolean).join(' ').toLowerCase();
   return label.includes(match);
 });
 if (btn) { btn.click(); return 'clicked'; } else { return 'no-match'; }
@@ -114,23 +132,50 @@ if [[ "$click_out" != "clicked" ]]; then
   exit 4
 fi
 
-sleep 1
-dialog_download_js="
-const dialog = document.querySelector('[role=dialog]');
-const download = dialog && Array.from(dialog.querySelectorAll('button')).find(e =>
-  (e.getAttribute('aria-label') || '').toLowerCase() === 'download'
-);
-if (download) { download.click(); return 'clicked'; }
-return 'no-dialog-download';
+# Some attachments open ChatGPT's artifact viewer first. Its upper-right
+# Download icon may be in a side panel rather than a role=dialog and may expose
+# only title/data-testid metadata. Poll briefly for that second-stage toolbar.
+viewer_download_js="
+const visible = e => {
+  const r = e.getBoundingClientRect();
+  const s = getComputedStyle(e);
+  return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
+};
+const candidates = Array.from(document.querySelectorAll('a,button,[role=button]'))
+  .filter(visible)
+  .map(e => {
+    const r = e.getBoundingClientRect();
+    const label = [e.getAttribute('aria-label'), e.getAttribute('title'),
+      e.getAttribute('data-testid'), e.getAttribute('download'), e.textContent]
+      .filter(Boolean).join(' ').trim();
+    const inDialog = Boolean(e.closest('[role=dialog],[aria-modal=true]'));
+    const inMessage = Boolean(e.closest('[data-message-author-role]'));
+    const topRight = r.left > innerWidth * 0.5 && r.top < innerHeight * 0.35;
+    let score = 0;
+    if (/\\bdownload\\b/i.test(label)) score += 100;
+    if (inDialog) score += 40;
+    if (!inMessage) score += 30;
+    if (topRight) score += 20;
+    return { e, label, score, inMessage, topRight };
+  })
+  .filter(x => x.score >= 130 && !x.inMessage)
+  .sort((a, b) => b.score - a.score);
+const download = candidates[0];
+if (download) {
+  download.e.click();
+  return JSON.stringify({status:'clicked', label:download.label, topRight:download.topRight});
+}
+return JSON.stringify({status:'not-found'});
 "
-dialog_download_out=$("$RUN_SH" js "$dialog_download_js" "${tab_args[@]}" 2>/dev/null || true)
-if [[ "$dialog_download_out" == \"*\" ]]; then
-  dialog_download_out="${dialog_download_out#\"}"
-  dialog_download_out="${dialog_download_out%\"}"
-fi
-if [[ "$dialog_download_out" == "clicked" ]]; then
-  echo "Clicked artifact dialog Download button" >&2
-fi
+for _viewer_attempt in 1 2 3 4 5 6 7 8 9 10; do
+  viewer_download_out=$("$RUN_SH" js "$viewer_download_js" "${tab_args[@]}" 2>/dev/null || true)
+  viewer_status=$(printf '%s' "$viewer_download_out" | python3 -c 'import json,sys; value=json.load(sys.stdin); value=json.loads(value) if isinstance(value,str) else value; print(value.get("status", ""))' 2>/dev/null || true)
+  if [[ "$viewer_status" == "clicked" ]]; then
+    echo "Clicked artifact viewer Download control" >&2
+    break
+  fi
+  sleep 0.5
+done
 
 echo "Waiting for download to appear in: $downloads_dir" >&2
 
