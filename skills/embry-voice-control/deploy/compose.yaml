@@ -1,0 +1,72 @@
+name: embry-voice
+
+services:
+  voice-control:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.voice-control
+    environment:
+      EMBRY_VOICE_JOURNAL_DB: /var/lib/embry-voice/voice-events.sqlite3
+    volumes:
+      - embry-journal:/var/lib/embry-voice
+      - embry-artifacts:/var/lib/embry-artifacts:ro
+    ports:
+      - "127.0.0.1:8019:8019"
+    restart: unless-stopped
+
+  realtime-stt:
+    build:
+      context: ${REALTIMESTT_REPO:?set REALTIMESTT_REPO}
+      dockerfile: docker/Dockerfile.embry-runtime
+    environment:
+      EMBRY_PCM_SOCKET: /run/embry/audio/realtimestt-pcm.sock
+      EMBRY_EVENT_OUTBOX: /var/lib/embry-realtimestt/outbox.sqlite3
+      EMBRY_JOURNAL_URL: http://voice-control:8019/v1/listener/events
+      EMBRY_OPENWAKEWORD_MODEL: /models/openwakeword/hey_embry.onnx
+      EMBRY_STT_DEVICE: cuda
+      EMBRY_STT_COMPUTE_TYPE: float16
+    volumes:
+      - ${EMBRY_AUDIO_RUNTIME_DIR:?set EMBRY_AUDIO_RUNTIME_DIR}:/run/embry/audio
+      - ${EMBRY_OPENWAKEWORD_MODEL_DIR:?set EMBRY_OPENWAKEWORD_MODEL_DIR}:/models/openwakeword:ro
+      - embry-realtimestt-state:/var/lib/embry-realtimestt
+      - ${HF_HOME:?set HF_HOME}:/models/huggingface
+    ports:
+      - "127.0.0.1:8020:8020"
+    depends_on:
+      voice-control:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  chatterbox:
+    build:
+      context: ${CHATTERBOX_REPO:?set CHATTERBOX_REPO}
+      dockerfile: docker/Dockerfile.runtime
+    environment:
+      CHATTERBOX_DEVICE: cuda
+      CHATTERBOX_OUT_DIR: /var/lib/embry-artifacts/chatterbox
+      HF_HOME: /models/huggingface
+    volumes:
+      - embry-artifacts:/var/lib/embry-artifacts
+      - ${HF_HOME:?set HF_HOME}:/models/huggingface
+    ports:
+      - "127.0.0.1:8018:8018"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  embry-journal:
+  embry-realtimestt-state:
+  embry-artifacts:
