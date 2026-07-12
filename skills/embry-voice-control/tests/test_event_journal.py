@@ -54,6 +54,18 @@ def test_producer_sequence_is_rejected(tmp_path: Path) -> None:
         append_event(db, supplied)
 
 
+def test_v2_event_is_preserved_with_server_assigned_sequence(tmp_path: Path) -> None:
+    db = tmp_path / "events.sqlite3"
+    supplied = event(event_id="v2-event")
+    supplied["schema"] = "embry.voice_event.v2"
+
+    stored = append_event(db, supplied)
+
+    assert stored["schema"] == "embry.voice_event.v2"
+    assert stored["sequence"] == 1
+    assert append_event(db, supplied) == stored
+
+
 def test_exact_event_replay_is_idempotent_and_returns_stored_event(tmp_path: Path) -> None:
     db = tmp_path / "events.sqlite3"
     stored = append_event(db, event())

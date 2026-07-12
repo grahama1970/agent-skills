@@ -9,7 +9,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-EVENT_SCHEMA = "embry.voice_event.v1"
+EVENT_SCHEMA = "embry.voice_event.v2"
+COMPATIBLE_EVENT_SCHEMAS = {"embry.voice_event.v1", EVENT_SCHEMA}
 REQUIRED_TEXT_FIELDS = (
     "event_id",
     "session_id",
@@ -46,6 +47,7 @@ def connect(path: Path) -> sqlite3.Connection:
     connection.execute(
         """CREATE TABLE IF NOT EXISTS events (
         event_id TEXT PRIMARY KEY,
+        event_schema TEXT NOT NULL DEFAULT 'embry.voice_event.v1',
         session_id TEXT NOT NULL,
         turn_id TEXT NOT NULL,
         sequence INTEGER NOT NULL,
@@ -96,6 +98,7 @@ def connect(path: Path) -> sqlite3.Connection:
 def _migrate_events(connection: sqlite3.Connection) -> None:
     columns = {row[1] for row in connection.execute("PRAGMA table_info(events)").fetchall()}
     for column, decl in {
+        "event_schema": "TEXT NOT NULL DEFAULT 'embry.voice_event.v1'",
         "causation_id": "TEXT",
         "correlation_id": "TEXT",
         "producer": "TEXT",
@@ -110,7 +113,7 @@ def _migrate_events(connection: sqlite3.Connection) -> None:
 
 def validate_event(event: dict[str, Any]) -> None:
     """Reject incomplete or noncanonical producer events."""
-    if event.get("schema") != EVENT_SCHEMA:
+    if event.get("schema") not in COMPATIBLE_EVENT_SCHEMAS:
         raise ValueError("event_schema_invalid")
     if "sequence" in event:
         raise ValueError("event_sequence_producer_supplied")
@@ -134,7 +137,7 @@ def validate_event(event: dict[str, Any]) -> None:
 def _row_to_event(row: sqlite3.Row) -> dict[str, Any]:
     artifact_hashes = row["artifact_hashes_json"]
     return {
-        "schema": EVENT_SCHEMA,
+        "schema": row["event_schema"],
         "event_id": row["event_id"],
         "session_id": row["session_id"],
         "turn_id": row["turn_id"],
@@ -177,12 +180,12 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         ).fetchone()[0]
         connection.execute(
             """INSERT INTO events (
-            event_id, session_id, turn_id, sequence, event_type, created_at,
+            event_id, event_schema, session_id, turn_id, sequence, event_type, created_at,
             causation_id, correlation_id, producer, mocked, live,
             artifact_hashes_json, receipt_hash, payload_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                event["event_id"], event["session_id"], event["turn_id"], sequence,
+                event["event_id"], event["schema"], event["session_id"], event["turn_id"], sequence,
                 event["type"], event["created_at"], event["causation_id"],
                 event["correlation_id"], event["producer"], int(event["mocked"]),
                 int(event["live"]), artifact_hashes_json, event["receipt_hash"], payload_json,

@@ -35,7 +35,7 @@ class VoiceEvent(BaseModel):
     """Canonical producer event accepted by the local listener service."""
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
-    schema_: str = Field(default="embry.voice_event.v1", alias="schema")
+    schema_: str = Field(default="embry.voice_event.v2", alias="schema")
     event_id: str
     session_id: str
     turn_id: str
