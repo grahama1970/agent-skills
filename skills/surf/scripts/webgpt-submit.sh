@@ -377,6 +377,14 @@ meta["agent_action"] = action
 meta["submitted_to_chatgpt"] = submitted
 meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 PY
+  python3 "${SCRIPT_DIR}/emit_surf_doctor_incident.py" \
+    --meta "$meta_output" \
+    --receipt "$receipt_output" \
+    --submitted "$submitted_output" \
+    --raw "$raw_output" \
+    --clean "$output" \
+    --heartbeat "$heartbeat_output" \
+    >/dev/null 2>&1 || true
   write_transport_summary
 }
 
