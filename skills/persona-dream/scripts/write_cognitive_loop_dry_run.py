@@ -21,14 +21,61 @@ def canonical_sha(value: Any) -> str:
     return f"sha256:{hashlib.sha256(data).hexdigest()}"
 
 
+def file_sha(path: Path) -> str:
+    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+
+
+def source_memory_bindings(residue: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
+    bindings: list[dict[str, Any]] = []
+    blockers: list[str] = []
+    items = residue.get("items")
+    if residue.get("schema") != "persona_dream.residue_links.v1" or not isinstance(items, list) or not items:
+        return [], ["BLOCKED_INTERPRETATION_RESIDUE_PACKET_INVALID"]
+    seen: set[str] = set()
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            blockers.append(f"BLOCKED_INTERPRETATION_RESIDUE_ITEM_INVALID:{index}")
+            continue
+        source_id = str(item.get("source_id") or "").strip()
+        text = str(item.get("text") or item.get("retrieval_text") or "").strip()
+        persona_id = str(item.get("persona_id") or "").strip()
+        if not source_id or source_id in seen:
+            blockers.append(f"BLOCKED_INTERPRETATION_SOURCE_ID_INVALID:{index}")
+            continue
+        if not text:
+            blockers.append(f"BLOCKED_INTERPRETATION_SOURCE_TEXT_MISSING:{source_id}")
+            continue
+        if persona_id != "embry":
+            blockers.append(f"BLOCKED_INTERPRETATION_PERSONA_SCOPE_MISMATCH:{source_id}")
+            continue
+        seen.add(source_id)
+        bindings.append({
+            "source_id": source_id,
+            "persona_id": persona_id,
+            "scope": item.get("scope"),
+            "source_path": item.get("source_path"),
+            "memory_text_sha256": canonical_sha(text),
+            "scores": item.get("scores") if isinstance(item.get("scores"), dict) else {},
+        })
+    if not bindings:
+        blockers.append("BLOCKED_INTERPRETATION_SOURCE_MEMORY_BINDING_MISSING")
+    return bindings, blockers
+
+
 def write(path: Path, value: dict[str, Any]) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def build(observation: dict[str, Any], dream_id: str, revision_id: str) -> dict[str, dict[str, Any]]:
+def build(
+    observation: dict[str, Any],
+    residue: dict[str, Any],
+    dream_id: str,
+    revision_id: str,
+    residue_packet_sha256: str,
+) -> dict[str, dict[str, Any]]:
     evidence = (observation.get("visual_facts") or []) + (observation.get("transcript_facts") or [])
     first_ref = evidence[0]["fact_id"] if evidence else None
-    blockers = ["BLOCKED_INTERPRETATION_SOURCE_MEMORY_BINDING_MISSING"]
+    bindings, blockers = source_memory_bindings(residue)
     if not first_ref:
         blockers.append("BLOCKED_INTERPRETATION_OBSERVATION_MISSING")
     if observation.get("fixture_backed"):
@@ -38,14 +85,17 @@ def build(observation: dict[str, Any], dream_id: str, revision_id: str) -> dict[
         "subject": "embry", "target": "kai",
         "statement": "Embry may be uncertain that Kai will respect a stated surf-safety boundary.",
         "observation_refs": [first_ref] if first_ref else [],
-        "source_memory_refs": ["REQUIRED_BEFORE_ACCEPTANCE"],
+        "source_memory_refs": [item["source_id"] for item in bindings],
         "alternative_explanation": "The fixture sequence or renderer may omit context needed to infer Kai's response.",
         "confidence": 0.0, "synthetic_origin": True, "literal_historical_event": False,
     }
     interpretation = {
         "schema": "persona_dream.dream_self_interpretation.v1", "status": "DRY_RUN_SELF_INTERPRETATION_PROPOSAL",
         "dream_id": dream_id, "revision_id": revision_id,
-        "observation_packet_sha256": canonical_sha(observation), "candidates": [candidate],
+        "observation_packet_sha256": canonical_sha(observation),
+        "source_residue_packet_sha256": residue_packet_sha256,
+        "source_memory_bindings": bindings,
+        "candidates": [candidate],
         "accepted_interpretations": [], "blockers": blockers, "creator_reviewer_iterations": 0,
         "mocked": False, "live": False, "provider_live": False,
     }
@@ -84,10 +134,21 @@ def build(observation: dict[str, Any], dream_id: str, revision_id: str) -> dict[
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--observation", type=Path, required=True); parser.add_argument("--dream-id", required=True)
+    parser.add_argument("--observation", type=Path, required=True)
+    parser.add_argument("--residue-links", type=Path, required=True)
+    parser.add_argument("--expected-residue-sha256", required=True)
+    parser.add_argument("--dream-id", required=True)
     parser.add_argument("--revision-id", required=True); parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--json", action="store_true"); args = parser.parse_args()
-    outputs = build(read_object(args.observation), args.dream_id, args.revision_id)
+    observed_residue_sha256 = file_sha(args.residue_links)
+    if observed_residue_sha256 != args.expected_residue_sha256:
+        raise SystemExit(
+            f"BLOCKED_INTERPRETATION_RESIDUE_PACKET_HASH_MISMATCH expected={args.expected_residue_sha256} observed={observed_residue_sha256}"
+        )
+    outputs = build(
+        read_object(args.observation), read_object(args.residue_links), args.dream_id,
+        args.revision_id, observed_residue_sha256,
+    )
     args.output_root.mkdir(parents=True, exist_ok=True)
     names = {"interpretation": "dream_self_interpretation.json", "tom": "tom_validation_receipt.json", "persistence": "dream_memory_transaction_plan.json", "recall": "dream_recall_probe_plan.json", "behavior": "dream_behavior_probe_plan.json"}
     for key, filename in names.items(): write(args.output_root / filename, outputs[key])
