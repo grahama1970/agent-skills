@@ -21,7 +21,12 @@ def promote_candidate(
         receipt_path = job_dir / "frame-patch-receipt.json"
         allowed = {"PASS_FRAME_PATCH"}
     if not receipt_path.is_file():
-        raise RuntimeError("promotion blocked: passing repair or frame-patch receipt missing")
+        receipt_path = job_dir / "named-frame-pack-receipt.json"
+        allowed = {"PASS_NAMED_FRAME_PACK"}
+    if not receipt_path.is_file():
+        raise RuntimeError(
+            "promotion blocked: passing repair, frame-patch, or named-frame-pack receipt missing"
+        )
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     status = receipt.get("status", "")
     if status not in allowed:

@@ -24,9 +24,21 @@ from sprite_atlas.inspect_source import inspect_source
 from sprite_atlas.map_frames import detected_counts, mapping_gaps, propose_mapping
 from sprite_atlas.normalize_frames import normalize_frames
 from sprite_atlas.promote import promote_candidate
-from sprite_atlas.receipts import build_receipt, build_regeneration_work_order, sha256_file, write_json
-from sprite_atlas.remove_background import crop_metadata_panel, remove_presentation_background
-from sprite_atlas.validate_atlas import summarize_checks, validate_atlas_png, validate_manifest
+from sprite_atlas.receipts import (
+    build_receipt,
+    build_regeneration_work_order,
+    sha256_file,
+    write_json,
+)
+from sprite_atlas.remove_background import (
+    crop_metadata_panel,
+    remove_presentation_background,
+)
+from sprite_atlas.validate_atlas import (
+    summarize_checks,
+    validate_atlas_png,
+    validate_manifest,
+)
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -38,7 +50,9 @@ def _default_job_dir(job_dir: Path | None, sprite_id: str | None) -> Path:
     return root / (sprite_id or "anonymous")
 
 
-def _missing_cells_report(sprite_id: str, gaps: list[dict[str, object]]) -> list[dict[str, object]]:
+def _missing_cells_report(
+    sprite_id: str, gaps: list[dict[str, object]]
+) -> list[dict[str, object]]:
     cells: list[dict[str, object]] = []
     for gap in gaps:
         animation = str(gap["animation"])
@@ -59,10 +73,14 @@ def _missing_cells_report(sprite_id: str, gaps: list[dict[str, object]]) -> list
 def validate_frames(
     frames_dir: Annotated[Path, typer.Option(help="Named-frame authoring directory.")],
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
-    job_dir: Annotated[Optional[Path], typer.Option(help="Optional validation output directory.")] = None,
+    job_dir: Annotated[
+        Optional[Path], typer.Option(help="Optional validation output directory.")
+    ] = None,
 ) -> None:
     """Validate a complete <animation>/<frame>.png authoring tree."""
-    validation = validate_named_frames(frames_dir=frames_dir, profile=load_profile(profile))
+    validation = validate_named_frames(
+        frames_dir=frames_dir, profile=load_profile(profile)
+    )
     if job_dir:
         write_json(job_dir / "frame-validation-index.json", validation)
     typer.echo(json.dumps(validation, indent=2))
@@ -72,7 +90,9 @@ def validate_frames(
 
 @app.command()
 def pack_frames(
-    frames_dir: Annotated[Path, typer.Option(help="Validated named-frame authoring directory.")],
+    frames_dir: Annotated[
+        Path, typer.Option(help="Validated named-frame authoring directory.")
+    ],
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
     sprite_id: Annotated[str, typer.Option(help="Stable sprite id.")],
     job_dir: Annotated[Path, typer.Option(help="Candidate output directory.")],
@@ -80,10 +100,36 @@ def pack_frames(
     """Pack named frame sources into the fixed-grid compatibility atlas."""
     prof = load_profile(profile)
     job_dir.mkdir(parents=True, exist_ok=True)
+    named_validation = validate_named_frames(frames_dir=frames_dir, profile=prof)
+    if not named_validation["passed"]:
+        raise typer.BadParameter("named frame validation failed; refusing to pack")
+    write_json(job_dir / "named-frame-validation.json", named_validation)
     atlas = pack_named_frames(frames_dir=frames_dir, profile=prof)
-    atlas.save(job_dir / "atlas.candidate.png")
-    write_manifest(job_dir / "atlas.candidate.json", sprite_id=sprite_id, image_name=f"{sprite_id}.png", profile=prof)
-    typer.echo(json.dumps({"status": "PASS_NAMED_FRAME_PACK", "job_dir": str(job_dir)}, indent=2))
+    candidate_png = job_dir / "atlas.candidate.png"
+    candidate_json = job_dir / "atlas.candidate.json"
+    atlas.save(candidate_png)
+    write_manifest(
+        candidate_json, sprite_id=sprite_id, image_name=f"{sprite_id}.png", profile=prof
+    )
+    write_json(
+        job_dir / "named-frame-pack-receipt.json",
+        {
+            "schema": "sprite_atlas.named_frame_pack_receipt.v1",
+            "status": "PASS_NAMED_FRAME_PACK",
+            "sprite_id": sprite_id,
+            "profile_sha256": sha256_file(profile),
+            "named_frame_validation_sha256": sha256_file(
+                job_dir / "named-frame-validation.json"
+            ),
+            "atlas_candidate_sha256": sha256_file(candidate_png),
+            "manifest_candidate_sha256": sha256_file(candidate_json),
+        },
+    )
+    typer.echo(
+        json.dumps(
+            {"status": "PASS_NAMED_FRAME_PACK", "job_dir": str(job_dir)}, indent=2
+        )
+    )
 
 
 @app.command()
@@ -97,7 +143,11 @@ def plan_repair(
     prof = load_profile(profile)
     job_dir.mkdir(parents=True, exist_ok=True)
     plan = build_repair_plan(
-        image=Image.open(atlas), atlas_path=atlas, profile=prof, profile_path=profile, sprite_id=sprite_id
+        image=Image.open(atlas),
+        atlas_path=atlas,
+        profile=prof,
+        profile_path=profile,
+        sprite_id=sprite_id,
     )
     write_json(job_dir / "frame-repair-plan.json", plan)
     work_order = {
@@ -126,8 +176,15 @@ def extract_frames(
     output_dir: Annotated[Path, typer.Option(help="Named-frame output directory.")],
 ) -> None:
     """Extract required cells into <animation>/<frame>.png authoring paths."""
-    index = extract_named_frames(image=Image.open(atlas), profile=load_profile(profile), output_dir=output_dir)
-    typer.echo(json.dumps({"output_dir": str(output_dir), "frame_count": index["frame_count"]}, indent=2))
+    index = extract_named_frames(
+        image=Image.open(atlas), profile=load_profile(profile), output_dir=output_dir
+    )
+    typer.echo(
+        json.dumps(
+            {"output_dir": str(output_dir), "frame_count": index["frame_count"]},
+            indent=2,
+        )
+    )
 
 
 @app.command()
@@ -136,7 +193,9 @@ def apply_frame_patch(
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
     sprite_id: Annotated[str, typer.Option(help="Stable sprite id.")],
     repair_plan: Annotated[Path, typer.Option(help="frame-repair-plan.json path.")],
-    patch_dir: Annotated[Path, typer.Option(help="Directory containing named replacement frames.")],
+    patch_dir: Annotated[
+        Path, typer.Option(help="Directory containing named replacement frames.")
+    ],
     job_dir: Annotated[Path, typer.Option(help="Candidate output directory.")],
 ) -> None:
     """Apply exact named-frame patches and revalidate the complete atlas."""
@@ -161,14 +220,23 @@ def apply_frame_patch(
 def inspect(
     source: Annotated[Path, typer.Option(help="Source PNG path.")],
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
-    job_dir: Annotated[Optional[Path], typer.Option(help="Job output directory.")] = None,
-    sprite_id: Annotated[Optional[str], typer.Option(help="Sprite id for default job dir.")] = None,
+    job_dir: Annotated[
+        Optional[Path], typer.Option(help="Job output directory.")
+    ] = None,
+    sprite_id: Annotated[
+        Optional[str], typer.Option(help="Sprite id for default job dir.")
+    ] = None,
 ) -> None:
     """Inspect a source sheet and emit analysis artifacts."""
     prof = load_profile(profile)
     out = _default_job_dir(job_dir, sprite_id)
     analysis = inspect_source(source=source, profile=prof, job_dir=out)
-    typer.echo(json.dumps({"job_dir": str(out), "frame_gaps": analysis.get("frame_gaps", [])}, indent=2))
+    typer.echo(
+        json.dumps(
+            {"job_dir": str(out), "frame_gaps": analysis.get("frame_gaps", [])},
+            indent=2,
+        )
+    )
 
 
 @app.command()
@@ -176,8 +244,12 @@ def repair(
     source: Annotated[Path, typer.Option(help="Source PNG path.")],
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
     sprite_id: Annotated[str, typer.Option(help="Stable sprite id.")],
-    job_dir: Annotated[Optional[Path], typer.Option(help="Job output directory.")] = None,
-    mapping: Annotated[Optional[Path], typer.Option(help="Approved mapping JSON.")] = None,
+    job_dir: Annotated[
+        Optional[Path], typer.Option(help="Job output directory.")
+    ] = None,
+    mapping: Annotated[
+        Optional[Path], typer.Option(help="Approved mapping JSON.")
+    ] = None,
 ) -> None:
     """Repair a source sheet into staged candidate atlas files.
 
@@ -221,17 +293,34 @@ def repair(
             profile_id=prof.profile_id,
             source_path=source,
             profile_path=profile,
-            checks=[{"name": "normalization", "passed": False, "detail": json.dumps(overflow)}],
+            checks=[
+                {
+                    "name": "normalization",
+                    "passed": False,
+                    "detail": json.dumps(overflow),
+                }
+            ],
         )
         write_json(out / "repair-receipt.json", receipt)
-        typer.echo(json.dumps({"status": receipt["status"], "job_dir": str(out), "overflow": overflow}, indent=2))
+        typer.echo(
+            json.dumps(
+                {
+                    "status": receipt["status"],
+                    "job_dir": str(out),
+                    "overflow": overflow,
+                },
+                indent=2,
+            )
+        )
         raise typer.Exit(code=4)
 
     atlas = assemble_atlas(prof, normalized)
     candidate_png = out / "atlas.candidate.png"
     candidate_json = out / "atlas.candidate.json"
     atlas.save(candidate_png)
-    write_manifest(candidate_json, sprite_id=sprite_id, image_name=f"{sprite_id}.png", profile=prof)
+    write_manifest(
+        candidate_json, sprite_id=sprite_id, image_name=f"{sprite_id}.png", profile=prof
+    )
 
     png_checks = validate_atlas_png(atlas, prof)
     manifest = json.loads(candidate_json.read_text(encoding="utf-8"))
@@ -294,7 +383,10 @@ def validate(
     manifest: Annotated[Path, typer.Option(help="Pixi manifest JSON.")],
     profile: Annotated[Path, typer.Option(help="Profile JSON path.")],
     sprite_id: Annotated[str, typer.Option(help="Sprite id for manifest validation.")],
-    job_dir: Annotated[Optional[Path], typer.Option(help="Optional job dir for validation.json output.")] = None,
+    job_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Optional job dir for validation.json output."),
+    ] = None,
 ) -> None:
     """Validate an existing runtime atlas pair."""
     prof = load_profile(profile)
@@ -318,7 +410,11 @@ def promote(
 ) -> None:
     """Promote staged candidate files after PASS receipt."""
     promote_candidate(job_dir=job_dir, out_png=out_png, out_json=out_json)
-    typer.echo(json.dumps({"promoted_png": str(out_png), "promoted_json": str(out_json)}, indent=2))
+    typer.echo(
+        json.dumps(
+            {"promoted_png": str(out_png), "promoted_json": str(out_json)}, indent=2
+        )
+    )
 
 
 if __name__ == "__main__":
