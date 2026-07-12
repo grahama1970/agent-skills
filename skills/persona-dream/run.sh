@@ -376,6 +376,9 @@ case "$COMMAND" in
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
     ;;
+  write-phase11-media-requirement-manifest)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_media_requirement_manifest.py" "$@"
+    ;;
   tailscale-funnel-publication-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;
