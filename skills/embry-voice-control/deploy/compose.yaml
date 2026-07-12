@@ -51,10 +51,13 @@ services:
     environment:
       CHATTERBOX_DEVICE: cuda
       CHATTERBOX_OUT_DIR: /var/lib/embry-artifacts/chatterbox
+      CHATTERBOX_REF_AUDIO: /data/embry_ref.wav
+      CHATTERBOX_REF_AUDIO_ROOTS: /data
       HF_HOME: /models/huggingface
     volumes:
       - embry-artifacts:/var/lib/embry-artifacts
       - ${HF_HOME:?set HF_HOME}:/models/huggingface
+      - ${EMBRY_REF_AUDIO:?set EMBRY_REF_AUDIO}:/data/embry_ref.wav:ro
     ports:
       - "127.0.0.1:8018:8018"
     deploy:
