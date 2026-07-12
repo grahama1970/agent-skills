@@ -2,6 +2,8 @@
 # e2e sanity for watch skill and subagent
 set -euo pipefail
 export UV_NO_SYNC=true
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 PASS=0
 FAIL=0
 
@@ -46,7 +48,7 @@ command -v uv > /dev/null 2>&1 && pass "uv found" || fail "uv missing"
 # ---------------------------------------------------------------------------
 echo "--- 4. Composed skills ---"
 for skill in ingest-youtube ingest-movie ops-nzbgeek brave-search; do
-  if [ -d "$(dirname "$0")/../$skill" ]; then
+  if [ -d "$SCRIPT_DIR/../$skill" ]; then
     pass "skill $skill exists"
   else
     fail "skill $skill missing"
@@ -57,7 +59,6 @@ done
 # 5. Movie library + resolution (no actual processing)
 # ---------------------------------------------------------------------------
 echo "--- 5. Movie library resolution ---"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 uv run python -c "
 import sys; sys.path.insert(0, 'scripts')
@@ -77,7 +78,7 @@ with tempfile.TemporaryDirectory() as d:
 print('file finders OK')
 
 # Test movie library lookup
-if MOVIE_LIBRARY.exists():
+if MOVIE_LIBRARY and MOVIE_LIBRARY.exists():
     tests = [
         ('The Devil Wears Prada', None),
         ('There Will Be Blood', None),
@@ -227,7 +228,7 @@ print('env filter OK')
 # 10. Subagent persona.yaml compliance (yaml-free grep validation)
 # ---------------------------------------------------------------------------
 echo "--- 10. Subagent contract ---"
-AGENTS_DIR="$(cd "$(dirname "$0")/../../agents" && pwd)"
+AGENTS_DIR="$(cd "$SCRIPT_DIR/../../agents" && pwd)"
 if [ ! -f "$AGENTS_DIR/watch/persona.yaml" ] || [ ! -f "$AGENTS_DIR/watch/AGENTS.md" ]; then
   fail "watch agent files missing at $AGENTS_DIR/watch/"
 else
@@ -269,7 +270,6 @@ fi
 # 11. Product failure-mode sanity checks
 # ---------------------------------------------------------------------------
 echo "--- 11. Product failure modes ---"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if uv run python "$SCRIPT_DIR/scripts/failure_modes_sanity.py"; then
   pass "failure-mode monkeypatch checks OK"
 else
@@ -290,7 +290,6 @@ fi
 # 13. Memory recall proof (3 QRA pairs, all queryable)
 # ---------------------------------------------------------------------------
 echo "--- 13. Memory recall proof (3 questions) ---"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if uv run python "$SCRIPT_DIR/scripts/recall_proof.py" 2>/dev/null; then
   pass "3 QRA pairs stored + recallable"
 else
@@ -301,7 +300,6 @@ fi
 # 14. e2e memory: scene elements + persona watch record
 # ---------------------------------------------------------------------------
 echo "--- 14. e2e memory (scene elements + persona) ---"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if uv run python -c "
 import sys, httpx, json
 sys.path.insert(0, '$SCRIPT_DIR/scripts')
