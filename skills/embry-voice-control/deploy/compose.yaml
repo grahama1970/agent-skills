@@ -23,6 +23,7 @@ services:
       EMBRY_EVENT_OUTBOX: /var/lib/embry-realtimestt/outbox.sqlite3
       EMBRY_JOURNAL_URL: http://voice-control:8019/v1/listener/events
       EMBRY_OPENWAKEWORD_MODEL: /models/openwakeword/hey_embry.onnx
+      EMBRY_OPENWAKEWORD_MODEL_SHA256: ${EMBRY_OPENWAKEWORD_MODEL_SHA256:?set EMBRY_OPENWAKEWORD_MODEL_SHA256}
       EMBRY_STT_DEVICE: cuda
       EMBRY_STT_COMPUTE_TYPE: float16
     volumes:
