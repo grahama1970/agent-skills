@@ -159,6 +159,77 @@ video, paper, or manual research must become a source-bearing receipt, route
 through research-auditor/reviewer validation, and then be reconciled into local
 artifacts and deterministic tests.
 
+### DAG Skill Providers: WebGPT And create-architecture
+
+Use a native `skill` node when a DAG should call WebGPT or render an architecture.
+Do not put these calls behind SciLLM: WebGPT composes Browser Oracle plus Surf,
+while `create-architecture` writes the UX Lab artifact.
+
+Copy this WebGPT node and replace only the paths, tab id, URL, and round limit:
+
+```json
+{
+  "node_id": "architecture-review",
+  "receipt_path": "/tmp/tau-architecture/review-receipt.json",
+  "work_order_path": "review-work-order.json",
+  "skill": {
+    "schema": "tau.skill_dag_node.v1",
+    "capability": "architecture_review",
+    "provider": "webgpt",
+    "input_path": "review-request.md",
+    "output_dir": "/tmp/tau-architecture/webgpt",
+    "configuration": {
+      "tab_id": "HUMAN_SUPPLIED_TAB_ID",
+      "expected_url": "HUMAN_SUPPLIED_CONVERSATION_URL",
+      "timeout_seconds": 900
+    },
+    "round_policy": {
+      "schema": "tau.bounded_skill_round_policy.v1",
+      "max_rounds": 3,
+      "clarification_allowed": true,
+      "clarification_answer_path": "/tmp/tau-architecture/answer.md"
+    }
+  }
+}
+```
+
+If WebGPT needs human input, Tau writes
+`<output_dir>/clarification-request.json` and blocks. Put the human answer at
+`clarification_answer_path`, then rerun the same DAG with resume enabled. Tau
+hash-binds every response and answer, rejects the same clarification question
+twice, and blocks after `max_rounds`. WebGPT cannot increase that value.
+
+Add the dependent renderer:
+
+```json
+{
+  "node_id": "architecture-render",
+  "depends_on": ["architecture-review"],
+  "receipt_path": "/tmp/tau-architecture/render-receipt.json",
+  "work_order_path": "render-work-order.json",
+  "skill": {
+    "schema": "tau.skill_dag_node.v1",
+    "capability": "architecture_render",
+    "provider": "create-architecture",
+    "input_path": "accepted-architecture.yaml",
+    "output_dir": "/tmp/tau-architecture/render"
+  }
+}
+```
+
+Run:
+
+```bash
+cd ${HOME}/workspace/experiments/tau
+uv run tau dag-run /absolute/path/to/dag.json
+```
+
+Required behavior is fail closed: missing tab id/URL, wrong controlled tab,
+missing sentinel proof, malformed round response, unanswered clarification,
+duplicate clarification, exhausted rounds, or renderer failure stops dependent
+nodes. WebGPT advice and a rendered diagram remain claims/artifacts, not proof
+that the architecture is correct or implemented.
+
 ### GitHub Apply-Gate Lane
 
 GitHub transport is dry-run by default. Live mutation requires explicit apply
