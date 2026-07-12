@@ -30,7 +30,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from download import download, is_url, is_youtube_url
 from frames import extract_frames, get_metadata, format_time, parse_time, auto_fps, auto_fps_focus
-from qra import generate_qras, describe_scene_images, describe_audio_tracks
+from qra import generate_qras, describe_scene_images, describe_scene_images_with_receipt, describe_audio_tracks
 from report import build_scene_elements, write_report, write_html_report, write_markdown_report, write_frames_manifest
 from scenes import parse_srt, find_scenes, analyze_emotions
 from storage import (
@@ -115,6 +115,8 @@ def _call_ingest_youtube(url: str, lang: str = "en", no_whisper: bool = True) ->
 
 
 def _find_movie_in_library(title: str) -> Path | None:
+    if MOVIE_LIBRARY is None:
+        return None
     if not MOVIE_LIBRARY.exists():
         return None
     import re
@@ -271,6 +273,9 @@ def run_watch(
     persona: str | None = None,
     out_dir: str | None = None,
     json_output: bool = False,
+    visual_model: str | None = None,
+    visual_fallback_models: str | None = None,
+    require_visual_descriptions: bool = False,
 ) -> int:
     """Main watch pipeline: resolve source, extract frames, transcribe, generate QRA, store to memory."""
     max_frames_capped = min(max_frames, 500)
@@ -493,10 +498,31 @@ def run_watch(
     persisted_frames = persist_frames(frames, _slugify(title))
     audio_path = extract_and_persist_audio(video_path, work, _slugify(title)) if video_path else None
     visual_descriptions = []
+    visual_description_receipt = None
     try:
-        visual_descriptions = describe_scene_images(persisted_frames or frames, title)
+        visual_descriptions, visual_description_receipt = describe_scene_images_with_receipt(
+            persisted_frames or frames,
+            title,
+            model=visual_model,
+            fallback_models=visual_fallback_models,
+        )
+        (work / "visual_description_receipt.json").write_text(json.dumps(visual_description_receipt, indent=2))
     except Exception as exc:
         logger.error("image description failed: {}", exc)
+        visual_description_receipt = {
+            "schema": "watch.visual_description_receipt.v1",
+            "status": "exception",
+            "mocked": False,
+            "live": True,
+            "requested_model": visual_model,
+            "fallback_models": [],
+            "frame_count": len(persisted_frames or frames),
+            "described_count": 0,
+            "gate": {"status": "failed", "reason": "exception"},
+            "error_type": exc.__class__.__name__,
+            "error": str(exc),
+        }
+        (work / "visual_description_receipt.json").write_text(json.dumps(visual_description_receipt, indent=2))
     if frames and not visual_descriptions:
         gaps.append("image_descriptions_missing")
     transcript_source = transcript.get("source") if transcript else None
@@ -554,7 +580,7 @@ def run_watch(
         transcript, scenes_analysis, emotion_analysis,
         metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
         gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
-        diff_intelligence=diff_intel,
+        diff_intelligence=diff_intel, visual_description_receipt=visual_description_receipt,
     )
 
     qra_pairs = generate_qras(full_text, title, uploader) if full_text else None
@@ -581,7 +607,7 @@ def run_watch(
                 transcript, scenes_analysis, emotion_analysis,
                 metadata={"width": meta.get("width"), "height": meta.get("height"), "codec": meta.get("codec")},
                 gaps=gaps, visual_descriptions=visual_descriptions, audio_path=audio_path, captions=captions,
-                diff_intelligence=diff_intel,
+                diff_intelligence=diff_intel, visual_description_receipt=visual_description_receipt,
             )
 
     if visual_descriptions:
@@ -604,10 +630,18 @@ def run_watch(
     else:
         logger.warning("no scene elements to store in memory")
 
+    visual_gate_failed = bool(
+        visual_description_receipt
+        and visual_description_receipt.get("gate", {}).get("status") == "failed"
+    )
+
     if json_output:
         print(json_report_path.read_text())
     else:
         _print_summary(source, title, full_duration, meta, frames, sampling_mode, transcript, scenes_analysis, emotion_analysis, qra_result, work)
+    if require_visual_descriptions and visual_gate_failed:
+        logger.error("visual description gate failed; see {}", work / "visual_description_receipt.json")
+        return 1
     return 0
 
 def _print_summary(source, title, duration, meta, frames, sampling_mode, transcript, scenes, emotion_analysis, qra_result, work):

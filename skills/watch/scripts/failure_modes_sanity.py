@@ -36,6 +36,18 @@ def _fake_frames(tmp: Path) -> list[dict]:
 def _base_patches(tmp: Path, *, transcript: dict | None = None, transcribe_error: Exception | None = None):
     video = _fake_video(tmp)
     frames = _fake_frames(tmp)
+    visual_receipt = {
+        "schema": "watch.visual_description_receipt.v1",
+        "status": "all_models_failed",
+        "mocked": True,
+        "live": False,
+        "requested_model": "test-vlm",
+        "fallback_models": [],
+        "frame_count": len(frames),
+        "described_count": 0,
+        "gate": {"status": "failed", "reason": "no_frame_descriptions"},
+        "frames": [],
+    }
     stack = ExitStack()
     stack.enter_context(patch.object(watch, "download", return_value={"video_path": str(video), "subtitle_path": None, "info": {"title": "Failure Fixture", "uploader": "tests"}}))
     stack.enter_context(patch.object(watch, "get_metadata", return_value={"duration_seconds": 30.0, "width": 640, "height": 360, "codec": "h264"}))
@@ -43,6 +55,7 @@ def _base_patches(tmp: Path, *, transcript: dict | None = None, transcribe_error
     stack.enter_context(patch.object(watch, "persist_frames", return_value=[]))
     stack.enter_context(patch.object(watch, "extract_and_persist_audio", return_value=None))
     stack.enter_context(patch.object(watch, "describe_scene_images", return_value=[]))
+    stack.enter_context(patch.object(watch, "describe_scene_images_with_receipt", return_value=([], visual_receipt)))
     stack.enter_context(patch.object(watch, "upsert_visual_descriptions", return_value=0))
     if transcribe_error is not None:
         stack.enter_context(patch.object(watch, "transcribe_video", side_effect=transcribe_error))
@@ -123,6 +136,7 @@ def check_missing_english_srt_or_transcript_is_reported() -> None:
         assert code == 0
         assert "missing_transcript" in _gaps(out)
         assert "image_descriptions_missing" in _gaps(out)
+        assert _report(out)["visual_description_receipt"]["gate"]["status"] == "failed"
         assert "transcript" not in _report(out)
         _assert_scene_table(out)
         assert _report(out)["scene_elements"][0]["visual_description_status"] == "not_analyzed"

@@ -39,6 +39,9 @@ def watch(
     persona: Optional[str] = typer.Option(None, "--persona", help="Persona name (e.g. embry) for persona_memory tagging"),
     out_dir: Optional[Path] = typer.Option(None, "--out-dir", help="Working directory"),
     json_output: bool = typer.Option(False, "--json", help="Output JSON instead of markdown"),
+    visual_model: Optional[str] = typer.Option(None, "--visual-model", help="Image-capable model for frame descriptions"),
+    visual_fallback_models: Optional[str] = typer.Option(None, "--visual-fallback-models", help="Comma-separated bounded fallback models for frame descriptions"),
+    require_visual_descriptions: bool = typer.Option(False, "--require-visual-descriptions", help="Return nonzero when frames exist but no visual descriptions are produced"),
 ):
     """Watch a video: extract frames, transcript, and optional scene analysis."""
     exit_code = run_watch(
@@ -58,6 +61,9 @@ def watch(
         persona=persona,
         out_dir=str(out_dir) if out_dir else None,
         json_output=json_output,
+        visual_model=visual_model,
+        visual_fallback_models=visual_fallback_models,
+        require_visual_descriptions=require_visual_descriptions,
     )
     raise typer.Exit(code=exit_code)
 

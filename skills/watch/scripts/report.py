@@ -22,6 +22,7 @@ def write_report(
     metadata: dict | None = None,
     gaps: list[str] | None = None,
     visual_descriptions: list[dict] | None = None,
+    visual_description_receipt: dict | None = None,
     audio_path: str | None = None,
     captions: dict | None = None,
     diff_intelligence: dict | None = None,
@@ -89,7 +90,11 @@ def write_report(
         report["emotion_analysis"] = emotion_analysis
 
     if visual_descriptions is not None:
+        report["watch_report"]["visual_description"] = visual_descriptions
         report["visual_descriptions"] = visual_descriptions
+
+    if visual_description_receipt is not None:
+        report["visual_description_receipt"] = visual_description_receipt
 
     out_path.write_text(json.dumps(report, indent=2))
     return out_path

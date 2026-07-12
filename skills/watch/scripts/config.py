@@ -15,6 +15,15 @@ WHISPER_API_KEY: str = os.getenv("WHISPER_API_KEY", "")
 # Memory daemon
 MEMORY_DAEMON_URL: str = os.getenv("MEMORY_DAEMON_URL", "http://127.0.0.1:8601")
 
+# Visual descriptions
+WATCH_VISUAL_DESCRIPTION_MODEL: str = os.getenv("WATCH_VISUAL_DESCRIPTION_MODEL", "vlm-chutes")
+WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS: str = os.getenv("WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS", "")
+WATCH_SCILLM_API_BASE: str = os.getenv("WATCH_SCILLM_API_BASE", os.getenv("SCILLM_API_BASE", "http://localhost:4001"))
+WATCH_SCILLM_PROXY_KEY: str = os.getenv(
+    "WATCH_SCILLM_PROXY_KEY",
+    os.getenv("SCILLM_PROXY_KEY", os.getenv("SCILLM_MASTER_KEY", "sk-dev-proxy-123")),
+)
+
 # Persistent media storage
 _WATCH_MEDIA_ROOT = os.getenv("WATCH_MEDIA_ROOT", "")
 if _WATCH_MEDIA_ROOT:

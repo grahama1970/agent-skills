@@ -1,8 +1,8 @@
 """QRA generation and multimodal description functions for watch skill.
 
 Input: transcript text + frame images + scene chunks
-Output: 3 QRA pairs (deepseek-v4-flash), image descriptions (mimo-v2-omni), audio descriptions (gpt-5.5)
-Failure: returns empty list on API error (calling code handles fallback)
+Output: 3 QRA pairs (deepseek-v4-flash), image descriptions, audio descriptions (gpt-5.5)
+Failure: visual description failures are returned as structured receipts
 """
 from __future__ import annotations
 
@@ -15,6 +15,13 @@ from pathlib import Path
 
 import httpx
 from loguru import logger
+
+from config import (
+    WATCH_SCILLM_API_BASE,
+    WATCH_SCILLM_PROXY_KEY,
+    WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS,
+    WATCH_VISUAL_DESCRIPTION_MODEL,
+)
 
 
 def _zen_api_key() -> str:
@@ -30,26 +37,70 @@ def _zen_api_key() -> str:
     return k
 
 
-def _scillm_call(messages: list, model: str = "gpt-5.5", timeout: int = 60) -> str | None:
+def _scillm_chat_completion(messages: list, model: str = "gpt-5.5", timeout: int = 60) -> dict:
+    requested_model = model
+    result = {
+        "provider": "scillm",
+        "requested_model": requested_model,
+        "served_model": None,
+        "status": "failed",
+        "content": "",
+        "http_status": None,
+        "error_type": None,
+        "error": None,
+    }
     try:
+        api_base = WATCH_SCILLM_API_BASE.rstrip("/")
         resp = httpx.post(
-            "http://localhost:4001/v1/chat/completions",
-            json={"model": model, "messages": messages, "temperature": 0.3, "max_tokens": 500, "stream": False},
-            headers={"Authorization": "Bearer sk-dev-proxy-123", "X-Caller-Skill": "watch"},
+            f"{api_base}/v1/chat/completions",
+            json={"model": model, "messages": messages, "temperature": 0.3, "stream": False},
+            headers={"Authorization": f"Bearer {WATCH_SCILLM_PROXY_KEY}", "X-Caller-Skill": "watch"},
             timeout=timeout,
         )
+        result["http_status"] = resp.status_code
         if resp.status_code == 200:
-            msg = resp.json()["choices"][0]["message"]
-            return msg.get("content") or msg.get("reasoning_content") or ""
+            payload = resp.json()
+            msg = payload["choices"][0]["message"]
+            content = msg.get("content") or msg.get("reasoning_content") or ""
+            result.update({
+                "status": "described" if content else "empty_response",
+                "served_model": payload.get("model") or requested_model,
+                "content": content,
+            })
+            return result
+        result["error_type"] = "http_error"
+        result["error"] = resp.text[:500]
     except Exception as exc:
+        result["error_type"] = exc.__class__.__name__
+        result["error"] = str(exc)
         logger.error("scillm call failed: {}", exc)
+    return result
+
+
+def _scillm_call(messages: list, model: str = "gpt-5.5", timeout: int = 60) -> str | None:
+    result = _scillm_chat_completion(messages, model=model, timeout=timeout)
+    if result.get("status") == "described":
+        return str(result.get("content") or "")
     return None
 
 
-def _zen_chat(messages: list, model: str = "deepseek-v4-flash", timeout: int = 120) -> str | None:
+def _zen_chat_completion(messages: list, model: str = "deepseek-v4-flash", timeout: int = 120) -> dict:
+    requested_model = model
+    result = {
+        "provider": "zen",
+        "requested_model": requested_model,
+        "served_model": None,
+        "status": "failed",
+        "content": "",
+        "http_status": None,
+        "error_type": None,
+        "error": None,
+    }
     api_key = _zen_api_key()
     if not api_key:
-        return None
+        result["error_type"] = "missing_api_key"
+        result["error"] = "ZEN_API_KEY is not configured"
+        return result
     try:
         resp = httpx.post(
             "https://opencode.ai/zen/go/v1/chat/completions",
@@ -57,12 +108,31 @@ def _zen_chat(messages: list, model: str = "deepseek-v4-flash", timeout: int = 1
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             timeout=timeout,
         )
+        result["http_status"] = resp.status_code
         if resp.status_code == 200:
-            msg = resp.json()["choices"][0]["message"]
-            return msg.get("content") or msg.get("reasoning_content") or ""
+            payload = resp.json()
+            msg = payload["choices"][0]["message"]
+            content = msg.get("content") or msg.get("reasoning_content") or ""
+            result.update({
+                "status": "described" if content else "empty_response",
+                "served_model": payload.get("model") or requested_model,
+                "content": content,
+            })
+            return result
+        result["error_type"] = "http_error"
+        result["error"] = resp.text[:500]
         logger.error("Zen API returned {}: {}", resp.status_code, resp.text[:200])
     except Exception as exc:
+        result["error_type"] = exc.__class__.__name__
+        result["error"] = str(exc)
         logger.error("Zen API call failed: {}", exc)
+    return result
+
+
+def _zen_chat(messages: list, model: str = "deepseek-v4-flash", timeout: int = 120) -> str | None:
+    result = _zen_chat_completion(messages, model=model, timeout=timeout)
+    if result.get("status") == "described":
+        return str(result.get("content") or "")
     return None
 
 
@@ -165,54 +235,157 @@ def _call_doc2qra_scene(scene_text: str, scene_index: int, source_title: str, st
     return None  # doc2qra integration placeholder — currently handled by main pipeline
 
 
-def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
-    """Describe every sampled scene frame via Scillm VLM, with Zen fallback."""
+def _parse_model_list(value: str | list[str] | tuple[str, ...] | None) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        raw = [str(v) for v in value]
+    else:
+        raw = str(value).split(",")
+    models: list[str] = []
+    for item in raw:
+        model = item.strip()
+        if model and model not in models:
+            models.append(model)
+    return models
+
+
+def _visual_provider_for_model(model: str) -> str:
+    lower = model.lower()
+    if lower.startswith("mimo") or lower.startswith("deepseek"):
+        return "zen"
+    return "scillm"
+
+
+def _visual_model_attempt(messages: list, model: str) -> dict:
+    provider = _visual_provider_for_model(model)
+    if provider == "zen":
+        return _zen_chat_completion(messages, model=model, timeout=120)
+    return _scillm_chat_completion(messages, model=model, timeout=120)
+
+
+def _visual_gate_status(frame_count: int, descriptions: list[dict]) -> str:
+    if frame_count <= 0:
+        return "not_applicable"
+    return "passed" if descriptions else "failed"
+
+
+def describe_scene_images_with_receipt(
+    frames: list[dict],
+    title: str,
+    *,
+    model: str | None = None,
+    fallback_models: str | list[str] | None = None,
+) -> tuple[list[dict], dict]:
+    """Describe sampled scene frames and return an auditable model-attempt receipt."""
+    requested_model = (model or WATCH_VISUAL_DESCRIPTION_MODEL).strip() or "vlm-chutes"
+    fallbacks = _parse_model_list(
+        WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS if fallback_models is None else fallback_models
+    )
+    model_chain = _parse_model_list([requested_model, *fallbacks])
     descriptions: list[dict] = []
+    receipt: dict = {
+        "schema": "watch.visual_description_receipt.v1",
+        "status": "pending",
+        "mocked": False,
+        "live": True,
+        "requested_model": requested_model,
+        "fallback_models": [m for m in model_chain if m != requested_model],
+        "frame_count": len(frames),
+        "described_count": 0,
+        "gate": {"status": "pending"},
+        "frames": [],
+    }
 
     def _describe_one(f: dict) -> dict | None:
+        frame_receipt = {
+            "index": f.get("index"),
+            "timestamp": f.get("timestamp_seconds"),
+            "path": f.get("path"),
+            "attempts": [],
+            "status": "not_described",
+        }
         fp = Path(f["path"])
         if not fp.exists():
-            return None
-        b64 = base64.b64encode(fp.read_bytes()).decode("ascii")
+            frame_receipt["status"] = "missing_frame"
+            frame_receipt["attempts"].append({
+                "provider": "filesystem",
+                "requested_model": None,
+                "served_model": None,
+                "status": "missing_frame",
+                "error": f"frame path does not exist: {fp}",
+            })
+            return {"description": None, "receipt": frame_receipt}
+        try:
+            image_bytes = fp.read_bytes()
+        except Exception as exc:
+            frame_receipt["status"] = "read_failed"
+            frame_receipt["attempts"].append({
+                "provider": "filesystem",
+                "requested_model": None,
+                "served_model": None,
+                "status": "read_failed",
+                "error_type": exc.__class__.__name__,
+                "error": str(exc),
+            })
+            return {"description": None, "receipt": frame_receipt}
+        b64 = base64.b64encode(image_bytes).decode("ascii")
         content = [
             {"type": "text", "text": f"Describe this frame from '{title}' in 2 sentences. Include only visible setting, lighting, subjects, clothing, objects, and action. Do not infer plot facts not visible in the image."},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
         ]
-        source = "vlm-chutes"
-        text = _scillm_call(
-            [{"role": "user", "content": content}],
-            model="vlm-chutes",
-            timeout=120,
-        )
-        if not text and _zen_api_key():
-            source = "mimo-v2-omni"
-            text = _zen_chat(
-            [{"role": "user", "content": [
-                {"type": "text", "text": f"Describe this frame from '{title}' in 2 sentences. Include only visible setting, lighting, subjects, clothing, objects, and action. Do not infer plot facts not visible in the image."},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-            ]}],
-            model="mimo-v2-omni",
-            timeout=120,
-            )
-        if text:
-            return {
-                "index": f["index"],
-                "timestamp": f["timestamp_seconds"],
-                "path": str(fp),
-                "description": text[:300],
-                "source": source,
-                "status": "described",
-            }
-        return None
+        messages = [{"role": "user", "content": content}]
+        for model_name in model_chain:
+            attempt = _visual_model_attempt(messages, model_name)
+            content_text = str(attempt.pop("content", "") or "")
+            frame_receipt["attempts"].append(attempt)
+            if attempt.get("status") == "described" and content_text:
+                frame_receipt["status"] = "described"
+                return {
+                    "description": {
+                        "index": f["index"],
+                        "timestamp": f["timestamp_seconds"],
+                        "path": str(fp),
+                        "description": content_text[:300],
+                        "source": f"{attempt.get('provider')}:{attempt.get('served_model') or model_name}",
+                        "status": "described",
+                        "requested_model": requested_model,
+                        "served_model": attempt.get("served_model") or model_name,
+                        "provider": attempt.get("provider"),
+                        "model_attempts": frame_receipt["attempts"],
+                    },
+                    "receipt": frame_receipt,
+                }
+        return {"description": None, "receipt": frame_receipt}
 
     with ThreadPoolExecutor(max_workers=5) as pool:
         futures = {pool.submit(_describe_one, f): f for f in frames}
         for fut in as_completed(futures):
             r = fut.result()
-            if r:
-                descriptions.append(r)
+            if not r:
+                continue
+            frame_receipt = r.get("receipt")
+            if frame_receipt:
+                receipt["frames"].append(frame_receipt)
+            description = r.get("description")
+            if description:
+                descriptions.append(description)
     descriptions.sort(key=lambda d: d["timestamp"])
+    receipt["frames"].sort(key=lambda d: (float(d.get("timestamp") or 0.0), int(d.get("index") or 0)))
+    receipt["described_count"] = len(descriptions)
+    gate_status = _visual_gate_status(len(frames), descriptions)
+    receipt["gate"] = {
+        "status": gate_status,
+        "reason": "no_frame_descriptions" if len(frames) and not descriptions else None,
+    }
+    receipt["status"] = "described" if descriptions else ("no_frames" if not frames else "all_models_failed")
     logger.info("described {} scene images concurrently", len(descriptions))
+    return descriptions, receipt
+
+
+def describe_scene_images(frames: list[dict], title: str) -> list[dict]:
+    """Compatibility wrapper returning descriptions only."""
+    descriptions, _receipt = describe_scene_images_with_receipt(frames, title)
     return descriptions
 
 
