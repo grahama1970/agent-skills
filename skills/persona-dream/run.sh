@@ -379,6 +379,9 @@ case "$COMMAND" in
   write-phase11-media-requirement-manifest)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_media_requirement_manifest.py" "$@"
     ;;
+  write-phase11-dry-run-bundle)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_dry_run_bundle.py" "$@"
+    ;;
   tailscale-funnel-publication-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;
