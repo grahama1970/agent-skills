@@ -28,6 +28,20 @@ def parser() -> argparse.ArgumentParser:
         run_parser.add_argument("--manifest", type=Path, required=True)
         run_parser.add_argument("--state", type=Path)
         run_parser.add_argument("--journal-db", type=Path, required=True)
+        run_parser.add_argument("--campaign-dir", type=Path)
+        run_parser.add_argument("--journal-url")
+        run_parser.add_argument("--realtimestt-repo", type=Path)
+        run_parser.add_argument("--realtimestt-python", type=Path)
+        run_parser.add_argument("--managed-listener-socket", type=Path)
+        run_parser.add_argument("--listener-source-node")
+        run_parser.add_argument("--listener-start-timeout-seconds", type=float, default=120)
+        run_parser.add_argument("--turn-timeout-seconds", type=float, default=180)
+        run_parser.add_argument("--listener-device", default="cpu")
+        run_parser.add_argument("--listener-compute-type", default="int8")
+        run_parser.add_argument("--turn-audio", type=Path, action="append", default=[])
+        run_parser.add_argument("--source-playback-target")
+        run_parser.add_argument("--source-playback-delay-seconds", type=float, default=2.0)
+        run_parser.add_argument("--pw-play", default="/usr/bin/pw-play")
 
     status_parser = commands.add_parser("status")
     status_parser.add_argument("--manifest", type=Path, required=True)
@@ -57,7 +71,33 @@ def main() -> int:
         print(json.dumps({"campaign_id": manifest["campaign_id"], "case_count": len(manifest["cases"]), "manifest": str(args.output)}, sort_keys=True))
         return 0
     if args.command in {"run", "resume"}:
-        print(json.dumps(run_campaign(manifest_path=args.manifest, state_path=args.state, journal_db=args.journal_db), sort_keys=True))
+        live_values = (
+            args.campaign_dir, args.journal_url, args.realtimestt_repo,
+            args.realtimestt_python, args.managed_listener_socket, args.listener_source_node,
+        )
+        live_config = None
+        if any(live_values):
+            if not all(live_values):
+                raise ValueError("live_listener_configuration_incomplete")
+            live_config = {
+                "campaign_dir": str(args.campaign_dir),
+                "journal_url": args.journal_url,
+                "realtimestt_repo": str(args.realtimestt_repo),
+                "realtimestt_python": str(args.realtimestt_python),
+                "managed_listener_socket": str(args.managed_listener_socket),
+                "listener_source_node": args.listener_source_node,
+                "listener_start_timeout_seconds": args.listener_start_timeout_seconds,
+                "turn_timeout_seconds": args.turn_timeout_seconds,
+                "listener_device": args.listener_device,
+                "listener_compute_type": args.listener_compute_type,
+                "turn_audio": [str(path) for path in args.turn_audio],
+                "source_playback_target": args.source_playback_target,
+                "source_playback_delay_seconds": args.source_playback_delay_seconds,
+                "pw_play": args.pw_play,
+            }
+            if args.turn_audio and not args.source_playback_target:
+                raise ValueError("source_playback_target_required")
+        print(json.dumps(run_campaign(manifest_path=args.manifest, state_path=args.state, journal_db=args.journal_db, live_config=live_config), sort_keys=True))
         return 0
     if args.command == "status":
         print(json.dumps(status(manifest_path=args.manifest, state_path=args.state), sort_keys=True))

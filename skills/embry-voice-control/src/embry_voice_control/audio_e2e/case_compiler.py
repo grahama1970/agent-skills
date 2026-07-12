@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
@@ -15,6 +16,10 @@ FOLLOWUPS = {
     "challenge_followup": "That sounds too generic. What would make your answer fail review?",
     "recovery_followup": "Pause and correct anything unsupported in your previous answer.",
     "soak_followup": "Restate the answer without changing its evidence or conclusion.",
+}
+
+SPOKEN_EXPANSIONS = {
+    "QRA": "Question Reasoning Answer pair",
 }
 
 
@@ -28,6 +33,14 @@ def sha256_value(value: Any) -> str:
 
 def sha256_path(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def spoken_text(display_text: str) -> str:
+    """Expand domain acronyms that are unreliable or unnatural in speech."""
+    result = display_text
+    for acronym, expansion in SPOKEN_EXPANSIONS.items():
+        result = re.sub(rf"\b{re.escape(acronym)}s?\b", expansion, result)
+    return result
 
 
 def _ordered_cases(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -76,18 +89,24 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
     if case["difficulty"] == "soak":
         prompts.extend([FOLLOWUPS["soak_followup"], FOLLOWUPS["recovery_followup"]])
     prompts = prompts[:count]
-    return [
-        {
+    turns = []
+    for index, prompt in enumerate(prompts, 1):
+        display = f"Hey Embry, {prompt[0].lower() + prompt[1:]}"
+        spoken = spoken_text(display)
+        turns.append({
             "turn_id": f"{case['id']}:turn-{index:03d}",
             "turn_index": index,
             "speaker": "horus_lupercal",
-            "utterance": f"Hey Embry, {prompt[0].lower() + prompt[1:]}",
-            "utterance_sha256": sha256_value(prompt if prompt.lower().startswith("hey embry") else f"Hey Embry, {prompt[0].lower() + prompt[1:]}"),
+            "utterance": display,
+            "utterance_sha256": sha256_value(display),
+            "display_text": display,
+            "display_text_sha256": sha256_value(display),
+            "spoken_text": spoken,
+            "spoken_text_sha256": sha256_value(spoken),
             "purpose": "matrix_question" if index == 1 else "conversation_followup",
             "speech_expectation": "speech_required",
-        }
-        for index, prompt in enumerate(prompts, 1)
-    ]
+        })
+    return turns
 
 
 def compile_campaign(

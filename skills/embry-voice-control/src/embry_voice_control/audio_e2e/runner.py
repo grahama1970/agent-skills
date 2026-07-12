@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from embry_voice_control.event_journal import append_event, session_snapshot
+from .case_executor import CaseExecutor, ManagedListenerProcess
 
 
 STAGES = ("compiled", "source_qualified", "turns_journaled", "completed")
@@ -138,15 +139,28 @@ def _advance_case(journal_db: Path, campaign_id: str, case: dict[str, Any], case
             case_state["last_event_id"] = event["event_id"]
 
 
-def run_campaign(*, manifest_path: Path, state_path: Path | None, journal_db: Path) -> dict[str, Any]:
+def run_campaign(*, manifest_path: Path, state_path: Path | None, journal_db: Path, live_config: dict[str, Any] | None = None) -> dict[str, Any]:
     state_path = state_path or default_state_path(manifest_path)
     manifest, state = load_or_create_state(manifest_path, state_path)
     by_id = {case["case_id"]: case for case in manifest["cases"]}
-    for case_id, case_state in state["cases"].items():
-        if case_state.get("stage") != "completed":
+    pending = [(case_id, case_state) for case_id, case_state in state["cases"].items() if case_state.get("stage") != "completed"]
+    if live_config and pending:
+        if len(pending) != 1:
+            raise ValueError("physical_live_runner_requires_one_case")
+        case_id, case_state = pending[0]
+        case = by_id[case_id]
+        config = {**live_config, "journal_db": str(journal_db)}
+        with ManagedListenerProcess(config, len(case["turn_script"])) as listener:
+            case_state["listener_turns"] = CaseExecutor(config, listener).execute_listener_turns(manifest["campaign_id"], case)
+            case_state["stage"] = "listener_complete"
+            case_state["failed_stage"] = "speaker_verification"
+        state["status"] = "blocked_after_live_listener"
+    else:
+        for case_id, case_state in pending:
             _advance_case(journal_db, manifest["campaign_id"], by_id[case_id], case_state)
     state["updated_at"] = utc_now()
-    state["status"] = "completed" if all(case["stage"] == "completed" for case in state["cases"].values()) else "waiting_for_audio"
+    if not live_config:
+        state["status"] = "completed" if all(case["stage"] == "completed" for case in state["cases"].values()) else "waiting_for_audio"
     write_json(state_path, state)
     return state
 

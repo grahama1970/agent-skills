@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from embry_voice_control.audio_e2e.case_compiler import compile_campaign
+from embry_voice_control.audio_e2e.case_compiler import compile_campaign, spoken_text
 
 
 def write_inputs(tmp_path: Path) -> tuple[Path, Path]:
@@ -33,8 +33,16 @@ def test_compile_one_case_is_deterministic_and_multiturn(tmp_path: Path) -> None
     assert first == second
     assert len(first["cases"]) == 1
     assert len(first["cases"][0]["turn_script"]) == 2
+    first_turn = first["cases"][0]["turn_script"][0]
+    assert first_turn["display_text"] == first_turn["spoken_text"]
+    assert first_turn["display_text_sha256"] == first_turn["spoken_text_sha256"]
     assert first["execution"]["typed_transcript_allowed"] is False
     assert first["execution"]["browser_microphone_allowed"] is False
+
+
+def test_spoken_text_expands_qra_without_changing_display_text() -> None:
+    display = "What evidence should a SPARTA QRA include?"
+    assert spoken_text(display) == "What evidence should a SPARTA Question Reasoning Answer pair include?"
 
 
 def test_stratified_selection_spans_buckets(tmp_path: Path) -> None:
