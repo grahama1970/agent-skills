@@ -49,3 +49,22 @@ def test_ambiguous_duplicate_conversation():
     assert out["ok"] is False
     assert out["error"] == "ambiguous_url"
     assert len(out["candidates"]) == 2
+
+
+def test_project_slug_mismatch_does_not_match_same_conversation_uuid():
+    cid = "6a4d9287-cf38-83ea-a247-a6321ff09844"
+    tabs = f"837358033\tChatGPT\thttps://chatgpt.com/g/g-p-project/c/{cid}\n"
+    out = _resolve(f"https://chatgpt.com/g/g-p-project-sparta-explorer/c/{cid}", tabs)
+    assert out["ok"] is False
+    assert out["error"] == "no_open_tab_for_url"
+
+
+def test_same_project_slug_matches_normalized_conversation_uuid():
+    cid = "ABCDEF12-3456-7890-ABCD-EF1234567890"
+    tabs = f"837358033\tChatGPT\thttps://chatgpt.com/g/g-p-project-sparta-explorer/c/{cid}\n"
+    out = _resolve(
+        "https://www.chatgpt.com/g/g-p-project-sparta-explorer/c/abcdef12-3456-7890-abcd-ef1234567890/",
+        tabs,
+    )
+    assert out["ok"] is True
+    assert out["tab_id"] == "837358033"

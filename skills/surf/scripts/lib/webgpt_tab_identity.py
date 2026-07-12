@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from resolve_webgpt_tab import conversation_id, normalize_chatgpt_url, parse_tab_list, resolve_url
+from resolve_webgpt_tab import conversation_id, normalize_chatgpt_url, parse_tab_list, project_context, resolve_url, same_conversation_route
 
 
 def _tab_payload(tab: dict[str, str] | None) -> dict[str, str] | None:
@@ -21,13 +21,15 @@ def _tab_url_matches_expected(tab_url: str, expected_url: str) -> tuple[bool, di
     expected_norm = normalize_chatgpt_url(expected_url)
     tab_cid = conversation_id(tab_norm)
     expected_cid = conversation_id(expected_norm)
-    ok = bool(tab_norm and expected_norm and (tab_norm == expected_norm or (tab_cid and tab_cid == expected_cid)))
+    ok = bool(tab_norm and expected_norm and (tab_norm == expected_norm or same_conversation_route(tab_norm, expected_norm)))
     return ok, {
         "tab_url": tab_url,
         "tab_normalized_url": tab_norm,
         "expected_normalized_url": expected_norm,
         "tab_conversation_id": tab_cid,
         "expected_conversation_id": expected_cid,
+        "tab_project_context": project_context(tab_norm),
+        "expected_project_context": project_context(expected_norm),
     }
 
 

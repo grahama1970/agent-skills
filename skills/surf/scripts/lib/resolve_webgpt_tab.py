@@ -10,7 +10,7 @@ import sys
 from urllib.parse import urlparse
 
 _CONV_RE = re.compile(
-    r"chatgpt\.com/c/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{10,})",
+    r"chatgpt\.com/(?:g/[^/]+/)?c/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{10,})",
 )
 
 
@@ -33,6 +33,25 @@ def normalize_chatgpt_url(url: str) -> str:
 def conversation_id(url: str) -> str | None:
     match = _CONV_RE.search(url or "")
     return match.group(1).lower() if match else None
+
+
+def project_context(url: str) -> str | None:
+    """Return the exact project route segment for /g/<project>/c/<conversation>."""
+    path = urlparse(normalize_chatgpt_url(url)).path
+    parts = [part for part in path.split("/") if part]
+    if len(parts) >= 4 and parts[0] == "g" and parts[2] == "c":
+        return parts[1]
+    return None
+
+
+def same_conversation_route(left_url: str, right_url: str) -> bool:
+    left_cid = conversation_id(left_url)
+    right_cid = conversation_id(right_url)
+    return bool(
+        left_cid
+        and left_cid == right_cid
+        and project_context(left_url) == project_context(right_url)
+    )
 
 
 def parse_tab_list(text: str) -> list[dict[str, str]]:
@@ -63,7 +82,7 @@ def resolve_url(target_url: str, tabs: list[dict[str, str]]) -> dict:
         if tab_norm == target_norm:
             exact.append(tab)
             continue
-        if target_cid and conversation_id(tab_norm) == target_cid:
+        if target_cid and same_conversation_route(tab_norm, target_norm):
             by_cid.append(tab)
 
     candidates = exact if exact else by_cid
