@@ -370,6 +370,12 @@ case "$COMMAND" in
   write-phase10-reproducibility-receipt)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_reproducibility_receipt.py" "$@"
     ;;
+  write-dream-observation-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_observation_packet.py" "$@"
+    ;;
+  check-dream-observation-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
+    ;;
   tailscale-funnel-publication-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;

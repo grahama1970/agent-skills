@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/dream_observation_packet.v1.schema.json",
+  "title": "Persona Dream observation packet",
+  "type": "object",
+  "required": [
+    "schema", "status", "dream_id", "revision_id", "evidence_origin",
+    "fixture_backed", "provider_returned", "persona_watched_provider_dream",
+    "source_video", "source_video_sha256", "duration_seconds", "frame_refs",
+    "visual_facts", "transcript_facts", "audible_facts", "timing_facts",
+    "coverage_gaps", "psychological_interpretation_performed", "claims"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.dream_observation_packet.v1"},
+    "status": {"enum": ["PASS_DREAM_OBSERVATION_CONTRACT_FIXTURE", "BLOCKED_DREAM_OBSERVATION_CONTRACT"]},
+    "dream_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "evidence_origin": {"enum": ["fixture_video", "provider_return"]},
+    "fixture_backed": {"type": "boolean"},
+    "provider_returned": {"type": "boolean"},
+    "persona_watched_provider_dream": {"type": "boolean"},
+    "source_video": {"type": "string", "minLength": 1},
+    "source_video_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "frame_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "visual_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "transcript_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "audible_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "timing_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "coverage_gaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "psychological_interpretation_performed": {"const": false},
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "$defs": {
+    "fact": {
+      "type": "object",
+      "required": ["fact_id", "statement", "time_range", "evidence_refs", "confidence"],
+      "properties": {
+        "fact_id": {"type": "string", "minLength": 1},
+        "statement": {"type": "string", "minLength": 1},
+        "time_range": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}
