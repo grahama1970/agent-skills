@@ -10,12 +10,35 @@ import subprocess
 import sys
 import time
 from typing import Any
+import re
 
-from .event_waiter import wait_for_managed_turn
+from .event_waiter import wait_for_managed_turn, wait_for_managed_wake
 
 
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def _tokens(value: str) -> list[str]:
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).split()
+
+
+def _request_wer(expected_spoken_text: str, actual_request_text: str) -> float:
+    expected = _tokens(expected_spoken_text)
+    if expected[:2] == ["hey", "embry"]:
+        expected = expected[2:]
+    actual = _tokens(actual_request_text)
+    previous = list(range(len(actual) + 1))
+    for expected_token in expected:
+        current = [previous[0] + 1]
+        for index, actual_token in enumerate(actual, 1):
+            current.append(min(
+                current[-1] + 1,
+                previous[index] + 1,
+                previous[index - 1] + (expected_token != actual_token),
+            ))
+        previous = current
+    return previous[-1] / max(1, len(expected))
 
 
 class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
@@ -85,6 +108,7 @@ class CaseExecutor:
     def execute_listener_turns(self, campaign_id: str, case: dict[str, Any]) -> list[dict[str, Any]]:
         receipts: list[dict[str, Any]] = []
         source_audio = [Path(path) for path in self.config.get("turn_audio", [])]
+        wake_audio = Path(self.config["wake_audio"]) if self.config.get("wake_audio") else None
         if source_audio and len(source_audio) != len(case["turn_script"]):
             raise ValueError("turn_audio_count_mismatch")
         for turn_offset, turn in enumerate(case["turn_script"]):
@@ -114,12 +138,32 @@ class CaseExecutor:
                 }),
                 flush=True,
             )
+            wake_event = None
+            if wake_audio is not None:
+                if not wake_audio.is_file():
+                    raise FileNotFoundError(f"wake_audio_missing:{wake_audio}")
+                time.sleep(self.config["source_playback_delay_seconds"])
+                wake_process = subprocess.run(
+                    [self.config["pw_play"], "--target", self.config["source_playback_target"], str(wake_audio)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=15,
+                )
+                if wake_process.returncode != 0:
+                    raise RuntimeError(f"wake_playback_failed:{wake_process.returncode}:{wake_process.stderr}")
+                wake_event = wait_for_managed_wake(
+                    Path(self.config["journal_db"]),
+                    session_id=case["session_id"],
+                    expected=expected,
+                    timeout_seconds=self.config["turn_timeout_seconds"],
+                )
             source_process = None
             if source_audio:
                 audio_path = source_audio[turn_offset]
                 if not audio_path.is_file():
                     raise FileNotFoundError(f"turn_audio_missing:{audio_path}")
-                time.sleep(self.config["source_playback_delay_seconds"])
+                time.sleep(self.config["source_playback_delay_seconds"] if wake_event is None else 0.5)
                 source_process = subprocess.Popen(
                     [
                         self.config["pw_play"],
@@ -141,15 +185,25 @@ class CaseExecutor:
                 if source_process.returncode != 0:
                     raise RuntimeError(f"source_playback_failed:{source_process.returncode}:{source_stderr}")
             final = chain["listener.final_transcript"]
+            request_text = final["payload"].get("request_text") or ""
+            expected_spoken = turn.get("spoken_text", turn["utterance"])
+            request_wer = _request_wer(expected_spoken, request_text)
+            if request_wer > self.config["max_request_wer"]:
+                raise RuntimeError(
+                    f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
+                    f"expected={expected_spoken!r}:actual={request_text!r}"
+                )
             receipts.append({
                 "turn_id": turn["turn_id"],
                 "display_text_sha256": turn.get("display_text_sha256", turn["utterance_sha256"]),
                 "expected_spoken_text_sha256": turn.get("spoken_text_sha256", turn["utterance_sha256"]),
                 "source_authority_id": source_authority_id,
                 "arm_event_id": chain["listener.turn_armed"]["event_id"],
+                "wake_event_id": wake_event["event_id"] if wake_event else None,
                 "final_event_id": final["event_id"],
                 "final_sequence": final["sequence"],
-                "request_text": final["payload"].get("request_text"),
+                "request_text": request_text,
+                "request_wer": round(request_wer, 4),
                 "audio_path": final["payload"].get("audio_path"),
                 "audio_sha256": final["payload"].get("audio_sha256"),
                 "completed_event_id": chain["listener.turn_completed"]["event_id"],

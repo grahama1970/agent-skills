@@ -36,9 +36,11 @@ def parser() -> argparse.ArgumentParser:
         run_parser.add_argument("--listener-source-node")
         run_parser.add_argument("--listener-start-timeout-seconds", type=float, default=120)
         run_parser.add_argument("--turn-timeout-seconds", type=float, default=180)
+        run_parser.add_argument("--max-request-wer", type=float, default=0.25)
         run_parser.add_argument("--listener-device", default="cpu")
         run_parser.add_argument("--listener-compute-type", default="int8")
         run_parser.add_argument("--turn-audio", type=Path, action="append", default=[])
+        run_parser.add_argument("--wake-audio", type=Path)
         run_parser.add_argument("--source-playback-target")
         run_parser.add_argument("--source-playback-delay-seconds", type=float, default=2.0)
         run_parser.add_argument("--pw-play", default="/usr/bin/pw-play")
@@ -88,9 +90,11 @@ def main() -> int:
                 "listener_source_node": args.listener_source_node,
                 "listener_start_timeout_seconds": args.listener_start_timeout_seconds,
                 "turn_timeout_seconds": args.turn_timeout_seconds,
+                "max_request_wer": args.max_request_wer,
                 "listener_device": args.listener_device,
                 "listener_compute_type": args.listener_compute_type,
                 "turn_audio": [str(path) for path in args.turn_audio],
+                "wake_audio": str(args.wake_audio) if args.wake_audio else None,
                 "source_playback_target": args.source_playback_target,
                 "source_playback_delay_seconds": args.source_playback_delay_seconds,
                 "pw_play": args.pw_play,

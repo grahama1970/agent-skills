@@ -60,3 +60,35 @@ def wait_for_managed_turn(
         time.sleep(poll_seconds)
     missing = [name for name in required if not matched.get(name)]
     raise TimeoutError("managed_listener_timeout:" + ",".join(missing))
+
+
+def wait_for_managed_wake(
+    journal_db: Path,
+    *,
+    session_id: str,
+    expected: dict[str, str],
+    timeout_seconds: float,
+    poll_seconds: float = 0.2,
+) -> dict[str, Any]:
+    """Return the exact managed wake event after the matching arm event."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        events = session_snapshot(journal_db, session_id)["events"]
+        armed = next(
+            (event for event in events if event["type"] == "listener.turn_armed" and managed_fields_match(event, expected)),
+            None,
+        )
+        wake = next(
+            (
+                event for event in events
+                if armed is not None
+                and event["type"] == "listener.wake_detected"
+                and event["sequence"] > armed["sequence"]
+                and managed_fields_match(event, expected)
+            ),
+            None,
+        )
+        if wake is not None:
+            return wake
+        time.sleep(poll_seconds)
+    raise TimeoutError("managed_listener_timeout:listener.wake_detected")
