@@ -641,6 +641,9 @@ function handleToolRequest(msg, socket) {
       tabId: requestedTabId,
       sentinel: extensionMsg.sentinel,
       timeout: extensionMsg.timeout,
+      wait: extensionMsg.wait === true,
+      stablePolls: extensionMsg.stablePolls,
+      noActivate: extensionMsg.noActivate === true,
       cdpEvaluate: (tabId, expression) => new Promise((resolve) => {
         const evalId = ++requestCounter;
         pendingToolRequests.set(evalId, {

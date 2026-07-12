@@ -141,9 +141,13 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     const file = String(heartbeatFile);
     const dir = path.dirname(file);
     fs.mkdirSync(dir, { recursive: true });
-    const existing = fs.existsSync(file)
+    let existing = fs.existsSync(file)
       ? JSON.parse(fs.readFileSync(file, "utf8"))
       : {};
+    const sentinelChanged = Boolean(
+      event.sentinel && existing.sentinel && existing.sentinel !== event.sentinel
+    );
+    if (sentinelChanged) existing = {};
     const assistantText = String(event.assistantText || "");
     const observedAt = isoNow();
     const assistant = {
@@ -171,6 +175,7 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     const payload = {
       ...existing,
       schema: existing.schema || "surf.webgpt_heartbeat.v1",
+      sentinel: event.sentinel || existing.sentinel || null,
       stream_schema: "surf.webgpt_assistant_stream.v1",
       updated_at: observedAt,
       last_browser_observation_at: observedAt,
@@ -203,6 +208,7 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     fs.renameSync(tmp, file);
     const eventPath = heartbeatEventsPath(file);
     if (eventPath) {
+      if (sentinelChanged) fs.writeFileSync(eventPath, "", "utf8");
       const eventPayload = {
         schema: "surf.webgpt_assistant_stream_event.v1",
         event: "assistant_snapshot",
@@ -1196,6 +1202,7 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       hiddenPolls,
       hiddenRecoveryUsed,
       pollCount,
+      sentinel,
     });
     if (
       sentinel
@@ -1282,11 +1289,38 @@ async function extractAssistantResponse(options) {
     sentinel,
     cdpEvaluate,
     timeout = 12000,
+    wait = false,
+    stablePolls = 3,
+    noActivate = false,
   } = options;
   if (!tabId) {
     throw new Error("tabId required");
   }
   const cdp = (expr) => cdpEvaluate(tabId, expr);
+  if (wait) {
+    if (!sentinel) throw new Error("sentinel required with chatgpt.extract --wait");
+    const result = await waitForResponse(cdp, timeout, {
+      sentinel,
+      stablePolls,
+      noActivate,
+      baselineAssistantCount: 0,
+    });
+    return {
+      response: result.text,
+      tabId,
+      controlledTabId: tabId,
+      messageId: result.messageId || null,
+      responseSource: result.source || "assistant-dom",
+      sentinel,
+      hasSentinel: result.hasSentinel === true,
+      pageTextContainsSentinel: result.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: result.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: result.visibilityStateAtCompletion || null,
+      stopVisible: false,
+      finished: true,
+      turnIndex: result.turnIndex,
+    };
+  }
   const snapshot = await assistantSnapshot(cdp, sentinel, timeout);
   const text = snapshot?.text || "";
   const hasSentinel = sentinel ? text.includes(sentinel) : false;

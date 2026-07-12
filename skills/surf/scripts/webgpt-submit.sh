@@ -24,7 +24,7 @@ Options:
   --submitted-output PATH   Submitted prompt with sentinel injection.
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
-  --timeout SECONDS         Browser wait timeout. Default: 900.
+  --timeout SECONDS         Browser wait timeout. Default: 1800.
   --advisory-after SECONDS  Soft wait before returning same-tab available text
                             without a sentinel. Default:
                             SURF_WEBGPT_ADVISORY_AFTER_SECONDS or 600.
@@ -93,7 +93,7 @@ receipt_output=""
 submitted_output=""
 sentinel="auto"
 stable_polls=3
-timeout_s=900
+timeout_s="${SURF_WEBGPT_TIMEOUT:-1800}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 model=""
 reasoning="${SURF_WEBGPT_REASONING:-Pro}"
@@ -255,6 +255,7 @@ raw_output="${raw_output:-${output}.raw.md}"
 meta_output="${meta_output:-${output}.meta.json}"
 receipt_output="${receipt_output:-${output}.receipt.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
+heartbeat_output="${meta_output%.json}.heartbeat.json"
 mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$receipt_output")" "$(dirname "$submitted_output")"
 
 
@@ -505,6 +506,7 @@ write_webgpt_heartbeat() {
   local timeout_remaining="${5:--1}"
   python3 "${SCRIPT_DIR}/lib/webgpt_heartbeat.py" write \
     --artifact-dir "$(dirname "$meta_output")" \
+    --heartbeat-path "$heartbeat_output" \
     --phase "$phase" \
     --page-state "$page_state" \
     --submitted-at "${started_at:-}" \
@@ -583,39 +585,31 @@ attempt_extract_fallback() {
   extract_raw="$(mktemp /tmp/surf-webgpt-submit-extract-raw.XXXXXX.md)"
   extract_meta="$(mktemp /tmp/surf-webgpt-submit-extract-meta.XXXXXX.json)"
   extract_err="$(mktemp /tmp/surf-webgpt-submit-extract-stderr.XXXXXX.log)"
-  local per_attempt_timeout="${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-30}"
-  local retry_interval="${SURF_WEBGPT_EXTRACT_FALLBACK_INTERVAL:-15}"
-  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-180}"
-  local started_at="$SECONDS"
-  local attempt=0
-  while (( SECONDS - started_at < retry_budget )); do
-    attempt=$((attempt + 1))
-    local extract_args=(--tab-id "$requested_tab_id" --output "$extract_clean" --raw-output "$extract_raw" --meta-output "$extract_meta" --timeout "$per_attempt_timeout")
-    if [[ -n "$sentinel" ]]; then
-      extract_args+=(--sentinel "$sentinel")
+  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-300}"
+  local extract_args=(--tab-id "$requested_tab_id" --output "$extract_clean" --raw-output "$extract_raw" --meta-output "$extract_meta" --timeout "$retry_budget" --wait --stable-polls "$stable_polls")
+  if [[ -n "$sentinel" ]]; then
+    extract_args+=(--sentinel "$sentinel")
+  fi
+  if "${SCRIPT_DIR}/webgpt-extract.sh" "${extract_args[@]}" > /dev/null 2>"$extract_err"; then
+    if [[ -s "$extract_raw" ]] && grep -Fq "$sentinel" "$extract_raw"; then
+      cp "$extract_raw" "$raw_output"
+      cp "$extract_clean" "$output"
+      {
+        echo "ExtractFallback: true"
+        echo "ExtractFallbackReason: $reason"
+        echo "ExtractFallbackMode: same_turn_wait"
+        echo "ExtractFallbackRaw: $extract_raw"
+        echo "ExtractFallbackMeta: $extract_meta"
+        echo "Tab ID: $requested_tab_id"
+        echo "ResponseSource: webgpt-extract-fallback"
+      } >> "$stderr_log"
+      return 0
     fi
-    if "${SCRIPT_DIR}/webgpt-extract.sh" "${extract_args[@]}" > /dev/null 2>"$extract_err"; then
-      if [[ -s "$extract_raw" ]] && grep -Fq "$sentinel" "$extract_raw"; then
-        cp "$extract_raw" "$raw_output"
-        cp "$extract_clean" "$output"
-        {
-          echo "ExtractFallback: true"
-          echo "ExtractFallbackReason: $reason"
-          echo "ExtractFallbackAttempts: $attempt"
-          echo "ExtractFallbackRaw: $extract_raw"
-          echo "ExtractFallbackMeta: $extract_meta"
-          echo "Tab ID: $requested_tab_id"
-          echo "ResponseSource: webgpt-extract-fallback"
-        } >> "$stderr_log"
-        return 0
-      fi
-    fi
-    sleep "$retry_interval"
-  done
+  fi
   {
     echo "ExtractFallback: false"
     echo "ExtractFallbackReason: $reason"
-    echo "ExtractFallbackAttempts: $attempt"
+    echo "ExtractFallbackMode: same_turn_wait"
     echo "ExtractFallbackErrorLog: $extract_err"
   } >> "$stderr_log"
   return 1
@@ -703,7 +697,6 @@ if [[ "$advisory_after_s" =~ ^[0-9]+$ && "$advisory_after_s" -gt 0 && "$advisory
   effective_timeout_s="$advisory_after_s"
 fi
 
-heartbeat_output="$(dirname "$meta_output")/webgpt_heartbeat.json"
 submitted_query="$(cat "$submitted_output")"
 args=(chatgpt "$submitted_query" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
 if [[ -n "$model" ]]; then
@@ -1273,7 +1266,8 @@ fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
   attempt_extract_fallback "missing_sentinel" || true
-  cp "$raw_output" "$output"
+  if ! grep -Fq "$sentinel" "$raw_output"; then
+    cp "$raw_output" "$output"
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
@@ -1352,9 +1346,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": finished,
 }, indent=2) + "\n")
 PY
-  enrich_agent_diagnosis
-  echo "ChatGPT response did not contain sentinel: $sentinel" >&2
-  exit 4
+    enrich_agent_diagnosis
+    echo "ChatGPT response did not contain sentinel: $sentinel" >&2
+    exit 4
+  fi
 fi
 
 if ! clean_error="$(python3 - "$raw_output" "$output" "$sentinel" 2>&1 <<'PY'
@@ -1564,6 +1559,11 @@ requested_model_observed = None
 selected_model = None
 model_selection_status = None
 model_selection_error = None
+extract_fallback_used = False
+extract_fallback_reason = None
+extract_fallback_mode = None
+extract_fallback_raw = None
+extract_fallback_meta = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -1615,6 +1615,16 @@ for line in reversed(stderr_text.splitlines()):
         model_selection_status = line.split(":", 1)[1].strip()
     elif line.startswith("ModelSelectionError:") and model_selection_error is None:
         model_selection_error = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallback:") and not extract_fallback_used:
+        extract_fallback_used = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ExtractFallbackReason:") and extract_fallback_reason is None:
+        extract_fallback_reason = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackMode:") and extract_fallback_mode is None:
+        extract_fallback_mode = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackRaw:") and extract_fallback_raw is None:
+        extract_fallback_raw = line.split(":", 1)[1].strip()
+    elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
+        extract_fallback_meta = line.split(":", 1)[1].strip()
     if (
         tab_id is not None
         and activated is not None
@@ -1738,6 +1748,11 @@ pathlib.Path(meta).write_text(json.dumps({
     "recovered_output": bool(status == "recovered_focus_changed"),
     "focus_mid_log": focus_mid_log,
     "response_source": response_source,
+    "extract_fallback_used": extract_fallback_used,
+    "extract_fallback_reason": extract_fallback_reason,
+    "extract_fallback_mode": extract_fallback_mode,
+    "extract_fallback_raw": extract_fallback_raw,
+    "extract_fallback_meta": extract_fallback_meta,
     "conversation_url": conversation_url,
     "page_text_contains_sentinel": page_text_contains_sentinel,
     "document_hidden_at_completion": document_hidden_at_completion,

@@ -1032,6 +1032,9 @@ function mapToolToMessage(tool, args, tabId) {
         type: "CHATGPT_EXTRACT",
         targetTabId: parseInt(a["tab-id"] || a.tabId || baseMsg.tabId, 10),
         sentinel: a.sentinel,
+        wait: a.wait === true,
+        stablePolls: a["stable-polls"] ? parseInt(a["stable-polls"], 10) : undefined,
+        noActivate: a["no-activate"] === true,
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 12000,
         ...baseMsg
       };
