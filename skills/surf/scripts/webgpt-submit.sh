@@ -118,6 +118,7 @@ host_log_file="${SURF_WEBGPT_HOST_LOG:-/tmp/surf-host.log}"
 warn_only=1
 require_attachment=""
 auto_download_patterns=()
+finalization_failure=""
 verify_cmd=""
 repo_root=""
 
@@ -1161,6 +1162,14 @@ cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
   attempt_extract_fallback "submit_failed" || true
+  if grep -Fq "$sentinel" "$raw_output"; then
+    {
+      echo "TransportDegraded: true"
+      echo "OriginalSubmitExitCode: $status"
+      echo "RecoveryTransition: response_proven_after_submit_failure"
+    } >> "$stderr_log"
+    status=0
+  else
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
@@ -1262,6 +1271,7 @@ PY
   enrich_agent_diagnosis
   cat "$stderr_log" >&2
   exit "$status"
+  fi
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
@@ -1429,13 +1439,14 @@ fi
 # ── --require-attachment check ──────────────────────────────
 if [[ -n "$require_attachment" && -n "${requested_tab_id:-}" ]]; then
   echo "Checking for required attachment matching: $require_attachment" >&2
-  _attach_js="return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=button]')).filter(e => { const t = (e.textContent || e.getAttribute('aria-label') || '').toLowerCase(); return t.includes('${require_attachment,,}'); }).length, null, 2)"
+  _attach_pattern_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].lower()))' "$require_attachment")"
+  _attach_js="return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=button]')).filter(e => { const t = (e.textContent || e.getAttribute('aria-label') || '').toLowerCase(); return t.includes(${_attach_pattern_json}); }).length, null, 2)"
   _attach_count="$("$RUN_SH" js "$_attach_js" --tab-id "$requested_tab_id" 2>/dev/null || echo 0)"
   _attach_count="$(printf '%s' "$_attach_count" | tr -cd '0-9' | head -c 5 || echo 0)"
   if [[ "${_attach_count:-0}" -eq 0 ]]; then
     echo "ERROR: --require-attachment '$require_attachment' not found in response DOM." >&2
     echo "  ChatGPT did not attach a downloadable file matching this pattern." >&2
-    exit 8
+    finalization_failure="required_attachment_missing:$require_attachment"
   fi
   echo "Attachment verified: found ${_attach_count} matching button(s)." >&2
 fi
@@ -1451,19 +1462,8 @@ if [[ ${#auto_download_patterns[@]} -gt 0 && -n "${requested_tab_id:-}" ]]; then
       _downloaded_zips+=("$(echo "$_dl_out" | tail -1)")
     else
       echo "No downloadable file found for '$_dl_pattern' — ChatGPT likely returned text without a real file attachment." >&2
-      echo "Sending follow-up requesting a real downloadable zip..." >&2
-      _retry_msg="Your prior response named ${_dl_pattern} but did not attach a downloadable file. Please attach it now as a real file download, not just the filename in text."
-      "$RUN_SH" js "document.querySelector('textarea,div[contenteditable]')?.focus(); document.execCommand('insertText', false, '$_retry_msg');" --tab-id "$requested_tab_id" 2>/dev/null || true
-      sleep 1
-      "$RUN_SH" key Enter --tab-id "$requested_tab_id" 2>/dev/null || true
-      sleep 5
-      echo "Retrying download..." >&2
-      if _dl_retry="$("$RUN_SH" webgpt.download --match "$_dl_pattern" --tab-id "$requested_tab_id" --output-dir "$_dl_output_dir" --timeout 300 2>&1)"; then
-        echo "Downloaded: $_dl_retry" >&2
-        _downloaded_zips+=("$(echo "$_dl_retry" | tail -1)")
-      else
-        echo "WARNING: --auto-download for '$_dl_pattern' failed after retry: $_dl_retry" >&2
-      fi
+      echo "No follow-up was submitted; caller action is required." >&2
+      finalization_failure="auto_download_missing:$_dl_pattern"
     fi
   done
 fi
@@ -1523,9 +1523,9 @@ if [[ -n "$verify_cmd" && ${#_downloaded_zips[@]} -gt 0 ]]; then
   done
 fi
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" "$finalization_failure" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s, finalization_failure = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
@@ -1748,6 +1748,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "recovered_output": bool(status == "recovered_focus_changed"),
     "focus_mid_log": focus_mid_log,
     "response_source": response_source,
+    "response_proof_status": "response_proven" if response_integrity_ok else "response_unproven",
+    "finalization_state": "failed" if finalization_failure else "completed",
+    "finalization_failure": finalization_failure or None,
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
     "extract_fallback_mode": extract_fallback_mode,
@@ -1769,6 +1772,11 @@ pathlib.Path(meta).write_text(json.dumps({
 PY
 
 enrich_agent_diagnosis
+
+if [[ -n "$finalization_failure" ]]; then
+  cat "$meta_output"
+  exit 8
+fi
 
 if [[ "$no_remember" -eq 0 ]]; then
   python3 - "$meta_output" "$tab_state_file" <<'PY'

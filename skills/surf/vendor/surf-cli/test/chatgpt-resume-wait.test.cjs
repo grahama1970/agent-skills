@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-const { extractAssistantResponse } = require("../native/chatgpt-client.cjs");
+const { assistantSnapshotExpression, extractAssistantResponse } = require("../native/chatgpt-client.cjs");
 const { mapToolToMessage } = require("../native/host-helpers.cjs");
 
 test("maps same-turn wait extraction options into the native request", () => {
@@ -17,6 +17,13 @@ test("maps same-turn wait extraction options into the native request", () => {
   assert.equal(message.stablePolls, 4);
   assert.equal(message.noActivate, true);
   assert.equal(message.timeout, 300000);
+});
+
+test("assistant snapshot accepts only the exact sentinel", () => {
+  const sentinel = "<<<WEBGPT_DONE:exact>>>";
+  const expression = assistantSnapshotExpression(sentinel, 0);
+  assert.match(expression, new RegExp(JSON.stringify(sentinel).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(expression, /SENTINEL\.slice\(0, -1\)/);
 });
 
 test("wait extraction resumes the existing turn until its sentinel stabilizes", async () => {

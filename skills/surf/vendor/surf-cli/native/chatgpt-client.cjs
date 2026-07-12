@@ -255,9 +255,7 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
     let lastAssistantTurn = newAssistantTurns.length
       ? newAssistantTurns[newAssistantTurns.length - 1]
       : null;
-    const sentinelVariants = SENTINEL
-      ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
-      : [];
+    const sentinelVariants = SENTINEL ? [SENTINEL] : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
     if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
       // ChatGPT can mutate an already-counted assistant container after we capture the
@@ -303,10 +301,6 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       ? turnText
       : contentText;
     const sentinelMatch = findSentinel(text);
-    if (SENTINEL && sentinelMatch && sentinelMatch !== SENTINEL) {
-      const idx = text.lastIndexOf(sentinelMatch);
-      text = text.slice(0, idx) + SENTINEL + text.slice(idx + sentinelMatch.length);
-    }
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
     const messageId = messageRoot.getAttribute('data-message-id') || null;

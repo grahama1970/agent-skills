@@ -51,11 +51,11 @@ if [[ -z "$tab_id" || -z "$output" ]]; then
   exit 2
 fi
 
-requested_tab_id="$(printf '%s' "$tab_id" | tr -cd '0-9' | head -c 20 || true)"
-if [[ -z "$requested_tab_id" ]]; then
+if [[ ! "$tab_id" =~ ^[0-9]+$ ]]; then
   echo "Invalid --tab-id: $tab_id" >&2
   exit 2
 fi
+requested_tab_id="$tab_id"
 
 raw_output="${raw_output:-${output}.raw.md}"
 meta_output="${meta_output:-${output}.meta.json}"

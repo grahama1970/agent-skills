@@ -2219,7 +2219,14 @@ async function attemptChatgptRecovery() {
   );
   return sendRequest(
     "chatgpt.extract",
-    { "tab-id": tabId, sentinel, timeout: Math.ceil(extractTimeoutMs / 1000) },
+    {
+      "tab-id": tabId,
+      sentinel,
+      timeout: Math.ceil(extractTimeoutMs / 1000),
+      wait: true,
+      "stable-polls": Number.parseInt(toolArgs["stable-polls"], 10) || 3,
+      "no-activate": true,
+    },
     extractTimeoutMs + 10000
   );
 }
