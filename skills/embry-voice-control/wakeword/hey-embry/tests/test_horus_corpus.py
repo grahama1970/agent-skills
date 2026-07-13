@@ -26,6 +26,7 @@ def test_positive_transcript_gate_is_bounded() -> None:
 def test_negative_gate_rejects_positive_phrase() -> None:
     assert MODULE.negative_transcript_accepted("Hey Henry.", prompt="Hey Henry.")
     assert MODULE.negative_transcript_accepted("Emery.", prompt="Emery!")
+    assert MODULE.negative_transcript_accepted("Emory.", prompt="Emery!")
     assert not MODULE.negative_transcript_accepted("Henry.", prompt="Hey Henry.")
     assert not MODULE.negative_transcript_accepted("Hey, Embry!", prompt="Hey Henry.")
     assert not MODULE.negative_transcript_accepted("", prompt="Hey Henry.")

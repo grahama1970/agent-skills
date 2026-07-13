@@ -49,7 +49,7 @@ NEGATIVE_TRANSCRIPT_ALIASES = {
     "Hey, M!": frozenset({"hey em", "hey m"}),
     "Hey Em!": frozenset({"hey em"}),
     "Embryo!": frozenset({"embryo"}),
-    "Emery!": frozenset({"emery"}),
+    "Emery!": frozenset({"emery", "emory"}),
     "Henry!": frozenset({"henry"}),
     "Every!": frozenset({"every"}),
     "Entry!": frozenset({"entry"}),
@@ -160,6 +160,17 @@ def json_request(url: str, payload: dict[str, Any], *, timeout: float) -> dict[s
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read())
+
+
+def http_error_reason(error: urllib.error.HTTPError) -> str:
+    try:
+        detail = json.loads(error.read()).get("detail", {})
+        message = str(detail.get("error", ""))
+    except (json.JSONDecodeError, OSError, AttributeError):
+        message = ""
+    if message.startswith("Generated audio too short:"):
+        return "generated_audio_too_short"
+    return "generation_or_validation_error"
 
 
 def download(url: str, *, timeout: float) -> bytes:
@@ -391,6 +402,11 @@ def generate(args: argparse.Namespace) -> int:
                     "audio_bytes": len(audio),
                 }
             except (KeyError, OSError, ValueError, urllib.error.URLError) as error:
+                rejection_reason = (
+                    http_error_reason(error)
+                    if isinstance(error, urllib.error.HTTPError)
+                    else "generation_or_validation_error"
+                )
                 record = {
                     "schema": "embry.horus_wake_corpus_record.v1",
                     "record_id": record_id,
@@ -401,7 +417,7 @@ def generate(args: argparse.Namespace) -> int:
                     "prompt": prompt,
                     "parameters": parameters,
                     "accepted": False,
-                    "rejection_reason": "generation_or_validation_error",
+                    "rejection_reason": rejection_reason,
                     "error": f"{type(error).__name__}: {error}",
                 }
             append_jsonl(manifest_path, record)
