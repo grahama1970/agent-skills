@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama1970.github.io/agent-skills/embry.horus_wake_corpus_receipt.v1.schema.json",
+  "title": "Embry Horus wake corpus receipt v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "live",
+    "mocked",
+    "persona",
+    "wake_phrase",
+    "seed",
+    "targets",
+    "accepted_counts",
+    "attempt_count",
+    "manifest",
+    "failed_gates"
+  ],
+  "properties": {
+    "schema": {"const": "embry.horus_wake_corpus_receipt.v1"},
+    "status": {"enum": ["PASS", "INCOMPLETE"]},
+    "live": {"const": true},
+    "mocked": {"const": false},
+    "persona": {"const": "horus_lupercal"},
+    "wake_phrase": {"const": "Hey Embry"},
+    "seed": {"type": "integer"},
+    "targets": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "accepted_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "attempt_count": {"type": "integer", "minimum": 0},
+    "manifest": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "failed_gates": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}
