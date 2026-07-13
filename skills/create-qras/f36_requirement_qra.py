@@ -591,6 +591,8 @@ def export_webgpt_batch(manifest_path: Path, batch_ordinal: int, batch_size: int
         "requirement_count": len(requirements),
         "expected_family_count": len(requirements),
         "expected_variant_count": len(requirements) * 5,
+        "expected_families": len(requirements),
+        "expected_variants": len(requirements) * 5,
         "first_stable_item_id": requirements[0]["stable_item_id"],
         "last_stable_item_id": requirements[-1]["stable_item_id"],
         "first_family_id": requirements[0]["engineering_qra_family_id"],

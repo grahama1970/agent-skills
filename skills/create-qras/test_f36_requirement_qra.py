@@ -225,6 +225,8 @@ def test_export_batch_one_size_200_has_stable_order_and_1000_variants(tmp_path: 
     assert receipt["requirement_count"] == 200
     assert receipt["expected_family_count"] == 200
     assert receipt["expected_variant_count"] == 1000
+    assert receipt["expected_families"] == 200
+    assert receipt["expected_variants"] == 1000
     assert exported["requirements"][0]["stable_item_id"] == "F36B-QRAF-STABLE-0001"
     assert exported["requirements"][-1]["stable_item_id"] == "F36B-QRAF-STABLE-0200"
     assert [item["role"] for item in exported["requirements"][0]["variants"]] == [
