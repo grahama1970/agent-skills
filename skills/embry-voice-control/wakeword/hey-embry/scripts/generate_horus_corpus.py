@@ -141,8 +141,8 @@ def deterministic_choice(values: tuple[str, ...], *, seed: int, index: int) -> s
 def deterministic_parameters(*, seed: int, index: int) -> dict[str, float]:
     rng = random.Random(seed + index)
     return {
-        "temperature": round(rng.uniform(0.35, 0.75), 3),
-        "top_p": round(rng.uniform(0.4, 0.9), 3),
+        "temperature": round(rng.uniform(0.35, 0.65), 3),
+        "top_p": round(rng.uniform(0.5, 0.9), 3),
         "repetition_penalty": round(rng.uniform(1.05, 1.15), 3),
     }
 

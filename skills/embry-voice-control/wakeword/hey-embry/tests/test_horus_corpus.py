@@ -59,9 +59,10 @@ def test_service_errors_do_not_consume_content_attempt_budget() -> None:
 def test_split_seed_offsets_and_parameters_are_deterministic() -> None:
     offsets = MODULE.SPLIT_OFFSETS
     assert len(set(offsets.values())) == len(offsets)
-    assert MODULE.deterministic_parameters(seed=7, index=3) == MODULE.deterministic_parameters(
-        seed=7, index=3
-    )
+    parameters = MODULE.deterministic_parameters(seed=7, index=3)
+    assert parameters == MODULE.deterministic_parameters(seed=7, index=3)
+    assert 0.35 <= parameters["temperature"] <= 0.65
+    assert 0.5 <= parameters["top_p"] <= 0.9
     assert MODULE.deterministic_choice(MODULE.POSITIVE_PROMPTS, seed=7, index=3) == (
         MODULE.deterministic_choice(MODULE.POSITIVE_PROMPTS, seed=7, index=3)
     )
