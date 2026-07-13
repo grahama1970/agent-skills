@@ -2,8 +2,8 @@
 name: code-review-runner
 description: >
   Deterministic code review skill with T0 validators (best-practices-*, ruff, compile)
-  and LLM-powered findings (codex/scillm). Scores finding_severity x fix_validity.
-  Self-improvement loop reduces false positives across rounds. Structured JSON output.
+  and LLM-powered findings (codex/scillm). Scores findings by severity, keeps
+  suggested fixes advisory, and fails closed on provider errors. Structured JSON output.
   Replaces raw codex exec in orchestrate T2 gate.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 triggers:
@@ -16,7 +16,7 @@ triggers:
   - review pull request code
   - check code quality
 metadata:
-  short-description: Deterministic code review with LLM findings + fix validation
+  short-description: Deterministic code review with advisory LLM findings
 provides:
   - code-review
   - quality-gate
@@ -40,9 +40,9 @@ Deterministic code review with LLM-powered findings. Two-tier architecture:
 - **T0 (deterministic)**: best-practices-* validators, ruff lint, compile() check, file limits
 - **T1 (LLM)**: codex/scillm review with structured findings prompt
 
-Each finding is scored: `severity x fix_validity`. A suggested fix must compile and not
-break the DoD to count as valid. The self-improvement loop across rounds reduces false
-positives — findings that don't survive validation get downweighted.
+Each finding is scored by severity. Suggested fixes remain advisory because the runner
+does not apply them; current-tree compilation or DoD results cannot validate a proposed
+fix. Critical and major findings fail the review until they are reconciled.
 
 SciLLM requests use the active proxy key from the environment or running proxy
 container and always send `X-Caller-Skill: code-review-runner`. A 401 from a
@@ -70,10 +70,10 @@ T0: Deterministic validators (no LLM)
 T1: LLM review (scillm codex or provider of choice)
   - Reads all target files + context
   - Produces structured findings (severity, location, description, fix)
-  - Each fix validated: compile() + DoD rerun
+  - Suggested fixes remain advisory until applied and independently checked
   |
   v
-Scoring: findings_score = sum(severity * fix_validity) / max_possible
+Scoring: findings impact is severity-derived; unapplied fixes remain advisory
   |
   v
 Output: ReviewResult JSON
@@ -127,7 +127,10 @@ for the change set.
 
 Suggested fixes remain advisory because this runner does not apply them. It
 must not mark a fix validated merely because the current tree compiles or its
-DoD passes. Critical or major findings fail the review pending reconciliation.
+DoD passes. Critical or major advisory findings remain in the result and fail
+the review pending reconciliation. If any requested provider round fails, the
+whole review returns `error`; successful rounds cannot mask an unavailable or
+unauthorized review round.
 
 ## Integration
 
