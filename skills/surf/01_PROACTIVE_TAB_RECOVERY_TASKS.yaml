@@ -214,13 +214,13 @@ tasks:
       - skills/browser-oracle/src/browser_oracle/cli.py
       - skills/browser-oracle/tests/test_bindings.py
     tests:
-      - python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
     blind_tests:
-      - python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
     max_rounds: 3
     gate: Rebinding occurs only for one exact live URL match and never opens, closes, activates, or navigates a tab.
     definition_of_done:
-      command: python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      command: /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
       assertion: exit_code == 0
 
   - id: '4'
@@ -256,13 +256,13 @@ tasks:
       - skills/surf/scripts/tab_recovery_receipt.py
       - skills/surf/tests/test_tab_recovery_receipt.py
     tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
     blind_tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
     max_rounds: 3
     gate: Unknown guards and failed mutations cannot produce a successful recovery action.
     definition_of_done:
-      command: python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
+      command: /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
       assertion: exit_code == 0
 
   - id: '5'
@@ -303,13 +303,13 @@ tasks:
       - skills/surf/scripts/tab-maintenance.sh
       - skills/surf/tests/test_tab_maintenance.py
     tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
     blind_tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
     max_rounds: 3
     gate: Coordinator cannot mutate without exact identity, enumerated trigger, all-safe guards, cooldown clearance, and repair-safe authorization.
     definition_of_done:
-      command: python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
+      command: /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
       assertion: exit_code == 0
 
   - id: '6'
@@ -346,13 +346,13 @@ tasks:
       - agents/surf-doctor/install-tab-maintenance-timer.sh
       - skills/surf/tests/test_tab_maintenance_timer.py
     tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
     blind_tests:
-      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
     max_rounds: 3
     gate: Tests and installation cannot start, enable, or mutate the operator's user timer without an explicit install action.
     definition_of_done:
-      command: python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
+      command: /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
       assertion: exit_code == 0
 
   - id: '7'
@@ -388,13 +388,13 @@ tasks:
       - skills/surf/scripts/live-tab-maintenance-canary.sh
       - skills/surf/tests/test_live_tab_maintenance_canary.py
     tests:
-      - python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
     blind_tests:
-      - python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
+      - /usr/bin/python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
     max_rounds: 3
     gate: Harness can mutate only disposable localhost tabs and bindings created by its own run ID.
     definition_of_done:
-      command: python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
+      command: /usr/bin/python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
       assertion: exit_code == 0
 
   - id: '8'
@@ -407,7 +407,7 @@ tasks:
       - '6'
       - '7'
     command: >-
-      python3 -m pytest -q
+      /usr/bin/python3 -m pytest -q
       skills/surf/tests/test_tab_recovery_receipt.py
       skills/surf/tests/test_tab_maintenance.py
       skills/surf/tests/test_tab_maintenance_timer.py
@@ -435,7 +435,7 @@ tasks:
     gate: Every focused deterministic command exits zero before any live browser mutation.
     definition_of_done:
       command: >-
-        python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py skills/surf/tests/test_tab_maintenance.py skills/surf/tests/test_tab_maintenance_timer.py skills/browser-oracle/tests/test_bindings.py
+        /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py skills/surf/tests/test_tab_maintenance.py skills/surf/tests/test_tab_maintenance_timer.py skills/browser-oracle/tests/test_bindings.py
       assertion: exit_code == 0
 
   - id: '9'
