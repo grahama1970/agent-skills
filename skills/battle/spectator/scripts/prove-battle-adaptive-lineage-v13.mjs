@@ -66,6 +66,8 @@ async function inspectAt(seconds, name, viewport = { width: 1600, height: 1050 }
   await page.waitForSelector('[data-battle-pixi-engine="animated-sprites"]', { timeout: 20_000 })
   await page.waitForSelector('canvas.pixiRaceCanvas', { timeout: 20_000 })
   await page.waitForTimeout(900)
+  const proofMenu = page.locator('[data-qid="battle:nav:proofs-menu"]')
+  if (await proofMenu.getAttribute('open') !== null) await proofMenu.locator('summary').click()
   const scroller = page.locator('[data-qid="battle:timeline:scroll"]')
   if (viewport.width < 700) await scroller.evaluate(async (node) => {
     let prior = node.scrollLeft
