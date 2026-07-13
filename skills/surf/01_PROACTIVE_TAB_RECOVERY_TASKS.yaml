@@ -202,6 +202,8 @@ tasks:
       URL or conversation-UUID match, and the existing stored project URL. It must reject
       missing, ambiguous, mismatched, or manually pinned bindings unless an explicit
       maintenance authorization is supplied. Preserve the previous binding in the result.
+      Add tests whose names include rebind_by_exact_url so the DoD cannot pass from the
+      pre-existing binding tests alone.
     implementation:
       - Add a pure exact-URL candidate resolver and an atomic binding update function.
       - Expose a JSON CLI command suitable for Surf Doctor without creating a new tab.
@@ -214,13 +216,13 @@ tasks:
       - skills/browser-oracle/src/browser_oracle/cli.py
       - skills/browser-oracle/tests/test_bindings.py
     tests:
-      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py -k rebind_by_exact_url
     blind_tests:
-      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      - /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py -k rebind_by_exact_url
     max_rounds: 3
     gate: Rebinding occurs only for one exact live URL match and never opens, closes, activates, or navigates a tab.
     definition_of_done:
-      command: /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
+      command: /usr/bin/python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py -k rebind_by_exact_url
       assertion: exit_code == 0
 
   - id: '4'
