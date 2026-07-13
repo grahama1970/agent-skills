@@ -283,6 +283,40 @@ def allocation(base_count: int, target_count: int, cap: int) -> list[int]:
     return counts
 
 
+def transfer_failed_slots(
+    counts: list[int], current_index: int, failed_variant: int, cap: int
+) -> list[int]:
+    """Move every abandoned derivative slot to unprocessed bases."""
+    remaining = counts[current_index] - failed_variant
+    counts[current_index] = failed_variant
+    replacements = []
+    for replacement_index in range(current_index + 1, len(counts)):
+        while remaining and counts[replacement_index] < cap:
+            counts[replacement_index] += 1
+            replacements.append(replacement_index)
+            remaining -= 1
+        if not remaining:
+            return replacements
+    raise ValueError("no later bases can accept all failed derivative slots")
+
+
+def resume_allocation(existing: list[int], target_count: int, cap: int) -> list[int]:
+    """Fill a partial run from its strongest admitted bases without exceeding caps."""
+    counts = existing.copy()
+    if any(count < 1 or count > cap for count in counts):
+        raise ValueError("invalid existing per-base count")
+    if sum(counts) > target_count:
+        raise ValueError("existing records exceed target")
+    while sum(counts) < target_count:
+        candidates = [index for index, count in enumerate(counts) if count < cap]
+        if not candidates:
+            raise ValueError("resume target cannot be allocated under per-base cap")
+        # Prefer bases that have already admitted more variants.
+        selected = min(candidates, key=lambda index: (-counts[index], index))
+        counts[selected] += 1
+    return counts
+
+
 def transcript_accepted(record: dict[str, Any], transcript: str) -> bool:
     if record["label"] == "positive":
         return GENERATOR.positive_transcript_accepted(transcript)
@@ -329,9 +363,16 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     records_path = output_dir / "candidate-b-records.jsonl"
-    records_path.write_text("", encoding="utf-8")
-    output_hashes: set[str] = set()
-    final_records: list[dict[str, Any]] = []
+    if args.resume and records_path.exists():
+        final_records = load_jsonl(records_path)
+    else:
+        records_path.write_text("", encoding="utf-8")
+        final_records = []
+    output_hashes = {row["sha256"] for row in final_records}
+    existing_by_base: dict[tuple[str, str], int] = {}
+    for row in final_records:
+        key = (row["split"], row["base_record_id"])
+        existing_by_base[key] = max(existing_by_base.get(key, 0), row["variant_index"] + 1)
 
     for split in SPLITS:
         selected = sorted(
@@ -344,14 +385,29 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
             )
         selected = selected[: base_targets[split]]
         cap = policy["maximum_total_clips_per_base"][split]
-        per_base = allocation(len(selected), targets[split], cap)
+        if args.resume:
+            existing_counts = [
+                existing_by_base.get((split, base["record_id"]), 0)
+                for base in selected
+            ]
+            if all(existing_counts):
+                per_base = resume_allocation(existing_counts, targets[split], cap)
+            else:
+                per_base = allocation(len(selected), targets[split], cap)
+        else:
+            per_base = allocation(len(selected), targets[split], cap)
         split_kind = "validation" if split.endswith("validation") else "train"
-        for base, clip_count in zip(selected, per_base, strict=True):
+        for base_index, (base, clip_count) in enumerate(
+            zip(selected, per_base, strict=True)
+        ):
             source = Path(base["audio_path"])
             if sha256_file(source).removeprefix("sha256:") != base["audio_sha256"]:
                 raise ValueError(f"base hash mismatch: {source}")
             normalized = normalize_base(source, rate=16_000)
-            for variant_index in range(clip_count):
+            existing_count = existing_by_base.get((split, base["record_id"]), 0)
+            if existing_count > clip_count:
+                raise ValueError(f"resume count exceeds allocation for {base['record_id']}")
+            for variant_index in range(existing_count, clip_count):
                 accepted_record = None
                 for attempt_index in range(args.max_variant_attempts):
                     if variant_index == 0:
@@ -445,9 +501,14 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
                     output_hashes.add(output_hash)
                     break
                 if accepted_record is None:
-                    raise ValueError(
-                        f"no accepted recipe for {base['record_id']} variant {variant_index}"
+                    if variant_index == 0:
+                        raise ValueError(
+                            f"identity admission failed for {base['record_id']}"
+                        )
+                    transfer_failed_slots(
+                        per_base, base_index, variant_index, cap
                     )
+                    break
                 final_records.append(accepted_record)
                 with records_path.open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(accepted_record, sort_keys=True) + "\n")
@@ -456,6 +517,8 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
         split: sum(row["split"] == split for row in final_records)
         for split in SPLITS
     }
+    if final_counts != targets:
+        raise ValueError(f"final corpus count mismatch: {final_counts} != {targets}")
     base_counts = {
         split: len({row["base_record_id"] for row in final_records if row["split"] == split})
         for split in SPLITS
@@ -529,6 +592,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     args.whisper_api_key = args.whisper_api_key_file.read_text().strip()
     if not args.whisper_api_key:

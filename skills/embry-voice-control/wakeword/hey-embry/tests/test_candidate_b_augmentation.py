@@ -25,6 +25,7 @@ def load_script(name: str):
 assets = load_script("build_augmentation_asset_manifests")
 expand = load_script("expand_horus_wake_corpus")
 validate = load_script("validate_candidate_b_corpus")
+features = load_script("build_candidate_b_feature_arrays")
 
 
 def write_audio(path: Path, *, frequency: float, rate: int = 16_000) -> None:
@@ -38,6 +39,23 @@ def test_exact_webgpt_allocations_obey_caps() -> None:
     assert sorted(expand.allocation(75, 350, 5)) == [4] * 25 + [5] * 50
     assert sorted(expand.allocation(260, 2000, 8)) == [7] * 80 + [8] * 180
     assert sorted(expand.allocation(90, 400, 5)) == [4] * 50 + [5] * 40
+
+
+def test_failed_derivative_slots_move_to_later_bases_with_capacity() -> None:
+    counts = [5, 5, 4, 4, 4]
+    replacements = expand.transfer_failed_slots(counts, 1, 2, 5)
+    assert replacements == [2, 3, 4]
+    assert counts == [5, 2, 5, 5, 5]
+    assert sum(counts) == 22
+
+
+def test_resume_allocation_prefers_already_robust_bases() -> None:
+    assert expand.resume_allocation([1, 4, 4, 1], 12, 5) == [1, 5, 5, 1]
+
+
+def test_validator_canonicalizes_known_prompt_families() -> None:
+    assert validate.prompt_family("Embry.") == "Embry!"
+    assert validate.prompt_family("Hey Em!") == "Hey, M!"
 
 
 def test_recipe_is_deterministic_and_bounded() -> None:
@@ -153,3 +171,28 @@ def test_independent_validator_checks_materialized_audio(tmp_path: Path) -> None
     result = validate.validate(receipt_path, require_exact_counts=False)
     assert result["status"] == "PASS"
     assert result["counts"]["records"] == 2
+
+
+def test_feature_framing_is_deterministic_and_trailing_bounded() -> None:
+    samples = np.arange(16_000, dtype=np.int16)
+    first = features.deterministic_fixed_clip(samples, "record-1")
+    second = features.deterministic_fixed_clip(samples, "record-1")
+    assert np.array_equal(first, second)
+    assert first.shape == (32_000,)
+    nonzero = np.flatnonzero(first)
+    assert nonzero[-1] >= 32_000 - 3_201 - 1
+
+
+def test_feature_concatenation_preserves_candidate_boundaries(tmp_path: Path) -> None:
+    left_path = tmp_path / "left.npy"
+    right_path = tmp_path / "right.npy"
+    output_path = tmp_path / "combined.npy"
+    np.save(left_path, np.ones((2, 16, 96), dtype=np.float32))
+    np.save(right_path, np.full((3, 16, 96), 2, dtype=np.float32))
+    receipt = features.concatenate_features(left_path, right_path, output_path)
+    combined = np.load(output_path)
+    assert receipt["shape"] == [5, 16, 96]
+    assert receipt["candidate_a_rows"] == 2
+    assert receipt["candidate_b_rows"] == 3
+    assert np.all(combined[:2] == 1)
+    assert np.all(combined[2:] == 2)

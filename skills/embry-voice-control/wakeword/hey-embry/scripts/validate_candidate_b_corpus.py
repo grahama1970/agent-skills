@@ -37,6 +37,10 @@ CAPS = {
 ALLOWED_TRANSFORMS = {"speed", "gain", "rir", "noise", "eq"}
 
 
+def prompt_family(prompt: str) -> str:
+    return {"Embry.": "Embry!", "Hey Em!": "Hey, M!"}.get(prompt, prompt)
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -130,7 +134,9 @@ def validate(receipt_path: Path, *, require_exact_counts: bool) -> dict[str, Any
         if row.get("identity") != (row.get("variant_index") == 0 and not chain):
             errors.append("identity_contract_mismatch")
         base_counts[split][row["base_record_id"]] += 1
-        phrase_counts[split][row["prompt"]] += int(row["variant_index"] == 0)
+        phrase_counts[split][prompt_family(row["prompt"])] += int(
+            row["variant_index"] == 0
+        )
         base_hashes[split].add(row["base_audio_sha256"])
         request_ids[split].add(row["orpheus_request_id"])
         if not row["identity"]:
