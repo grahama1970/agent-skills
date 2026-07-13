@@ -2725,6 +2725,109 @@ export async function handleMessage(
       return { success: true };
     }
 
+    case "TAB_RECOVERY_STATE": {
+      if (typeof tabId !== "number" || !Number.isFinite(tabId)) {
+        throw new Error("Explicit numeric tabId required");
+      }
+
+      const tab = await chrome.tabs.get(tabId);
+      const tabIdentity = {
+        id: tab.id,
+        windowId: tab.windowId,
+        index: tab.index,
+        url: tab.url,
+        title: tab.title,
+        active: tab.active,
+        highlighted: tab.highlighted,
+        pinned: tab.pinned,
+        incognito: tab.incognito,
+        discarded: tab.discarded,
+        frozen: (tab as any).frozen,
+      };
+
+      let pageState: any = null;
+      let pageStateError: string | null = null;
+      try {
+        const result = await cdp.evaluateScript(tabId, `
+(() => {
+  const editableSelector = [
+    "textarea",
+    "input:not([type])",
+    "input[type='text']",
+    "input[type='search']",
+    "[contenteditable='true']",
+    "[role='textbox']"
+  ].join(",");
+
+  const editables = Array.from(document.querySelectorAll(editableSelector));
+  const nonEmptyEditable = editables.find((el) => {
+    const value = "value" in el ? String(el.value || "") : String(el.textContent || "");
+    return value.trim().length > 0;
+  });
+
+  const stopSelector = [
+    "button[aria-label*='Stop']",
+    "button[aria-label*='stop']",
+    "button[aria-label*='Cancel']",
+    "button[data-testid*='stop']",
+    "button[data-testid*='Stop']"
+  ].join(",");
+  const generationButton = Array.from(document.querySelectorAll(stopSelector)).find((el) => {
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
+  });
+
+  return {
+    readyState: document.readyState,
+    locationHref: location.href,
+    title: document.title,
+    hasNonEmptyEditableDraft: Boolean(nonEmptyEditable),
+    nonEmptyEditableDraftReason: nonEmptyEditable
+      ? "found a non-empty editable input or contenteditable element"
+      : "no non-empty editable input or contenteditable element found",
+    isChatGPTGenerating: Boolean(generationButton),
+    chatGPTGenerationReason: generationButton
+      ? "found a visible ChatGPT stop/cancel generation control"
+      : "no visible ChatGPT stop/cancel generation control found",
+  };
+})()
+        `);
+        pageState = result.result?.value || null;
+      } catch (err: any) {
+        pageStateError = err?.message || String(err);
+      }
+
+      const guardUnknownReason = pageStateError
+        ? `page inspection failed: ${pageStateError}`
+        : "page inspection did not return a value";
+
+      return {
+        tab: tabIdentity,
+        loadState: {
+          status: tab.status,
+          documentReadyState: pageState?.readyState ?? "unknown",
+          url: pageState?.locationHref ?? tab.url,
+          title: pageState?.title ?? tab.title,
+        },
+        guards: {
+          chatgptGeneration: pageState ? {
+            value: pageState.isChatGPTGenerating === true,
+            reason: pageState.chatGPTGenerationReason,
+          } : {
+            value: "unknown",
+            reason: guardUnknownReason,
+          },
+          nonEmptyEditableDraft: pageState ? {
+            value: pageState.hasNonEmptyEditableDraft === true,
+            reason: pageState.nonEmptyEditableDraftReason,
+          } : {
+            value: "unknown",
+            reason: guardUnknownReason,
+          },
+        },
+      };
+    }
     case "ZOOM_GET": {
       if (!tabId) throw new Error("No tabId provided");
       const zoom = await chrome.tabs.getZoom(tabId);
