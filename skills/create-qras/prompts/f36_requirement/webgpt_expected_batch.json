@@ -1,0 +1,87 @@
+{
+  "schema": "f36.webgpt_complete_family_batch.v1",
+  "export_id": "F36B-WEBGPT-EXPORT-example00000000000000",
+  "canonical_input_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "synthetic": true,
+  "operational_authority": false,
+  "certification_authority": false,
+  "families": [
+    {
+      "schema": "f36.webgpt_complete_family.v1",
+      "stable_item_id": "F36B-QRAF-example",
+      "engineering_qra_family_id": "F36B-QRAF-example",
+      "engineering_obligation_id": "F36B-OBL-EXAMPLE-001",
+      "requirement_id": "F36B-REQ-EXAMPLE-001",
+      "requirement_revision_id": "F36B-REQ-EXAMPLE-001-R1",
+      "requirement_content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "primary_component_family_id": "F36B-M00-S01-C01",
+      "canonical_question": "When a transition command is received, what must the transition-command acceptance function do to accept the command only from an authenticated source so unauthenticated transition commands are rejected?",
+      "canonical_answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+      "canonical_intent": {
+        "engineering_obligation_id": "F36B-OBL-EXAMPLE-001",
+        "primary_component_family_id": "F36B-M00-S01-C01",
+        "protected_object_or_interface": "transition-command acceptance function",
+        "condition": "when a transition command is received",
+        "required_behavior": "accept the command only from an authenticated source",
+        "expected_outcome": "unauthenticated transition commands are rejected",
+        "source_fragments": {
+          "protected_object_or_interface": "transition-command acceptance function",
+          "condition": "when a transition command is received",
+          "required_behavior": "accept the command only from an authenticated source",
+          "expected_outcome": "unauthenticated transition commands are rejected"
+        }
+      },
+      "variants": [
+        {
+          "variant_id": "F36B-QRAF-example-V01",
+          "role": "operator",
+          "difficulty": "simple",
+          "question": "When a transition command is received, how should the transition-command acceptance function accept the command only from an authenticated source and ensure unauthenticated transition commands are rejected?",
+          "answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+          "intent_hash": "sha256:5e889952e3bd8f9e9ebe2962545e7a9493b9308f055a3cc57f57c9e05b2f1537"
+        },
+        {
+          "variant_id": "F36B-QRAF-example-V02",
+          "role": "project_manager",
+          "difficulty": "simple",
+          "question": "For project delivery, when a transition command is received, what must the transition-command acceptance function do to accept the command only from an authenticated source so unauthenticated transition commands are rejected?",
+          "answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+          "intent_hash": "sha256:5e889952e3bd8f9e9ebe2962545e7a9493b9308f055a3cc57f57c9e05b2f1537"
+        },
+        {
+          "variant_id": "F36B-QRAF-example-V03",
+          "role": "systems_engineer",
+          "difficulty": "medium",
+          "question": "For systems engineering, when a transition command is received, how shall the transition-command acceptance function accept the command only from an authenticated source so unauthenticated transition commands are rejected?",
+          "answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+          "intent_hash": "sha256:5e889952e3bd8f9e9ebe2962545e7a9493b9308f055a3cc57f57c9e05b2f1537"
+        },
+        {
+          "variant_id": "F36B-QRAF-example-V04",
+          "role": "cybersecurity_compliance_officer",
+          "difficulty": "medium",
+          "question": "For cybersecurity compliance, when a transition command is received, what must the transition-command acceptance function do to accept the command only from an authenticated source so unauthenticated transition commands are rejected?",
+          "answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+          "intent_hash": "sha256:5e889952e3bd8f9e9ebe2962545e7a9493b9308f055a3cc57f57c9e05b2f1537"
+        },
+        {
+          "variant_id": "F36B-QRAF-example-V05",
+          "role": "mission_assurance_cybersecurity_reviewer",
+          "difficulty": "advanced",
+          "question": "For mission assurance review, when a transition command is received, how must the transition-command acceptance function accept the command only from an authenticated source so unauthenticated transition commands are rejected?",
+          "answer": "When a transition command is received, the transition-command acceptance function must accept the command only from an authenticated source so unauthenticated transition commands are rejected.",
+          "intent_hash": "sha256:5e889952e3bd8f9e9ebe2962545e7a9493b9308f055a3cc57f57c9e05b2f1537"
+        }
+      ],
+      "synthetic": true,
+      "operational_authority": false,
+      "certification_authority": false,
+      "engineering_qra_state": "generated_candidate",
+      "sparta_applicability": "not_assessed",
+      "sparta_resolution": "not_run",
+      "resolved_control_ids": [],
+      "crosswalk_chain_ids": [],
+      "evidence_case_id": null
+    }
+  ]
+}

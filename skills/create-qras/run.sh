@@ -21,17 +21,13 @@ case "${1:-help}" in
         shift
         python3 "$SCRIPT_DIR/f36_requirement_qra.py" review "$@"
         ;;
-    f36-manifest)
+    f36-webgpt-export)
         shift
-        python3 "$SCRIPT_DIR/f36_requirement_qra.py" manifest "$@"
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" webgpt-export "$@"
         ;;
-    f36-validate)
+    f36-webgpt-import)
         shift
-        python3 "$SCRIPT_DIR/f36_requirement_qra.py" validate "$@"
-        ;;
-    f36-phase-gate)
-        shift
-        python3 "$SCRIPT_DIR/f36_requirement_qra.py" phase-gate "$@"
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" webgpt-import "$@"
         ;;
     list-sources)
         python3 "$SCRIPT_DIR/generator.py" list-sources
@@ -47,12 +43,25 @@ USAGE:
     ./run.sh generate [OPTIONS]
     ./run.sh manifest <path> [OPTIONS]
     ./run.sh review <path> [OPTIONS]
-    ./run.sh f36-review <path> --output <review.json>
-    ./run.sh f36-manifest <path> --review <review.json> --output-jsonl <families.jsonl> --receipt <receipt.json> [--limit N] [--dry-run]
-    ./run.sh f36-validate <families.jsonl> --receipt <receipt.json> --expected-families N
-    ./run.sh f36-phase-gate --one-item-receipt <receipt.json> --heterogeneous-receipt <receipt.json> --output <gate.json>
+    ./run.sh f36-review <manifest.json> --output <review.json>
+    ./run.sh f36-webgpt-export <manifest.json> --batch-ordinal N --batch-size N --output-dir <dir>
+    ./run.sh f36-webgpt-import <requirements.json> <complete-family.json> \
+        --accepted-output <accepted.json> --quarantine-output <quarantine.json> --receipt <receipt.json> \
+        [--transport-receipt <webgpt-transport-receipt.json>]
     ./run.sh list-sources
     ./run.sh stats
+
+F36 WEBGPT EXPORT
+    Selects immutable F36 manifest rows in stable order and writes:
+      request.md
+      requirements.json
+      export-receipt.json
+
+F36 WEBGPT IMPORT
+    Validates a closed complete-family batch. Any missing, duplicate, malformed,
+    expanded, authority-bearing, or SPARTA-resolved family rejects the entire
+    batch and writes durable per-family quarantine reasons. The importer makes
+    no SciLLM, Chutes, OpenCode, or other model-provider calls.
 
 MANIFEST OPTIONS:
     <path>               Path to execution manifest JSON
@@ -80,20 +89,16 @@ GENERATE OPTIONS:
     --output FILE        Write results to JSON file
 
 EXAMPLES:
-    # Relationship QRA from CWE (uses /create-evidence-case for crosswalk)
     ./run.sh generate --control CWE-79
-
-    # Independent QRA for NIST control (no technique mapping needed)
     ./run.sh generate --control AC-17
-
-    # Standalone QRA from URL knowledge document
     ./run.sh generate --doc sparta_url_knowledge/doc123
-
-    # Batch generate for framework
     ./run.sh generate --framework nist --limit 100
-
-    # Dry run to preview
     ./run.sh generate --control CWE-79 --dry-run
+    ./run.sh f36-webgpt-export manifest.json --batch-ordinal 1 --batch-size 200 --output-dir ./webgpt-r01
+    ./run.sh f36-webgpt-import ./webgpt-r01/requirements.json ./downloads/complete-family.json \
+      --accepted-output ./webgpt-r01/accepted.json \
+      --quarantine-output ./webgpt-r01/quarantine.json \
+      --receipt ./webgpt-r01/import-receipt.json
 EOF
         ;;
     *)

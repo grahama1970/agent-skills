@@ -171,34 +171,53 @@ When `--mode auto` (default), mode is detected from input:
 ### F36 requirement extension - Engineering QRA families
 
 The F36 synthetic corpus uses a requirement-first extension because an
-engineering requirement is not itself a SPARTA control or crosswalk edge.
-This extension creates one candidate engineering QRA family with one canonical
-answer and five role/difficulty question surfaces. It explicitly does not
-resolve SPARTA controls; a subsequent `/create-evidence-case` stage owns
-applicability, crosswalk chains, and evidence-case state.
+engineering requirement is not itself a SPARTA control or crosswalk edge. The
+F36 execution surface is deterministic WebGPT artifact export/import; it makes
+no SciLLM, Chutes, OpenCode, or other live-provider calls.
 
 ```bash
 ./run.sh f36-review manifest.json --output manifest.review.json
-./run.sh f36-manifest manifest.json --review manifest.review.json \
-  --output-jsonl families.jsonl --receipt dry-run.json --limit 8 --dry-run
-./run.sh f36-manifest manifest.json --review manifest.review.json \
-  --output-jsonl families.jsonl --receipt canary.json --limit 8
+./run.sh f36-webgpt-export manifest.json \
+  --batch-ordinal 1 --batch-size 200 --output-dir ./webgpt-r01
+./run.sh f36-webgpt-import \
+  ./webgpt-r01/requirements.json ./downloads/complete-family.json \
+  --accepted-output ./webgpt-r01/accepted.json \
+  --quarantine-output ./webgpt-r01/quarantine.json \
+  --receipt ./webgpt-r01/import-receipt.json
 ```
 
-The live model returns only a bounded engineering semantic core: immutable
-requirement identity, one intent tuple, rationale, verification observable,
-canonical answer, claims, and an evidence-applicability query. The runtime
-constructs the canonical question and all five role/difficulty variants from
-versioned deterministic templates. Every variant carries the same canonical
-answer and intent hashes; an independent validator re-renders the templates and
-rejects any mismatch before the family becomes available.
+`f36-webgpt-export` selects jobs in immutable manifest order and writes
+`request.md`, `requirements.json`, and `export-receipt.json`. Each exported row
+contains the immutable requirement/revision/content hash, family and obligation
+IDs, component owner, source record, and five stable variant IDs in the fixed
+role/difficulty order. Batch ordinal 1 with size 200 therefore expects 200
+families and 1,000 variants.
 
-Live F36 runs persist raw terminal provider events, per-call item receipts, and
-quarantine records before family validation. `--only-item`, `--repeat 2`, and
-`--lane-offset N` support bounded incident canaries. `--heterogeneous-canary`
-selects one stable requirement per requested engineering class. Any missing,
-invalid, or semantically inconsistent item fails the run; partial output is not
-success.
+The WebGPT output contract is closed. One family must be returned per exported
+requirement with one canonical engineering question, one nonempty canonical
+answer, and exactly five unique questions. Every variant repeats the canonical
+answer byte-for-byte and carries the same canonical-intent hash. Intent fields
+are extractive from the supplied source requirement. No SPARTA/control IDs,
+thresholds, components, evidence, test results, authority, or additional
+obligations may be invented.
+
+`f36-webgpt-import` validates the closed schema, immutable identities, source
+fragments, answer identity, role/ID order, bounded semantic anchors, authority
+flags, and empty SPARTA/evidence fields. Missing, duplicate, malformed,
+expanded, source-mismatched, or authority-bearing content rejects the entire
+batch. The importer writes no usable partial batch; it writes durable
+per-family quarantine reasons and exits nonzero.
+
+An optional `--transport-receipt` may use
+`create_qras.webgpt_transport_receipt.v1`. `live` is true only when that receipt
+is non-mocked/live and its export, canonical-input, request, and output hashes
+match. Without transport proof, deterministic import may still succeed, but its
+receipt truthfully records `live: false`.
+
+SPARTA applicability, 1..N control resolution, persisted crosswalk chains, and
+evidence-case state remain downstream responsibilities of
+`/create-evidence-case`. All F36 family outputs remain synthetic,
+non-operational candidates requiring human review.
 
 ## Usage Examples
 
