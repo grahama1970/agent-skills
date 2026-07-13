@@ -44,7 +44,8 @@ def test_negative_prompt_targets_are_balanced_and_exact() -> None:
     ]
     assert MODULE.next_negative_prompt(
         records=records, split="negative_train", target_count=13
-    ) == "Hey Em!"
+    ) == "Hey, M!"
+    assert MODULE.negative_transcript_accepted("Hey, M.", prompt="Hey, M!")
 
 
 def test_service_errors_do_not_consume_content_attempt_budget() -> None:

@@ -30,7 +30,7 @@ POSITIVE_PROMPTS = (
 )
 NEGATIVE_PROMPTS = (
     "Embry!",
-    "Hey Em!",
+    "Hey, M!",
     "Embryo!",
     "Emery!",
     "Henry!",
@@ -46,6 +46,7 @@ NEGATIVE_PROMPTS = (
 NEGATIVE_TRANSCRIPT_ALIASES = {
     "Embry!": frozenset({"embry", "embree", "embrie"}),
     "Embry.": frozenset({"embry", "embree", "embrie"}),
+    "Hey, M!": frozenset({"hey em", "hey m"}),
     "Hey Em!": frozenset({"hey em"}),
     "Embryo!": frozenset({"embryo"}),
     "Emery!": frozenset({"emery"}),
@@ -59,7 +60,7 @@ NEGATIVE_TRANSCRIPT_ALIASES = {
     "Computer!": frozenset({"computer"}),
     "Jarvis!": frozenset({"jarvis"}),
 }
-NEGATIVE_PROMPT_FAMILY = {"Embry.": "Embry!"}
+NEGATIVE_PROMPT_FAMILY = {"Embry.": "Embry!", "Hey Em!": "Hey, M!"}
 SPLIT_OFFSETS = {
     "positive_train": 0,
     "positive_validation": 100_000,
