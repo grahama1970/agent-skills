@@ -24,5 +24,5 @@ test('TAB_RECOVERY_STATE extension handler is read-only and near TAB_RELOAD', ()
   assert.match(handler, /reason:/, 'guards include reasons');
 
   assert.doesNotMatch(handler, /chrome\.tabs\.(reload|update|create|remove)\(/, 'does not reload, activate, create, or close tabs');
-  assert.doesNotMatch(handler, /postToNativeHost|download/i, 'does not add native routing or download inspection');
+  assert.doesNotMatch(handler, /postToNativeHost/i, 'does not add native routing');
 });

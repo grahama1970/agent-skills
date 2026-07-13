@@ -411,7 +411,7 @@ tasks:
       - '6'
       - '7'
     command: >-
-      /usr/bin/python3 -m pytest -q
+      PYTHONPATH=skills/browser-oracle/src /usr/bin/python3 -m pytest -q
       skills/surf/tests/test_tab_recovery_receipt.py
       skills/surf/tests/test_tab_maintenance.py
       skills/surf/tests/test_tab_maintenance_timer.py
@@ -439,7 +439,7 @@ tasks:
     gate: Every focused deterministic command exits zero before any live browser mutation.
     definition_of_done:
       command: >-
-        /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py skills/surf/tests/test_tab_maintenance.py skills/surf/tests/test_tab_maintenance_timer.py skills/browser-oracle/tests/test_bindings.py
+        PYTHONPATH=skills/browser-oracle/src /usr/bin/python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py skills/surf/tests/test_tab_maintenance.py skills/surf/tests/test_tab_maintenance_timer.py skills/browser-oracle/tests/test_bindings.py
       assertion: exit_code == 0
 
   - id: '9'
