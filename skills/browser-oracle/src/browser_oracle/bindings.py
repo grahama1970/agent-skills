@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from loguru import logger
 
@@ -35,11 +37,61 @@ class BindingState:
 
 
 class BindingError(RuntimeError):
-    """Raised when a manually-bound tab is missing."""
+    """Raised when a binding cannot be verified or safely changed."""
 
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _normalize_url(url: str) -> str:
+    raw = str(url).strip()
+    if not raw:
+        return ""
+    try:
+        parts = urlsplit(raw)
+    except Exception:
+        return raw
+    scheme = parts.scheme.lower()
+    netloc = parts.netloc.lower()
+    path = re.sub(r"/{2,}", "/", parts.path or "/")
+    if path != "/":
+        path = path.rstrip("/")
+    query = urlencode(sorted(parse_qsl(parts.query, keep_blank_values=True)))
+    return urlunsplit((scheme, netloc, path, query, ""))
+
+
+def _conversation_uuid(url: str) -> str:
+    match = re.search(
+        r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        url,
+    )
+    return match.group(0).lower() if match else ""
+
+
+def _scan_live_tabs(surf_run: Path | None, timeout: float) -> list[dict[str, str]]:
+    surf = surf_run or surf_run_path()
+    if not surf.exists():
+        raise BindingError(f"surf runtime not found at {surf}")
+    try:
+        proc = subprocess.run(
+            [str(surf), "tab.list"],
+            cwd=surf.parent,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except Exception as exc:
+        raise BindingError(f"surf tab.list failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise BindingError(f"surf tab.list failed with exit code {proc.returncode}")
+    tabs: list[dict[str, str]] = []
+    for line in proc.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 3:
+            continue
+        tabs.append({"tab_id": parts[0], "title": parts[1], "url": parts[2]})
+    return tabs
 
 
 def sanitize_name(name: str) -> str:
@@ -130,6 +182,53 @@ def bind(
         state.tab_id = identity
     save(state, root=root)
     return state
+
+
+def rebind_by_exact_url(
+    name: str,
+    backend: str,
+    *,
+    surf_run: Path | None = None,
+    root: Path | None = None,
+    timeout: float = 15.0,
+    maintenance_authorized: bool = False,
+) -> dict:
+    """Atomically replace a stale tab_id with one live tab matching the stored URL."""
+    state = load(name, backend, root=root)
+    if state is None:
+        raise BindingError(f"missing binding for {name!r} ({backend})")
+    if backend == "cursor-browser":
+        raise BindingError("rebind-by-exact-url is only supported for tab-id backends")
+    if not state.conversation_url.strip():
+        raise BindingError("stored project URL is required")
+    if state.bound_manually and not maintenance_authorized:
+        raise BindingError("manual binding requires maintenance authorization")
+
+    previous = deepcopy(state)
+    stored_url = _normalize_url(state.conversation_url)
+    stored_uuid = _conversation_uuid(state.conversation_url)
+    tabs = _scan_live_tabs(surf_run, timeout)
+    matches = []
+    for tab in tabs:
+        url = tab["url"]
+        if _normalize_url(url) == stored_url or (stored_uuid and _conversation_uuid(url) == stored_uuid):
+            matches.append(tab)
+    if not matches:
+        raise BindingError("no live tab matches stored project URL")
+    if len(matches) != 1:
+        raise BindingError("ambiguous live tab matches stored project URL")
+
+    match = matches[0]
+    if match["tab_id"] == state.tab_id:
+        raise BindingError("binding is not stale; live matching tab already has stored tab_id")
+
+    now = _utc_now()
+    state.tab_id = match["tab_id"].strip()
+    state.conversation_url = match["url"].strip()
+    state.last_used_at = now
+    state.last_verified_at = now
+    save(state, root=root)
+    return {"binding": state.to_dict(), "previous_binding": previous.to_dict(), "matched_tab": match}
 
 
 def unbind(name: str, backend: str, *, root: Path | None = None) -> bool:

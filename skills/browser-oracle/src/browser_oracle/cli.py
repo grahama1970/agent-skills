@@ -10,7 +10,7 @@ from typing import Optional
 
 import typer
 from loguru import logger
-
+from .bindings import BindingError, bind, list_bindings, load, rebind_by_exact_url, unbind, verify
 from .bindings import BindingError, bind, list_bindings, load, unbind, verify
 from .config import SUPPORTED_BACKENDS, project_root, surf_run_path
 from .registry import register_mapping, resolve_project
@@ -158,7 +158,28 @@ def list_cmd(
         rows.append(row)
     if as_json:
         typer.echo(json.dumps(rows, indent=2))
-    else:
+@app.command("rebind-by-exact-url")
+def rebind_by_exact_url_cmd(
+    name: str = typer.Argument(...),
+    backend: str = typer.Option("webgpt", "--backend"),
+    maintenance_authorized: bool = typer.Option(False, "--maintenance-authorized", help="Allow maintenance rebind of manually pinned bindings."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Atomically rebind a stale tab id by exactly one live stored-URL match."""
+    try:
+        payload = rebind_by_exact_url(
+            name,
+            backend,
+            surf_run=surf_run_path(),
+            maintenance_authorized=maintenance_authorized,
+        )
+    except BindingError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
+    _emit(payload, as_json)
+
+
+@app.command("list")
         for row in rows:
             typer.echo(
                 f"{row['name']}\t{row['backend']}\ttab={row.get('tab_id') or row.get('view_id')}\t{row['state_path']}"
