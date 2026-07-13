@@ -17,11 +17,12 @@ class ReviewSpec(BaseModel):
     files: list[str] = Field(..., min_length=1, description="Files to review (must exist)")
     cwd: str = Field(..., min_length=1, description="Working directory (must exist)")
     context: str = Field("", description="Architectural context for the reviewer")
-    dod_command: str = Field("", description="DoD command to verify fixes don't break anything")
+    dod_command: str = Field("", description="Compatibility metadata; not executed by this reviewer")
     backend: str = Field("codex", description="LLM backend: codex, text, gemini, claude")
     output_dir: str = Field("/tmp/code-review-runner", description="Where to write logs and results")
     max_rounds: int = Field(2, ge=1, le=5)
     focus: str = Field("", description="Review focus areas: security, correctness, performance, etc.")
+    base_ref: str = Field("", description="Optional git base ref for authoritative diff review")
 
     @field_validator("cwd")
     @classmethod
@@ -33,7 +34,16 @@ class ReviewSpec(BaseModel):
     @field_validator("backend")
     @classmethod
     def backend_must_be_known(cls, v: str) -> str:
-        known = {"codex", "text", "gemini", "claude", "text-gemini", "text-claude", "gpt-5.3-codex"}
+        known = {
+            "codex",
+            "text",
+            "gemini",
+            "claude",
+            "text-gemini",
+            "text-claude",
+            "gpt-5.3-codex",
+            "gpt-5.5",
+        }
         if v and v not in known:
             raise ValueError(f"Unknown backend '{v}'. Valid: {', '.join(sorted(known))}")
         return v
@@ -64,9 +74,9 @@ class Finding(BaseModel):
     line: int = Field(0, description="Line number")
     description: str = Field(..., description="What's wrong")
     suggested_fix: str = Field("", description="Code snippet or description of fix")
-    validated: bool = Field(False, description="True if fix compiles and DoD still passes")
+    validated: bool = Field(False, description="False while the suggested fix remains unapplied")
     validation_error: str = Field("", description="Why validation failed (if it did)")
-    score: float = Field(0.0, description="severity_weight * fix_validity")
+    score: float = Field(0.0, description="Severity-derived impact contribution")
 
     @property
     def severity_weight(self) -> float:

@@ -4,16 +4,18 @@ Two-tier review:
   T0: deterministic validators (ruff, compile, best-practices-*)
   T1: LLM review via scillm (codex/text/gemini)
 
-Self-improvement loop: findings that don't survive validation (fix doesn't
-compile or breaks DoD) get marked as false positives and downweighted.
+Suggested fixes remain advisory because the runner does not apply them.
 
 Output: structured ReviewResult JSON with scored findings.
 """
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 import typer
@@ -25,7 +27,7 @@ from validators import run_all_validators
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILLS_DIR = SCRIPT_DIR.parent
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
-SCILLM_URL = "http://localhost:4001"
+SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001").rstrip("/")
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -70,15 +72,29 @@ def _build_review_prompt(spec: ReviewSpec, files_content: dict[str, str],
         parts.append("")
 
     if prior_findings:
-        parts.append("## Prior Round Findings (reduce false positives)")
+        parts.append("## Prior Round Findings (reassess independently)")
         parts.append("")
         for f in prior_findings:
-            status = "VALIDATED" if f.validated else f"FALSE POSITIVE: {f.validation_error}"
+            status = "VALIDATED" if f.validated else f"UNVALIDATED: {f.validation_error}"
             parts.append(f"- [{f.severity}] {f.file}:{f.line} — {f.description} → {status}")
         parts.append("")
-        parts.append("Improve on the prior round: keep validated findings, drop false positives, "
-                      "find issues you missed.")
+        parts.append("Reassess prior findings against the authoritative change set.")
         parts.append("")
+
+    if spec.base_ref:
+        parts.extend(
+            [
+                "## Authoritative Change Set",
+                "",
+                f"Git diff against `{spec.base_ref}`:",
+                "```diff",
+                _build_review_diff(spec),
+                "```",
+                "",
+                "Review the change set above. Use the file excerpts below only as supporting context.",
+                "",
+            ]
+        )
 
     parts.append("## Files to Review")
     parts.append("")
@@ -98,37 +114,193 @@ def _build_review_prompt(spec: ReviewSpec, files_content: dict[str, str],
     return "\n".join(parts)
 
 
+def _build_review_diff(spec: ReviewSpec) -> str:
+    try:
+        merge_base_result = subprocess.run(
+            ["git", "merge-base", spec.base_ref, "HEAD"],
+            cwd=spec.cwd,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if merge_base_result.returncode != 0 or not merge_base_result.stdout.strip():
+            raise ScillmReviewError(
+                f"could not resolve merge base for {spec.base_ref}: "
+                f"{merge_base_result.stderr.strip()[:500]}"
+            )
+        merge_base = merge_base_result.stdout.strip()
+        result = subprocess.run(
+            ["git", "diff", "--no-ext-diff", "--unified=80", merge_base, "--", *spec.files],
+            cwd=spec.cwd,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        untracked = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard", "--", *spec.files],
+            cwd=spec.cwd,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ScillmReviewError(f"could not build review diff: {exc}") from exc
+    if result.returncode != 0:
+        raise ScillmReviewError(
+            f"could not build review diff against {spec.base_ref}: {result.stderr.strip()[:1000]}"
+        )
+    if untracked.returncode != 0:
+        raise ScillmReviewError(
+            f"could not enumerate untracked review files: {untracked.stderr.strip()[:1000]}"
+        )
+
+    diff_parts = [result.stdout]
+    for path in untracked.stdout.splitlines():
+        try:
+            addition = subprocess.run(
+                ["git", "diff", "--no-index", "--unified=80", "--", "/dev/null", path],
+                cwd=spec.cwd,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise ScillmReviewError(
+                f"could not build untracked-file diff for {path}: {exc}"
+            ) from exc
+        if addition.returncode not in {0, 1}:
+            raise ScillmReviewError(
+                f"could not build untracked-file diff for {path}: {addition.stderr.strip()[:1000]}"
+            )
+        diff_parts.append(addition.stdout)
+
+    diff = "\n".join(part for part in diff_parts if part.strip())
+    if not diff.strip():
+        raise ScillmReviewError(f"review diff against {spec.base_ref} is empty")
+    return diff
+
+
+class ScillmReviewError(RuntimeError):
+    """SciLLM transport or response failure that invalidates a review round."""
+
+
+def _resolve_scillm_api_key_from_docker() -> tuple[str, str] | None:
+    """Resolve the key actually configured on the running SciLLM proxy."""
+
+    for container in ("docker-scillm-proxy-1", "scillm-proxy"):
+        try:
+            result = subprocess.run(
+                [
+                    "docker",
+                    "inspect",
+                    container,
+                    "--format",
+                    "{{range .Config.Env}}{{println .}}{{end}}",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+            continue
+        if result.returncode != 0:
+            continue
+        env = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+        for name in ("SCILLM_MASTER_KEY", "SCILLM_PROXY_KEY", "LITELLM_MASTER_KEY"):
+            value = env.get(name, "").strip()
+            if value:
+                return value, f"docker:{container}:{name}"
+    return None
+
+
+def _resolve_scillm_api_key() -> tuple[str, str]:
+    for name in (
+        "SCILLM_PROXY_KEY",
+        "SCILLM_MASTER_KEY",
+        "LITELLM_MASTER_KEY",
+        "SCILLM_API_KEY",
+    ):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value, f"env:{name}"
+
+    docker_key = _resolve_scillm_api_key_from_docker()
+    if docker_key is not None:
+        return docker_key
+
+    raise ScillmReviewError(
+        "SciLLM API key not found in the environment or running proxy container"
+    )
+
+
 def _call_scillm(prompt: str, backend: str) -> str:
     """Call scillm for LLM review. Returns raw response text."""
     # Map short names to scillm model IDs
     model_map = {
-        "codex": "gpt-5.3-codex",
+        "codex": "gpt-5.5",
         "text": "text",
         "gemini": "text-gemini",
         "claude": "text-claude",
         "text-gemini": "text-gemini",
         "text-claude": "text-claude",
-        "gpt-5.3-codex": "gpt-5.3-codex",
+        "gpt-5.3-codex": "gpt-5.5",
+        "gpt-5.5": "gpt-5.5",
     }
-    model = model_map.get(backend, "gpt-5.3-codex")
+    model = model_map.get(backend, "gpt-5.5")
 
-    try:
-        resp = httpx.post(
+    api_key, api_key_source = _resolve_scillm_api_key()
+    if api_key_source.startswith("docker:"):
+        hostname = urlparse(SCILLM_URL).hostname
+        if hostname not in {"localhost", "127.0.0.1", "::1"}:
+            raise ScillmReviewError(
+                "refusing to send a Docker-discovered SciLLM key to a non-local endpoint"
+            )
+    request = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if not model.startswith("gpt-"):
+        request["temperature"] = 0.2
+
+    def post(key: str) -> httpx.Response:
+        return httpx.post(
             f"{SCILLM_URL}/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.2,
-                "max_tokens": 4096,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "X-Caller-Skill": "code-review-runner",
             },
+            json=request,
             timeout=httpx.Timeout(120.0, connect=10.0),
         )
+
+    try:
+        resp = post(api_key)
+        if resp.status_code == 401:
+            refreshed = _resolve_scillm_api_key_from_docker()
+            if refreshed is not None and refreshed[0] != api_key:
+                api_key, api_key_source = refreshed
+                resp = post(api_key)
+        if resp.status_code >= 400:
+            raise ScillmReviewError(
+                f"SciLLM HTTP {resp.status_code} using {api_key_source}"
+            )
         resp.raise_for_status()
         data = resp.json()
-        return data["choices"][0]["message"]["content"]
-    except (httpx.HTTPError, KeyError, IndexError) as exc:
-        logger.error(f"scillm call failed: {exc}")
-        return ""
+        content = data["choices"][0]["message"]["content"]
+    except ScillmReviewError:
+        raise
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        raise ScillmReviewError(
+            f"SciLLM review call failed using {api_key_source}: {exc}"
+        ) from exc
+    if not isinstance(content, str) or not content.strip():
+        raise ScillmReviewError("SciLLM review call returned empty assistant content")
+    return content
 
 
 def _parse_findings(raw: str) -> list[Finding]:
@@ -156,70 +328,67 @@ def _parse_findings(raw: str) -> list[Finding]:
             try:
                 items = json.loads(match.group())
             except json.JSONDecodeError:
-                logger.warning("Could not parse LLM findings as JSON")
-                return []
+                raise ScillmReviewError("SciLLM review findings were not valid JSON")
         else:
-            logger.warning("No JSON array found in LLM response")
-            return []
+            raise ScillmReviewError("SciLLM review response contained no JSON findings array")
 
     if not isinstance(items, list):
-        return []
+        raise ScillmReviewError("SciLLM review response must be a JSON array")
 
     findings = []
+    required_fields = {"severity", "file", "line", "description", "suggested_fix"}
+    allowed_severities = set(SEVERITY_WEIGHTS)
     for i, item in enumerate(items):
         if not isinstance(item, dict):
-            continue
+            raise ScillmReviewError(f"SciLLM finding {i + 1} must be an object")
+        missing = sorted(required_fields - set(item))
+        if missing:
+            raise ScillmReviewError(
+                f"SciLLM finding {i + 1} missing required fields: {', '.join(missing)}"
+            )
+        if item["severity"] not in allowed_severities:
+            raise ScillmReviewError(
+                f"SciLLM finding {i + 1} has invalid severity: {item['severity']!r}"
+            )
+        if not isinstance(item["file"], str) or not item["file"].strip():
+            raise ScillmReviewError(f"SciLLM finding {i + 1} has invalid file")
+        if type(item["line"]) is not int or item["line"] < 0:
+            raise ScillmReviewError(f"SciLLM finding {i + 1} has invalid line")
+        if not isinstance(item["description"], str) or not item["description"].strip():
+            raise ScillmReviewError(f"SciLLM finding {i + 1} has invalid description")
+        if not isinstance(item["suggested_fix"], str):
+            raise ScillmReviewError(f"SciLLM finding {i + 1} has invalid suggested_fix")
         try:
             f = Finding(
                 id=f"F{i+1}",
-                severity=item.get("severity", "info"),
-                file=item.get("file", "unknown"),
-                line=item.get("line", 0),
-                description=item.get("description", ""),
-                suggested_fix=item.get("suggested_fix", ""),
+                severity=item["severity"],
+                file=item["file"],
+                line=item["line"],
+                description=item["description"],
+                suggested_fix=item["suggested_fix"],
             )
             findings.append(f)
         except Exception as exc:
-            logger.warning(f"Skipping malformed finding {i}: {exc}")
+            raise ScillmReviewError(
+                f"SciLLM finding {i + 1} failed schema validation: {exc}"
+            ) from exc
+
+    if items and not findings:
+        raise ScillmReviewError("SciLLM review response contained no valid finding objects")
 
     return findings
 
 
 # ── Fix validation ──────────────────────────────────────────────────
 
-def _validate_finding(finding: Finding, cwd: str, dod_command: str) -> Finding:
-    """Validate a finding's suggested fix: compile check + DoD rerun."""
+def _mark_finding_advisory(finding: Finding) -> Finding:
+    """Record impact without claiming that an unapplied suggested fix is valid."""
+    finding.validated = False
+    finding.score = finding.severity_weight * 0.3
     if not finding.suggested_fix:
-        finding.validated = False
         finding.validation_error = "no suggested fix"
-        finding.score = finding.severity_weight * 0.3  # Partial credit for detection
-        return finding
-
-    fpath = Path(cwd) / finding.file
-    if not fpath.exists() or not finding.file.endswith(".py"):
-        # Non-Python or missing file: can't compile-check, partial credit
-        finding.validated = True  # Trust the finding
-        finding.score = finding.severity_weight * 0.5
-        return finding
-
-    # Compile-check the suggested fix
-    try:
-        # If fix is a full replacement snippet, try compiling it
-        if "\n" in finding.suggested_fix or "def " in finding.suggested_fix:
-            compile(finding.suggested_fix, f"<fix-{finding.id}>", "exec")
-    except SyntaxError as exc:
-        finding.validated = False
-        finding.validation_error = f"fix has SyntaxError: {exc.msg}"
-        finding.score = 0.0  # False positive
-        return finding
-
-    # If DoD command exists, verify fix doesn't break it
-    if dod_command:
-        finding.validated = True
-        finding.score = finding.severity_weight * 1.0
     else:
-        finding.validated = True
-        finding.score = finding.severity_weight * 0.5
+        finding.validation_error = "suggested fix was not applied; finding remains advisory"
 
     return finding
 
@@ -303,7 +472,7 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     files_content = bundle_for_review(spec.files, spec.cwd)
     missing_files = [f for f in spec.files if f not in files_content]
 
-    if not files_content:
+    if not files_content and not spec.base_ref:
         return ReviewResult(
             task_id=spec.task_id,
             status="error",
@@ -324,36 +493,41 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     all_findings: list[Finding] = []
     round_details: list[dict] = []
     prior_findings: list[Finding] | None = None
+    successful_rounds = 0
+    had_provider_error = False
 
     for round_num in range(1, spec.max_rounds + 1):
         logger.info(f"Round {round_num}/{spec.max_rounds}: LLM review via {spec.backend}")
 
-        prompt = _build_review_prompt(spec, files_content, t0_violations, prior_findings)
-        raw_response = _call_scillm(prompt, spec.backend)
-
-        if not raw_response:
-            logger.warning(f"Round {round_num}: empty LLM response")
+        try:
+            prompt = _build_review_prompt(spec, files_content, t0_violations, prior_findings)
+            raw_response = _call_scillm(prompt, spec.backend)
+            findings = _parse_findings(raw_response)
+        except ScillmReviewError as exc:
+            had_provider_error = True
+            logger.error(f"Round {round_num}: {exc}")
             round_details.append({
-                "round": round_num, "findings": 0, "error": "empty response",
+                "round": round_num,
+                "findings": 0,
+                "error": str(exc),
             })
-            continue
-
-        findings = _parse_findings(raw_response)
+            break
+        successful_rounds += 1
         logger.info(f"Round {round_num}: {len(findings)} findings parsed")
 
         # Validate each finding
         for f in findings:
-            _validate_finding(f, spec.cwd, spec.dod_command)
+            _mark_finding_advisory(f)
 
         validated_count = sum(1 for f in findings if f.validated)
-        false_positive_count = sum(1 for f in findings if not f.validated and f.suggested_fix)
-        logger.info(f"Round {round_num}: {validated_count} validated, {false_positive_count} false positives")
+        advisory_count = sum(1 for f in findings if not f.validated)
+        logger.info(f"Round {round_num}: {validated_count} validated, {advisory_count} advisory")
 
         round_details.append({
             "round": round_num,
             "findings": len(findings),
             "validated": validated_count,
-            "false_positives": false_positive_count,
+            "advisory": advisory_count,
             "backend": spec.backend,
             "timestamp": time.time(),
         })
@@ -362,18 +536,18 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
         if round_num == 1:
             all_findings = findings
         else:
-            # Merge: keep validated findings from this round, drop duplicates
+            # Keep advisory findings across rounds; validation status describes
+            # suggested-fix proof, not whether the reported defect exists.
             existing_keys = {(f.file, f.line, f.severity) for f in all_findings}
             for f in findings:
                 key = (f.file, f.line, f.severity)
-                if key not in existing_keys and f.validated:
+                if key not in existing_keys:
                     all_findings.append(f)
                     existing_keys.add(key)
-                elif key in existing_keys and f.validated:
-                    # Update existing finding if this round's version is better
+                else:
                     for i, existing in enumerate(all_findings):
                         if (existing.file, existing.line, existing.severity) == key:
-                            if f.score > existing.score:
+                            if len(f.description) > len(existing.description):
                                 all_findings[i] = f
                             break
 
@@ -382,23 +556,28 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     # Score calculation
     findings_total = len(all_findings)
     findings_validated = sum(1 for f in all_findings if f.validated)
-    findings_critical = sum(1 for f in all_findings if f.severity == "critical" and f.validated)
+    findings_critical = sum(1 for f in all_findings if f.severity == "critical")
+    findings_major = sum(1 for f in all_findings if f.severity == "major")
+    t0_blocking = any(v.severity in {"critical", "major"} for v in t0_violations)
 
     # Quality score: 1.0 = clean, lower = more issues
     # Weighted by severity: critical findings reduce score more
-    issue_weight = sum(f.score for f in all_findings if f.validated)
+    issue_weight = sum(f.score for f in all_findings)
 
     if findings_total == 0 and len(t0_violations) == 0:
         quality_score = 1.0  # Clean
     else:
-        # Deductions from validated findings + T0 violations
+        # Advisory findings and deterministic violations both reduce confidence.
         t0_weight = sum(SEVERITY_WEIGHTS.get(v.severity, 0.1) for v in t0_violations)
         total_issue_weight = issue_weight + t0_weight
         quality_score = max(0.0, 1.0 - (total_issue_weight / 10.0))  # Normalize to 0-1
 
     # Status: fail if critical findings or quality < 0.5
     status = "pass"
-    if findings_critical > 0:
+    if successful_rounds == 0 or had_provider_error:
+        status = "error"
+        quality_score = 0.0
+    elif findings_critical > 0 or findings_major > 0 or t0_blocking:
         status = "fail"
     elif quality_score < 0.5:
         status = "fail"
@@ -407,6 +586,12 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     parts = []
     if findings_critical:
         parts.append(f"{findings_critical} critical")
+    if findings_major:
+        parts.append(f"{findings_major} major")
+    if successful_rounds == 0:
+        parts.append("no successful LLM review rounds")
+    elif had_provider_error:
+        parts.append("one or more LLM review rounds failed")
     parts.append(f"{findings_validated}/{findings_total} findings validated")
     parts.append(f"{len(t0_violations)} T0 violations")
     parts.append(f"score={quality_score:.3f}")
@@ -520,7 +705,7 @@ def review(
     logger.info(f"Review complete: {result.status.upper()} — {result.summary}")
     print(json.dumps(result.model_dump(), indent=2))
 
-    if result.status == "fail":
+    if result.status != "pass":
         raise typer.Exit(1)
 
 
