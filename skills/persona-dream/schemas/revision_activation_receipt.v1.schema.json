@@ -1,0 +1,429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/revision_activation_receipt.v1.schema.json",
+  "title": "Persona Dream revision activation receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "gate",
+    "run_id",
+    "revision_id",
+    "source_revision_id",
+    "source_commit",
+    "runtime_release_id",
+    "memory_url",
+    "collection",
+    "activation_transaction_id",
+    "activated_at",
+    "local_files",
+    "local_pointer",
+    "receipt_chain",
+    "memory",
+    "queue",
+    "hash_validation",
+    "command",
+    "claims",
+    "mocked",
+    "live",
+    "provider_live",
+    "paid_call_authorized",
+    "submitted",
+    "provider_ready",
+    "live_submit_ready",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.revision_activation_receipt.v1"
+    },
+    "status": {
+      "const": "PASS_ACTIVE_CONSISTENT"
+    },
+    "gate": {
+      "const": "revision-activation-and-repair-queue-convergence"
+    },
+    "run_id": {
+      "$ref": "#/$defs/identity"
+    },
+    "revision_id": {
+      "$ref": "#/$defs/identity"
+    },
+    "source_revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "runtime_release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "memory_url": {
+      "type": "string",
+      "pattern": "^https?://"
+    },
+    "collection": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activation_transaction_id": {
+      "type": "string",
+      "pattern": "^activation-[a-f0-9]{32}$"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "local_files": {
+      "type": "object",
+      "required": [
+        "revision_manifest",
+        "artifact_index",
+        "prepare_receipt",
+        "verify_receipt",
+        "local_active_pointer",
+        "work_order",
+        "queue_item",
+        "queue_terminal_event"
+      ],
+      "properties": {
+        "revision_manifest": {"$ref": "#/$defs/local_file"},
+        "artifact_index": {"$ref": "#/$defs/local_file"},
+        "prepare_receipt": {"$ref": "#/$defs/local_file"},
+        "verify_receipt": {"$ref": "#/$defs/local_file"},
+        "local_active_pointer": {"$ref": "#/$defs/local_file"},
+        "work_order": {"$ref": "#/$defs/local_file"},
+        "queue_item": {"$ref": "#/$defs/local_file"},
+        "queue_terminal_event": {"$ref": "#/$defs/local_file"}
+      },
+      "additionalProperties": false
+    },
+    "local_pointer": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "run_id",
+        "revision_id",
+        "revision_manifest_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "persona_dream.active_revision_pointer.v1",
+            "persona_dream.active_revision_pointer.v2"
+          ]
+        },
+        "run_id": {"$ref": "#/$defs/identity"},
+        "revision_id": {"$ref": "#/$defs/identity"},
+        "revision_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "receipt_chain": {
+      "type": "object",
+      "required": [
+        "prepare_schema",
+        "prepare_status",
+        "verify_schema",
+        "verify_status",
+        "exact_record_count",
+        "phase_record_count",
+        "required_artifact_record_count",
+        "semantic_pointer_count",
+        "dense_matching_count",
+        "max_dense"
+      ],
+      "properties": {
+        "prepare_schema": {
+          "const": "persona_dream.revision_memory_prepare_receipt.v1"
+        },
+        "prepare_status": {
+          "const": "PASS_MEMORY_REVISION_PREPARED"
+        },
+        "verify_schema": {
+          "const": "persona_dream.revision_memory_verify_receipt.v1"
+        },
+        "verify_status": {
+          "const": "PASS_MEMORY_REVISION_VERIFIED"
+        },
+        "exact_record_count": {"const": 27},
+        "phase_record_count": {"const": 10},
+        "required_artifact_record_count": {"const": 16},
+        "semantic_pointer_count": {"const": 27},
+        "dense_matching_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_dense": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "memory": {
+      "type": "object",
+      "required": [
+        "active_pointer_key",
+        "active_revision_id",
+        "previous_revision_id",
+        "exact_reread_count",
+        "document_contract_sha256",
+        "qdrant_collection",
+        "qdrant_point_id",
+        "embedding_model",
+        "embedding_version",
+        "text_hash",
+        "semantic_sync_state",
+        "requests"
+      ],
+      "properties": {
+        "active_pointer_key": {
+          "type": "string",
+          "pattern": "^pd_active_[a-f0-9]{48}$"
+        },
+        "active_revision_id": {"$ref": "#/$defs/identity"},
+        "previous_revision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exact_reread_count": {"const": 1},
+        "document_contract_sha256": {"$ref": "#/$defs/sha256"},
+        "qdrant_collection": {
+          "type": "string",
+          "minLength": 1
+        },
+        "qdrant_point_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "embedding_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "embedding_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semantic_sync_state": {
+          "const": "synced"
+        },
+        "requests": {
+          "type": "object",
+          "required": ["list_before", "upsert", "list_after"],
+          "properties": {
+            "list_before": {"$ref": "#/$defs/http_evidence"},
+            "upsert": {"$ref": "#/$defs/http_evidence"},
+            "list_after": {"$ref": "#/$defs/http_evidence"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "queue": {
+      "type": "object",
+      "required": [
+        "work_order_id",
+        "source_revision_id",
+        "target_revision_id",
+        "historical_queue_status",
+        "terminal_status",
+        "terminal_event_schema",
+        "terminal_event_sequence"
+      ],
+      "properties": {
+        "work_order_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_revision_id": {"$ref": "#/$defs/identity"},
+        "historical_queue_status": {"const": "QUEUED"},
+        "terminal_status": {"const": "COMPLETED"},
+        "terminal_event_schema": {
+          "const": "persona_dream.repair_queue_terminal_event.v1"
+        },
+        "terminal_event_sequence": {"const": 1}
+      },
+      "additionalProperties": false
+    },
+    "hash_validation": {
+      "$ref": "#/$defs/hash_validation"
+    },
+    "command": {
+      "$ref": "#/$defs/command"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live": {
+      "type": "boolean"
+    },
+    "provider_live": {"const": false},
+    "paid_call_authorized": {"const": false},
+    "submitted": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "$defs": {
+    "identity": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "local_file": {
+      "type": "object",
+      "required": ["relative_path", "sha256"],
+      "properties": {
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "pattern": "(^/|(^|/)\\.\\.(/|$))"
+          }
+        },
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "http_evidence": {
+      "type": "object",
+      "required": [
+        "endpoint",
+        "status_code",
+        "request_payload_sha256",
+        "response_sha256",
+        "returned_counts"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status_code": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 299
+        },
+        "request_payload_sha256": {"$ref": "#/$defs/sha256"},
+        "response_sha256": {"$ref": "#/$defs/sha256"},
+        "returned_counts": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hash_validation": {
+      "type": "object",
+      "required": [
+        "artifact_count",
+        "recomputed_count",
+        "matched_count",
+        "mismatch_count",
+        "symlink_count",
+        "escape_count",
+        "artifact_hash_manifest_sha256"
+      ],
+      "properties": {
+        "artifact_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "recomputed_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "matched_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mismatch_count": {"const": 0},
+        "symlink_count": {"const": 0},
+        "escape_count": {"const": 0},
+        "artifact_hash_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "argv",
+        "cwd",
+        "python_version",
+        "platform",
+        "script_path",
+        "script_sha256",
+        "source_commit"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "cwd": {"type": "string"},
+        "python_version": {"type": "string"},
+        "platform": {"type": "string"},
+        "script_path": {"type": "string"},
+        "script_sha256": {"$ref": "#/$defs/sha256"},
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "does_not_prove": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"mocked": {"const": true}}
+      },
+      "then": {
+        "properties": {"live": {"const": false}}
+      }
+    },
+    {
+      "if": {
+        "properties": {"mocked": {"const": false}}
+      },
+      "then": {
+        "properties": {"live": {"const": true}}
+      }
+    }
+  ]
+}

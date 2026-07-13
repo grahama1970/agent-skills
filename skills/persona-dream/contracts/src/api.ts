@@ -100,8 +100,15 @@ export type DreamRunDetailResponse = {
   }
   revisionQualification: {
     state: 'MISSING' | 'LEGACY_UNQUALIFIED' | 'ACTIVE_CONSISTENT'
-    status: 'BLOCKED_REVISION_NOT_QUALIFIED' | 'PASS_PERSONA_DREAM_SELF_HEAL_ACTIVE_REVISION'
+    status: 'BLOCKED_REVISION_NOT_QUALIFIED' | 'PASS_ACTIVE_CONSISTENT'
     blockers: string[]
+    activationTransactionId?: string
+    activationReceiptPath?: string
+    memoryActivePointerKey?: string
+    queueTerminalEventPath?: string
+    actualProviderCallAttempts: 0
+    providerReady: false
+    liveSubmitReady: false
   }
   consumers?: {
     storyboard?: StoryboardConsumerProjection
