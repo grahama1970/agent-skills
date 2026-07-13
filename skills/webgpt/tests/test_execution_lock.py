@@ -23,3 +23,8 @@ def test_execution_lock_requires_all_headings() -> None:
 def test_complete_execution_lock_is_accepted() -> None:
     text = "\n".join(f"## {heading.title()}" for heading in MODULE.EXECUTION_LOCK_HEADINGS)
     assert MODULE.validate_execution_lock(text) == []
+
+
+def test_surf_runtime_path_expands_home() -> None:
+    assert MODULE.SURF == Path.home() / "workspace/experiments/agent-skills/skills/surf/run.sh"
+    assert "${HOME}" not in str(MODULE.SURF)
