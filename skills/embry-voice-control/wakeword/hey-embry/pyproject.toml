@@ -1,0 +1,19 @@
+[project]
+name = "embry-hey-wakeword-training"
+version = "0.1.0"
+description = "Reproducible data preparation for the Hey Embry OpenWakeWord model."
+requires-python = "==3.12.*"
+dependencies = [
+  "numpy==2.1.3",
+  "scipy==1.14.1",
+  "soundfile==0.13.1",
+]
+
+[dependency-groups]
+dev = ["pytest==8.4.1"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

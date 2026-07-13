@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "embry.rir_normalization_receipt.v1.schema.json",
+  "title": "Embry RIR normalization receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "toolchain",
+    "policy",
+    "counts",
+    "sources",
+    "failed_gates"
+  ],
+  "properties": {
+    "schema": {"const": "embry.rir_normalization_receipt.v1"},
+    "status": {"const": "PASS"},
+    "toolchain": {"type": "object"},
+    "policy": {
+      "type": "object",
+      "required": [
+        "target_rate_hz",
+        "channel_policy",
+        "resampler",
+        "peak_target",
+        "output_subtype",
+        "trimmed"
+      ],
+      "properties": {
+        "target_rate_hz": {"const": 16000},
+        "channel_policy": {"const": "split"},
+        "resampler": {"const": "scipy.signal.resample_poly"},
+        "peak_target": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "output_subtype": {"const": "PCM_16"},
+        "trimmed": {"const": false}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": ["sources", "outputs"],
+      "properties": {
+        "sources": {"type": "integer", "minimum": 1},
+        "outputs": {"type": "integer", "minimum": 1}
+      }
+    },
+    "sources": {"type": "array", "minItems": 1},
+    "failed_gates": {"type": "array", "maxItems": 0}
+  }
+}
+
