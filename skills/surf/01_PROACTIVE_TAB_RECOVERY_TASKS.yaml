@@ -1,0 +1,382 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /home/graham/workspace/experiments/agent-skills
+metadata:
+  title: Surf Proactive Extension-Tab Recovery
+  goal: Add a host-side Surf CLI maintenance runtime for registered project browser targets with guarded reload, exact URL rebinding, and durable recovery receipts.
+  plan_type: code
+  created: '2026-07-13'
+  primary_persona:
+    name: Surf Doctor
+    role: Cross-project browser reliability operator
+    source: agents/surf-doctor/AGENTS.md
+execution:
+  max_concurrency: 2
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+capability_overlap:
+  - EXTEND /surf: existing tab.list, tab.reload, exact-tab targeting, WebGPT busy detection, and extension transport remain authoritative.
+  - EXTEND /browser-oracle: existing project binding verification remains the source of registered project tabs.
+  - EXTEND agents/surf-doctor: existing incident ownership receives proactive scan and recovery receipts.
+  - REUSE emit_surf_doctor_incident.py patterns for atomic artifact writes; do not create an unrelated monitoring subsystem.
+  - The expected skills-manifest.json was absent; direct skill-directory and source inspection found no existing proactive tab-maintenance runtime.
+  - Brave Search primary-source discovery identified Chrome tabs, downloads, storage, service-worker lifecycle, and alarms documentation; host scheduling is selected because receipts must be durable filesystem artifacts.
+questions_blockers:
+  - None
+lanes:
+  - id: '0'
+    label: Wave 0 - Safety contract
+  - id: '1'
+    label: Wave 1 - Independent primitives
+  - id: '2'
+    label: Wave 2 - Coordinator and scheduling
+  - id: '3'
+    label: Wave 3 - Deterministic and live proof
+tasks:
+  - id: '1'
+    title: Freeze proactive recovery safety contract
+    lane: '0'
+    runner: local
+    backend: ''
+    mode: ''
+    depends_on: []
+    command: >-
+      python3 skills/brave-search/brave_search.py web
+      "site:developer.chrome.com/docs/extensions tabs.reload downloads search service worker lifecycle storage"
+      --count 10 --json > /tmp/surf-tab-maintenance-primary-sources.json
+    implementation:
+      - Scheduled scans are read-only by default and restricted to browser-oracle registered project tabs.
+      - Reload requires a proven repair trigger plus safe guards for generation, drafts, downloads, URL identity, and complete tab inventory.
+      - Missing or ambiguous tabs fail closed; exact unique URL matches may update a stale binding without creating or selecting another tab.
+      - Every scan target emits one durable receipt with observed identity, guard decisions, action, and before/after state.
+    allowlist:
+      - /tmp/surf-tab-maintenance-primary-sources.json
+    tests:
+      - jq validates that the captured primary-source result includes Chrome extension lifecycle and tabs documentation.
+    gate: No implementation task starts without the explicit fail-closed mutation contract above.
+    definition_of_done:
+      command: jq -e '.results | length >= 3' /tmp/surf-tab-maintenance-primary-sources.json
+      assertion: exit_code == 0
+
+  - id: '2'
+    title: Add exact-tab recovery-state and active-download probes
+    lane: '1'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: general-purpose
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '1'
+    prompt: >-
+      Add read-only extension/native commands that classify one explicit tab for guarded
+      maintenance. Return URL/title/loading/discarded state, ChatGPT generation state,
+      non-empty composer or editable draft state, and whether Chrome has any in-progress
+      download associated with the tab URL/origin when determinable. Do not reload,
+      activate, navigate, close, or create tabs in these commands. Fail closed when a
+      signal cannot be determined.
+    implementation:
+      - Add a read-only TAB_RECOVERY_STATE handler to the Surf extension service worker.
+      - Add native CLI routing and machine-readable JSON output for tab.recovery-state.
+      - Keep exact numeric tab-id validation and return explicit unknown guard states.
+    read_context:
+      - skills/surf/vendor/surf-cli/src/service-worker/index.ts
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/native/chatgpt-client.cjs
+    allowlist:
+      - skills/surf/vendor/surf-cli/src/service-worker/index.ts
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+    tests:
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+    blind_tests:
+      - skills/test-lab/run.sh verify-task 2 skills/surf/vendor/surf-cli --domain browser
+    max_rounds: 3
+    gate: Read-only probe must never call chrome.tabs.reload, update, create, remove, or activate.
+    definition_of_done:
+      command: node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      assertion: exit_code == 0
+
+  - id: '3'
+    title: Add unique-URL browser-oracle rebinding primitive
+    lane: '1'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: general-purpose
+    skills:
+      - browser-oracle
+    cwd: /home/graham/workspace/experiments/agent-skills/skills/browser-oracle
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '1'
+    prompt: >-
+      Extend browser-oracle with an atomic rebind-by-exact-URL operation for stale
+      extension tab IDs. It must require a complete live tab scan, exactly one normalized
+      URL or conversation-UUID match, and the existing stored project URL. It must reject
+      missing, ambiguous, mismatched, or manually pinned bindings unless an explicit
+      maintenance authorization is supplied. Preserve the previous binding in the result.
+    implementation:
+      - Add a pure exact-URL candidate resolver and an atomic binding update function.
+      - Expose a JSON CLI command suitable for Surf Doctor without creating a new tab.
+      - Return old_tab_id, new_tab_id, URL evidence, scan completeness, and failure reason.
+    read_context:
+      - src/browser_oracle/bindings.py
+      - src/browser_oracle/cli.py
+      - src/browser_oracle/models.py
+    allowlist:
+      - src/browser_oracle/bindings.py
+      - src/browser_oracle/cli.py
+      - tests/test_bindings.py
+    tests:
+      - python3 -m pytest -q tests/test_bindings.py
+    blind_tests:
+      - ../test-lab/run.sh verify-task 3 . --domain python
+    max_rounds: 3
+    gate: Rebinding occurs only for one exact live URL match and never opens, closes, activates, or navigates a tab.
+    definition_of_done:
+      command: python3 -m pytest -q tests/test_bindings.py
+      assertion: exit_code == 0
+
+  - id: '4'
+    title: Add atomic tab-recovery receipt writer
+    lane: '1'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: general-purpose
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '1'
+    prompt: >-
+      Add a small atomic JSON receipt writer for proactive Surf tab maintenance. The
+      receipt must distinguish scanned, skipped_guarded, rebound, reloaded, and failed;
+      include project, requested and resolved tab IDs, exact URL evidence, every guard
+      value, repair trigger, action timestamps, and before/after observations; and never
+      encode a skipped or unknown guard as success. Follow existing Surf Doctor atomic
+      write and artifact conventions.
+    implementation:
+      - Implement one versioned receipt module under Surf scripts.
+      - Validate required identity, guard, action, and evidence fields before writing.
+      - Use temporary-file replacement and preserve prior attempt receipts.
+    read_context:
+      - skills/surf/scripts/emit_surf_doctor_incident.py
+      - agents/surf-doctor/AGENTS.md
+    allowlist:
+      - skills/surf/scripts/tab_recovery_receipt.py
+      - skills/surf/tests/test_tab_recovery_receipt.py
+    tests:
+      - python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
+    blind_tests:
+      - skills/test-lab/run.sh verify-task 4 skills/surf/scripts --domain python
+    max_rounds: 3
+    gate: Unknown guards and failed mutations cannot produce a successful recovery action.
+    definition_of_done:
+      command: python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
+      assertion: exit_code == 0
+
+  - id: '5'
+    title: Compose Surf Doctor proactive maintenance coordinator
+    lane: '2'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: surf-doctor
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '2'
+      - '3'
+      - '4'
+    prompt: >-
+      Implement a host-side proactive maintenance coordinator for registered browser-oracle
+      project tabs. Each scheduled run must inventory tabs once, classify each exact target
+      read-only, rebind only a uniquely matched stale URL, and reload only when a specific
+      repair trigger is present and all guards are safe. Default to dry-run. Repair mode is
+      bounded to one mutation per project per run, never activates or creates tabs, and emits
+      a receipt for every target. A merely idle tab is not a repair trigger.
+    implementation:
+      - Add a standalone tab-maintenance.sh entrypoint with --dry-run default, --repair-safe, --project, --receipt-dir, and --json.
+      - Recognize only enumerated triggers such as content-script-detached, stale explicit binding after unique URL match, or recorded GPU renderer transition.
+      - Serialize per project and apply a cooldown so repeated timer runs cannot reload-loop.
+      - Preserve skipped and failed receipts for Surf Doctor diagnosis.
+    read_context:
+      - skills/surf/scripts/webgpt-submit.sh
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/browser-oracle/src/browser_oracle/bindings.py
+      - skills/surf/scripts/tab_recovery_receipt.py
+    allowlist:
+      - skills/surf/scripts/tab-maintenance.sh
+      - skills/surf/tests/test_tab_maintenance.py
+    tests:
+      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
+    blind_tests:
+      - skills/test-lab/run.sh verify-task 5 skills/surf --domain browser
+    max_rounds: 3
+    gate: Coordinator cannot mutate without exact identity, enumerated trigger, all-safe guards, cooldown clearance, and repair-safe authorization.
+    definition_of_done:
+      command: python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
+      assertion: exit_code == 0
+
+  - id: '6'
+    title: Install bounded user timer for Surf Doctor scans
+    lane: '2'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: surf-doctor
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '5'
+    prompt: >-
+      Add user-level systemd service and timer templates plus an idempotent installer for
+      Surf Doctor proactive tab maintenance. Default cadence is 30 minutes with randomized
+      delay. The service calls tab-maintenance.sh --repair-safe, uses a durable receipt directory,
+      has a bounded runtime, and does not run concurrently. Installation must not start the
+      timer during tests; explicit install/enable is required.
+    implementation:
+      - Add service and timer templates under agents/surf-doctor/systemd.
+      - Add an installer that resolves absolute repository paths and validates units.
+      - Add deterministic template tests without enabling the timer.
+    read_context:
+      - agents/surf-doctor/AGENTS.md
+      - skills/surf/scripts/tab-maintenance.sh
+    allowlist:
+      - agents/surf-doctor/systemd/surf-tab-maintenance.service
+      - agents/surf-doctor/systemd/surf-tab-maintenance.timer
+      - agents/surf-doctor/install-tab-maintenance-timer.sh
+      - skills/surf/tests/test_tab_maintenance_timer.py
+    tests:
+      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
+    blind_tests:
+      - skills/test-lab/run.sh verify-task 6 agents/surf-doctor/systemd --domain shell
+    max_rounds: 3
+    gate: Tests and installation cannot start, enable, or mutate the operator's user timer without an explicit install action.
+    definition_of_done:
+      command: python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
+      assertion: exit_code == 0
+
+  - id: '7'
+    title: Add disposable live maintenance canary harness
+    lane: '2'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: surf-doctor
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - '5'
+    prompt: >-
+      Add a bounded live canary harness for Surf tab maintenance. It must create and
+      register only disposable local-app tabs, capture focus before and after, exercise one
+      intended recoverable reload plus draft-present, ambiguous-URL, and active-generation
+      guarded skips, validate every receipt, and remove only resources it created. Default
+      to refusing execution unless the extension socket and local app are reachable.
+    implementation:
+      - Add an executable live-tab-maintenance-canary.sh with an explicit output directory.
+      - Preserve tab lists, focus snapshots, command stderr, receipts, and result.json.
+      - Refuse non-local target URLs and record mocked=false and live=true only after real extension commands run.
+    read_context:
+      - skills/surf/scripts/tab-maintenance.sh
+      - skills/surf/scripts/webgpt-tab-id-background-sanity.sh
+      - skills/surf/SKILL.md
+    allowlist:
+      - skills/surf/scripts/live-tab-maintenance-canary.sh
+      - skills/surf/tests/test_live_tab_maintenance_canary.py
+    tests:
+      - python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
+    blind_tests:
+      - skills/test-lab/run.sh verify-task 7 skills/surf/scripts/live-tab-maintenance-canary.sh --domain shell
+    max_rounds: 3
+    gate: Harness can mutate only disposable localhost tabs and bindings created by its own run ID.
+    definition_of_done:
+      command: python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
+      assertion: exit_code == 0
+
+  - id: '8'
+    title: Run deterministic aggregate gates
+    lane: '3'
+    runner: local
+    backend: ''
+    mode: ''
+    depends_on:
+      - '6'
+      - '7'
+    command: >-
+      python3 -m pytest -q
+      skills/surf/tests/test_tab_recovery_receipt.py
+      skills/surf/tests/test_tab_maintenance.py
+      skills/surf/tests/test_tab_maintenance_timer.py
+      skills/browser-oracle/tests/test_bindings.py
+      && node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      && bash -n skills/surf/scripts/tab-maintenance.sh agents/surf-doctor/install-tab-maintenance-timer.sh
+      && python3 scripts/check_mock_evidence_claims.py
+    allowlist:
+      - skills/surf/tests/test_tab_recovery_receipt.py
+      - skills/surf/tests/test_tab_maintenance.py
+      - skills/surf/tests/test_tab_maintenance_timer.py
+      - skills/surf/scripts/tab-maintenance.sh
+      - agents/surf-doctor/install-tab-maintenance-timer.sh
+    implementation:
+      - Run only the focused deterministic gates for touched modules.
+      - Treat these tests as wiring and fail-closed policy evidence, not live browser proof.
+    tests:
+      - Focused Python, Node, shell syntax, and mock-claim checks.
+    gate: Every focused deterministic command exits zero before any live browser mutation.
+    definition_of_done:
+      command: >-
+        python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py skills/surf/tests/test_tab_maintenance.py skills/surf/tests/test_tab_maintenance_timer.py skills/browser-oracle/tests/test_bindings.py
+      assertion: exit_code == 0
+
+  - id: '9'
+    title: Prove one live safe-reload and three live fail-closed skips
+    lane: '3'
+    runner: local
+    backend: ''
+    mode: ''
+    depends_on:
+      - '8'
+    command: >-
+      skills/surf/scripts/live-tab-maintenance-canary.sh
+      --output-dir /tmp/surf-tab-maintenance-live-canary
+      --preserve-tabs
+    allowlist:
+      - skills/surf/scripts/live-tab-maintenance-canary.sh
+    implementation:
+      - Create and register one disposable local-app project tab, inject a proven recoverable content-script failure, and require one exact-tab safe reload receipt.
+      - Exercise separate draft-present, ambiguous-URL, and active-generation guard scenarios and require skipped_guarded receipts with no navigation timestamp change.
+      - Confirm the user's foreground tab and focused window do not change.
+      - Remove only the disposable canary binding and tab after evidence is captured.
+    tests:
+      - Non-mocked extension/native-host run against the authenticated Chrome with receipt and focus artifacts.
+    gate: Live success requires one intended reload, zero unintended mutations, exact URL identity, unchanged focus, and locally validated receipts.
+    definition_of_done:
+      command: jq -e '.mocked == false and .live == true and .intended_reloads == 1 and .unintended_mutations == 0 and .guarded_skips == 3 and .focus_changed == false' /tmp/surf-tab-maintenance-live-canary/result.json
+      assertion: exit_code == 0
