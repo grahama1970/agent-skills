@@ -124,3 +124,29 @@ test('run detail reads only the atomically promoted revision', async () => {
   assert.ok(detail.stages.every((stage) => stage.effectiveState === 'accepted_current'))
   rmSync(root, { recursive: true, force: true })
 })
+
+test('required artifacts are projected before optional artifact limits', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-required-artifact-'))
+  const revisionRoot = resolve(root, '.persona-dream', 'revisions', 'rev_0002')
+  const storyboardRoot = resolve(revisionRoot, 'phase_07')
+  mkdirSync(resolve(root, '.persona-dream', 'state'), { recursive: true })
+  mkdirSync(storyboardRoot, { recursive: true })
+  writeFileSync(resolve(root, 'status.json'), JSON.stringify({ status: 'PASS' }))
+  writeFileSync(resolve(root, 'dream_revision_manifest.v1.json'), JSON.stringify({ active_revision_id: 'rev_0001', repair_enabled: true }))
+  writeFileSync(resolve(root, '.persona-dream', 'state', 'active_revision.json'), JSON.stringify({
+    runId: 'run', revisionId: 'rev_0002', revisionRoot,
+    revisionManifestSha256: 'sha256:test',
+  }))
+  for (let index = 0; index < 40; index += 1) {
+    writeFileSync(resolve(storyboardRoot, `storyboard_optional_${String(index).padStart(2, '0')}.json`), '{}')
+  }
+  const requiredPath = resolve(storyboardRoot, 'storyboard_packet.json')
+  writeFileSync(requiredPath, JSON.stringify({ schema: 'persona_dream.storyboard_packet.v1', panels: [] }))
+
+  const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
+  const storyboard = detail.stages.find((stage) => stage.id === '07')
+  assert.equal(storyboard?.evidence.state, 'present')
+  assert.ok(storyboard?.artifacts.some((artifact) => artifact.path === requiredPath))
+  assert.equal(storyboard?.artifacts.length, 30)
+  rmSync(root, { recursive: true, force: true })
+})

@@ -1140,7 +1140,7 @@ type MediaLockFrame = {
 function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: DreamStage[] }) {
   const storyboardStage = allStages.find((candidate) => candidate.id === '07')
   const packetArtifact = storyboardStage?.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
-  const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
+  const packetPath = packetArtifact?.path
   const [frames, setFrames] = useState<MediaLockFrame[]>([])
   const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
   const frameGroups = mediaLockFrameGroups(frames)
@@ -1149,6 +1149,7 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
     let cancelled = false
     async function loadPacket() {
       try {
+        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
         const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const packet = await response.json()
@@ -2311,30 +2312,28 @@ function SystemStatusIndicator({ label, status }: { label: string; status: strin
 }
 
 
-const phase07StoryboardPacketPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json'
-const phase07StoryboardVerdictPath = '/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json'
-
 function StoryboardConsole({ stage }: { stage: DreamStage }) {
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
   const [verdict, setVerdict] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
   const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
-  const packetPath = packetArtifact?.path ?? phase07StoryboardPacketPath
-  const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
+  const packetPath = packetArtifact?.path
+  const verdictPath = verdictArtifact?.path
 
   useEffect(() => {
     let cancelled = false
     async function loadPacket() {
       try {
         setLoadError(null)
+        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
         const [packetResponse, verdictResponse] = await Promise.all([
           fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`),
-          fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`),
+          verdictPath ? fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`) : Promise.resolve(null),
         ])
         if (!packetResponse.ok) throw new Error(`storyboard packet HTTP ${packetResponse.status}`)
         const payload = await packetResponse.json()
-        const verdictPayload = verdictResponse.ok ? await verdictResponse.json() : null
+        const verdictPayload = verdictResponse?.ok ? await verdictResponse.json() : null
         if (!cancelled) {
           setPacket(payload)
           setVerdict(verdictPayload)

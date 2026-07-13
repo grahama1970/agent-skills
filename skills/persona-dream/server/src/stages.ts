@@ -37,9 +37,13 @@ function artifactKind(path: string): DreamArtifactRef['kind'] {
   return 'other'
 }
 
-function requirementPresent(requirement: string, files: string[]): boolean {
+function requirementMatches(requirement: string, path: string): boolean {
   const normalized = requirement.replace(/_/g, '.*')
-  return files.some((path) => new RegExp(normalized, 'i').test(path))
+  return new RegExp(normalized, 'i').test(path)
+}
+
+function requirementPresent(requirement: string, files: string[]): boolean {
+  return files.some((path) => requirementMatches(requirement, path))
 }
 
 export function projectStages(
@@ -62,8 +66,14 @@ export function projectStages(
     const evidenceState = malformedIds.length > 0 ? 'malformed' : missingIds.length > 0 ? 'missing' : 'present'
     if (!earliestIssue && evidenceState !== 'present') earliestIssue = phase.id
     const blockedByUpstream = Boolean(earliestIssue && earliestIssue !== phase.id)
-    const artifacts = matched
-      .filter((path) => !/\.(png|jpe?g|webp|gif)$/i.test(path))
+    const nonImageArtifacts = matched.filter((path) => !/\.(png|jpe?g|webp|gif)$/i.test(path))
+    const requiredArtifacts = phase.required
+      .map((requirement) => nonImageArtifacts.find((path) => requirementMatches(requirement, path)))
+      .filter((path): path is string => Boolean(path))
+    const artifacts = [...new Set([
+      ...requiredArtifacts,
+      ...nonImageArtifacts,
+    ])]
       .slice(0, 30)
       .map((path) => ({ label: relative(runRoot, path), path, kind: artifactKind(path) }))
     const images = matched
