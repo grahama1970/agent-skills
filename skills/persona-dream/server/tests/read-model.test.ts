@@ -158,6 +158,8 @@ test('required artifacts are projected before optional artifact limits', async (
   assert.ok(storyboard?.artifacts.some((artifact) => artifact.path === requiredPath))
   assert.equal(storyboard?.artifacts[0]?.path, requiredPath)
   assert.equal(storyboard?.artifacts.length, 30)
+  assert.equal(storyboard?.requiredArtifacts.storyboard_packet.path, requiredPath)
+  assert.equal(storyboard?.requiredArtifacts.storyboard_packet.artifactId, 'storyboard_packet')
   rmSync(root, { recursive: true, force: true })
 })
 

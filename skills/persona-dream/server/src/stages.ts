@@ -110,7 +110,18 @@ export function projectStages(
       ...nonImageArtifacts,
     ])]
       .slice(0, 30)
-      .map((path) => ({ label: relative(runRoot, path), path, kind: artifactKind(path) }))
+      .map((path) => ({ label: relative(runRoot, path), path, kind: artifactKind(path), url: `/api/projects/dream/asset?path=${encodeURIComponent(path)}` }))
+    const requiredArtifactMap = Object.fromEntries(phase.required.flatMap((requirement) => {
+      const path = requiredArtifact(requirement, nonImageArtifacts)
+      if (!path) return []
+      return [[requirement.artifact_id, {
+        artifactId: requirement.artifact_id,
+        label: relative(runRoot, path),
+        path,
+        kind: artifactKind(path),
+        url: `/api/projects/dream/asset?path=${encodeURIComponent(path)}`,
+      }]]
+    }))
     const images = matched
       .filter((path) => /\.(png|jpe?g|webp|gif)$/i.test(path))
       .slice(0, 20)
@@ -138,6 +149,7 @@ export function projectStages(
       summary: phase.summary,
       failureOrGap: evidenceState === 'present' ? null : `Required evidence is not current: ${[...missingIds, ...malformedIds, ...semanticInvalidIds].join(', ')}`,
       artifacts,
+      requiredArtifacts: requiredArtifactMap,
       images,
       acceptance: { state: evidenceState === 'present' ? 'accepted' : 'not_evaluated' },
       evidence: { state: evidenceState, required: phase.required.map((requirement) => requirement.artifact_id), observed: artifacts, missingIds, malformedIds, semanticInvalidIds },

@@ -91,7 +91,12 @@ type DreamStage = {
   summary: string
   failureOrGap?: string | null
   artifacts: Array<{ label: string; path: string; kind: string }>
+  requiredArtifacts?: Record<string, { artifactId?: string; label: string; path: string; kind: string; url?: string; sha256?: string }>
   images: Array<{ label: string; path: string; url: string }>
+}
+
+function requiredStageArtifact(stage: DreamStage | undefined, artifactId: string) {
+  return stage?.requiredArtifacts?.[artifactId]
 }
 
 type RevisionQualification = {
@@ -971,7 +976,7 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
         setPhase07ReviewerStatus(null)
         return
       }
-      const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+      const packetArtifact = requiredStageArtifact(stage, 'storyboard_packet')
       const packetPath = packetArtifact?.path
       try {
         if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
@@ -986,7 +991,7 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
     }
     void loadPhase07ReviewerStatus()
     return () => { cancelled = true }
-  }, [stage.id, stage.artifacts])
+  }, [stage.id, stage.requiredArtifacts])
 
   const headerStatus = stage.id === '07' && phase07ReviewerStatus ? phase07ReviewerStatus : effectiveStageStatus(stage)
   const headerPassed = statusTone(headerStatus) === 'pass'
@@ -1146,7 +1151,7 @@ type MediaLockFrame = {
 
 function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: DreamStage[] }) {
   const storyboardStage = allStages.find((candidate) => candidate.id === '07')
-  const packetArtifact = storyboardStage?.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+  const packetArtifact = requiredStageArtifact(storyboardStage, 'storyboard_packet')
   const packetPath = packetArtifact?.path
   const [frames, setFrames] = useState<MediaLockFrame[]>([])
   const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
@@ -2323,7 +2328,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
   const [verdict, setVerdict] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+  const packetArtifact = requiredStageArtifact(stage, 'storyboard_packet')
   const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path))
   const packetPath = packetArtifact?.path
   const verdictPath = verdictArtifact?.path
@@ -8088,7 +8093,7 @@ function AgentPane({
         setPhase07ReviewerStatus(null)
         return
       }
-      const packetArtifact = selectedStage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+      const packetArtifact = requiredStageArtifact(selectedStage, 'storyboard_packet')
       const packetPath = packetArtifact?.path
       try {
         if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
@@ -8103,7 +8108,7 @@ function AgentPane({
     }
     void loadPhase07ReviewerStatus()
     return () => { cancelled = true }
-  }, [selectedStage?.id, selectedStage?.artifacts])
+  }, [selectedStage?.id, selectedStage?.requiredArtifacts])
 
   const selectedStageStatus = selectedStage
     ? selectedStage.id === '07' && phase07ReviewerStatus

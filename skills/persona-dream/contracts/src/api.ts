@@ -3,9 +3,12 @@ export type EvidenceState = 'present' | 'missing' | 'malformed' | 'semantic_inva
 export type LineageState = 'current' | 'stale' | 'unknown'
 
 export type DreamArtifactRef = {
+  artifactId?: string
   label: string
   path: string
   kind: 'json' | 'markdown' | 'text' | 'html' | 'media' | 'other'
+  url?: string
+  sha256?: string
 }
 
 export type DreamImageRef = {
@@ -21,6 +24,7 @@ export type DreamPhaseProjection = {
   summary: string
   failureOrGap: string | null
   artifacts: DreamArtifactRef[]
+  requiredArtifacts: Record<string, DreamArtifactRef>
   images: DreamImageRef[]
   acceptance: { state: AcceptanceState; rawStatus?: string }
   evidence: {
