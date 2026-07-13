@@ -59,6 +59,7 @@ NEGATIVE_TRANSCRIPT_ALIASES = {
     "Computer!": frozenset({"computer"}),
     "Jarvis!": frozenset({"jarvis"}),
 }
+NEGATIVE_PROMPT_FAMILY = {"Embry.": "Embry!"}
 SPLIT_OFFSETS = {
     "positive_train": 0,
     "positive_validation": 100_000,
@@ -121,7 +122,8 @@ def next_negative_prompt(
             for record in records
             if record["split"] == split
             and record["accepted"]
-            and record["prompt"] == prompt
+            and NEGATIVE_PROMPT_FAMILY.get(record["prompt"], record["prompt"])
+            == prompt
         )
         for prompt in NEGATIVE_PROMPTS
     }

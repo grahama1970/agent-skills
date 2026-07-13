@@ -39,6 +39,12 @@ def test_negative_prompt_targets_are_balanced_and_exact() -> None:
     assert sum(validation.values()) == 90
     assert min(validation.values()) == 6
     assert max(validation.values()) == 7
+    records = [
+        {"split": "negative_train", "accepted": True, "prompt": "Embry."}
+    ]
+    assert MODULE.next_negative_prompt(
+        records=records, split="negative_train", target_count=13
+    ) == "Hey Em!"
 
 
 def test_service_errors_do_not_consume_content_attempt_budget() -> None:
