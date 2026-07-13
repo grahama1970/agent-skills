@@ -13,10 +13,8 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  skills/battle/
 f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt
 02a324cf7dea3f054e148c9fa2d7d350c966abce33031324f46bdaaba3605a08  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt
-af7c5e303929058d21f80b4c226ac5169e901b0e666f02f7217cdc4b262dd80b  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/original/__pycache__/app.cpython-312.pyc
 b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/original/app.py
 76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/original/red_exploit_submission.py
-7d7139f60665452f2142fecf875fe0581787e3cdbff0d7945f18b7d11705eaef  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/patched/__pycache__/app.cpython-312.pyc
 912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/patched/app.py
 76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/replays/red-0__blue-0/patched/red_exploit_submission.py
 be3a347f56d4743a75f519119cb459cd8079ec99e7ed5b5c4ab42d0eb21016e4  skills/battle/local/battle-004-adaptive-memory-v14/generation-3/judge/reviewed-judge-pair-input.json
