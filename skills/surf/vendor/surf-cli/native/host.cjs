@@ -13,6 +13,7 @@ const geminiClient = require("./gemini-client.cjs");
 const perplexityClient = require("./perplexity-client.cjs");
 const { mapToolToMessage, mapComputerAction, formatToolContent } = require("./host-helpers.cjs");
 const { KeyedRequestQueue } = require("./ai-request-queue.cjs");
+const { createBoundedLogger, summarizeExtensionMessage } = require("./host-log.cjs");
 
 const SOCKET_PATH = "/tmp/surf.sock";
 
@@ -56,7 +57,6 @@ const aiRequestQueue = new KeyedRequestQueue(2000);
 function queueAiRequest(handler, key = "global") {
   return aiRequestQueue.enqueue(key, handler);
 }
-const LOG_FILE = "/tmp/surf-host.log";
 const AUTH_FILE = path.join(os.homedir(), ".pi", "agent", "auth.json");
 
 const DEFAULT_RETRY_OPTIONS = {
@@ -265,9 +265,7 @@ async function handleApiRequest(msg, sendResponse) {
   }
 }
 
-const log = (msg) => {
-  fs.appendFileSync(LOG_FILE, `${new Date().toISOString()} ${msg}\n`);
-};
+const log = createBoundedLogger();
 
 log("Host starting...");
 
@@ -1276,7 +1274,7 @@ function processInput() {
     
     try {
       const msg = JSON.parse(jsonStr);
-      log(`Received from extension: ${JSON.stringify(msg)}`);
+      log(`Received from extension: ${summarizeExtensionMessage(msg, Buffer.byteLength(jsonStr))}`);
       
       if (msg.type === "GET_AUTH") {
         log("Handling GET_AUTH from extension");
