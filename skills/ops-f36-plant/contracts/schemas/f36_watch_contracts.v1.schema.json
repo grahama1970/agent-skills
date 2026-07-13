@@ -1,0 +1,579 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "f36_watch_contracts.v1.schema.json",
+  "title": "F-36 Watch Visual Evidence Contract Bundle",
+  "description": "Contract-first schema bundle for the recorded F-36 visual evidence canary. This bundle pins the common envelope, semantic package, Watch sequence/crop/memory/suggestion records, visual evidence bundle, SPARTA link, and QA-only disposition boundary.",
+  "type": "object",
+  "required": [
+    "schema",
+    "architecture_ref",
+    "semantic_package_manifest",
+    "procedure_snapshot",
+    "artifact_refs",
+    "events",
+    "crop_artifacts",
+    "label_decisions",
+    "memory_ingest_receipts",
+    "suggestion_results",
+    "visual_evidence_bundle",
+    "sparta_evidence_case_link"
+  ],
+  "properties": {
+    "schema": {
+      "const": "f36.watch.contract_fixture.v1"
+    },
+    "architecture_ref": {
+      "type": "object",
+      "required": ["architecture_id", "architecture_sha"],
+      "properties": {
+        "architecture_id": {"type": "string"},
+        "architecture_sha": {"type": "string", "minLength": 12}
+      },
+      "additionalProperties": false
+    },
+    "semantic_package_manifest": {
+      "$ref": "#/$defs/f36.semantic_package_manifest.v1"
+    },
+    "procedure_snapshot": {
+      "$ref": "#/$defs/f36.test_procedure_snapshot.v1"
+    },
+    "asset_registry": {
+      "$ref": "#/$defs/f36.asset_registry.v1"
+    },
+    "work_context": {
+      "$ref": "#/$defs/f36.work_context.v1"
+    },
+    "test_run": {
+      "$ref": "#/$defs/f36.test_run.v1"
+    },
+    "source_session": {
+      "$ref": "#/$defs/watch.source_session.v1"
+    },
+    "detector_profile": {
+      "$ref": "#/$defs/watch.detector_profile.v1"
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/common.evidence_artifact_ref.v1"},
+      "minItems": 1
+    },
+    "events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/common.event_envelope.v1"},
+      "minItems": 1
+    },
+    "crop_artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/watch.crop_artifact.v1"}
+    },
+    "label_decisions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/watch.label_decision.v1"}
+    },
+    "memory_ingest_receipts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/watch.memory_ingest_receipt.v1"}
+    },
+    "suggestion_results": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/watch.suggestion_result.v1"}
+    },
+    "suggestion_requests": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/watch.suggestion_request.v1"}
+    },
+    "outbox_events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/common.persistence_outbox_event.v1"}
+    },
+    "visual_evidence_bundle": {
+      "$ref": "#/$defs/f36.visual_evidence_bundle.v1"
+    },
+    "sparta_evidence_case_link": {
+      "$ref": "#/$defs/sparta.evidence_case_link.v1"
+    },
+    "disposition": {
+      "$ref": "#/$defs/f36.disposition.v1"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "common.event_envelope.v1": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "schema_version",
+        "aggregate_type",
+        "aggregate_id",
+        "aggregate_revision",
+        "sequence_number",
+        "correlation_id",
+        "idempotency_key",
+        "occurred_at",
+        "effective_at",
+        "producer",
+        "payload_hash",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {"type": "string"},
+        "schema_version": {"type": "string"},
+        "aggregate_type": {"type": "string"},
+        "aggregate_id": {"type": "string"},
+        "aggregate_revision": {"type": "integer", "minimum": 1},
+        "sequence_number": {"type": "integer", "minimum": 1},
+        "correlation_id": {"type": "string"},
+        "causation_id": {"type": ["string", "null"]},
+        "idempotency_key": {"type": "string"},
+        "occurred_at": {"type": "string", "format": "date-time"},
+        "effective_at": {"type": "number", "minimum": 0},
+        "producer": {"type": "string"},
+        "payload_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "payload": {
+          "oneOf": [
+            {"$ref": "#/$defs/watch.sequence_event.v1"},
+            {"$ref": "#/$defs/f36.test_adapter_event.v1"},
+            {"$ref": "#/$defs/f36.telemetry_event.v1"},
+            {"$ref": "#/$defs/watch.detector_observation.v1"},
+            {"$ref": "#/$defs/watch.coverage_event.v1"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "f36.semantic_package_manifest.v1": {
+      "type": "object",
+      "required": [
+        "package_id",
+        "package_version",
+        "package_sha256",
+        "source_dataset_refs",
+        "compatible_contract_versions"
+      ],
+      "properties": {
+        "package_id": {"type": "string"},
+        "package_version": {"type": "string"},
+        "package_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "source_dataset_refs": {"type": "array", "items": {"type": "string"}},
+        "requirement_namespace": {"type": "string"},
+        "control_namespace": {"type": "string"},
+        "qra_namespace": {"type": "string"},
+        "procedure_namespace": {"type": "string"},
+        "compatible_contract_versions": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "f36.test_procedure_snapshot.v1": {
+      "type": "object",
+      "required": [
+        "procedure_id",
+        "revision",
+        "snapshot_hash",
+        "steps",
+        "required_evidence",
+        "acceptance_authority"
+      ],
+      "properties": {
+        "procedure_id": {"type": "string"},
+        "revision": {"type": "string"},
+        "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "effective_date": {"type": "string"},
+        "steps": {"type": "array", "items": {"type": "object"}},
+        "required_evidence": {"type": "array", "items": {"type": "string"}},
+        "acceptance_authority": {"type": "string"},
+        "source_document_refs": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "f36.asset_registry.v1": {
+      "type": "object",
+      "required": ["registry_id", "registry_hash", "part_instance_id", "part_family_id"],
+      "properties": {
+        "registry_id": {"type": "string"},
+        "registry_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "part_family_id": {"type": "string"},
+        "configuration_id": {"type": "string"},
+        "part_instance_id": {"type": "string"},
+        "serial_number": {"type": "string"},
+        "lot_id": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "f36.work_context.v1": {
+      "type": "object",
+      "required": ["context_id", "test_run_id", "aggregate_revision", "last_event_id", "semantic_package_ref", "projected_at"],
+      "properties": {
+        "context_id": {"type": "string"},
+        "test_run_id": {"type": "string"},
+        "aggregate_revision": {"type": "integer", "minimum": 1},
+        "last_event_id": {"type": "string"},
+        "semantic_package_ref": {"type": "string"},
+        "projected_at": {"type": "string", "format": "date-time"},
+        "plant_context": {
+          "type": "object",
+          "properties": {
+            "program_id": {"type": "string"},
+            "part_id": {"type": "string"},
+            "serial_number": {"type": "string"},
+            "lot_id": {"type": "string"},
+            "cell_id": {"type": "string"},
+            "station_id": {"type": "string"},
+            "procedure_id": {"type": "string"},
+            "procedure_revision": {"type": "string"},
+            "watch_session_id": {"type": "string"},
+            "current_phase": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "f36.test_run.v1": {
+      "type": "object",
+      "required": [
+        "test_run_id",
+        "part_instance_ref",
+        "procedure_snapshot_ref",
+        "semantic_package_ref",
+        "status"
+      ],
+      "properties": {
+        "test_run_id": {"type": "string"},
+        "part_instance_ref": {"type": "string"},
+        "procedure_snapshot_ref": {"type": "string"},
+        "semantic_package_ref": {"type": "string"},
+        "status": {"enum": ["CREATED", "RUNNING", "REVIEW_PENDING", "COMPLETED", "ABORTED"]},
+        "current_phase": {"type": "string"},
+        "watch_session_refs": {"type": "array", "items": {"type": "string"}},
+        "created_by": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "closed_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "f36.test_adapter_event.v1": {
+      "type": "object",
+      "required": ["schema", "test_run_id", "adapter_id", "event_type", "source_time", "monotonic_time"],
+      "properties": {
+        "schema": {"const": "f36.test_adapter_event.v1"},
+        "test_run_id": {"type": "string"},
+        "adapter_id": {"type": "string"},
+        "event_type": {"enum": ["TEST_STARTED", "PHASE_STARTED", "PHASE_COMPLETED", "TEST_ABORTED", "TEST_COMPLETED"]},
+        "phase_id": {"type": "string"},
+        "source_time": {"type": "number", "minimum": 0},
+        "monotonic_time": {"type": "number", "minimum": 0},
+        "telemetry_refs": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "f36.telemetry_event.v1": {
+      "type": "object",
+      "required": ["schema", "test_run_id", "telemetry_id", "source_time", "monotonic_time", "measurements"],
+      "properties": {
+        "schema": {"const": "f36.telemetry_event.v1"},
+        "test_run_id": {"type": "string"},
+        "telemetry_id": {"type": "string"},
+        "source_time": {"type": "number", "minimum": 0},
+        "monotonic_time": {"type": "number", "minimum": 0},
+        "measurements": {
+          "type": "object",
+          "additionalProperties": {"type": ["number", "string", "boolean", "null"]}
+        }
+      },
+      "additionalProperties": false
+    },
+    "watch.source_session.v1": {
+      "type": "object",
+      "required": ["session_id", "test_run_id", "stream_id", "source_kind", "source_uri_hash", "clock_model", "state"],
+      "properties": {
+        "session_id": {"type": "string"},
+        "test_run_id": {"type": "string"},
+        "stream_id": {"type": "string"},
+        "source_kind": {"enum": ["RECORDED_VIDEO", "LIVE_STREAM", "FRAME_SEQUENCE"]},
+        "source_uri_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "source_media_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "clock_model": {"enum": ["SOURCE_PTS", "MONOTONIC_RECEIVE_TIME", "FRAME_INDEX_ONLY"]},
+        "state": {"enum": ["CREATED", "OPEN", "DEGRADED", "CLOSED", "FAILED"]},
+        "opened_at": {"type": "string", "format": "date-time"},
+        "closed_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "watch.detector_profile.v1": {
+      "type": "object",
+      "required": ["profile_id", "model_id", "model_version", "tracker", "class_map", "profile_hash", "permitted_subject_types"],
+      "properties": {
+        "profile_id": {"type": "string"},
+        "model_id": {"type": "string"},
+        "model_version": {"type": "string"},
+        "tracker": {"type": "string"},
+        "class_map": {"type": "object"},
+        "thresholds": {"type": "object"},
+        "image_size": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
+        "preprocessing": {"type": "object"},
+        "profile_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "permitted_subject_types": {
+          "type": "array",
+          "items": {"enum": ["PERSON", "PART", "ASSEMBLY", "COMPONENT", "TOOL", "FIXTURE", "SURFACE_REGION", "DEFECT_CANDIDATE"]}
+        }
+      },
+      "additionalProperties": false
+    },
+    "watch.detector_observation.v1": {
+      "type": "object",
+      "required": ["schema", "observation_type", "observation_id", "source_frame_ref", "source_pts", "detector_profile_ref"],
+      "properties": {
+        "schema": {"const": "watch.detector_observation.v1"},
+        "observation_type": {"enum": ["DETECTION", "NO_DETECTIONS", "FRAME_SAMPLED_OUT", "DECODE_ERROR", "DETECTOR_TIMEOUT", "STREAM_GAP"]},
+        "observation_id": {"type": "string"},
+        "source_frame_ref": {"type": "string"},
+        "source_pts": {"type": "number", "minimum": 0},
+        "detector_profile_ref": {"type": "string"},
+        "class_name": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "bbox": {"$ref": "#/$defs/bbox"},
+        "detector_track_id": {"type": "string"},
+        "model_id": {"type": "string"},
+        "model_version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "watch.sequence_event.v1": {
+      "type": "object",
+      "required": ["schema", "sequence_id", "event_type", "detector_track_id"],
+      "properties": {
+        "schema": {"const": "watch.sequence_event.v1"},
+        "sequence_id": {"type": "string"},
+        "detector_track_id": {"type": "string"},
+        "event_type": {"enum": ["START", "ASSIGN", "KEYFRAME", "UNASSIGN_STOP", "REASSIGN_START", "END", "SUPERSEDE"]},
+        "subject_id": {"type": ["string", "null"]},
+        "subject_type": {"enum": ["PERSON", "PART", "ASSEMBLY", "COMPONENT", "TOOL", "FIXTURE", "SURFACE_REGION", "DEFECT_CANDIDATE", "UNASSIGNED"]},
+        "observation_ref": {"type": "string"},
+        "bbox": {"$ref": "#/$defs/bbox"}
+      },
+      "additionalProperties": false
+    },
+    "watch.coverage_event.v1": {
+      "type": "object",
+      "required": ["schema", "coverage_type", "source_session_id", "source_time"],
+      "properties": {
+        "schema": {"const": "watch.coverage_event.v1"},
+        "coverage_type": {"enum": ["NO_DETECTIONS", "CAMERA_OBSCURED", "FRAME_DROPPED", "BACKPRESSURE_DROP", "DECODE_FAILURE", "SOURCE_GAP", "MODEL_UNAVAILABLE", "UNREVIEWABLE_REGION"]},
+        "source_session_id": {"type": "string"},
+        "source_time": {"type": "number", "minimum": 0},
+        "duration_seconds": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "watch.crop_artifact.v1": {
+      "type": "object",
+      "required": ["crop_id", "observation_id", "source_frame_ref", "bbox", "crop_hash", "review_state", "quarantine"],
+      "properties": {
+        "crop_id": {"type": "string"},
+        "observation_id": {"type": "string"},
+        "source_frame_ref": {"type": "string"},
+        "bbox": {"$ref": "#/$defs/bbox"},
+        "crop_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "quality": {"type": "object"},
+        "review_state": {"enum": ["UNREVIEWED", "ACCEPTED", "REJECTED", "AMBIGUOUS", "BAD_GEOMETRY"]},
+        "quarantine": {"type": "boolean"},
+        "retention_class": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "watch.label_decision.v1": {
+      "type": "object",
+      "required": ["decision_id", "decision_type", "crop_id", "subject_id", "positive_memory_ingest_allowed"],
+      "properties": {
+        "decision_id": {"type": "string"},
+        "decision_type": {"enum": ["ACCEPT_LABEL", "REJECT_LABEL", "REJECT_CROP", "BAD_GEOMETRY", "AMBIGUOUS", "RESET_UI"]},
+        "crop_id": {"type": "string"},
+        "subject_id": {"type": ["string", "null"]},
+        "reviewer_id": {"type": "string"},
+        "positive_memory_ingest_allowed": {"type": "boolean"},
+        "negative_memory_ingest_allowed": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "watch.memory_ingest_receipt.v1": {
+      "type": "object",
+      "required": ["receipt_id", "crop_id", "decision_id", "eligibility", "embedding_model", "collection", "status"],
+      "properties": {
+        "receipt_id": {"type": "string"},
+        "crop_id": {"type": "string"},
+        "decision_id": {"type": "string"},
+        "eligibility": {
+          "type": "object",
+          "required": ["positive_allowed", "negative_allowed", "quarantine"],
+          "properties": {
+            "positive_allowed": {"type": "boolean"},
+            "negative_allowed": {"type": "boolean"},
+            "quarantine": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "embedding_model": {"type": "string"},
+        "collection": {"type": "string"},
+        "point_id": {"type": ["string", "null"]},
+        "payload_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "status": {"enum": ["PENDING", "STORED", "REJECTED", "FAILED"]}
+      },
+      "additionalProperties": false
+    },
+    "watch.suggestion_request.v1": {
+      "type": "object",
+      "required": ["request_id", "query_crop_id", "embedding_model", "collection", "readiness_policy_version", "requested_by", "auto_apply_allowed"],
+      "properties": {
+        "request_id": {"type": "string"},
+        "query_crop_id": {"type": "string"},
+        "embedding_model": {"type": "string"},
+        "collection": {"type": "string"},
+        "readiness_policy_version": {"type": "string"},
+        "requested_by": {"type": "string"},
+        "filter": {"type": "object"},
+        "auto_apply_allowed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "watch.suggestion_result.v1": {
+      "type": "object",
+      "required": ["suggestion_id", "query_crop_id", "embedding_model", "collection", "candidates", "display_state", "auto_apply_allowed"],
+      "properties": {
+        "suggestion_id": {"type": "string"},
+        "query_crop_id": {"type": "string"},
+        "embedding_model": {"type": "string"},
+        "collection": {"type": "string"},
+        "readiness_policy_version": {"type": "string"},
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["subject_id", "score", "support_count", "distinct_test_run_count", "supporting_point_ids"],
+            "properties": {
+              "subject_id": {"type": "string"},
+              "score": {"type": "number", "minimum": 0, "maximum": 1},
+              "support_count": {"type": "integer", "minimum": 0},
+              "distinct_test_run_count": {"type": "integer", "minimum": 0},
+              "margin_to_next": {"type": "number"},
+              "supporting_point_ids": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": false
+          }
+        },
+        "blocked_reasons": {"type": "array", "items": {"type": "string"}},
+        "display_state": {"enum": ["HIDDEN", "DEBUG_ONLY", "TENTATIVE"]},
+        "auto_apply_allowed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "common.evidence_artifact_ref.v1": {
+      "type": "object",
+      "required": ["artifact_id", "media_type", "content_sha256", "size_bytes", "storage_uri", "created_at", "source_session_id", "retention_class"],
+      "properties": {
+        "artifact_id": {"type": "string"},
+        "media_type": {"type": "string"},
+        "content_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "storage_uri": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "source_session_id": {"type": "string"},
+        "encryption_class": {"type": "string"},
+        "retention_class": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "common.persistence_outbox_event.v1": {
+      "type": "object",
+      "required": ["outbox_id", "local_record_ref", "destination", "status", "retry_count", "created_at"],
+      "properties": {
+        "outbox_id": {"type": "string"},
+        "local_record_ref": {"type": "string"},
+        "destination": {"enum": ["MEMORY", "SPARTA", "ARTIFACT_STORE", "EMBRY_STATE"]},
+        "status": {"enum": ["PENDING", "DELIVERED", "FAILED", "TERMINAL_FAILURE"]},
+        "retry_count": {"type": "integer", "minimum": 0},
+        "last_error": {"type": ["string", "null"]},
+        "created_at": {"type": "string", "format": "date-time"},
+        "delivered_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "f36.visual_evidence_bundle.v1": {
+      "type": "object",
+      "required": ["bundle_id", "bundle_version", "manifest_hash", "test_run_ref", "part_instance_ref", "procedure_snapshot_ref", "semantic_package_ref", "artifact_refs", "sequence_event_refs", "review_decision_refs", "memory_receipt_refs", "completeness_status"],
+      "properties": {
+        "bundle_id": {"type": "string"},
+        "bundle_version": {"type": "string"},
+        "manifest_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "test_run_ref": {"type": "string"},
+        "part_instance_ref": {"type": "string"},
+        "procedure_snapshot_ref": {"type": "string"},
+        "semantic_package_ref": {"type": "string"},
+        "source_session_refs": {"type": "array", "items": {"type": "string"}},
+        "observation_refs": {"type": "array", "items": {"type": "string"}},
+        "sequence_event_refs": {"type": "array", "items": {"type": "string"}},
+        "review_decision_refs": {"type": "array", "items": {"type": "string"}},
+        "artifact_refs": {"type": "array", "items": {"type": "string"}},
+        "memory_receipt_refs": {"type": "array", "items": {"type": "string"}},
+        "coverage_summary": {"type": "object"},
+        "completeness_status": {"enum": ["COMPLETE", "PARTIAL", "INCONCLUSIVE"]},
+        "supersedes_bundle_id": {"type": ["string", "null"]},
+        "created_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "f36.visual_evidence_review.v1": {
+      "type": "object",
+      "required": ["review_id", "decision_type", "reviewer_id"],
+      "properties": {
+        "review_id": {"type": "string"},
+        "decision_type": {"enum": ["ACCEPT_OBSERVATION", "REJECT_LABEL", "REJECT_CROP", "BAD_GEOMETRY", "AMBIGUOUS", "REQUEST_MORE_EVIDENCE"]},
+        "reviewer_id": {"type": "string"},
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "f36.disposition.v1": {
+      "type": "object",
+      "required": ["disposition_id", "test_run_id", "part_instance_id", "state", "authority", "reviewer_id", "decided_at", "evidence_bundle_refs"],
+      "properties": {
+        "disposition_id": {"type": "string"},
+        "test_run_id": {"type": "string"},
+        "part_instance_id": {"type": "string"},
+        "state": {"enum": ["PASS", "FAIL", "HOLD", "REWORK", "SCRAP"]},
+        "authority": {"enum": ["QA", "AUTHORIZED_MANUFACTURING_SYSTEM"]},
+        "reviewer_id": {"type": "string"},
+        "role": {"type": "string"},
+        "decided_at": {"type": "string", "format": "date-time"},
+        "evidence_bundle_refs": {"type": "array", "items": {"type": "string"}},
+        "rationale": {"type": "string"},
+        "signature_or_receipt": {"type": "string"},
+        "producer": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "sparta.evidence_case_link.v1": {
+      "type": "object",
+      "required": ["link_id", "evidence_bundle_id", "evidence_bundle_hash", "semantic_package_id", "semantic_package_hash", "resolved_entity_refs", "resolution_result", "resolver_version"],
+      "properties": {
+        "link_id": {"type": "string"},
+        "evidence_bundle_id": {"type": "string"},
+        "evidence_bundle_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "semantic_package_id": {"type": "string"},
+        "semantic_package_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "resolved_entity_refs": {"type": "array", "items": {"type": "string"}},
+        "resolution_result": {"enum": ["SUPPORTED", "REFUTED", "INCONCLUSIVE"]},
+        "resolution_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "blockers": {"type": "array", "items": {"type": "string"}},
+        "resolver_version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "bbox": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

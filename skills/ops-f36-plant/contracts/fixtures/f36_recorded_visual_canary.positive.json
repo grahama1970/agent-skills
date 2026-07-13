@@ -1,0 +1,393 @@
+{
+  "schema": "f36.watch.contract_fixture.v1",
+  "architecture_ref": {
+    "architecture_id": "f-36-watch-evidence-vertical-slice",
+    "architecture_sha": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "semantic_package_manifest": {
+    "package_id": "f36-demo-visual-package",
+    "package_version": "2026.07.canary",
+    "package_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "created_at": "2026-07-13T15:00:00Z",
+    "source_dataset_refs": ["sparta:f36-demo-qra"],
+    "requirement_namespace": "F36-DEMO-REQ",
+    "control_namespace": "F36-DEMO-CTRL",
+    "qra_namespace": "F36-DEMO-QRA",
+    "procedure_namespace": "PROC-VIS",
+    "compatible_contract_versions": ["f36_watch_contracts.v1"]
+  },
+  "procedure_snapshot": {
+    "procedure_id": "PROC-VIS-001",
+    "revision": "A",
+    "snapshot_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "effective_date": "2026-07-13",
+    "steps": [{"step_id": "VIS-1", "text": "Inspect mounting surface A."}],
+    "required_evidence": ["source_frame", "accepted_crop", "coverage_summary"],
+    "acceptance_authority": "QA",
+    "source_document_refs": ["doc:f36-demo-proc-vis-001-a"]
+  },
+  "asset_registry": {
+    "registry_id": "f36-demo-assets",
+    "registry_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "part_family_id": "avionics-mounting-bracket",
+    "configuration_id": "cfg-demo-a",
+    "part_instance_id": "F36-DEMO-VIS-001",
+    "serial_number": "DEMO-001",
+    "lot_id": "LOT-DEMO"
+  },
+  "work_context": {
+    "context_id": "embry-context-f36-demo-vis-001",
+    "test_run_id": "test-run-f36-demo-vis-001",
+    "aggregate_revision": 4,
+    "last_event_id": "evt-005",
+    "semantic_package_ref": "f36-demo-visual-package@2026.07.canary",
+    "projected_at": "2026-07-13T15:01:40Z",
+    "plant_context": {
+      "program_id": "F36",
+      "part_id": "F36-DEMO-VIS-001",
+      "serial_number": "DEMO-001",
+      "lot_id": "LOT-DEMO",
+      "cell_id": "demo-cell-1",
+      "station_id": "visual-station-1",
+      "procedure_id": "PROC-VIS-001",
+      "procedure_revision": "A",
+      "watch_session_id": "watch-session-f36-demo-vis-001",
+      "current_phase": "VISUAL_INSPECTION"
+    }
+  },
+  "test_run": {
+    "test_run_id": "test-run-f36-demo-vis-001",
+    "part_instance_ref": "F36-DEMO-VIS-001",
+    "procedure_snapshot_ref": "PROC-VIS-001@A",
+    "semantic_package_ref": "f36-demo-visual-package@2026.07.canary",
+    "status": "REVIEW_PENDING",
+    "current_phase": "VISUAL_INSPECTION",
+    "watch_session_refs": ["watch-session-f36-demo-vis-001"],
+    "created_by": "operator-demo",
+    "created_at": "2026-07-13T15:01:00Z",
+    "closed_at": null
+  },
+  "source_session": {
+    "session_id": "watch-session-f36-demo-vis-001",
+    "test_run_id": "test-run-f36-demo-vis-001",
+    "stream_id": "recorded-camera-01",
+    "source_kind": "RECORDED_VIDEO",
+    "source_uri_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "source_media_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "clock_model": "SOURCE_PTS",
+    "state": "CLOSED",
+    "opened_at": "2026-07-13T15:01:01Z",
+    "closed_at": "2026-07-13T15:01:40Z"
+  },
+  "detector_profile": {
+    "profile_id": "f36-demo-detector-profile",
+    "model_id": "deterministic-fixture-detector",
+    "model_version": "fixture-1",
+    "tracker": "fixture-track",
+    "class_map": {"0": "part"},
+    "thresholds": {"part": 0.5},
+    "image_size": [1280, 720],
+    "preprocessing": {"mode": "recorded-fixture"},
+    "profile_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+    "permitted_subject_types": ["PART", "FIXTURE", "DEFECT_CANDIDATE"]
+  },
+  "artifact_refs": [
+    {
+      "artifact_id": "frame-000100",
+      "media_type": "image/jpeg",
+      "content_sha256": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "size_bytes": 120000,
+      "storage_uri": "artifact://f36-demo/frame-000100.jpg",
+      "created_at": "2026-07-13T15:01:10Z",
+      "source_session_id": "watch-session-f36-demo-vis-001",
+      "encryption_class": "local-dev",
+      "retention_class": "canary"
+    }
+  ],
+  "events": [
+    {
+      "event_id": "evt-001",
+      "schema_version": "common.event_envelope.v1",
+      "aggregate_type": "watch.sequence",
+      "aggregate_id": "seq-part-track-7",
+      "aggregate_revision": 1,
+      "sequence_number": 1,
+      "correlation_id": "corr-f36-demo",
+      "causation_id": null,
+      "idempotency_key": "seq-part-track-7-001",
+      "occurred_at": "2026-07-13T15:01:05Z",
+      "effective_at": 5.0,
+      "producer": "watch",
+      "payload_hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "payload": {
+        "schema": "watch.sequence_event.v1",
+        "sequence_id": "seq-part-track-7",
+        "detector_track_id": "track_7",
+        "event_type": "ASSIGN",
+        "subject_id": "F36-DEMO-VIS-001",
+        "subject_type": "PART",
+        "observation_ref": "obs-001",
+        "bbox": [0.1, 0.2, 0.5, 0.7]
+      }
+    },
+    {
+      "event_id": "evt-002",
+      "schema_version": "common.event_envelope.v1",
+      "aggregate_type": "watch.sequence",
+      "aggregate_id": "seq-part-track-7",
+      "aggregate_revision": 2,
+      "sequence_number": 2,
+      "correlation_id": "corr-f36-demo",
+      "causation_id": "evt-001",
+      "idempotency_key": "seq-part-track-7-002",
+      "occurred_at": "2026-07-13T15:01:14Z",
+      "effective_at": 14.25,
+      "producer": "watch",
+      "payload_hash": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "payload": {
+        "schema": "watch.sequence_event.v1",
+        "sequence_id": "seq-part-track-7",
+        "detector_track_id": "track_7",
+        "event_type": "UNASSIGN_STOP",
+        "subject_id": null,
+        "subject_type": "UNASSIGNED",
+        "observation_ref": "obs-002",
+        "bbox": [0.1, 0.2, 0.5, 0.7]
+      }
+    },
+    {
+      "event_id": "evt-003",
+      "schema_version": "common.event_envelope.v1",
+      "aggregate_type": "watch.sequence",
+      "aggregate_id": "seq-part-track-7",
+      "aggregate_revision": 3,
+      "sequence_number": 3,
+      "correlation_id": "corr-f36-demo",
+      "causation_id": "evt-002",
+      "idempotency_key": "seq-part-track-7-003",
+      "occurred_at": "2026-07-13T15:01:21Z",
+      "effective_at": 21.0,
+      "producer": "watch",
+      "payload_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "payload": {
+        "schema": "watch.sequence_event.v1",
+        "sequence_id": "seq-part-track-7",
+        "detector_track_id": "track_7",
+        "event_type": "REASSIGN_START",
+        "subject_id": "F36-DEMO-VIS-001",
+        "subject_type": "PART",
+        "observation_ref": "obs-003",
+        "bbox": [0.2, 0.2, 0.6, 0.75]
+      }
+    },
+    {
+      "event_id": "evt-004",
+      "schema_version": "common.event_envelope.v1",
+      "aggregate_type": "f36.test_run",
+      "aggregate_id": "test-run-f36-demo-vis-001",
+      "aggregate_revision": 1,
+      "sequence_number": 4,
+      "correlation_id": "corr-f36-demo",
+      "causation_id": null,
+      "idempotency_key": "test-run-f36-demo-vis-001-start",
+      "occurred_at": "2026-07-13T15:01:01Z",
+      "effective_at": 1.0,
+      "producer": "plant-test-runner",
+      "payload_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "payload": {
+        "schema": "f36.test_adapter_event.v1",
+        "test_run_id": "test-run-f36-demo-vis-001",
+        "adapter_id": "deterministic-visual-runner",
+        "event_type": "PHASE_STARTED",
+        "phase_id": "VISUAL_INSPECTION",
+        "source_time": 1.0,
+        "monotonic_time": 1.0,
+        "telemetry_refs": []
+      }
+    },
+    {
+      "event_id": "evt-005",
+      "schema_version": "common.event_envelope.v1",
+      "aggregate_type": "f36.telemetry",
+      "aggregate_id": "telemetry-f36-demo-vis-001",
+      "aggregate_revision": 1,
+      "sequence_number": 5,
+      "correlation_id": "corr-f36-demo",
+      "causation_id": "evt-004",
+      "idempotency_key": "telemetry-f36-demo-vis-001-001",
+      "occurred_at": "2026-07-13T15:01:02Z",
+      "effective_at": 2.0,
+      "producer": "plant-test-runner",
+      "payload_hash": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+      "payload": {
+        "schema": "f36.telemetry_event.v1",
+        "test_run_id": "test-run-f36-demo-vis-001",
+        "telemetry_id": "telemetry-f36-demo-vis-001",
+        "source_time": 2.0,
+        "monotonic_time": 2.0,
+        "measurements": {
+          "fixture_locked": true,
+          "camera_pitch_degrees": -12.5
+        }
+      }
+    }
+  ],
+  "crop_artifacts": [
+    {
+      "crop_id": "crop-positive-001",
+      "observation_id": "obs-001",
+      "source_frame_ref": "frame-000100",
+      "bbox": [0.1, 0.2, 0.5, 0.7],
+      "crop_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "quality": {"blur": 0.1, "occlusion": 0.0},
+      "review_state": "ACCEPTED",
+      "quarantine": false,
+      "retention_class": "canary-positive"
+    },
+    {
+      "crop_id": "crop-negative-001",
+      "observation_id": "obs-002",
+      "source_frame_ref": "frame-000100",
+      "bbox": [0.7, 0.2, 0.8, 0.3],
+      "crop_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "quality": {"blur": 0.3, "occlusion": 0.4},
+      "review_state": "REJECTED",
+      "quarantine": true,
+      "retention_class": "canary-negative"
+    }
+  ],
+  "label_decisions": [
+    {
+      "decision_id": "decision-accept-001",
+      "decision_type": "ACCEPT_LABEL",
+      "crop_id": "crop-positive-001",
+      "subject_id": "F36-DEMO-VIS-001",
+      "reviewer_id": "qa-demo",
+      "positive_memory_ingest_allowed": true,
+      "negative_memory_ingest_allowed": false
+    },
+    {
+      "decision_id": "decision-reject-001",
+      "decision_type": "REJECT_CROP",
+      "crop_id": "crop-negative-001",
+      "subject_id": null,
+      "reviewer_id": "qa-demo",
+      "positive_memory_ingest_allowed": false,
+      "negative_memory_ingest_allowed": true
+    }
+  ],
+  "memory_ingest_receipts": [
+    {
+      "receipt_id": "memory-receipt-positive-001",
+      "crop_id": "crop-positive-001",
+      "decision_id": "decision-accept-001",
+      "eligibility": {"positive_allowed": true, "negative_allowed": false, "quarantine": false},
+      "embedding_model": "jina-clip-v2",
+      "collection": "watch-f36-canary-positive",
+      "point_id": "point-positive-001",
+      "payload_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "status": "STORED"
+    },
+    {
+      "receipt_id": "memory-receipt-negative-001",
+      "crop_id": "crop-negative-001",
+      "decision_id": "decision-reject-001",
+      "eligibility": {"positive_allowed": false, "negative_allowed": true, "quarantine": true},
+      "embedding_model": "jina-clip-v2",
+      "collection": "watch-f36-canary-negative",
+      "point_id": null,
+      "payload_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "status": "REJECTED"
+    }
+  ],
+  "suggestion_requests": [
+    {
+      "request_id": "suggestion-request-heldout-001",
+      "query_crop_id": "crop-positive-001",
+      "embedding_model": "jina-clip-v2",
+      "collection": "watch-f36-canary-positive",
+      "readiness_policy_version": "canary-1",
+      "requested_by": "watch",
+      "filter": {
+        "semantic_package_ref": "f36-demo-visual-package@2026.07.canary",
+        "positive_only": true
+      },
+      "auto_apply_allowed": false
+    }
+  ],
+  "suggestion_results": [
+    {
+      "suggestion_id": "suggestion-heldout-001",
+      "query_crop_id": "crop-positive-001",
+      "embedding_model": "jina-clip-v2",
+      "collection": "watch-f36-canary-positive",
+      "readiness_policy_version": "canary-1",
+      "candidates": [
+        {
+          "subject_id": "F36-DEMO-VIS-001",
+          "score": 0.84,
+          "support_count": 1,
+          "distinct_test_run_count": 1,
+          "margin_to_next": 0.2,
+          "supporting_point_ids": ["point-positive-001"]
+        }
+      ],
+      "blocked_reasons": [],
+      "display_state": "TENTATIVE",
+      "auto_apply_allowed": false
+    }
+  ],
+  "outbox_events": [
+    {
+      "outbox_id": "outbox-memory-positive-001",
+      "local_record_ref": "memory-receipt-positive-001",
+      "destination": "MEMORY",
+      "status": "DELIVERED",
+      "retry_count": 0,
+      "last_error": null,
+      "created_at": "2026-07-13T15:01:20Z",
+      "delivered_at": "2026-07-13T15:01:21Z"
+    },
+    {
+      "outbox_id": "outbox-sparta-link-001",
+      "local_record_ref": "sparta-link-f36-demo-vis-001",
+      "destination": "SPARTA",
+      "status": "DELIVERED",
+      "retry_count": 0,
+      "last_error": null,
+      "created_at": "2026-07-13T15:01:40Z",
+      "delivered_at": "2026-07-13T15:01:41Z"
+    }
+  ],
+  "visual_evidence_bundle": {
+    "bundle_id": "bundle-f36-demo-vis-001",
+    "bundle_version": "1",
+    "manifest_hash": "sha256:abababababababababababababababababababababababababababababababab",
+    "test_run_ref": "test-run-f36-demo-vis-001",
+    "part_instance_ref": "F36-DEMO-VIS-001",
+    "procedure_snapshot_ref": "PROC-VIS-001@A",
+    "semantic_package_ref": "f36-demo-visual-package@2026.07.canary",
+    "source_session_refs": ["watch-session-f36-demo-vis-001"],
+    "observation_refs": ["obs-001", "obs-002", "obs-003"],
+    "sequence_event_refs": ["evt-001", "evt-002", "evt-003"],
+    "review_decision_refs": ["decision-accept-001", "decision-reject-001"],
+    "artifact_refs": ["frame-000100"],
+    "memory_receipt_refs": ["memory-receipt-positive-001", "memory-receipt-negative-001"],
+    "coverage_summary": {"gaps": [{"type": "SOURCE_GAP", "start": 16.0, "end": 16.5}]},
+    "completeness_status": "PARTIAL",
+    "supersedes_bundle_id": null,
+    "created_at": "2026-07-13T15:01:40Z"
+  },
+  "sparta_evidence_case_link": {
+    "link_id": "sparta-link-f36-demo-vis-001",
+    "evidence_bundle_id": "bundle-f36-demo-vis-001",
+    "evidence_bundle_hash": "sha256:abababababababababababababababababababababababababababababababab",
+    "semantic_package_id": "f36-demo-visual-package",
+    "semantic_package_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "resolved_entity_refs": ["F36-DEMO-REQ-001", "F36-DEMO-CTRL-001", "F36-DEMO-QRA-001"],
+    "resolution_result": "SUPPORTED",
+    "resolution_confidence": 0.7,
+    "blockers": [],
+    "resolver_version": "sparta-demo-resolver-1"
+  }
+}

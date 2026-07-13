@@ -1,0 +1,23 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/disposition",
+      "value": {
+        "disposition_id": "disp-watch-illegal",
+        "test_run_id": "test-run-f36-demo-vis-001",
+        "part_instance_id": "F36-DEMO-VIS-001",
+        "state": "PASS",
+        "authority": "QA",
+        "reviewer_id": "watch-service",
+        "role": "service",
+        "decided_at": "2026-07-13T15:02:00Z",
+        "evidence_bundle_refs": ["bundle-f36-demo-vis-001"],
+        "rationale": "Watch must not issue manufacturing disposition.",
+        "signature_or_receipt": "receipt-demo",
+        "producer": "watch"
+      }
+    }
+  ],
+  "expected_error": "watch_authored_disposition"
+}

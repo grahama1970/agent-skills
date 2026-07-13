@@ -1,0 +1,10 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/suggestion_results/0/auto_apply_allowed",
+      "value": true
+    }
+  ],
+  "expected_error": "schema_validation_failed"
+}

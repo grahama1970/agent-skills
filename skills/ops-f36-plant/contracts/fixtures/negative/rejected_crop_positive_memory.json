@@ -1,0 +1,14 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/memory_ingest_receipts/1/eligibility/positive_allowed",
+      "value": true
+    },
+    {
+      "path": "/memory_ingest_receipts/1/status",
+      "value": "STORED"
+    }
+  ],
+  "expected_error": "rejected_or_quarantined_crop_positive_memory"
+}

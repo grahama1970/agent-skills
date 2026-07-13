@@ -1,0 +1,10 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/artifact_refs/0/content_sha256",
+      "delete": true
+    }
+  ],
+  "expected_error": "schema_validation_failed"
+}

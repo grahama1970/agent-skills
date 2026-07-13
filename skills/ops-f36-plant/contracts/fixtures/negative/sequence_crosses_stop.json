@@ -1,0 +1,14 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/events/2/payload/event_type",
+      "value": "KEYFRAME"
+    },
+    {
+      "path": "/events/2/payload/subject_id",
+      "value": "F36-DEMO-VIS-001"
+    }
+  ],
+  "expected_error": "assignment_crosses_unassign_stop"
+}

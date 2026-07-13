@@ -1,0 +1,10 @@
+{
+  "extends": "../f36_recorded_visual_canary.positive.json",
+  "mutations": [
+    {
+      "path": "/sparta_evidence_case_link/semantic_package_hash",
+      "value": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+    }
+  ],
+  "expected_error": "semantic_package_hash_mismatch"
+}
