@@ -304,14 +304,62 @@ def _get_memory_client() -> httpx.Client:
     return httpx.Client(base_url=_memory_base_url(), timeout=30.0)
 
 
+def _read_env_value(path: Path, key: str) -> str | None:
+    """Read one key from a dotenv file without mutating the process environment."""
+    if not path.is_file():
+        return None
+    for raw_line in path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        name, separator, value = line.partition("=")
+        if separator and name.strip() == key:
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            return value or None
+    return None
+
+
+def _scillm_api_key() -> str:
+    """Resolve the live SciLLM credential without embedding a development key."""
+    explicit_api_key = os.getenv("SCILLM_API_KEY")
+    if explicit_api_key:
+        return explicit_api_key
+
+    env_path = Path(
+        os.getenv("SCILLM_ENV", "/home/graham/workspace/experiments/scillm/.env")
+    ).expanduser()
+    for key_name in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
+        file_value = _read_env_value(env_path, key_name)
+        if file_value:
+            return file_value
+
+    for key_name in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_PROXY_KEY"):
+        env_value = os.getenv(key_name)
+        if env_value:
+            return env_value
+
+    raise RuntimeError(
+        "SciLLM credential unavailable; set SCILLM_API_KEY or configure "
+        f"SCILLM_MASTER_KEY in {env_path}"
+    )
+
+
+def _scillm_headers() -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {_scillm_api_key()}",
+        "x-caller-skill": "create-qras",
+    }
+
+
 def _get_scillm_client() -> httpx.Client:
     """Get httpx client for scillm."""
     return httpx.Client(
         base_url="http://localhost:4001",
-        headers={
-            "Authorization": "Bearer sk-dev-proxy-123",
-            "x-caller-skill": "create-qras",
-        },
+        headers=_scillm_headers(),
         timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
     )
 
@@ -320,10 +368,7 @@ def _get_async_scillm_client() -> httpx.AsyncClient:
     """Get async httpx client for scillm batch processing."""
     return httpx.AsyncClient(
         base_url="http://localhost:4001",
-        headers={
-            "Authorization": "Bearer sk-dev-proxy-123",
-            "x-caller-skill": "create-qras",
-        },
+        headers=_scillm_headers(),
         timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
     )
 
@@ -435,10 +480,7 @@ def _get_provider_concurrency(model: str = "text") -> int:
         with httpx.Client(timeout=5.0) as client:
             resp = client.get(
                 f"http://localhost:4001/v1/scillm/concurrency?model={model}",
-                headers={
-                    "Authorization": "Bearer sk-dev-proxy-123",
-                    "X-Caller-Skill": "create-qras",
-                },
+                headers=_scillm_headers(),
             )
             if resp.status_code == 200:
                 data = resp.json()
