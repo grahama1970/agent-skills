@@ -240,7 +240,9 @@ def test_export_batch_one_size_200_has_stable_order_and_1000_variants(tmp_path: 
     assert (tmp_path / "out" / "export-receipt.json").exists()
     request = (tmp_path / "out" / "request.md").read_text()
     assert '"required_output_filename": "f36b-qra-batch-001.json"' in request
-    assert "downloadable attachment named `f36b-qra-batch-001.json`" in request
+    assert '"required_output_archive": "f36b-qra-batch-001.zip"' in request
+    assert "downloadable ZIP attachment named `f36b-qra-batch-001.zip`" in request
+    assert "exactly one file named `f36b-qra-batch-001.json`" in request
 
 
 def test_export_batch_ordinal_selects_stable_manifest_slice() -> None:
