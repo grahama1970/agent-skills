@@ -43,6 +43,21 @@ NEGATIVE_PROMPTS = (
     "Computer.",
     "Jarvis.",
 )
+NEGATIVE_TRANSCRIPT_ALIASES = {
+    "Embry.": frozenset({"embry", "embree", "embrie"}),
+    "Hey Em.": frozenset({"hey em"}),
+    "Embryo.": frozenset({"embryo"}),
+    "Emery.": frozenset({"emery"}),
+    "Henry.": frozenset({"henry"}),
+    "Every.": frozenset({"every"}),
+    "Entry.": frozenset({"entry"}),
+    "Empty.": frozenset({"empty"}),
+    "Hey Henry.": frozenset({"hey henry"}),
+    "Hey Emily.": frozenset({"hey emily"}),
+    "Hey Empty.": frozenset({"hey empty"}),
+    "Computer.": frozenset({"computer"}),
+    "Jarvis.": frozenset({"jarvis"}),
+}
 SPLIT_OFFSETS = {
     "positive_train": 0,
     "positive_validation": 100_000,
@@ -79,9 +94,44 @@ def canonical_positive_transcript(value: str) -> str | None:
     return POSITIVE_TRANSCRIPT_ALIASES.get(normalize_transcript(value))
 
 
-def negative_transcript_accepted(value: str) -> bool:
+def negative_transcript_accepted(value: str, *, prompt: str) -> bool:
     normalized = normalize_transcript(value)
-    return bool(normalized) and normalized not in POSITIVE_TRANSCRIPTS
+    return (
+        normalized not in POSITIVE_TRANSCRIPTS
+        and normalized in NEGATIVE_TRANSCRIPT_ALIASES[prompt]
+    )
+
+
+def balanced_prompt_targets(prompts: tuple[str, ...], target_count: int) -> dict[str, int]:
+    quotient, remainder = divmod(target_count, len(prompts))
+    return {
+        prompt: quotient + int(index < remainder)
+        for index, prompt in enumerate(prompts)
+    }
+
+
+def next_negative_prompt(
+    *, records: list[dict[str, Any]], split: str, target_count: int
+) -> str | None:
+    targets = balanced_prompt_targets(NEGATIVE_PROMPTS, target_count)
+    accepted_counts = {
+        prompt: sum(
+            1
+            for record in records
+            if record["split"] == split
+            and record["accepted"]
+            and record["prompt"] == prompt
+        )
+        for prompt in NEGATIVE_PROMPTS
+    }
+    return next(
+        (
+            prompt
+            for prompt in NEGATIVE_PROMPTS
+            if accepted_counts[prompt] < targets[prompt]
+        ),
+        None,
+    )
 
 
 def deterministic_choice(values: tuple[str, ...], *, seed: int, index: int) -> str:
@@ -212,6 +262,11 @@ def build_receipt(
         "wake_phrase": "Hey Embry",
         "accepted_transcript_variants": sorted(set(POSITIVE_TRANSCRIPT_ALIASES.values())),
         "asr_spelling_aliases": POSITIVE_TRANSCRIPT_ALIASES,
+        "positive_alias_rule_id": "whisper_orthographic_embrie_to_embree_v1",
+        "negative_phrase_specific_aliases": {
+            prompt: sorted(aliases)
+            for prompt, aliases in NEGATIVE_TRANSCRIPT_ALIASES.items()
+        },
         "seed": seed,
         "output_dir": str(output_dir.resolve()),
         "targets": {spec.name: spec.target_count for spec in specs},
@@ -257,7 +312,16 @@ def generate(args: argparse.Namespace) -> int:
         while accepted_count < spec.target_count and attempts < max_attempts:
             index = attempts
             split_seed = args.seed + SPLIT_OFFSETS[spec.name]
-            prompt = deterministic_choice(spec.prompts, seed=split_seed, index=index)
+            if spec.label == "negative":
+                prompt = next_negative_prompt(
+                    records=records,
+                    split=spec.name,
+                    target_count=spec.target_count,
+                )
+                if prompt is None:
+                    break
+            else:
+                prompt = deterministic_choice(spec.prompts, seed=split_seed, index=index)
             parameters = deterministic_parameters(seed=split_seed, index=index)
             request_payload = {"prompt": prompt, "speaker": "horus", **parameters}
             record_id = sha256_bytes(
@@ -288,7 +352,7 @@ def generate(args: argparse.Namespace) -> int:
                 accepted = (
                     positive_transcript_accepted(transcript)
                     if spec.label == "positive"
-                    else negative_transcript_accepted(transcript)
+                    else negative_transcript_accepted(transcript, prompt=prompt)
                 )
                 rejection_reason = None if accepted else "transcript_gate_rejected"
                 audio_path = output_dir / "audio" / spec.name / f"{record_id}.wav"

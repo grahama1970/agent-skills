@@ -24,10 +24,21 @@ def test_positive_transcript_gate_is_bounded() -> None:
 
 
 def test_negative_gate_rejects_positive_phrase() -> None:
-    assert MODULE.negative_transcript_accepted("Hey Henry.")
-    assert MODULE.negative_transcript_accepted("Emery.")
-    assert not MODULE.negative_transcript_accepted("Hey, Embry!")
-    assert not MODULE.negative_transcript_accepted("")
+    assert MODULE.negative_transcript_accepted("Hey Henry.", prompt="Hey Henry.")
+    assert MODULE.negative_transcript_accepted("Emery.", prompt="Emery.")
+    assert not MODULE.negative_transcript_accepted("Henry.", prompt="Hey Henry.")
+    assert not MODULE.negative_transcript_accepted("Hey, Embry!", prompt="Hey Henry.")
+    assert not MODULE.negative_transcript_accepted("", prompt="Hey Henry.")
+
+
+def test_negative_prompt_targets_are_balanced_and_exact() -> None:
+    train = MODULE.balanced_prompt_targets(MODULE.NEGATIVE_PROMPTS, 260)
+    validation = MODULE.balanced_prompt_targets(MODULE.NEGATIVE_PROMPTS, 90)
+    assert sum(train.values()) == 260
+    assert set(train.values()) == {20}
+    assert sum(validation.values()) == 90
+    assert min(validation.values()) == 6
+    assert max(validation.values()) == 7
 
 
 def test_split_seed_offsets_and_parameters_are_deterministic() -> None:
