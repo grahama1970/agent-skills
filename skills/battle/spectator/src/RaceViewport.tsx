@@ -171,19 +171,6 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     });
   }, []);
 
-  const handlePixiScrollLeftChange = useCallback(
-    (left: number) => {
-      const node = scrollRef.current;
-      if (!node) return;
-      const maxLeft = Math.max(0, node.scrollWidth - node.clientWidth);
-      const nextLeft = Math.min(maxLeft, Math.max(0, left));
-      if (Math.abs(node.scrollLeft - nextLeft) > 0.5) node.scrollLeft = nextLeft;
-      syncScrollMetrics();
-    },
-    [syncScrollMetrics],
-  );
-
-
   const scrubPlayheadFromClientX = useCallback(
     (clientX: number, trackRect: DOMRect, mode: "overlay" | "timeline") => {
       if (receiptReplay && fixture.battle_timeline_control?.controls?.can_scrub === false) return;
@@ -471,7 +458,6 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             contentWidth={contentWidth}
             allottedSeconds={allotted}
             scrollLeft={scrollMetrics.scrollLeft}
-            onScrollLeftChange={handlePixiScrollLeftChange}
             heightPx={pixiRowsHeight}
             playing={playing}
             collapsedParentIds={collapsed}

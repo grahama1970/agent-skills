@@ -91,4 +91,7 @@ echo "XX/XX PR6 genetic Pixi lifecycle proof"
 echo "XX/XX PR8 live transport proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr8-live-transport)
 
+echo "XX/XX V13 adaptive lineage Pixi proof"
+(cd "$SPECTATOR_DIR" && npm run prove:adaptive-lineage-v13)
+
 echo "BATTLE_PROVE_SPECTATOR_PASS"

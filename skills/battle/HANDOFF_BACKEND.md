@@ -1170,3 +1170,7 @@ composite demonstration. Frontend must consume only this public fixture, never
 raw Tau/provider/Docker/Judge/Arena paths. `improvement_claimed` is false and
 `judge_verified_exploits` remains zero; semantic novelty is not performance or
 exploit-success evidence.
+
+V13 is the default `#battle/receipt?engine=pixi` adaptive replay. PR6 remains
+available only at its explicit fixture URL and must be labeled `legacy
+composite`; it is not a fallback authority for adaptive lineage.

@@ -20,14 +20,15 @@ export function BattleProofNav() {
 	const onCampaign = isBattleCampaignView(hash);
 	const onMusic = isBattleMusicView(hash);
 	const onGenetic = hash.includes("pr6-genetic") && !onCampaign;
+	const onAdaptive = hash.includes("adaptive-lineage-v13");
 	const onDesign = isBattleDesignView();
-	const onProofFamily = onProof || onSynthesis || onCompile || onRuntime || onPopulation || onGenetic || onCampaign || onMusic || onLive;
+	const onProofFamily = onProof || onSynthesis || onCompile || onRuntime || onPopulation || onGenetic || onAdaptive || onCampaign || onMusic || onLive;
 	const onRace = !onDesign && !onProofFamily && (isBattleReceiptReplayView() || hash.startsWith("#battle/receipt"));
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
 			<a href="#battle/receipt?engine=pixi" aria-current={onRace ? "page" : undefined} data-qid="battle:nav:race">
-				Battle Replay
+				Adaptive Replay
 			</a>
 			<a href="#battle" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" title="Dense design-parity mockup (not receipt truth)">
 				Design
@@ -36,12 +37,20 @@ export function BattleProofNav() {
 				<summary className={onProofFamily ? "is-active" : undefined}>Proofs &amp; stages</summary>
 				<div className="battle-proof-nav-more-links">
 					<a
+						href="#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13"
+						aria-current={onAdaptive ? "page" : undefined}
+						data-qid="battle:nav:adaptive"
+						title="Single-run causal Red/Blue parent-child lineage"
+					>
+						Adaptive Lineage V13
+					</a>
+					<a
 						href="#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
 						aria-current={onGenetic ? "page" : undefined}
 						data-qid="battle:nav:genetic"
 						title="Composite demonstration — causal continuity not proven"
 					>
-						Genetic Pixi (composite)
+						Genetic Pixi (legacy composite)
 					</a>
 					<a
 						href="#battle/campaign?engine=pixi&fixture=battle-004-pr6-genetic-pixi"

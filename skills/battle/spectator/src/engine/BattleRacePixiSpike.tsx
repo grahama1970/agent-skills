@@ -33,7 +33,6 @@ type Props = {
 	contentWidth: number;
 	allottedSeconds: number;
 	scrollLeft: number;
-	onScrollLeftChange?: (scrollLeft: number) => void;
 	heightPx: number;
 	playing?: boolean;
 	collapsedParentIds?: Set<string>;
@@ -56,6 +55,8 @@ type SceneFrameState = {
 	playing: boolean;
 };
 
+let pixiMountSequence = 0;
+
 function destroyApplication(app: Application) {
 	app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
 }
@@ -72,7 +73,6 @@ export function BattleRacePixiSpike({
 	contentWidth,
 	allottedSeconds,
 	scrollLeft,
-	onScrollLeftChange,
 	heightPx,
 	playing = false,
 	collapsedParentIds = new Set(),
@@ -81,9 +81,7 @@ export function BattleRacePixiSpike({
 	const stageHostRef = useRef<HTMLDivElement>(null);
 	const runtimeRef = useRef<PixiRaceRuntime | null>(null);
 	const runnersRef = useRef<Map<string, RunnerActor>>(new Map());
-	const syncingRef = useRef(false);
 	const scrollLeftRef = useRef(scrollLeft);
-	const onScrollLeftChangeRef = useRef(onScrollLeftChange);
 	const atlasReadyRef = useRef(false);
 	const frameStateRef = useRef<SceneFrameState>({
 		lanes,
@@ -192,10 +190,6 @@ export function BattleRacePixiSpike({
 	}, [scrollLeft]);
 
 	useEffect(() => {
-		onScrollLeftChangeRef.current = onScrollLeftChange;
-	}, [onScrollLeftChange]);
-
-	useEffect(() => {
 		const host = hostRef.current;
 		if (!host) return;
 
@@ -220,6 +214,7 @@ export function BattleRacePixiSpike({
 			frameStateRef.current.markerAtlas = markerAtlas;
 			host.replaceChildren(app.canvas);
 			app.canvas.className = "pixiRaceCanvas";
+			app.canvas.dataset.battlePixiMountId = String(++pixiMountSequence);
 			enableBattlePixiAccessibility(app);
 
 			const viewport = new Viewport({
@@ -231,15 +226,9 @@ export function BattleRacePixiSpike({
 			});
 			configureBattleViewportAccessibility(viewport);
 			app.stage.addChild(viewport);
-			viewport.drag({ direction: "x" }).wheel({ smooth: 3 }).decelerate().clamp({ direction: "all" });
 
 			const scene = createBattlePixiSceneLayers();
 			viewport.addChild(scene.world);
-
-			viewport.on("moved", () => {
-				if (syncingRef.current) return;
-				onScrollLeftChangeRef.current?.(Math.max(0, -viewport.position.x));
-			});
 
 			const resizeObserver = new ResizeObserver(() => {
 				const runtime = runtimeRef.current;
@@ -258,9 +247,7 @@ export function BattleRacePixiSpike({
 			atlasReadyRef.current = true;
 			bindBattlePixiTicker(app, { tick: tickerBindingRef.current.tick, context: tickerBindingRef.current });
 
-			syncingRef.current = true;
 			viewport.position.x = -pixiViewportScrollLeft(viewport, scrollLeftRef.current, contentWidth);
-			syncingRef.current = false;
 			tickerBindingRef.current.tick(runtime.app.ticker);
 		};
 
@@ -290,9 +277,7 @@ export function BattleRacePixiSpike({
 	useEffect(() => {
 		const runtime = runtimeRef.current;
 		if (!runtime) return;
-		syncingRef.current = true;
 		runtime.viewport.position.x = -pixiViewportScrollLeft(runtime.viewport, scrollLeft, contentWidth);
-		syncingRef.current = false;
 	}, [contentWidth, scrollLeft]);
 
 	return (

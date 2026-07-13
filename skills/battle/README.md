@@ -350,7 +350,11 @@ promotion.
 The UX7 genetic Pixi replay contract enriches the existing race fixture schema
 with a `genetic_lifecycle` block and receipt-backed top-level events.
 
-Route: `#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi`.
+Legacy composite route: `#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi`.
+
+PR6 is retained only as a composite presentation demonstration. Its stages come
+from four source runs with synthetic presentation ordering, so it is not the
+default adaptive replay and does not prove one causal genetic campaign.
 
 ```text
 local/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json

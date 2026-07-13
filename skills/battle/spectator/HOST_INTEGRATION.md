@@ -7,6 +7,7 @@ The spectator package is self-contained under `skills/battle/spectator/`. Host a
 | URL | Source |
 |-----|--------|
 | `/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `skills/battle/local/battle-004-parent-spawn-pixi-replay/` |
+| `/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json` | `skills/battle/local/battle-004-adaptive-lineage-v13/` |
 | `/battle-sprites/pixijs/*` | `skills/battle/assets/sprites/pixijs/` |
 
 Includes runner atlases (`blue_lizard.json`, …) and marker atlas `battle-race-atlas.png.json`.
@@ -50,9 +51,17 @@ npm run typecheck
 npm test
 BATTLE_HOST=http://127.0.0.1:3012 npm run prove:pixi
 BATTLE_HOST=http://127.0.0.1:3012 npm run prove:receipt-replay
+BATTLE_HOST=http://127.0.0.1:3012 npm run prove:adaptive-lineage-v13
 ```
 
 Or run the Battle skill orchestrator: `./run.sh prove-spectator`
+
+The adaptive V13 proof writes a hash-bound bundle when
+`BATTLE_ADAPTIVE_V13_PROOF_DIR` is set. The committed reference bundle lives at
+`skills/battle/local/battle-004-adaptive-lineage-v13-ui-proof/` and includes
+the proof summary, browser console/network reports, and desktop/mobile
+screenshots. The browser's outer timeline scroller is the sole horizontal
+camera authority; Pixi only renders the supplied scroll position.
 
 
 ## Battle audio (UX9 Genesis intro)

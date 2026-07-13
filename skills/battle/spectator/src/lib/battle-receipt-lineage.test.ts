@@ -47,8 +47,8 @@ describe("battle receipt lineage", () => {
 	});
 
 	it("resolves committed receipt replay fixture keys from the route hash", () => {
-		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi")).toBe("battle-004-parent-spawn");
-		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=missing")).toBe("battle-004-parent-spawn");
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi")).toBe("battle-004-adaptive-lineage-v13");
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=missing")).toBe("battle-004-adaptive-lineage-v13");
 		expect(battleReceiptReplayFixtureUrl("#battle/receipt?engine=pixi&fixture=battle-005-ssrf-metadata")).toBe(
 			"/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json",
 		);

@@ -469,6 +469,13 @@ performance improvement, Judge-confirmed Red exploit success, durable memory
 write/recall, population-scale evolution, multiple vulnerabilities, or
 production readiness.
 
+The V13 adaptive fixture is the default receipt replay. Its durable UI proof is
+archived under `local/battle-004-adaptive-lineage-v13-ui-proof/` with hashes for
+the normalized fixture, shared Plague Nurgling atlas, browser reports, and eight
+screenshots. PR6 remains an explicitly legacy composite demonstration. Pixi no
+longer writes back to the browser timeline scroll position; the outer scroller
+is the single horizontal camera authority.
+
 Battle v0 does not prove:
 
 - real Red agent behavior
@@ -497,6 +504,5 @@ Battle v0 does not prove:
   `reports`, `worktrees`, `node_modules`, or `__pycache__` directories.
 - Generated monitor artifacts under `monitor/battle/public/artifacts/` are proof
   copies for UI validation and should not be treated as source.
-- Current Battle worktree state is uncommitted and pending review.
-- Full clean validation should be rerun before any closure, commit, or readiness
-  claim.
+- V13 UI durability and camera changes require the committed proof manifest and
+  a clean-checkout browser run before any closure claim.
