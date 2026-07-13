@@ -965,13 +965,14 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
         setPhase07ReviewerStatus(null)
         return
       }
-      const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
-      const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
+      const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+      const packetPath = packetArtifact?.path
       try {
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`)
-        if (!response.ok) throw new Error(`storyboard review HTTP ${response.status}`)
+        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!response.ok) throw new Error(`storyboard packet HTTP ${response.status}`)
         const payload = await response.json()
-        const status = String(payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
+        const status = String(payload?.review_status ?? payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
         if (!cancelled) setPhase07ReviewerStatus(status)
       } catch {
         if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
@@ -2356,15 +2357,18 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
     ? panels.filter((panel) => targetPanelIds.includes(String(panel.panel_id ?? panel.id ?? '')))
     : panels
   const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
-  const reviewBlockers = Array.isArray(verdict?.blockers) ? verdict.blockers.map(String).filter(Boolean) : []
+  const reviewBlockers = Array.isArray(verdict?.blockers)
+    ? verdict.blockers.map(String).filter(Boolean)
+    : Array.isArray(packet?.review_blockers)
+      ? packet.review_blockers.map(String).filter(Boolean)
+      : []
   const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
   const panelsHaveAcceptedFrames = reviewPanels.length > 0 && reviewPanels.every(panelHasAcceptedStoryboardFrames)
-  const reviewAccepted = Boolean(verdict?.accepted) && String(verdict?.status ?? '').includes('PASS')
+  const reviewAccepted = (Boolean(verdict?.accepted) && String(verdict?.status ?? '').includes('PASS'))
+    || (Boolean(packet?.accepted) && String(packet?.review_status ?? packet?.status ?? '').includes('PASS'))
   const status = verdict
     ? String(verdict.status ?? (reviewAccepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
-    : panelsHaveAcceptedFrames
-      ? 'REVIEW_VERDICT_MISSING'
-      : String(packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+    : String(packet?.review_status ?? packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
   const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames || !reviewAccepted
   const targetLabel = targetPanelIds.length > 0 ? targetPanelIds.join(', ') : null
   const panelCountLabel = targetPanelIds.length > 0
@@ -8078,13 +8082,14 @@ function AgentPane({
         setPhase07ReviewerStatus(null)
         return
       }
-      const verdictArtifact = selectedStage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
-      const verdictPath = verdictArtifact?.path ?? phase07StoryboardVerdictPath
+      const packetArtifact = selectedStage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+      const packetPath = packetArtifact?.path
       try {
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`)
-        if (!response.ok) throw new Error(`storyboard review HTTP ${response.status}`)
+        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
+        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!response.ok) throw new Error(`storyboard packet HTTP ${response.status}`)
         const payload = await response.json()
-        const status = String(payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
+        const status = String(payload?.review_status ?? payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
         if (!cancelled) setPhase07ReviewerStatus(status)
       } catch {
         if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
