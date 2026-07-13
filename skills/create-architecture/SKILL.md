@@ -44,6 +44,9 @@ elements with labeled shapes, connecting arrows, and file attachments.
 # Create from a YAML pipeline definition
 ./run.sh create --input pipeline.yaml
 
+# Deadline-bound implementation architecture
+./run.sh create --input pipeline.yaml --execution-locked
+
 # Create from inline JSON
 ./run.sh create --name "QuerySpec Pipeline" --json '[{"id":"step1","label":"Classifier","tech":"SetFit"}]'
 
@@ -87,6 +90,30 @@ connections:
 3. Lays out components vertically with consistent spacing
 4. Saves via `PUT /api/architecture/:id` on the UX Lab Express server
 5. Architecture appears at `localhost:3002/#architecture`
+
+## Execution-Locked Architectures
+
+When the user names a deadline, runnable campaign, immediate operational target,
+or reports drift, implementation workflow diagrams must use
+`--execution-locked`. The YAML must classify every component:
+
+```yaml
+execution_lock:
+  objective: "Start the executable regression campaign tonight"
+  deadline: "2026-07-13T23:59:00-04:00"
+  current_phase: corpus
+  critical_path: [corpus, model, physical_canary, campaign]
+  deferred: [release_qualification, expanded_suite]
+  stop_condition: "Campaign process starts and writes its first live row receipt"
+  max_attempts_per_blocker: 2
+  update_interval_minutes: 5
+```
+
+The runtime rejects missing fields, unclassified components, overlap between
+critical and deferred work, an off-path current phase, more than two attempts
+per blocker, or an update interval over five minutes. An architecture may show
+deferred work, but the project agent may not execute it before the critical-path
+stop condition without explicit user authorization.
 
 ## Colors
 

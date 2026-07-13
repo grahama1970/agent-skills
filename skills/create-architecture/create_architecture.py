@@ -1,5 +1,6 @@
 """Create and update architecture diagrams in UX Lab's Excalidraw canvas."""
 
+import builtins
 import json
 import random
 import sys
@@ -24,6 +25,49 @@ COLORS = {
     "red": "#ff4444",
     "dim": "#64748b",
 }
+
+EXECUTION_LOCK_FIELDS = {
+    "objective",
+    "deadline",
+    "current_phase",
+    "critical_path",
+    "deferred",
+    "stop_condition",
+    "max_attempts_per_blocker",
+    "update_interval_minutes",
+}
+
+
+def validate_execution_lock(spec: dict) -> list[str]:
+    """Validate a deadline-bound architecture against a closed component set."""
+    lock = spec.get("execution_lock")
+    if not isinstance(lock, dict):
+        return ["missing_execution_lock"]
+    errors = [f"missing_{field}" for field in sorted(EXECUTION_LOCK_FIELDS - lock.keys())]
+    critical = lock.get("critical_path", [])
+    deferred = lock.get("deferred", [])
+    component_ids = {component.get("id") for component in spec.get("components", [])}
+    if not isinstance(critical, builtins.list) or not critical:
+        errors.append("critical_path_must_be_nonempty_list")
+        critical = []
+    if not isinstance(deferred, builtins.list):
+        errors.append("deferred_must_be_list")
+        deferred = []
+    if set(critical) & set(deferred):
+        errors.append("critical_and_deferred_overlap")
+    classified = set(critical) | set(deferred)
+    if component_ids - classified:
+        errors.append("unclassified_components")
+    if classified - component_ids:
+        errors.append("unknown_classified_components")
+    if lock.get("current_phase") not in set(critical):
+        errors.append("current_phase_not_on_critical_path")
+    if lock.get("max_attempts_per_blocker") not in (1, 2):
+        errors.append("max_attempts_per_blocker_must_be_one_or_two")
+    interval = lock.get("update_interval_minutes")
+    if not isinstance(interval, int) or not 1 <= interval <= 5:
+        errors.append("update_interval_minutes_must_be_one_to_five")
+    return sorted(set(errors))
 
 
 def _nonce() -> int:
@@ -395,6 +439,11 @@ def create(
     name: Optional[str] = typer.Option(None, "--name", "-n", help="Architecture name (overrides YAML)"),
     project_id: Optional[str] = typer.Option(None, "--project", "-p", help="Project ID (slug, default: derived from name)"),
     json_input: Optional[str] = typer.Option(None, "--json", help="Inline JSON array of components"),
+    execution_locked: bool = typer.Option(
+        False,
+        "--execution-locked",
+        help="Require all components to be critical-path or explicitly deferred",
+    ),
 ) -> None:
     """Create an architecture diagram from a pipeline definition."""
     if input and input.exists():
@@ -410,6 +459,15 @@ def create(
     else:
         console.print("[red]ERROR: provide --input pipeline.yaml or --json '[...]'[/red]")
         raise typer.Exit(1)
+
+    if execution_locked:
+        if not input:
+            console.print("[red]ERROR: --execution-locked requires a YAML input[/red]")
+            raise typer.Exit(2)
+        errors = validate_execution_lock(spec)
+        if errors:
+            console.print("[red]ERROR: invalid execution lock: " + ", ".join(errors) + "[/red]")
+            raise typer.Exit(2)
 
     pid = project_id or arch_name.lower().replace(" ", "-").replace("/", "-")
 

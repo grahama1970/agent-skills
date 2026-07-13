@@ -31,6 +31,9 @@ All commands default to `--background` (no KDE switch, no window focus).
 # One command: submit + wait + download
 python scripts/webgpt_cli.py submit bundle.md
 
+# Deadline-bound implementation review: fail if the bundle can drift
+python scripts/webgpt_cli.py submit bundle.md --execution-locked
+
 # Re-submit latest bundle (auto-finds creation-bundle*.md)
 python scripts/webgpt_cli.py submit
 
@@ -81,3 +84,25 @@ python scripts/webgpt_cli.py config --tab-id 837356566 --url "https://chatgpt.co
 ```
 
 Stored in `~/.pi/webgpt-projects/<project>.json`.
+
+## Execution Lock
+
+When the user names a deadline, campaign, immediate runnable target, or says the
+agent is drifting, every implementation or architecture submission must use
+`--execution-locked`. The bundle must contain these exact level-two headings:
+
+```text
+## Objective
+## Current Phase
+## Critical Path
+## Deferred Work
+## Stop Condition
+```
+
+The critical path must be the shortest path to the user's named runnable
+artifact. Put release hardening, adjacent subsystems, comprehensive redesigns,
+and later qualification in Deferred Work unless they are strictly required for
+the current stop condition. WebGPT recommendations do not authorize the agent
+to expand the critical path. If a recommendation adds prerequisites, the agent
+must identify which existing critical-path command they unblock; otherwise the
+recommendation remains deferred.

@@ -21,6 +21,20 @@ SURF = Path("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh")
 GITHUB_REPO = "agent-skills"
 GITHUB_ORG = "grahama1970"
 
+EXECUTION_LOCK_HEADINGS = (
+    "objective",
+    "current phase",
+    "critical path",
+    "deferred work",
+    "stop condition",
+)
+
+
+def validate_execution_lock(text: str) -> list[str]:
+    """Return missing execution-lock headings for deadline-bound reviews."""
+    lowered = text.lower()
+    return [heading for heading in EXECUTION_LOCK_HEADINGS if f"## {heading}" not in lowered]
+
 
 def _now() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -242,12 +256,24 @@ def submit(
     project: str = typer.Option("sparta", "-p"),
     timeout: int = typer.Option(900, "--timeout", "-t", help="WebGPT timeout (seconds)"),
     background: bool = typer.Option(True, "--background", help="Background: no KDE switch, no window focus"),
+    execution_locked: bool = typer.Option(
+        False,
+        "--execution-locked",
+        help="Require a shortest-path execution lock in the submitted bundle",
+    ),
 ):
     """Submit a bundle, capture response, download solution zip. All complexity hidden."""
     bp = Path(bundle) if bundle else _latest_bundle()
     if not bp or not bp.exists():
         typer.echo("Bundle not found", err=True)
         raise typer.Exit(1)
+    if execution_locked:
+        missing = validate_execution_lock(bp.read_text(encoding="utf-8"))
+        if missing:
+            typer.echo(
+                "Execution lock missing headings: " + ", ".join(missing), err=True
+            )
+            raise typer.Exit(2)
 
     b = _binding(project)
     _verify_desktop(b, background, "submit")
