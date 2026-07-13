@@ -2876,6 +2876,8 @@ export async function handleMessage(
         ? `page inspection failed: ${pageStateError}`
         : "page inspection did not return a value";
 
+      const activeDownloadGuard = await getActiveDownloadRecoveryGuard(pageState?.locationHref ?? tab.url);
+
       return {
         tab: tabIdentity,
         loadState: {
@@ -2899,6 +2901,7 @@ export async function handleMessage(
             value: "unknown",
             reason: guardUnknownReason,
           },
+          activeDownload: activeDownloadGuard,
         },
       };
     }
