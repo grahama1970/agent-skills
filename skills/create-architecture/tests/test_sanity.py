@@ -40,6 +40,9 @@ def test_execution_lock_rejects_unclassified_components():
             "deferred": [],
             "stop_condition": "runner starts",
             "max_attempts_per_blocker": 2,
+            "max_identical_failures_per_family": 3,
+            "systemic_failure_action": "stop_family_mark_remaining_blocked_continue_independent_families",
+            "reviewer_scope_authority": "none",
             "update_interval_minutes": 5,
         },
     }
@@ -58,7 +61,34 @@ def test_execution_lock_accepts_closed_scope():
             "deferred": ["later"],
             "stop_condition": "runner starts",
             "max_attempts_per_blocker": 2,
+            "max_identical_failures_per_family": 3,
+            "systemic_failure_action": "stop_family_mark_remaining_blocked_continue_independent_families",
+            "reviewer_scope_authority": "none",
             "update_interval_minutes": 5,
         },
     }
     assert module.validate_execution_lock(spec) == []
+
+
+def test_execution_lock_rejects_campaign_without_systemic_fail_fast():
+    module = load_module()
+    spec = {
+        "components": [{"id": "campaign"}],
+        "execution_lock": {
+            "objective": "run campaign",
+            "deadline": "tonight",
+            "current_phase": "campaign",
+            "critical_path": ["campaign"],
+            "deferred": [],
+            "stop_condition": "runner finishes",
+            "max_attempts_per_blocker": 2,
+            "max_identical_failures_per_family": 20,
+            "systemic_failure_action": "finish_all_cases",
+            "reviewer_scope_authority": "implicit",
+            "update_interval_minutes": 5,
+        },
+    }
+    errors = module.validate_execution_lock(spec)
+    assert "max_identical_failures_per_family_must_be_one_to_three" in errors
+    assert "systemic_failure_action_must_fail_fast_by_family" in errors
+    assert "reviewer_scope_authority_must_be_none" in errors

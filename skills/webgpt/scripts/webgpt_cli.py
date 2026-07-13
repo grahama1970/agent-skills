@@ -31,6 +31,7 @@ EXECUTION_LOCK_HEADINGS = (
     "current phase",
     "critical path",
     "deferred work",
+    "failure policy",
     "stop condition",
 )
 
@@ -43,11 +44,27 @@ CODE_GATE_FIELDS = (
     "forbidden_adjacent_scope",
 )
 
+EXECUTION_LOCK_DIRECTIVES = (
+    "max_identical_failures_per_family: 3",
+    "systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families",
+    "reviewer_scope_authority: none",
+)
+
 
 def validate_execution_lock(text: str) -> list[str]:
-    """Return missing execution-lock headings for deadline-bound reviews."""
+    """Return missing execution-lock requirements for deadline-bound reviews."""
     lowered = text.lower()
-    return [heading for heading in EXECUTION_LOCK_HEADINGS if f"## {heading}" not in lowered]
+    missing = [
+        heading
+        for heading in EXECUTION_LOCK_HEADINGS
+        if f"## {heading}" not in lowered
+    ]
+    missing.extend(
+        directive
+        for directive in EXECUTION_LOCK_DIRECTIVES
+        if directive not in lowered
+    )
+    return missing
 
 
 def validate_code_gate(text: str) -> list[str]:

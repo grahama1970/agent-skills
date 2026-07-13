@@ -34,6 +34,9 @@ EXECUTION_LOCK_FIELDS = {
     "deferred",
     "stop_condition",
     "max_attempts_per_blocker",
+    "max_identical_failures_per_family",
+    "systemic_failure_action",
+    "reviewer_scope_authority",
     "update_interval_minutes",
 }
 
@@ -104,6 +107,14 @@ def validate_execution_lock(spec: dict) -> list[str]:
         errors.append("current_phase_not_on_critical_path")
     if lock.get("max_attempts_per_blocker") not in (1, 2):
         errors.append("max_attempts_per_blocker_must_be_one_or_two")
+    if lock.get("max_identical_failures_per_family") not in (1, 2, 3):
+        errors.append("max_identical_failures_per_family_must_be_one_to_three")
+    if lock.get("systemic_failure_action") != (
+        "stop_family_mark_remaining_blocked_continue_independent_families"
+    ):
+        errors.append("systemic_failure_action_must_fail_fast_by_family")
+    if lock.get("reviewer_scope_authority") != "none":
+        errors.append("reviewer_scope_authority_must_be_none")
     interval = lock.get("update_interval_minutes")
     if not isinstance(interval, int) or not 1 <= interval <= 5:
         errors.append("update_interval_minutes_must_be_one_to_five")
