@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/revision_memory_prepare_receipt.v1.schema.json",
+  "title": "Persona Dream revision Memory prepare receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "revision_id",
+    "source_revision_id",
+    "source_commit",
+    "runtime_release_id",
+    "memory_url",
+    "collection",
+    "lifecycle_state",
+    "revision_root",
+    "artifact_index_path",
+    "artifact_index_sha256",
+    "revision_manifest_sha256",
+    "hash_validation",
+    "records",
+    "requests",
+    "semantic_sync",
+    "command",
+    "claims",
+    "prepared_at",
+    "mocked",
+    "live",
+    "provider_live",
+    "paid_call_authorized",
+    "submitted",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.revision_memory_prepare_receipt.v1"
+    },
+    "status": {
+      "const": "PASS_MEMORY_REVISION_PREPARED"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_revision_id": {
+      "type": "string"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "runtime_release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "collection": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycle_state": {
+      "const": "PREPARED"
+    },
+    "revision_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_index_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_index_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "revision_manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "hash_validation": {
+      "$ref": "#/$defs/hash_validation"
+    },
+    "records": {
+      "type": "object",
+      "required": [
+        "revision_key",
+        "phase_keys",
+        "required_artifact_keys",
+        "exact_keys",
+        "expected_counts",
+        "returned_counts"
+      ],
+      "properties": {
+        "revision_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase_keys": {
+          "type": "object",
+          "minProperties": 10,
+          "maxProperties": 10,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required_artifact_keys": {
+          "type": "object",
+          "minProperties": 16,
+          "maxProperties": 16,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exact_keys": {
+          "type": "array",
+          "minItems": 27,
+          "maxItems": 27,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expected_counts": {
+          "$ref": "#/$defs/record_counts"
+        },
+        "returned_counts": {
+          "$ref": "#/$defs/record_counts"
+        }
+      }
+    },
+    "requests": {
+      "type": "object",
+      "required": [
+        "control_upsert",
+        "semantic_upsert",
+        "list_after_prepare"
+      ],
+      "properties": {
+        "control_upsert": {
+          "$ref": "#/$defs/http_evidence"
+        },
+        "semantic_upsert": {
+          "$ref": "#/$defs/http_evidence"
+        },
+        "list_after_prepare": {
+          "$ref": "#/$defs/http_evidence"
+        }
+      }
+    },
+    "semantic_sync": {
+      "$ref": "#/$defs/semantic_sync"
+    },
+    "command": {
+      "$ref": "#/$defs/command"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "prepared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live": {
+      "type": "boolean"
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "memory_url": {
+      "type": "string",
+      "pattern": "^https?://"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "hash_validation": {
+      "type": "object",
+      "required": [
+        "artifact_count",
+        "recomputed_count",
+        "matched_count",
+        "mismatch_count",
+        "symlink_count",
+        "escape_count",
+        "artifact_hash_manifest_sha256"
+      ],
+      "properties": {
+        "artifact_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "recomputed_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "matched_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mismatch_count": {
+          "const": 0
+        },
+        "symlink_count": {
+          "const": 0
+        },
+        "escape_count": {
+          "const": 0
+        },
+        "artifact_hash_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "record_counts": {
+      "type": "object",
+      "required": [
+        "revision",
+        "phase",
+        "required_artifact",
+        "total"
+      ],
+      "properties": {
+        "revision": {
+          "const": 1
+        },
+        "phase": {
+          "const": 10
+        },
+        "required_artifact": {
+          "const": 16
+        },
+        "total": {
+          "const": 27
+        }
+      }
+    },
+    "http_evidence": {
+      "type": "object",
+      "required": [
+        "endpoint",
+        "status_code",
+        "request_payload_sha256",
+        "response_sha256",
+        "returned_counts"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status_code": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 299
+        },
+        "request_payload_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "response_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "returned_counts": {
+          "type": "object"
+        }
+      }
+    },
+    "semantic_sync": {
+      "type": "object",
+      "required": [
+        "required",
+        "expected_pointer_count",
+        "pointer_count",
+        "states"
+      ],
+      "properties": {
+        "required": {
+          "const": true
+        },
+        "expected_pointer_count": {
+          "const": 27
+        },
+        "pointer_count": {
+          "const": 27
+        },
+        "states": {
+          "type": "object",
+          "required": [
+            "synced"
+          ],
+          "properties": {
+            "synced": {
+              "const": 27
+            }
+          }
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "argv",
+        "cwd",
+        "python_version",
+        "platform",
+        "script_path",
+        "script_sha256",
+        "source_commit"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "python_version": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "script_path": {
+          "type": "string"
+        },
+        "script_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": [
+        "proves",
+        "does_not_prove"
+      ],
+      "properties": {
+        "proves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "does_not_prove": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mocked": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "live": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mocked": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "live": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}
