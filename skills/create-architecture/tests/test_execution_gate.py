@@ -1,0 +1,41 @@
+"""Focused tests for create-architecture's human authorization gate."""
+
+import json
+from pathlib import Path
+
+from test_sanity import load_module
+
+
+def write_gate(tmp_path: Path, **overrides: object) -> Path:
+    gate = {
+        "gate_id": "battle-current-gate",
+        "status": "BLOCKED_CURRENT_GATE",
+        "architecture_authorized": False,
+    }
+    gate.update(overrides)
+    path = tmp_path / "gate.json"
+    path.write_text(json.dumps(gate), encoding="utf-8")
+    return path
+
+
+def test_gate_rejects_missing_or_unauthorized_architecture(tmp_path: Path) -> None:
+    module = load_module()
+    assert module.validate_execution_gate(None) == ["missing_execution_gate"]
+    assert module.validate_execution_gate(write_gate(tmp_path)) == [
+        "architecture_not_authorized"
+    ]
+
+
+def test_gate_accepts_only_explicit_human_authorization(tmp_path: Path) -> None:
+    module = load_module()
+    gate = write_gate(tmp_path, architecture_authorized=True)
+    assert module.validate_execution_gate(gate) == []
+
+
+def test_presentation_only_is_explicit_and_mutually_exclusive(tmp_path: Path) -> None:
+    module = load_module()
+    assert module.validate_execution_gate(None, presentation_only=True) == []
+    gate = write_gate(tmp_path, architecture_authorized=True)
+    assert module.validate_execution_gate(gate, presentation_only=True) == [
+        "execution_gate_and_presentation_only_are_mutually_exclusive"
+    ]

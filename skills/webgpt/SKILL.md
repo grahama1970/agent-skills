@@ -34,6 +34,13 @@ python scripts/webgpt_cli.py submit bundle.md
 # Deadline-bound implementation review: fail if the bundle can drift
 python scripts/webgpt_cli.py submit bundle.md --execution-locked
 
+# Code is the default contract; prose-only responses fail closed
+python scripts/webgpt_cli.py submit bundle.md --output-contract code
+
+# Preserve an explicitly selected human tab and exact conversation
+python scripts/webgpt_cli.py submit bundle.md \
+  --tab-id 837358116 --expect-url "https://chatgpt.com/c/..."
+
 # Re-submit latest bundle (auto-finds creation-bundle*.md)
 python scripts/webgpt_cli.py submit
 
@@ -106,3 +113,23 @@ the current stop condition. WebGPT recommendations do not authorize the agent
 to expand the critical path. If a recommendation adds prerequisites, the agent
 must identify which existing critical-path command they unblock; otherwise the
 recommendation remains deferred.
+
+## Code Deliverable Gate
+
+Code submissions default to `--output-contract code`. Before Surf is called,
+the bundle must contain exactly one non-empty line for each field:
+
+```text
+current_gate: ...
+blocking_defect: ...
+allowed_files: comma-separated exact repo paths or directory prefixes ending in /
+required_live_proof: ...
+stop_condition: ...
+forbidden_adjacent_scope: ...
+```
+
+The response must contain a unified diff or produce a non-empty solution zip,
+and every returned path must remain inside `allowed_files`.
+Prose-only responses fail with `BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING`.
+Explicit `--tab-id` submissions also require an exact `--expect-url`; the
+runtime never replaces or creates a tab in that mode.
