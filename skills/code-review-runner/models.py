@@ -22,6 +22,7 @@ class ReviewSpec(BaseModel):
     output_dir: str = Field("/tmp/code-review-runner", description="Where to write logs and results")
     max_rounds: int = Field(2, ge=1, le=5)
     focus: str = Field("", description="Review focus areas: security, correctness, performance, etc.")
+    base_ref: str = Field("", description="Optional git base ref for authoritative diff review")
 
     @field_validator("cwd")
     @classmethod

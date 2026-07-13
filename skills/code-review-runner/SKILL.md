@@ -44,6 +44,15 @@ Each finding is scored: `severity x fix_validity`. A suggested fix must compile 
 break the DoD to count as valid. The self-improvement loop across rounds reduces false
 positives — findings that don't survive validation get downweighted.
 
+SciLLM requests use the active proxy key from the environment or running proxy
+container and always send `X-Caller-Skill: code-review-runner`. A 401 from a
+stale environment key triggers one retry with the running proxy container key.
+The Codex backend uses the current one-shot `gpt-5.5` route and omits
+`temperature` and `max_tokens` as required by the SciLLM paved path.
+An HTTP failure, empty assistant response, or malformed findings payload makes
+the review status `error` and the CLI exits nonzero; zero provider output must
+never become PASS.
+
 ## Architecture
 
 ```
@@ -97,9 +106,15 @@ Output: ReviewResult JSON
   "context": "Auth module rewrite for compliance",
   "dod_command": "uv run pytest tests/test_auth.py -q",
   "backend": "codex",
-  "max_rounds": 2
+  "max_rounds": 2,
+  "base_ref": "origin/main"
 }
 ```
+
+Set `base_ref` for pull-request or branch review. The runner then includes the
+authoritative git diff in the model request and fails closed if the diff cannot
+be built or is empty. File excerpts are supporting context, not a substitute
+for the change set.
 
 ## Scoring
 
@@ -110,10 +125,9 @@ Output: ReviewResult JSON
 | minor | 0.3 | Style, naming, minor inefficiency |
 | info | 0.1 | Suggestion, nitpick |
 
-Fix validity multiplier:
-- 1.0 = fix compiles AND DoD still passes
-- 0.5 = fix compiles but no DoD to verify
-- 0.0 = fix doesn't compile or breaks DoD (false positive)
+Suggested fixes remain advisory because this runner does not apply them. It
+must not mark a fix validated merely because the current tree compiles or its
+DoD passes. Critical or major findings fail the review pending reconciliation.
 
 ## Integration
 

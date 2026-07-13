@@ -12,6 +12,8 @@ Output: structured ReviewResult JSON with scored findings.
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -25,7 +27,7 @@ from validators import run_all_validators
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILLS_DIR = SCRIPT_DIR.parent
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
-SCILLM_URL = "http://localhost:4001"
+SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001").rstrip("/")
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -73,12 +75,26 @@ def _build_review_prompt(spec: ReviewSpec, files_content: dict[str, str],
         parts.append("## Prior Round Findings (reduce false positives)")
         parts.append("")
         for f in prior_findings:
-            status = "VALIDATED" if f.validated else f"FALSE POSITIVE: {f.validation_error}"
+            status = "VALIDATED" if f.validated else f"UNVALIDATED: {f.validation_error}"
             parts.append(f"- [{f.severity}] {f.file}:{f.line} — {f.description} → {status}")
         parts.append("")
-        parts.append("Improve on the prior round: keep validated findings, drop false positives, "
-                      "find issues you missed.")
+        parts.append("Reassess prior findings against the authoritative change set.")
         parts.append("")
+
+    if spec.base_ref:
+        parts.extend(
+            [
+                "## Authoritative Change Set",
+                "",
+                f"Git diff against `{spec.base_ref}`:",
+                "```diff",
+                _build_review_diff(spec),
+                "```",
+                "",
+                "Review the change set above. Use the file excerpts below only as supporting context.",
+                "",
+            ]
+        )
 
     parts.append("## Files to Review")
     parts.append("")
@@ -98,37 +114,133 @@ def _build_review_prompt(spec: ReviewSpec, files_content: dict[str, str],
     return "\n".join(parts)
 
 
+def _build_review_diff(spec: ReviewSpec) -> str:
+    command = ["git", "diff", "--no-ext-diff", "--unified=80", spec.base_ref, "--", *spec.files]
+    result = subprocess.run(
+        command,
+        cwd=spec.cwd,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        raise ScillmReviewError(
+            f"could not build review diff against {spec.base_ref}: {result.stderr.strip()[:1000]}"
+        )
+    if not result.stdout.strip():
+        raise ScillmReviewError(f"review diff against {spec.base_ref} is empty")
+    return result.stdout
+
+
+class ScillmReviewError(RuntimeError):
+    """SciLLM transport or response failure that invalidates a review round."""
+
+
+def _resolve_scillm_api_key_from_docker() -> tuple[str, str] | None:
+    """Resolve the key actually configured on the running SciLLM proxy."""
+
+    for container in ("docker-scillm-proxy-1", "scillm-proxy"):
+        try:
+            result = subprocess.run(
+                [
+                    "docker",
+                    "inspect",
+                    container,
+                    "--format",
+                    "{{range .Config.Env}}{{println .}}{{end}}",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+            continue
+        if result.returncode != 0:
+            continue
+        env = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+        for name in ("SCILLM_MASTER_KEY", "SCILLM_PROXY_KEY", "LITELLM_MASTER_KEY"):
+            value = env.get(name, "").strip()
+            if value:
+                return value, f"docker:{container}:{name}"
+    return None
+
+
+def _resolve_scillm_api_key() -> tuple[str, str]:
+    for name in (
+        "SCILLM_PROXY_KEY",
+        "SCILLM_MASTER_KEY",
+        "LITELLM_MASTER_KEY",
+        "SCILLM_API_KEY",
+    ):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value, f"env:{name}"
+
+    docker_key = _resolve_scillm_api_key_from_docker()
+    if docker_key is not None:
+        return docker_key
+
+    return "sk-dev-proxy-123", "default:sk-dev-proxy-123"
+
+
 def _call_scillm(prompt: str, backend: str) -> str:
     """Call scillm for LLM review. Returns raw response text."""
     # Map short names to scillm model IDs
     model_map = {
-        "codex": "gpt-5.3-codex",
+        "codex": "gpt-5.5",
         "text": "text",
         "gemini": "text-gemini",
         "claude": "text-claude",
         "text-gemini": "text-gemini",
         "text-claude": "text-claude",
-        "gpt-5.3-codex": "gpt-5.3-codex",
+        "gpt-5.3-codex": "gpt-5.5",
     }
-    model = model_map.get(backend, "gpt-5.3-codex")
+    model = model_map.get(backend, "gpt-5.5")
 
-    try:
-        resp = httpx.post(
+    api_key, api_key_source = _resolve_scillm_api_key()
+    request = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if not model.startswith("gpt-"):
+        request["temperature"] = 0.2
+
+    def post(key: str) -> httpx.Response:
+        return httpx.post(
             f"{SCILLM_URL}/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.2,
-                "max_tokens": 4096,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "X-Caller-Skill": "code-review-runner",
             },
+            json=request,
             timeout=httpx.Timeout(120.0, connect=10.0),
         )
+
+    try:
+        resp = post(api_key)
+        if resp.status_code == 401:
+            refreshed = _resolve_scillm_api_key_from_docker()
+            if refreshed is not None and refreshed[0] != api_key:
+                api_key, api_key_source = refreshed
+                resp = post(api_key)
+        if resp.status_code >= 400:
+            raise ScillmReviewError(
+                f"SciLLM HTTP {resp.status_code} using {api_key_source}: {resp.text[:1000]}"
+            )
         resp.raise_for_status()
         data = resp.json()
-        return data["choices"][0]["message"]["content"]
-    except (httpx.HTTPError, KeyError, IndexError) as exc:
-        logger.error(f"scillm call failed: {exc}")
-        return ""
+        content = data["choices"][0]["message"]["content"]
+    except ScillmReviewError:
+        raise
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        raise ScillmReviewError(
+            f"SciLLM review call failed using {api_key_source}: {exc}"
+        ) from exc
+    if not isinstance(content, str) or not content.strip():
+        raise ScillmReviewError("SciLLM review call returned empty assistant content")
+    return content
 
 
 def _parse_findings(raw: str) -> list[Finding]:
@@ -156,14 +268,12 @@ def _parse_findings(raw: str) -> list[Finding]:
             try:
                 items = json.loads(match.group())
             except json.JSONDecodeError:
-                logger.warning("Could not parse LLM findings as JSON")
-                return []
+                raise ScillmReviewError("SciLLM review findings were not valid JSON")
         else:
-            logger.warning("No JSON array found in LLM response")
-            return []
+            raise ScillmReviewError("SciLLM review response contained no JSON findings array")
 
     if not isinstance(items, list):
-        return []
+        raise ScillmReviewError("SciLLM review response must be a JSON array")
 
     findings = []
     for i, item in enumerate(items):
@@ -181,6 +291,9 @@ def _parse_findings(raw: str) -> list[Finding]:
             findings.append(f)
         except Exception as exc:
             logger.warning(f"Skipping malformed finding {i}: {exc}")
+
+    if items and not findings:
+        raise ScillmReviewError("SciLLM review response contained no valid finding objects")
 
     return findings
 
@@ -213,13 +326,11 @@ def _validate_finding(finding: Finding, cwd: str, dod_command: str) -> Finding:
         finding.score = 0.0  # False positive
         return finding
 
-    # If DoD command exists, verify fix doesn't break it
-    if dod_command:
-        finding.validated = True
-        finding.score = finding.severity_weight * 1.0
-    else:
-        finding.validated = True
-        finding.score = finding.severity_weight * 0.5
+    # This runner does not apply suggested fixes. Running the current DoD would
+    # validate the current tree, not the proposed fix, so never claim fix validity.
+    finding.validated = False
+    finding.validation_error = "suggested fix was not applied; finding remains advisory"
+    finding.score = finding.severity_weight * 0.3
 
     return finding
 
@@ -324,21 +435,24 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     all_findings: list[Finding] = []
     round_details: list[dict] = []
     prior_findings: list[Finding] | None = None
+    successful_rounds = 0
 
     for round_num in range(1, spec.max_rounds + 1):
         logger.info(f"Round {round_num}/{spec.max_rounds}: LLM review via {spec.backend}")
 
         prompt = _build_review_prompt(spec, files_content, t0_violations, prior_findings)
-        raw_response = _call_scillm(prompt, spec.backend)
-
-        if not raw_response:
-            logger.warning(f"Round {round_num}: empty LLM response")
+        try:
+            raw_response = _call_scillm(prompt, spec.backend)
+            findings = _parse_findings(raw_response)
+        except ScillmReviewError as exc:
+            logger.error(f"Round {round_num}: {exc}")
             round_details.append({
-                "round": round_num, "findings": 0, "error": "empty response",
+                "round": round_num,
+                "findings": 0,
+                "error": str(exc),
             })
             continue
-
-        findings = _parse_findings(raw_response)
+        successful_rounds += 1
         logger.info(f"Round {round_num}: {len(findings)} findings parsed")
 
         # Validate each finding
@@ -382,7 +496,8 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     # Score calculation
     findings_total = len(all_findings)
     findings_validated = sum(1 for f in all_findings if f.validated)
-    findings_critical = sum(1 for f in all_findings if f.severity == "critical" and f.validated)
+    findings_critical = sum(1 for f in all_findings if f.severity == "critical")
+    findings_major = sum(1 for f in all_findings if f.severity == "major")
 
     # Quality score: 1.0 = clean, lower = more issues
     # Weighted by severity: critical findings reduce score more
@@ -398,7 +513,10 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
 
     # Status: fail if critical findings or quality < 0.5
     status = "pass"
-    if findings_critical > 0:
+    if successful_rounds == 0:
+        status = "error"
+        quality_score = 0.0
+    elif findings_critical > 0 or findings_major > 0:
         status = "fail"
     elif quality_score < 0.5:
         status = "fail"
@@ -407,6 +525,10 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
     parts = []
     if findings_critical:
         parts.append(f"{findings_critical} critical")
+    if findings_major:
+        parts.append(f"{findings_major} major")
+    if successful_rounds == 0:
+        parts.append("no successful LLM review rounds")
     parts.append(f"{findings_validated}/{findings_total} findings validated")
     parts.append(f"{len(t0_violations)} T0 violations")
     parts.append(f"score={quality_score:.3f}")
@@ -520,7 +642,7 @@ def review(
     logger.info(f"Review complete: {result.status.upper()} — {result.summary}")
     print(json.dumps(result.model_dump(), indent=2))
 
-    if result.status == "fail":
+    if result.status != "pass":
         raise typer.Exit(1)
 
 
