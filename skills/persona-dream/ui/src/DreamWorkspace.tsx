@@ -105,6 +105,27 @@ type RevisionQualification = {
   blockers: string[]
 }
 
+type StoryboardFrameProjection = {
+  artifactId: string
+  sha256: string
+  url: string
+}
+
+type StoryboardPanelProjection = {
+  panelId: string
+  startFrame: StoryboardFrameProjection
+  endFrame: StoryboardFrameProjection
+}
+
+type StoryboardConsumerProjection = {
+  contract: 'dream_storyboard_workspace_v1'
+  revisionId: string
+  packetArtifactId: 'storyboard_packet'
+  packetUrl: string
+  panelCount: number
+  panels: StoryboardPanelProjection[]
+}
+
 type ResearchMemoryResult = {
   title: string
   url: string
@@ -368,6 +389,8 @@ type DreamRunDetailResponse = {
   runRoot: string
   stageReportPath?: string
   stages: DreamStage[]
+  revisionQualification?: RevisionQualification
+  consumers?: { storyboard?: StoryboardConsumerProjection }
   error?: string
 }
 
@@ -851,6 +874,8 @@ function StageCard({
   memoryResults,
   researchSeed,
   ideaText,
+  storyboardProjection,
+  revisionQualified,
 }: {
   run: DreamRun
   stage: DreamStage
@@ -864,6 +889,8 @@ function StageCard({
   researchSeed?: string
   ideaText?: string
   memoryResults?: ResearchMemoryResult[] | null
+  storyboardProjection?: StoryboardConsumerProjection
+  revisionQualified: boolean
 }) {
   const ideaStage = allStages?.find((s) => s.id === '01')
   const isBlockedByPrev = stage.id === '02' && ideaStage != null && !isStagePassed(ideaStage)
@@ -939,7 +966,11 @@ function StageCard({
           />
         )}
         {stage.id === '07' && (
-          <StoryboardConsole stage={stage} />
+          <StoryboardConsole
+            stage={stage}
+            projection={storyboardProjection}
+            revisionQualified={revisionQualified}
+          />
         )}
         {stage.id === '08' && (
           <MediaLockPanel stage={stage} allStages={allStages ?? []} />
@@ -967,33 +998,7 @@ function StageCard({
 }
 
 function StageCardHeader({ stage }: { stage: DreamStage }) {
-  const [phase07ReviewerStatus, setPhase07ReviewerStatus] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    async function loadPhase07ReviewerStatus() {
-      if (stage.id !== '07') {
-        setPhase07ReviewerStatus(null)
-        return
-      }
-      const packetArtifact = requiredStageArtifact(stage, 'storyboard_packet')
-      const packetPath = packetArtifact?.path
-      try {
-        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
-        if (!response.ok) throw new Error(`storyboard packet HTTP ${response.status}`)
-        const payload = await response.json()
-        const status = String(payload?.review_status ?? payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
-        if (!cancelled) setPhase07ReviewerStatus(status)
-      } catch {
-        if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
-      }
-    }
-    void loadPhase07ReviewerStatus()
-    return () => { cancelled = true }
-  }, [stage.id, stage.requiredArtifacts])
-
-  const headerStatus = stage.id === '07' && phase07ReviewerStatus ? phase07ReviewerStatus : effectiveStageStatus(stage)
+  const headerStatus = effectiveStageStatus(stage)
   const headerPassed = statusTone(headerStatus) === 'pass'
 
   return (
@@ -2324,43 +2329,41 @@ function SystemStatusIndicator({ label, status }: { label: string; status: strin
 }
 
 
-function StoryboardConsole({ stage }: { stage: DreamStage }) {
+function StoryboardConsole({
+  stage,
+  projection,
+  revisionQualified,
+}: {
+  stage: DreamStage
+  projection?: StoryboardConsumerProjection
+  revisionQualified: boolean
+}) {
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
-  const [verdict, setVerdict] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const packetArtifact = requiredStageArtifact(stage, 'storyboard_packet')
-  const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path))
-  const packetPath = packetArtifact?.path
-  const verdictPath = verdictArtifact?.path
+  const packetUrl = projection?.packetUrl
 
   useEffect(() => {
     let cancelled = false
     async function loadPacket() {
       try {
         setLoadError(null)
-        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
-        const [packetResponse, verdictResponse] = await Promise.all([
-          fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`),
-          verdictPath ? fetch(`/api/projects/dream/asset?path=${encodeURIComponent(verdictPath)}`) : Promise.resolve(null),
-        ])
+        if (!packetUrl) throw new Error('storyboard consumer projection missing from the active revision read model')
+        const packetResponse = await fetch(packetUrl)
         if (!packetResponse.ok) throw new Error(`storyboard packet HTTP ${packetResponse.status}`)
         const payload = await packetResponse.json()
-        const verdictPayload = verdictResponse?.ok ? await verdictResponse.json() : null
         if (!cancelled) {
           setPacket(payload)
-          setVerdict(verdictPayload)
         }
       } catch (error) {
         if (!cancelled) {
           setPacket(null)
-          setVerdict(null)
           setLoadError(error instanceof Error ? error.message : String(error))
         }
       }
     }
     void loadPacket()
     return () => { cancelled = true }
-  }, [packetPath, verdictPath])
+  }, [packetUrl])
 
   const panels = Array.isArray(packet?.panels) ? packet.panels as Array<Record<string, unknown>> : []
   const targetPanelIds = storyboardTargetPanelIds(packet)
@@ -2368,19 +2371,15 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
     ? panels.filter((panel) => targetPanelIds.includes(String(panel.panel_id ?? panel.id ?? '')))
     : panels
   const blockers = Array.isArray(packet?.missing_reference_blockers) ? packet.missing_reference_blockers as Array<Record<string, unknown>> : []
-  const reviewBlockers = Array.isArray(verdict?.blockers)
-    ? verdict.blockers.map(String).filter(Boolean)
-    : Array.isArray(packet?.review_blockers)
+  const reviewBlockers = Array.isArray(packet?.review_blockers)
       ? packet.review_blockers.map(String).filter(Boolean)
       : []
   const candidates = Array.isArray(packet?.generated_candidate_panels) ? packet.generated_candidate_panels as Array<Record<string, unknown>> : []
   const panelsHaveAcceptedFrames = reviewPanels.length > 0 && reviewPanels.every(panelHasAcceptedStoryboardFrames)
-  const reviewAccepted = (Boolean(verdict?.accepted) && String(verdict?.status ?? '').includes('PASS'))
-    || (Boolean(packet?.accepted) && String(packet?.review_status ?? packet?.status ?? '').includes('PASS'))
-  const status = verdict
-    ? String(verdict.status ?? (reviewAccepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
-    : String(packet?.review_status ?? packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
-  const isBlocked = /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames || !reviewAccepted
+  const reviewAccepted = Boolean(packet?.accepted) && String(packet?.review_status ?? packet?.status ?? '').includes('PASS')
+  const packetStatus = String(packet?.review_status ?? packet?.status ?? (loadError ? 'MISSING_STORYBOARD_PACKET' : 'LOADING_STORYBOARD_PACKET'))
+  const status = revisionQualified ? packetStatus : 'BLOCKED_REVISION_NOT_QUALIFIED'
+  const isBlocked = !revisionQualified || /BLOCKED|MISSING|REJECTED|ERROR/i.test(status) || !panelsHaveAcceptedFrames || !reviewAccepted
   const targetLabel = targetPanelIds.length > 0 ? targetPanelIds.join(', ') : null
   const panelCountLabel = targetPanelIds.length > 0
     ? `${reviewPanels.length}/${panels.length || reviewPanels.length} target`
@@ -2427,6 +2426,8 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
           <span>
             {loadError
               ? `Storyboard packet could not be loaded: ${loadError}.`
+              : !revisionQualified
+                ? 'The active revision is available for read-only inspection but has not passed revision qualification.'
               : reviewBlockers.length
                 ? `Panel reviewer rejected this storyboard: ${reviewBlockers[0]}`
               : targetLabel
@@ -2444,7 +2445,7 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
               <div style={nvis.storyboardBlockerErrorText}>{blocker}</div>
               <div style={nvis.storyboardBlockerVerdict}>
                 <span style={nvis.storyboardBlockerVerdictLabel}>Reviewer verdict</span>
-                <span style={nvis.storyboardBlockerVerdictStatus}>{String(verdict?.status ?? 'BLOCKED')}</span>
+                <span style={nvis.storyboardBlockerVerdictStatus}>{status}</span>
               </div>
             </div>
           ))}
@@ -2471,7 +2472,11 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
       {panels.length > 0 && (
         <div style={nvis.storyboardPanelGrid}>
           {panels.map((panel) => (
-            <StoryboardPanel key={String(panel.panel_id ?? panel.shot)} panel={panel} />
+            <StoryboardPanel
+              key={String(panel.panel_id ?? panel.shot)}
+              panel={panel}
+              projection={projection?.panels.find((candidate) => candidate.panelId === String(panel.panel_id ?? ''))}
+            />
           ))}
         </div>
       )}
@@ -2480,10 +2485,9 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
         <div style={nvis.storyboardCandidateStrip}>
           <div style={nvis.storyboardBlockerTitle}>Rejected generated candidate</div>
           {candidates.map((candidate) => {
-            const url = dreamAssetUrl(String(candidate.path ?? ''))
             return (
               <div key={String(candidate.panel_id ?? candidate.path)} style={nvis.storyboardCandidateRow}>
-                {url && <img src={url} alt={String(candidate.panel_id ?? 'candidate panel')} style={nvis.storyboardCandidateThumb} />}
+                <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
                 <div>
                   <div style={nvis.storyboardCandidateStatus}>{String(candidate.status ?? 'REJECTED')}</div>
                   <div style={nvis.storyboardCandidateReason}>{String(candidate.reason ?? '')}</div>
@@ -2497,7 +2501,13 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
   )
 }
 
-function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
+function StoryboardPanel({
+  panel,
+  projection,
+}: {
+  panel: Record<string, unknown>
+  projection?: StoryboardPanelProjection
+}) {
   const [copyStatus, setCopyStatus] = useState('')
   const range = panel.time_range && typeof panel.time_range === 'object' ? panel.time_range as Record<string, unknown> : {}
   const references = Array.isArray(panel.references) ? panel.references as Array<Record<string, unknown>> : []
@@ -2511,7 +2521,7 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
   const generationPrompt = storyboardRecord(panel.generation_prompt)
   const actingBeats = storyboardStringList(panel.acting_beats)
   const primaryFrame = acceptedStoryboardFrame(startFrame) || acceptedStoryboardFrame(endFrame)
-  const primaryReferenceUrl = primaryFrame ? dreamAssetUrl(String(primaryFrame.path || primaryFrame.image_path || '')) : ''
+  const primaryReferenceUrl = projection?.startFrame.url ?? projection?.endFrame.url ?? ''
   const timeLabel = `${String(range.start_s ?? '?')}-${String(range.end_s ?? '?')}`
   const shotText = String(panel.shot ?? 'Missing shot direction')
   const shotCode = storyboardShotCode(shotText)
@@ -2725,9 +2735,10 @@ function StoryboardPanel({ panel }: { panel: Record<string, unknown> }) {
             {references.map((reference) => {
               const raw = String(reference.path || reference.url || '')
               const url = dreamAssetUrl(raw)
+              const imageEligible = Boolean(url) && String(reference.role ?? '') !== 'rejected_candidate_reference'
               return (
                 <div key={String(reference.id ?? reference.title ?? raw)} style={nvis.storyboardReferenceCard}>
-                  {url ? (
+                  {imageEligible ? (
                     <img src={url} alt={String(reference.title ?? reference.id ?? 'reference')} style={nvis.storyboardReferenceThumb} />
                   ) : (
                     <div style={nvis.storyboardReferenceFallback}><Image size={16} /></div>
@@ -8084,37 +8095,7 @@ function AgentPane({
   onSubmitAction: (action: StageAction, noteOverride?: string) => void
 }) {
   const disabled = !selectedRun || !selectedStage
-  const [phase07ReviewerStatus, setPhase07ReviewerStatus] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    async function loadPhase07ReviewerStatus() {
-      if (selectedStage?.id !== '07') {
-        setPhase07ReviewerStatus(null)
-        return
-      }
-      const packetArtifact = requiredStageArtifact(selectedStage, 'storyboard_packet')
-      const packetPath = packetArtifact?.path
-      try {
-        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
-        if (!response.ok) throw new Error(`storyboard packet HTTP ${response.status}`)
-        const payload = await response.json()
-        const status = String(payload?.review_status ?? payload?.status ?? (payload?.accepted ? 'PASS_PANEL_REVIEWED' : 'BLOCKED_PANEL_REVIEW'))
-        if (!cancelled) setPhase07ReviewerStatus(status)
-      } catch {
-        if (!cancelled) setPhase07ReviewerStatus('MISSING_STORYBOARD_REVIEW_VERDICT')
-      }
-    }
-    void loadPhase07ReviewerStatus()
-    return () => { cancelled = true }
-  }, [selectedStage?.id, selectedStage?.requiredArtifacts])
-
-  const selectedStageStatus = selectedStage
-    ? selectedStage.id === '07' && phase07ReviewerStatus
-      ? phase07ReviewerStatus
-      : effectiveStageStatus(selectedStage)
-    : ''
+  const selectedStageStatus = selectedStage ? effectiveStageStatus(selectedStage) : ''
   const selectedStageMissing = /MISSING|BLOCKED|FAIL/i.test(selectedStageStatus)
   const selectedStagePassed = selectedStage != null && statusTone(selectedStageStatus) === 'pass'
   const agentGuidance = (() => {
@@ -9126,6 +9107,8 @@ export function DreamWorkspace() {
                   researchSeed={researchResults?.map((r) => r.title + ' ' + r.snippet).join(' ')}
                   ideaText={ideaTextRef.current}
                   memoryResults={researchResults}
+                  storyboardProjection={runDetail?.consumers?.storyboard}
+                  revisionQualified={revisionQualified}
                   onTriggerMemories={handleAutoExtract}
                   onNoteChange={(value) => setStageNotes((current) => ({ ...current, [selectedStage.id]: value }))}
                   onSubmitAction={(action, noteOverride) => void submitStageAction(selectedStage.id, action, noteOverride)}

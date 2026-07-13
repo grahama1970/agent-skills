@@ -17,6 +17,27 @@ export type DreamImageRef = {
   url: string
 }
 
+export type StoryboardFrameProjection = {
+  artifactId: string
+  sha256: string
+  url: string
+}
+
+export type StoryboardPanelProjection = {
+  panelId: string
+  startFrame: StoryboardFrameProjection
+  endFrame: StoryboardFrameProjection
+}
+
+export type StoryboardConsumerProjection = {
+  contract: 'dream_storyboard_workspace_v1'
+  revisionId: string
+  packetArtifactId: 'storyboard_packet'
+  packetUrl: string
+  panelCount: number
+  panels: StoryboardPanelProjection[]
+}
+
 export type DreamPhaseProjection = {
   id: string
   title: string
@@ -81,6 +102,9 @@ export type DreamRunDetailResponse = {
     state: 'MISSING' | 'LEGACY_UNQUALIFIED' | 'ACTIVE_CONSISTENT'
     status: 'BLOCKED_REVISION_NOT_QUALIFIED' | 'PASS_PERSONA_DREAM_SELF_HEAL_ACTIVE_REVISION'
     blockers: string[]
+  }
+  consumers?: {
+    storyboard?: StoryboardConsumerProjection
   }
   earliestIssue?: {
     phaseId: string

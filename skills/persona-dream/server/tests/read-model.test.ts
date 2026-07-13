@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
@@ -173,5 +174,69 @@ test('storyboard filename presence cannot accept an empty packet', async () => {
   const storyboard = detail.stages.find((stage) => stage.id === '07')
   assert.equal(storyboard?.evidence.state, 'semantic_invalid')
   assert.deepEqual(storyboard?.evidence.semanticInvalidIds, ['storyboard_packet'])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('run detail projects revision-scoped storyboard artifact URLs while qualification remains blocked', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-storyboard-projection-'))
+  const runId = 'pipeline-complete'
+  const revisionId = 'rev_projection'
+  const runRoot = resolve(root, runId)
+  const revisionRoot = resolve(runRoot, '.persona-dream', 'revisions', revisionId)
+  const storyboardRoot = resolve(revisionRoot, 'phase_07_storyboard_live_tau')
+  const framesRoot = resolve(storyboardRoot, 'generated_storyboard_frames')
+  mkdirSync(resolve(runRoot, '.persona-dream', 'state'), { recursive: true })
+  mkdirSync(framesRoot, { recursive: true })
+  writeFileSync(resolve(runRoot, 'status.json'), JSON.stringify({ status: 'PASS' }))
+  writeFileSync(resolve(runRoot, '.persona-dream', 'state', 'active_revision.json'), JSON.stringify({
+    runId,
+    revisionId,
+    revisionRoot: '/stale/checkout/pipeline-complete/.persona-dream/revisions/rev_projection',
+  }))
+
+  const artifacts: Record<string, { relative_path: string; sha256: string; roles: string[] }> = {}
+  const panels = Array.from({ length: 4 }, (_, index) => {
+    const panelId = `sb_${String(index + 1).padStart(3, '0')}`
+    const frame = (role: 'start' | 'end') => {
+      const filename = `${panelId}_${role}_frame.png`
+      const relativePath = `phase_07_storyboard_live_tau/generated_storyboard_frames/${filename}`
+      const bytes = Buffer.from(`${panelId}-${role}-bytes`)
+      const digest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`
+      writeFileSync(resolve(revisionRoot, relativePath), bytes)
+      artifacts[`${panelId}.${role}_frame`] = { relative_path: relativePath, sha256: digest, roles: ['accepted_frame'] }
+      return { accepted_frame: { path: `/stale/checkout/${filename}`, sha256: digest } }
+    }
+    return { panel_id: panelId, start_frame: frame('start'), end_frame: frame('end') }
+  })
+  const packet = {
+    schema: 'persona_dream.storyboard_packet.v1',
+    status: 'PASS_PANEL_REVIEWED',
+    accepted: true,
+    panel_count: 4,
+    panels,
+  }
+  const packetPath = resolve(storyboardRoot, 'storyboard_packet.json')
+  writeFileSync(packetPath, JSON.stringify(packet))
+  artifacts.storyboard_packet = {
+    relative_path: 'phase_07_storyboard_live_tau/storyboard_packet.json',
+    sha256: `sha256:${createHash('sha256').update(JSON.stringify(packet)).digest('hex')}`,
+    roles: ['required_evidence', 'consumer_input'],
+  }
+  writeFileSync(resolve(revisionRoot, 'revision_artifact_index.json'), JSON.stringify({
+    run_id: runId,
+    revision_id: revisionId,
+    artifacts,
+  }))
+
+  const detail = await buildRunDetail(new DreamPathPolicy([root]), runRoot)
+  assert.equal(detail.revisionQualification.state, 'LEGACY_UNQUALIFIED')
+  assert.equal(detail.consumers?.storyboard?.panelCount, 4)
+  assert.equal(detail.consumers?.storyboard?.panels.length, 4)
+  assert.equal(detail.consumers?.storyboard?.panels[0].startFrame.artifactId, 'sb_001.start_frame')
+  assert.equal(
+    detail.consumers?.storyboard?.panels[0].startFrame.url,
+    '/api/projects/dream/runs/pipeline-complete/revisions/rev_projection/artifacts/sb_001.start_frame',
+  )
+  assert.equal(detail.stages.some((stage) => stage.effectiveState === 'accepted_current'), false)
   rmSync(root, { recursive: true, force: true })
 })

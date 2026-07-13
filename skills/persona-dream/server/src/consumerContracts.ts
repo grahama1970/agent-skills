@@ -1,5 +1,3 @@
-import { basename } from 'node:path'
-
 type ArtifactIndexEntry = {
   relative_path: string
   sha256: string
@@ -51,13 +49,10 @@ export function hydrateStoryboardConsumer(
     for (const role of ['start_frame', 'end_frame'] as const) {
       const frameContainer = object(panel[role])
       const acceptedFrame = object(frameContainer.accepted_frame)
-      const sourcePath = String(acceptedFrame.path ?? '')
       const expectedSha256 = String(acceptedFrame.sha256 ?? '')
-      const indexed = Object.entries(artifactIndex.artifacts).find(([, artifact]) =>
-        artifact.relative_path.endsWith(`/generated_storyboard_frames/${basename(sourcePath)}`),
-      )
-      if (!indexed) throw new Error(`BLOCKED_ASSET_RESOLUTION:${panelId}:${role}`)
-      const [artifactId, artifact] = indexed
+      const artifactId = `${panelId}.${role}`
+      const artifact = artifactIndex.artifacts[artifactId]
+      if (!artifact) throw new Error(`BLOCKED_ASSET_RESOLUTION:${panelId}:${role}`)
       if (expectedSha256 !== artifact.sha256) throw new Error(`BLOCKED_ASSET_FETCH_HASH_MISMATCH:${panelId}:${role}`)
       frames.push({ panelId, role, artifactId, relativePath: artifact.relative_path, sha256: artifact.sha256 })
     }

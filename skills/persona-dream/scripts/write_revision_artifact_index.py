@@ -18,6 +18,10 @@ from phase_artifact_contract import (
 )
 
 INDEX_NAME = "revision_artifact_index.json"
+FRAME_NAME = re.compile(
+    r"^(sb_\d{3})_(start|end)_frame\.(png|jpe?g|webp)$",
+    re.IGNORECASE,
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -52,6 +56,15 @@ def optional_artifact_id(phase_id: str | None, relative_path: str) -> str:
     normalized = re.sub(r"[^a-z0-9]+", ".", relative_path.lower()).strip(".")
     prefix = f"phase{phase_id}" if phase_id else "revision"
     return f"{prefix}.{normalized}"
+
+
+def canonical_artifact_id(path: Path, phase_id: str | None, relative_path: str) -> str:
+    match = FRAME_NAME.fullmatch(path.name)
+    if match:
+        panel_id = match.group(1).lower()
+        role = match.group(2).lower()
+        return f"{panel_id}.{role}_frame"
+    return optional_artifact_id(phase_id, relative_path)
 
 
 def media_role(path: Path) -> list[str]:
@@ -91,7 +104,7 @@ def build_index(revision_root: Path, run_id: str, revision_id: str) -> dict[str,
         relative_path = str(path.relative_to(revision_root))
         required = required_by_path.get(relative_path)
         phase_id = required[0] if required else phase_id_for(relative_path)
-        artifact_id = required[1] if required else optional_artifact_id(phase_id, relative_path)
+        artifact_id = required[1] if required else canonical_artifact_id(path, phase_id, relative_path)
         if artifact_id in artifacts:
             raise ValueError(f"BLOCKED_PHASE_ARTIFACT_ID_COLLISION:{artifact_id}")
         requirement = required[2] if required else {}

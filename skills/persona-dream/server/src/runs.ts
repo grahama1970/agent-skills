@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
-import type { DreamRunDetailResponse } from '../../contracts/src/index'
+import type { DreamRunDetailResponse, StoryboardConsumerProjection } from '../../contracts/src/index'
+import { hydrateStoryboardConsumer } from './consumerContracts'
 import { DreamPathPolicy } from './paths'
 import { projectStages } from './stages'
 
@@ -68,15 +69,17 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
   const revision = readJson(resolve(runRoot, 'dream_revision_manifest.v1.json'))
   const pointerPath = resolve(runRoot, '.persona-dream', 'state', 'active_revision.json')
   const pointer = readJson(pointerPath)
-  const declaredRevisionRoot = typeof pointer?.revisionRoot === 'string' ? pointer.revisionRoot : ''
-  const evidenceRoot = declaredRevisionRoot && existsSync(declaredRevisionRoot)
-    ? policy.resolveDirectory(realpathSync(declaredRevisionRoot))
-    : runRoot
   const sourceRevisionId = typeof pointer?.revisionId === 'string'
     ? pointer.revisionId
     : typeof revision?.active_revision_id === 'string'
       ? revision.active_revision_id
       : ''
+  const localRevisionRoot = sourceRevisionId
+    ? resolve(runRoot, '.persona-dream', 'revisions', sourceRevisionId)
+    : ''
+  const evidenceRoot = localRevisionRoot && existsSync(localRevisionRoot)
+    ? policy.resolveDirectory(realpathSync(localRevisionRoot))
+    : runRoot
   const files = await listFiles(evidenceRoot)
   const projectedStages = projectStages(evidenceRoot, files, '10', sourceRevisionId || undefined)
   const revisionQualification: DreamRunDetailResponse['revisionQualification'] = sourceRevisionId
@@ -131,6 +134,52 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
         blockers: repairEnabled ? [] : ['REPAIR_NOT_ENABLED'],
       }
     : undefined
+  const runId = basename(runRoot)
+  let storyboard: StoryboardConsumerProjection | undefined
+  if (sourceRevisionId) {
+    const index = readJson(resolve(evidenceRoot, 'revision_artifact_index.json'))
+    const artifacts = index?.artifacts && typeof index.artifacts === 'object' && !Array.isArray(index.artifacts)
+      ? index.artifacts as Record<string, { relative_path: string; sha256: string; roles: string[] }>
+      : null
+    const packetEntry = artifacts?.storyboard_packet
+    if (artifacts && packetEntry?.relative_path) {
+      try {
+        const revisionPolicy = new DreamPathPolicy([evidenceRoot])
+        const packetPath = revisionPolicy.resolveFile(resolve(evidenceRoot, packetEntry.relative_path))
+        const packet = readJson(packetPath)
+        if (packet) {
+          const hydrated = hydrateStoryboardConsumer(packet, { artifacts })
+          const artifactUrl = (artifactId: string) => [
+            '/api/projects/dream/runs',
+            encodeURIComponent(runId),
+            'revisions',
+            encodeURIComponent(sourceRevisionId),
+            'artifacts',
+            encodeURIComponent(artifactId),
+          ].join('/')
+          storyboard = {
+            contract: 'dream_storyboard_workspace_v1',
+            revisionId: sourceRevisionId,
+            packetArtifactId: 'storyboard_packet',
+            packetUrl: artifactUrl('storyboard_packet'),
+            panelCount: hydrated.panelCount,
+            panels: hydrated.panelIds.map((panelId) => {
+              const start = hydrated.frames.find((frame) => frame.panelId === panelId && frame.role === 'start_frame')
+              const end = hydrated.frames.find((frame) => frame.panelId === panelId && frame.role === 'end_frame')
+              if (!start || !end) throw new Error(`BLOCKED_ASSET_RESOLUTION:${panelId}`)
+              return {
+                panelId,
+                startFrame: { artifactId: start.artifactId, sha256: start.sha256, url: artifactUrl(start.artifactId) },
+                endFrame: { artifactId: end.artifactId, sha256: end.sha256, url: artifactUrl(end.artifactId) },
+              }
+            }),
+          }
+        }
+      } catch {
+        storyboard = undefined
+      }
+    }
+  }
   return {
     schemaVersion: 'persona_dream.run_detail.v2',
     status: 'ok',
@@ -140,7 +189,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
     stageReportPath: existsSync(resolve(evidenceRoot, 'pipeline_stage_report.json')) ? resolve(evidenceRoot, 'pipeline_stage_report.json') : undefined,
     stages,
     sourceGroupedStages: [],
-    runId: basename(runRoot),
+    runId,
     runKind: revision?.fixture === true ? 'fixture' : revision?.historical === true ? 'historical' : 'active',
     repairEnabled,
     activeRevision: sourceRevisionId ? {
@@ -148,6 +197,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       manifestSha256: typeof pointer?.revisionManifestSha256 === 'string' ? pointer.revisionManifestSha256 : undefined,
     } : undefined,
     revisionQualification,
+    consumers: storyboard ? { storyboard } : undefined,
     earliestIssue: earliest ? {
       phaseId: earliest.id,
       kind: earliest.evidence.state === 'malformed' || earliest.evidence.state === 'semantic_invalid' ? 'malformed' : 'missing',

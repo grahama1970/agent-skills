@@ -6,6 +6,7 @@ import { buildRunDetail, collectRuns } from './runs'
 import { enqueueRepairCandidate, FileTauRepairQueue, type TauRepairQueuePort } from './repair'
 import { createPanelPromptBundle } from './bundles'
 import { createDefaultResearchPort, createDefaultVoiceAuditionPort, type DreamResearchPort, type VoiceAuditionPort } from './services'
+import { resolveRevisionArtifact } from './artifacts'
 
 export type PersonaDreamRouterOptions = {
   reportRoots: readonly string[]
@@ -43,6 +44,35 @@ export function createPersonaDreamRouter(options: PersonaDreamRouterOptions): Ex
       const message = error instanceof Error ? error.message : String(error)
       const status = message === 'path_not_allowed' ? 403 : 500
       res.status(status).json({ status: 'error', error: message, stages: [] })
+    }
+  })
+
+  router.get('/runs/:runId/revisions/:revisionId/artifacts/:artifactId', (req, res) => {
+    try {
+      const artifact = resolveRevisionArtifact(
+        [...options.reportRoots, ...options.outputRoots],
+        {
+          runId: req.params.runId,
+          revisionId: req.params.revisionId,
+          artifactId: req.params.artifactId,
+        },
+      )
+      res.setHeader('Content-Type', artifact.contentType)
+      res.setHeader('Content-Length', String(artifact.sizeBytes))
+      res.setHeader('ETag', `"${artifact.sha256.slice('sha256:'.length)}"`)
+      res.setHeader('X-Persona-Dream-Run-Id', artifact.runId)
+      res.setHeader('X-Persona-Dream-Revision-Id', artifact.revisionId)
+      res.setHeader('X-Persona-Dream-Artifact-Id', artifact.artifactId)
+      res.setHeader('X-Persona-Dream-Sha256', artifact.sha256)
+      createReadStream(artifact.path).pipe(res)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const status = message === 'artifact_identity_invalid'
+        ? 400
+        : message === 'artifact_sha256_mismatch' || message === 'artifact_index_identity_mismatch'
+          ? 409
+          : 404
+      res.status(status).json({ status: 'error', error: message })
     }
   })
 
@@ -126,3 +156,4 @@ export * from '../../contracts/src/index'
 export * from './repair'
 export * from './services'
 export * from './personaMedia'
+export * from './artifacts'

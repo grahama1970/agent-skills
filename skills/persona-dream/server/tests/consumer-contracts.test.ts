@@ -9,7 +9,7 @@ function fixture() {
     const frame = (role: 'start' | 'end') => {
       const name = `${panelId}_${role}_frame.png`
       const sha256 = `sha256:${panelId}-${role}`
-      artifacts[`phase07.${name}`] = { relative_path: `phase_07/generated_storyboard_frames/${name}`, sha256, roles: ['accepted_frame'] }
+      artifacts[`${panelId}.${role}_frame`] = { relative_path: `phase_07/generated_storyboard_frames/${name}`, sha256, roles: ['accepted_frame'] }
       return { accepted_frame: { path: `/stale/checkout/${name}`, sha256 } }
     }
     return { panel_id: panelId, start_frame: frame('start'), end_frame: frame('end') }
@@ -30,6 +30,6 @@ test('storyboard consumer hydrates four panels and eight indexed frames without 
 
 test('storyboard consumer blocks an indexed frame hash mismatch', () => {
   const { packet, index } = fixture()
-  index.artifacts['phase07.sb_001_start_frame.png'].sha256 = 'sha256:tampered'
+  index.artifacts['sb_001.start_frame'].sha256 = 'sha256:tampered'
   assert.throws(() => hydrateStoryboardConsumer(packet, index), /BLOCKED_ASSET_FETCH_HASH_MISMATCH/)
 })
