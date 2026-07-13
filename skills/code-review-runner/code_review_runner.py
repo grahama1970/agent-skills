@@ -15,6 +15,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 import typer
@@ -253,6 +254,12 @@ def _call_scillm(prompt: str, backend: str) -> str:
     model = model_map.get(backend, "gpt-5.5")
 
     api_key, api_key_source = _resolve_scillm_api_key()
+    if api_key_source.startswith("docker:"):
+        hostname = urlparse(SCILLM_URL).hostname
+        if hostname not in {"localhost", "127.0.0.1", "::1"}:
+            raise ScillmReviewError(
+                "refusing to send a Docker-discovered SciLLM key to a non-local endpoint"
+            )
     request = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -504,7 +511,7 @@ def run_review(spec: ReviewSpec) -> ReviewResult:
                 "findings": 0,
                 "error": str(exc),
             })
-            continue
+            break
         successful_rounds += 1
         logger.info(f"Round {round_num}: {len(findings)} findings parsed")
 

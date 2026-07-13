@@ -112,6 +112,21 @@ class CodeReviewRunnerAuthTests(unittest.TestCase):
         ):
             runner._resolve_scillm_api_key()
 
+    def test_docker_key_is_not_sent_to_non_local_scillm_url(self) -> None:
+        with (
+            patch.object(runner, "SCILLM_URL", "https://review.example.test"),
+            patch.object(
+                runner,
+                "_resolve_scillm_api_key",
+                return_value=("active-key", "docker:scillm-proxy:SCILLM_MASTER_KEY"),
+            ),
+            patch.object(runner.httpx, "post") as post,
+            self.assertRaisesRegex(runner.ScillmReviewError, "non-local endpoint"),
+        ):
+            runner._call_scillm("review", "codex")
+
+        post.assert_not_called()
+
     def test_scillm_call_recovers_stale_environment_key_once(self) -> None:
         unauthorized = Mock(status_code=401)
         success = Mock(status_code=200)
@@ -168,6 +183,33 @@ class CodeReviewRunnerAuthTests(unittest.TestCase):
                 )
             )
             self.assertEqual(persisted["status"], "error")
+
+    def test_provider_failure_stops_later_rounds(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            Path(root, "sample.py").write_text("value = 1\n", encoding="utf-8")
+            spec = ReviewSpec(
+                task_id="provider-stop",
+                files=["sample.py"],
+                cwd=str(root),
+                output_dir=str(root / "out"),
+                max_rounds=3,
+            )
+            with (
+                patch.object(
+                    runner,
+                    "_call_scillm",
+                    side_effect=runner.ScillmReviewError("401"),
+                ) as call,
+                patch.object(runner, "run_all_validators", return_value=[]),
+                patch.object(runner, "_recall_prior_reviews", return_value=""),
+                patch.object(runner, "_learn_review", return_value=None),
+            ):
+                result = runner.run_review(spec)
+
+        self.assertEqual(result.status, "error")
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(result.rounds, 1)
 
     def test_partial_provider_failure_invalidates_entire_review(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
