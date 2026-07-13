@@ -727,7 +727,7 @@ function mapToolToMessage(tool, args, tabId) {
     case "focus.state":
       return { type: "GET_FOCUS_STATE" };
     case "tab.new":
-      return { type: "NEW_TAB", url: a.url, urls: a.urls };
+      return { type: "NEW_TAB", url: a.url, urls: a.urls, active: a.background !== true };
     case "tab.switch": {
       const id = a.id || a.tab_id || a.tabId;
       if (typeof id === "string" && !/^\d+$/.test(id)) {

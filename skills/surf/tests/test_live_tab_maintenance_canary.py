@@ -47,6 +47,8 @@ def test_help_documents_bounded_disposable_live_canary_contract():
     assert "draft-present guarded skip" in proc.stdout
     assert "ambiguous-URL guarded skip" in proc.stdout
     assert "active-generation guarded skip" in proc.stdout
+    assert "--output-dir DIR" in proc.stdout
+    assert "--preserve-tabs" in proc.stdout
 
 
 def test_canary_uses_only_created_tabs_validates_receipts_and_cleans_up(tmp_path):
@@ -83,7 +85,7 @@ def test_canary_uses_only_created_tabs_validates_receipts_and_cleans_up(tmp_path
             sys.exit(0)
 
         if cmd == "tab.new":
-            url = args[-1]
+            url = args[1] if args[1] != "--url" else args[2]
             tab_id = str(data["next_id"])
             data["next_id"] += 1
             data["tabs"].append({{"tab_id": tab_id, "title": "canary", "url": url}})
@@ -159,3 +161,19 @@ def test_canary_uses_only_created_tabs_validates_receipts_and_cleans_up(tmp_path
     assert sorted(state["closed"]) == sorted(payload["created_tab_ids"])
     assert state["reloaded"] == [payload["created_tab_ids"][0]]
     assert not any((work_dir / "bindings").glob("*.json"))
+
+
+def test_output_dir_writes_refusal_result(tmp_path):
+    output_dir = tmp_path / "output"
+    proc = run_canary([
+        "--json",
+        "--output-dir",
+        str(output_dir),
+        "--local-app-url",
+        "http://127.0.0.1:9",
+    ], env={"SURF_EXTENSION_SOCKET": "/tmp/surf-canary-definitely-missing.sock"})
+
+    assert proc.returncode == 3
+    result = json.loads((output_dir / "result.json").read_text())
+    assert result["status"] == "refused"
+    assert result["reason"] == "extension_socket_unreachable"

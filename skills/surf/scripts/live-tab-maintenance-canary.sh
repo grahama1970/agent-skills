@@ -9,12 +9,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SURF_RUN="${SURF_RUN_SH:-${SCRIPT_DIR}/../run.sh}"
 TAB_MAINTENANCE="${SURF_TAB_MAINTENANCE_SH:-${SCRIPT_DIR}/tab-maintenance.sh}"
 SOCKET="${SURF_EXTENSION_SOCKET:-/tmp/surf.sock}"
-LOCAL_APP_URL="${SURF_LIVE_CANARY_LOCAL_APP_URL:-http://127.0.0.1:8765}"
+LOCAL_APP_URL="${SURF_LIVE_CANARY_LOCAL_APP_URL:-auto}"
 WORK_DIR=""
+OUTPUT_DIR=""
 TIMEOUT_SECONDS="${SURF_LIVE_CANARY_TIMEOUT:-15}"
 KEEP_ARTIFACTS=0
 JSON_ONLY=0
 ALLOW_UNREACHABLE=0
+PRESERVE_TABS=0
 
 usage() {
   cat <<'EOF'
@@ -28,11 +30,13 @@ then exercises tab-maintenance repair/guard paths:
   * active-generation guarded skip
 
 Options:
-  --local-app-url URL     Reachable local app base URL. Default: SURF_LIVE_CANARY_LOCAL_APP_URL or http://127.0.0.1:8765
+  --local-app-url URL     Reachable local app base URL. Default: an owned disposable loopback server
   --surf-run PATH         Surf runtime. Default: SURF_RUN_SH or ../run.sh
   --work-dir DIR          Temporary artifact root. Default: mktemp under /tmp
+  --output-dir DIR        Durable artifact root containing result.json
   --timeout SECONDS       Per-command timeout. Default: SURF_LIVE_CANARY_TIMEOUT or 15
   --keep-artifacts        Do not remove temporary binding/receipt directories
+  --preserve-tabs         Assert pre-existing tabs are preserved; disposable canary tabs are still closed
   --allow-unreachable     Test-only override for socket/local-app preflight refusal
   --json                  Emit machine-readable summary only
   -h, --help              Show help
@@ -46,8 +50,10 @@ while [[ $# -gt 0 ]]; do
     --local-app-url) LOCAL_APP_URL="${2:-}"; shift 2 ;;
     --surf-run) SURF_RUN="${2:-}"; shift 2 ;;
     --work-dir) WORK_DIR="${2:-}"; shift 2 ;;
+    --output-dir) OUTPUT_DIR="${2:-}"; WORK_DIR="${2:-}"; KEEP_ARTIFACTS=1; shift 2 ;;
     --timeout) TIMEOUT_SECONDS="${2:-}"; shift 2 ;;
     --keep-artifacts) KEEP_ARTIFACTS=1; shift ;;
+    --preserve-tabs) PRESERVE_TABS=1; shift ;;
     --allow-unreachable) ALLOW_UNREACHABLE=1; shift ;;
     --json) JSON_ONLY=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -60,7 +66,7 @@ if [[ -z "$LOCAL_APP_URL" ]]; then
   exit 3
 fi
 
-python3 - "$SURF_RUN" "$TAB_MAINTENANCE" "$SOCKET" "$LOCAL_APP_URL" "$WORK_DIR" "$TIMEOUT_SECONDS" "$KEEP_ARTIFACTS" "$JSON_ONLY" "$ALLOW_UNREACHABLE" <<'PY'
+python3 - "$SURF_RUN" "$TAB_MAINTENANCE" "$SOCKET" "$LOCAL_APP_URL" "$WORK_DIR" "$OUTPUT_DIR" "$TIMEOUT_SECONDS" "$KEEP_ARTIFACTS" "$JSON_ONLY" "$ALLOW_UNREACHABLE" "$PRESERVE_TABS" <<'PY'
 from __future__ import annotations
 
 import json
@@ -73,21 +79,32 @@ import sys
 import tempfile
 import time
 import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-surf_run, tab_maintenance, sock, local_app, work_dir_arg, timeout_s, keep_s, json_s, allow_s = sys.argv[1:]
+surf_run, tab_maintenance, sock, local_app, work_dir_arg, output_dir_arg, timeout_s, keep_s, json_s, allow_s, preserve_tabs_s = sys.argv[1:]
 timeout = float(timeout_s or 15)
 keep = keep_s == "1"
 json_only = json_s == "1"
 allow_unreachable = allow_s == "1"
+preserve_tabs = preserve_tabs_s == "1"
 created_tabs: list[str] = []
 created_paths: list[Path] = []
 summary: dict = {"schema": "surf.live_tab_maintenance_canary.v1", "status": "failed"}
+owned_server: ThreadingHTTPServer | None = None
 
 
 def emit(obj: dict):
+    if output_dir_arg:
+        output_dir = Path(output_dir_arg).expanduser()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        result_path = output_dir / "result.json"
+        tmp = result_path.with_name(f".{result_path.name}.tmp.{os.getpid()}")
+        tmp.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n")
+        tmp.replace(result_path)
     if json_only:
         print(json.dumps(obj, sort_keys=True))
     else:
@@ -118,6 +135,14 @@ def norm(url: str) -> str:
         path = path.rstrip("/")
     query = urlencode(sorted(parse_qsl(p.query, keep_blank_values=True)))
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), path, query, ""))
+
+
+def focus_identity(state: dict) -> dict:
+    return {
+        "focusedWindowId": state.get("focusedWindowId"),
+        "activeTabId": state.get("activeTabId"),
+        "activeTabUrl": norm(state.get("activeTabUrl", "")),
+    }
 
 
 def tabs_from_list(stdout: str) -> list[dict]:
@@ -160,9 +185,9 @@ def find_unique_tab(url: str, before_ids: set[str]) -> str:
 
 def create_tab(url: str) -> str:
     before = {str(t.get("tab_id")) for t in list_tabs()}
-    p = surf("tab.new", url, check=False)
+    p = surf("tab.new", url, "--background", check=False)
     if p.returncode != 0:
-        p = surf("tab.new", "--url", url, check=False)
+        p = surf("tab.new", "--url", url, "--background", check=False)
     if p.returncode != 0:
         raise RuntimeError(f"tab.new failed for {url}: {p.stderr.strip() or p.stdout.strip()}")
     tid = ""
@@ -229,6 +254,29 @@ def cleanup(work: Path | None):
         shutil.rmtree(work, ignore_errors=True)
 
 
+if local_app == "auto":
+    class CanaryHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            scenario = dict(parse_qsl(urlsplit(self.path).query)).get("scenario", "")
+            body = "<h1>Surf recovery canary</h1>"
+            if scenario == "draft-present":
+                body += '<textarea aria-label="Canary draft">unsent canary draft</textarea>'
+            elif scenario == "active-generation":
+                body += '<button aria-label="Stop generating" style="width:120px;height:32px">Stop</button>'
+            payload = f"<!doctype html><title>{scenario or 'canary'}</title>{body}".encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, _format, *_args):
+            return
+
+    owned_server = ThreadingHTTPServer(("127.0.0.1", 0), CanaryHandler)
+    Thread(target=owned_server.serve_forever, daemon=True).start()
+    local_app = f"http://127.0.0.1:{owned_server.server_port}"
+
 if not allow_unreachable:
     if not socket.socket(socket.AF_UNIX).connect_ex(sock) == 0:
         refuse("extension_socket_unreachable", sock)
@@ -248,7 +296,11 @@ created_root = not bool(work_dir_arg)
 
 try:
     token = f"{os.getpid()}-{int(time.time())}"
-    focus_before = surf("focus.state", "--json", check=False).stdout.strip() or "{}"
+    tabs_before = list_tabs()
+    focus_before_raw = surf("focus.state", "--json", check=False).stdout.strip() or "{}"
+    focus_before = json.loads(focus_before_raw)
+    if not isinstance(focus_before, dict):
+        raise RuntimeError("focus.state did not return a JSON object")
 
     projects = {
         "reload": f"canary-reload-{token}",
@@ -288,6 +340,8 @@ try:
     cmd.extend(["--repair-trigger", f"{projects['generation']}:discarded"])
     cmd.extend(["--repair-trigger", f"{projects['ambiguous']}:discarded"])
     maint = run(cmd, check=False)
+    (work / "maintenance.stdout.txt").write_text(maint.stdout)
+    (work / "maintenance.stderr.txt").write_text(maint.stderr)
 
     got = {
         "reload": receipt_ok(receipts / f"{projects['reload']}.json", projects["reload"], "reloaded"),
@@ -295,13 +349,76 @@ try:
         "generation": receipt_ok(receipts / f"{projects['generation']}.json", projects["generation"], "skipped_guarded", "guards_not_safe"),
         "ambiguous": receipt_ok(receipts / f"{projects['ambiguous']}.json", projects["ambiguous"], "skipped_guarded", "stored_tab_not_live"),
     }
-    focus_after = surf("focus.state", "--json", check=False).stdout.strip() or "{}"
+    exact_ids = {
+        "reload": reload_tab,
+        "draft": draft_tab,
+        "generation": generation_tab,
+    }
+    for scenario, expected_id in exact_ids.items():
+        item = got[scenario]
+        if str(item.get("requested_tab_id")) != expected_id or str(item.get("resolved_tab_id")) != expected_id:
+            raise AssertionError(f"{scenario} receipt lost exact tab identity: {item}")
+    if len(got["ambiguous"].get("before_observation", {}).get("url_matches", [])) != 2:
+        raise AssertionError(f"ambiguous receipt lacks two exact URL matches: {got['ambiguous']}")
+
+    tabs_after_maintenance = list_tabs()
+    scenario_urls = {reload_tab: reload_url, draft_tab: draft_url, generation_tab: generation_url,
+                     ambiguous_tab_a: ambiguous_url, ambiguous_tab_b: ambiguous_url}
+    observed_urls = {str(t.get("tab_id")): norm(t.get("url", "")) for t in tabs_after_maintenance}
+    if any(observed_urls.get(tab_id) != norm(url) for tab_id, url in scenario_urls.items()):
+        raise AssertionError("a canary tab navigated away from its exact scenario URL")
+
+    cleanup(None)
+    tabs_final = list_tabs()
+    focus_after_raw = surf("focus.state", "--json", check=False).stdout.strip() or "{}"
+    focus_after = json.loads(focus_after_raw)
+    if not isinstance(focus_after, dict):
+        raise RuntimeError("focus.state did not return a JSON object after maintenance")
+    before_identity = {str(t.get("tab_id")): norm(t.get("url", "")) for t in tabs_before}
+    final_identity = {str(t.get("tab_id")): norm(t.get("url", "")) for t in tabs_final}
+    leaked_canary_tabs = sorted(set(created_tabs) & set(final_identity))
+    changed_preexisting_tabs = sorted(
+        tab_id for tab_id, url in before_identity.items()
+        if tab_id in final_identity and final_identity[tab_id] != url
+    )
+    concurrent_tab_delta = {
+        "added": sorted(set(final_identity) - set(before_identity)),
+        "removed": sorted(set(before_identity) - set(final_identity)),
+        "changed_url": changed_preexisting_tabs,
+    }
+    # Attribute mutations only to exact canary-owned IDs. Other project agents may
+    # legitimately add or close unrelated tabs while this concurrent canary runs.
+    unintended_mutations = len(leaked_canary_tabs)
+    intended_reloads = sum(1 for item in got.values() if item.get("status") == "reloaded")
+    guarded_skips = sum(1 for item in got.values() if item.get("status") == "skipped_guarded")
+    focus_changed = focus_identity(focus_before) != focus_identity(focus_after)
+    if maint.returncode != 0 or intended_reloads != 1 or guarded_skips != 3 or unintended_mutations or focus_changed:
+        raise AssertionError(
+            "live maintenance counters did not meet the bounded canary contract: "
+            f"maintenance_exit={maint.returncode} reloads={intended_reloads} "
+            f"skips={guarded_skips} leaked_canary_tabs={leaked_canary_tabs} "
+            f"focus_changed={focus_changed}"
+        )
     summary.update({
         "status": "pass",
+        "mocked": allow_unreachable,
+        "live": not allow_unreachable,
+        "intended_reloads": intended_reloads,
+        "unintended_mutations": unintended_mutations,
+        "guarded_skips": guarded_skips,
+        "focus_changed": focus_changed,
+        "focus_identity_before": focus_identity(focus_before),
+        "focus_identity_after": focus_identity(focus_after),
+        "preserved_preexisting_tabs": preserve_tabs,
         "work_dir": str(work),
         "created_tab_ids": created_tabs,
-        "focus_before": json.loads(focus_before) if focus_before.startswith("{") else focus_before,
-        "focus_after": json.loads(focus_after) if focus_after.startswith("{") else focus_after,
+        "focus_before": focus_before,
+        "focus_after": focus_after,
+        "tabs_before": tabs_before,
+        "tabs_after_maintenance": tabs_after_maintenance,
+        "tabs_final": tabs_final,
+        "leaked_canary_tabs": leaked_canary_tabs,
+        "concurrent_tab_delta": concurrent_tab_delta,
         "maintenance_exit_code": maint.returncode,
         "receipts": got,
     })
@@ -315,4 +432,7 @@ except Exception as exc:
     raise SystemExit(5)
 finally:
     cleanup(work if created_root or not keep else None)
+    if owned_server is not None:
+        owned_server.shutdown()
+        owned_server.server_close()
 PY

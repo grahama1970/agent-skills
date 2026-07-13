@@ -19,6 +19,13 @@ test('tab.recovery-state maps one exact tab without mutation fields', () => {
   );
 });
 
+test('tab.new background mapping preserves the active tab', () => {
+  assert.deepEqual(
+    helpers.mapToolToMessage('tab.new', { url: 'http://127.0.0.1/', background: true }),
+    { type: 'NEW_TAB', url: 'http://127.0.0.1/', urls: undefined, active: false },
+  );
+});
+
 test('CLI registers tab.recovery-state and preserves strict tab identity', () => {
   const source = fs.readFileSync(cliPath, 'utf8');
   assert.match(source, /"tab\.recovery-state"/);

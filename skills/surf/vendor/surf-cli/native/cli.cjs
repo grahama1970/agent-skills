@@ -199,9 +199,10 @@ const TOOLS = {
       "tab.new": { 
         desc: "Open new tab", 
         args: ["url"], 
-        opts: { urls: "Open multiple URLs" },
+        opts: { urls: "Open multiple URLs", background: "Open without activating the new tab" },
         examples: [
           { cmd: 'tab.new "https://google.com"', desc: "Open single tab" },
+          { cmd: 'tab.new "https://google.com" --background', desc: "Open without changing focus" },
           { cmd: 'tab.new --urls "https://a.com" "https://b.com"', desc: "Open multiple" },
         ]
       },

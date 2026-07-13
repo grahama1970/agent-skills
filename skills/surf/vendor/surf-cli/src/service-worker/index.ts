@@ -2428,7 +2428,7 @@ export async function handleMessage(
       for (let i = 0; i < urls.length; i++) {
         const createOptions: chrome.tabs.CreateProperties = {
           url: urls[i],
-          active: i === 0,
+          active: message.active !== false && i === 0,
         };
         // Support creating tab in specific window
         if (message.windowId) {
