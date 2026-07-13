@@ -58,8 +58,8 @@ tasks:
       command: jq -e '.results | length >= 3' /tmp/surf-tab-maintenance-primary-sources.json
       assertion: exit_code == 0
 
-  - id: '2'
-    title: Add exact-tab recovery-state and active-download probes
+  - id: 2a
+    title: Add exact-tab extension recovery-state probe
     lane: '1'
     runner: code-runner
     backend: codex
@@ -74,32 +74,110 @@ tasks:
     depends_on:
       - '1'
     prompt: >-
-      Add read-only extension/native commands that classify one explicit tab for guarded
-      maintenance. Return URL/title/loading/discarded state, ChatGPT generation state,
-      non-empty composer or editable draft state, and whether Chrome has any in-progress
-      download associated with the tab URL/origin when determinable. Do not reload,
-      activate, navigate, close, or create tabs in these commands. Fail closed when a
-      signal cannot be determined.
+      Add only the read-only TAB_RECOVERY_STATE extension handler near the existing
+      TAB_RELOAD handler. For one explicit numeric tab ID, return tab identity and load
+      state plus ChatGPT generation and non-empty editable-draft guard values. Every guard
+      is true, false, or unknown with a reason. Do not add native CLI routing or download
+      inspection in this task. Never reload, activate, navigate, close, or create a tab.
     implementation:
       - Add a read-only TAB_RECOVERY_STATE handler to the Surf extension service worker.
-      - Add native CLI routing and machine-readable JSON output for tab.recovery-state.
-      - Keep exact numeric tab-id validation and return explicit unknown guard states.
+      - Require one exact numeric tab ID and preserve URL, title, loading, and discarded observations.
+      - Return explicit unknown values when ChatGPT generation or draft state cannot be observed.
     read_context:
       - skills/surf/vendor/surf-cli/src/service-worker/index.ts
-      - skills/surf/vendor/surf-cli/native/cli.cjs
-      - skills/surf/vendor/surf-cli/native/chatgpt-client.cjs
     allowlist:
       - skills/surf/vendor/surf-cli/src/service-worker/index.ts
-      - skills/surf/vendor/surf-cli/native/cli.cjs
-      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
     tests:
-      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
     blind_tests:
-      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
     max_rounds: 3
     gate: Read-only probe must never call chrome.tabs.reload, update, create, remove, or activate.
     definition_of_done:
-      command: node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      command: node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
+      assertion: exit_code == 0
+
+  - id: 2b
+    title: Route exact-tab recovery state through native CLI
+    lane: '1'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: general-purpose
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - 2a
+    prompt: >-
+      Add only native CLI routing for tab.recovery-state using the implemented
+      TAB_RECOVERY_STATE extension message. Require one exact numeric tab ID and print the
+      extension response as machine-readable JSON without changing guard values. Reject
+      malformed IDs; do not coerce them, select fallback tabs, activate tabs, or mutate the
+      browser. Do not add download inspection in this task.
+    implementation:
+      - Register tab.recovery-state beside existing tab.list and tab.reload commands.
+      - Forward the exact numeric tab ID to TAB_RECOVERY_STATE and preserve unknown guard reasons.
+      - Add native command tests for valid routing and malformed-ID rejection.
+    read_context:
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/src/service-worker/index.ts
+    allowlist:
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+    tests:
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+    blind_tests:
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+    max_rounds: 3
+    gate: Native routing preserves exact identity and cannot select or mutate another tab.
+    definition_of_done:
+      command: node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+      assertion: exit_code == 0
+
+  - id: 2c
+    title: Add guarded active-download observation
+    lane: '1'
+    runner: code-runner
+    backend: codex
+    mode: iterative
+    agent: general-purpose
+    skills:
+      - surf
+    dirty_worktree_policy: isolated_worktree
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    depends_on:
+      - 2b
+    prompt: >-
+      Extend TAB_RECOVERY_STATE with one read-only active-download guard. Query only
+      in-progress Chrome downloads and associate a download with the exact tab URL or
+      origin only when evidence is deterministic. Return true, false, or unknown with a
+      reason; unknown must block reload. Preserve all existing recovery-state output and
+      native routing. Never cancel, open, pause, resume, or otherwise mutate downloads.
+    implementation:
+      - Add a bounded chrome.downloads.search in the existing recovery-state handler.
+      - Fail closed when download-to-tab association cannot be determined.
+      - Add tests for associated, unrelated, and indeterminate in-progress downloads.
+    read_context:
+      - skills/surf/vendor/surf-cli/src/service-worker/index.ts
+      - skills/surf/vendor/surf-cli/native/cli.cjs
+    allowlist:
+      - skills/surf/vendor/surf-cli/src/service-worker/index.ts
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
+    tests:
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
+    blind_tests:
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
+    max_rounds: 3
+    gate: Download observation is read-only and any indeterminate association blocks reload.
+    definition_of_done:
+      command: node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
       assertion: exit_code == 0
 
   - id: '3'
@@ -201,7 +279,7 @@ tasks:
     commit_on_success: true
     rollback_on_failure: true
     depends_on:
-      - '2'
+      - 2c
       - '3'
       - '4'
     prompt: >-
@@ -334,7 +412,10 @@ tasks:
       skills/surf/tests/test_tab_maintenance.py
       skills/surf/tests/test_tab_maintenance_timer.py
       skills/browser-oracle/tests/test_bindings.py
-      && node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
+      && node --test
+      skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
+      skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+      skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
       && bash -n skills/surf/scripts/tab-maintenance.sh agents/surf-doctor/install-tab-maintenance-timer.sh
       && python3 scripts/check_mock_evidence_claims.py
     allowlist:
@@ -343,6 +424,9 @@ tasks:
       - skills/surf/tests/test_tab_maintenance_timer.py
       - skills/surf/scripts/tab-maintenance.sh
       - agents/surf-doctor/install-tab-maintenance-timer.sh
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-extension.test.cjs
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
+      - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
     implementation:
       - Run only the focused deterministic gates for touched modules.
       - Treat these tests as wiring and fail-closed policy evidence, not live browser proof.
