@@ -1,0 +1,287 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_index_path": "/tmp/persona-dream-runtime-current/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_artifact_index.json",
+  "artifact_index_sha256": "sha256:eb8f6a6ace77d09f65f37bc31f373f71010a63931283de543113c01325fe38ee",
+  "claims": {
+    "does_not_prove": [
+      "Memory active-revision compare-and-swap",
+      "file active-pointer mutation or ACTIVE_CONSISTENT state",
+      "repair queue completion",
+      "provider readiness, publication, payment, or submission"
+    ],
+    "proves": [
+      "the immutable Phase 01-10 revision hashes were recomputed again before verification",
+      "Memory durably returned the exact revision, phase, and required-artifact records",
+      "question-shaped recall returned the expected run and revision with a positive dense score",
+      "the revision record lifecycle advanced from PREPARED to VERIFIED through Memory"
+    ]
+  },
+  "collection": "project_knowledge",
+  "command": {
+    "argv": [
+      "skills/persona-dream/scripts/prepare_revision_qualification.py",
+      "--run-root",
+      "skills/persona-dream/reports/pipeline-complete",
+      "--revision-id",
+      "rev_repair_a8b93ffeca8f",
+      "--source-commit",
+      "62c255c9b8d380079ce37c39cab3ab9adada30e3",
+      "--memory-url",
+      "http://127.0.0.1:8601",
+      "verify"
+    ],
+    "cwd": "/tmp/persona-dream-runtime-current",
+    "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "script_path": "/tmp/persona-dream-runtime-current/skills/persona-dream/scripts/prepare_revision_qualification.py",
+    "script_sha256": "sha256:26e43824f59b875e0feba8469dcee0a3de0eafd51db84beea5c005223f179361",
+    "source_commit": "62c255c9b8d380079ce37c39cab3ab9adada30e3"
+  },
+  "hash_validation": {
+    "artifact_count": 318,
+    "artifact_hash_manifest_sha256": "sha256:53125f3ba27243738f9b17fb5d4cb2995a43330cd0b28b0ecc7b58df5a892bda",
+    "escape_count": 0,
+    "matched_count": 318,
+    "mismatch_count": 0,
+    "recomputed_count": 318,
+    "symlink_count": 0
+  },
+  "lifecycle_state": "VERIFIED",
+  "live": true,
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "paid_call_authorized": false,
+  "prepare_receipt_sha256": "sha256:af2ec26de2281dc6848f5fca4d3c69728f4bddde31543432f4e7c01baa5f64fd",
+  "provider_live": false,
+  "records": {
+    "after_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "before_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "exact_keys": [
+      "pd_rev_22af973c08c8213a344d89876b0b3485a6da13b092de9ad7",
+      "pd_phase_c3d9de8f27c8c8f9db5dc1ea208b1af9ea2951cd70b691af",
+      "pd_phase_d20ea846a0d2d900cff1b66a1b917978164ccfc0834cfc83",
+      "pd_phase_868357a58d97d281a7f61b7d1833fcc5d51c10e6dea3fc6f",
+      "pd_phase_0debb5488166c83b490266154b72497bedc67ee4ab3e7e2a",
+      "pd_phase_2df2f3a1dc933d67bd722005f36be5e754d6f292dea1edc2",
+      "pd_phase_cfa3f05aad5f596eeb0b7de9d02652955a7ae8360e37ff5a",
+      "pd_phase_1c6d00559ce5db915f2a1992a62f1cb4050a9b54b3c6b972",
+      "pd_phase_dc3d725b572d64e64bcb923d23c8a7c2853decee19c7cce2",
+      "pd_phase_6b546282b57e39bd09809b72cfbdf6923b247b6cfb5d81e9",
+      "pd_phase_8bb753a530c90f7e6208d4084ffc1098e8de631b2645eba8",
+      "pd_artifact_f44cab1d3e553c41bbda007acb54513e87d33226ee3fec50",
+      "pd_artifact_ee52ff67c7765677f185ae25fb19aa05e4e0620041137d04",
+      "pd_artifact_4e78007070c85824d8786efb12885b1a35774681a96b3874",
+      "pd_artifact_aefc1b769a1bb59d9488552998d457ffc07c9f944ec31d36",
+      "pd_artifact_be773b6e43d6ec6146de833780acf21b21fda4d854c0bfce",
+      "pd_artifact_8e92c5763a3ec78418827ee1d79d9c0b3c44235878ef8d84",
+      "pd_artifact_42796b14d772835e9e7bc5575ea6fa13a35782d73355a565",
+      "pd_artifact_6c4dd17765c0b7ac22942969a5eae009bcd1951347dbff61",
+      "pd_artifact_a8c0d3102635ea8abbe8a44382a3fac9c7e3e6cf6354ce8d",
+      "pd_artifact_65ee8cc5a075a50930cdc75fda83eaabe8871e77cdd1941b",
+      "pd_artifact_a0a86a42c2864d8c2bc617c610a10534befdda29ee999a71",
+      "pd_artifact_ab8040c2d1e4cba0c73cebd56fd513641a910342f399d22b",
+      "pd_artifact_e29e883ef778a226a38c365aae0c707f03d4549a8934c185",
+      "pd_artifact_2d54aa828b3b6dcf830a085dade228c36d5f6db38798cb50",
+      "pd_artifact_9bca31ece750a63e389f9f9a9da58e027788515751230bfc",
+      "pd_artifact_cc06feeef9ee04389a0ea666a3fef87bcc83ed008a23a5c5"
+    ],
+    "expected_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "phase_keys": {
+      "01": "pd_phase_c3d9de8f27c8c8f9db5dc1ea208b1af9ea2951cd70b691af",
+      "02": "pd_phase_d20ea846a0d2d900cff1b66a1b917978164ccfc0834cfc83",
+      "03": "pd_phase_868357a58d97d281a7f61b7d1833fcc5d51c10e6dea3fc6f",
+      "04": "pd_phase_0debb5488166c83b490266154b72497bedc67ee4ab3e7e2a",
+      "05": "pd_phase_2df2f3a1dc933d67bd722005f36be5e754d6f292dea1edc2",
+      "06": "pd_phase_cfa3f05aad5f596eeb0b7de9d02652955a7ae8360e37ff5a",
+      "07": "pd_phase_1c6d00559ce5db915f2a1992a62f1cb4050a9b54b3c6b972",
+      "08": "pd_phase_dc3d725b572d64e64bcb923d23c8a7c2853decee19c7cce2",
+      "09": "pd_phase_6b546282b57e39bd09809b72cfbdf6923b247b6cfb5d81e9",
+      "10": "pd_phase_8bb753a530c90f7e6208d4084ffc1098e8de631b2645eba8"
+    },
+    "required_artifact_keys": {
+      "contact_sheet_gate_receipt": "pd_artifact_6c4dd17765c0b7ac22942969a5eae009bcd1951347dbff61",
+      "contact_sheet_manifest": "pd_artifact_42796b14d772835e9e7bc5575ea6fa13a35782d73355a565",
+      "contact_sheet_requirements": "pd_artifact_8e92c5763a3ec78418827ee1d79d9c0b3c44235878ef8d84",
+      "crew_contract": "pd_artifact_aefc1b769a1bb59d9488552998d457ffc07c9f944ec31d36",
+      "crew_gate_receipt": "pd_artifact_be773b6e43d6ec6146de833780acf21b21fda4d854c0bfce",
+      "dream_request": "pd_artifact_f44cab1d3e553c41bbda007acb54513e87d33226ee3fec50",
+      "media_lock": "pd_artifact_ab8040c2d1e4cba0c73cebd56fd513641a910342f399d22b",
+      "panel_distillation_contract": "pd_artifact_9bca31ece750a63e389f9f9a9da58e027788515751230bfc",
+      "provider_final_gate": "pd_artifact_2d54aa828b3b6dcf830a085dade228c36d5f6db38798cb50",
+      "provider_schema_receipt": "pd_artifact_cc06feeef9ee04389a0ea666a3fef87bcc83ed008a23a5c5",
+      "residue_links": "pd_artifact_ee52ff67c7765677f185ae25fb19aa05e4e0620041137d04",
+      "script_contract": "pd_artifact_65ee8cc5a075a50930cdc75fda83eaabe8871e77cdd1941b",
+      "story_contract": "pd_artifact_4e78007070c85824d8786efb12885b1a35774681a96b3874",
+      "storyboard_packet": "pd_artifact_a0a86a42c2864d8c2bc617c610a10534befdda29ee999a71",
+      "video_provider_scorecard": "pd_artifact_e29e883ef778a226a38c365aae0c707f03d4549a8934c185",
+      "voice_evidence": "pd_artifact_a8c0d3102635ea8abbe8a44382a3fac9c7e3e6cf6354ce8d"
+    },
+    "revision_key": "pd_rev_22af973c08c8213a344d89876b0b3485a6da13b092de9ad7"
+  },
+  "requests": {
+    "finalize_revision": {
+      "endpoint": "/upsert",
+      "request_payload_sha256": "sha256:9cbc8ccf0210a36950e438ba29631cffabbbbcce0024b40fe69b399f6c63df5f",
+      "response_sha256": "sha256:6fd5a4526bb96fdb8d03b62844d44d633025c7e332db74056b39fce642c08316",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "errors": [],
+        "inserted": 0,
+        "total": 1,
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260713T192926304153Z_8_123316216006336.jsonl"
+      },
+      "status_code": 200
+    },
+    "list_after_verify": {
+      "endpoint": "/list",
+      "request_payload_sha256": "sha256:d9f4a997ba924d96d8b56e9a6cbdc5a7fd927ffeb2314116621ce0c19674fc87",
+      "response_sha256": "sha256:862968d6d4b950681de3c414d6be9f989833ab4057ba3d46ab32903b25dfb1db",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "count": 27,
+        "total": 27
+      },
+      "status_code": 200
+    },
+    "list_before_verify": {
+      "endpoint": "/list",
+      "request_payload_sha256": "sha256:d9f4a997ba924d96d8b56e9a6cbdc5a7fd927ffeb2314116621ce0c19674fc87",
+      "response_sha256": "sha256:140dfc7d45b6a4eb7c8f7ce24a19d79dc6cc96dc9203d913bdc943980f49ee7c",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "count": 27,
+        "total": 27
+      },
+      "status_code": 200
+    },
+    "recall": {
+      "endpoint": "/recall",
+      "request_payload_sha256": "sha256:709fe28b062913fbcae94ba39b85f84486169740df5f802247c822da3875109f",
+      "response_sha256": "sha256:a87e4a5826f38c4e0282fc5d4054ad0a316bd178f73a97b2cc01a609d0522e21",
+      "returned_counts": {
+        "errors": []
+      },
+      "status_code": 200
+    }
+  },
+  "revision_id": "rev_repair_a8b93ffeca8f",
+  "revision_manifest_sha256": "sha256:31436766ed937f0682f9316af2ea258f44edaa4cb53d15078aafab69d1cc99bd",
+  "revision_root": "/tmp/persona-dream-runtime-current/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@62c255c9b8d380079ce37c39cab3ab9adada30e3",
+  "schema": "persona_dream.revision_memory_verify_receipt.v1",
+  "semantic_sync": {
+    "after": {
+      "expected_pointer_count": 27,
+      "pointer_count": 27,
+      "required": true,
+      "states": {
+        "synced": 27
+      }
+    },
+    "before": {
+      "expected_pointer_count": 27,
+      "pointer_count": 27,
+      "required": true,
+      "states": {
+        "synced": 27
+      }
+    },
+    "recall": {
+      "dense_matching_count": 11,
+      "evidence": [
+        {
+          "dense": 0.8538387,
+          "key": "pd_rev_22af973c08c8213a344d89876b0b3485a6da13b092de9ad7",
+          "phase_id": null,
+          "record_type": "revision"
+        },
+        {
+          "dense": 0.77035254,
+          "key": "pd_phase_c3d9de8f27c8c8f9db5dc1ea208b1af9ea2951cd70b691af",
+          "phase_id": "01",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.75173855,
+          "key": "pd_phase_8bb753a530c90f7e6208d4084ffc1098e8de631b2645eba8",
+          "phase_id": "10",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.7683081,
+          "key": "pd_phase_d20ea846a0d2d900cff1b66a1b917978164ccfc0834cfc83",
+          "phase_id": "02",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.75963074,
+          "key": "pd_phase_2df2f3a1dc933d67bd722005f36be5e754d6f292dea1edc2",
+          "phase_id": "05",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.75472367,
+          "key": "pd_phase_1c6d00559ce5db915f2a1992a62f1cb4050a9b54b3c6b972",
+          "phase_id": "07",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.761852,
+          "key": "pd_phase_cfa3f05aad5f596eeb0b7de9d02652955a7ae8360e37ff5a",
+          "phase_id": "06",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.73488957,
+          "key": "pd_phase_868357a58d97d281a7f61b7d1833fcc5d51c10e6dea3fc6f",
+          "phase_id": "03",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.72707057,
+          "key": "pd_phase_dc3d725b572d64e64bcb923d23c8a7c2853decee19c7cce2",
+          "phase_id": "08",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.71365076,
+          "key": "pd_phase_6b546282b57e39bd09809b72cfbdf6923b247b6cfb5d81e9",
+          "phase_id": "09",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.70060956,
+          "key": "pd_phase_0debb5488166c83b490266154b72497bedc67ee4ab3e7e2a",
+          "phase_id": "04",
+          "record_type": "phase"
+        }
+      ],
+      "item_count": 50,
+      "matching_identity_count": 11,
+      "max_dense": 0.8538387,
+      "question": "Which immutable Persona Dream revision is prepared for run pipeline-complete revision rev_repair_a8b93ffeca8f, and which Phase 01 through Phase 10 evidence records belong to it?"
+    }
+  },
+  "source_commit": "62c255c9b8d380079ce37c39cab3ab9adada30e3",
+  "source_revision_id": "rev_0001",
+  "status": "PASS_MEMORY_REVISION_VERIFIED",
+  "submitted": false,
+  "verified_at": "2026-07-13T19:29:26.478753+00:00"
+}
