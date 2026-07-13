@@ -984,15 +984,19 @@ async function captureAssistantBaseline(cdp) {
       ? directAssistantTurns
       : conversationTurns.filter((node) => isAssistantTurn(node));
     const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
+    const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"], [data-turn="user"]'))
+      .filter((node) => node instanceof HTMLElement);
     return {
       assistantCount: assistantTurns.length,
       lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
+      userCount: userTurns.length,
     };
   })()`;
   const value = await evaluate(cdp, expr);
   return {
     assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
     lastMessageId: value?.lastMessageId || null,
+    userCount: Number.isFinite(value?.userCount) ? value.userCount : 0,
   };
 }
 
@@ -1042,9 +1046,11 @@ async function clickSend(cdp, inputCdp) {
   return true;
 }
 
-async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
+async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000, baseline = {}) {
   const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
   const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
+  const baselineAssistantCount = Number.isFinite(baseline.assistantCount) ? baseline.assistantCount : 0;
+  const baselineUserCount = Number.isFinite(baseline.userCount) ? baseline.userCount : 0;
   const deadline = Date.now() + timeoutMs;
   let lastState = null;
   while (Date.now() < deadline) {
@@ -1057,15 +1063,24 @@ async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
         const promptEnd = ${promptEnd};
         const prompt = document.querySelector(PROMPT_SELECTOR);
         const text = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '') : '';
+        const assistantTurns = document.querySelectorAll('[data-message-author-role="assistant"], [data-turn="assistant"]');
+        const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"], [data-turn="user"]'));
+        const lastUser = userTurns.length ? userTurns[userTurns.length - 1] : null;
+        const lastUserText = lastUser ? (lastUser.innerText || lastUser.textContent || '') : '';
         return {
           stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
           promptPresent: Boolean(prompt),
           composerStillContainsPrompt: Boolean(text && text.includes(promptStart) && text.includes(promptEnd)),
           composerChars: text.length,
+          assistantCount: assistantTurns.length,
+          userCount: userTurns.length,
+          lastUserContainsPrompt: Boolean(lastUserText && lastUserText.includes(promptStart) && lastUserText.includes(promptEnd)),
         };
       })()`
     );
-    if (lastState?.stopVisible || lastState?.composerStillContainsPrompt === false) {
+    const assistantAdvanced = Number(lastState?.assistantCount || 0) > baselineAssistantCount;
+    const userTurnAdvanced = Number(lastState?.userCount || 0) > baselineUserCount && lastState?.lastUserContainsPrompt === true;
+    if (lastState?.stopVisible || assistantAdvanced || userTurnAdvanced) {
       return { accepted: true, ...lastState };
     }
     await delay(200);
@@ -1414,7 +1429,7 @@ async function query(options) {
     const assistantBaseline = await captureAssistantBaseline(cdp);
     log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
-    const submitState = await waitForSubmitAccepted(cdp, prompt);
+    const submitState = await waitForSubmitAccepted(cdp, prompt, 10000, assistantBaseline);
     log(`Prompt accepted: sentinel=${sentinel || ''} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     let response;
