@@ -119,9 +119,12 @@ test('run detail reads only the atomically promoted revision', async () => {
   }))
   const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
   assert.equal(detail.activeRevision?.revisionId, 'rev_0002')
+  assert.equal(detail.revisionQualification.state, 'LEGACY_UNQUALIFIED')
+  assert.equal(detail.revisionQualification.status, 'BLOCKED_REVISION_NOT_QUALIFIED')
   assert.equal(detail.earliestIssue, undefined)
   assert.equal(detail.repairCandidate, undefined)
-  assert.ok(detail.stages.every((stage) => stage.effectiveState === 'accepted_current'))
+  assert.ok(detail.stages.filter((stage) => Number(stage.id) < 8).every((stage) => stage.effectiveState === 'accepted_current'))
+  assert.ok(detail.stages.filter((stage) => Number(stage.id) >= 8).every((stage) => stage.effectiveState === 'blocked_by_upstream'))
   rmSync(root, { recursive: true, force: true })
 })
 

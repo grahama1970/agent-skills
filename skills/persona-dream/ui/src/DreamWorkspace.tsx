@@ -94,6 +94,12 @@ type DreamStage = {
   images: Array<{ label: string; path: string; url: string }>
 }
 
+type RevisionQualification = {
+  state: 'MISSING' | 'LEGACY_UNQUALIFIED' | 'ACTIVE_CONSISTENT'
+  status: 'BLOCKED_REVISION_NOT_QUALIFIED' | 'PASS_PERSONA_DREAM_SELF_HEAL_ACTIVE_REVISION'
+  blockers: string[]
+}
+
 type ResearchMemoryResult = {
   title: string
   url: string
@@ -8786,7 +8792,8 @@ export function DreamWorkspace() {
       : stage)
   }, [backendStages, phase02MediaGate])
   const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[0] ?? null
-  const klingReady = stages.length > 0 && stages.every((p) => isStagePassed(p)) && !!selectedRun?.paidCallAuthorized
+  const revisionQualified = (runDetail?.revisionQualification as RevisionQualification | undefined)?.state === 'ACTIVE_CONSISTENT'
+  const klingReady = revisionQualified && stages.length > 0 && stages.every((p) => isStagePassed(p)) && !!selectedRun?.paidCallAuthorized
 
   const pageVariants = {
     initial: (dir: number) => ({ opacity: 0, x: dir > 0 ? 20 : -20 }),

@@ -78,7 +78,45 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       ? revision.active_revision_id
       : ''
   const files = await listFiles(evidenceRoot)
-  const stages = projectStages(evidenceRoot, files, '10', sourceRevisionId || undefined)
+  const projectedStages = projectStages(evidenceRoot, files, '10', sourceRevisionId || undefined)
+  const revisionQualification: DreamRunDetailResponse['revisionQualification'] = sourceRevisionId
+    ? {
+        state: 'LEGACY_UNQUALIFIED',
+        status: 'BLOCKED_REVISION_NOT_QUALIFIED',
+        blockers: [
+          'BLOCKED_REVISION_QUALIFICATION_RECEIPT_MISSING',
+          'BLOCKED_MEMORY_ACTIVE_REVISION_UNPROVEN',
+          'BLOCKED_QUEUE_TERMINAL_STATE_UNPROVEN',
+        ],
+      }
+    : {
+        state: 'MISSING',
+        status: 'BLOCKED_REVISION_NOT_QUALIFIED',
+        blockers: ['BLOCKED_ACTIVE_REVISION_MISSING'],
+      }
+  const stages = projectedStages.map((stage) => {
+    if (Number(stage.id) < 8 || revisionQualification.state === 'ACTIVE_CONSISTENT') return stage
+    return {
+      ...stage,
+      status: 'BLOCKED_REVISION_NOT_QUALIFIED',
+      failureOrGap: 'The active revision has not passed consumer hydration and Memory-backed revision qualification.',
+      acceptance: { ...stage.acceptance, state: 'blocked' as const },
+      effectiveState: 'blocked_by_upstream' as const,
+      lineage: {
+        ...stage.lineage,
+        state: 'stale' as const,
+        staleReasons: [
+          ...stage.lineage.staleReasons,
+          { code: 'REVISION_QUALIFICATION_NOT_ACTIVE_CONSISTENT' },
+        ],
+      },
+      repair: {
+        ...stage.repair,
+        eligible: false,
+        reason: 'revision_qualification_transaction_required',
+      },
+    }
+  })
   const earliest = stages.find((stage) => ['missing', 'malformed', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
   const repairEnabled = Boolean(revision?.repair_enabled === true || revision?.pipeline_complete === true)
   const phaseRange = earliest ? stages.filter((stage) => Number(stage.id) >= Number(earliest.id) && Number(stage.id) <= 10).map((stage) => stage.id) : []
@@ -109,6 +147,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       revisionId: sourceRevisionId,
       manifestSha256: typeof pointer?.revisionManifestSha256 === 'string' ? pointer.revisionManifestSha256 : undefined,
     } : undefined,
+    revisionQualification,
     earliestIssue: earliest ? { phaseId: earliest.id, kind: earliest.evidence.state === 'malformed' ? 'malformed' : 'missing', reasons: [...earliest.evidence.missingIds, ...earliest.evidence.malformedIds] } : undefined,
     repairCandidate: candidate,
   }

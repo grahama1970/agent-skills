@@ -71,6 +71,11 @@ export type DreamRunDetailResponse = {
     revisionId: string
     manifestSha256?: string
   }
+  revisionQualification: {
+    state: 'MISSING' | 'LEGACY_UNQUALIFIED' | 'ACTIVE_CONSISTENT'
+    status: 'BLOCKED_REVISION_NOT_QUALIFIED' | 'PASS_PERSONA_DREAM_SELF_HEAL_ACTIVE_REVISION'
+    blockers: string[]
+  }
   earliestIssue?: {
     phaseId: string
     kind: 'missing' | 'malformed' | 'stale' | 'blocked'
