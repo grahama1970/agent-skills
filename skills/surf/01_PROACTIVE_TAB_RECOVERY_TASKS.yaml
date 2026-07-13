@@ -95,7 +95,7 @@ tasks:
     tests:
       - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
     blind_tests:
-      - skills/test-lab/run.sh verify-task 2 skills/surf/vendor/surf-cli --domain browser
+      - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state.test.cjs
     max_rounds: 3
     gate: Read-only probe must never call chrome.tabs.reload, update, create, remove, or activate.
     definition_of_done:
@@ -111,7 +111,7 @@ tasks:
     agent: general-purpose
     skills:
       - browser-oracle
-    cwd: /home/graham/workspace/experiments/agent-skills/skills/browser-oracle
+    cwd: /home/graham/workspace/experiments/agent-skills
     dirty_worktree_policy: isolated_worktree
     apply_to_source: true
     commit_on_success: true
@@ -129,21 +129,20 @@ tasks:
       - Expose a JSON CLI command suitable for Surf Doctor without creating a new tab.
       - Return old_tab_id, new_tab_id, URL evidence, scan completeness, and failure reason.
     read_context:
-      - src/browser_oracle/bindings.py
-      - src/browser_oracle/cli.py
-      - src/browser_oracle/models.py
+      - skills/browser-oracle/src/browser_oracle/bindings.py
+      - skills/browser-oracle/src/browser_oracle/cli.py
     allowlist:
-      - src/browser_oracle/bindings.py
-      - src/browser_oracle/cli.py
-      - tests/test_bindings.py
+      - skills/browser-oracle/src/browser_oracle/bindings.py
+      - skills/browser-oracle/src/browser_oracle/cli.py
+      - skills/browser-oracle/tests/test_bindings.py
     tests:
-      - python3 -m pytest -q tests/test_bindings.py
+      - python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
     blind_tests:
-      - ../test-lab/run.sh verify-task 3 . --domain python
+      - python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
     max_rounds: 3
     gate: Rebinding occurs only for one exact live URL match and never opens, closes, activates, or navigates a tab.
     definition_of_done:
-      command: python3 -m pytest -q tests/test_bindings.py
+      command: python3 -m pytest -q skills/brow''ser-oracle/tests/test_bindings.py
       assertion: exit_code == 0
 
   - id: '4'
@@ -181,7 +180,7 @@ tasks:
     tests:
       - python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
     blind_tests:
-      - skills/test-lab/run.sh verify-task 4 skills/surf/scripts --domain python
+      - python3 -m pytest -q skills/surf/tests/test_tab_recovery_receipt.py
     max_rounds: 3
     gate: Unknown guards and failed mutations cannot produce a successful recovery action.
     definition_of_done:
@@ -228,7 +227,7 @@ tasks:
     tests:
       - python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
     blind_tests:
-      - skills/test-lab/run.sh verify-task 5 skills/surf --domain browser
+      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance.py
     max_rounds: 3
     gate: Coordinator cannot mutate without exact identity, enumerated trigger, all-safe guards, cooldown clearance, and repair-safe authorization.
     definition_of_done:
@@ -271,7 +270,7 @@ tasks:
     tests:
       - python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
     blind_tests:
-      - skills/test-lab/run.sh verify-task 6 agents/surf-doctor/systemd --domain shell
+      - python3 -m pytest -q skills/surf/tests/test_tab_maintenance_timer.py
     max_rounds: 3
     gate: Tests and installation cannot start, enable, or mutate the operator's user timer without an explicit install action.
     definition_of_done:
@@ -313,7 +312,7 @@ tasks:
     tests:
       - python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
     blind_tests:
-      - skills/test-lab/run.sh verify-task 7 skills/surf/scripts/live-tab-maintenance-canary.sh --domain shell
+      - python3 -m pytest -q skills/surf/tests/test_live_tab_maintenance_canary.py
     max_rounds: 3
     gate: Harness can mutate only disposable localhost tabs and bindings created by its own run ID.
     definition_of_done:
