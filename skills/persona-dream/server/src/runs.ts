@@ -117,7 +117,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       },
     }
   })
-  const earliest = stages.find((stage) => ['missing', 'malformed', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
+  const earliest = stages.find((stage) => ['missing', 'malformed', 'semantic_invalid', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
   const repairEnabled = Boolean(revision?.repair_enabled === true || revision?.pipeline_complete === true)
   const phaseRange = earliest ? stages.filter((stage) => Number(stage.id) >= Number(earliest.id) && Number(stage.id) <= 10).map((stage) => stage.id) : []
   const candidate = earliest && sourceRevisionId
@@ -148,7 +148,11 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       manifestSha256: typeof pointer?.revisionManifestSha256 === 'string' ? pointer.revisionManifestSha256 : undefined,
     } : undefined,
     revisionQualification,
-    earliestIssue: earliest ? { phaseId: earliest.id, kind: earliest.evidence.state === 'malformed' ? 'malformed' : 'missing', reasons: [...earliest.evidence.missingIds, ...earliest.evidence.malformedIds] } : undefined,
+    earliestIssue: earliest ? {
+      phaseId: earliest.id,
+      kind: earliest.evidence.state === 'malformed' || earliest.evidence.state === 'semantic_invalid' ? 'malformed' : 'missing',
+      reasons: [...earliest.evidence.missingIds, ...earliest.evidence.malformedIds, ...earliest.evidence.semanticInvalidIds],
+    } : undefined,
     repairCandidate: candidate,
   }
 }

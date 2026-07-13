@@ -1,5 +1,5 @@
 export type AcceptanceState = 'accepted' | 'blocked' | 'not_evaluated'
-export type EvidenceState = 'present' | 'missing' | 'malformed'
+export type EvidenceState = 'present' | 'missing' | 'malformed' | 'semantic_invalid'
 export type LineageState = 'current' | 'stale' | 'unknown'
 
 export type DreamArtifactRef = {
@@ -29,6 +29,7 @@ export type DreamPhaseProjection = {
     observed: DreamArtifactRef[]
     missingIds: string[]
     malformedIds: string[]
+    semanticInvalidIds: string[]
   }
   lineage: {
     state: LineageState
@@ -44,6 +45,7 @@ export type DreamPhaseProjection = {
     | 'blocked_stale'
     | 'missing'
     | 'malformed'
+    | 'semantic_invalid'
     | 'unknown'
     | 'blocked_by_upstream'
   repair: {

@@ -1,28 +1,33 @@
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, relative } from 'node:path'
-import type { DreamArtifactRef, DreamPhaseProjection } from '../../contracts/src/index'
+import { PHASE_ARTIFACTS_CONTRACT } from '../../contracts/src/index'
+import type { DreamArtifactRef, DreamPhaseProjection, PhaseArtifactRequirement } from '../../contracts/src/index'
 
 type PhaseSpec = {
   id: string
   title: string
   summary: string
-  required: string[]
+  required: PhaseArtifactRequirement[]
   matches: RegExp
 }
 
-export const PHASES: PhaseSpec[] = [
-  { id: '01', title: 'Idea and Memory Residue', summary: 'Grounded dream request and selected memory residue.', required: ['dream_request', 'residue_links'], matches: /dream_request|residue_links|dream_packet/i },
-  { id: '02', title: 'Story', summary: 'Accepted story and entity contracts.', required: ['story_contract'], matches: /story_contract|dream_story|character_scene_bible|visual_entities/i },
-  { id: '03', title: 'Crew', summary: 'Producer, writer, director, and reviewer authority contract.', required: ['crew_contract', 'crew_gate_receipt'], matches: /phase_03|crew_contract|crew_prompt|validate_crew|producer|script_writer|director/i },
-  { id: '04', title: 'Contact Sheets', summary: 'Accepted character, prop, and environment reference sheets.', required: ['contact_sheet_requirements', 'contact_sheet_manifest', 'contact_sheet_gate_receipt'], matches: /phase_04|contact_sheet|reference_sheet|chosen_reference/i },
-  { id: '05', title: 'Voices', summary: 'Voice references and audition evidence.', required: ['voice_evidence'], matches: /phase_05|voice|tts|audio|wav|waveform/i },
-  { id: '06', title: 'Script', summary: 'Timed script and dialogue/action evidence.', required: ['script_contract'], matches: /phase_06|script_contract|timed_transcript|dialogue/i },
-  { id: '07', title: 'Storyboard', summary: 'Reviewed storyboard panels and frame evidence.', required: ['storyboard_packet'], matches: /phase_07|storyboard/i },
-  { id: '08', title: 'Media Lock', summary: 'Accepted locked provider-facing media.', required: ['media_lock'], matches: /phase_08|media_lock|accepted_frame/i },
-  { id: '09', title: 'Video Provider', summary: 'Provider selection and scene packet.', required: ['video_provider_scorecard', 'provider_final_gate'], matches: /phase_09|video_provider|provider_scorecard|provider_final_gate|kling_scene_packet/i },
-  { id: '10', title: 'Provider Distillation', summary: 'Per-panel provider payload distillation and dry-run contract.', required: ['panel_distillation_contract', 'provider_schema_receipt'], matches: /phase_10|panel_distillation|provider_schema_receipt|final_provider_payload/i },
-]
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export const PHASES: PhaseSpec[] = Object.entries(PHASE_ARTIFACTS_CONTRACT.phases)
+  .sort(([left], [right]) => Number(left) - Number(right))
+  .map(([id, phase]) => ({
+  id,
+  title: phase.title,
+  summary: phase.summary,
+  required: phase.required_artifacts,
+  matches: new RegExp([
+    ...phase.directory_patterns,
+    ...phase.required_artifacts.flatMap((artifact) => [artifact.artifact_id, ...artifact.basenames]),
+  ].map(escapeRegExp).join('|'), 'i'),
+  }))
 
 function readJson(path: string): Record<string, unknown> | null {
   try { return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown> } catch { return null }
@@ -37,19 +42,38 @@ function artifactKind(path: string): DreamArtifactRef['kind'] {
   return 'other'
 }
 
-function requirementMatches(requirement: string, path: string): boolean {
-  const normalized = requirement.replace(/_/g, '.*')
+function requirementMatches(requirement: PhaseArtifactRequirement, path: string): boolean {
+  if (requirement.basenames.some((name) => basename(path).toLowerCase() === name.toLowerCase())) return true
+  const normalized = requirement.artifact_id.replace(/_/g, '.*')
   return new RegExp(normalized, 'i').test(path)
 }
 
-function requirementPresent(requirement: string, files: string[]): boolean {
+function requirementPresent(requirement: PhaseArtifactRequirement, files: string[]): boolean {
   return files.some((path) => requirementMatches(requirement, path))
 }
 
-function requiredArtifact(requirement: string, files: string[]): string | undefined {
-  const exactName = `${requirement}.json`
-  return files.find((path) => basename(path).toLowerCase() === exactName.toLowerCase())
+function requiredArtifact(requirement: PhaseArtifactRequirement, files: string[]): string | undefined {
+  return files.find((path) => requirement.basenames.some((name) => basename(path).toLowerCase() === name.toLowerCase()))
     ?? files.find((path) => requirementMatches(requirement, path))
+}
+
+function semanticBlockers(requirement: PhaseArtifactRequirement, path: string): string[] {
+  if (!requirement.semantic_validator) return []
+  const value = readJson(path)
+  if (!value) return ['json_object_required']
+  if (requirement.semantic_validator === 'storyboard_packet_v1') {
+    const panels = Array.isArray(value.panels) ? value.panels : []
+    const panelIds = panels.map((panel) => typeof panel === 'object' && panel !== null ? String((panel as Record<string, unknown>).panel_id ?? '') : '')
+    return [
+      ...(value.schema === requirement.schema ? [] : ['schema']),
+      ...(value.accepted === true ? [] : ['accepted']),
+      ...(requirement.accepted_statuses?.includes(String(value.status)) ? [] : ['status']),
+      ...(panels.length > 0 ? [] : ['panels']),
+      ...(value.panel_count === panels.length ? [] : ['panel_count']),
+      ...(panelIds.every(Boolean) && new Set(panelIds).size === panels.length ? [] : ['panel_ids']),
+    ]
+  }
+  return [`unknown_semantic_validator:${requirement.semantic_validator}`]
 }
 
 export function projectStages(
@@ -65,11 +89,16 @@ export function projectStages(
 
   return PHASES.map((phase) => {
     const matched = files.filter((path) => phase.matches.test(relative(runRoot, path)))
-    const missingIds = phase.required.filter((id) => !requirementPresent(id, matched))
+    const missingIds = phase.required.filter((requirement) => !requirementPresent(requirement, matched)).map((requirement) => requirement.artifact_id)
     const malformedIds = matched
       .filter((path) => path.endsWith('.json') && readJson(path) === null)
       .map((path) => basename(path))
-    const evidenceState = malformedIds.length > 0 ? 'malformed' : missingIds.length > 0 ? 'missing' : 'present'
+    const semanticInvalidIds = phase.required.flatMap((requirement) => {
+      const path = requiredArtifact(requirement, matched)
+      if (!path || semanticBlockers(requirement, path).length === 0) return []
+      return [requirement.artifact_id]
+    })
+    const evidenceState = malformedIds.length > 0 ? 'malformed' : missingIds.length > 0 ? 'missing' : semanticInvalidIds.length > 0 ? 'semantic_invalid' : 'present'
     if (!earliestIssue && evidenceState !== 'present') earliestIssue = phase.id
     const blockedByUpstream = Boolean(earliestIssue && earliestIssue !== phase.id)
     const nonImageArtifacts = matched.filter((path) => !/\.(png|jpe?g|webp|gif)$/i.test(path))
@@ -92,6 +121,8 @@ export function projectStages(
         ? 'missing'
         : evidenceState === 'malformed'
           ? 'malformed'
+          : evidenceState === 'semantic_invalid'
+            ? 'semantic_invalid'
           : activeRevisionId
             ? 'accepted_current'
             : 'unknown'
@@ -105,11 +136,11 @@ export function projectStages(
       title: phase.title,
       status: effectiveState === 'accepted_current' ? 'EVIDENCE_FOUND' : effectiveState.toUpperCase(),
       summary: phase.summary,
-      failureOrGap: evidenceState === 'present' ? null : `Required evidence missing or malformed: ${[...missingIds, ...malformedIds].join(', ')}`,
+      failureOrGap: evidenceState === 'present' ? null : `Required evidence is not current: ${[...missingIds, ...malformedIds, ...semanticInvalidIds].join(', ')}`,
       artifacts,
       images,
       acceptance: { state: evidenceState === 'present' ? 'accepted' : 'not_evaluated' },
-      evidence: { state: evidenceState, required: phase.required, observed: artifacts, missingIds, malformedIds },
+      evidence: { state: evidenceState, required: phase.required.map((requirement) => requirement.artifact_id), observed: artifacts, missingIds, malformedIds, semanticInvalidIds },
       lineage: {
         state: activeRevisionId ? 'current' : 'unknown',
         activeRevisionId,

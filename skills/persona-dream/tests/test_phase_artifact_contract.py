@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+from phase_artifact_contract import (  # noqa: E402
+    load_phase_artifact_contract,
+    validate_revision_artifacts,
+)
+
+
+def write_required_files(root: Path) -> None:
+    contract = load_phase_artifact_contract()
+    for phase_id, phase in contract["phases"].items():
+        phase_root = root / f"phase_{phase_id}"
+        phase_root.mkdir(parents=True, exist_ok=True)
+        for requirement in phase["required_artifacts"]:
+            value: dict[str, object] = {}
+            if requirement["artifact_id"] == "storyboard_packet":
+                value = {
+                    "schema": "persona_dream.storyboard_packet.v1",
+                    "status": "PASS_PANEL_REVIEWED",
+                    "accepted": True,
+                    "panel_count": 1,
+                    "panels": [{"panel_id": "sb_001"}],
+                }
+            (phase_root / requirement["basenames"][0]).write_text(
+                json.dumps(value), encoding="utf-8"
+            )
+
+
+def test_shared_contract_defines_phases_01_through_10() -> None:
+    contract = load_phase_artifact_contract()
+    assert list(contract["phases"]) == [f"{phase:02d}" for phase in range(1, 11)]
+
+
+def test_storyboard_packet_empty_object_is_semantically_blocked(tmp_path: Path) -> None:
+    write_required_files(tmp_path)
+    packet = tmp_path / "phase_07" / "storyboard_packet.json"
+    packet.write_text("{}", encoding="utf-8")
+    result = validate_revision_artifacts(tmp_path)["07"]
+    assert result["status"] == "BLOCKED"
+    assert result["artifacts"][0]["status"] == "SEMANTIC_INVALID"
+
+
+def test_valid_storyboard_packet_is_current(tmp_path: Path) -> None:
+    write_required_files(tmp_path)
+    results = validate_revision_artifacts(tmp_path)
+    assert all(result["status"] == "CURRENT" for result in results.values())

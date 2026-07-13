@@ -111,7 +111,12 @@ test('run detail reads only the atomically promoted revision', async () => {
   }
   for (const [directory, filenames] of Object.entries(fixtureFiles)) {
     mkdirSync(resolve(revisionRoot, directory), { recursive: true })
-    for (const filename of filenames) writeFileSync(resolve(revisionRoot, directory, filename), '{}')
+    for (const filename of filenames) {
+      const value = filename === 'storyboard_packet.json'
+        ? { schema: 'persona_dream.storyboard_packet.v1', status: 'PASS_PANEL_REVIEWED', accepted: true, panel_count: 1, panels: [{ panel_id: 'sb_001' }] }
+        : {}
+      writeFileSync(resolve(revisionRoot, directory, filename), JSON.stringify(value))
+    }
   }
   writeFileSync(resolve(root, '.persona-dream', 'state', 'active_revision.json'), JSON.stringify({
     runId: 'run', revisionId: 'rev_0002', revisionRoot,
@@ -145,7 +150,7 @@ test('required artifacts are projected before optional artifact limits', async (
   }
   writeFileSync(resolve(storyboardRoot, 'phase_07_storyboard_packet_tau_dag_contract.json'), '{}')
   const requiredPath = resolve(storyboardRoot, 'storyboard_packet.json')
-  writeFileSync(requiredPath, JSON.stringify({ schema: 'persona_dream.storyboard_packet.v1', panels: [] }))
+  writeFileSync(requiredPath, JSON.stringify({ schema: 'persona_dream.storyboard_packet.v1', status: 'PASS_PANEL_REVIEWED', accepted: true, panel_count: 1, panels: [{ panel_id: 'sb_001' }] }))
 
   const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
   const storyboard = detail.stages.find((stage) => stage.id === '07')
@@ -153,5 +158,17 @@ test('required artifacts are projected before optional artifact limits', async (
   assert.ok(storyboard?.artifacts.some((artifact) => artifact.path === requiredPath))
   assert.equal(storyboard?.artifacts[0]?.path, requiredPath)
   assert.equal(storyboard?.artifacts.length, 30)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('storyboard filename presence cannot accept an empty packet', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-semantic-artifact-'))
+  const storyboardRoot = resolve(root, 'phase_07')
+  mkdirSync(storyboardRoot, { recursive: true })
+  writeFileSync(resolve(storyboardRoot, 'storyboard_packet.json'), '{}')
+  const detail = await buildRunDetail(new DreamPathPolicy([root]), root)
+  const storyboard = detail.stages.find((stage) => stage.id === '07')
+  assert.equal(storyboard?.evidence.state, 'semantic_invalid')
+  assert.deepEqual(storyboard?.evidence.semanticInvalidIds, ['storyboard_packet'])
   rmSync(root, { recursive: true, force: true })
 })

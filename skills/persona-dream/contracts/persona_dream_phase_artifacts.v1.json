@@ -1,0 +1,111 @@
+{
+  "schema": "persona_dream.phase_artifacts.v1",
+  "selected_through_phase": "10",
+  "phases": {
+    "01": {
+      "title": "Idea and Memory Residue",
+      "summary": "Grounded dream request and selected memory residue.",
+      "directory_patterns": ["phase_01"],
+      "required_artifacts": [
+        {"artifact_id": "dream_request", "basenames": ["dream_request.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "residue_links", "basenames": ["residue_links.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["02", "03", "04", "05", "06", "07", "08", "09", "10"]
+    },
+    "02": {
+      "title": "Story",
+      "summary": "Accepted story and entity contracts.",
+      "directory_patterns": ["phase_02"],
+      "required_artifacts": [
+        {"artifact_id": "story_contract", "basenames": ["story_contract.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["03", "04", "05", "06", "07", "08", "09", "10"]
+    },
+    "03": {
+      "title": "Crew",
+      "summary": "Producer, writer, director, and reviewer authority contract.",
+      "directory_patterns": ["phase_03"],
+      "required_artifacts": [
+        {"artifact_id": "crew_contract", "basenames": ["crew_contract.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "crew_gate_receipt", "basenames": ["crew_gate_receipt.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["04", "05", "06", "07", "08", "09", "10"]
+    },
+    "04": {
+      "title": "Contact Sheets",
+      "summary": "Accepted character, prop, and environment reference sheets.",
+      "directory_patterns": ["phase_04"],
+      "required_artifacts": [
+        {"artifact_id": "contact_sheet_requirements", "basenames": ["contact_sheet_requirements.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "contact_sheet_manifest", "basenames": ["contact_sheet_manifest.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "contact_sheet_gate_receipt", "basenames": ["contact_sheet_gate_receipt.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["05", "06", "07", "08", "09", "10"]
+    },
+    "05": {
+      "title": "Voices",
+      "summary": "Voice references and audition evidence.",
+      "directory_patterns": ["phase_05"],
+      "required_artifacts": [
+        {"artifact_id": "voice_evidence", "basenames": ["voice_evidence.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["06", "07", "08", "09", "10"]
+    },
+    "06": {
+      "title": "Script",
+      "summary": "Timed script and dialogue/action evidence.",
+      "directory_patterns": ["phase_06"],
+      "required_artifacts": [
+        {"artifact_id": "script_contract", "basenames": ["script_contract.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["07", "08", "09", "10"]
+    },
+    "07": {
+      "title": "Storyboard",
+      "summary": "Reviewed storyboard panels and frame evidence.",
+      "directory_patterns": ["phase_07"],
+      "required_artifacts": [
+        {
+          "artifact_id": "storyboard_packet",
+          "basenames": ["storyboard_packet.json"],
+          "kind": "json",
+          "schema": "persona_dream.storyboard_packet.v1",
+          "accepted_statuses": ["PASS_PANEL_REVIEWED"],
+          "semantic_validator": "storyboard_packet_v1",
+          "consumer_contract": "dream_storyboard_workspace_v1",
+          "ui_priority": "required"
+        }
+      ],
+      "invalidates": ["08", "09", "10"]
+    },
+    "08": {
+      "title": "Media Lock",
+      "summary": "Accepted locked provider-facing media.",
+      "directory_patterns": ["phase_08"],
+      "required_artifacts": [
+        {"artifact_id": "media_lock", "basenames": ["storyboard_media_lock_manifest.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["09", "10"]
+    },
+    "09": {
+      "title": "Video Provider",
+      "summary": "Provider selection and scene packet.",
+      "directory_patterns": ["phase_09"],
+      "required_artifacts": [
+        {"artifact_id": "video_provider_scorecard", "basenames": ["video_provider_scorecard.v1.json", "video_provider_scorecard.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "provider_final_gate", "basenames": ["provider_final_gate_receipt.json", "provider_final_gate.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": ["10"]
+    },
+    "10": {
+      "title": "Provider Distillation",
+      "summary": "Per-panel provider payload distillation and dry-run contract.",
+      "directory_patterns": ["phase_10"],
+      "required_artifacts": [
+        {"artifact_id": "panel_distillation_contract", "basenames": ["panel_distillation_contract.json"], "kind": "json", "ui_priority": "required"},
+        {"artifact_id": "provider_schema_receipt", "basenames": ["provider_schema_receipt.json"], "kind": "json", "ui_priority": "required"}
+      ],
+      "invalidates": []
+    }
+  }
+}

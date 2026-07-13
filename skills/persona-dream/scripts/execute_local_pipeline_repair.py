@@ -19,21 +19,9 @@ from typing import Any
 
 import typer
 
+from phase_artifact_contract import validate_revision_artifacts
+
 app = typer.Typer(add_completion=False)
-
-PHASE_REQUIREMENTS: dict[str, tuple[str, ...]] = {
-    "01": ("dream_request", "residue_links"),
-    "02": ("story_contract",),
-    "03": ("crew_contract", "crew_gate_receipt"),
-    "04": ("contact_sheet_requirements", "contact_sheet_manifest", "contact_sheet_gate_receipt"),
-    "05": ("voice_evidence",),
-    "06": ("script_contract",),
-    "07": ("storyboard_packet",),
-    "08": ("media_lock",),
-    "09": ("video_provider_scorecard", "provider_final_gate"),
-    "10": ("panel_distillation_contract", "provider_schema_receipt"),
-}
-
 
 def read_object(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -212,13 +200,17 @@ def derive_normalized_evidence(revision_root: Path) -> list[Path]:
 
 
 def requirement_results(root: Path) -> dict[str, dict[str, Any]]:
-    files = [str(path.relative_to(root)).lower() for path in root.rglob("*") if path.is_file()]
+    results = validate_revision_artifacts(root)
     return {
         phase_id: {
-            "required": list(required),
-            "missing": [name for name in required if not any(name in path for path in files)],
+            **result,
+            "missing": [
+                artifact["artifact_id"]
+                for artifact in result["artifacts"]
+                if artifact["status"] != "CURRENT"
+            ],
         }
-        for phase_id, required in PHASE_REQUIREMENTS.items()
+        for phase_id, result in results.items()
     }
 
 
