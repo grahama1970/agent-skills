@@ -158,6 +158,13 @@ def list_cmd(
         rows.append(row)
     if as_json:
         typer.echo(json.dumps(rows, indent=2))
+    else:
+        for row in rows:
+            typer.echo(
+                f"{row['name']}\t{row['backend']}\ttab={row.get('tab_id') or row.get('view_id')}\t{row['state_path']}"
+            )
+
+
 @app.command("rebind-by-exact-url")
 def rebind_by_exact_url_cmd(
     name: str = typer.Argument(...),
@@ -177,13 +184,6 @@ def rebind_by_exact_url_cmd(
         typer.echo(str(exc), err=True)
         raise typer.Exit(2)
     _emit(payload, as_json)
-
-
-@app.command("list")
-        for row in rows:
-            typer.echo(
-                f"{row['name']}\t{row['backend']}\ttab={row.get('tab_id') or row.get('view_id')}\t{row['state_path']}"
-            )
 
 
 @app.command("unbind")
