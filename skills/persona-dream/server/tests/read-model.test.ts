@@ -140,6 +140,7 @@ test('required artifacts are projected before optional artifact limits', async (
   for (let index = 0; index < 40; index += 1) {
     writeFileSync(resolve(storyboardRoot, `storyboard_optional_${String(index).padStart(2, '0')}.json`), '{}')
   }
+  writeFileSync(resolve(storyboardRoot, 'phase_07_storyboard_packet_tau_dag_contract.json'), '{}')
   const requiredPath = resolve(storyboardRoot, 'storyboard_packet.json')
   writeFileSync(requiredPath, JSON.stringify({ schema: 'persona_dream.storyboard_packet.v1', panels: [] }))
 
@@ -147,6 +148,7 @@ test('required artifacts are projected before optional artifact limits', async (
   const storyboard = detail.stages.find((stage) => stage.id === '07')
   assert.equal(storyboard?.evidence.state, 'present')
   assert.ok(storyboard?.artifacts.some((artifact) => artifact.path === requiredPath))
+  assert.equal(storyboard?.artifacts[0]?.path, requiredPath)
   assert.equal(storyboard?.artifacts.length, 30)
   rmSync(root, { recursive: true, force: true })
 })

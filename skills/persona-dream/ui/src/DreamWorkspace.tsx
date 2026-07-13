@@ -1139,7 +1139,7 @@ type MediaLockFrame = {
 
 function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: DreamStage[] }) {
   const storyboardStage = allStages.find((candidate) => candidate.id === '07')
-  const packetArtifact = storyboardStage?.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
+  const packetArtifact = storyboardStage?.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
   const packetPath = packetArtifact?.path
   const [frames, setFrames] = useState<MediaLockFrame[]>([])
   const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
@@ -2316,8 +2316,8 @@ function StoryboardConsole({ stage }: { stage: DreamStage }) {
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null)
   const [verdict, setVerdict] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path) || /storyboard_packet/i.test(artifact.label))
-  const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path) || /storyboard_review_verdict/i.test(artifact.label))
+  const packetArtifact = stage.artifacts.find((artifact) => /storyboard_packet\.json$/i.test(artifact.path))
+  const verdictArtifact = stage.artifacts.find((artifact) => /storyboard_review_verdict\.json$/i.test(artifact.path))
   const packetPath = packetArtifact?.path
   const verdictPath = verdictArtifact?.path
 

@@ -46,6 +46,12 @@ function requirementPresent(requirement: string, files: string[]): boolean {
   return files.some((path) => requirementMatches(requirement, path))
 }
 
+function requiredArtifact(requirement: string, files: string[]): string | undefined {
+  const exactName = `${requirement}.json`
+  return files.find((path) => basename(path).toLowerCase() === exactName.toLowerCase())
+    ?? files.find((path) => requirementMatches(requirement, path))
+}
+
 export function projectStages(
   runRoot: string,
   files: string[],
@@ -68,7 +74,7 @@ export function projectStages(
     const blockedByUpstream = Boolean(earliestIssue && earliestIssue !== phase.id)
     const nonImageArtifacts = matched.filter((path) => !/\.(png|jpe?g|webp|gif)$/i.test(path))
     const requiredArtifacts = phase.required
-      .map((requirement) => nonImageArtifacts.find((path) => requirementMatches(requirement, path)))
+      .map((requirement) => requiredArtifact(requirement, nonImageArtifacts))
       .filter((path): path is string => Boolean(path))
     const artifacts = [...new Set([
       ...requiredArtifacts,
