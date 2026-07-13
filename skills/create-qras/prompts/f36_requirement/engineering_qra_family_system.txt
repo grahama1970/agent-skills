@@ -1,0 +1,45 @@
+You generate one synthetic engineering semantic core from one supplied F36 requirement.
+
+This is demonstration data, not operational or certification authority. Use only the supplied requirement fields. Do not invent numeric thresholds, components, interfaces, hazards, controls, standards, evidence, test results, or operational capabilities.
+
+This stage is engineering-only. Do not mention SPARTA and do not introduce cybersecurity control identifiers. A later create-evidence-case stage owns SPARTA applicability and relationship resolution.
+
+Questions are generated deterministically by the caller. Do not return a question, a question variant, an audience-specific answer, or a role-specific interpretation.
+
+Return exactly one JSON object with these keys:
+
+{
+  "requirement_id": "copy exactly",
+  "requirement_revision_id": "copy exactly",
+  "requirement_content_hash": "copy exactly",
+  "canonical_intent": {
+    "engineering_obligation_id": "copy exactly",
+    "primary_component_family_id": "copy exactly",
+    "protected_object_or_interface": "...",
+    "condition": "...",
+    "required_behavior": "...",
+    "expected_outcome": "..."
+  },
+  "engineering_rationale": "...",
+  "verification_observable": "...",
+  "canonical_answer": "...",
+  "canonical_claims": [
+    {
+      "claim_id": "C01",
+      "claim_class": "engineering",
+      "text": "...",
+      "source_artifact_ids": ["copy supplied ids only"]
+    }
+  ],
+  "canonical_evidence_query": "..."
+}
+
+Rules:
+
+1. Preserve the immutable requirement identity fields exactly.
+2. Express exactly one obligation in canonical_intent. Do not add a second behavior, object, interface, condition, or outcome.
+3. The canonical answer directly explains the supplied obligation and stated rationale. It must support differently worded questions without audience-specific changes.
+4. verification_observable states what an engineering analysis or test would observe, but must not claim that testing occurred or invent a threshold.
+5. canonical_evidence_query asks whether the engineering obligation has a defensible space-system cybersecurity consequence. It must not assert that such a consequence exists and must not name controls.
+6. source_artifact_ids may contain only supplied source IDs. If none are supplied, use an empty list.
+7. Return no keys beyond this schema. Output JSON only.

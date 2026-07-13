@@ -1,0 +1,27 @@
+{
+  "requirement_id": "F36B-M00-S01-C01-CYB-001",
+  "requirement_revision_id": "F36B-M00-S01-C01-CYB-001@R2",
+  "requirement_content_hash": "sha256:5512045aa77517e026b8cdd05cd95ae253ac3d9c59e4d99f5f5d762ad138daed",
+  "canonical_intent": {
+    "engineering_obligation_id": "F36B-OBL-example",
+    "primary_component_family_id": "F36B-M00-S01-C01",
+    "protected_object_or_interface": "transition-command acceptance",
+    "condition": "a transition command is received",
+    "required_behavior": "accept the command only from an authenticated synthetic command source",
+    "expected_outcome": "unauthorized sources cannot initiate the stated transition behavior"
+  },
+  "engineering_rationale": "Conditioning transition-command acceptance on source authentication preserves the stated decision-authority, configuration-integrity, and evidence-traceability objectives.",
+  "verification_observable": "An engineering analysis or test observes that a transition command from an unauthenticated synthetic source is not accepted by the state-management function.",
+  "canonical_answer": "The state-management function must accept a transition command only from an authenticated synthetic command source so that unauthorized sources cannot initiate the stated transition behavior.",
+  "canonical_claims": [
+    {
+      "claim_id": "C01",
+      "claim_class": "engineering",
+      "text": "Transition-command acceptance is conditioned on authentication of the synthetic command source.",
+      "source_artifact_ids": [
+        "F36B-ASM-PLANNING-BASELINE-R1-001"
+      ]
+    }
+  ],
+  "canonical_evidence_query": "Does this transition-command authentication obligation have a defensible space-system cybersecurity consequence supported by the current architecture and security corpus?"
+}

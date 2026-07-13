@@ -1,0 +1,17 @@
+Create the engineering QRA family for this immutable requirement package.
+
+engineering_qra_family_id: {engineering_qra_family_id}
+engineering_obligation_id: {engineering_obligation_id}
+requirement_revision_id: {requirement_revision_id}
+requirement_content_hash: {requirement_content_hash}
+requirement_id: {requirement_id}
+title: {title}
+statement: {statement}
+rationale: {rationale}
+requirement_type: {requirement_type}
+major_system_id: {major_system_id}
+subsystem_id: {subsystem_id}
+primary_component_family_id: {primary_component_family_id}
+source_artifact_ids: {source_artifact_ids}
+
+Preserve requirement_id, requirement_revision_id, requirement_content_hash, engineering_obligation_id, and primary_component_family_id exactly. Return only the engineering semantic core JSON. Do not return questions or variants.

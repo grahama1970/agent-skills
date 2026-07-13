@@ -17,6 +17,22 @@ case "${1:-help}" in
         shift
         python3 "$SCRIPT_DIR/generator.py" review "$@"
         ;;
+    f36-review)
+        shift
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" review "$@"
+        ;;
+    f36-manifest)
+        shift
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" manifest "$@"
+        ;;
+    f36-validate)
+        shift
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" validate "$@"
+        ;;
+    f36-phase-gate)
+        shift
+        python3 "$SCRIPT_DIR/f36_requirement_qra.py" phase-gate "$@"
+        ;;
     list-sources)
         python3 "$SCRIPT_DIR/generator.py" list-sources
         ;;
@@ -31,6 +47,10 @@ USAGE:
     ./run.sh generate [OPTIONS]
     ./run.sh manifest <path> [OPTIONS]
     ./run.sh review <path> [OPTIONS]
+    ./run.sh f36-review <path> --output <review.json>
+    ./run.sh f36-manifest <path> --review <review.json> --output-jsonl <families.jsonl> --receipt <receipt.json> [--limit N] [--dry-run]
+    ./run.sh f36-validate <families.jsonl> --receipt <receipt.json> --expected-families N
+    ./run.sh f36-phase-gate --one-item-receipt <receipt.json> --heterogeneous-receipt <receipt.json> --output <gate.json>
     ./run.sh list-sources
     ./run.sh stats
 

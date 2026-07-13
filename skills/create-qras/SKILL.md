@@ -168,6 +168,38 @@ When `--mode auto` (default), mode is detected from input:
 | `--control SV-AC-2` | native | SPARTA - extract definitions |
 | `--doc doc123` | standalone | Document extraction |
 
+### F36 requirement extension - Engineering QRA families
+
+The F36 synthetic corpus uses a requirement-first extension because an
+engineering requirement is not itself a SPARTA control or crosswalk edge.
+This extension creates one candidate engineering QRA family with one canonical
+answer and five role/difficulty question surfaces. It explicitly does not
+resolve SPARTA controls; a subsequent `/create-evidence-case` stage owns
+applicability, crosswalk chains, and evidence-case state.
+
+```bash
+./run.sh f36-review manifest.json --output manifest.review.json
+./run.sh f36-manifest manifest.json --review manifest.review.json \
+  --output-jsonl families.jsonl --receipt dry-run.json --limit 8 --dry-run
+./run.sh f36-manifest manifest.json --review manifest.review.json \
+  --output-jsonl families.jsonl --receipt canary.json --limit 8
+```
+
+The live model returns only a bounded engineering semantic core: immutable
+requirement identity, one intent tuple, rationale, verification observable,
+canonical answer, claims, and an evidence-applicability query. The runtime
+constructs the canonical question and all five role/difficulty variants from
+versioned deterministic templates. Every variant carries the same canonical
+answer and intent hashes; an independent validator re-renders the templates and
+rejects any mismatch before the family becomes available.
+
+Live F36 runs persist raw terminal provider events, per-call item receipts, and
+quarantine records before family validation. `--only-item`, `--repeat 2`, and
+`--lane-offset N` support bounded incident canaries. `--heterogeneous-canary`
+selects one stable requirement per requested engineering class. Any missing,
+invalid, or semantically inconsistent item fails the run; partial output is not
+success.
+
 ## Usage Examples
 
 ```bash
