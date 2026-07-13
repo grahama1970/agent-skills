@@ -61,9 +61,11 @@ def resolve_cmd(
         "registry_path": str(result.registry_path) if result.registry_path else None,
         "registry_root": str(result.registry_root) if result.registry_root else None,
         "binding_path": str(result.binding_path) if result.binding_path else None,
+        "human_name": result.binding.human_name if result.binding else None,
         "tab_id": result.binding.tab_id if result.binding else None,
         "view_id": result.binding.view_id if result.binding else None,
         "conversation_url": result.binding.conversation_url if result.binding else None,
+        "kde_desktop_index": result.binding.kde_desktop_index if result.binding else None,
         "bound_manually": result.binding.bound_manually if result.binding else None,
         "status": "ok" if result.project else "needs_attention",
     }
@@ -88,9 +90,11 @@ def resolve_cmd(
 def bind_cmd(
     name: str = typer.Argument(..., help="Project name (e.g. oc-subagent-personas)."),
     backend: str = typer.Option("webgpt", "--backend"),
+    human_name: str = typer.Option("", "--human-name", "--display-name", help="Human-facing name for this browser oracle binding."),
     tab_id: str = typer.Option("", "--tab-id", help="Chrome tab id (WebGPT/Gemini/Kimi)."),
     view_id: str = typer.Option("", "--view-id", help="Cursor Browser viewId."),
     url: str = typer.Option("", "--url", help="Conversation URL for identity checks."),
+    kde_desktop_index: str = typer.Option("", "--kde-desktop", "--desktop", help="Human KDE desktop number, 1-indexed."),
     manual: bool = typer.Option(True, "--manual/--auto", help="Manual bindings are not auto-replaced."),
     as_json: bool = typer.Option(False, "--json"),
 ) -> None:
@@ -99,9 +103,11 @@ def bind_cmd(
         state = bind(
             name,
             backend,
+            human_name=human_name,
             tab_id=tab_id,
             view_id=view_id,
             conversation_url=url,
+            kde_desktop_index=kde_desktop_index,
             manual=manual,
         )
     except ValueError as exc:
@@ -279,8 +285,10 @@ def doctor_cmd(
         "source": result.source,
         "registry_path": str(result.registry_path) if result.registry_path else None,
         "binding_path": str(result.binding_path) if result.binding_path else None,
+        "human_name": result.binding.human_name if result.binding else None,
         "tab_id": result.binding.tab_id if result.binding else None,
         "conversation_url": result.binding.conversation_url if result.binding else None,
+        "kde_desktop_index": result.binding.kde_desktop_index if result.binding else None,
         "issues": issues,
         "surf_run": str(surf),
     }

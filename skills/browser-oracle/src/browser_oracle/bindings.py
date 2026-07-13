@@ -20,9 +20,11 @@ _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 class BindingState:
     name: str
     backend: str
+    human_name: str = ""
     tab_id: str = ""
     view_id: str = ""
     conversation_url: str = ""
+    kde_desktop_index: str = ""
     bound_manually: bool = False
     created_at: str = ""
     last_used_at: str = ""
@@ -87,9 +89,11 @@ def bind(
     name: str,
     backend: str,
     *,
+    human_name: str = "",
     tab_id: str = "",
     view_id: str = "",
     conversation_url: str = "",
+    kde_desktop_index: str = "",
     manual: bool = False,
     root: Path | None = None,
 ) -> BindingState:
@@ -108,10 +112,14 @@ def bind(
     state = existing or BindingState(name=sanitised, backend=backend, created_at=now)
     state.name = sanitised
     state.backend = backend
+    if human_name:
+        state.human_name = human_name.strip()
     state.tab_id = tab_id.strip() if tab_id else state.tab_id
     state.view_id = view_id.strip() if view_id else state.view_id
     if conversation_url:
         state.conversation_url = conversation_url.strip()
+    if kde_desktop_index:
+        state.kde_desktop_index = str(kde_desktop_index).strip()
     if manual:
         state.bound_manually = True
     state.last_used_at = now

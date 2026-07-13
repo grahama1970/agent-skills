@@ -10,15 +10,19 @@ def test_bind_and_load_roundtrip(tmp_path: Path) -> None:
     state = bind(
         "demo-project",
         "webgpt",
+        human_name="Demo Project",
         tab_id="12345",
         conversation_url="https://chatgpt.com/c/demo",
+        kde_desktop_index="2",
         manual=True,
         root=tmp_path,
     )
     loaded = load("demo-project", "webgpt", root=tmp_path)
     assert loaded is not None
+    assert loaded.human_name == "Demo Project"
     assert loaded.tab_id == state.tab_id
     assert loaded.conversation_url == state.conversation_url
+    assert loaded.kde_desktop_index == "2"
     assert loaded.bound_manually is True
 
 
