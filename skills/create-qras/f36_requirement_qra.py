@@ -544,6 +544,7 @@ def build_export_bundle(manifest: dict[str, Any], batch_ordinal: int, batch_size
 
 def render_request(export_bundle: dict[str, Any]) -> str:
     contract = WEBGPT_CONTRACT_PATH.read_text(encoding="utf-8")
+    output_filename = f"f36b-qra-batch-{export_bundle['batch_ordinal']:03d}.json"
     metadata = {
         "export_id": export_bundle["export_id"],
         "canonical_input_sha256": export_bundle["canonical_input_sha256"],
@@ -552,6 +553,7 @@ def render_request(export_bundle: dict[str, Any]) -> str:
         "expected_family_count": export_bundle["expected_family_count"],
         "expected_variant_count": export_bundle["expected_variant_count"],
         "requirements_file": "requirements.json",
+        "required_output_filename": output_filename,
     }
     return (
         "# F36B WebGPT Complete-Family Request\n\n"
@@ -559,6 +561,7 @@ def render_request(export_bundle: dict[str, Any]) -> str:
         "```json\n"
         + json.dumps(metadata, indent=2, ensure_ascii=False)
         + "\n```\n\n"
+        + f"Return the JSON as a downloadable attachment named `{output_filename}`.\n\n"
         + contract.rstrip()
         + "\n"
     )
