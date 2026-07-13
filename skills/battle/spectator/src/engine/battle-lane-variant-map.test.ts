@@ -42,7 +42,7 @@ describe("spriteThemeSpriteId", () => {
 });
 
 describe("spriteIdForLane", () => {
-	it("prefers backend actor_visual variant resolved through sprite_theme", () => {
+	it("uses plague_nurgling even when backend metadata requests another variant", () => {
 		expect(
 			spriteIdForLane(
 				lane({
@@ -59,10 +59,10 @@ describe("spriteIdForLane", () => {
 				}),
 				spriteTheme,
 			),
-		).toBe("crimson_hornbreaker");
+		).toBe("plague_nurgling");
 	});
 
-	it("prefers backend actor_visual variant over design fallback lane map", () => {
+	it("uses plague_nurgling when backend metadata already requests it", () => {
 		expect(
 			spriteIdForLane(
 				lane({
@@ -81,11 +81,11 @@ describe("spriteIdForLane", () => {
 		).toBe("plague_nurgling");
 	});
 
-	it("keeps the design fallback for lanes without backend actor_visual", () => {
-		expect(spriteIdForLane(lane({ id: "payload-857-receipt" }))).toBe("crimson_hornbreaker");
+	it("uses plague_nurgling for lanes without actor metadata", () => {
+		expect(spriteIdForLane(lane({ id: "payload-857-receipt" }))).toBe("plague_nurgling");
 	});
 
 	it("spriteVariantForLane remains a compatibility alias", () => {
-		expect(spriteVariantForLane(lane({ id: "payload-857-receipt" }))).toBe("crimson_hornbreaker");
+		expect(spriteVariantForLane(lane({ id: "payload-857-receipt" }))).toBe("plague_nurgling");
 	});
 });
