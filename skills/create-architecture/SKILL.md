@@ -29,6 +29,9 @@ metadata:
 taxonomy:
   - visualization
   - create
+complies:
+  - best-practices-skills
+  - best-practices-python
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -42,16 +45,16 @@ elements with labeled shapes, connecting arrows, and file attachments.
 
 ```bash
 # Create from a YAML pipeline definition
-./run.sh create --input pipeline.yaml
+./run.sh create --input pipeline.yaml --presentation-only
 
 # Deadline-bound implementation architecture
-./run.sh create --input pipeline.yaml --execution-locked
+./run.sh create --input pipeline.yaml --execution-locked --execution-gate gate.json
 
 # Create from inline JSON
-./run.sh create --name "QuerySpec Pipeline" --json '[{"id":"step1","label":"Classifier","tech":"SetFit"}]'
+./run.sh create --name "QuerySpec Pipeline" --json '[{"id":"step1","label":"Classifier","tech":"SetFit"}]' --presentation-only
 
 # Add a component to an existing architecture
-./run.sh add-component --project queryspec-pipeline --label "New Step" --after recall
+./run.sh add-component --project queryspec-pipeline --label "New Step" --after recall --presentation-only
 
 # List saved architectures
 ./run.sh list
@@ -114,6 +117,25 @@ critical and deferred work, an off-path current phase, more than two attempts
 per blocker, or an update interval over five minutes. An architecture may show
 deferred work, but the project agent may not execute it before the critical-path
 stop condition without explicit user authorization.
+
+## Mutation Authorization Gate
+
+`create` and `add-component` reject mutation unless one mode is explicit:
+
+1. `--presentation-only`, which labels the saved diagram as non-evidence.
+2. `--execution-gate gate.json`, where a human-authored gate contains:
+
+```json
+{
+  "gate_id": "current-gate",
+  "status": "BLOCKED_CURRENT_GATE",
+  "architecture_authorized": true
+}
+```
+
+Missing, malformed, or unauthorized gates fail before any API request with
+`REJECTED_SCOPE_EXPANSION`. A project agent must not set
+`architecture_authorized:true` on the human's behalf.
 
 ## Colors
 

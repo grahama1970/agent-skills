@@ -37,6 +37,46 @@ EXECUTION_LOCK_FIELDS = {
     "update_interval_minutes",
 }
 
+EXECUTION_GATE_STATUSES = {
+    "OPEN_CURRENT_GATE",
+    "BLOCKED_CURRENT_GATE",
+    "PASS_CURRENT_GATE",
+}
+
+
+def validate_execution_gate(
+    gate_path: Optional[Path], presentation_only: bool = False
+) -> list[str]:
+    """Reject architecture mutation unless a human-authorized gate permits it."""
+    if presentation_only:
+        if gate_path is not None:
+            return ["execution_gate_and_presentation_only_are_mutually_exclusive"]
+        return []
+    if gate_path is None:
+        return ["missing_execution_gate"]
+    try:
+        gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ["invalid_execution_gate_json"]
+    if not isinstance(gate, dict):
+        return ["execution_gate_must_be_object"]
+    errors: list[str] = []
+    if not isinstance(gate.get("gate_id"), str) or not gate["gate_id"].strip():
+        errors.append("missing_gate_id")
+    if gate.get("status") not in EXECUTION_GATE_STATUSES:
+        errors.append("invalid_gate_status")
+    if gate.get("architecture_authorized") is not True:
+        errors.append("architecture_not_authorized")
+    return errors
+
+
+def require_execution_gate(gate_path: Optional[Path], presentation_only: bool) -> None:
+    """Apply the architecture mutation gate before any API call."""
+    errors = validate_execution_gate(gate_path, presentation_only)
+    if errors:
+        console.print("[red]REJECTED_SCOPE_EXPANSION: " + ", ".join(errors) + "[/red]")
+        raise typer.Exit(3)
+
 
 def validate_execution_lock(spec: dict) -> list[str]:
     """Validate a deadline-bound architecture against a closed component set."""
@@ -444,8 +484,17 @@ def create(
         "--execution-locked",
         help="Require all components to be critical-path or explicitly deferred",
     ),
+    execution_gate: Optional[Path] = typer.Option(
+        None, "--execution-gate", help="Human-authored JSON gate permitting architecture mutation"
+    ),
+    presentation_only: bool = typer.Option(
+        False,
+        "--presentation-only",
+        help="Save a diagram explicitly classified as presentation, not execution evidence",
+    ),
 ) -> None:
     """Create an architecture diagram from a pipeline definition."""
+    require_execution_gate(execution_gate, presentation_only)
     if input and input.exists():
         with open(input) as f:
             spec = yaml.safe_load(f)
@@ -480,6 +529,8 @@ def create(
     console.print(f"[green]Saved:[/green] {arch_name} → {pid}")
     console.print(f"  {n_boxes} components, {n_arrows} connections, {len(attachments)} with file attachments")
     console.print(f"  View: http://localhost:3002/#architecture (select {pid})")
+    if presentation_only:
+        console.print("[yellow]PRESENTATION_ONLY: this diagram is not execution evidence[/yellow]")
 
     if "--json" in sys.argv or any(a.startswith("--json") for a in sys.argv):
         print(json.dumps(result))
@@ -508,8 +559,17 @@ def add_component(
     color: str = typer.Option("blue", "--color", help="Color: purple|green|blue|amber|red"),
     after: Optional[str] = typer.Option(None, "--after", help="Insert after this component ID"),
     files: Optional[List[str]] = typer.Option(None, "--file", "-f", help="Attached file paths"),
+    execution_gate: Optional[Path] = typer.Option(
+        None, "--execution-gate", help="Human-authored JSON gate permitting architecture mutation"
+    ),
+    presentation_only: bool = typer.Option(
+        False,
+        "--presentation-only",
+        help="Mutate a diagram as presentation only, not execution evidence",
+    ),
 ) -> None:
     """Add a component to an existing architecture."""
+    require_execution_gate(execution_gate, presentation_only)
     r = httpx.get(f"{UX_LAB_URL}/api/architecture/{project}", timeout=10)
     if r.status_code == 404:
         console.print(f"[red]Architecture '{project}' not found[/red]")
@@ -550,7 +610,7 @@ def add_component(
     elements = _build_elements(components, [])
     attachments = _build_attachments(components)
     arch_name = data.get("title", data.get("excalidraw", {}).get("name", project))
-    result = _save(project, arch_name, elements, attachments)
+    _save(project, arch_name, elements, attachments)
 
     console.print(f"[green]Added:[/green] {label} → {project}")
     console.print(f"  Now {len(components)} components total")

@@ -5,13 +5,18 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import time
+import zipfile
 from pathlib import Path
 
 import typer
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
@@ -29,11 +34,132 @@ EXECUTION_LOCK_HEADINGS = (
     "stop condition",
 )
 
+CODE_GATE_FIELDS = (
+    "current_gate",
+    "blocking_defect",
+    "allowed_files",
+    "required_live_proof",
+    "stop_condition",
+    "forbidden_adjacent_scope",
+)
+
 
 def validate_execution_lock(text: str) -> list[str]:
     """Return missing execution-lock headings for deadline-bound reviews."""
     lowered = text.lower()
     return [heading for heading in EXECUTION_LOCK_HEADINGS if f"## {heading}" not in lowered]
+
+
+def validate_code_gate(text: str) -> list[str]:
+    """Return missing or duplicated fields in a code-deliverable gate."""
+    errors: list[str] = []
+    for field in CODE_GATE_FIELDS:
+        matches = re.findall(
+            rf"(?im)^\s*(?:[-*]\s*)?{re.escape(field)}\s*:\s*(\S.*)$",
+            text,
+        )
+        if not matches:
+            errors.append(f"missing_{field}")
+        elif len(matches) > 1:
+            errors.append(f"duplicate_{field}")
+    return errors
+
+
+def code_gate_values(text: str) -> dict[str, str]:
+    """Parse canonical gate fields after validation succeeds."""
+    values: dict[str, str] = {}
+    for field in CODE_GATE_FIELDS:
+        match = re.search(
+            rf"(?im)^\s*(?:[-*]\s*)?{re.escape(field)}\s*:\s*(\S.*)$",
+            text,
+        )
+        if match:
+            values[field] = match.group(1).strip()
+    return values
+
+
+def _allowed_path(path: str, allowed: list[str]) -> bool:
+    normalized = path.removeprefix("a/").removeprefix("b/").lstrip("./")
+    return any(
+        normalized == item.rstrip("/")
+        or (item.endswith("/") and normalized.startswith(item))
+        for item in allowed
+    )
+
+
+def code_deliverable_errors(response_text: str, zip_path: Path, gate_text: str) -> list[str]:
+    """Validate that returned code is real and stays inside the declared boundary."""
+    allowed = [
+        item.strip().lstrip("./")
+        for item in code_gate_values(gate_text).get("allowed_files", "").split(",")
+        if item.strip()
+    ]
+    diff_paths = re.findall(r"(?m)^diff --git a/(\S+) b/(\S+)$", response_text)
+    patch_paths = re.findall(
+        r"(?m)^\*\*\* (?:Add|Update|Delete) File:\s*(\S.*)$", response_text
+    )
+    returned_paths = [path for pair in diff_paths for path in pair] + patch_paths
+    if returned_paths:
+        outside = sorted({path for path in returned_paths if not _allowed_path(path, allowed)})
+        return [f"path_outside_allowed_files:{path}" for path in outside]
+    if zip_path.is_file() and zipfile.is_zipfile(zip_path):
+        with zipfile.ZipFile(zip_path) as archive:
+            members = [
+                member for member in archive.infolist() if not member.is_dir() and member.file_size > 0
+            ]
+        if not members:
+            return ["empty_solution_zip"]
+        outside = sorted(
+            member.filename for member in members if not _allowed_path(member.filename, allowed)
+        )
+        return [f"path_outside_allowed_files:{path}" for path in outside]
+    return ["code_deliverable_missing"]
+
+
+def read_code_gate_text(bundle_path: Path) -> str:
+    """Read the code gate from Markdown or a zipped execution-gate.md."""
+    if bundle_path.suffix != ".zip":
+        return bundle_path.read_text(encoding="utf-8")
+    if not zipfile.is_zipfile(bundle_path):
+        return ""
+    with zipfile.ZipFile(bundle_path) as archive:
+        matches = [
+            member
+            for member in archive.infolist()
+            if not member.is_dir() and Path(member.filename).name == "execution-gate.md"
+        ]
+        if len(matches) != 1:
+            return ""
+        return archive.read(matches[0]).decode("utf-8")
+
+
+def validate_explicit_tab(tab_id: str, expected_url: str, tabs: list[dict]) -> list[str]:
+    """Verify an explicit human-selected tab without replacing it."""
+    if not tab_id:
+        return []
+    if not expected_url:
+        return ["explicit_tab_requires_expect_url"]
+    match = next((tab for tab in tabs if str(tab.get("id", "")) == tab_id), None)
+    if match is None:
+        return ["explicit_tab_not_found"]
+    actual_url = str(match.get("url", ""))
+    if actual_url.rstrip("/") != expected_url.rstrip("/"):
+        return ["explicit_tab_url_mismatch"]
+    return []
+
+
+def submission_target_args(tab_id: str, expected_url: str, binding: dict) -> list[str]:
+    """Build Surf targeting args without replacing an explicit tab."""
+    selected_tab = tab_id or str(binding.get("tab_id", ""))
+    selected_url = expected_url or str(binding.get("conversation_url", ""))
+    if not selected_tab:
+        return ["--create-tab"]
+    args = ["--tab-id", selected_tab]
+    if selected_url:
+        args += ["--expect-url", selected_url]
+    if tab_id:
+        args += ["--no-remember"]
+    return args
 
 
 def _now() -> str:
@@ -44,7 +170,7 @@ def _collect_context(command: str, error: str, stderr: str = "", binding: dict |
     """Collect debug context for a bug report."""
     parts = [
         f"## webgpt failure report ({_now()})",
-        f"",
+        "",
         f"**Command:** `{command}`",
         f"**Error:** {error[:500]}",
     ]
@@ -80,7 +206,7 @@ def _collect_context(command: str, error: str, stderr: str = "", binding: dict |
     for k, v in extra.items():
         if v:
             parts.append(f"**{k}:** {v[:500]}")
-    parts.append(f"\n---\nAuto-filed by `webgpt_cli.py`")
+    parts.append("\n---\nAuto-filed by `webgpt_cli.py`")
     return "\n".join(parts)
 
 
@@ -158,7 +284,6 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
         return binding
 
     tag = f" [{label}]" if label else ""
-    changed = False
     actual_desk = None
     actual_url = None
 
@@ -218,7 +343,6 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
                     stored.update(binding)
                     path.write_text(json.dumps(stored, indent=2) + "\n")
                 print(f"TAB_REPLACED: {tab_id} -> {new_id} (new window on Desktop 2){tag}", file=sys.stderr)
-                changed = True
 
     return binding
 
@@ -261,6 +385,11 @@ def submit(
         "--execution-locked",
         help="Require a shortest-path execution lock in the submitted bundle",
     ),
+    output_contract: str = typer.Option(
+        "code", "--output-contract", help="Required response deliverable: code or prose"
+    ),
+    tab_id: str = typer.Option("", "--tab-id", help="Exact human-selected WebGPT tab"),
+    expect_url: str = typer.Option("", "--expect-url", help="Exact URL required for --tab-id"),
 ):
     """Submit a bundle, capture response, download solution zip. All complexity hidden."""
     bp = Path(bundle) if bundle else _latest_bundle()
@@ -275,14 +404,41 @@ def submit(
             )
             raise typer.Exit(2)
 
+    if output_contract not in {"code", "prose"}:
+        typer.echo("output contract must be code or prose", err=True)
+        raise typer.Exit(2)
+    bundle_text = read_code_gate_text(bp)
+    if output_contract == "code":
+        gate_errors = validate_code_gate(bundle_text)
+        if gate_errors:
+            typer.echo("BLOCKED_WEBGPT_CODE_GATE_INVALID: " + ", ".join(gate_errors), err=True)
+            raise typer.Exit(2)
+
     b = _binding(project)
-    _verify_desktop(b, background, "submit")
+    if tab_id:
+        tab_result = _surf("tab.list", "--json", "--with-kde")
+        try:
+            tab_payload = json.loads(tab_result.stdout) if tab_result.returncode == 0 else {}
+            tabs = tab_payload.get("tabs", []) if isinstance(tab_payload, dict) else tab_payload
+        except json.JSONDecodeError:
+            tabs = []
+        tab_errors = validate_explicit_tab(tab_id, expect_url, tabs if isinstance(tabs, list) else [])
+        if tab_errors:
+            typer.echo("BLOCKED_WEBGPT_EXPLICIT_TAB_INVALID: " + ", ".join(tab_errors), err=True)
+            raise typer.Exit(2)
+    else:
+        b = _verify_desktop(b, background, "submit")
 
     resp_path = bp.with_name(f"{bp.stem}-response.md")
     zip_path = bp.with_name(f"{bp.stem}-solution.zip")
 
     typer.echo(f"Submitting {bp.name}...", err=True)
-    cmd: list[str | int] = ["webgpt.submit", "--input", str(bp), "--output", str(resp_path), "--timeout", str(timeout), "--create-tab"]
+    cmd: list[str | int] = [
+        "webgpt.submit", "--input", str(bp), "--output", str(resp_path),
+        "--timeout", str(timeout),
+    ]
+    selected_tab = tab_id or str(b.get("tab_id", ""))
+    cmd += submission_target_args(tab_id, expect_url, b)
     if background:
         cmd += ["--no-activate"]
     if bp.suffix == ".zip":
@@ -291,21 +447,38 @@ def submit(
 
     if result.returncode != 0:
         _report_failure("submit", result, binding=b, bundle=str(bp), timeout=str(timeout))
-        typer.echo(f"Submit failed", err=True)
+        typer.echo("Submit failed", err=True)
         raise typer.Exit(result.returncode)
     typer.echo(f"Response: {resp_path}")
+
+    response_text = resp_path.read_text(encoding="utf-8") if resp_path.exists() else ""
+    if output_contract == "code" and not code_deliverable_errors(response_text, zip_path, bundle_text):
+        typer.echo("PASS_CURRENT_GATE")
+        return
 
     # Try to download solution zip from the new tab
     typer.echo("Looking for solution zip...", err=True)
     time.sleep(3)
-    new_tab = _active_chatgpt_tab()
+    new_tab = selected_tab or _active_chatgpt_tab()
     if new_tab:
         found = _click_and_wait_download(new_tab, ".zip", timeout=120, background=background)
         if found:
             shutil.copy2(str(found), str(zip_path))
             typer.echo(f"Solution: {zip_path}")
-            return
-    typer.echo("No zip detected (check Downloads)", err=True)
+    if output_contract == "code":
+        errors = code_deliverable_errors(response_text, zip_path, bundle_text)
+        if errors:
+            ruling = (
+                "REJECTED_SCOPE_EXPANSION"
+                if any(error.startswith("path_outside_allowed_files:") for error in errors)
+                else "BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING"
+            )
+            typer.echo(ruling + ": " + ", ".join(errors), err=True)
+            raise typer.Exit(3)
+        typer.echo("PASS_CURRENT_GATE")
+        return
+    if not zip_path.exists():
+        typer.echo("No zip detected (check Downloads)", err=True)
 
 
 def _latest_bundle() -> Path | None:
