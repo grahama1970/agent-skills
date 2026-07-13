@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "tab-maintenance.sh"
+RUN_SH = Path(__file__).resolve().parents[1] / "run.sh"
 
 
 def write_fake_surf(path: Path, log: Path, tabs: str, recovery: dict | None = None):
@@ -30,6 +31,18 @@ def run(tmp_path, *args):
     env = os.environ.copy()
     env["HOME"] = str(tmp_path)
     return subprocess.run([str(SCRIPT), *args], text=True, capture_output=True, env=env)
+
+
+def test_public_surf_entrypoint_exposes_guarded_maintenance():
+    proc = subprocess.run(
+        [str(RUN_SH), "tab.maintenance", "--help"],
+        text=True,
+        capture_output=True,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert "--repair-safe" in proc.stdout
+    assert "idle" in proc.stdout
 
 
 def test_default_dry_run_rebind_would_not_mutate(tmp_path):

@@ -494,6 +494,10 @@ if [[ "$1" == "extension.reload" ]]; then
     exec "$SKILL_DIR/scripts/extension-reload.sh" "${@:2}"
 fi
 
+if [[ "$1" == "tab.maintenance" ]]; then
+    exec "$SKILL_DIR/scripts/tab-maintenance.sh" "${@:2}"
+fi
+
 if [[ "$1" == "extension.fresh" ]]; then
     exec "$SKILL_DIR/scripts/extension-fresh.sh" "${@:2}"
 fi
@@ -504,6 +508,14 @@ fi
 
 if [[ "$1" == "vendor.status" ]]; then
     exec "$SKILL_DIR/scripts/vendor-status.sh" "${@:2}"
+fi
+
+if [[ "$1" == "click" ]]; then
+    for _click_arg in "${@:2}"; do
+        if [[ "$_click_arg" == "--expect-download" || "$_click_arg" == "--download-output" ]]; then
+            exec "${SURF_CLICK_DOWNLOAD_SH:-$SKILL_DIR/scripts/click-with-download.sh}" "${@:2}"
+        fi
+    done
 fi
 
 if [[ "$1" == "webgpt.submit" ]]; then
@@ -595,6 +607,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf setup              Check setup status & show install instructions"
     echo "  surf extension.build    Build vendored surf-cli (npm ci && npm run build)"
     echo "  surf extension.reload   Reload Chrome extension after build"
+    echo "  surf tab.maintenance    Scan/rebind tabs; guarded reload requires an explicit trigger"
     echo "  surf extension.fresh    Check whether dist matches source"
     echo "  surf vendor.sync        Sync vendor/surf-cli from Embry fork"
     echo "  surf vendor.status      Show vendored commit + dist freshness"
@@ -608,7 +621,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "Browser Automation:"
     echo "  surf go <url>           Navigate to URL (add --expect-url URL --tab-id ID to guard against wrong tab)"
     echo "  surf read               Read page with element refs (e1, e2...)"
-    echo "  surf click <ref|selector> Click element by ref (e5) or CSS selector"
+    echo "  surf click <ref|selector> Click element by ref or selector; add --expect-download or --download-output PATH"
     echo "  surf type <text>        Type text (--ref <ref> to target element)"
     echo "  surf key <key>          Press key (Enter, Tab, Escape...)"
     echo "  surf snap               Take screenshot (--full for full page)"

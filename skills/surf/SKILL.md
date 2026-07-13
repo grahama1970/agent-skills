@@ -211,6 +211,29 @@ In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-bro
 defaults the ChatGPT reasoning selector to `Pro` (`ASK_WEBGPT_REASONING`) unless
 the caller explicitly overrides the WebGPT reasoning label.
 
+### Automatic tab recovery contract
+
+Project agents must use Surf's exact-tab maintenance path instead of manually
+activating, refreshing, or rediscovering a browser tab:
+
+```bash
+surf tab.maintenance --repair-safe \
+  --project PROJECT \
+  --repair-trigger PROJECT:recovery_state_failed
+```
+
+The coordinator inventories tabs once, rebinds only one unique exact-URL match,
+and reloads only when the trigger is enumerated and the exact tab reports all
+guards safe. Drafts, active generation, active downloads, unknown guard state,
+and ambiguous URLs fail closed. Every target writes a
+`surf.tab_maintenance_receipt.v1` receipt under
+`~/.local/state/surf/tab-maintenance-receipts` by default.
+
+The Surf Doctor user timer runs this maintenance every 30 minutes with a
+randomized delay. Timer scans may repair a unique stale URL binding, but idle
+state alone never authorizes a reload. Use `tab.new --background` for disposable
+helper tabs so the user's foreground tab and window remain unchanged.
+
 ---
 
 ### WebGPT Completion-Sentinel Handoff
@@ -440,7 +463,14 @@ Behavior:
   same-tab operation, not background proof. Avoid typing or clicking in that
   ChatGPT page while the submit is running.
 - `--allow-foreground-controlled` is retained for compatibility with older
-  scripts; current Surf no longer rejects the already-active controlled tab.
+  scripts; it permits already-active same-tab operation and implies
+  `--no-activate`. It must not be used as permission to call `tab.activate` or
+  move focus to the target tab.
+- Surf serializes `webgpt.submit` per controlled tab. A second submit to the
+  same tab fails before prompt submission with
+  `failure: concurrent_submit_same_tab` and `proof_status: not_submitted`.
+  Wait for the active run, recover with `webgpt.extract`, or use a separate
+  verified reviewer tab.
 - Long submits poll focus every `SURF_WEBGPT_FOCUS_POLL_INTERVAL` seconds (default
   `15`). Mid-run tab switches set `focus_stolen_mid_submit` in meta. Optional
   `SURF_WEBGPT_ABORT_ON_FOCUS_STEAL=1` kills the in-flight submit when focus drifts.
@@ -1205,15 +1235,20 @@ the default WebGPT path is that the controlled tab is not foregrounded.
    before cleanup, the stale connection blocks all subsequent CDP access to that
    tab (`"Failed to attach debugger: Another debugger is already attached"`).
    `webgpt.submit` now:
-   - Activates the tab with `tab.activate` to force Chrome to release the stale
-     CDP connection
+   - In foreground mode, activates the tab with `tab.activate` to force Chrome
+     to release the stale CDP connection
+   - In `--no-activate` mode with an explicit `--tab-id` or `--url`, reloads
+     the Surf extension once and retries the same tab; if the same tab still
+     cannot attach, it fails closed with `failure: stale_cdp_on_explicit_tab`
+     before prompt submission
+   - It must not create or switch to a fallback tab for a human-named target
    - Clears the ChatGPT composer text and its localStorage draft source
      (ChatGPT restores drafts on page load, causing false-positive
      "ChatGPT prompt composer is not empty" errors)
    - Retries the clear if ChatGPT restores the draft between clear and submit
 
-If all three recovery steps fail, use `--create-tab` which opens a fresh
-ChatGPT tab with no stale CDP and no restored draft:
+If you deliberately want a fresh reviewer tab instead of the named tab, use
+`--create-tab` explicitly:
 
 ```bash
 surf webgpt.submit --input REQ.md --output RESP.md --create-tab --timeout 900
