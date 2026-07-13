@@ -20,6 +20,12 @@ export const BATTLE_FIXTURE_RENDERERS: Record<string, RegistryEntry> = {
 		renderer: "BattleSpectatorArena",
 		supported: true,
 	},
+	[BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE]: {
+		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE,
+		viewKind: "race",
+		renderer: "BattleSpectatorArena",
+		supported: true,
+	},
 	[BATTLE_VIEW_FIXTURE_SCHEMAS.PROOF_CARD]: {
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.PROOF_CARD,
 		viewKind: "proof-card",

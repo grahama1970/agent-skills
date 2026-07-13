@@ -171,6 +171,18 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     });
   }, []);
 
+  const handlePixiScrollLeftChange = useCallback(
+    (left: number) => {
+      const node = scrollRef.current;
+      if (!node) return;
+      const maxLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+      const nextLeft = Math.min(maxLeft, Math.max(0, left));
+      if (Math.abs(node.scrollLeft - nextLeft) > 0.5) node.scrollLeft = nextLeft;
+      syncScrollMetrics();
+    },
+    [syncScrollMetrics],
+  );
+
 
   const scrubPlayheadFromClientX = useCallback(
     (clientX: number, trackRect: DOMRect, mode: "overlay" | "timeline") => {
@@ -431,6 +443,11 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             isSelected={lane.id === selectedId}
             isDimmed={Boolean(selectedId && selectedLane && lane.id !== selectedId)}
             activeFinisher={activeFinisher}
+            statusLabel={
+              lane.parentId && effectivePlayheadSeconds < (lane.first_active_segment_elapsed_seconds ?? Number.POSITIVE_INFINITY)
+                ? "AUTHORIZED PENDING"
+                : undefined
+            }
             onSelect={onSelect}
             allottedSeconds={allotted}
             hideTrack={pixiEngine}
@@ -454,12 +471,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             contentWidth={contentWidth}
             allottedSeconds={allotted}
             scrollLeft={scrollMetrics.scrollLeft}
-            onScrollLeftChange={(left) => {
-              const node = scrollRef.current;
-              if (!node) return;
-              node.scrollLeft = left;
-              syncScrollMetrics();
-            }}
+            onScrollLeftChange={handlePixiScrollLeftChange}
             heightPx={pixiRowsHeight}
             playing={playing}
             collapsedParentIds={collapsed}

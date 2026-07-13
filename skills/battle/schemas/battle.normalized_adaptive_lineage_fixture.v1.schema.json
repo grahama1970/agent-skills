@@ -2,12 +2,85 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "battle.normalized_adaptive_lineage_fixture.v1",
   "type": "object",
-  "required": ["schema", "fixture_id", "battle_id", "run_id", "proof_mode", "causal_continuity_proven", "campaign", "events", "receipt_refs", "selection", "memory_evaluation", "claim_boundary", "provenance"],
+  "required": ["schema", "fixture_id", "battle_id", "run_id", "proof_mode", "causal_continuity_proven", "campaign", "lanes", "lineage_edges", "sprite_theme", "renderer_contract", "events", "receipt_refs", "selection", "memory_evaluation", "claim_boundary", "provenance"],
   "properties": {
     "schema": {"const": "battle.normalized_adaptive_lineage_fixture.v1"},
     "proof_mode": {"const": "receipt_backed_fixture"},
     "causal_continuity_proven": {"const": true},
-    "events": {"type": "array", "minItems": 1},
+    "lanes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["lane_id", "team", "generation", "role", "display_name", "visible_from_elapsed_seconds", "active_from_elapsed_seconds", "end_elapsed_seconds", "actor_visual"],
+        "properties": {
+          "lane_id": {"enum": ["red-g1", "red-g2", "blue-g1", "blue-g2"]},
+          "team": {"enum": ["red", "blue"]},
+          "generation": {"enum": [1, 2]},
+          "role": {"enum": ["parent", "child"]},
+          "parent_lane_id": {"type": ["string", "null"]},
+          "visible_from_elapsed_seconds": {"type": "number", "minimum": 0},
+          "active_from_elapsed_seconds": {"type": "number", "minimum": 0},
+          "end_elapsed_seconds": {"type": "number", "minimum": 0},
+          "actor_visual": {
+            "type": "object",
+            "required": ["variant_id", "cosmetic_only", "semantic_authority"],
+            "properties": {
+              "variant_id": {"const": "v13-shared-runner"},
+              "cosmetic_only": {"const": true},
+              "semantic_authority": {"const": false}
+            }
+          }
+        }
+      }
+    },
+    "lineage_edges": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["edge_id", "team", "parent_lane_id", "child_lane_id", "requested_receipt_ref", "authorized_receipt_ref", "visible_from_elapsed_seconds"]
+      }
+    },
+    "sprite_theme": {
+      "type": "object",
+      "required": ["schema", "theme_id", "proof_scope", "shared_atlas", "semantic_authority", "variants"],
+      "properties": {
+        "schema": {"const": "battle.sprite_theme.v1"},
+        "shared_atlas": {"const": true},
+        "semantic_authority": {"const": false}
+      }
+    },
+    "renderer_contract": {
+      "type": "object",
+      "required": ["schema", "time_authority", "event_order_authority", "child_visibility_event", "child_activation_event", "pair_judge_event_is_global", "selection_is_not_victory", "no_promotion_is_not_promoted", "sprite_identity_is_cosmetic_only"],
+      "properties": {
+        "schema": {"const": "battle.adaptive_lineage_renderer_contract.v1"},
+        "child_visibility_event": {"const": "spawn_authorized"},
+        "child_activation_event": {"const": "child_research_materialized"},
+        "pair_judge_event_is_global": {"const": true},
+        "selection_is_not_victory": {"const": true},
+        "no_promotion_is_not_promoted": {"const": true},
+        "sprite_identity_is_cosmetic_only": {"const": true}
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["seq", "event_id", "elapsed_seconds", "event_type", "generation", "team", "lane_id", "scope", "affected_lane_ids", "receipt_ref", "payload"],
+        "properties": {
+          "seq": {"type": "integer", "minimum": 1},
+          "elapsed_seconds": {"type": "number", "minimum": 0},
+          "lane_id": {"type": ["string", "null"]},
+          "scope": {"enum": ["lane", "generation_pair", "campaign"]},
+          "affected_lane_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    },
     "provenance": {"type": "object", "required": ["raw_paths_redacted", "source_run_count", "source_proof_id"]}
   },
   "additionalProperties": true

@@ -14,6 +14,7 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
 	"battle-004-kill-shot": "/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-004-parent-spawn-lifecycle": "/battle-fixtures/battle-004-parent-spawn-lifecycle-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-004-pr6-genetic-pixi": "/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
+	"battle-004-adaptive-lineage-v13": "/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
 } as const;
 
 export type BattleReceiptReplayFixtureKey = keyof typeof BATTLE_RECEIPT_REPLAY_FIXTURE_URLS;

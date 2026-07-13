@@ -156,7 +156,20 @@ function makeBeat(args: {
 }): ReceiptBeat {
 	const { fixture, lanes, lane, laneEvent, atSeconds, kind } = args;
 	const reactKind = cueKindForReact(kind);
-	const ticker = hungerGamesNotification(reactKind, lane);
+	const adaptiveLabel = laneEvent.label && [
+		"CHILD RESEARCH ACTIVE",
+		"MUTATION EVIDENCE VERIFIED",
+	].includes(laneEvent.label)
+		? laneEvent.label
+		: null;
+	const ticker = adaptiveLabel
+		? {
+			prefix: "Adaptive lineage — ",
+			highlight: `${(lane.name || lane.id).toUpperCase()}: ${adaptiveLabel}`,
+			highlightTone: "green" as const,
+			notification: `Adaptive lineage — ${(lane.name || lane.id).toUpperCase()}: ${adaptiveLabel}`,
+		}
+		: hungerGamesNotification(reactKind, lane);
 	return {
 		id: args.id ?? `${lane.id}:${kind}:${atSeconds.toFixed(3)}`,
 		atSeconds,

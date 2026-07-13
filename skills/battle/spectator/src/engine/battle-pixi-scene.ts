@@ -30,7 +30,7 @@ import {
 	type KillShotLayer,
 	type KillShotVisual,
 } from "./battle-pixi-kill-shot";
-import { createPixiLineageLayer, syncPixiLineage, teardownPixiLineageLayer, type PixiLineageLayer } from "./battle-pixi-lineage";
+import { childLineageMotion, createPixiLineageLayer, syncPixiLineage, teardownPixiLineageLayer, type PixiLineageLayer } from "./battle-pixi-lineage";
 import {
 	createBeatVfxLayer,
 	syncBeatEmphasisVfx,
@@ -454,8 +454,13 @@ function syncEntities(
 	for (const lane of lanes) {
 		const row = rowLayout.find((item) => item.laneId === lane.id);
 		if (!row) continue;
-		const y = row.topPx + row.heightPx / 2;
-		const runnerX = runnerXAtPlayhead(lane, currentSeconds, allottedSeconds, contentWidth, useElapsed);
+		let y = row.topPx + row.heightPx / 2;
+		let runnerX = runnerXAtPlayhead(lane, currentSeconds, allottedSeconds, contentWidth, useElapsed);
+		const lineageMotion = childLineageMotion({ lane, lanes, rowLayout, currentSeconds, allottedSeconds, contentWidth, useElapsed });
+		if (lineageMotion) {
+			runnerX = lineageMotion.x;
+			y = lineageMotion.y;
+		}
 
 		for (const event of lane.events) {
 			const eventSeconds = eventElapsedSeconds(event, allottedSeconds, useElapsed);
@@ -510,7 +515,7 @@ function syncEntities(
 			killShotAnimation ??
 			runnerAnimationWithReceiptGate(lane, currentSeconds, allottedSeconds, validationGate.receiptSafe, useElapsed);
 		const activeSegment = activitySegmentAtPlayhead(lane, currentSeconds, allottedSeconds, useElapsed);
-		const runnerAlpha = activeSegment && isProvisionalSegment(activeSegment) ? 0.62 : 1;
+		const runnerAlpha = lineageMotion?.alpha ?? (activeSegment?.phase === "authorized_pending" ? 0.42 : activeSegment && isProvisionalSegment(activeSegment) ? 0.62 : 1);
 		upsertRunnerActor({
 			runners: layers.runners,
 			runnerMap,
@@ -535,6 +540,7 @@ function syncEntities(
 		allottedSeconds,
 		contentWidth,
 		useElapsed,
+		currentSeconds,
 	});
 
 	const beatVfxResult = syncBeatEmphasisVfx({

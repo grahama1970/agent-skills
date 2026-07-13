@@ -23,6 +23,7 @@ import {
 	teardownBattlePixiSceneLayers,
 	type RunnerActor,
 } from "./battle-pixi-scene";
+import { lineageTransitionPhase } from "./battle-pixi-lineage";
 import "../battle-pixi-engine.css";
 
 type Props = {
@@ -59,6 +60,11 @@ function destroyApplication(app: Application) {
 	app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
 }
 
+function pixiViewportScrollLeft(viewport: Viewport, outerScrollLeft: number, contentWidth: number): number {
+	const maxViewportScroll = Math.max(0, contentWidth - viewport.screenWidth);
+	return Math.min(maxViewportScroll, Math.max(0, outerScrollLeft));
+}
+
 export function BattleRacePixiSpike({
 	lanes,
 	rowLayout,
@@ -76,6 +82,8 @@ export function BattleRacePixiSpike({
 	const runtimeRef = useRef<PixiRaceRuntime | null>(null);
 	const runnersRef = useRef<Map<string, RunnerActor>>(new Map());
 	const syncingRef = useRef(false);
+	const scrollLeftRef = useRef(scrollLeft);
+	const onScrollLeftChangeRef = useRef(onScrollLeftChange);
 	const atlasReadyRef = useRef(false);
 	const frameStateRef = useRef<SceneFrameState>({
 		lanes,
@@ -120,6 +128,9 @@ export function BattleRacePixiSpike({
 			});
 			const stageHost = stageHostRef.current;
 			if (stageHost) {
+				stageHost.dataset.battleLineagePhases = JSON.stringify(
+					Object.fromEntries(state.lanes.filter((lane) => lane.parentId).map((lane) => [lane.id, lineageTransitionPhase(lane, state.input.viewport.currentSeconds)])),
+				);
 				if (probe.killShot) {
 					stageHost.dataset.battleKillShotPhase = probe.killShot.phase;
 					stageHost.dataset.battleKillShotImpact = probe.killShot.impactKind;
@@ -177,6 +188,14 @@ export function BattleRacePixiSpike({
 	}, [allottedSeconds, contentWidth, input, lanes, playing, rowLayout]);
 
 	useEffect(() => {
+		scrollLeftRef.current = scrollLeft;
+	}, [scrollLeft]);
+
+	useEffect(() => {
+		onScrollLeftChangeRef.current = onScrollLeftChange;
+	}, [onScrollLeftChange]);
+
+	useEffect(() => {
 		const host = hostRef.current;
 		if (!host) return;
 
@@ -219,7 +238,7 @@ export function BattleRacePixiSpike({
 
 			viewport.on("moved", () => {
 				if (syncingRef.current) return;
-				onScrollLeftChange?.(Math.max(0, -viewport.position.x));
+				onScrollLeftChangeRef.current?.(Math.max(0, -viewport.position.x));
 			});
 
 			const resizeObserver = new ResizeObserver(() => {
@@ -240,7 +259,7 @@ export function BattleRacePixiSpike({
 			bindBattlePixiTicker(app, { tick: tickerBindingRef.current.tick, context: tickerBindingRef.current });
 
 			syncingRef.current = true;
-			viewport.position.x = -scrollLeft;
+			viewport.position.x = -pixiViewportScrollLeft(viewport, scrollLeftRef.current, contentWidth);
 			syncingRef.current = false;
 			tickerBindingRef.current.tick(runtime.app.ticker);
 		};
@@ -262,7 +281,7 @@ export function BattleRacePixiSpike({
 			}
 			host.replaceChildren();
 		};
-	}, [contentWidth, onScrollLeftChange, scrollLeft, spriteIds, totalHeight]);
+	}, [contentWidth, spriteIds, totalHeight]);
 
 	useEffect(() => {
 		void loadBattleRunnerSprites(spriteIds);
@@ -272,9 +291,9 @@ export function BattleRacePixiSpike({
 		const runtime = runtimeRef.current;
 		if (!runtime) return;
 		syncingRef.current = true;
-		runtime.viewport.position.x = -scrollLeft;
+		runtime.viewport.position.x = -pixiViewportScrollLeft(runtime.viewport, scrollLeft, contentWidth);
 		syncingRef.current = false;
-	}, [scrollLeft]);
+	}, [contentWidth, scrollLeft]);
 
 	return (
 		<div ref={stageHostRef} className="battleRaceStageHost" style={{ height: heightPx }} data-battle-pixi-engine="animated-sprites" data-battle-viewport-seconds={input.viewport.currentSeconds} data-qid="battle:pixi:stage">

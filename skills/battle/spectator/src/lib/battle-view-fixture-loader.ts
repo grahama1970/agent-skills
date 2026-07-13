@@ -9,6 +9,9 @@ import { validateRuntimeJudgeFixture } from "./battle-runtime-validator";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import { validateSynthesisFixture } from "./battle-synthesis-validator";
 import type { BattleNormalizedUxFixture } from "./battle-types";
+import type { BattleNormalizedAdaptiveLineageFixtureV1 } from "./battle-adaptive-lineage-types";
+import { validateAdaptiveLineageFixture } from "./battle-adaptive-lineage-validator";
+import { adaptiveLineageToRaceFixture } from "./battle-adaptive-lineage-view-model";
 import {
 	BATTLE_VIEW_FIXTURE_SCHEMAS,
 	readFixtureSchema,
@@ -94,7 +97,7 @@ export function discriminateBattleViewFixture(
 	}
 
 	const expectedSchema = expectedSchemaForViewKind(expectedViewKind);
-	if (schema !== expectedSchema || entry.viewKind !== expectedViewKind) {
+	if (entry.viewKind !== expectedViewKind) {
 		return {
 			ok: false,
 			error: {
@@ -103,6 +106,27 @@ export function discriminateBattleViewFixture(
 				detail: `Route expects ${expectedSchema} (${expectedViewKind}); fixture declared ${schema} (${entry.viewKind}).`,
 				schema,
 			},
+		};
+	}
+
+	if (schema === BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE) {
+		const validated = validateAdaptiveLineageFixture(data);
+		if (!validated.ok) {
+			return {
+				ok: false,
+				error: {
+					code: validated.error.code,
+					title: validated.error.title,
+					detail: validated.error.detail,
+					schema,
+				},
+			};
+		}
+		return {
+			ok: true,
+			fixture: validated.fixture,
+			schema: validated.fixture.schema,
+			viewKind: "race",
 		};
 	}
 
@@ -247,9 +271,12 @@ export async function loadBattleViewFixture(
 export async function loadBattleRaceFixture(url: string): Promise<BattleFixtureLoadResult<BattleNormalizedUxFixture>> {
 	const result = await loadBattleViewFixture(url, "race");
 	if (!result.ok) return result;
+	const fixture = result.schema === BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE
+		? adaptiveLineageToRaceFixture(result.fixture as BattleNormalizedAdaptiveLineageFixtureV1)
+		: result.fixture as BattleNormalizedUxFixture;
 	return {
 		ok: true,
-		fixture: result.fixture as BattleNormalizedUxFixture,
+		fixture,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RACE,
 		viewKind: "race",
 	};

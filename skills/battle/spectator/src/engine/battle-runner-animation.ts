@@ -71,6 +71,8 @@ function phaseToAnimation(phase: string): BattleRunnerAnimation {
 			return "blocked";
 		case "judge_replay":
 			return "blocked";
+		case "mutation_evidence":
+			return "mutate";
 		default:
 			return "idle";
 	}
@@ -202,4 +204,3 @@ export function runnerAnimationWithReceiptGate(
 	if (receiptSafe || !RECEIPT_SAFE_TERMINAL_ANIMATIONS.has(animation)) return animation;
 	return laneIsMoving(lane, currentSeconds, allottedSeconds, useElapsed) ? "run" : "idle";
 }
-

@@ -27,6 +27,10 @@
   },
   "events": [
     {
+      "affected_lane_ids": [
+        "red-g1",
+        "blue-g1"
+      ],
       "elapsed_seconds": 47.613963,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0001",
       "event_type": "judge_verdict",
@@ -42,15 +46,19 @@
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
+      "scope": "generation_pair",
       "seq": 1,
       "team": null
     },
     {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
       "elapsed_seconds": 47.615299,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0002",
       "event_type": "parent_observation_materialized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "red-g1",
       "payload": {
         "judge_verdict": "BLUE_SUCCESS"
       },
@@ -61,15 +69,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 2,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
       "elapsed_seconds": 47.616217,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0003",
       "event_type": "fitness_materialized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "red-g1",
       "payload": {
         "selection_key": [
           1,
@@ -85,15 +97,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 3,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
       "elapsed_seconds": 47.61702,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0004",
       "event_type": "parent_observation_materialized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "blue-g1",
       "payload": {
         "judge_verdict": "BLUE_SUCCESS"
       },
@@ -104,15 +120,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 4,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
       "elapsed_seconds": 47.617759,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0005",
       "event_type": "fitness_materialized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "blue-g1",
       "payload": {
         "selection_key": [
           2,
@@ -128,15 +148,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 5,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
       "elapsed_seconds": 71.671843,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0006",
       "event_type": "spawn_requested",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "red-g1",
       "payload": {
         "requested_action": "SPAWN_CHILD"
       },
@@ -147,15 +171,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 6,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
       "elapsed_seconds": 71.673061,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0007",
       "event_type": "spawn_requested",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "blue-g1",
       "payload": {
         "requested_action": "SPAWN_CHILD"
       },
@@ -166,15 +194,20 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 7,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g1",
+        "red-g2"
+      ],
       "elapsed_seconds": 71.67393,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0008",
       "event_type": "spawn_authorized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "red-g1",
       "payload": {
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
@@ -185,15 +218,20 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 8,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g1",
+        "blue-g2"
+      ],
       "elapsed_seconds": 71.674468,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0009",
       "event_type": "spawn_authorized",
       "generation": 1,
-      "lane_id": null,
+      "lane_id": "blue-g1",
       "payload": {
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
@@ -204,15 +242,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 9,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 71.675815,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0010",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {
         "packet_id": "battle-004-red-generation-2-knowledge"
       },
@@ -223,15 +265,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 10,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 71.676418,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0011",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {
         "packet_id": "battle-004-blue-generation-2-knowledge"
       },
@@ -242,15 +288,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 11,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 79.090885,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0012",
       "event_type": "child_research_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {
         "source_count": 5
       },
@@ -261,15 +311,19 @@
         "status": null,
         "verdict": null
       },
+      "scope": "lane",
       "seq": 12,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 79.091782,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0013",
       "event_type": "child_research_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {
         "source_count": 5
       },
@@ -280,10 +334,15 @@
         "status": null,
         "verdict": null
       },
+      "scope": "lane",
       "seq": 13,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g2",
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.445378,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0014",
       "event_type": "judge_verdict",
@@ -299,15 +358,19 @@
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
+      "scope": "generation_pair",
       "seq": 14,
       "team": null
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 134.4476,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0015",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {},
       "receipt_ref": {
         "receipt_id": null,
@@ -316,15 +379,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 15,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.448202,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0016",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {},
       "receipt_ref": {
         "receipt_id": null,
@@ -333,15 +400,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 16,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 134.449272,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0017",
       "event_type": "genome_mutated",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {
         "semantic_change_count": 24
       },
@@ -352,15 +423,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 17,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.450488,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0018",
       "event_type": "genome_mutated",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {
         "semantic_change_count": 33
       },
@@ -371,15 +446,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 18,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 134.451459,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0019",
       "event_type": "generation_observation_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {
         "judge_verdict": "BLUE_SUCCESS"
       },
@@ -390,15 +469,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 19,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
       "elapsed_seconds": 134.452388,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0020",
       "event_type": "fitness_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "red-g2",
       "payload": {
         "selection_key": [
           1,
@@ -414,15 +497,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 20,
       "team": "red"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.453421,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0021",
       "event_type": "generation_observation_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {
         "judge_verdict": "BLUE_SUCCESS"
       },
@@ -433,15 +520,19 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 21,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.45463,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0022",
       "event_type": "fitness_materialized",
       "generation": 2,
-      "lane_id": null,
+      "lane_id": "blue-g2",
       "payload": {
         "selection_key": [
           2,
@@ -457,10 +548,17 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "lane",
       "seq": 22,
       "team": "blue"
     },
     {
+      "affected_lane_ids": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.455613,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0023",
       "event_type": "selection_decision",
@@ -477,10 +575,17 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "campaign",
       "seq": 23,
       "team": null
     },
     {
+      "affected_lane_ids": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ],
       "elapsed_seconds": 134.457076,
       "event_id": "battle-004-adaptive-red-blue-lineage-v13-event-0024",
       "event_type": "memory_evaluation",
@@ -499,11 +604,122 @@
         "status": "PASS",
         "verdict": null
       },
+      "scope": "campaign",
       "seq": 24,
       "team": null
     }
   ],
   "fixture_id": "battle-004-adaptive-lineage-v13",
+  "lanes": [
+    {
+      "active_from_elapsed_seconds": 0.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "RED G1 PARENT",
+      "end_elapsed_seconds": 134.457076,
+      "generation": 1,
+      "lane_id": "red-g1",
+      "parent_lane_id": null,
+      "role": "parent",
+      "team": "red",
+      "visible_from_elapsed_seconds": 0.0
+    },
+    {
+      "active_from_elapsed_seconds": 79.090885,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "RED G2 CHILD",
+      "end_elapsed_seconds": 134.457076,
+      "generation": 2,
+      "lane_id": "red-g2",
+      "parent_lane_id": "red-g1",
+      "role": "child",
+      "team": "red",
+      "visible_from_elapsed_seconds": 71.67393
+    },
+    {
+      "active_from_elapsed_seconds": 0.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "BLUE G1 PARENT",
+      "end_elapsed_seconds": 134.457076,
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "parent_lane_id": null,
+      "role": "parent",
+      "team": "blue",
+      "visible_from_elapsed_seconds": 0.0
+    },
+    {
+      "active_from_elapsed_seconds": 79.091782,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "BLUE G2 CHILD",
+      "end_elapsed_seconds": 134.457076,
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "parent_lane_id": "blue-g1",
+      "role": "child",
+      "team": "blue",
+      "visible_from_elapsed_seconds": 71.674468
+    }
+  ],
+  "lineage_edges": [
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-spawn-policy-decision",
+        "schema": "battle.adaptive_spawn_policy_decision.v1",
+        "sha256": "abad5cd4c7ebdd7f52a0d304c5fcc57be5dc8e7f6019dc7ad1350b786aeeffc7",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "red-g2",
+      "edge_id": "red-g1-to-g2",
+      "parent_lane_id": "red-g1",
+      "requested_receipt_ref": {
+        "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-parent-spawn-request",
+        "schema": "battle.adaptive_spawn_request.v1",
+        "sha256": "d88df30ac4704e367b32bd62bc2dcb8d85c0c9dc76c290914840c6a2f3072670",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "red",
+      "visible_from_elapsed_seconds": 71.67393
+    },
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-spawn-policy-decision",
+        "schema": "battle.adaptive_spawn_policy_decision.v1",
+        "sha256": "ac2f5b31c87136dce78ac8b988c0c1fdf53d8ca550e9c6a59a868708291d0152",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "blue-g2",
+      "edge_id": "blue-g1-to-g2",
+      "parent_lane_id": "blue-g1",
+      "requested_receipt_ref": {
+        "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-parent-spawn-request",
+        "schema": "battle.adaptive_spawn_request.v1",
+        "sha256": "80224c8fe47650b78fded13cc3631b6ad60649c96f06e6222fc3d68525d4fe8c",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "blue",
+      "visible_from_elapsed_seconds": 71.674468
+    }
+  ],
   "live_source": "adaptive_red_blue_lineage_v2",
   "memory_evaluation": {
     "decisions": [
@@ -675,6 +891,18 @@
       "verdict": null
     }
   ],
+  "renderer_contract": {
+    "child_activation_event": "child_research_materialized",
+    "child_pending_state": "AUTHORIZED_PENDING",
+    "child_visibility_event": "spawn_authorized",
+    "event_order_authority": "event.seq",
+    "no_promotion_is_not_promoted": true,
+    "pair_judge_event_is_global": true,
+    "schema": "battle.adaptive_lineage_renderer_contract.v1",
+    "selection_is_not_victory": true,
+    "sprite_identity_is_cosmetic_only": true,
+    "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
+  },
   "run_id": "battle-004-adaptive-red-blue-lineage-v13",
   "schema": "battle.normalized_adaptive_lineage_fixture.v1",
   "selection": {
@@ -729,6 +957,19 @@
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
+      }
+    }
+  },
+  "sprite_theme": {
+    "proof_scope": "cosmetic_identity_only",
+    "schema": "battle.sprite_theme.v1",
+    "semantic_authority": false,
+    "shared_atlas": true,
+    "theme_id": "v13-shared-plague-nurgling",
+    "variants": {
+      "v13-shared-runner": {
+        "scale": 1.0,
+        "sprite_id": "plague_nurgling"
       }
     }
   }

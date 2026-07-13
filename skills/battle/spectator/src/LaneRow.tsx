@@ -25,10 +25,11 @@ type Props = {
   onToggleCollapse?: () => void;
   allottedSeconds: number;
   hideTrack?: boolean;
+  statusLabel?: string;
 };
 
 export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
-  { lane, hasChildren = false, isCollapsed = false, isChild = false, isSelected, isDimmed, activeFinisher, onSelect, onToggleCollapse, allottedSeconds, hideTrack = false },
+  { lane, hasChildren = false, isCollapsed = false, isChild = false, isSelected, isDimmed, activeFinisher, onSelect, onToggleCollapse, allottedSeconds, hideTrack = false, statusLabel },
   ref
 ) {
   const designView = isBattleDesignView();
@@ -138,7 +139,7 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
   const workerSuffix = lane.name === displayName ? null : lane.name.slice(displayName.length).trim();
 
   if (hideTrack) {
-    const terminalLabel = lane.terminal === "none" ? "ACTIVE" : lane.terminal.replace(/_/g, " ").toUpperCase();
+    const terminalLabel = statusLabel ?? (lane.terminal === "none" ? "ACTIVE" : lane.terminal.replace(/_/g, " ").toUpperCase());
     return (
       <motion.div
         ref={ref}

@@ -4,6 +4,7 @@ import type { BattleNormalizedPopulationFixtureV1 } from "./battle-population-ty
 import type { BattleNormalizedRuntimeJudgeFixtureV1 } from "./battle-runtime-types";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import type { BattleNormalizedUxFixture } from "./battle-types";
+import type { BattleNormalizedAdaptiveLineageFixtureV1 } from "./battle-adaptive-lineage-types";
 
 /** Known normalized UX fixture schemas. Population is supported via PR5 normalized fixture. */
 export const BATTLE_VIEW_FIXTURE_SCHEMAS = {
@@ -13,6 +14,7 @@ export const BATTLE_VIEW_FIXTURE_SCHEMAS = {
 	COMPILE: "battle.normalized_compile_fixture.v1",
 	RUNTIME_JUDGE: "battle.normalized_runtime_judge_fixture.v1",
 	POPULATION: "battle.normalized_population_fixture.v1",
+	ADAPTIVE_LINEAGE: "battle.normalized_adaptive_lineage_fixture.v1",
 } as const;
 
 export type BattleViewFixtureSchema = (typeof BATTLE_VIEW_FIXTURE_SCHEMAS)[keyof typeof BATTLE_VIEW_FIXTURE_SCHEMAS];
@@ -26,7 +28,8 @@ export type BattleViewFixture =
 	| BattleNormalizedSynthesisFixtureV1
 	| BattleNormalizedCompileFixtureV1
 	| BattleNormalizedRuntimeJudgeFixtureV1
-	| BattleNormalizedPopulationFixtureV1;
+	| BattleNormalizedPopulationFixtureV1
+	| BattleNormalizedAdaptiveLineageFixtureV1;
 
 export type BattleFixtureLoadErrorCode =
 	| "UNSUPPORTED_FIXTURE"

@@ -35,6 +35,7 @@
     "prove:pr9-campaign": "node scripts/prove-battle-pr9-campaign.mjs",
     "prove:score-package": "node scripts/prove-battle-score-package.mjs",
     "prove:music-m1": "node scripts/prove-battle-music-m1.mjs",
+    "prove:adaptive-lineage-v13": "node scripts/prove-battle-adaptive-lineage-v13.mjs",
     "prove:layout-geometry": "node scripts/prove-battle-layout-geometry.mjs"
   },
   "dependencies": {

@@ -23,6 +23,7 @@ describe("syncPixiLineage", () => {
 			rowLayout,
 			collapsedParentIds: new Set(),
 			allottedSeconds: 1200,
+			currentSeconds: 0,
 			contentWidth: 1200,
 			useElapsed: fixtureUsesElapsedAxis(fixture),
 		});

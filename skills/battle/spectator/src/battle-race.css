@@ -628,6 +628,43 @@
   min-width: 0;
 }
 
+@media (max-width: 700px) {
+  .battle-mockup-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  .battle-mockup-shell .battle-receipt-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .battle-receipt-score,
+  .battle-live-events {
+    width: 100%;
+    max-width: none;
+  }
+
+  .battle-receipt-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .battle-mockup-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .battle-spectator-rail-slot,
+  .battle-agent-pane-slot {
+    display: none;
+  }
+
+  .battle-mockup-footer {
+    position: static;
+    flex-wrap: wrap;
+  }
+}
+
 
 /* BATTLE_RECEIPT_SPARSE_TRACK — fill center height; empty below lanes is track, not void */
 .battle-timeline-scroll {

@@ -417,14 +417,14 @@ export function BattleSpectatorArena() {
               : undefined
           }
         >
-          <div className="h-full min-h-0 min-w-0 overflow-hidden">
+          <div className="battle-spectator-rail-slot h-full min-h-0 min-w-0 overflow-hidden">
             <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
           </div>
           <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           </div>
           {selectedLane ? (
-            <div className="h-full min-h-0 min-w-0 overflow-hidden">
+            <div className="battle-agent-pane-slot h-full min-h-0 min-w-0 overflow-hidden">
               <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />
             </div>
           ) : null}

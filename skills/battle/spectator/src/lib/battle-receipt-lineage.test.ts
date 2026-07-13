@@ -58,5 +58,8 @@ describe("battle receipt lineage", () => {
 		expect(battleReceiptReplayFixtureUrl("#battle/receipt?engine=pixi&fixture=battle-007-file-upload")).toBe(
 			"/battle-fixtures/battle-007-file-upload-pixi-replay/battle.normalized_ux_fixture.json",
 		);
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13")).toBe(
+			"battle-004-adaptive-lineage-v13",
+		);
 	});
 });

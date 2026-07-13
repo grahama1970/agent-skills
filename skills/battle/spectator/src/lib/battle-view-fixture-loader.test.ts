@@ -36,6 +36,16 @@ describe("discriminateBattleViewFixture", () => {
 		}
 	});
 
+	it("accepts the validated adaptive lineage source on the race route", async () => {
+		const data = await loadJson("../../public/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json");
+		const result = discriminateBattleViewFixture(data, "race");
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.viewKind).toBe("race");
+			expect(result.schema).toBe(BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE);
+		}
+	});
+
 	it("accepts proof-card fixture on proof-card route", async () => {
 		const data = await loadJson("../../public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json");
 		const result = discriminateBattleViewFixture(data, "proof-card");

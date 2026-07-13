@@ -825,7 +825,7 @@ export type Lane = {
 	name: string;
 	payloadId: string;
 	generation: number;
-	team: "red";
+	team: "red" | "blue";
 	parentId?: string;
 	parent_id?: string;
 	expanded?: boolean;
