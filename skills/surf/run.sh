@@ -47,6 +47,20 @@ find_chrome() {
     return 1
 }
 
+gpu_render_device_available() {
+    if [[ "${SURF_GPU_MODE:-auto}" == "software" ]]; then
+        return 1
+    fi
+    if compgen -G "/dev/dri/renderD*" >/dev/null; then
+        return 0
+    fi
+    command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1
+}
+
+cdp_gpu_status() {
+    python3 "$SKILL_DIR/scripts/cdp_gpu_status.py" --port "$1"
+}
+
 # ─────────────────────────────────────────────────────────────
 # CDP Management
 # ─────────────────────────────────────────────────────────────
@@ -68,10 +82,15 @@ cdp_start() {
         return 1
     }
 
+    local gpu_launch_mode="software-fallback"
     if [[ "$headless" == "headless" ]]; then
         echo "Starting Chrome (headless) with CDP on port ${port}..."
+        gpu_launch_mode="software-explicit-headless"
+    elif gpu_render_device_available; then
+        echo "Starting Chrome with GPU acceleration and CDP on port ${port}..."
+        gpu_launch_mode="hardware-requested"
     else
-        echo "Starting Chrome with CDP on port ${port}..."
+        echo "Starting Chrome with CDP on port ${port}; no GPU render device detected."
     fi
 
     # Create profile directory
@@ -104,10 +123,18 @@ cdp_start() {
     # Add headless flag if requested
     if [[ "$headless" == "headless" ]]; then
         chrome_flags+=(--headless=new)
+    elif [[ "$gpu_launch_mode" == "hardware-requested" ]]; then
+        chrome_flags+=(--enable-gpu-rasterization)
     fi
 
-    # Start Chrome with CDP flags
-    "$chrome" "${chrome_flags[@]}" "about:blank" &>/dev/null &
+    # Detach Chrome from short-lived agent shells and preserve startup diagnostics.
+    local chrome_log="/tmp/chrome-cdp-${port}.log"
+    local -a detach_prefix=()
+    if command -v setsid >/dev/null 2>&1; then
+        detach_prefix=(setsid)
+    fi
+    nohup "${detach_prefix[@]}" "$chrome" "${chrome_flags[@]}" "about:blank" \
+        </dev/null >"$chrome_log" 2>&1 &
 
     local pid=$!
     echo "$pid" > "$CDP_PID_FILE"
@@ -120,6 +147,11 @@ cdp_start() {
             echo " ready!"
             echo ""
             cdp_status "$port"
+            echo "  Startup log: ${chrome_log}"
+            echo "  GPU launch mode: ${gpu_launch_mode}"
+            if ! cdp_gpu_status "$port"; then
+                echo "Warning: Chrome is not reporting a hardware renderer; continuing with Chrome's fallback." >&2
+            fi
             return 0
         fi
         echo -n "."

@@ -1,0 +1,71 @@
+import importlib.util
+from pathlib import Path
+
+
+MODULE_PATH = Path(__file__).parents[1] / "scripts" / "cdp_gpu_status.py"
+SPEC = importlib.util.spec_from_file_location("cdp_gpu_status", MODULE_PATH)
+assert SPEC and SPEC.loader
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+
+
+def test_classifies_swiftshader_as_software():
+    gpu = {
+        "devices": [
+            {
+                "vendorString": "Google Inc. (Google)",
+                "deviceString": "ANGLE (Google, SwiftShader Device)",
+                "driverVendor": "SwANGLE",
+            }
+        ],
+        "auxAttributes": {"displayType": "ANGLE_SWIFTSHADER"},
+    }
+
+    assert MODULE.classify_gpu(gpu) == "software"
+
+
+def test_classifies_physical_renderer_as_hardware():
+    gpu = {
+        "devices": [
+            {
+                "vendorString": "NVIDIA Corporation",
+                "deviceString": "NVIDIA RTX A5000",
+                "driverVendor": "NVIDIA",
+            }
+        ],
+        "auxAttributes": {
+            "displayType": "ANGLE_OPENGL",
+            "glRenderer": "NVIDIA RTX A5000/PCIe/SSE2",
+        },
+    }
+
+    assert MODULE.classify_gpu(gpu) == "hardware"
+
+
+def test_empty_gpu_payload_is_unknown():
+    assert MODULE.classify_gpu({}) == "unknown"
+
+
+def test_report_includes_feature_status():
+    report = MODULE.build_report(
+        {
+            "gpu": {
+                "devices": [
+                    {
+                        "vendorString": "NVIDIA Corporation",
+                        "deviceString": "NVIDIA RTX A5000",
+                    }
+                ],
+                "auxAttributes": {"displayType": "ANGLE_OPENGL"},
+                "featureStatus": {"gpu_compositing": "enabled"},
+            }
+        }
+    )
+
+    assert report == {
+        "renderer_mode": "hardware",
+        "vendor": "NVIDIA Corporation",
+        "device": "NVIDIA RTX A5000",
+        "display_type": "ANGLE_OPENGL",
+        "gpu_compositing": "enabled",
+    }
