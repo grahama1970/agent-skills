@@ -241,6 +241,21 @@ Rerun the same DAG. Tau preflights the exact tab/URL and calls `webgpt.extract`;
 it does not resubmit or consume another round. Never copy a sentinel from a
 different tab, prompt, or review round.
 
+The maintained live acceptance pattern is:
+
+```text
+round 1: WebGPT CLARIFY -> Tau writes clarification-request.json and blocks
+human: writes the named clarification_answer_path
+round 2: WebGPT PASS -> Tau hash-binds the answer and accepted response
+later resume: Tau reuses the accepted receipt without creating round 3
+```
+
+Use `max_rounds: 2` when exactly one clarification and one final answer are
+allowed. The round-state artifact must remain at two entries after resume.
+This proves bounded clarification transport and receipt reuse for the named
+work order; it does not prove WebGPT semantic correctness or authorize a
+production policy change.
+
 ### GitHub Apply-Gate Lane
 
 GitHub transport is dry-run by default. Live mutation requires explicit apply

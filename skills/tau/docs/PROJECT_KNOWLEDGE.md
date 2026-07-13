@@ -5,6 +5,19 @@ It does not implement Tau behavior itself.
 
 ## Current Evidence Boundaries
 
+- 2026-07-13 live WebGPT clarification acceptance: Tau ran one native
+  `architecture_review/webgpt` skill node against Browser Oracle project `tau`
+  and exact tab `837358072`. Round 1 returned `CLARIFY`; the human selected
+  `route_human`; round 2 returned `PASS` at the immutable `2/2` limit; and a
+  later DAG invocation reused the accepted receipt without creating round 3.
+  The answer SHA-256 was
+  `b5c3a0231ce59f22f0598636ad1700a5b21877f48d482f4646ceaecd709571be`.
+  Surf recorded `proof_status:"response_proven"`, matching requested and
+  controlled tab ids, `raw_contains_sentinel:true`, `focus_changed:false`, and
+  `transport_degraded:false`. Artifacts are under
+  `/tmp/tau-skill-clarification-live-20260713T1255Z/`. This was
+  `mocked:false`, `live:true`, and `provider_live:false`.
+
 - 2026-07-05 wrapper catch-up: `skills/tau/scripts/tau_skill.py` now expands
   Tau paths via `Path.home()` / `TAU_ROOT`, exposes `doctor`, exposes
   `proof-status`, and keeps `e2e` only as an alias reporting
@@ -40,6 +53,16 @@ It does not implement Tau behavior itself.
   `${HOME}/.local/state/project-watchdog/receipts/`.
 
 ## Pending Proof Boundaries
+
+- Secure execution still needs a host-compatible positive isolated command,
+  grant-scoped mounts, explicit secret/network grants, retry grant renewal, and
+  Docker/Docker-Sandbox integration.
+- Course-correction receipts still need general execution and follow-through
+  verification, not only decision artifacts.
+- A real OMP binary, broader controlled-data worker demo, asymmetric signing,
+  append-only audit ledger, and authenticated/RBAC API remain pending.
+- Provider/model semantic quality and arbitrary future skill-route correctness
+  remain explicit non-claims.
 
 - The skill alone does not prove fresh browser chat rendering.
 - Chat UI claims need `test-interactions` manifests and browser/CDP screenshot
