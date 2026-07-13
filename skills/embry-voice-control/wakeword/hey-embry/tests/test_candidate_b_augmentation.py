@@ -24,6 +24,7 @@ def load_script(name: str):
 
 assets = load_script("build_augmentation_asset_manifests")
 expand = load_script("expand_horus_wake_corpus")
+validate = load_script("validate_candidate_b_corpus")
 
 
 def write_audio(path: Path, *, frequency: float, rate: int = 16_000) -> None:
@@ -100,3 +101,48 @@ def test_negative_derivative_admission_remains_prompt_specific() -> None:
     assert expand.transcript_accepted(record, "Hey Henry.")
     assert not expand.transcript_accepted(record, "Henry.")
     assert not expand.transcript_accepted(record, "Hey Embry.")
+
+
+def test_independent_validator_checks_materialized_audio(tmp_path: Path) -> None:
+    records = []
+    for index, split in enumerate(("positive_train", "positive_validation")):
+        path = tmp_path / f"{split}.wav"
+        write_audio(path, frequency=220 + index)
+        records.append(
+            {
+                "split": split,
+                "path": str(path),
+                "sha256": validate.sha256_file(path),
+                "post_transform_asr_accepted": True,
+                "transform_chain": [],
+                "identity": True,
+                "variant_index": 0,
+                "base_record_id": f"base-{index}",
+                "base_audio_sha256": f"sha256:base-{index}",
+                "orpheus_request_id": f"request-{index}",
+                "transform_seed": 0,
+                "transform_recipe_sha256": "sha256:identity",
+                "prompt": "Hey Em-bree!",
+            }
+        )
+    records_path = tmp_path / "records.jsonl"
+    records_path.write_text(
+        "".join(json.dumps(record) + "\n" for record in records)
+    )
+    receipt_path = tmp_path / "receipt.json"
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "schema": "embry.horus_wake_candidate_b_corpus.v1",
+                "status": "PASS",
+                "failed_gates": [],
+                "records_manifest": {
+                    "path": str(records_path),
+                    "sha256": validate.sha256_file(records_path),
+                },
+            }
+        )
+    )
+    result = validate.validate(receipt_path, require_exact_counts=False)
+    assert result["status"] == "PASS"
+    assert result["counts"]["records"] == 2

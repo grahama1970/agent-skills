@@ -115,6 +115,9 @@ def validate(receipt_path: Path, *, require_exact_counts: bool) -> dict[str, Any
             errors.append("invalid_audio_format")
         if samples.size == 0 or not np.isfinite(samples).all():
             errors.append("invalid_audio_samples")
+        duration_ms = info.frames * 1000 / info.samplerate
+        if not 250 <= duration_ms <= 6_000:
+            errors.append("audio_duration_policy_failed")
         peak = float(np.max(np.abs(samples))) if samples.size else 0.0
         if peak <= 0 or peak > 10 ** (-1 / 20) + 1 / 32768:
             errors.append("audio_peak_policy_failed")
