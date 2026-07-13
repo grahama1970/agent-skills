@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Write or verify an immutable Persona Dream revision artifact index."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import mimetypes
+import re
+from pathlib import Path
+from typing import Any
+
+from phase_artifact_contract import (
+    load_phase_artifact_contract,
+    resolve_required_artifact,
+    validate_revision_artifacts,
+)
+
+INDEX_NAME = "revision_artifact_index.json"
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return f"sha256:{digest.hexdigest()}"
+
+
+def artifact_kind(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return "json"
+    if suffix in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+        return "image"
+    if suffix in {".wav", ".mp3", ".flac", ".m4a"}:
+        return "audio"
+    if suffix in {".mp4", ".webm", ".mov"}:
+        return "video"
+    if suffix in {".md", ".txt", ".html"}:
+        return "text"
+    return "other"
+
+
+def phase_id_for(relative_path: str) -> str | None:
+    match = re.search(r"(?:^|/)phase_(\d{2})(?:_|/)", relative_path)
+    return match.group(1) if match else None
+
+
+def optional_artifact_id(phase_id: str | None, relative_path: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", ".", relative_path.lower()).strip(".")
+    prefix = f"phase{phase_id}" if phase_id else "revision"
+    return f"{prefix}.{normalized}"
+
+
+def media_role(path: Path) -> list[str]:
+    match = re.fullmatch(r"(sb_\d{3})_(start|end)_frame\.(?:png|jpe?g|webp)", path.name, re.I)
+    if match:
+        return ["accepted_frame", f"{match.group(1).lower()}_{match.group(2).lower()}_frame"]
+    return []
+
+
+def build_index(revision_root: Path, run_id: str, revision_id: str) -> dict[str, Any]:
+    revision_root = revision_root.resolve()
+    validation = validate_revision_artifacts(revision_root)
+    blocked = {
+        phase_id: result
+        for phase_id, result in validation.items()
+        if result["status"] != "CURRENT"
+    }
+    if blocked:
+        raise ValueError(f"BLOCKED_REVISION_ARTIFACT_CONTRACT:{sorted(blocked)}")
+
+    contract = load_phase_artifact_contract()
+    required_by_path: dict[str, tuple[str, str, dict[str, Any]]] = {}
+    for phase_id, phase in contract["phases"].items():
+        for requirement in phase["required_artifacts"]:
+            path = resolve_required_artifact(revision_root, requirement)
+            if path is None:
+                raise ValueError(f"BLOCKED_PHASE_ARTIFACT_MISSING:{phase_id}:{requirement['artifact_id']}")
+            relative_path = str(path.relative_to(revision_root))
+            if relative_path in required_by_path:
+                raise ValueError(f"BLOCKED_PHASE_ARTIFACT_ID_COLLISION:{relative_path}")
+            required_by_path[relative_path] = (phase_id, requirement["artifact_id"], requirement)
+
+    artifacts: dict[str, dict[str, Any]] = {}
+    for path in sorted(revision_root.rglob("*")):
+        if not path.is_file() or path.name == INDEX_NAME:
+            continue
+        relative_path = str(path.relative_to(revision_root))
+        required = required_by_path.get(relative_path)
+        phase_id = required[0] if required else phase_id_for(relative_path)
+        artifact_id = required[1] if required else optional_artifact_id(phase_id, relative_path)
+        if artifact_id in artifacts:
+            raise ValueError(f"BLOCKED_PHASE_ARTIFACT_ID_COLLISION:{artifact_id}")
+        requirement = required[2] if required else {}
+        roles = (["required_evidence"] if required else ["optional_evidence"]) + media_role(path)
+        if requirement.get("consumer_contract"):
+            roles.append("consumer_input")
+        artifacts[artifact_id] = {
+            "phase_id": phase_id,
+            "relative_path": relative_path,
+            "sha256": sha256_file(path),
+            "size_bytes": path.stat().st_size,
+            "kind": artifact_kind(path),
+            "media_type": mimetypes.guess_type(path.name)[0] or "application/octet-stream",
+            "schema": requirement.get("schema"),
+            "consumer_contract": requirement.get("consumer_contract"),
+            "roles": roles,
+        }
+
+    manifest_path = revision_root / "revision_manifest.json"
+    return {
+        "schema": "persona_dream.revision_artifact_index.v1",
+        "run_id": run_id,
+        "revision_id": revision_id,
+        "revision_manifest_sha256": sha256_file(manifest_path) if manifest_path.is_file() else None,
+        "phase_contract_schema": contract["schema"],
+        "artifact_count": len(artifacts),
+        "required_artifact_count": len(required_by_path),
+        "artifacts": artifacts,
+        "claims": {
+            "proves": [
+                "required Phase 01-10 artifacts passed the local shared contract",
+                "indexed artifact paths are revision-relative and bound to observed hashes",
+            ],
+            "does_not_prove": [
+                "production read-model hydration",
+                "UI consumer hydration",
+                "Memory, ArangoDB, or Qdrant persistence",
+                "active revision promotion",
+                "provider readiness or submission",
+            ],
+        },
+        "mocked": False,
+        "live": False,
+        "provider_live": False,
+        "actual_provider_call_attempts": 0,
+    }
+
+
+def write_index(revision_root: Path, output: Path, run_id: str, revision_id: str) -> dict[str, Any]:
+    value = build_index(revision_root, run_id, revision_id)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return value
+
+
+def verify_index(revision_root: Path, index_path: Path) -> dict[str, Any]:
+    observed = json.loads(index_path.read_text(encoding="utf-8"))
+    expected = build_index(revision_root, str(observed["run_id"]), str(observed["revision_id"]))
+    if observed != expected:
+        raise ValueError("BLOCKED_REVISION_ARTIFACT_INDEX_MISMATCH")
+    return {
+        "schema": "persona_dream.revision_artifact_index_verification.v1",
+        "status": "PASS_REVISION_ARTIFACT_INDEX",
+        "index_path": str(index_path.resolve()),
+        "index_sha256": sha256_file(index_path),
+        "artifact_count": expected["artifact_count"],
+        "required_artifact_count": expected["required_artifact_count"],
+        "mocked": False,
+        "live": False,
+        "actual_provider_call_attempts": 0,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    write_parser = subparsers.add_parser("write")
+    write_parser.add_argument("--revision-root", type=Path, required=True)
+    write_parser.add_argument("--output", type=Path)
+    write_parser.add_argument("--run-id", required=True)
+    write_parser.add_argument("--revision-id", required=True)
+    verify_parser = subparsers.add_parser("verify")
+    verify_parser.add_argument("--revision-root", type=Path, required=True)
+    verify_parser.add_argument("--index", type=Path, required=True)
+    args = parser.parse_args()
+    if args.command == "write":
+        output = args.output or args.revision_root / INDEX_NAME
+        result = write_index(args.revision_root, output, args.run_id, args.revision_id)
+    else:
+        result = verify_index(args.revision_root, args.index)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
