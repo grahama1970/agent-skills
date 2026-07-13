@@ -1,0 +1,20 @@
+{
+  "artifact_role": "red_exploit",
+  "battle_id": "battle-004",
+  "created_at": "2026-07-13T16:38:52Z",
+  "generation": 3,
+  "genome_sha256": "9e4d0cc20ffdc2ca93703f7e1e4e92f060565b3fb6010d972f7e291f47ce9f30",
+  "language": "python",
+  "materialization_receipt_sha256": "361b0ab03e94e514973e8d33f886ad4252ba04e515444e5a18cbc1ba94eb1786",
+  "provider_receipt_sha256": "1670d9ab84048a2f7fa16ab514a189f58c90e8e7e3a2f5fcad477b2812b4a148",
+  "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+  "schema": "battle.team_artifact_descriptor.v1",
+  "source_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+  "status": "PASS",
+  "target_identity_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+  "tau_declared_artifact_bytes": 2063,
+  "tau_declared_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+  "tau_scillm_call_receipt_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+  "tau_strategy_genome_sha256": "f089e520cef5ff73c05b007f355c041868140a2aab43a445d1fb975ae45f8900",
+  "team": "red"
+}

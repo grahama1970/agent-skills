@@ -1,0 +1,143 @@
+{
+  "attempts": [
+    {
+      "blue_action_id": "blue-blue-0-patch",
+      "blue_artifact": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/blue/app.py",
+      "blue_worker_id": "blue-0",
+      "commands_run": [
+        {
+          "command": [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--user",
+            "1000:1000",
+            "-v",
+            "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/original:/workspace:rw",
+            "-w",
+            "/workspace",
+            "python:3.12-slim",
+            "python",
+            "red_exploit_submission.py",
+            "--expect-vulnerable"
+          ],
+          "exit_code": 0,
+          "stderr_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-original.stderr.txt",
+          "stdout_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt"
+        },
+        {
+          "command": [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--user",
+            "1000:1000",
+            "-v",
+            "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/patched:/workspace:rw",
+            "-w",
+            "/workspace",
+            "python:3.12-slim",
+            "python",
+            "red_exploit_submission.py"
+          ],
+          "exit_code": 1,
+          "stderr_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt",
+          "stdout_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt"
+        }
+      ],
+      "exploit_blocked_after_patch": true,
+      "exploit_confirmed_before_patch": true,
+      "exploit_still_succeeds_after_patch": false,
+      "functionality_preserved": true,
+      "pair_id": "red-0__blue-0",
+      "red_artifact": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/red/red_exploit_submission.py",
+      "red_lane_id": "payload-857-receipt",
+      "red_worker_id": "red-0",
+      "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+      "status": "PASS",
+      "verdict": "BLUE_SUCCESS"
+    }
+  ],
+  "blue_artifact_count": 1,
+  "blue_pipeline_handoff_sha256": "8c2401e5d6e4a5705e94ed7e2961f81fc9c046b7aa2200f02701e45029f013b7",
+  "blue_selected_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+  "blue_success_count": 1,
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/original:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py",
+        "--expect-vulnerable"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-original.stderr.txt",
+      "stdout_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt"
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/patched:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py"
+      ],
+      "exit_code": 1,
+      "stderr_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt",
+      "stdout_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt"
+    }
+  ],
+  "insufficient_evidence_count": 0,
+  "judged_pair_count": 1,
+  "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+  "patched_target_tree_sha256": "099f9cb1164f8164b23e30cd14c1158123b6bbb4cb8bb010d1e80122157baea5",
+  "red_artifact_count": 1,
+  "red_pipeline_handoff_sha256": "31d6cd0bfc3774a57f6f8d1724ff702cab8666d8d7e3b23bb26c011141913d92",
+  "red_selected_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+  "red_success_count": 0,
+  "reviewed_judge_input_sha256": "be3a347f56d4743a75f519119cb459cd8079ec99e7ed5b5c4ab42d0eb21016e4",
+  "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+  "status": "PASS",
+  "target_identity_receipt_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+  "verdict": "BLUE_SUCCESS"
+}

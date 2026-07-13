@@ -977,6 +977,39 @@ def adaptive_red_blue_lineage_canary(
         raise typer.Exit(1)
 
 
+@app.command("adaptive-memory-canary")
+def adaptive_memory_canary(
+    battle_id: str = typer.Argument("battle-004"),
+    source_root: Path = typer.Option(..., "--source-root", exists=True, readable=True),
+    out: Path = typer.Option(..., "--out"),
+    run_id: str = typer.Option(..., "--run-id"),
+    memory_base_url: str = typer.Option("http://127.0.0.1:8601", "--memory-base-url"),
+    docker_image: str = typer.Option("python:3.12-slim", "--docker-image"),
+    model: str = typer.Option("gpt-5.5", "--model"),
+    scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
+    timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
+):
+    """Prove V13 selected evidence is written, recalled, and used by live providers."""
+    import json as _json
+
+    from .adaptive_memory_canary import run_adaptive_memory_canary
+
+    receipt = run_adaptive_memory_canary(
+        battle_id=battle_id,
+        source_root=source_root,
+        out_dir=out,
+        run_id=run_id,
+        memory_base_url=memory_base_url,
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+    )
+    print(_json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command("live-tau-child-dag-canary")
 def live_tau_child_dag_canary(
     battle_id: str = typer.Argument(

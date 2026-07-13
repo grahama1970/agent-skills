@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.memory_use_acknowledgement.v1.schema.json",
+  "title": "Battle Memory Use Acknowledgement v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema", "status", "acknowledgement_id", "battle_id", "run_id", "team",
+    "memory_key", "memory_content_sha256", "memory_recall_receipt_sha256",
+    "provider_call_receipt_sha256", "provider_citations",
+    "reused_selected_methods", "parent_genome_sha256", "child_genome_sha256",
+    "parent_artifact_sha256", "child_artifact_sha256", "artifact_changed",
+    "claims", "created_at"
+  ],
+  "properties": {
+    "schema": {"const": "battle.memory_use_acknowledgement.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "reused_selected_methods": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "artifact_changed": {"type": "boolean"}
+  }
+}

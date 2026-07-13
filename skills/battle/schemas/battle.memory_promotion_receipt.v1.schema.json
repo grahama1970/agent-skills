@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.memory_promotion_receipt.v1.schema.json",
+  "title": "Battle Memory Promotion Receipt v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema", "status", "promotion_id", "battle_id", "run_id", "team",
+    "visibility_scope", "selected_generation", "evidence_classification",
+    "selection_receipt_sha256", "fitness_receipt_sha256",
+    "observation_receipt_sha256", "judge_receipt_sha256", "genome_sha256",
+    "selected_artifact_sha256", "policy", "created_at"
+  ],
+  "properties": {
+    "schema": {"const": "battle.memory_promotion_receipt.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "visibility_scope": {"enum": ["red_only", "blue_only"]},
+    "selected_generation": {"type": "integer", "minimum": 1},
+    "policy": {
+      "type": "object",
+      "required": ["positive_requires_judge", "negative_requires_reviewed_runtime_and_judge", "memory_is_not_outcome_authority"]
+    }
+  }
+}

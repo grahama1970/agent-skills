@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.memory_recall_receipt.v1.schema.json",
+  "title": "Battle Memory Recall Receipt v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema", "status", "team", "memory_key", "memory_content_sha256",
+    "memory_write_receipt_sha256", "collection", "query_sha256",
+    "exact_match_count", "team_filter_applied", "cross_team_items_absent",
+    "recalled_document", "mocked", "live", "created_at"
+  ],
+  "properties": {
+    "schema": {"const": "battle.memory_recall_receipt.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "exact_match_count": {"type": "integer", "minimum": 0},
+    "cross_team_items_absent": {"type": "boolean"},
+    "mocked": {"const": false},
+    "live": {"const": true}
+  }
+}

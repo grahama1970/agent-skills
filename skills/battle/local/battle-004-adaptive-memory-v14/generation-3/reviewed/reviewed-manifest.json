@@ -1,0 +1,149 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 60.641,
+  "handoff_topology": "bounded_worker_matrix",
+  "live": true,
+  "materialized_counts": {
+    "blue": 1,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gpt-5.5",
+  "requested_workers": {
+    "blue": 1,
+    "red": 1
+  },
+  "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_auth_preflight": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/scillm-auth-preflight.json",
+  "scillm_base_url": "http://127.0.0.1:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_bytes": 2063,
+        "artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/red/red_exploit_submission.py",
+        "pipeline_handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/red/team-artifact-pipeline-receipt.json",
+        "rationale": "Directly exercises the public import_zip function with a Zip Slip entry and confirms actual filesystem escape outside the destination. This retains recalled evidence memory_key=battle-004-v13-red-g2-selected-evidence, memory_sha256=212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de, and recall_receipt_sha256=a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252 while slightly mutating the prior artifact with explicit payload validation and containment checking.",
+        "raw_provider_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/red_exploit_submission.py",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+        "status": "PASS",
+        "strategy_genome_sha256": "f089e520cef5ff73c05b007f355c041868140a2aab43a445d1fb975ae45f8900"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2063,
+        "artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/red/red_exploit_submission.py",
+        "pipeline_handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/red/team-artifact-pipeline-receipt.json",
+        "rationale": "Directly exercises the public import_zip function with a Zip Slip entry and confirms actual filesystem escape outside the destination. This retains recalled evidence memory_key=battle-004-v13-red-g2-selected-evidence, memory_sha256=212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de, and recall_receipt_sha256=a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252 while slightly mutating the prior artifact with explicit payload validation and containment checking.",
+        "raw_provider_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/red_exploit_submission.py",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+        "status": "PASS",
+        "strategy_genome_sha256": "f089e520cef5ff73c05b007f355c041868140a2aab43a445d1fb975ae45f8900"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-red-durable-memory-child",
+      "scillm_call": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_bytes": 4147,
+        "artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/blue/app.py",
+        "pipeline_handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/blue/team-artifact-pipeline-receipt.json",
+        "rationale": "Patch hardens archive import against Zip Slip by validating every member before writing, canonicalizing the destination, rejecting traversal/absolute/drive/backslash paths, and rejecting zip symlink entries while preserving import_zip(zip_path, destination) -> list[str]. This incorporates durable recall memory_key=battle-004-v13-blue-g2-selected-evidence, memory_sha256=5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9, and recall_receipt_sha256=391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7 as design input only.",
+        "raw_provider_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/app.py",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "c3d9ecc5091f13e4d1e71f72334f310f00d2f8219efaeb6f1887c7ccb6744c24",
+        "status": "PASS",
+        "strategy_genome_sha256": "253163c61799469f32421738b5bfa9535f35e198a185578acdbafebe2b6f0eea"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 4147,
+        "artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/blue/app.py",
+        "pipeline_handoff": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/reviewed/blue/team-artifact-pipeline-receipt.json",
+        "rationale": "Patch hardens archive import against Zip Slip by validating every member before writing, canonicalizing the destination, rejecting traversal/absolute/drive/backslash paths, and rejecting zip symlink entries while preserving import_zip(zip_path, destination) -> list[str]. This incorporates durable recall memory_key=battle-004-v13-blue-g2-selected-evidence, memory_sha256=5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9, and recall_receipt_sha256=391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7 as design input only.",
+        "raw_provider_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/app.py",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "c3d9ecc5091f13e4d1e71f72334f310f00d2f8219efaeb6f1887c7ccb6744c24",
+        "status": "PASS",
+        "strategy_genome_sha256": "253163c61799469f32421738b5bfa9535f35e198a185578acdbafebe2b6f0eea"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-durable-memory-child",
+      "scillm_call": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 4147,
+  "artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/tau-live/blue/app.py",
+  "rationale": "Patch hardens archive import against Zip Slip by validating every member before writing, canonicalizing the destination, rejecting traversal/absolute/drive/backslash paths, and rejecting zip symlink entries while preserving import_zip(zip_path, destination) -> list[str]. This incorporates durable recall memory_key=battle-004-v13-blue-g2-selected-evidence, memory_sha256=5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9, and recall_receipt_sha256=391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7 as design input only.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "c3d9ecc5091f13e4d1e71f72334f310f00d2f8219efaeb6f1887c7ccb6744c24",
+  "status": "PASS",
+  "strategy_genome_sha256": "253163c61799469f32421738b5bfa9535f35e198a185578acdbafebe2b6f0eea"
+}

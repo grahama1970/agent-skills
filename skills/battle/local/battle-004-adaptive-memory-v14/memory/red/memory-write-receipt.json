@@ -1,0 +1,21 @@
+{
+  "collection": "lessons",
+  "created_at": "2026-07-13T16:37:48Z",
+  "live": true,
+  "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+  "memory_key": "battle-004-v13-red-g2-selected-evidence",
+  "mocked": false,
+  "promotion_receipt_sha256": "71407c223dfe26205780bfe41c64dcc4923262e17a09cdff09bbc92662716769",
+  "request_document_sha256": "abe2c1c930f7d542f6481590d7e2a70b1bf858735e7a7365e50258521b65bb71",
+  "schema": "battle.memory_write_receipt.v1",
+  "service_response": {
+    "collection": "lessons",
+    "errors": [],
+    "inserted": 0,
+    "total": 1,
+    "updated": 1,
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_lessons_20260713T163748571381Z_15_134786865694400.jsonl"
+  },
+  "status": "PASS",
+  "team": "red"
+}

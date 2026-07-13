@@ -1,0 +1,98 @@
+{
+  "battle_id": "battle-004",
+  "instructions": "Return a JSON object with artifact_type=red_exploit, exploit_py, and strategy_genome. strategy_genome must be an object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. The exploit_py script is executed by Battle Judge as: python red_exploit_submission.py --expect-vulnerable inside a local Docker workspace containing app.py. Use Python standard library only. Do not import requests, httpx, flask, fastapi, urllib, socket, or any network/HTTP package. Do not assume a web server or localhost:8000. The script must import import_zip from local app.py, create a temporary zip file with a path traversal entry such as ../arena_escape.txt, call import_zip(zip_path, destination) directly, and verify that the escape file was written outside the destination. When --expect-vulnerable is passed and the vulnerable write succeeds, print RED_EXPLOIT_CONFIRMED and exit 0. When --expect-vulnerable is passed and the write does not occur, exit nonzero. The script must contain RED_EXPLOIT_CONFIRMED.",
+  "lane_id": "payload-857-receipt",
+  "persona": "battle-red-durable-memory-child",
+  "public_context": {
+    "artifacts": {
+      "team_public_brief": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/arena/team-public/scenario-brief.json",
+      "team_public_target": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/arena/team-public/target/app.py"
+    },
+    "bundle_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/context/tau-public-context.json",
+    "schema": "tau.battle_context_bundle.v1",
+    "summary": {
+      "arena_private_artifact_count": 0,
+      "battle_id": "battle-004",
+      "generation": 3,
+      "mode": "bounded_worker_matrix",
+      "public_artifacts_inline": {
+        "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+        "scenario_brief": {
+          "battle_id": "battle-004",
+          "public_contract": {
+            "input": "zip archive upload",
+            "method": "POST",
+            "visible_behavior": "Extract uploaded archive into an import workspace."
+          },
+          "public_entrypoint": "/api/import-zip",
+          "red_blue_visible": {
+            "entrypoint": "/api/import-zip",
+            "files": [
+              "app.py"
+            ],
+            "hint": "Archive import endpoint accepts zip files."
+          },
+          "scenario_id": "arena-zip-slip-import-001",
+          "title": "Archive import path traversal"
+        }
+      },
+      "public_entrypoint": "/api/import-zip",
+      "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+      "scenario_id": "arena-zip-slip-import-001",
+      "team_public_artifact_count": 2,
+      "teams": {
+        "red": {
+          "objective": "Create the next red artifact using durable recalled memory. In rationale and strategy_genome.mutation_origin cite memory_key=battle-004-v13-red-g2-selected-evidence, memory_sha256=212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de, and recall_receipt_sha256=a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252. Retain at least one exact selected method from this recalled list: [\"direct function invocation via from app import import_zip\", \"temporary isolated workspace\", \"ZIP entry named ../arena_escape.txt\", \"post-call filesystem verification that escaped path is outside destination\", \"nonzero exit when --expect-vulnerable is supplied but traversal is blocked\"]. Produce a changed artifact; memory is design input and does not authorize outcomes."
+        }
+      },
+      "visibility_rule": "teams receive only the listed public artifacts",
+      "worker_counts": {
+        "blue": 1,
+        "red": 1
+      }
+    },
+    "team_context": {
+      "authority": {
+        "Battle_and_Judge_retain_outcome_authority": true,
+        "memory_is_design_input_only": true
+      },
+      "durable_memory_recall": {
+        "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+        "memory_key": "battle-004-v13-red-g2-selected-evidence",
+        "memory_recall_receipt_sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+        "strategy": {
+          "expected_observation": "On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.",
+          "parameters": {
+            "allowed_libraries": "Python standard library only",
+            "confirmation_string": "RED_EXPLOIT_CONFIRMED",
+            "destination_subdir": "destination",
+            "traversal_entry": "../arena_escape.txt"
+          },
+          "rejected_methods": [
+            "HTTP or network probing",
+            "third-party packages",
+            "assuming a running server",
+            "absolute-path payloads",
+            "relying only on import_zip return values without checking disk state"
+          ],
+          "selected_methods": [
+            "direct function invocation via from app import import_zip",
+            "temporary isolated workspace",
+            "ZIP entry named ../arena_escape.txt",
+            "post-call filesystem verification that escaped path is outside destination",
+            "nonzero exit when --expect-vulnerable is supplied but traversal is blocked"
+          ]
+        },
+        "summary": "Selected V13 red Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero."
+      },
+      "team": "red"
+    }
+  },
+  "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_team_handoff.v1",
+  "team": "red",
+  "visibility_model": "team_public_only",
+  "worker_id": "red-0",
+  "worker_index": 0
+}

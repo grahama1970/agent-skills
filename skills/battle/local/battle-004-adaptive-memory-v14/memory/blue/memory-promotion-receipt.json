@@ -1,0 +1,23 @@
+{
+  "battle_id": "battle-004",
+  "created_at": "2026-07-13T16:37:48Z",
+  "evidence_classification": "judge_confirmed_defense_evidence",
+  "fitness_receipt_sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+  "genome_sha256": "e1a826512bcd53c122956144c972b4d116a54b2565115fdbf6375e5e6c92ea3a",
+  "judge_receipt_sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+  "observation_receipt_sha256": "ba18de7ad1a0d5ee05a738cb7e6860a6a346549258f3265638416abf0856e7ff",
+  "policy": {
+    "memory_is_not_outcome_authority": true,
+    "negative_requires_reviewed_runtime_and_judge": true,
+    "positive_requires_judge": true
+  },
+  "promotion_id": "battle-004-adaptive-memory-v14-r6-blue-memory-promotion",
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.memory_promotion_receipt.v1",
+  "selected_artifact_sha256": "e8ccba014b0a5135abefe94f00ccd85e2545cda3e2d787c65c9c68a93e920bfd",
+  "selected_generation": 2,
+  "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+  "status": "PASS",
+  "team": "blue",
+  "visibility_scope": "blue_only"
+}

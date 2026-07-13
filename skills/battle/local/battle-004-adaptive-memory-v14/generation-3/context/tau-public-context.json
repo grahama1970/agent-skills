@@ -1,0 +1,128 @@
+{
+  "artifacts": {
+    "team_public_brief": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/arena/team-public/scenario-brief.json",
+    "team_public_target": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/arena/team-public/target/app.py"
+  },
+  "bundle_path": "/tmp/battle-004-adaptive-memory-v14-r6/generation-3/context/tau-public-context.json",
+  "schema": "tau.battle_context_bundle.v1",
+  "summary": {
+    "arena_private_artifact_count": 0,
+    "battle_id": "battle-004",
+    "generation": 3,
+    "mode": "bounded_worker_matrix",
+    "public_artifacts_inline": {
+      "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+      "scenario_brief": {
+        "battle_id": "battle-004",
+        "public_contract": {
+          "input": "zip archive upload",
+          "method": "POST",
+          "visible_behavior": "Extract uploaded archive into an import workspace."
+        },
+        "public_entrypoint": "/api/import-zip",
+        "red_blue_visible": {
+          "entrypoint": "/api/import-zip",
+          "files": [
+            "app.py"
+          ],
+          "hint": "Archive import endpoint accepts zip files."
+        },
+        "scenario_id": "arena-zip-slip-import-001",
+        "title": "Archive import path traversal"
+      }
+    },
+    "public_entrypoint": "/api/import-zip",
+    "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+    "scenario_id": "arena-zip-slip-import-001",
+    "team_public_artifact_count": 2,
+    "teams": {
+      "blue": {
+        "objective": "Create the next blue artifact using durable recalled memory. In rationale and strategy_genome.mutation_origin cite memory_key=battle-004-v13-blue-g2-selected-evidence, memory_sha256=5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9, and recall_receipt_sha256=391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7. Retain at least one exact selected method from this recalled list: [\"canonicalize_destination_with_Path.resolve\", \"prevalidate_all_zip_members_before_write\", \"reject_dotdot_absolute_drive_and_backslash_paths\", \"enforce_target.relative_to(destination_root)\", \"reject_zip_symlink_entries\", \"preserve_import_zip_callable_contract\"]. Produce a changed artifact; memory is design input and does not authorize outcomes."
+      },
+      "red": {
+        "objective": "Create the next red artifact using durable recalled memory. In rationale and strategy_genome.mutation_origin cite memory_key=battle-004-v13-red-g2-selected-evidence, memory_sha256=212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de, and recall_receipt_sha256=a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252. Retain at least one exact selected method from this recalled list: [\"direct function invocation via from app import import_zip\", \"temporary isolated workspace\", \"ZIP entry named ../arena_escape.txt\", \"post-call filesystem verification that escaped path is outside destination\", \"nonzero exit when --expect-vulnerable is supplied but traversal is blocked\"]. Produce a changed artifact; memory is design input and does not authorize outcomes."
+      }
+    },
+    "visibility_rule": "teams receive only the listed public artifacts",
+    "worker_counts": {
+      "blue": 1,
+      "red": 1
+    }
+  },
+  "team_contexts": {
+    "blue": {
+      "authority": {
+        "Battle_and_Judge_retain_outcome_authority": true,
+        "memory_is_design_input_only": true
+      },
+      "durable_memory_recall": {
+        "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+        "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+        "memory_recall_receipt_sha256": "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7",
+        "strategy": {
+          "expected_observation": "Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written.",
+          "parameters": {
+            "directory_entries": "create_inside_destination_but_do_not_return_as_written_files",
+            "path_separator_policy": "reject_backslash_for_cross_platform_safety",
+            "symlink_policy": "reject",
+            "unsafe_member_action": "raise UnsafeArchivePath",
+            "write_policy": "validate_entire_archive_before_any_write"
+          },
+          "rejected_methods": [
+            "blind_ZipFile.extractall",
+            "string_prefix_checks_without_resolution",
+            "skip_bad_members_silently",
+            "post_write_cleanup_after_traversal",
+            "dependency_on_web_framework_for_core_import_function"
+          ],
+          "selected_methods": [
+            "canonicalize_destination_with_Path.resolve",
+            "prevalidate_all_zip_members_before_write",
+            "reject_dotdot_absolute_drive_and_backslash_paths",
+            "enforce_target.relative_to(destination_root)",
+            "reject_zip_symlink_entries",
+            "preserve_import_zip_callable_contract"
+          ]
+        },
+        "summary": "Selected V13 blue Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written."
+      },
+      "team": "blue"
+    },
+    "red": {
+      "authority": {
+        "Battle_and_Judge_retain_outcome_authority": true,
+        "memory_is_design_input_only": true
+      },
+      "durable_memory_recall": {
+        "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+        "memory_key": "battle-004-v13-red-g2-selected-evidence",
+        "memory_recall_receipt_sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+        "strategy": {
+          "expected_observation": "On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.",
+          "parameters": {
+            "allowed_libraries": "Python standard library only",
+            "confirmation_string": "RED_EXPLOIT_CONFIRMED",
+            "destination_subdir": "destination",
+            "traversal_entry": "../arena_escape.txt"
+          },
+          "rejected_methods": [
+            "HTTP or network probing",
+            "third-party packages",
+            "assuming a running server",
+            "absolute-path payloads",
+            "relying only on import_zip return values without checking disk state"
+          ],
+          "selected_methods": [
+            "direct function invocation via from app import import_zip",
+            "temporary isolated workspace",
+            "ZIP entry named ../arena_escape.txt",
+            "post-call filesystem verification that escaped path is outside destination",
+            "nonzero exit when --expect-vulnerable is supplied but traversal is blocked"
+          ]
+        },
+        "summary": "Selected V13 red Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero."
+      },
+      "team": "red"
+    }
+  }
+}

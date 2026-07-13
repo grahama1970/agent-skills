@@ -1,0 +1,38 @@
+{
+  "artifact_role": "red_exploit",
+  "battle_id": "battle-004",
+  "expected_observation": "On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script verifies the escaped file is outside destination with the expected bytes, prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.",
+  "generation": 3,
+  "knowledge_packet_id": null,
+  "mutation_origin": "Derived from durable recalled memory memory_key=battle-004-v13-red-g2-selected-evidence, memory_sha256=212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de, recall_receipt_sha256=a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252; changed by adding byte-for-byte escaped payload validation and a helper-based relative-path containment check.",
+  "parameters": {
+    "allowed_libraries": "Python standard library only",
+    "confirmation_string": "RED_EXPLOIT_CONFIRMED",
+    "destination_subdir": "destination",
+    "execution_mode": "direct local import and function call",
+    "payload_marker": "zip-slip traversal proof: payload-857-receipt",
+    "traversal_entry": "../arena_escape.txt"
+  },
+  "parent_genome_sha256": "96762e5999ff085318b380cf8618c4da4e2c6ca30f722d663f1ceab6944fe958",
+  "provider_response_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+  "rejected_methods": [
+    "HTTP or network probing",
+    "third-party packages",
+    "assuming a running server",
+    "absolute-path payloads",
+    "relying only on import_zip return values without checking disk state",
+    "using banned urllib/socket/network packages"
+  ],
+  "research_receipt_sha256": null,
+  "run_id": "battle-004-adaptive-memory-v14-r6-g3",
+  "schema": "battle.adaptive_team_genome.v1",
+  "selected_methods": [
+    "direct function invocation via from app import import_zip",
+    "temporary isolated workspace",
+    "ZIP entry named ../arena_escape.txt",
+    "post-call filesystem verification that escaped path is outside destination",
+    "nonzero exit when --expect-vulnerable is supplied but traversal is blocked",
+    "validate escaped file payload bytes match the archive entry"
+  ],
+  "team": "red"
+}

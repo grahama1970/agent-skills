@@ -1,0 +1,310 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "The Memory service enforces team ACLs; Battle enforces routing isolation.",
+      "Either team improved because durable memory was used.",
+      "Judge-confirmed Red exploit success unless the Judge verdict states it.",
+      "Population-scale durable learning is production-ready."
+    ],
+    "proves": [
+      "Battle authorized and wrote one team-scoped selected V13 memory per team.",
+      "Battle recalled each memory through the live Memory service.",
+      "Live Tau/SciLLM Red and Blue providers cited and used their own recalled memory.",
+      "The memory-informed artifacts crossed Docker compile, review, handoff, and Judge."
+    ]
+  },
+  "created_at": "2026-07-13T16:38:54Z",
+  "fixture_fallback_used": false,
+  "generation_3": {
+    "judge_receipt_sha256": "6ca024e7538cb76b37a44a8785c7d6a97010fe41f0c8f8446e33524e9b13e762",
+    "judge_status": "PASS",
+    "judge_verdict": "BLUE_SUCCESS",
+    "pipelines": {
+      "blue": {
+        "handoff_sha256": "8c2401e5d6e4a5705e94ed7e2961f81fc9c046b7aa2200f02701e45029f013b7",
+        "selected_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+        "status": "PASS"
+      },
+      "red": {
+        "handoff_sha256": "31d6cd0bfc3774a57f6f8d1724ff702cab8666d8d7e3b23bb26c011141913d92",
+        "selected_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+        "status": "PASS"
+      }
+    },
+    "tau_status": "PASS"
+  },
+  "live": true,
+  "memory_collection": "lessons",
+  "memory_service": "http://127.0.0.1:8601",
+  "mocked": false,
+  "promotions": {
+    "blue": {
+      "battle_id": "battle-004",
+      "created_at": "2026-07-13T16:37:48Z",
+      "evidence_classification": "judge_confirmed_defense_evidence",
+      "fitness_receipt_sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+      "genome_sha256": "e1a826512bcd53c122956144c972b4d116a54b2565115fdbf6375e5e6c92ea3a",
+      "judge_receipt_sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+      "observation_receipt_sha256": "ba18de7ad1a0d5ee05a738cb7e6860a6a346549258f3265638416abf0856e7ff",
+      "policy": {
+        "memory_is_not_outcome_authority": true,
+        "negative_requires_reviewed_runtime_and_judge": true,
+        "positive_requires_judge": true
+      },
+      "promotion_id": "battle-004-adaptive-memory-v14-r6-blue-memory-promotion",
+      "receipt_sha256": "d505c9849f6baf9f46e491d5225704d2a5bc9baf81e78dec94afb7a2930c573e",
+      "run_id": "battle-004-adaptive-memory-v14-r6",
+      "schema": "battle.memory_promotion_receipt.v1",
+      "selected_artifact_sha256": "e8ccba014b0a5135abefe94f00ccd85e2545cda3e2d787c65c9c68a93e920bfd",
+      "selected_generation": 2,
+      "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+      "status": "PASS",
+      "team": "blue",
+      "visibility_scope": "blue_only"
+    },
+    "red": {
+      "battle_id": "battle-004",
+      "created_at": "2026-07-13T16:37:48Z",
+      "evidence_classification": "validated_negative_exploit_evidence",
+      "fitness_receipt_sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+      "genome_sha256": "96762e5999ff085318b380cf8618c4da4e2c6ca30f722d663f1ceab6944fe958",
+      "judge_receipt_sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+      "observation_receipt_sha256": "317de695abcaf72c38eb2eccc7e68970d3dec35e7412b81f677b638389d7ddb0",
+      "policy": {
+        "memory_is_not_outcome_authority": true,
+        "negative_requires_reviewed_runtime_and_judge": true,
+        "positive_requires_judge": true
+      },
+      "promotion_id": "battle-004-adaptive-memory-v14-r6-red-memory-promotion",
+      "receipt_sha256": "71407c223dfe26205780bfe41c64dcc4923262e17a09cdff09bbc92662716769",
+      "run_id": "battle-004-adaptive-memory-v14-r6",
+      "schema": "battle.memory_promotion_receipt.v1",
+      "selected_artifact_sha256": "f9e7bcea8910ece23495e1ea1b469b04f33d55667fd2f5d04bb272eb749c1b89",
+      "selected_generation": 2,
+      "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+      "status": "PASS",
+      "team": "red",
+      "visibility_scope": "red_only"
+    }
+  },
+  "provider_use": {
+    "blue": {
+      "acknowledgement_id": "battle-004-adaptive-memory-v14-r6-blue-memory-use",
+      "artifact_changed": true,
+      "battle_id": "battle-004",
+      "child_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+      "child_genome_sha256": "ec34dca73e08d7f91054ece2b14870281089b138e80fe8dd33b048dadde7d134",
+      "claims": {
+        "does_not_prove": [
+          "The recalled strategy improved Judge outcome."
+        ],
+        "proves": [
+          "The provider cited the exact recalled memory key, content hash, and recall receipt.",
+          "The provider retained at least one selected method from recalled memory."
+        ]
+      },
+      "created_at": "2026-07-13T16:38:52Z",
+      "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+      "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+      "memory_recall_receipt_sha256": "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7",
+      "parent_artifact_sha256": "e8ccba014b0a5135abefe94f00ccd85e2545cda3e2d787c65c9c68a93e920bfd",
+      "parent_genome_sha256": "e1a826512bcd53c122956144c972b4d116a54b2565115fdbf6375e5e6c92ea3a",
+      "provider_call_receipt_sha256": "c3d9ecc5091f13e4d1e71f72334f310f00d2f8219efaeb6f1887c7ccb6744c24",
+      "provider_citations": {
+        "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7": true,
+        "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9": true,
+        "battle-004-v13-blue-g2-selected-evidence": true
+      },
+      "receipt_sha256": "c038552922597a4c6f3ad810adabc76e5acdeed6207c33aa8d80e7a6dfb99afd",
+      "reused_selected_methods": [
+        "canonicalize_destination_with_Path.resolve",
+        "enforce_target.relative_to(destination_root)",
+        "preserve_import_zip_callable_contract",
+        "prevalidate_all_zip_members_before_write",
+        "reject_dotdot_absolute_drive_and_backslash_paths",
+        "reject_zip_symlink_entries"
+      ],
+      "run_id": "battle-004-adaptive-memory-v14-r6",
+      "schema": "battle.memory_use_acknowledgement.v1",
+      "status": "PASS",
+      "team": "blue"
+    },
+    "red": {
+      "acknowledgement_id": "battle-004-adaptive-memory-v14-r6-red-memory-use",
+      "artifact_changed": true,
+      "battle_id": "battle-004",
+      "child_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+      "child_genome_sha256": "9e4d0cc20ffdc2ca93703f7e1e4e92f060565b3fb6010d972f7e291f47ce9f30",
+      "claims": {
+        "does_not_prove": [
+          "The recalled strategy improved Judge outcome."
+        ],
+        "proves": [
+          "The provider cited the exact recalled memory key, content hash, and recall receipt.",
+          "The provider retained at least one selected method from recalled memory."
+        ]
+      },
+      "created_at": "2026-07-13T16:38:52Z",
+      "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+      "memory_key": "battle-004-v13-red-g2-selected-evidence",
+      "memory_recall_receipt_sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+      "parent_artifact_sha256": "f9e7bcea8910ece23495e1ea1b469b04f33d55667fd2f5d04bb272eb749c1b89",
+      "parent_genome_sha256": "96762e5999ff085318b380cf8618c4da4e2c6ca30f722d663f1ceab6944fe958",
+      "provider_call_receipt_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+      "provider_citations": {
+        "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de": true,
+        "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252": true,
+        "battle-004-v13-red-g2-selected-evidence": true
+      },
+      "receipt_sha256": "6e1636d4d77e7ed800812105a0ed03f6223e5e7b042d83e876e3f83987d76ac8",
+      "reused_selected_methods": [
+        "ZIP entry named ../arena_escape.txt",
+        "direct function invocation via from app import import_zip",
+        "nonzero exit when --expect-vulnerable is supplied but traversal is blocked",
+        "post-call filesystem verification that escaped path is outside destination",
+        "temporary isolated workspace"
+      ],
+      "run_id": "battle-004-adaptive-memory-v14-r6",
+      "schema": "battle.memory_use_acknowledgement.v1",
+      "status": "PASS",
+      "team": "red"
+    }
+  },
+  "recalls": {
+    "blue": {
+      "collection": "lessons",
+      "created_at": "2026-07-13T16:37:50Z",
+      "cross_team_items_absent": true,
+      "exact_match_count": 1,
+      "live": true,
+      "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+      "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+      "memory_write_receipt_sha256": "2a144230d96055253457f6a830d8bd98e0406ebf1a762c6363c2ce16431c3b56",
+      "mocked": false,
+      "query_sha256": "f58307432712fa35d76b4af2bff85a62574aaa91b796f66f4a0b48157b4ce348",
+      "recalled_document": {
+        "_key": "battle-004-v13-blue-g2-selected-evidence",
+        "_source": "lessons",
+        "problem": "What selected V13 blue evidence should a later Battle worker recall?",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.46605545,
+          "freshness": 0.9999998217214201,
+          "graph": 0.0
+        },
+        "solution": "{\"strategy\":{\"expected_observation\":\"Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written.\",\"parameters\":{\"directory_entries\":\"create_inside_destination_but_do_not_return_as_written_files\",\"path_separator_policy\":\"reject_backslash_for_cross_platform_safety\",\"symlink_policy\":\"reject\",\"unsafe_member_action\":\"raise UnsafeArchivePath\",\"write_policy\":\"validate_entire_archive_before_any_write\"},\"rejected_methods\":[\"blind_ZipFile.extractall\",\"string_prefix_checks_without_resolution\",\"skip_bad_members_silently\",\"post_write_cleanup_after_traversal\",\"dependency_on_web_framework_for_core_import_function\"],\"selected_methods\":[\"canonicalize_destination_with_Path.resolve\",\"prevalidate_all_zip_members_before_write\",\"reject_dotdot_absolute_drive_and_backslash_paths\",\"enforce_target.relative_to(destination_root)\",\"reject_zip_symlink_entries\",\"preserve_import_zip_callable_contract\"]},\"summary\":\"Selected V13 blue Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written.\"}",
+        "tags": [
+          "battle",
+          "durable-memory",
+          "team:blue",
+          "battle-004",
+          "v13-selected",
+          "content-sha:5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9"
+        ],
+        "updated_at": "2026-07-13T16:37:48Z"
+      },
+      "receipt_sha256": "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7",
+      "schema": "battle.memory_recall_receipt.v1",
+      "service_confidence": 1.0,
+      "service_found": true,
+      "status": "PASS",
+      "team": "blue",
+      "team_filter_applied": "team:blue"
+    },
+    "red": {
+      "collection": "lessons",
+      "created_at": "2026-07-13T16:37:48Z",
+      "cross_team_items_absent": true,
+      "exact_match_count": 1,
+      "live": true,
+      "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+      "memory_key": "battle-004-v13-red-g2-selected-evidence",
+      "memory_write_receipt_sha256": "081392e2c8c2c78790963ffc2dbf8fa8e9d79a0105876d4225b50dde78733d42",
+      "mocked": false,
+      "query_sha256": "6f6c4b7dfd6022747b3d2c38832c681ea32530751cbfa74ed69accca73419c16",
+      "recalled_document": {
+        "_key": "battle-004-v13-red-g2-selected-evidence",
+        "_source": "lessons",
+        "problem": "What selected V13 red evidence should a later Battle worker recall?",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.5074268,
+          "freshness": 1.0,
+          "graph": 0.0
+        },
+        "solution": "{\"strategy\":{\"expected_observation\":\"On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.\",\"parameters\":{\"allowed_libraries\":\"Python standard library only\",\"confirmation_string\":\"RED_EXPLOIT_CONFIRMED\",\"destination_subdir\":\"destination\",\"traversal_entry\":\"../arena_escape.txt\"},\"rejected_methods\":[\"HTTP or network probing\",\"third-party packages\",\"assuming a running server\",\"absolute-path payloads\",\"relying only on import_zip return values without checking disk state\"],\"selected_methods\":[\"direct function invocation via from app import import_zip\",\"temporary isolated workspace\",\"ZIP entry named ../arena_escape.txt\",\"post-call filesystem verification that escaped path is outside destination\",\"nonzero exit when --expect-vulnerable is supplied but traversal is blocked\"]},\"summary\":\"Selected V13 red Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.\"}",
+        "tags": [
+          "battle",
+          "durable-memory",
+          "team:red",
+          "battle-004",
+          "v13-selected",
+          "content-sha:212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de"
+        ],
+        "updated_at": "2026-07-13T16:37:48Z"
+      },
+      "receipt_sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+      "schema": "battle.memory_recall_receipt.v1",
+      "service_confidence": 1.0,
+      "service_found": true,
+      "status": "PASS",
+      "team": "red",
+      "team_filter_applied": "team:red"
+    }
+  },
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.adaptive_memory_canary.v1",
+  "source_campaign": {
+    "campaign_receipt_sha256": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
+    "run_id": "battle-004-adaptive-red-blue-lineage-v13",
+    "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728"
+  },
+  "status": "PASS",
+  "writes": {
+    "blue": {
+      "collection": "lessons",
+      "created_at": "2026-07-13T16:37:49Z",
+      "live": true,
+      "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+      "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+      "mocked": false,
+      "promotion_receipt_sha256": "d505c9849f6baf9f46e491d5225704d2a5bc9baf81e78dec94afb7a2930c573e",
+      "receipt_sha256": "2a144230d96055253457f6a830d8bd98e0406ebf1a762c6363c2ce16431c3b56",
+      "request_document_sha256": "35560831df7103a7864e1a2fa89512db2049fbcd8f146142d3a0249810ed178d",
+      "schema": "battle.memory_write_receipt.v1",
+      "service_response": {
+        "collection": "lessons",
+        "errors": [],
+        "inserted": 0,
+        "total": 1,
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_lessons_20260713T163748875401Z_15_134786865694400.jsonl"
+      },
+      "status": "PASS",
+      "team": "blue"
+    },
+    "red": {
+      "collection": "lessons",
+      "created_at": "2026-07-13T16:37:48Z",
+      "live": true,
+      "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+      "memory_key": "battle-004-v13-red-g2-selected-evidence",
+      "mocked": false,
+      "promotion_receipt_sha256": "71407c223dfe26205780bfe41c64dcc4923262e17a09cdff09bbc92662716769",
+      "receipt_sha256": "081392e2c8c2c78790963ffc2dbf8fa8e9d79a0105876d4225b50dde78733d42",
+      "request_document_sha256": "abe2c1c930f7d542f6481590d7e2a70b1bf858735e7a7365e50258521b65bb71",
+      "schema": "battle.memory_write_receipt.v1",
+      "service_response": {
+        "collection": "lessons",
+        "errors": [],
+        "inserted": 0,
+        "total": 1,
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_lessons_20260713T163748571381Z_15_134786865694400.jsonl"
+      },
+      "status": "PASS",
+      "team": "red"
+    }
+  }
+}

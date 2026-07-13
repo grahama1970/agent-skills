@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.memory_write_receipt.v1.schema.json",
+  "title": "Battle Memory Write Receipt v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema", "status", "team", "memory_key", "memory_content_sha256",
+    "collection", "promotion_receipt_sha256", "request_document_sha256",
+    "service_response", "mocked", "live", "created_at"
+  ],
+  "properties": {
+    "schema": {"const": "battle.memory_write_receipt.v1"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "team": {"enum": ["red", "blue"]},
+    "mocked": {"const": false},
+    "live": {"const": true}
+  }
+}

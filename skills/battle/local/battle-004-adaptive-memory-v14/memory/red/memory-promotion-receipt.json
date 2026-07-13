@@ -1,0 +1,23 @@
+{
+  "battle_id": "battle-004",
+  "created_at": "2026-07-13T16:37:48Z",
+  "evidence_classification": "validated_negative_exploit_evidence",
+  "fitness_receipt_sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+  "genome_sha256": "96762e5999ff085318b380cf8618c4da4e2c6ca30f722d663f1ceab6944fe958",
+  "judge_receipt_sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+  "observation_receipt_sha256": "317de695abcaf72c38eb2eccc7e68970d3dec35e7412b81f677b638389d7ddb0",
+  "policy": {
+    "memory_is_not_outcome_authority": true,
+    "negative_requires_reviewed_runtime_and_judge": true,
+    "positive_requires_judge": true
+  },
+  "promotion_id": "battle-004-adaptive-memory-v14-r6-red-memory-promotion",
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.memory_promotion_receipt.v1",
+  "selected_artifact_sha256": "f9e7bcea8910ece23495e1ea1b469b04f33d55667fd2f5d04bb272eb749c1b89",
+  "selected_generation": 2,
+  "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+  "status": "PASS",
+  "team": "red",
+  "visibility_scope": "red_only"
+}

@@ -1,0 +1,39 @@
+{
+  "collection": "lessons",
+  "created_at": "2026-07-13T16:37:48Z",
+  "cross_team_items_absent": true,
+  "exact_match_count": 1,
+  "live": true,
+  "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+  "memory_key": "battle-004-v13-red-g2-selected-evidence",
+  "memory_write_receipt_sha256": "081392e2c8c2c78790963ffc2dbf8fa8e9d79a0105876d4225b50dde78733d42",
+  "mocked": false,
+  "query_sha256": "6f6c4b7dfd6022747b3d2c38832c681ea32530751cbfa74ed69accca73419c16",
+  "recalled_document": {
+    "_key": "battle-004-v13-red-g2-selected-evidence",
+    "_source": "lessons",
+    "problem": "What selected V13 red evidence should a later Battle worker recall?",
+    "scores": {
+      "bm25": 1.0,
+      "dense": 0.5074268,
+      "freshness": 1.0,
+      "graph": 0.0
+    },
+    "solution": "{\"strategy\":{\"expected_observation\":\"On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.\",\"parameters\":{\"allowed_libraries\":\"Python standard library only\",\"confirmation_string\":\"RED_EXPLOIT_CONFIRMED\",\"destination_subdir\":\"destination\",\"traversal_entry\":\"../arena_escape.txt\"},\"rejected_methods\":[\"HTTP or network probing\",\"third-party packages\",\"assuming a running server\",\"absolute-path payloads\",\"relying only on import_zip return values without checking disk state\"],\"selected_methods\":[\"direct function invocation via from app import import_zip\",\"temporary isolated workspace\",\"ZIP entry named ../arena_escape.txt\",\"post-call filesystem verification that escaped path is outside destination\",\"nonzero exit when --expect-vulnerable is supplied but traversal is blocked\"]},\"summary\":\"Selected V13 red Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: On the vulnerable public app.py, import_zip writes arena_escape.txt one directory above destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable; on a safe implementation it exits nonzero.\"}",
+    "tags": [
+      "battle",
+      "durable-memory",
+      "team:red",
+      "battle-004",
+      "v13-selected",
+      "content-sha:212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de"
+    ],
+    "updated_at": "2026-07-13T16:37:48Z"
+  },
+  "schema": "battle.memory_recall_receipt.v1",
+  "service_confidence": 1.0,
+  "service_found": true,
+  "status": "PASS",
+  "team": "red",
+  "team_filter_applied": "team:red"
+}

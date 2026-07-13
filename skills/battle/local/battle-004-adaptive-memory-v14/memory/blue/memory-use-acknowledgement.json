@@ -1,0 +1,40 @@
+{
+  "acknowledgement_id": "battle-004-adaptive-memory-v14-r6-blue-memory-use",
+  "artifact_changed": true,
+  "battle_id": "battle-004",
+  "child_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+  "child_genome_sha256": "ec34dca73e08d7f91054ece2b14870281089b138e80fe8dd33b048dadde7d134",
+  "claims": {
+    "does_not_prove": [
+      "The recalled strategy improved Judge outcome."
+    ],
+    "proves": [
+      "The provider cited the exact recalled memory key, content hash, and recall receipt.",
+      "The provider retained at least one selected method from recalled memory."
+    ]
+  },
+  "created_at": "2026-07-13T16:38:52Z",
+  "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+  "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+  "memory_recall_receipt_sha256": "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7",
+  "parent_artifact_sha256": "e8ccba014b0a5135abefe94f00ccd85e2545cda3e2d787c65c9c68a93e920bfd",
+  "parent_genome_sha256": "e1a826512bcd53c122956144c972b4d116a54b2565115fdbf6375e5e6c92ea3a",
+  "provider_call_receipt_sha256": "c3d9ecc5091f13e4d1e71f72334f310f00d2f8219efaeb6f1887c7ccb6744c24",
+  "provider_citations": {
+    "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7": true,
+    "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9": true,
+    "battle-004-v13-blue-g2-selected-evidence": true
+  },
+  "reused_selected_methods": [
+    "canonicalize_destination_with_Path.resolve",
+    "enforce_target.relative_to(destination_root)",
+    "preserve_import_zip_callable_contract",
+    "prevalidate_all_zip_members_before_write",
+    "reject_dotdot_absolute_drive_and_backslash_paths",
+    "reject_zip_symlink_entries"
+  ],
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.memory_use_acknowledgement.v1",
+  "status": "PASS",
+  "team": "blue"
+}

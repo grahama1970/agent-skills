@@ -1,0 +1,39 @@
+{
+  "acknowledgement_id": "battle-004-adaptive-memory-v14-r6-red-memory-use",
+  "artifact_changed": true,
+  "battle_id": "battle-004",
+  "child_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+  "child_genome_sha256": "9e4d0cc20ffdc2ca93703f7e1e4e92f060565b3fb6010d972f7e291f47ce9f30",
+  "claims": {
+    "does_not_prove": [
+      "The recalled strategy improved Judge outcome."
+    ],
+    "proves": [
+      "The provider cited the exact recalled memory key, content hash, and recall receipt.",
+      "The provider retained at least one selected method from recalled memory."
+    ]
+  },
+  "created_at": "2026-07-13T16:38:52Z",
+  "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+  "memory_key": "battle-004-v13-red-g2-selected-evidence",
+  "memory_recall_receipt_sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+  "parent_artifact_sha256": "f9e7bcea8910ece23495e1ea1b469b04f33d55667fd2f5d04bb272eb749c1b89",
+  "parent_genome_sha256": "96762e5999ff085318b380cf8618c4da4e2c6ca30f722d663f1ceab6944fe958",
+  "provider_call_receipt_sha256": "3b2d22c9af03220ced0f1fa54d3e0ce5a24b20267c13f47ce5b204c38f56eba4",
+  "provider_citations": {
+    "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de": true,
+    "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252": true,
+    "battle-004-v13-red-g2-selected-evidence": true
+  },
+  "reused_selected_methods": [
+    "ZIP entry named ../arena_escape.txt",
+    "direct function invocation via from app import import_zip",
+    "nonzero exit when --expect-vulnerable is supplied but traversal is blocked",
+    "post-call filesystem verification that escaped path is outside destination",
+    "temporary isolated workspace"
+  ],
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.memory_use_acknowledgement.v1",
+  "status": "PASS",
+  "team": "red"
+}

@@ -144,7 +144,7 @@
 - BATTLE-004 spectator UX lives in skills/battle/spectator/ (canonical); ux-lab is a thin host on :3002. Phase 1 receipt replay uses battle.normalized_ux_fixture.json only (not stream/events.jsonl yet). Full arena battle is replayed time-compressed at vintage tower-defense pace (Plants vs Zombies readability): lanes, speed-up, scrub, arcade combat feedback.
 - Backend owns actor_visual.variant_id per lane (complexity/strength/durability roster choice) plus sprite_theme; spectator resolves variant_id to Pixi sheets. Sprite look is cosmetic only (proof_scope.cosmetic_identity_only) — block/kill/promote outcomes remain receipt-gated. Block/kill = vintage points burst; Blue miss + exploit survive = evade animation (hit/duck/jump).
 - Playhead authority: timeline_elapsed_axis_model.playhead.current_elapsed_seconds. Child visibility: lineage.spawns[].visible_from_elapsed_seconds (spawn time). Phase 1 PASS = prove-spectator on BATTLE_HOST=http://127.0.0.1:3002 (6 receipt-replay checks + sparse negative + typecheck/vitest).
-- 2026-07-11 Music M1 is on agent-skills@main. Backend commit 7b6823bd4 publishes frozen battle.music_context_packet.v1, battle.music_promotion_receipt.v1, battle.music_schedule_entry.v1, battle.music_schedule.v1, and battle.normalized_music_fixture.v1 contracts; valid/invalid examples; a BATTLE-004 public fixture; and versioned promoted MIDI/OGG assets. The schedule authorizes live_arena_loop from the lifecycle-start receipt and motif:plague_nurgling from a materialized-spawn receipt. Death, victory, and next-arena remain events_not_emitted. create-midi validation, promotion, schedule, receipt, score-packet, and asset hashes are bound. M1 is mocked:no, live:local_deterministic_music_promotion_schedule, composer_live:false. It does not prove live composition, rendering, browser playback, speaker output, musical quality, or Battle outcomes. Frontend consumption is on main in commit 2c94d8e97. Next backend rung is Music M2: live music-composer score-packet authorship, deterministic MIDI-to-OGG render receipt, deadline/fallback evidence, and promotion through the existing M1 contracts.
+- 2026-07-11 Music M1 is on agent-skills@main. Backend commit 7b6823bd4 publishes frozen battle.music_context_packet.v1, battle.music_promotion_receipt.v1, battle.music_schedule_entry.v1, battle.music_schedule.v1, and battle.normalized_music_fixture.v1 contracts; valid/invalid examples; a BATTLE-004 public fixture; and versioned promoted MIDI/OGG assets. The schedule authorizes live_arena_loop from the lifecycle-start receipt and motif:plague_nurgling from a materialized-spawn receipt. Death, victory, and next-arena remain events_not_emitted. create-midi validation, promotion, schedule, receipt, score-packet, and asset hashes are bound. M1 is mocked:no, live:local_deterministic_music_promotion_schedule, composer_live:false. It does not prove live composition, rendering, browser playback, speaker output, musical quality, or Battle outcomes. Frontend consumption is on main in commit 2c94d8e97. Music M2 remains deferred behind the adaptive-lineage and durable-memory rungs.
 
 ## Recent Decisions
 
@@ -475,6 +475,40 @@ the normalized fixture, shared Plague Nurgling atlas, browser reports, and eight
 screenshots. PR6 remains an explicitly legacy composite demonstration. Pixi no
 longer writes back to the browser timeline scroll position; the outer scroller
 is the single horizontal camera authority.
+
+## Durable Memory Write, Recall, and Provider Use V14 (2026-07-13)
+
+The fresh V14 run reuses selected V13 Generation 2 evidence and crosses the
+real Memory, Tau/SciLLM, Docker, and Judge boundaries:
+
+```text
+run=/tmp/battle-004-adaptive-memory-v14-r6
+archive=local/battle-004-adaptive-memory-v14
+status=PASS
+mocked=false
+live=true
+fixture_fallback_used=false
+memory_promotions=2
+memory_writes=2
+memory_recalls=2
+provider_use_acknowledgements=2
+team_isolated_handoffs=2
+docker_artifact_pipelines=2
+judge_status=PASS
+judge_verdict=BLUE_SUCCESS
+```
+
+Red stores validated negative exploit evidence. Blue stores Judge-confirmed
+defense evidence. Battle routes each recalled lesson only to its owning team;
+the Memory service is persistence and retrieval infrastructure, not team ACL or
+outcome authority. Each provider response cites the exact memory key, content
+hash, and recall-receipt hash, retains at least one recalled method, and
+produces a changed artifact before the existing Docker/review/handoff/Judge
+chain runs.
+
+This rung does not prove that memory improved either team, that the Memory
+service enforces team ACLs, that Red achieved exploit success, or that durable
+learning is ready for population scale.
 
 Battle v0 does not prove:
 

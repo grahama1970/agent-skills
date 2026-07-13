@@ -1,0 +1,20 @@
+{
+  "blue_pipeline_handoff_sha256": "8c2401e5d6e4a5705e94ed7e2961f81fc9c046b7aa2200f02701e45029f013b7",
+  "blue_selected_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+  "claims": {
+    "does_not_prove": [
+      "Judge executed the pair.",
+      "Either team succeeded."
+    ],
+    "proves": [
+      "Battle selected one reviewed Red/Blue artifact pair for Judge."
+    ]
+  },
+  "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+  "patched_target_tree_sha256": "099f9cb1164f8164b23e30cd14c1158123b6bbb4cb8bb010d1e80122157baea5",
+  "red_pipeline_handoff_sha256": "31d6cd0bfc3774a57f6f8d1724ff702cab8666d8d7e3b23bb26c011141913d92",
+  "red_selected_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+  "schema": "battle.reviewed_judge_pair_input.v1",
+  "status": "PASS",
+  "target_identity_receipt_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d"
+}

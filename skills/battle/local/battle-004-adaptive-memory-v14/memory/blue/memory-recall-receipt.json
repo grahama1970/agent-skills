@@ -1,0 +1,39 @@
+{
+  "collection": "lessons",
+  "created_at": "2026-07-13T16:37:50Z",
+  "cross_team_items_absent": true,
+  "exact_match_count": 1,
+  "live": true,
+  "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+  "memory_key": "battle-004-v13-blue-g2-selected-evidence",
+  "memory_write_receipt_sha256": "2a144230d96055253457f6a830d8bd98e0406ebf1a762c6363c2ce16431c3b56",
+  "mocked": false,
+  "query_sha256": "f58307432712fa35d76b4af2bff85a62574aaa91b796f66f4a0b48157b4ce348",
+  "recalled_document": {
+    "_key": "battle-004-v13-blue-g2-selected-evidence",
+    "_source": "lessons",
+    "problem": "What selected V13 blue evidence should a later Battle worker recall?",
+    "scores": {
+      "bm25": 1.0,
+      "dense": 0.46605545,
+      "freshness": 0.9999998217214201,
+      "graph": 0.0
+    },
+    "solution": "{\"strategy\":{\"expected_observation\":\"Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written.\",\"parameters\":{\"directory_entries\":\"create_inside_destination_but_do_not_return_as_written_files\",\"path_separator_policy\":\"reject_backslash_for_cross_platform_safety\",\"symlink_policy\":\"reject\",\"unsafe_member_action\":\"raise UnsafeArchivePath\",\"write_policy\":\"validate_entire_archive_before_any_write\"},\"rejected_methods\":[\"blind_ZipFile.extractall\",\"string_prefix_checks_without_resolution\",\"skip_bad_members_silently\",\"post_write_cleanup_after_traversal\",\"dependency_on_web_framework_for_core_import_function\"],\"selected_methods\":[\"canonicalize_destination_with_Path.resolve\",\"prevalidate_all_zip_members_before_write\",\"reject_dotdot_absolute_drive_and_backslash_paths\",\"enforce_target.relative_to(destination_root)\",\"reject_zip_symlink_entries\",\"preserve_import_zip_callable_contract\"]},\"summary\":\"Selected V13 blue Generation 2 strategy received Judge verdict BLUE_SUCCESS. Expected observation: Benign relative-path zip imports still write files under the destination and return their paths; traversal, absolute, Windows-drive, backslash, or symlink members are rejected before any archive content is written.\"}",
+    "tags": [
+      "battle",
+      "durable-memory",
+      "team:blue",
+      "battle-004",
+      "v13-selected",
+      "content-sha:5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9"
+    ],
+    "updated_at": "2026-07-13T16:37:48Z"
+  },
+  "schema": "battle.memory_recall_receipt.v1",
+  "service_confidence": 1.0,
+  "service_found": true,
+  "status": "PASS",
+  "team": "blue",
+  "team_filter_applied": "team:blue"
+}
