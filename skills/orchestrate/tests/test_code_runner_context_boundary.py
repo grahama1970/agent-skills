@@ -157,6 +157,63 @@ def test_retrieval_context_cannot_be_the_only_task_prompt(tmp_path: Path) -> Non
         raise AssertionError("expected context-only code-runner task to fail")
 
 
+def _skill_context_plan() -> dict:
+    return {
+        "tasks": [
+            {
+                "id": "skill-context",
+                "title": "Bound skill guidance",
+                "runner": "code-runner",
+                "backend": "codex",
+                "prompt": "Make the bounded implementation change.",
+                "skills": ["demo-skill", "demo-skill"],
+                "allowlist": ["src/app.py"],
+                "read_context": ["src/app.py"],
+                "definition_of_done": {"command": "true", "assertion": "exit_code == 0"},
+                "blind_tests": [{"command": "true"}],
+            }
+        ]
+    }
+
+
+def test_skill_context_is_disabled_by_default(monkeypatch, tmp_path: Path) -> None:
+    helpers = load_module("structured_execute_helpers_skill_disabled", ORCH_DIR / "structured_execute_helpers.py")
+    monkeypatch.delenv("ORCHESTRATE_ENABLE_SKILL_CONTEXT", raising=False)
+
+    runtime = helpers._build_runtimes(_skill_context_plan(), tmp_path)["skill-context"]
+
+    assert "Compiled Skill Guidance" not in runtime.prompt
+    assert runtime.read_context == ["src/app.py"]
+    assert all(not Path(path).is_absolute() for path in runtime.read_context)
+
+
+def test_enabled_skill_context_is_prompt_only_and_spec_valid(monkeypatch, tmp_path: Path) -> None:
+    helpers = load_module("structured_execute_helpers_skill_enabled", ORCH_DIR / "structured_execute_helpers.py")
+    skill_root = tmp_path / "skills"
+    skill_dir = skill_root / "demo-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("---\nname: demo-skill\n---\n# Demo Skill\nBounded API guidance.\n")
+    monkeypatch.setattr(helpers, "SKILLS_DIR", skill_root)
+    monkeypatch.setenv("ORCHESTRATE_ENABLE_SKILL_CONTEXT", "1")
+
+    runtime = helpers._build_runtimes(_skill_context_plan(), tmp_path)["skill-context"]
+
+    assert "Compiled Skill Guidance (non-authoritative)" in runtime.prompt
+    assert runtime.prompt.count("### SKILL: /demo-skill") == 1
+    assert "Bounded API guidance." in runtime.prompt
+    assert runtime.read_context == ["src/app.py"]
+    assert all(not Path(path).is_absolute() for path in runtime.read_context)
+
+    executor = load_module("structured_execute_skill_context_spec", ORCH_DIR / "structured_execute.py")
+    spec = executor._build_code_runner_spec(runtime, runtime.task_id, tmp_path, tmp_path / "out")
+    code_runner_src = ROOT / "skills" / "code-runner" / "src"
+    sys.path.insert(0, str(code_runner_src))
+    from code_runner.spec import TaskSpec
+
+    validated = TaskSpec.model_validate(spec)
+    assert validated.read_context == ["src/app.py"]
+
+
 def test_code_runner_spec_excludes_orchestration_only_fields(tmp_path: Path) -> None:
     module = load_module("structured_execute_under_test_context", ORCH_DIR / "structured_execute.py")
     task = module.TaskRuntime(
