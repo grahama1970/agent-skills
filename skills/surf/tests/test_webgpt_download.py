@@ -87,6 +87,118 @@ exit 3
     assert "btn.click()" in call_log
 
 
+def test_webgpt_download_ignores_unrelated_new_file_and_selects_exact_basename(
+    tmp_path: Path,
+) -> None:
+    downloads = tmp_path / "Downloads"
+    downloads.mkdir()
+    output = tmp_path / "artifact.zip"
+    fake_run = tmp_path / "fake-surf-run.sh"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+js="${2:-}"
+if [[ "$js" == *"JSON.stringify(Array.from"* ]]; then
+  printf '%s\n' '"[{\\"text\\":\\"Download expected.zip\\",\\"aria\\":\\"\\",\\"href\\":\\"\\",\\"download\\":\\"\\",\\"role\\":\\"button\\",\\"tag\\":\\"BUTTON\\"}]"'
+elif [[ "$js" == *"btn.click()"* ]]; then
+  printf 'stale-batch' > "$FAKE_DOWNLOADS_DIR/aaa-unrelated-batch.json"
+  printf 'expected-bytes' > "$FAKE_DOWNLOADS_DIR/expected.zip"
+  printf '%s\n' '"clicked"'
+elif [[ "$js" == *"const download = candidates[0]"* ]]; then
+  printf '%s\n' '"{\\"status\\":\\"not-found\\"}"'
+else
+  exit 3
+fi
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env.update({"SURF_RUN_SH": str(fake_run), "FAKE_DOWNLOADS_DIR": str(downloads)})
+
+    result = subprocess.run(
+        [
+            "bash",
+            "skills/surf/scripts/webgpt-download.sh",
+            "--match",
+            "expected.zip",
+            "--downloads-dir",
+            str(downloads),
+            "--output",
+            str(output),
+            "--poll-interval",
+            "1",
+            "--timeout",
+            "8",
+        ],
+        cwd=Path(__file__).resolve().parents[3],
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output.read_text(encoding="utf-8") == "expected-bytes"
+    assert "Ignoring unrelated download candidate: aaa-unrelated-batch.json" in result.stderr
+
+
+def test_webgpt_download_fails_closed_when_only_new_file_has_wrong_basename(
+    tmp_path: Path,
+) -> None:
+    downloads = tmp_path / "Downloads"
+    downloads.mkdir()
+    output = tmp_path / "artifact.zip"
+    fake_run = tmp_path / "fake-surf-run.sh"
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+js="${2:-}"
+if [[ "$js" == *"JSON.stringify(Array.from"* ]]; then
+  printf '%s\n' '"[{\\"text\\":\\"Download expected.zip\\",\\"aria\\":\\"\\",\\"href\\":\\"\\",\\"download\\":\\"\\",\\"role\\":\\"button\\",\\"tag\\":\\"BUTTON\\"}]"'
+elif [[ "$js" == *"btn.click()"* ]]; then
+  printf 'wrong-bytes' > "$FAKE_DOWNLOADS_DIR/wrong.zip"
+  printf '%s\n' '"clicked"'
+elif [[ "$js" == *"const download = candidates[0]"* ]]; then
+  printf '%s\n' '"{\\"status\\":\\"not-found\\"}"'
+else
+  exit 3
+fi
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env.update({"SURF_RUN_SH": str(fake_run), "FAKE_DOWNLOADS_DIR": str(downloads)})
+
+    result = subprocess.run(
+        [
+            "bash",
+            "skills/surf/scripts/webgpt-download.sh",
+            "--match",
+            "expected.zip",
+            "--downloads-dir",
+            str(downloads),
+            "--output",
+            str(output),
+            "--poll-interval",
+            "1",
+            "--timeout",
+            "3",
+        ],
+        cwd=Path(__file__).resolve().parents[3],
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 5
+    assert not output.exists()
+    assert "Ignoring unrelated download candidate: wrong.zip" in result.stderr
+    assert "Exact download 'expected.zip' did not complete" in result.stderr
+
+
 def test_webgpt_download_clicks_title_only_viewer_toolbar_control(tmp_path: Path) -> None:
     downloads = tmp_path / "Downloads"
     downloads.mkdir()
@@ -156,3 +268,5 @@ fi
     call_log = calls.read_text(encoding="utf-8")
     assert "getAttribute('title')" in call_log
     assert "const download = candidates[0]" in call_log
+    assert "r.bottom > 0" in call_log
+    assert "r.top < innerHeight" in call_log

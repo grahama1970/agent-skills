@@ -24,6 +24,9 @@ Options:
   --downloads-dir PATH  Browser downloads directory. Default: ~/Downloads.
   --poll-interval SECONDS  How often to check for new files. Default: 2.
   --timeout SECONDS     Max wait for download to complete. Default: 60.
+  --after-click         Complete a download after another command already
+                        clicked the source control.
+  --before-manifest PATH  Pre-click sorted download-directory listing.
   --help|-h             Show this message.
 EOF
 }
@@ -35,6 +38,8 @@ output_dir=""
 downloads_dir=""
 poll_interval=2
 timeout_s=60
+after_click=0
+before_manifest=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -45,12 +50,14 @@ while [[ $# -gt 0 ]]; do
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --poll-interval) poll_interval="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --after-click) after_click=1; shift ;;
+    --before-manifest) before_manifest="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-if [[ -z "$match" ]]; then
+if [[ -z "$match" && "$after_click" -ne 1 ]]; then
   echo "Error: --match is required" >&2
   usage >&2
   exit 2
@@ -62,8 +69,22 @@ if [[ -n "$tab_id" ]]; then
   tab_args=(--tab-id "$tab_id")
 fi
 
-# Encode user input before embedding it in JavaScript.
-match_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$match")"
+expected_basename=""
+if [[ -n "$match" ]]; then
+  expected_basename="$(basename -- "$match")"
+fi
+
+# Snapshot downloads before the source click. Generic click passes its own
+# pre-click manifest because the click has already happened when this starts.
+if [[ -n "$before_manifest" && -f "$before_manifest" ]]; then
+  before_files="$(cat "$before_manifest")"
+else
+  before_files=$(ls -1 "$downloads_dir" 2>/dev/null | sort || true)
+fi
+
+if [[ "$after_click" -ne 1 ]]; then
+  # Encode user input before embedding it in JavaScript.
+  match_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$match")"
 
 # 1. Find artifact controls matching the pattern via JS
 echo "Searching for download button matching: $match" >&2
@@ -85,11 +106,11 @@ return JSON.stringify(Array.from(document.querySelectorAll('a,button,[role=butto
 
 buttons_json="$("$RUN_SH" js "$find_js" "${tab_args[@]}" 2>/dev/null || true)"
 
-if [[ -z "$buttons_json" || "$buttons_json" == "[]" || "$buttons_json" == "[]\n" ]]; then
+  if [[ -z "$buttons_json" || "$buttons_json" == "[]" || "$buttons_json" == "[]\n" ]]; then
   echo "Error: No download button found matching pattern: $match" >&2
   echo "  Try activating the ChatGPT tab first with: surf tab.activate <id>" >&2
   exit 3
-fi
+  fi
 
 # 2. Pick the first match and click by aria-label CSS selector.
 # ChatGPT download buttons have empty textContent — only aria-label has the
@@ -97,16 +118,13 @@ fi
 # attribute selector instead.
 button_aria="$(echo "$buttons_json" | python3 -c "import json,sys; data=json.load(sys.stdin); data=json.loads(data) if isinstance(data, str) else data; print(data[0].get('aria') or data[0].get('text') or '')" 2>/dev/null || true)"
 
-if [[ -z "$button_aria" ]]; then
+  if [[ -z "$button_aria" ]]; then
   echo "Error: Could not parse button aria-label from match" >&2
   echo "$buttons_json" >&2
   exit 3
-fi
+  fi
 
 echo "Clicking: $button_aria" >&2
-
-# Snapshot downloads dir before click
-before_files=$(ls -1 "$downloads_dir" 2>/dev/null || true)
 
 # Click via JS: find the first button whose aria-label or text matches the
 # pattern, then click it programmatically. This works regardless of whether
@@ -126,10 +144,11 @@ if [[ "$click_out" == \"*\" ]]; then
   click_out="${click_out%\"}"
 fi
 
-if [[ "$click_out" != "clicked" ]]; then
+  if [[ "$click_out" != "clicked" ]]; then
   echo "Error: Could not find or click download button" >&2
   echo "  Try: surf click 'button' (find ref via surf read --tab-id \$TAB)" >&2
   exit 4
+  fi
 fi
 
 # Some attachments open ChatGPT's artifact viewer first. Its upper-right
@@ -139,7 +158,9 @@ viewer_download_js="
 const visible = e => {
   const r = e.getBoundingClientRect();
   const s = getComputedStyle(e);
-  return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
+  return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 &&
+    r.top < innerHeight && r.left < innerWidth &&
+    s.visibility !== 'hidden' && s.display !== 'none';
 };
 const candidates = Array.from(document.querySelectorAll('a,button,[role=button]'))
   .filter(visible)
@@ -184,11 +205,15 @@ start_time=$SECONDS
 downloaded_file=""
 while (( SECONDS - start_time < timeout_s )); do
   sleep "$poll_interval"
-  after_files=$(ls -1 "$downloads_dir" 2>/dev/null || true)
+  after_files=$(ls -1 "$downloads_dir" 2>/dev/null | sort || true)
   new_files=$(comm -13 <(echo "$before_files") <(echo "$after_files") 2>/dev/null || echo "$after_files" | while IFS= read -r f; do echo "$before_files" | grep -qFx "$f" || echo "$f"; done)
 
   if [[ -n "$new_files" ]]; then
     while IFS= read -r f; do
+      if [[ -n "$expected_basename" && "$f" != "$expected_basename" ]]; then
+        echo "Ignoring unrelated download candidate: $f (expected: $expected_basename)" >&2
+        continue
+      fi
       candidate="$downloads_dir/$f"
       if [[ -f "$candidate" ]]; then
         # Check file age — wait for download to finish (file not modified for 1s)
@@ -213,9 +238,18 @@ while (( SECONDS - start_time < timeout_s )); do
 done
 
 if [[ -z "$downloaded_file" ]]; then
-  echo "Error: Download did not complete within ${timeout_s}s" >&2
+  if [[ -n "$expected_basename" ]]; then
+    echo "Error: Exact download '$expected_basename' did not complete within ${timeout_s}s" >&2
+  else
+    echo "Error: Download did not complete within ${timeout_s}s" >&2
+  fi
   echo "  Check $downloads_dir for the file manually" >&2
   exit 5
+fi
+
+if [[ -n "$expected_basename" && "$(basename -- "$downloaded_file")" != "$expected_basename" ]]; then
+  echo "Error: Download basename mismatch: expected '$expected_basename', got '$(basename -- "$downloaded_file")'" >&2
+  exit 6
 fi
 
 echo "Downloaded: $downloaded_file" >&2
