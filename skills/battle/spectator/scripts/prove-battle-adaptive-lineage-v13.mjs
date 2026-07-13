@@ -106,27 +106,27 @@ async function inspectAt(seconds, name, viewport = { width: 1600, height: 1050 }
 }
 
 const preSpawn = await inspectAt(71.67, '01-pre-spawn-children-hidden.png')
-record('pre-spawn-parent-only', JSON.stringify([...new Set(preSpawn.laneIds)].sort()) === JSON.stringify(['blue-g1', 'red-g1']), preSpawn)
+record('pre-spawn-parent-only', JSON.stringify([...new Set(preSpawn.laneIds)].sort()) === JSON.stringify(['blue-g1', 'red-g1']), { laneIds: preSpawn.laneIds, animations: preSpawn.animations })
 
 const pending = await inspectAt(72, '02-spawn-authorized-pending.png')
 record('authorized-four-lanes', ['red-g1', 'red-g2', 'blue-g1', 'blue-g2'].every((id) => pending.laneIds.includes(id)), pending.laneIds)
-record('authorized-pending-not-active', pending.lineagePhases['red-g2'] === 'authorized_pending' && pending.lineagePhases['blue-g2'] === 'authorized_pending' && pending.animations['red-g2'] === 'idle' && pending.animations['blue-g2'] === 'idle' && /AUTHORIZED PENDING/.test(pending.body), pending)
+record('authorized-pending-not-active', pending.lineagePhases['red-g2'] === 'authorized_pending' && pending.lineagePhases['blue-g2'] === 'authorized_pending' && pending.animations['red-g2'] === 'idle' && pending.animations['blue-g2'] === 'idle' && /AUTHORIZED PENDING/.test(pending.body), { lineagePhases: pending.lineagePhases, animations: pending.animations })
 
 const descending = await inspectAt(79.2, '03-ladder-descent-hop.png')
-record('research-materializes-child', descending.lineagePhases['red-g2'] === 'descending' && descending.lineagePhases['blue-g2'] === 'descending' && descending.animations['red-g2'] === 'spawn' && descending.animations['blue-g2'] === 'spawn', descending)
+record('research-materializes-child', descending.lineagePhases['red-g2'] === 'descending' && descending.lineagePhases['blue-g2'] === 'descending' && descending.animations['red-g2'] === 'spawn' && descending.animations['blue-g2'] === 'spawn', { lineagePhases: descending.lineagePhases, animations: descending.animations })
 
 const active = await inspectAt(82, '04-children-active-research.png')
-record('children-active-research', active.lineagePhases['red-g2'] === 'active' && active.lineagePhases['blue-g2'] === 'active' && active.animations['red-g2'] === 'research' && active.animations['blue-g2'] === 'research', active)
+record('children-active-research', active.lineagePhases['red-g2'] === 'active' && active.lineagePhases['blue-g2'] === 'active' && active.animations['red-g2'] === 'research' && active.animations['blue-g2'] === 'research', { lineagePhases: active.lineagePhases, animations: active.animations })
 
 const mutation = await inspectAt(134.451, '05-mutation-evidence.png')
-record('mutation-evidence-animation', mutation.animations['red-g2'] === 'mutate' && mutation.animations['blue-g2'] === 'mutate' && /MUTATION EVIDENCE VERIFIED/.test(mutation.body), mutation)
+record('mutation-evidence-animation', mutation.animations['red-g2'] === 'mutate' && mutation.animations['blue-g2'] === 'mutate' && /MUTATION EVIDENCE VERIFIED/.test(mutation.body), { animations: mutation.animations })
 
 const finalState = await inspectAt(134.457, '06-judge-selection-memory-boundary.png')
 record('no-terminal-overclaim', Object.values(finalState.animations).every((value) => !['killed', 'victory', 'promoted'].includes(value)), finalState.animations)
 record('canvas-nonblank-dimensions', finalState.canvas.width > 900 && finalState.canvas.height > 200, finalState.canvas)
 
 const mobile = await inspectAt(129, '07-four-lane-mobile.png', { width: 430, height: 900 })
-record('mobile-four-lane-state', ['red-g1', 'red-g2', 'blue-g1', 'blue-g2'].every((id) => mobile.laneIds.includes(id)) && mobile.canvas.width > 300 && mobile.pageWidth.scroll <= mobile.pageWidth.client && mobile.timelineScrollLeft > 0, mobile)
+record('mobile-four-lane-state', ['red-g1', 'red-g2', 'blue-g1', 'blue-g2'].every((id) => mobile.laneIds.includes(id)) && mobile.canvas.width > 300 && mobile.pageWidth.scroll <= mobile.pageWidth.client && mobile.timelineScrollLeft > 0, { laneIds: mobile.laneIds, canvas: mobile.canvas, pageWidth: mobile.pageWidth, timelineScrollLeft: mobile.timelineScrollLeft })
 
 const cameraRegression = await page.evaluate(async () => {
   const scroller = document.querySelector('[data-qid="battle:timeline:scroll"]')
