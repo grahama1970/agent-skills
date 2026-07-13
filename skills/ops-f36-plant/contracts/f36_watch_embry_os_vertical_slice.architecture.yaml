@@ -1,0 +1,204 @@
+name: "F-36 Watch Evidence Vertical Slice"
+
+# Shared integration contract for ops-f36-plant, watch, embry-os, Memory/Qdrant,
+# and SPARTA Explorer. The first slice is recorded visual inspection, not live
+# plant automation or production disposition.
+
+components:
+  - id: bounded_f36_package
+    label: "Bounded F-36 Package"
+    tech: "SPARTA + F-36 corpus"
+    latency: "offline"
+    color: purple
+    row: 0
+    col: 1
+    description: "Small visual-inspection domain package: one program, cell, part family, procedure revision, requirement set, controls, QRAs, and adversarial cases."
+    files:
+      - skills/watch/sparta
+      - skills/watch/docs/PROJECT_KNOWLEDGE.md
+
+  - id: shared_contracts
+    label: "Shared Evidence Contracts"
+    tech: "versioned schemas"
+    latency: "schema gate"
+    color: blue
+    row: 1
+    col: 1
+    description: "Stable event and evidence schemas consumed by ops-f36-plant, Watch, Embry OS, Memory, and SPARTA Explorer."
+    files:
+      - skills/ops-f36-plant/contracts/f36_watch_embry_os_vertical_slice.architecture.yaml
+      - skills/watch/docs/architecture/schemas/watch_track_observation.schema.json
+      - skills/watch/docs/architecture/schemas/watch_keyframe_annotation.schema.json
+      - skills/watch/docs/architecture/schemas/watch_identity_evidence.schema.json
+      - skills/watch/docs/architecture/watch_memory_persistence_contract_P1.md
+
+  - id: embry_context
+    label: "Embry OS Plant Context"
+    tech: "state daemon + Unix sockets"
+    latency: "<50ms"
+    color: teal
+    row: 2
+    col: 0
+    description: "Operator/plant context: part, serial, lot, cell, station, procedure revision, test run, Watch session, and current phase. Same OS and datastore pattern applies on plant and product."
+
+  - id: ops_orchestrator
+    label: "ops-f36-plant Orchestrator"
+    tech: "skill command"
+    latency: "seconds"
+    color: amber
+    row: 2
+    col: 1
+    description: "Starts visual inspection run, validates part/procedure, coordinates Watch session and test adapter, and requests human QA disposition."
+    files:
+      - skills/ops-f36-plant/SKILL.md
+      - skills/ops-f36-plant/run.sh
+
+  - id: plant_test_runner
+    label: "Plant Test Runner"
+    tech: "deterministic adapter"
+    latency: "stream"
+    color: green
+    row: 2
+    col: 2
+    description: "Initial simulator emits f36.test_phase_event and f36.telemetry_event. It replaces invalid physical-test routing through quality-audit."
+
+  - id: watch_session
+    label: "Watch Source Session"
+    tech: "recorded video first"
+    latency: "source PTS"
+    color: cyan
+    row: 3
+    col: 1
+    description: "Owns video sessions, source timestamps, detector observations, sequence events, label decisions, coverage events, and source hashes."
+    files:
+      - skills/watch/SKILL.md
+      - skills/watch/docs/architecture/watch_realtime_character_tracking_contract.md
+      - skills/watch/docs/architecture/watch_realtime_identity_state_machine_P1.md
+
+  - id: detector_observations
+    label: "Detector Observations"
+    tech: "YOLOAnalytics profile"
+    latency: "frame"
+    color: cyan
+    row: 4
+    col: 0
+    description: "Raw detector boxes/tracks remain separate from Watch subject sequences. Profiles later expand from person-only to plant parts, tools, fixtures, and anomalies."
+    files:
+      - skills/watch/docs/architecture/watch_yolo_bytetrack_adapter.inspection.md
+
+  - id: subject_sequences
+    label: "Watch Subject Sequences"
+    tech: "sequence ledger"
+    latency: "event replay"
+    color: blue
+    row: 4
+    col: 1
+    description: "Maps detector observations to PART, COMPONENT, TOOL, FIXTURE, PERSON, or DEFECT_CANDIDATE sequences. UNASSIGN_STOP blocks identity propagation and interpolation."
+    files:
+      - skills/watch/docs/architecture/watch_realtime_identity_state_machine_P1.md
+      - skills/watch/tests
+
+  - id: memory_qdrant
+    label: "Memory/Qdrant Recall"
+    tech: "multimodal crop retrieval"
+    latency: "subsecond-target"
+    color: purple
+    row: 4
+    col: 2
+    description: "Accepted crops become positive evidence; rejected crops are excluded from positive recall. Suggestions remain tentative and never mutate sequence state."
+    files:
+      - skills/memory/SKILL.md
+      - skills/watch/docs/architecture/schemas/watch_memory_trace_write.schema.json
+      - skills/watch/docs/architecture/schemas/watch_recall_receipt_P1.schema.json
+
+  - id: evidence_bundle
+    label: "Visual Evidence Bundle"
+    tech: "f36.visual_evidence_bundle.v1"
+    latency: "session close"
+    color: green
+    row: 5
+    col: 1
+    description: "Complete, partial, or inconclusive evidence package with accepted, rejected, tentative observations, model versions, source refs, coverage gaps, and decision refs."
+    files:
+      - skills/watch/docs/architecture/watch_evidence_case.sample.json
+      - skills/watch/docs/architecture/schemas/watch_evidence_case_P1.schema.json
+
+  - id: sparta_link
+    label: "SPARTA Evidence Link"
+    tech: "evidence-case seam"
+    latency: "review"
+    color: purple
+    row: 6
+    col: 0
+    description: "Links reviewed Watch evidence to requirements, procedure steps, controls, hazards, QRAs, sources, and evidence cases. It does not validate detector boxes."
+
+  - id: qa_review
+    label: "Human QA Review"
+    tech: "review_decision.v1"
+    latency: "human"
+    color: red
+    row: 6
+    col: 1
+    description: "Owns acceptance, rejection, inconclusive decisions, and disposition. Watch provides evidence; ops-f36-plant routes workflow; QA signs off."
+
+  - id: embry_surface
+    label: "Embry OS Operator Surface"
+    tech: "Tauri + Stream Deck"
+    latency: "operator UI"
+    color: teal
+    row: 6
+    col: 2
+    description: "Hosts skill-owned surfaces, service health, Watch session state, coverage warnings, evidence-case links, and shift handoff."
+
+  - id: integration_gates
+    label: "Integration Gates"
+    tech: "contract + sequence + evidence"
+    latency: "CI + smoke"
+    color: amber
+    row: 7
+    col: 1
+    description: "Contract validation, row-10 sequence gate, evidence completeness, SPARTA source grounding, Embry OS health, and restart/air-gap checks."
+
+connections:
+  - from: bounded_f36_package
+    to: shared_contracts
+  - from: shared_contracts
+    to: ops_orchestrator
+  - from: shared_contracts
+    to: embry_context
+  - from: shared_contracts
+    to: watch_session
+  - from: embry_context
+    to: ops_orchestrator
+  - from: ops_orchestrator
+    to: plant_test_runner
+  - from: ops_orchestrator
+    to: watch_session
+  - from: plant_test_runner
+    to: watch_session
+  - from: watch_session
+    to: detector_observations
+  - from: detector_observations
+    to: subject_sequences
+  - from: subject_sequences
+    to: memory_qdrant
+  - from: memory_qdrant
+    to: subject_sequences
+  - from: subject_sequences
+    to: evidence_bundle
+  - from: evidence_bundle
+    to: sparta_link
+  - from: evidence_bundle
+    to: qa_review
+  - from: qa_review
+    to: sparta_link
+  - from: qa_review
+    to: embry_surface
+  - from: embry_surface
+    to: embry_context
+  - from: sparta_link
+    to: integration_gates
+  - from: qa_review
+    to: integration_gates
+  - from: embry_surface
+    to: integration_gates

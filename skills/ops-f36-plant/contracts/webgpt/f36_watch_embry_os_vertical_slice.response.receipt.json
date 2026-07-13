@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/ops-f36-plant/contracts/f36_watch_embry_os_vertical_slice.webgpt.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/ops-f36-plant/contracts/webgpt/f36_watch_embry_os_vertical_slice.response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/ops-f36-plant/contracts/webgpt/f36_watch_embry_os_vertical_slice.response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/ops-f36-plant/contracts/webgpt/f36_watch_embry_os_vertical_slice.response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/skills/ops-f36-plant/contracts/webgpt/f36_watch_embry_os_vertical_slice.response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260713T150703Z:094ecb43>>>",
+  "requested_tab_id": "837357102",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-13T15:07:17Z"
+}
