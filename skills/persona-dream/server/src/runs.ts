@@ -95,7 +95,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
         blockers: ['BLOCKED_ACTIVE_REVISION_MISSING'],
       }
   const stages = projectedStages.map((stage) => {
-    if (Number(stage.id) < 8 || revisionQualification.state === 'ACTIVE_CONSISTENT') return stage
+    if (revisionQualification.state === 'ACTIVE_CONSISTENT' || stage.effectiveState !== 'accepted_current') return stage
     return {
       ...stage,
       status: 'BLOCKED_REVISION_NOT_QUALIFIED',

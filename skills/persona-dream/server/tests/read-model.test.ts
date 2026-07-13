@@ -128,8 +128,9 @@ test('run detail reads only the atomically promoted revision', async () => {
   assert.equal(detail.revisionQualification.status, 'BLOCKED_REVISION_NOT_QUALIFIED')
   assert.equal(detail.earliestIssue, undefined)
   assert.equal(detail.repairCandidate, undefined)
-  assert.ok(detail.stages.filter((stage) => Number(stage.id) < 8).every((stage) => stage.effectiveState === 'accepted_current'))
-  assert.ok(detail.stages.filter((stage) => Number(stage.id) >= 8).every((stage) => stage.effectiveState === 'blocked_by_upstream'))
+  assert.ok(detail.stages.every((stage) => stage.effectiveState === 'blocked_by_upstream'))
+  assert.ok(detail.stages.every((stage) => stage.acceptance.state === 'blocked'))
+  assert.ok(detail.stages.every((stage) => stage.status === 'BLOCKED_REVISION_NOT_QUALIFIED'))
   rmSync(root, { recursive: true, force: true })
 })
 

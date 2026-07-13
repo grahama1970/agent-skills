@@ -8784,9 +8784,10 @@ export function DreamWorkspace() {
   }, [selectedRun?.id])
 
   const backendStages = runDetail?.stages ?? []
+  const revisionQualified = (runDetail?.revisionQualification as RevisionQualification | undefined)?.state === 'ACTIVE_CONSISTENT'
   const stages = useMemo(() => {
     const normalized = normalizeToCanonicalPhases(backendStages)
-    if (phase02MediaGate?.status !== 'PASS') return normalized
+    if (!revisionQualified || phase02MediaGate?.status !== 'PASS') return normalized
     return normalized.map((stage) => stage.id === '02'
       ? {
           ...stage,
@@ -8795,9 +8796,8 @@ export function DreamWorkspace() {
           failureOrGap: null,
         }
       : stage)
-  }, [backendStages, phase02MediaGate])
+  }, [backendStages, phase02MediaGate, revisionQualified])
   const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? stages[0] ?? null
-  const revisionQualified = (runDetail?.revisionQualification as RevisionQualification | undefined)?.state === 'ACTIVE_CONSISTENT'
   const klingReady = revisionQualified && stages.length > 0 && stages.every((p) => isStagePassed(p)) && !!selectedRun?.paidCallAuthorized
 
   const pageVariants = {
