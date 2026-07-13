@@ -1,0 +1,110 @@
+{
+  "schema": "battle.adaptive_lineage_ui_proof_manifest.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "source_commit": "3fee73d26ff842e38d32d808ad6c5310abe99de8",
+  "host": "http://127.0.0.1:3004",
+  "route": "http://127.0.0.1:3004/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "retained_campaign": {
+    "campaign_receipt_sha256": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
+    "events_jsonl_sha256": "2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902"
+  },
+  "source_artifacts": [
+    {
+      "id": "local_fixture",
+      "path": "skills/battle/local/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "sha256": "9b6fe932abcb8775fbbe3872e231e83785dc837c791aeebd723c10bb03a954c7",
+      "bytes": 30832
+    },
+    {
+      "id": "public_fixture",
+      "path": "skills/battle/spectator/public/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "sha256": "9b6fe932abcb8775fbbe3872e231e83785dc837c791aeebd723c10bb03a954c7",
+      "bytes": 30832
+    },
+    {
+      "id": "plague_nurgling_png",
+      "path": "skills/battle/assets/sprites/pixijs/plague_nurgling.png",
+      "sha256": "19334a13b7aac8c24906fd6eccc156f5ed885dca5f5d13a3b09cbb9c5d2c802a",
+      "bytes": 585469
+    },
+    {
+      "id": "plague_nurgling_json",
+      "path": "skills/battle/assets/sprites/pixijs/plague_nurgling.json",
+      "sha256": "63be1df2c69d5c28226efab217577269f4f404992149c57055c11a9b97cdc2e5",
+      "bytes": 31314
+    },
+    {
+      "id": "sprite_manifest",
+      "path": "skills/battle/assets/sprites/pixijs/battle-sprite-assets.manifest.json",
+      "sha256": "ba487539dd51b708309e350c25404b848abbe8c7240d94ac38bd6ec5b85d07f8",
+      "bytes": 5252
+    }
+  ],
+  "proof_artifacts": [
+    {
+      "path": "proof-summary.json",
+      "sha256": "a1d8a7f53fe4116049f496e918483113bca1433ed18c6982128256983fe9b55c",
+      "bytes": 7620
+    },
+    {
+      "path": "browser-console.json",
+      "sha256": "d70965521dca34c20f11f681f3730bed6b636032469cbf64e644f0ee672ac949",
+      "bytes": 1206
+    },
+    {
+      "path": "network-authority-requests.json",
+      "sha256": "c8d3ba0beeb2cfbf5af600d2a2b10fb4fc3b6801b8c0534659c5ed2b4712c721",
+      "bytes": 1101
+    },
+    {
+      "path": "screenshots/01-pre-spawn-children-hidden.png",
+      "sha256": "84b8e71889a4648090d6d881f4867e56c600fcf6feccdbb148a15ac4613735cb",
+      "bytes": 304833
+    },
+    {
+      "path": "screenshots/02-spawn-authorized-pending.png",
+      "sha256": "14fb3719a1dd16a6ffdd470d499160d841d17bdf4b71458278ddcdb24ed4dd67",
+      "bytes": 317936
+    },
+    {
+      "path": "screenshots/03-ladder-descent-hop.png",
+      "sha256": "8e1df01595428f71f20fd05685b18da6ec4ed55ee69c38db856a99b040b6d37b",
+      "bytes": 324952
+    },
+    {
+      "path": "screenshots/04-children-active-research.png",
+      "sha256": "517447255b2de5a0e426eeb83a54ffdb997a1da19c1bcf82064e431528ee1b9b",
+      "bytes": 336142
+    },
+    {
+      "path": "screenshots/05-mutation-evidence.png",
+      "sha256": "3e1f21ab6829f1a5ae962749547daed912dd47948d7a9414c3ec96e90dd2ec21",
+      "bytes": 320294
+    },
+    {
+      "path": "screenshots/06-judge-selection-memory-boundary.png",
+      "sha256": "3448fc482392ca2265bd9b92298fec2265fbb5d75845eb7799210058c47a0772",
+      "bytes": 320294
+    },
+    {
+      "path": "screenshots/07-four-lane-mobile.png",
+      "sha256": "1becf3a870a3f42e2138cfc06e1dd624228b4784f541e4007ad8ad29da6d64f2",
+      "bytes": 127701
+    },
+    {
+      "path": "screenshots/08-four-lane-mobile-race.png",
+      "sha256": "2eeaace41348375e2ffd796a441091b3a7cd882c66d941f45260861bcfac4aed",
+      "bytes": 50522
+    }
+  ],
+  "claims": {
+    "proves": [
+      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners and one-way outer-scroll camera control."
+    ],
+    "does_not_prove": [
+      "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."
+    ]
+  }
+}

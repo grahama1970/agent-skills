@@ -1,0 +1,314 @@
+{
+  "schema": "battle.adaptive_lineage_ui_proof.v1",
+  "pass": true,
+  "mocked": false,
+  "live": true,
+  "source_commit": "3fee73d26ff842e38d32d808ad6c5310abe99de8",
+  "host": "http://127.0.0.1:3004",
+  "route": "http://127.0.0.1:3004/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "fixture": {
+    "event_count": 24,
+    "lane_count": 4,
+    "lineage_edge_count": 2
+  },
+  "retained_campaign": {
+    "campaign_receipt_sha256": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
+    "events_jsonl_sha256": "2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902"
+  },
+  "checks": [
+    {
+      "id": "retained-campaign-hash",
+      "pass": true,
+      "detail": {
+        "expected": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
+        "actual": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3"
+      }
+    },
+    {
+      "id": "retained-events-hash",
+      "pass": true,
+      "detail": {
+        "expected": "2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902",
+        "actual": "2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902"
+      }
+    },
+    {
+      "id": "fixture-http",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "schema": "battle.normalized_adaptive_lineage_fixture.v1"
+      }
+    },
+    {
+      "id": "fixture-causal-contract",
+      "pass": true,
+      "detail": {
+        "causal": true,
+        "events": 24,
+        "lanes": 4,
+        "edges": 2
+      }
+    },
+    {
+      "id": "fixture-shared-atlas",
+      "pass": true,
+      "detail": {
+        "proof_scope": "cosmetic_identity_only",
+        "schema": "battle.sprite_theme.v1",
+        "semantic_authority": false,
+        "shared_atlas": true,
+        "theme_id": "v13-shared-plague-nurgling",
+        "variants": {
+          "v13-shared-runner": {
+            "scale": 1,
+            "sprite_id": "plague_nurgling"
+          }
+        }
+      }
+    },
+    {
+      "id": "pre-spawn-parent-only",
+      "pass": true,
+      "detail": {
+        "laneIds": [
+          "red-g1",
+          "blue-g1"
+        ],
+        "animations": {
+          "red-g1": "run",
+          "blue-g1": "run"
+        }
+      }
+    },
+    {
+      "id": "authorized-four-lanes",
+      "pass": true,
+      "detail": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ]
+    },
+    {
+      "id": "authorized-pending-not-active",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "authorized_pending",
+          "blue-g2": "authorized_pending"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "idle",
+          "blue-g1": "run",
+          "blue-g2": "idle"
+        }
+      }
+    },
+    {
+      "id": "research-materializes-child",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "descending",
+          "blue-g2": "descending"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "spawn",
+          "blue-g1": "run",
+          "blue-g2": "spawn"
+        }
+      }
+    },
+    {
+      "id": "children-active-research",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "active",
+          "blue-g2": "active"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "research",
+          "blue-g1": "run",
+          "blue-g2": "research"
+        }
+      }
+    },
+    {
+      "id": "mutation-evidence-animation",
+      "pass": true,
+      "detail": {
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "mutate",
+          "blue-g1": "run",
+          "blue-g2": "mutate"
+        }
+      }
+    },
+    {
+      "id": "no-terminal-overclaim",
+      "pass": true,
+      "detail": {
+        "red-g1": "run",
+        "red-g2": "mutate",
+        "blue-g1": "run",
+        "blue-g2": "mutate"
+      }
+    },
+    {
+      "id": "canvas-nonblank-dimensions",
+      "pass": true,
+      "detail": {
+        "width": 1030,
+        "height": 356,
+        "mountId": "6"
+      }
+    },
+    {
+      "id": "mobile-four-lane-state",
+      "pass": true,
+      "detail": {
+        "laneIds": [
+          "red-g1",
+          "red-g2",
+          "blue-g1",
+          "blue-g2"
+        ],
+        "canvas": {
+          "width": 1030,
+          "height": 356,
+          "mountId": "7"
+        },
+        "pageWidth": {
+          "client": 430,
+          "scroll": 430
+        },
+        "timelineScrollLeft": 924
+      }
+    },
+    {
+      "id": "mobile-outer-scroll-stable",
+      "pass": true,
+      "detail": {
+        "available": true,
+        "target": 851,
+        "actual": 851,
+        "sameCanvas": true,
+        "mountId": "7",
+        "nextMountId": "7",
+        "canvasWidth": 1030
+      }
+    },
+    {
+      "id": "mobile-pixi-no-remount",
+      "pass": true,
+      "detail": {
+        "available": true,
+        "target": 851,
+        "actual": 851,
+        "sameCanvas": true,
+        "mountId": "7",
+        "nextMountId": "7",
+        "canvasWidth": 1030
+      }
+    },
+    {
+      "id": "mobile-four-runner-pixel-occupancy",
+      "pass": true,
+      "detail": [
+        {
+          "laneId": "red-g1",
+          "x": 253,
+          "y": 40,
+          "width": 138,
+          "height": 84,
+          "spritePixels": 1911
+        },
+        {
+          "laneId": "red-g2",
+          "x": 253,
+          "y": 132,
+          "width": 138,
+          "height": 78,
+          "spritePixels": 1453
+        },
+        {
+          "laneId": "blue-g1",
+          "x": 253,
+          "y": 218,
+          "width": 138,
+          "height": 84,
+          "spritePixels": 1873
+        },
+        {
+          "laneId": "blue-g2",
+          "x": 253,
+          "y": 310,
+          "width": 138,
+          "height": 78,
+          "spritePixels": 1441
+        }
+      ]
+    },
+    {
+      "id": "plague-atlas-requested",
+      "pass": true,
+      "detail": [
+        {
+          "url": "http://127.0.0.1:3004/battle-sprites/pixijs/plague_nurgling.json?v=4",
+          "resource_type": "fetch",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:3004/battle-sprites/pixijs/plague_nurgling.png?v=4",
+          "resource_type": "fetch",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "id": "no-raw-runtime-requests",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "id": "no-browser-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "id": "local-public-fixture-byte-identical",
+      "pass": true,
+      "detail": {
+        "local": "9b6fe932abcb8775fbbe3872e231e83785dc837c791aeebd723c10bb03a954c7",
+        "public": "9b6fe932abcb8775fbbe3872e231e83785dc837c791aeebd723c10bb03a954c7"
+      }
+    }
+  ],
+  "failed": [],
+  "errors": [],
+  "screenshots": [
+    "screenshots/01-pre-spawn-children-hidden.png",
+    "screenshots/02-spawn-authorized-pending.png",
+    "screenshots/03-ladder-descent-hop.png",
+    "screenshots/04-children-active-research.png",
+    "screenshots/05-mutation-evidence.png",
+    "screenshots/06-judge-selection-memory-boundary.png",
+    "screenshots/07-four-lane-mobile.png",
+    "screenshots/08-four-lane-mobile-race.png"
+  ],
+  "claims": {
+    "proves": [
+      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners and one-way outer-scroll camera control."
+    ],
+    "does_not_prove": [
+      "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."
+    ]
+  }
+}
