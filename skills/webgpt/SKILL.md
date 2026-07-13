@@ -130,6 +130,8 @@ forbidden_adjacent_scope: ...
 
 The response must contain a unified diff or produce a non-empty solution zip,
 and every returned path must remain inside `allowed_files`.
+Unified diffs must pass `git apply --check` against the current repository
+before the wrapper may emit `PASS_CURRENT_GATE`.
 Prose-only responses fail with `BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING`.
 Explicit `--tab-id` submissions also require an exact `--expect-url`; the
 runtime never replaces or creates a tab in that mode.

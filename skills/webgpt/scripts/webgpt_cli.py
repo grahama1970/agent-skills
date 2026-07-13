@@ -104,7 +104,12 @@ def _allowed_path(path: str, allowed: list[str]) -> bool:
     )
 
 
-def code_deliverable_errors(response_text: str, zip_path: Path, gate_text: str) -> list[str]:
+def code_deliverable_errors(
+    response_text: str,
+    zip_path: Path,
+    gate_text: str,
+    repo_root: Path | None = None,
+) -> list[str]:
     """Validate that returned code is real and stays inside the declared boundary."""
     allowed = [
         item.strip().lstrip("./")
@@ -118,7 +123,22 @@ def code_deliverable_errors(response_text: str, zip_path: Path, gate_text: str) 
     returned_paths = [path for pair in diff_paths for path in pair] + patch_paths
     if returned_paths:
         outside = sorted({path for path in returned_paths if not _allowed_path(path, allowed)})
-        return [f"path_outside_allowed_files:{path}" for path in outside]
+        if outside:
+            return [f"path_outside_allowed_files:{path}" for path in outside]
+        if not diff_paths:
+            return ["non_unified_patch_format"]
+        if repo_root is not None:
+            check = subprocess.run(
+                ["git", "apply", "--check", "--whitespace=nowarn", "-"],
+                cwd=repo_root,
+                input=response_text,
+                capture_output=True,
+                text=True,
+            )
+            if check.returncode != 0:
+                detail = (check.stderr or check.stdout).strip().splitlines()
+                return ["unapplicable_unified_diff:" + (detail[0] if detail else "unknown")]
+        return []
     if zip_path.is_file() and zipfile.is_zipfile(zip_path):
         with zipfile.ZipFile(zip_path) as archive:
             members = [
@@ -177,6 +197,23 @@ def submission_target_args(tab_id: str, expected_url: str, binding: dict) -> lis
     if tab_id:
         args += ["--no-remember"]
     return args
+
+
+def webgpt_download_args(
+    tab_id: str, pattern: str, output_path: Path, timeout: int
+) -> list[str]:
+    """Build the supported Surf WebGPT download command."""
+    return [
+        "webgpt.download",
+        "--match",
+        pattern,
+        "--tab-id",
+        tab_id,
+        "--output",
+        str(output_path),
+        "--timeout",
+        str(timeout),
+    ]
 
 
 def _now() -> str:
@@ -378,16 +415,13 @@ def _active_chatgpt_tab() -> str:
 
 
 def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, background: bool = False) -> Path | None:
-    """Click a download button by text match, poll ~/Downloads."""
-    before = set((Path.home() / "Downloads").iterdir()) if (Path.home() / "Downloads").exists() else set()
-    _surf("click", pattern, *(["--no-activate"] if background else []), "--tab-id", tab_id, capture=False)
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        time.sleep(2)
-        after = set((Path.home() / "Downloads").iterdir())
-        new = [f for f in (after - before) if pattern in f.name and f.stat().st_size > 0]
-        if new:
-            return new[0]
+    """Download through Surf's tab-aware WebGPT artifact command."""
+    del background
+    suffix = Path(pattern).suffix or ".download"
+    output_path = Path("/tmp") / f"webgpt-download-{os.getpid()}-{time.time_ns()}{suffix}"
+    result = _surf(*webgpt_download_args(tab_id, pattern, output_path, timeout))
+    if result.returncode == 0 and output_path.is_file() and output_path.stat().st_size > 0:
+        return output_path
     return None
 
 
@@ -469,7 +503,10 @@ def submit(
     typer.echo(f"Response: {resp_path}")
 
     response_text = resp_path.read_text(encoding="utf-8") if resp_path.exists() else ""
-    if output_contract == "code" and not code_deliverable_errors(response_text, zip_path, bundle_text):
+    repo_root = Path(__file__).resolve().parents[3]
+    if output_contract == "code" and not code_deliverable_errors(
+        response_text, zip_path, bundle_text, repo_root
+    ):
         typer.echo("PASS_CURRENT_GATE")
         return
 
@@ -483,7 +520,7 @@ def submit(
             shutil.copy2(str(found), str(zip_path))
             typer.echo(f"Solution: {zip_path}")
     if output_contract == "code":
-        errors = code_deliverable_errors(response_text, zip_path, bundle_text)
+        errors = code_deliverable_errors(response_text, zip_path, bundle_text, repo_root)
         if errors:
             ruling = (
                 "REJECTED_SCOPE_EXPANSION"
