@@ -223,4 +223,43 @@ function countOffscreenMarkers(state: ReturnType<typeof createInitialAnnotationS
   assert.equal(state.tracksByCharacterId[characterIdFor('Marcus')]?.offscreenById[markerId]?.source, 'memory')
 }
 
+{
+  const row10SavedAfterStop = [
+    memKeyframe('row10-track15-marcus-start', 'Marcus', 240, boxA, row10),
+    memOffscreen('row10-track15-unassign-stop', 'Marcus', 241.792, row10),
+  ]
+
+  let state = createInitialAnnotationSession(row10)
+  state = annotationSessionReducer(state, actions.hydrateFromMemory(row10, row10SavedAfterStop))
+
+  assert.equal(countKeyframes(state), 1)
+  assert.equal(countOffscreenMarkers(state), 1)
+  assert.equal(selectVisibleOverlays(state, 241.791).filter((overlay) => overlay.characterName === 'Marcus').length, 1)
+  assert.equal(selectVisibleOverlays(state, 241.792).filter((overlay) => overlay.characterName === 'Marcus').length, 0)
+  assert.equal(selectVisibleOverlays(state, 242).filter((overlay) => overlay.characterName === 'Marcus').length, 0)
+
+  state = annotationSessionReducer(state, actions.selectCharacter('Willie', 'Billy Bob Thornton'))
+  state = annotationSessionReducer(state, actions.setPlaybackTime(244.542))
+  state = annotationSessionReducer(state, actions.commitDraw(boxC))
+
+  assert.equal(selectVisibleOverlays(state, 244.542).filter((overlay) => overlay.characterName === 'Marcus').length, 0)
+  assert.equal(selectVisibleOverlays(state, 244.542).filter((overlay) => overlay.characterName === 'Willie')[0]?.policy, 'exact_keyframe')
+  assert.equal(selectPersistenceQueue(state).filter((op) => op.kind === 'upsert_keyframe').length, 1)
+
+  const row10SavedAfterReassign = [
+    ...row10SavedAfterStop,
+    memKeyframe('row10-track15-willie-reassign-start', 'Willie', 244.542, boxC, row10),
+  ]
+  state = createInitialAnnotationSession(row10)
+  state = annotationSessionReducer(state, actions.hydrateFromMemory(row10, row10SavedAfterReassign))
+
+  assert.equal(countKeyframes(state), 2)
+  assert.equal(countOffscreenMarkers(state), 1)
+  assert.equal(selectVisibleOverlays(state, 242).filter((overlay) => overlay.characterName === 'Marcus').length, 0)
+  assert.equal(selectVisibleOverlays(state, 244.49).filter((overlay) => overlay.characterName === 'Willie').length, 0)
+  assert.equal(selectVisibleOverlays(state, 244.542).filter((overlay) => overlay.characterName === 'Willie')[0]?.policy, 'exact_keyframe')
+  assert.equal(selectVisibleOverlays(state, 245).filter((overlay) => overlay.characterName === 'Willie')[0]?.policy, 'runtime_held')
+  assert.equal(selectPersistenceQueue(state).length, 0)
+}
+
 console.log('watchAnnotationSession smoke passed')
