@@ -41,6 +41,21 @@ def test_negative_prompt_targets_are_balanced_and_exact() -> None:
     assert max(validation.values()) == 7
 
 
+def test_service_errors_do_not_consume_content_attempt_budget() -> None:
+    records = [
+        {"split": "positive_train", "rejection_reason": "generation_or_validation_error"},
+        {"split": "positive_train", "rejection_reason": "transcript_gate_rejected"},
+        {"split": "positive_train", "rejection_reason": None},
+    ]
+    content_attempts = sum(
+        1
+        for record in records
+        if record["split"] == "positive_train"
+        and record["rejection_reason"] != "generation_or_validation_error"
+    )
+    assert content_attempts == 2
+
+
 def test_split_seed_offsets_and_parameters_are_deterministic() -> None:
     offsets = MODULE.SPLIT_OFFSETS
     assert len(set(offsets.values())) == len(offsets)

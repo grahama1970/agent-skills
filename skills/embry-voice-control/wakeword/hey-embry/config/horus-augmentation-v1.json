@@ -1,0 +1,48 @@
+{
+  "schema": "embry.horus_wake_augmentation_policy.v1",
+  "policy_id": "embry_horus_wake_augmentation_v1",
+  "sample_rate_hz": 16000,
+  "output_subtype": "PCM_16",
+  "speed": {
+    "implementation": "ffmpeg_atempo",
+    "minimum": 0.9,
+    "maximum": 1.1
+  },
+  "gain_db": {
+    "minimum": -9.0,
+    "maximum": 3.0,
+    "maximum_peak_dbfs": -1.0
+  },
+  "noise_snr_db": {
+    "minimum": 8.0,
+    "maximum": 30.0
+  },
+  "equalization": {
+    "maximum_absolute_gain_db": 6.0,
+    "maximum_highpass_hz": 180.0,
+    "minimum_lowpass_hz": 5500.0
+  },
+  "maximum_non_identity_transforms": 3,
+  "maximum_total_clips_per_base": {
+    "positive_train": 8,
+    "positive_validation": 5,
+    "negative_train": 8,
+    "negative_validation": 5
+  },
+  "target_counts": {
+    "positive_train": 1500,
+    "positive_validation": 350,
+    "negative_train": 2000,
+    "negative_validation": 400
+  },
+  "prohibited_transforms": [
+    "pitch_shift",
+    "formant_shift",
+    "voice_conversion",
+    "nonlinear_distortion",
+    "lossy_codec",
+    "dynamic_range_compression",
+    "phoneme_splicing",
+    "time_reversal"
+  ]
+}

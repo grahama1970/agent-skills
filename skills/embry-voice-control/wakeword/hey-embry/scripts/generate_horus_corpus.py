@@ -307,10 +307,17 @@ def generate(args: argparse.Namespace) -> int:
         accepted_count = sum(
             1 for record in records if record["split"] == spec.name and record["accepted"]
         )
-        attempts = sum(1 for record in records if record["split"] == spec.name)
+        attempts = sum(
+            1
+            for record in records
+            if record["split"] == spec.name
+            and record.get("rejection_reason") != "generation_or_validation_error"
+        )
+        record_index = sum(1 for record in records if record["split"] == spec.name)
+        consecutive_service_errors = 0
         max_attempts = max(spec.target_count, spec.target_count * args.max_attempt_multiplier)
         while accepted_count < spec.target_count and attempts < max_attempts:
-            index = attempts
+            index = record_index
             split_seed = args.seed + SPLIT_OFFSETS[spec.name]
             if spec.label == "negative":
                 prompt = next_negative_prompt(
@@ -395,7 +402,12 @@ def generate(args: argparse.Namespace) -> int:
                 }
             append_jsonl(manifest_path, record)
             records.append(record)
-            attempts += 1
+            record_index += 1
+            if record["rejection_reason"] == "generation_or_validation_error":
+                consecutive_service_errors += 1
+            else:
+                attempts += 1
+                consecutive_service_errors = 0
             accepted_count += int(record["accepted"])
             print(
                 json.dumps(
@@ -410,6 +422,20 @@ def generate(args: argparse.Namespace) -> int:
                 ),
                 flush=True,
             )
+            if consecutive_service_errors >= args.max_consecutive_service_errors:
+                receipt = build_receipt(
+                    output_dir=output_dir,
+                    seed=args.seed,
+                    specs=specs,
+                    records=records,
+                    status="INCOMPLETE",
+                )
+                receipt["failed_gates"].append("upstream_service_error_circuit_open")
+                receipt["consecutive_service_errors"] = consecutive_service_errors
+                (output_dir / "receipt.json").write_text(
+                    json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+                )
+                return 2
             if args.delay_seconds:
                 time.sleep(args.delay_seconds)
 
@@ -440,6 +466,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--negative-validation", type=int, default=400)
     parser.add_argument("--seed", type=int, default=20260713)
     parser.add_argument("--max-attempt-multiplier", type=int, default=8)
+    parser.add_argument("--max-consecutive-service-errors", type=int, default=5)
     parser.add_argument("--timeout", type=float, default=180.0)
     parser.add_argument("--delay-seconds", type=float, default=0.0)
     args = parser.parse_args()
