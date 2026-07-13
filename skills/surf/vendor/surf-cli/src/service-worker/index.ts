@@ -133,6 +133,80 @@ function base64ToBlob(base64: string, mimeType = "image/png"): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
+type RecoveryGuardValue = true | false | "unknown";
+
+type RecoveryGuard = {
+  value: RecoveryGuardValue;
+  reason: string;
+};
+
+function recoveryUrlEvidenceOrigin(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.origin === "null" ? null : parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+async function getActiveDownloadRecoveryGuard(tabUrl: unknown): Promise<RecoveryGuard> {
+  if (!chrome.downloads?.search) {
+    return { value: "unknown", reason: "chrome downloads API is unavailable" };
+  }
+  if (typeof tabUrl !== "string" || tabUrl.length === 0) {
+    return { value: "unknown", reason: "tab URL is unavailable for active download check" };
+  }
+
+  let tabOrigin: string | null = null;
+  try {
+    const parsedTabUrl = new URL(tabUrl);
+    tabOrigin = parsedTabUrl.origin === "null" ? null : parsedTabUrl.origin;
+  } catch {
+    return { value: "unknown", reason: "tab URL is invalid for active download check" };
+  }
+
+  try {
+    const activeDownloads = await chrome.downloads.search({ state: "in_progress" });
+    if (activeDownloads.length === 0) {
+      return { value: false, reason: "no in-progress Chrome downloads found" };
+    }
+
+    const exactMatches = activeDownloads.filter((download) => {
+      const candidates = [(download as any).url, (download as any).finalUrl, (download as any).referrer];
+      return candidates.some((candidate) => candidate === tabUrl);
+    });
+    if (exactMatches.length > 0) {
+      return {
+        value: true,
+        reason: `found ${exactMatches.length} in-progress Chrome download(s) with exact tab URL evidence`,
+      };
+    }
+
+    if (!tabOrigin) {
+      return { value: "unknown", reason: "tab URL has no deterministic origin for active download check" };
+    }
+
+    const originMatches = activeDownloads.filter((download) => {
+      const candidates = [(download as any).url, (download as any).finalUrl, (download as any).referrer];
+      return candidates.some((candidate) => recoveryUrlEvidenceOrigin(candidate) === tabOrigin);
+    });
+    if (originMatches.length > 0) {
+      return {
+        value: true,
+        reason: `found ${originMatches.length} in-progress Chrome download(s) with matching tab origin evidence`,
+      };
+    }
+
+    return {
+      value: false,
+      reason: `checked ${activeDownloads.length} in-progress Chrome download(s); none matched exact tab URL or origin`,
+    };
+  } catch (err: any) {
+    return { value: "unknown", reason: `active download check failed: ${err?.message || String(err)}` };
+  }
+}
+
 async function captureFullPage(tabId: number, maxHeight: number): Promise<{ base64: string; width: number; height: number }> {
   const dimensionsResult = await cdp.evaluateScript(tabId, `(() => ({
     viewportHeight: window.innerHeight,
@@ -2801,6 +2875,7 @@ export async function handleMessage(
       const guardUnknownReason = pageStateError
         ? `page inspection failed: ${pageStateError}`
         : "page inspection did not return a value";
+      const activeDownloadGuard = await getActiveDownloadRecoveryGuard(pageState?.locationHref ?? tab.url);
 
       return {
         tab: tabIdentity,
@@ -2825,6 +2900,7 @@ export async function handleMessage(
             value: "unknown",
             reason: guardUnknownReason,
           },
+          activeDownload: activeDownloadGuard,
         },
       };
     }
