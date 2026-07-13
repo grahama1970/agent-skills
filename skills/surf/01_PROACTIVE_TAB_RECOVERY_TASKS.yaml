@@ -125,9 +125,11 @@ tasks:
       - Add native command tests for valid routing and malformed-ID rejection.
     read_context:
       - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/native/host-helpers.cjs
       - skills/surf/vendor/surf-cli/src/service-worker/index.ts
     allowlist:
       - skills/surf/vendor/surf-cli/native/cli.cjs
+      - skills/surf/vendor/surf-cli/native/host-helpers.cjs
       - skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
     tests:
       - node --test skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-cli.test.cjs
