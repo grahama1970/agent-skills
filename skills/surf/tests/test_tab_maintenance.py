@@ -60,7 +60,7 @@ def test_repair_rebinds_unique_stale_url_once_without_reload(tmp_path):
     surf = tmp_path / "surf"
     write_fake_surf(surf, log, "2\tChatGPT\thttps://chatgpt.com/c/abc\n")
 
-    proc = run(tmp_path, "--repair", "--root", str(root), "--surf-run", str(surf), "--receipt-dir", str(tmp_path / "r"), "--project", "p", "--trigger", "discarded")
+    proc = run(tmp_path, "--repair-safe", "--root", str(root), "--surf-run", str(surf), "--receipt-dir", str(tmp_path / "r"), "--project", "p", "--trigger", "discarded")
 
     assert proc.returncode == 0, proc.stderr
     assert json.loads((root / "p.json").read_text())["tab_id"] == "2"

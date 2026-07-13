@@ -422,6 +422,7 @@ tasks:
       skills/surf/vendor/surf-cli/test/unit/tab-recovery-state-download.test.cjs
       && bash -n skills/surf/scripts/tab-maintenance.sh agents/surf-doctor/install-tab-maintenance-timer.sh
       && test -x skills/surf/scripts/live-tab-maintenance-canary.sh
+      && test -x agents/surf-doctor/install-tab-maintenance-timer.sh
       && python3 scripts/check_mock_evidence_claims.py
     allowlist:
       - skills/surf/tests/test_tab_recovery_receipt.py

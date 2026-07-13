@@ -16,7 +16,7 @@ TIMEOUT_SECONDS="${SURF_TAB_MAINTENANCE_TIMEOUT:-15}"
 
 usage() {
   cat <<'EOF'
-Usage: tab-maintenance.sh [--repair|--dry-run] [--project NAME ...] [options]
+Usage: tab-maintenance.sh [--repair-safe|--repair|--dry-run] [--project NAME ...] [options]
 
 Options:
   --backend NAME              Browser-oracle backend. Default: webgpt.
@@ -34,7 +34,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --repair) MODE="repair"; shift ;;
+    --repair|--repair-safe) MODE="repair"; shift ;;
     --dry-run) MODE="dry-run"; shift ;;
     --backend) BACKEND="${2:-}"; shift 2 ;;
     --root) ROOT="${2:-}"; shift 2 ;;
