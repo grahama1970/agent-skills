@@ -103,6 +103,13 @@ def test_negative_derivative_admission_remains_prompt_specific() -> None:
     assert not expand.transcript_accepted(record, "Hey Embry.")
 
 
+def test_identity_base_transcript_remains_valid_admission_authority() -> None:
+    positive = {"label": "positive", "prompt": "Hey Em-bree!"}
+    negative = {"label": "negative", "prompt": "Emery!"}
+    assert expand.transcript_accepted(positive, "Hey, Embrie.")
+    assert expand.transcript_accepted(negative, "Emory.")
+
+
 def test_independent_validator_checks_materialized_audio(tmp_path: Path) -> None:
     records = []
     for index, split in enumerate(("positive_train", "positive_validation")):

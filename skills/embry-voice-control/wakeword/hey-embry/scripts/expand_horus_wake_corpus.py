@@ -394,14 +394,19 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
                     if output_hash in output_hashes:
                         destination.unlink()
                         continue
-                    transcript_response = GENERATOR.multipart_transcribe(
-                        f"{args.whisper_url.rstrip('/')}/v1/audio/transcriptions",
-                        audio=destination.read_bytes(),
-                        filename=destination.name,
-                        api_key=args.whisper_api_key,
-                        timeout=args.timeout,
-                    )
-                    transcript = str(transcript_response.get("text", ""))
+                    if variant_index == 0:
+                        transcript = str(base["transcript"])
+                        admission_source = "accepted_base_receipt"
+                    else:
+                        transcript_response = GENERATOR.multipart_transcribe(
+                            f"{args.whisper_url.rstrip('/')}/v1/audio/transcriptions",
+                            audio=destination.read_bytes(),
+                            filename=destination.name,
+                            api_key=args.whisper_api_key,
+                            timeout=args.timeout,
+                        )
+                        transcript = str(transcript_response.get("text", ""))
+                        admission_source = "post_transform_whisper"
                     if not transcript_accepted(base, transcript):
                         destination.unlink()
                         continue
@@ -435,6 +440,7 @@ def expand(args: argparse.Namespace) -> dict[str, Any]:
                         "duration_ms": round(info.frames * 1000 / info.samplerate, 3),
                         "post_transform_asr_transcript": transcript,
                         "post_transform_asr_accepted": True,
+                        "asr_admission_source": admission_source,
                     }
                     output_hashes.add(output_hash)
                     break
