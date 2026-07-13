@@ -109,14 +109,27 @@ execution_lock:
   deferred: [release_qualification, expanded_suite]
   stop_condition: "Campaign process starts and writes its first live row receipt"
   max_attempts_per_blocker: 2
+  max_identical_failures_per_family: 3
+  systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families
+  reviewer_scope_authority: none
   update_interval_minutes: 5
 ```
 
 The runtime rejects missing fields, unclassified components, overlap between
 critical and deferred work, an off-path current phase, more than two attempts
-per blocker, or an update interval over five minutes. An architecture may show
-deferred work, but the project agent may not execute it before the critical-path
-stop condition without explicit user authorization.
+per blocker, more than three identical failures in one family, any systemic
+failure action other than family-level fail-fast, reviewer scope authority, or
+an update interval over five minutes. An architecture may show deferred work,
+but the project agent may not execute it before the critical-path stop condition
+without explicit user authorization.
+
+For campaigns, three identical failed gates, error codes, or root causes make
+the family systemic. Stop that family, preserve representative evidence, mark
+untouched variants `blocked_by_systemic_failure`, and continue independent
+families. Do not add retry loops, qualification rungs, architecture work, or
+adjacent components to make the diagram appear comprehensive. The architecture
+must keep the human's objective unchanged; reviewer recommendations cannot move
+components from deferred work onto the critical path.
 
 ## Mutation Authorization Gate
 

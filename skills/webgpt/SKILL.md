@@ -130,6 +130,30 @@ forbidden_adjacent_scope: ...
 
 The response must contain a unified diff or produce a non-empty solution zip,
 and every returned path must remain inside `allowed_files`.
+Unified diffs must pass `git apply --check` against the current repository
+before the wrapper may emit `PASS_CURRENT_GATE`.
 Prose-only responses fail with `BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING`.
 Explicit `--tab-id` submissions also require an exact `--expect-url`; the
 runtime never replaces or creates a tab in that mode.
+
+Execution-locked bundles must also contain:
+
+```text
+## Failure Policy
+max_identical_failures_per_family: 3
+systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families
+reviewer_scope_authority: none
+```
+
+Three cases in one test family with the same failed gate, error code, or root
+cause are a systemic failure. Stop that family immediately, preserve the three
+representative receipts, and mark its untouched cases
+`blocked_by_systemic_failure`. Do not spend live calls reproducing the same
+defect. Continue independent families so one subsystem does not conceal the
+rest of the campaign's coverage.
+
+WebGPT must recommend repair of the current systemic blocker before broad
+reruns. It must not respond to a systemic failure by adding architecture,
+qualification rungs, model training, dashboards, manifests, or adjacent
+subsystems to the critical path. Reviewer output has no authority to change the
+human's objective or expand scope; only the human may do that explicitly.

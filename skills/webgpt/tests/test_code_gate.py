@@ -51,6 +51,20 @@ def test_code_deliverable_rejects_scope_expansion(tmp_path: Path) -> None:
     ]
 
 
+def test_code_deliverable_rejects_corrupt_unified_diff(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    MODULE.subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    corrupt = """diff --git a/skills/webgpt/scripts/webgpt_cli.py b/skills/webgpt/scripts/webgpt_cli.py
+--- a/skills/webgpt/scripts/webgpt_cli.py
++++ b/skills/webgpt/scripts/webgpt_cli.py
+@@ -1 +1 @@
+missing-context-prefix
+"""
+    errors = MODULE.code_deliverable_errors(corrupt, tmp_path / "missing.zip", VALID_GATE, repo)
+    assert errors and errors[0].startswith("unapplicable_unified_diff:")
+
+
 def test_zipped_bundle_requires_execution_gate_member(tmp_path: Path) -> None:
     archive = tmp_path / "bundle.zip"
     with zipfile.ZipFile(archive, "w") as output:
@@ -83,3 +97,18 @@ def test_explicit_tab_target_never_creates_or_remembers_tab() -> None:
         "--no-remember",
     ]
     assert "--create-tab" not in args
+
+
+def test_download_uses_tab_aware_webgpt_command(tmp_path: Path) -> None:
+    output = tmp_path / "solution.zip"
+    assert MODULE.webgpt_download_args("837358116", ".zip", output, 120) == [
+        "webgpt.download",
+        "--match",
+        ".zip",
+        "--tab-id",
+        "837358116",
+        "--output",
+        str(output),
+        "--timeout",
+        "120",
+    ]
