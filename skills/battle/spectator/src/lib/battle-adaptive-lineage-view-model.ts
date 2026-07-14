@@ -10,7 +10,7 @@ function receiptId(event: AdaptiveLineageEvent): string {
 }
 
 function laneEventKind(event: AdaptiveLineageEvent): LaneEvent["kind"] {
-	if (event.event_type === "child_research_materialized") return "handoff";
+	if (event.event_type === "child_research_materialized" || event.event_type === "memory_use_acknowledged") return "handoff";
 	if (event.event_type === "genome_mutated") return "genome_selected";
 	return "useful";
 }
@@ -26,6 +26,11 @@ function laneEventLabel(event: AdaptiveLineageEvent): string {
 		child_research_materialized: "CHILD RESEARCH ACTIVE",
 		child_knowledge_acknowledged: "INHERITANCE VERIFIED",
 		genome_mutated: "MUTATION EVIDENCE VERIFIED",
+		memory_promoted: "MEMORY PROMOTED · PENDING",
+		memory_written: "MEMORY WRITTEN",
+		memory_recalled: "MEMORY RECALLED",
+		memory_use_acknowledged: "MEMORY USE ACKNOWLEDGED",
+		memory_generation_evaluated: "MEMORY GENERATION EVALUATED",
 	};
 	return labels[event.event_type] ?? event.event_type.replace(/_/g, " ").toUpperCase();
 }
@@ -49,18 +54,18 @@ function toLaneEvent(event: AdaptiveLineageEvent, duration: number): LaneEvent {
 	};
 }
 
-function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEvent[], duration: number): LaneActivitySegment[] {
+function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEvent[], duration: number, isMemory: boolean): LaneActivitySegment[] {
 	if (source.role === "parent") return [];
-	const research = events.find((event) => event.event_type === "child_research_materialized" && event.lane_id === source.lane_id);
-	const judge = events.find((event) => event.event_type === "judge_verdict" && event.generation === 2);
+	const activation = events.find((event) => event.event_type === (isMemory ? "memory_use_acknowledged" : "child_research_materialized") && event.lane_id === source.lane_id);
+	const judge = events.find((event) => event.event_type === (isMemory ? "memory_generation_evaluated" : "judge_verdict") && event.generation === source.generation);
 	const mutation = events.find((event) => event.event_type === "genome_mutated" && event.lane_id === source.lane_id);
-	const activeAt = research?.elapsed_seconds ?? source.active_from_elapsed_seconds;
+	const activeAt = activation?.elapsed_seconds ?? source.active_from_elapsed_seconds;
 	const judgeAt = judge?.elapsed_seconds ?? duration;
 	const segments: LaneActivitySegment[] = [
 		{
 			id: `${source.lane_id}:authorized-pending`,
 			phase: "authorized_pending",
-			label: "AUTHORIZED · PENDING",
+			label: isMemory ? "MEMORY PROMOTED · PENDING" : "AUTHORIZED · PENDING",
 			start_x: pct(source.visible_from_elapsed_seconds, duration),
 			end_x: pct(activeAt, duration),
 			start_elapsed_seconds: source.visible_from_elapsed_seconds,
@@ -70,7 +75,7 @@ function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEv
 		{
 			id: `${source.lane_id}:materialize`,
 			phase: "materialize",
-			label: "CHILD RESEARCH MATERIALIZED",
+			label: isMemory ? "MEMORY USE ACKNOWLEDGED" : "CHILD RESEARCH MATERIALIZED",
 			start_x: pct(activeAt, duration),
 			end_x: pct(Math.min(activeAt + 1.5, judgeAt), duration),
 			start_elapsed_seconds: activeAt,
@@ -80,7 +85,7 @@ function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEv
 		{
 			id: `${source.lane_id}:research`,
 			phase: "research",
-			label: "CHILD RESEARCH",
+			label: isMemory ? "MEMORY-INFORMED GENERATION" : "CHILD RESEARCH",
 			start_x: pct(Math.min(activeAt + 1.5, judgeAt), duration),
 			end_x: pct(judgeAt, duration),
 			start_elapsed_seconds: Math.min(activeAt + 1.5, judgeAt),
@@ -106,6 +111,8 @@ function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEv
 function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLineageFixtureV1): Lane {
 	const duration = fixture.campaign.elapsed_seconds;
 	const events = fixture.events.filter((event) => event.lane_id === source.lane_id);
+	const childLane = fixture.lanes.find((lane) => lane.parent_lane_id === source.lane_id);
+	const isMemory = fixture.live_source === "adaptive_memory_v14";
 	return {
 		id: source.lane_id,
 		name: source.display_name,
@@ -114,7 +121,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 		team: source.team,
 		parentId: source.parent_lane_id ?? undefined,
 		parent_id: source.parent_lane_id ?? undefined,
-		children: source.role === "parent" ? [`${source.team}-g2`] : [],
+		children: childLane ? [childLane.lane_id] : [],
 		xStart: pct(source.visible_from_elapsed_seconds, duration),
 		xEnd: 100,
 		start_elapsed_seconds: source.visible_from_elapsed_seconds,
@@ -128,7 +135,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 		lineColor: source.team === "red" ? (source.role === "parent" ? "red" : "green") : "purple",
 		terminal: "none",
 		events: events.map((event) => toLaneEvent(event, duration)),
-		activitySegments: activitySegments(source, fixture.events, duration),
+		activitySegments: activitySegments(source, fixture.events, duration, isMemory),
 		lineageGroupId: `lineage:${source.team}`,
 		collapsible: source.role === "parent",
 		expandedByDefault: true,
@@ -141,7 +148,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 			team: source.team,
 			archetype: "adaptive-lineage-runner",
 			variant_id: source.actor_visual.variant_id,
-			style_family: "v13-shared-plague-nurgling",
+			style_family: fixture.sprite_theme.theme_id,
 			initial_state: source.role === "child" ? "authorized_pending" : "idle",
 			state_source: "battle.normalized_adaptive_lineage_fixture.v1",
 		},
@@ -150,6 +157,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 
 function toBattleEvent(event: AdaptiveLineageEvent, fixture: BattleNormalizedAdaptiveLineageFixtureV1): BattleEvent {
 	const team = event.team ?? "system";
+	const memoryNonclaim = event.event_type === "memory_use_acknowledged" || event.event_type === "memory_generation_evaluated";
 	return {
 		id: event.event_id,
 		ts: event.elapsed_seconds,
@@ -172,10 +180,14 @@ function toBattleEvent(event: AdaptiveLineageEvent, fixture: BattleNormalizedAda
 			spectator_caption: `${laneEventLabel(event)} at receipt commit ${event.elapsed_seconds.toFixed(3)}s.`,
 		},
 		claim_boundary: {
-			does_not_prove: event.event_type === "selection_decision" ? ["child improvement", "victory"] : ["action occurrence time independent of receipt commit"],
+			does_not_prove: event.event_type === "selection_decision" ? ["child improvement", "victory"] : memoryNonclaim ? ["memory improved either team", "victory"] : ["action occurrence time independent of receipt commit"],
 			victory_requires_judge_receipt: true,
 		},
 	};
+}
+
+function edgeVisibilityReceipt(edge: BattleNormalizedAdaptiveLineageFixtureV1["lineage_edges"][number]) {
+	return edge.edge_kind === "memory_continuation" ? edge.promoted_receipt_ref : edge.authorized_receipt_ref;
 }
 
 export function adaptiveLineageToRaceFixture(source: BattleNormalizedAdaptiveLineageFixtureV1): BattleNormalizedUxFixture {
@@ -214,13 +226,17 @@ export function adaptiveLineageToRaceFixture(source: BattleNormalizedAdaptiveLin
 			spawn_count: source.lineage_edges.length,
 			parent_lane_ids: source.lineage_edges.map((edge) => edge.parent_lane_id),
 			child_lane_ids: source.lineage_edges.map((edge) => edge.child_lane_id),
-			groups: source.lineage_edges.map((edge) => ({ group_id: `lineage:${edge.team}`, parent_lane_id: edge.parent_lane_id, child_lane_ids: [edge.child_lane_id], lane_ids: [edge.parent_lane_id, edge.child_lane_id], collapsible: true, expanded_by_default: true, spawn_receipt_ids: [edge.authorized_receipt_ref.receipt_id ?? edge.authorized_receipt_ref.sha256], lane_count: 2, proof_mode: "receipt_backed_fixture" })),
+			groups: source.lineage_edges.map((edge) => {
+				const receipt = edgeVisibilityReceipt(edge);
+				return { group_id: `lineage:${edge.team}`, parent_lane_id: edge.parent_lane_id, child_lane_ids: [edge.child_lane_id], lane_ids: [edge.parent_lane_id, edge.child_lane_id], collapsible: true, expanded_by_default: true, spawn_receipt_ids: [receipt.receipt_id ?? receipt.sha256], lane_count: 2, proof_mode: "receipt_backed_fixture" };
+			}),
 			spawns: source.lineage_edges.map((edge) => {
 				const child = source.lanes.find((lane) => lane.lane_id === edge.child_lane_id)!;
-				return { receipt_id: edge.authorized_receipt_ref.receipt_id ?? edge.authorized_receipt_ref.sha256, parent_lane_id: edge.parent_lane_id, child_lane_id: edge.child_lane_id, generation: 2, spawn_elapsed_seconds: edge.visible_from_elapsed_seconds, visible_from_elapsed_seconds: edge.visible_from_elapsed_seconds, child_start_elapsed_seconds: child.active_from_elapsed_seconds, first_active_segment_elapsed_seconds: child.active_from_elapsed_seconds, proof_mode: "receipt_backed_fixture" as const };
+				const receipt = edgeVisibilityReceipt(edge);
+				return { receipt_id: receipt.receipt_id ?? receipt.sha256, parent_lane_id: edge.parent_lane_id, child_lane_id: edge.child_lane_id, generation: child.generation, spawn_elapsed_seconds: edge.visible_from_elapsed_seconds, visible_from_elapsed_seconds: edge.visible_from_elapsed_seconds, child_start_elapsed_seconds: child.active_from_elapsed_seconds, first_active_segment_elapsed_seconds: child.active_from_elapsed_seconds, proof_mode: "receipt_backed_fixture" as const };
 			}),
 			proof_mode: "receipt_backed_fixture",
-			does_not_prove: ["child improvement", "population-scale evolution"],
+			does_not_prove: source.claim_boundary.must_not_claim,
 		},
 		sprite_theme: source.sprite_theme,
 		lanes,

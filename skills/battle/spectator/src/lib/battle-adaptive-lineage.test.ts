@@ -17,6 +17,15 @@ async function sourceFixture() {
 	);
 }
 
+async function memoryFixture() {
+	return JSON.parse(
+		await readFile(
+			resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-adaptive-memory-v14/battle.normalized_ux_fixture.json"),
+			"utf8",
+		),
+	);
+}
+
 describe("Battle V13 adaptive lineage projection", () => {
 	it("validates the four-lane causal contract and explicit shared atlas", async () => {
 		const result = validateAdaptiveLineageFixture(await sourceFixture());
@@ -69,5 +78,43 @@ describe("Battle V13 adaptive lineage projection", () => {
 		const result = validateAdaptiveLineageFixture(source);
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error.detail).toMatch(/plague_nurgling theme/i);
+	});
+});
+
+describe("Battle V14 adaptive memory projection", () => {
+	it("validates and projects the receipt-backed G2/G3 memory continuation", async () => {
+		const validated = validateAdaptiveLineageFixture(await memoryFixture());
+		expect(validated.ok).toBe(true);
+		if (!validated.ok) return;
+		expect(validated.fixture.events).toHaveLength(9);
+		expect(validated.fixture.lanes.map((lane) => lane.lane_id)).toEqual(["red-g2", "red-g3", "blue-g2", "blue-g3"]);
+		expect(validated.fixture.lineage_edges.every((edge) => edge.edge_kind === "memory_continuation")).toBe(true);
+
+		const fixture = adaptiveLineageToRaceFixture(validated.fixture);
+		expect(fixture.lanes.map((lane) => lane.id)).toEqual(["red-g2", "red-g3", "blue-g2", "blue-g3"]);
+		expect(fixture.events).toHaveLength(9);
+		expect(fixture.lanes.every((lane) => lane.terminal === "none")).toBe(true);
+		expect(fixture.claims?.does_not_prove).toContain("memory improved either team");
+		const evaluation = fixture.events.find((event) => String(event.event_type) === "memory_generation_evaluated");
+		expect(evaluation?.claim_boundary?.does_not_prove).toContain("memory improved either team");
+	});
+
+	it("keeps memory children pending until provider use is acknowledged", async () => {
+		const validated = validateAdaptiveLineageFixture(await memoryFixture());
+		if (!validated.ok) throw new Error(validated.error.detail);
+		const fixture = adaptiveLineageToRaceFixture(validated.fixture);
+		const child = fixture.lanes.find((lane) => lane.id === "red-g3")!;
+		expect(child.visible_from_elapsed_seconds).toBe(0);
+		expect(child.first_active_segment_elapsed_seconds).toBe(64);
+		expect(child.activitySegments?.[0]?.label).toBe("MEMORY PROMOTED · PENDING");
+		expect(child.activitySegments?.[1]?.label).toBe("MEMORY USE ACKNOWLEDGED");
+	});
+
+	it("fails closed when V14 memory use is presented as improvement", async () => {
+		const source = await memoryFixture();
+		source.renderer_contract.memory_use_is_not_improvement = false;
+		const result = validateAdaptiveLineageFixture(source);
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.error.detail).toMatch(/claim gates/i);
 	});
 });

@@ -9,9 +9,9 @@ export type AdaptiveReceiptRef = {
 };
 
 export type AdaptiveLineageLane = {
-	lane_id: "red-g1" | "red-g2" | "blue-g1" | "blue-g2";
+	lane_id: string;
 	team: AdaptiveTeam;
-	generation: 1 | 2;
+	generation: number;
 	role: "parent" | "child";
 	parent_lane_id: string | null;
 	display_name: string;
@@ -25,22 +25,36 @@ export type AdaptiveLineageLane = {
 	};
 };
 
-export type AdaptiveLineageEdge = {
+type AdaptiveLineageEdgeBase = {
 	edge_id: string;
 	team: AdaptiveTeam;
 	parent_lane_id: string;
 	child_lane_id: string;
-	requested_receipt_ref: AdaptiveReceiptRef;
-	authorized_receipt_ref: AdaptiveReceiptRef;
 	visible_from_elapsed_seconds: number;
 };
+
+export type AdaptiveSpawnLineageEdge = AdaptiveLineageEdgeBase & {
+	edge_kind?: "spawn";
+	requested_receipt_ref: AdaptiveReceiptRef;
+	authorized_receipt_ref: AdaptiveReceiptRef;
+};
+
+export type AdaptiveMemoryLineageEdge = AdaptiveLineageEdgeBase & {
+	edge_kind: "memory_continuation";
+	promoted_receipt_ref: AdaptiveReceiptRef;
+	written_receipt_ref: AdaptiveReceiptRef;
+	recalled_receipt_ref: AdaptiveReceiptRef;
+	use_receipt_ref: AdaptiveReceiptRef;
+};
+
+export type AdaptiveLineageEdge = AdaptiveSpawnLineageEdge | AdaptiveMemoryLineageEdge;
 
 export type AdaptiveLineageEvent = {
 	seq: number;
 	event_id: string;
 	elapsed_seconds: number;
 	event_type: string;
-	generation: 1 | 2 | null;
+	generation: number | null;
 	team: AdaptiveTeam | null;
 	lane_id: string | null;
 	scope: "lane" | "generation_pair" | "campaign";
@@ -61,6 +75,7 @@ export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 		campaign_clock_id: string;
 		elapsed_seconds: number;
 		generation_count: 2;
+		generation_ids?: [number, number];
 		teams: ["red", "blue"];
 	};
 	lanes: AdaptiveLineageLane[];
@@ -77,14 +92,15 @@ export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 	};
 	renderer_contract: {
 		schema: "battle.adaptive_lineage_renderer_contract.v1";
-		time_authority: "event.elapsed_seconds_is_receipt_commit_time";
+		time_authority: string;
 		event_order_authority: "event.seq";
-		child_visibility_event: "spawn_authorized";
-		child_pending_state: "AUTHORIZED_PENDING";
-		child_activation_event: "child_research_materialized";
+		child_visibility_event: "spawn_authorized" | "memory_promoted";
+		child_pending_state: "AUTHORIZED_PENDING" | "MEMORY_PENDING";
+		child_activation_event: "child_research_materialized" | "memory_use_acknowledged";
 		pair_judge_event_is_global: true;
 		selection_is_not_victory: true;
 		no_promotion_is_not_promoted: true;
+		memory_use_is_not_improvement?: true;
 		sprite_identity_is_cosmetic_only: true;
 	};
 	events: AdaptiveLineageEvent[];
@@ -92,5 +108,12 @@ export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 	selection: Record<string, unknown>;
 	memory_evaluation: Record<string, unknown>;
 	claim_boundary: { may_claim: string[]; must_not_claim: string[] };
-	provenance: { raw_paths_redacted: true; source_run_count: 1; source_proof_id: string };
+	provenance: {
+		raw_paths_redacted: true;
+		source_run_count: number;
+		source_proof_id: string;
+		projection_kind?: "adaptive_lineage_v13" | "adaptive_memory_v14";
+	};
+	memory_lifecycle?: Record<string, unknown>;
+	source_campaign?: Record<string, unknown>;
 };
