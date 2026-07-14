@@ -523,7 +523,7 @@ def collect_entities(question: str) -> dict | None:
     try:
         resp = client.post(
             "/extract-entities",
-            json={"text": question[:500], "view": "legacy"},
+            json={"text": question[:4000], "view": "legacy"},
         )
         resp.raise_for_status()
         result = resp.json()

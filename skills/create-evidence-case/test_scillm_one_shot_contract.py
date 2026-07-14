@@ -16,7 +16,7 @@ def test_scillm_render_uses_caller_attributed_gemini_one_shot(monkeypatch):
             return {
                 "choices": [{
                     "message": {
-                        "content": '{"answer":"CM0028 applies.","citations":["CM0028"]}'
+                        "content": '{"decision":"answer","answer":"CM0028 applies to detect firmware changes.","clarifying_question":"","citations":["CM0028"]}'
                     }
                 }]
             }
@@ -29,7 +29,13 @@ def test_scillm_render_uses_caller_attributed_gemini_one_shot(monkeypatch):
     monkeypatch.setattr(
         runner,
         "collect_entities",
-        lambda _answer: {"resolved_entities": [{"canonical_id": "CM0028"}]},
+        lambda _answer: {
+            "resolved_entities": [
+                {"canonical_id": "CM0028"},
+                {"canonical_id": "MID-001"},
+                {"canonical_id": "Detect"},
+            ]
+        },
     )
 
     answer = EvidenceCaseRunner()._scillm_render(
@@ -43,7 +49,10 @@ def test_scillm_render_uses_caller_attributed_gemini_one_shot(monkeypatch):
         steps=[],
     )
 
-    assert answer == "CM0028 applies."
+    assert answer.splitlines()[0] == "CM0028 applies to detect firmware changes."
+    assert "[CM0028]" in answer
+    assert "MID-001" not in answer
+    assert "[Detect]" not in answer
     assert captured["headers"]["X-Caller-Skill"] == "create-evidence-case"
     assert captured["json"]["model"] == "gemini-flash"
     assert "max_tokens" not in captured["json"]
@@ -59,7 +68,7 @@ def test_scillm_render_ignores_nullable_citation_ids(monkeypatch):
             return {
                 "choices": [{
                     "message": {
-                        "content": '{"answer":"CM0020 mitigates DE-0001.","citations":[null,"CM0020","DE-0001"]}'
+                        "content": '{"decision":"answer","answer":"CM0020 mitigates DE-0001.","clarifying_question":"","citations":[null,"CM0020","DE-0001"]}'
                     }
                 }]
             }
@@ -91,7 +100,29 @@ def test_scillm_render_ignores_nullable_citation_ids(monkeypatch):
         steps=[],
     )
 
-    assert answer == "CM0020 mitigates DE-0001."
+    assert answer.splitlines()[0] == "CM0020 mitigates DE-0001."
+    assert "[CM0020]" in answer
+    assert "[DE-0001]" in answer
+
+
+def test_scillm_render_fails_closed_after_transport_errors(monkeypatch):
+    def fail_post(*_args, **_kwargs):
+        raise RuntimeError("transport unavailable")
+
+    monkeypatch.setattr("runner.httpx.post", fail_post)
+
+    answer = EvidenceCaseRunner()._scillm_render(
+        question="How does CM0020 address DE-0001?",
+        verdict_state="satisfied",
+        resolved=[],
+        unresolved=[],
+        external=[],
+        extraction_glossary=[],
+        qra_items=[],
+        steps=[],
+    )
+
+    assert answer == "LLM render failed: transport unavailable"
 
 
 def test_memory_persistence_client_uses_current_http_daemon(monkeypatch):

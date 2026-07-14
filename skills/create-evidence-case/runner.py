@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from enum import Enum
 from typing import Any
@@ -39,6 +40,7 @@ from scoring import (
 SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001")
 SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
 SCILLM_EVIDENCE_MODEL = os.environ.get("SCILLM_EVIDENCE_MODEL", "gemini-flash")
+SCILLM_EVIDENCE_TIMEOUT_S = float(os.environ.get("SCILLM_EVIDENCE_TIMEOUT_S", "120"))
 
 
 class AgentAction(str, Enum):
@@ -47,6 +49,46 @@ class AgentAction(str, Enum):
     REJECT_OFF_TOPIC = "reject_off_topic"
     ASK_CLARIFY = "ask_clarifying_question"
     RETRY = "retry_with_more_context"
+
+
+def restrict_to_expected_entities(
+    entities: dict[str, Any],
+    expected_control_ids: list[str],
+    *,
+    exact_path_proven: bool,
+) -> tuple[dict[str, Any], bool, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Keep only the exact pre-grounded path endpoints for assertion evaluation."""
+    expected = set(expected_control_ids)
+    resolved = [
+        entity
+        for entity in entities.get("resolved_entities") or []
+        if entity.get("canonical_id") in expected
+    ]
+    resolved_ids = {
+        entity.get("canonical_id")
+        for entity in resolved
+        if entity.get("canonical_id")
+    }
+    grounding_ok = resolved_ids == expected
+    unresolved = [
+        entity
+        for entity in entities.get("unresolved_entities") or []
+        if entity.get("mention") in expected
+    ]
+    normalized = {
+        **entities,
+        "grounding_ok": grounding_ok,
+        "resolved_entities": resolved,
+        "unresolved_entities": unresolved,
+        "external_entities": [],
+        "technique_coherence": {
+            "ok": bool(exact_path_proven and grounding_ok),
+            "detail": "pre_grounded_exact_persisted_path"
+            if exact_path_proven and grounding_ok
+            else "expected_entity_or_path_missing",
+        },
+    }
+    return normalized, grounding_ok, resolved, unresolved, []
 
 
 class EvidenceCaseRunner:
@@ -62,6 +104,8 @@ class EvidenceCaseRunner:
         category: str = "auto",
         force_strategies: int = 0,
         show_progress: bool = True,
+        expected_control_ids: list[str] | None = None,
+        exact_path_proven: bool = False,
     ) -> dict[str, Any]:
         """Run the 4-call pipeline."""
         t0 = time.monotonic()
@@ -129,6 +173,13 @@ class EvidenceCaseRunner:
         resolved = entities.get("resolved_entities", [])
         unresolved = entities.get("unresolved_entities", [])
         external = entities.get("external_entities", [])
+        if expected_control_ids is not None:
+            entities, grounding_ok, resolved, unresolved, external = restrict_to_expected_entities(
+                entities,
+                expected_control_ids,
+                exact_path_proven=exact_path_proven,
+            )
+            action = None
         control_ids = [e.get("canonical_id", "") for e in resolved if e.get("canonical_id")]
 
         steps.append({
@@ -262,11 +313,15 @@ class EvidenceCaseRunner:
 
         if self.gates_only:
             answer = f"Gates-only: {verdict_state}"
+            render_ok = True
         else:
             answer = self._scillm_render(
                 claim_text, verdict_state, resolved, unresolved,
                 external, entities.get("glossary", []), qra_items, steps,
             )
+            render_ok = not answer.startswith("LLM render failed:")
+            if not render_ok:
+                verdict_state = "inconclusive"
 
         n_passed = sum(1 for s in steps if s.get("passed"))
         n_total = len(steps)
@@ -275,8 +330,13 @@ class EvidenceCaseRunner:
 
         steps.append({
             "gate": "scillm_synthesize",
-            "passed": verdict_state == "satisfied",
-            "detail": f"verdict={verdict_state}",
+            "passed": render_ok and verdict_state == "satisfied",
+            "detail": f"verdict={verdict_state}; render_ok={str(render_ok).lower()}",
+            "data": {
+                "model": SCILLM_EVIDENCE_MODEL,
+                "timeout_s": SCILLM_EVIDENCE_TIMEOUT_S,
+                "caller_skill": "create-evidence-case",
+            },
         })
 
         # --- Step 3: /memory store ---
@@ -502,7 +562,7 @@ EVIDENCE_CASE:
                         "messages": messages,
                         "temperature": 0.2,
                     },
-                    timeout=30,
+                    timeout=SCILLM_EVIDENCE_TIMEOUT_S,
                 )
                 resp.raise_for_status()
                 content = resp.json()["choices"][0]["message"]["content"].strip()
@@ -524,6 +584,20 @@ EVIDENCE_CASE:
                         value
                         for entity in answer_entities.get("resolved_entities", [])
                         if (value := self._citation_id(entity.get("canonical_id")))
+                        and self._looks_like_citation_id(value)
+                        and re.search(
+                            rf"(?<![A-Za-z0-9]){re.escape(value)}(?![A-Za-z0-9])",
+                            answer_text,
+                            flags=re.IGNORECASE,
+                        )
+                    }
+                    answer_entities = {
+                        **answer_entities,
+                        "resolved_entities": [
+                            entity
+                            for entity in answer_entities.get("resolved_entities", [])
+                            if self._citation_id(entity.get("canonical_id")) in extracted_ids
+                        ],
                     }
                 except Exception as exc:
                     logger.warning("Citation extraction failed: {}", exc)
@@ -582,18 +656,18 @@ EVIDENCE_CASE:
                 if attempt == self.MAX_RENDER_RETRIES:
                     return f"LLM render failed: {exc}"
 
-        # Exhausted retries — return last result with invalid citations stripped
-        logger.warning("Render retries exhausted, stripping invalid citations")
-        clean_citations = [c for c in llm_citations if c in valid_ids]
-        answer = result.get("answer", "")
-        if not answer:
-            return content
-        return answer
+        logger.warning("Render retries exhausted without a valid response")
+        return "LLM render failed: validation retries exhausted"
 
     @staticmethod
     def _citation_id(value: Any) -> str:
         """Return a sortable citation identifier or an empty sentinel."""
         return value.strip() if isinstance(value, str) else ""
+
+    @staticmethod
+    def _looks_like_citation_id(value: str) -> bool:
+        """Reject semantic labels that entity extraction presents as IDs."""
+        return any(char.isdigit() for char in value) or ":" in value
 
     def _build_evidence_case(
         self,

@@ -23,7 +23,7 @@ from runner import EvidenceCaseRunner
 
 MEMORY_API_BASE = os.environ.get("MEMORY_API_BASE", "http://127.0.0.1:8601")
 MEMORY_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
-ORCHESTRATOR_CONTRACT_ID = "f36-create-evidence-case-family-v1.1"
+ORCHESTRATOR_CONTRACT_ID = "f36-create-evidence-case-family-v1.3"
 VARIANT_PLAN = (
     ("operator", "simple"),
     ("project_manager", "simple"),
@@ -45,6 +45,13 @@ MATERIAL_REQUIREMENT_KEYS = (
     "lifecycle_phase_ids",
 )
 DISALLOWED_EDGE_STATES = {"rejected", "superseded", "stale"}
+TRIAGE_DISPOSITIONS = {
+    "candidate_applicable",
+    "adjacent",
+    "informational",
+    "candidate_non_applicable",
+    "clarify",
+}
 STOPWORDS = {
     "and", "are", "for", "from", "how", "shall", "that", "the", "this",
     "what", "when", "where", "which", "with", "must", "required", "outcome",
@@ -83,6 +90,7 @@ def validate_family_input(envelope: dict[str, Any]) -> list[str]:
     requirement = envelope.get("requirement") or {}
     family = envelope.get("family") or {}
     corpus = envelope.get("sparta_corpus") or {}
+    triage = envelope.get("triage") or {"disposition": "candidate_applicable"}
 
     if not requirement.get("requirement_id"):
         issues.append("missing requirement_id")
@@ -96,6 +104,8 @@ def validate_family_input(envelope: dict[str, Any]) -> list[str]:
         issues.append("family component owner mismatch")
     if not family.get("canonical_question") or not family.get("canonical_answer"):
         issues.append("canonical question or answer missing")
+    if triage.get("disposition") not in TRIAGE_DISPOSITIONS:
+        issues.append("invalid triage disposition")
 
     variants = family.get("variants") or []
     if len(variants) != 5:
@@ -402,6 +412,69 @@ def _event(stage: str, state: str, detail: dict[str, Any]) -> dict[str, Any]:
     return {"stage": stage, "state": state, "timestamp_ns": time.time_ns(), "detail": detail}
 
 
+def _assertion_role(route: str) -> tuple[str, bool]:
+    if route == "organizational_assurance":
+        return "assurance_context", False
+    return "mitigation", True
+
+
+def _build_assertion_manifest(
+    family: dict[str, Any],
+    route: str,
+    paths: list[dict[str, Any]],
+) -> dict[str, Any]:
+    role, material = _assertion_role(route)
+    assertions: list[dict[str, Any]] = []
+    for path in paths:
+        source, target = path["nodes"]
+        assertion_id = "F36B-MAP-" + hashlib.sha256(
+            canonical_bytes(
+                [family["engineering_qra_family_id"], path["path_signature"], role, material]
+            )
+        ).hexdigest()[:20]
+        assertions.append(
+            {
+                "assertion_id": assertion_id,
+                "relationship_role": role,
+                "candidate_material": material,
+                "source_entity": {
+                    "framework": source["source_framework"],
+                    "id": source["control_id"],
+                    "name": source["name"],
+                },
+                "target_entity": {
+                    "framework": target["source_framework"],
+                    "id": target["control_id"],
+                    "name": target["name"],
+                },
+                "path_proof_id": path["path_signature"],
+                "persisted_edge_ids": path["persisted_edge_ids"],
+            }
+        )
+    manifest = {
+        "schema": "f36.family_candidate_assertion_manifest.v1",
+        "family_id": family["engineering_qra_family_id"],
+        "assertions": assertions,
+    }
+    manifest["manifest_hash"] = sha256_bytes(canonical_bytes(manifest))
+    return manifest
+
+
+def _assertion_question(intent: dict[str, Any], assertion: dict[str, Any]) -> str:
+    source = assertion["source_entity"]
+    target = assertion["target_entity"]
+    return (
+        f"For an engineering obligation to {intent.get('required_behavior') or 'perform the declared behavior'} "
+        f"under {intent.get('condition') or 'the declared condition'} for "
+        f"{intent.get('protected_object_or_interface') or 'the declared protected object or interface'}, "
+        f"with the intended outcome {intent.get('expected_outcome') or 'the declared expected outcome'}, "
+        f"what evidence supports or contradicts treating the relationship between "
+        f"{source['framework']} {source['id']} ({source['name']}) and "
+        f"{target['framework']} {target['id']} ({target['name']}) as a "
+        f"{assertion['relationship_role']} mapping?"
+    )
+
+
 def run_family_orchestration(
     envelope: dict[str, Any],
     output_path: Path,
@@ -440,27 +513,43 @@ def run_family_orchestration(
         if part
     )
 
-    with httpx.Client(base_url=MEMORY_API_BASE, timeout=MEMORY_TIMEOUT) as client:
-        recall_result = _post(
-            client,
-            "/recall",
-            {"q": query, "collections": ["sparta_qra"], "k": 12, "threshold": 0.3},
-        )
-        recall_items = [item for item in recall_result.get("items") or [] if isinstance(item, dict)]
+    triage = envelope.get("triage") or {"disposition": "candidate_applicable"}
+    triage_disposition = triage["disposition"]
+    events.append(_event("applicability_triage", "complete", triage))
+    recall_result: dict[str, Any] = {"found": False, "items": []}
+    recall_items: list[dict[str, Any]] = []
+    path_proofs: list[dict[str, Any]] = []
+    grounded_ids: list[str] = []
+    if triage_disposition in {"candidate_applicable", "adjacent"}:
+        with httpx.Client(base_url=MEMORY_API_BASE, timeout=MEMORY_TIMEOUT) as client:
+            recall_result = _post(
+                client,
+                "/recall",
+                {"q": query, "collections": ["sparta_qra"], "k": 12, "threshold": 0.3},
+            )
+            recall_items = [item for item in recall_result.get("items") or [] if isinstance(item, dict)]
+            events.append(
+                _event(
+                    "sparta_qra_recall",
+                    "passed" if recall_items else "empty",
+                    {"item_count": len(recall_items), "found": bool(recall_result.get("found"))},
+                )
+            )
+            path_proofs, grounded_ids = _resolve_paths(
+                client,
+                recall_items,
+                Path(corpus["source_path"]),
+                corpus["release_id"],
+                corpus["release_hash"],
+                query,
+            )
+    else:
         events.append(
             _event(
                 "sparta_qra_recall",
-                "passed" if recall_items else "empty",
-                {"item_count": len(recall_items), "found": bool(recall_result.get("found"))},
+                "skipped_by_triage",
+                {"triage_disposition": triage_disposition},
             )
-        )
-        path_proofs, grounded_ids = _resolve_paths(
-            client,
-            recall_items,
-            Path(corpus["source_path"]),
-            corpus["release_id"],
-            corpus["release_hash"],
-            query,
         )
 
     events.append(
@@ -471,34 +560,106 @@ def run_family_orchestration(
         )
     )
 
-    evidence_query = family["canonical_question"]
-    if path_proofs:
-        edge = path_proofs[0]["edges"][0]
-        evidence_query = (
-            f"How does {edge['source_framework']} control {edge['source_id']} address "
-            f"{edge['target_framework']} control {edge['target_id']}?"
-        )
+    route = envelope.get("applicability_route", "unresolved")
+    assertion_manifest = _build_assertion_manifest(family, route, path_proofs)
+    assertion_outcomes: list[dict[str, Any]] = []
+    execution_live = live and triage_disposition in {"candidate_applicable", "adjacent"}
+    if execution_live:
+        runner = EvidenceCaseRunner()
+        for assertion in assertion_manifest["assertions"]:
+            evidence_query = _assertion_question(intent, assertion)
+            runner_result = runner.run(
+                claim_text=evidence_query,
+                category="compliance",
+                show_progress=False,
+                expected_control_ids=[
+                    assertion["source_entity"]["id"],
+                    assertion["target_entity"]["id"],
+                ],
+                exact_path_proven=True,
+            )
+            runner_state = str(
+                (runner_result.get("verdict") or {}).get("state") or "inconclusive"
+            )
+            evidence_verdict = {
+                "satisfied": "SATISFIED",
+                "not_satisfied": "NOT_SATISFIED",
+                "inconclusive": "INCONCLUSIVE",
+                "ambiguous_entity": "NOT_SATISFIED",
+            }.get(runner_state, "INCONCLUSIVE")
+            outcome = {
+                **assertion,
+                "evidence_query": evidence_query,
+                "evidence_verdict": evidence_verdict,
+                "evidence_case_id": (runner_result.get("claim") or {}).get("id"),
+                "persistence": runner_result.get("persistence"),
+                "gate_trace": runner_result.get("gate_trace") or [],
+                "raw_result_hash": sha256_bytes(canonical_bytes(runner_result)),
+                "raw_result": runner_result,
+            }
+            assertion_outcomes.append(outcome)
+            events.append(
+                _event(
+                    "assertion_evidence_evaluation",
+                    "complete",
+                    {
+                        "assertion_id": assertion["assertion_id"],
+                        "evidence_verdict": evidence_verdict,
+                    },
+                )
+            )
 
-    runner_result: dict[str, Any]
-    if live:
-        runner_result = EvidenceCaseRunner().run(
-            claim_text=evidence_query,
-            category="compliance",
-            show_progress=False,
+    evidence_required = triage_disposition in {"candidate_applicable", "adjacent"}
+    sparta_applicability = {
+        "candidate_applicable": "sparta_applicable",
+        "adjacent": "sparta_candidate_adjacent",
+        "informational": "sparta_applicable",
+        "candidate_non_applicable": "not_sparta_applicable",
+        "clarify": "unresolved",
+    }[triage_disposition]
+    if execution_live:
+        evidence_execution_state = "completed"
+        crosswalk_resolution_state = "exact_path" if path_proofs else "no_exact_path"
+    else:
+        evidence_execution_state = (
+            "not_required"
+            if triage_disposition in {"informational", "candidate_non_applicable"}
+            else "not_run"
         )
-    else:
-        runner_result = {
-            "verdict": {"state": "not_run"},
-            "persistence": {"ok": False},
-            "gate_trace": [],
-        }
-    runner_state = str((runner_result.get("verdict") or {}).get("state") or "inconclusive")
-    if runner_state == "satisfied" and path_proofs:
-        terminal_state = "SATISFIED"
-    elif runner_state in {"not_satisfied", "ambiguous_entity"}:
-        terminal_state = "NOT_SATISFIED"
-    else:
+        evidence_verdict = None
+        crosswalk_resolution_state = "not_attempted"
+
+    if triage_disposition == "candidate_non_applicable":
+        terminal_state = "NOT_APPLICABLE_PENDING_REVIEW"
+        family_disposition = "candidate_non_applicable"
+    elif triage_disposition == "informational":
+        terminal_state = "INFORMATIONAL"
+        family_disposition = "informational"
+    elif triage_disposition == "clarify":
+        terminal_state = "CLARIFY"
+        family_disposition = "clarify"
+    elif not path_proofs:
         terminal_state = "INCONCLUSIVE"
+        evidence_verdict = "INCONCLUSIVE"
+        family_disposition = "unresolved_evidence"
+    else:
+        material_outcomes = [row for row in assertion_outcomes if row["candidate_material"]]
+        if not material_outcomes:
+            terminal_state = "INFORMATIONAL"
+            evidence_verdict = None
+            family_disposition = "informational"
+        elif any(row["evidence_verdict"] == "NOT_SATISFIED" for row in material_outcomes):
+            terminal_state = "NOT_SATISFIED"
+            evidence_verdict = "NOT_SATISFIED"
+            family_disposition = "material_negative"
+        elif any(row["evidence_verdict"] != "SATISFIED" for row in material_outcomes):
+            terminal_state = "INCONCLUSIVE"
+            evidence_verdict = "INCONCLUSIVE"
+            family_disposition = "unresolved_evidence"
+        else:
+            terminal_state = "SATISFIED"
+            evidence_verdict = "SATISFIED"
+            family_disposition = "satisfied_candidate"
     events.append(_event("verdict", "complete", {"terminal_state": terminal_state}))
 
     family_snapshot_id = "F36B-ECF-" + hashlib.sha256(
@@ -510,7 +671,7 @@ def run_family_orchestration(
         "orchestrator_contract_id": ORCHESTRATOR_CONTRACT_ID,
         "input_fingerprint": input_fingerprint,
         "mocked": False,
-        "live": live,
+        "live": execution_live,
         "synthetic": True,
         "operational_authority": False,
         "accepted": False,
@@ -542,9 +703,18 @@ def run_family_orchestration(
         },
         "applicability": {
             "route": envelope.get("applicability_route", "unresolved"),
-            "state": "candidate_applicable" if path_proofs else "unresolved",
+            "state": triage_disposition,
+            "sparta_applicability": sparta_applicability,
+            "reason_codes": triage.get("reason_codes") or [],
             "review_state": "pending",
         },
+        "evidence_required": evidence_required,
+        "evidence_execution_state": evidence_execution_state,
+        "crosswalk_resolution_state": crosswalk_resolution_state,
+        "evidence_verdict": evidence_verdict,
+        "family_disposition": family_disposition,
+        "family_orchestration_runs": 1,
+        "assertion_evidence_evaluations": len(assertion_outcomes),
         "stage_receipts": {
             "decomposition": decomposition,
             "sparta_qra_recall": {
@@ -568,16 +738,9 @@ def run_family_orchestration(
                 "sparta_release_hash": corpus["release_hash"],
                 "path_proofs": path_proofs,
             },
+            "assertion_manifest": assertion_manifest,
             "formal_proof": {"state": "not_run"},
-            "underlying_evidence_case": {
-                "evidence_query": evidence_query,
-                "verdict": runner_result.get("verdict"),
-                "claim_id": (runner_result.get("claim") or {}).get("id"),
-                "persistence": runner_result.get("persistence"),
-                "gate_trace": runner_result.get("gate_trace") or [],
-                "raw_result_hash": sha256_bytes(canonical_bytes(runner_result)),
-                "raw_result": runner_result,
-            },
+            "assertion_evidence_outcomes": assertion_outcomes,
         },
         "terminal_disposition": terminal_state,
         "binding_registry_state": "not_promoted",
