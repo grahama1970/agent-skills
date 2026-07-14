@@ -1,0 +1,14 @@
+{
+  "event_count": 9,
+  "fixture_sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+  "journal_sha256": "5fe3bb6cc359bc4bb5fd4e22a85c615d9e95a0fcba21a78454e7ddf9443aac6b",
+  "lane_count": 4,
+  "lineage_edge_count": 2,
+  "local_public_byte_identical": true,
+  "projection_kind": "adaptive_memory_v14",
+  "schema": "battle.normalized_adaptive_lineage_validation.v1",
+  "source_index_sha256": "e7d2f743914b83f8a7c798bb80d4ff39bd9e33002bf7fb271704c915d0658279",
+  "source_receipt_count": 9,
+  "source_run_id": "battle-004-adaptive-memory-v14-r6",
+  "status": "PASS"
+}

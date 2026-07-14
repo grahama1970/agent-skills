@@ -1,0 +1,164 @@
+{
+  "battle_id": "battle-004",
+  "campaign_root_id": "battle-004-adaptive-memory-v14",
+  "memory_evaluation": {
+    "improvement_proven": false,
+    "schema": "battle.adaptive_memory_projection_evaluation.v1",
+    "status": "PASS",
+    "teams": {
+      "blue": {
+        "evidence_classification": "judge_confirmed_defense_evidence",
+        "promotion_status": "PASS",
+        "recall_status": "PASS",
+        "use_status": "PASS"
+      },
+      "red": {
+        "evidence_classification": "validated_negative_exploit_evidence",
+        "promotion_status": "PASS",
+        "recall_status": "PASS",
+        "use_status": "PASS"
+      }
+    }
+  },
+  "memory_lifecycle": {
+    "generation_3": {
+      "improvement_proven": false,
+      "judge_receipt_sha256": "6ca024e7538cb76b37a44a8785c7d6a97010fe41f0c8f8446e33524e9b13e762",
+      "judge_status": "PASS",
+      "judge_verdict": "BLUE_SUCCESS",
+      "pipelines": {
+        "blue": {
+          "handoff_sha256": "8c2401e5d6e4a5705e94ed7e2961f81fc9c046b7aa2200f02701e45029f013b7",
+          "selected_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+          "status": "PASS"
+        },
+        "red": {
+          "handoff_sha256": "31d6cd0bfc3774a57f6f8d1724ff702cab8666d8d7e3b23bb26c011141913d92",
+          "selected_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+          "status": "PASS"
+        }
+      },
+      "tau_status": "PASS"
+    },
+    "improvement_proven": false,
+    "memory_generation": 3,
+    "schema": "battle.normalized_adaptive_memory_lifecycle.v1",
+    "source_generation": 2,
+    "status": "PASS",
+    "teams": {
+      "blue": {
+        "artifact_changed": true,
+        "child_artifact_sha256": "912333c51c0f8ad900a5c34933849d8c7317317016bb52600ae84306095d260a",
+        "cross_team_items_absent": true,
+        "evidence_classification": "judge_confirmed_defense_evidence",
+        "exact_match_count": 1,
+        "memory_content_sha256": "5591ea2800c6c22a07e7e7e4af7a3323d7f5e35c854333273fe4582ac5d9a4b9",
+        "parent_artifact_sha256": "e8ccba014b0a5135abefe94f00ccd85e2545cda3e2d787c65c9c68a93e920bfd",
+        "promotion_status": "PASS",
+        "recall_status": "PASS",
+        "reused_method_count": 6,
+        "use_status": "PASS",
+        "write_status": "PASS"
+      },
+      "red": {
+        "artifact_changed": true,
+        "child_artifact_sha256": "76a4f3cccd8cc7fca7d628f5fdea54cce7c405344b70966da675456c4b761f53",
+        "cross_team_items_absent": true,
+        "evidence_classification": "validated_negative_exploit_evidence",
+        "exact_match_count": 1,
+        "memory_content_sha256": "212bf5efaf3e33494cbbcc9816c4cb2da7c848e7669ed7389e9c5adac80521de",
+        "parent_artifact_sha256": "f9e7bcea8910ece23495e1ea1b469b04f33d55667fd2f5d04bb272eb749c1b89",
+        "promotion_status": "PASS",
+        "recall_status": "PASS",
+        "reused_method_count": 5,
+        "use_status": "PASS",
+        "write_status": "PASS"
+      }
+    }
+  },
+  "projection_kind": "adaptive_memory_v14",
+  "public_receipts": [
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-red-memory-promotion",
+      "schema": "battle.memory_promotion_receipt.v1",
+      "sha256": "71407c223dfe26205780bfe41c64dcc4923262e17a09cdff09bbc92662716769",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-blue-memory-promotion",
+      "schema": "battle.memory_promotion_receipt.v1",
+      "sha256": "d505c9849f6baf9f46e491d5225704d2a5bc9baf81e78dec94afb7a2930c573e",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-red-memory-written",
+      "schema": "battle.memory_write_receipt.v1",
+      "sha256": "081392e2c8c2c78790963ffc2dbf8fa8e9d79a0105876d4225b50dde78733d42",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-blue-memory-written",
+      "schema": "battle.memory_write_receipt.v1",
+      "sha256": "2a144230d96055253457f6a830d8bd98e0406ebf1a762c6363c2ce16431c3b56",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-red-memory-recalled",
+      "schema": "battle.memory_recall_receipt.v1",
+      "sha256": "a170e98b34ceb61f0a095e4321535e7d08609b825dff27773f02bb5984fc8252",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-blue-memory-recalled",
+      "schema": "battle.memory_recall_receipt.v1",
+      "sha256": "391000c79075cb8fd439b940a000b45152fca4a8d8e4f4bb1c3642a22d675af7",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-red-memory-use",
+      "schema": "battle.memory_use_acknowledgement.v1",
+      "sha256": "6e1636d4d77e7ed800812105a0ed03f6223e5e7b042d83e876e3f83987d76ac8",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6-blue-memory-use",
+      "schema": "battle.memory_use_acknowledgement.v1",
+      "sha256": "c038552922597a4c6f3ad810adabc76e5acdeed6207c33aa8d80e7a6dfb99afd",
+      "status": "PASS",
+      "verdict": null
+    },
+    {
+      "receipt_id": "battle-004-adaptive-memory-v14-r6",
+      "schema": "battle.adaptive_memory_canary.v1",
+      "sha256": "6c3e29c961e1141cf7e82dc8e688ff19229730db2cc0551352c0283ed2251f30",
+      "status": "PASS",
+      "verdict": "BLUE_SUCCESS"
+    }
+  ],
+  "run_id": "battle-004-adaptive-memory-v14-r6",
+  "schema": "battle.adaptive_memory_source_receipt_index.v1",
+  "selection": {
+    "schema": "battle.adaptive_memory_source_selection.v1",
+    "selected_generations": {
+      "blue": 2,
+      "red": 2
+    },
+    "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+    "source_run_id": "battle-004-adaptive-red-blue-lineage-v13",
+    "status": "PASS"
+  },
+  "source_campaign": {
+    "campaign_receipt_sha256": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
+    "run_id": "battle-004-adaptive-red-blue-lineage-v13",
+    "selection_receipt_sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728"
+  },
+  "source_run_count": 2,
+  "top_receipt_sha256": "6c3e29c961e1141cf7e82dc8e688ff19229730db2cc0551352c0283ed2251f30"
+}

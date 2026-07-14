@@ -2,86 +2,599 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "battle.normalized_adaptive_lineage_fixture.v1",
   "type": "object",
-  "required": ["schema", "fixture_id", "battle_id", "run_id", "proof_mode", "causal_continuity_proven", "campaign", "lanes", "lineage_edges", "sprite_theme", "renderer_contract", "events", "receipt_refs", "selection", "memory_evaluation", "claim_boundary", "provenance"],
+  "required": [
+    "schema",
+    "fixture_id",
+    "battle_id",
+    "run_id",
+    "proof_mode",
+    "live_source",
+    "causal_continuity_proven",
+    "campaign",
+    "lanes",
+    "lineage_edges",
+    "sprite_theme",
+    "renderer_contract",
+    "events",
+    "receipt_refs",
+    "selection",
+    "memory_evaluation",
+    "claim_boundary",
+    "provenance"
+  ],
   "properties": {
-    "schema": {"const": "battle.normalized_adaptive_lineage_fixture.v1"},
-    "proof_mode": {"const": "receipt_backed_fixture"},
-    "causal_continuity_proven": {"const": true},
+    "schema": {
+      "const": "battle.normalized_adaptive_lineage_fixture.v1"
+    },
+    "fixture_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "battle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proof_mode": {
+      "const": "receipt_backed_fixture"
+    },
+    "live_source": {
+      "enum": [
+        "adaptive_red_blue_lineage_v2",
+        "adaptive_memory_v14"
+      ]
+    },
+    "causal_continuity_proven": {
+      "const": true
+    },
+    "campaign": {
+      "type": "object",
+      "required": [
+        "campaign_clock_id",
+        "elapsed_seconds",
+        "generation_count",
+        "teams"
+      ],
+      "properties": {
+        "campaign_clock_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "elapsed_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "generation_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "generation_ids": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "teams": {
+          "const": [
+            "red",
+            "blue"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
     "lanes": {
       "type": "array",
       "minItems": 4,
-      "maxItems": 4,
+      "maxItems": 6,
       "items": {
         "type": "object",
-        "required": ["lane_id", "team", "generation", "role", "display_name", "visible_from_elapsed_seconds", "active_from_elapsed_seconds", "end_elapsed_seconds", "actor_visual"],
+        "required": [
+          "lane_id",
+          "team",
+          "generation",
+          "role",
+          "display_name",
+          "visible_from_elapsed_seconds",
+          "active_from_elapsed_seconds",
+          "end_elapsed_seconds",
+          "actor_visual"
+        ],
         "properties": {
-          "lane_id": {"enum": ["red-g1", "red-g2", "blue-g1", "blue-g2"]},
-          "team": {"enum": ["red", "blue"]},
-          "generation": {"enum": [1, 2]},
-          "role": {"enum": ["parent", "child"]},
-          "parent_lane_id": {"type": ["string", "null"]},
-          "visible_from_elapsed_seconds": {"type": "number", "minimum": 0},
-          "active_from_elapsed_seconds": {"type": "number", "minimum": 0},
-          "end_elapsed_seconds": {"type": "number", "minimum": 0},
+          "lane_id": {
+            "type": "string",
+            "pattern": "^(red|blue)-g[1-9][0-9]*$"
+          },
+          "team": {
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "role": {
+            "enum": [
+              "parent",
+              "child"
+            ]
+          },
+          "parent_lane_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^(red|blue)-g[1-9][0-9]*$"
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visible_from_elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "active_from_elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end_elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
           "actor_visual": {
             "type": "object",
-            "required": ["variant_id", "cosmetic_only", "semantic_authority"],
+            "required": [
+              "variant_id",
+              "cosmetic_only",
+              "semantic_authority"
+            ],
             "properties": {
-              "variant_id": {"const": "v13-shared-runner"},
-              "cosmetic_only": {"const": true},
-              "semantic_authority": {"const": false}
-            }
+              "variant_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cosmetic_only": {
+                "const": true
+              },
+              "semantic_authority": {
+                "const": false
+              }
+            },
+            "additionalProperties": true
           }
-        }
+        },
+        "additionalProperties": true
       }
     },
     "lineage_edges": {
       "type": "array",
       "minItems": 2,
-      "maxItems": 2,
+      "maxItems": 4,
       "items": {
         "type": "object",
-        "required": ["edge_id", "team", "parent_lane_id", "child_lane_id", "requested_receipt_ref", "authorized_receipt_ref", "visible_from_elapsed_seconds"]
+        "required": [
+          "edge_id",
+          "team",
+          "parent_lane_id",
+          "child_lane_id",
+          "visible_from_elapsed_seconds"
+        ],
+        "properties": {
+          "edge_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edge_kind": {
+            "enum": [
+              "spawn",
+              "memory_continuation"
+            ]
+          },
+          "team": {
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "parent_lane_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "child_lane_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visible_from_elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "requested_receipt_ref": {
+            "type": "object"
+          },
+          "authorized_receipt_ref": {
+            "type": "object"
+          },
+          "promoted_receipt_ref": {
+            "type": "object"
+          },
+          "written_receipt_ref": {
+            "type": "object"
+          },
+          "recalled_receipt_ref": {
+            "type": "object"
+          },
+          "use_receipt_ref": {
+            "type": "object"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "edge_kind": {
+                  "const": "spawn"
+                }
+              },
+              "required": [
+                "edge_kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "requested_receipt_ref",
+                "authorized_receipt_ref"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "edge_kind": {
+                  "const": "memory_continuation"
+                }
+              },
+              "required": [
+                "edge_kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "promoted_receipt_ref",
+                "written_receipt_ref",
+                "recalled_receipt_ref",
+                "use_receipt_ref"
+              ]
+            }
+          }
+        ],
+        "additionalProperties": true
       }
     },
     "sprite_theme": {
       "type": "object",
-      "required": ["schema", "theme_id", "proof_scope", "shared_atlas", "semantic_authority", "variants"],
+      "required": [
+        "schema",
+        "theme_id",
+        "proof_scope",
+        "shared_atlas",
+        "semantic_authority",
+        "variants"
+      ],
       "properties": {
-        "schema": {"const": "battle.sprite_theme.v1"},
-        "shared_atlas": {"const": true},
-        "semantic_authority": {"const": false}
-      }
+        "schema": {
+          "const": "battle.sprite_theme.v1"
+        },
+        "theme_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proof_scope": {
+          "const": "cosmetic_identity_only"
+        },
+        "shared_atlas": {
+          "const": true
+        },
+        "semantic_authority": {
+          "const": false
+        },
+        "variants": {
+          "type": "object",
+          "minProperties": 1
+        }
+      },
+      "additionalProperties": true
     },
     "renderer_contract": {
       "type": "object",
-      "required": ["schema", "time_authority", "event_order_authority", "child_visibility_event", "child_activation_event", "pair_judge_event_is_global", "selection_is_not_victory", "no_promotion_is_not_promoted", "sprite_identity_is_cosmetic_only"],
+      "required": [
+        "schema",
+        "time_authority",
+        "event_order_authority",
+        "child_visibility_event",
+        "child_activation_event",
+        "pair_judge_event_is_global",
+        "selection_is_not_victory",
+        "no_promotion_is_not_promoted",
+        "sprite_identity_is_cosmetic_only"
+      ],
       "properties": {
-        "schema": {"const": "battle.adaptive_lineage_renderer_contract.v1"},
-        "child_visibility_event": {"const": "spawn_authorized"},
-        "child_activation_event": {"const": "child_research_materialized"},
-        "pair_judge_event_is_global": {"const": true},
-        "selection_is_not_victory": {"const": true},
-        "no_promotion_is_not_promoted": {"const": true},
-        "sprite_identity_is_cosmetic_only": {"const": true}
-      }
+        "schema": {
+          "const": "battle.adaptive_lineage_renderer_contract.v1"
+        },
+        "time_authority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_order_authority": {
+          "const": "event.seq"
+        },
+        "child_visibility_event": {
+          "enum": [
+            "spawn_authorized",
+            "memory_promoted"
+          ]
+        },
+        "child_activation_event": {
+          "enum": [
+            "child_research_materialized",
+            "memory_use_acknowledged"
+          ]
+        },
+        "pair_judge_event_is_global": {
+          "const": true
+        },
+        "selection_is_not_victory": {
+          "const": true
+        },
+        "no_promotion_is_not_promoted": {
+          "const": true
+        },
+        "memory_use_is_not_improvement": {
+          "const": true
+        },
+        "sprite_identity_is_cosmetic_only": {
+          "const": true
+        }
+      },
+      "additionalProperties": true
     },
     "events": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["seq", "event_id", "elapsed_seconds", "event_type", "generation", "team", "lane_id", "scope", "affected_lane_ids", "receipt_ref", "payload"],
+        "required": [
+          "seq",
+          "event_id",
+          "elapsed_seconds",
+          "event_type",
+          "generation",
+          "team",
+          "lane_id",
+          "scope",
+          "affected_lane_ids",
+          "receipt_ref",
+          "payload"
+        ],
         "properties": {
-          "seq": {"type": "integer", "minimum": 1},
-          "elapsed_seconds": {"type": "number", "minimum": 0},
-          "lane_id": {"type": ["string", "null"]},
-          "scope": {"enum": ["lane", "generation_pair", "campaign"]},
-          "affected_lane_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+          "seq": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "event_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "event_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "generation": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "team": {
+            "enum": [
+              "red",
+              "blue",
+              null
+            ]
+          },
+          "lane_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "enum": [
+              "lane",
+              "generation_pair",
+              "campaign"
+            ]
+          },
+          "affected_lane_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "receipt_ref": {
+            "type": "object"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "source_created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_elapsed_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "timing_source": {
+            "const": "receipt_created_at"
+          },
+          "projection_tie_break_applied": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "receipt_refs": {
+      "type": "array"
+    },
+    "selection": {
+      "type": "object"
+    },
+    "memory_evaluation": {
+      "type": "object"
+    },
+    "memory_lifecycle": {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "source_generation",
+        "memory_generation",
+        "improvement_proven",
+        "teams",
+        "generation_3"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.normalized_adaptive_memory_lifecycle.v1"
+        },
+        "status": {
+          "const": "PASS"
+        },
+        "source_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memory_generation": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "improvement_proven": {
+          "const": false
+        },
+        "teams": {
+          "type": "object",
+          "required": [
+            "red",
+            "blue"
+          ]
+        },
+        "generation_3": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_campaign": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "campaign_receipt_sha256",
+        "selection_receipt_sha256"
+      ]
+    },
+    "claim_boundary": {
+      "type": "object",
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ],
+      "properties": {
+        "may_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-    "provenance": {"type": "object", "required": ["raw_paths_redacted", "source_run_count", "source_proof_id"]}
+    "provenance": {
+      "type": "object",
+      "required": [
+        "raw_paths_redacted",
+        "source_run_count",
+        "source_proof_id"
+      ],
+      "properties": {
+        "raw_paths_redacted": {
+          "const": true
+        },
+        "source_run_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_proof_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projection_kind": {
+          "enum": [
+            "adaptive_lineage_v13",
+            "adaptive_memory_v14"
+          ]
+        }
+      }
+    }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "live_source": {
+            "const": "adaptive_memory_v14"
+          }
+        },
+        "required": [
+          "live_source"
+        ]
+      },
+      "then": {
+        "required": [
+          "memory_lifecycle",
+          "source_campaign"
+        ],
+        "properties": {
+          "renderer_contract": {
+            "required": [
+              "memory_use_is_not_improvement"
+            ]
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

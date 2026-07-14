@@ -4,6 +4,7 @@ import json
 
 from battle_skill.normalized_adaptive_lineage_fixture import (
     build_normalized_adaptive_fixture,
+    write_fixture_copies,
 )
 
 
@@ -24,29 +25,15 @@ def test_normalizer_rejects_cross_run_and_projects_public_events(tmp_path) -> No
     events = []
     for seq, (event_type, team, generation, elapsed) in enumerate(specs, 1):
         events.append(
-            {
-                "schema": "battle.campaign_event.v1",
-                "seq": seq,
-                "event_id": f"e{seq}",
-                "battle_id": "battle-004",
-                "run_id": "run",
-                "campaign_clock_id": "clock",
-                "generation": generation,
-                "team": team,
-                "event_type": event_type,
-                "timing": {"elapsed_seconds": elapsed},
-                "source_receipt": {
-                    "receipt_id": f"r{seq}",
-                    "schema": "x",
-                    "sha256": f"{seq:064x}",
-                    "status": "PASS",
-                },
-                "payload": {},
-            }
+            _event(
+                seq=seq,
+                event_type=event_type,
+                team=team,
+                generation=generation,
+                elapsed=elapsed,
+            )
         )
-    (root / "events.jsonl").write_text(
-        "".join(json.dumps(event) + "\n" for event in events)
-    )
+    _write_journal(root, events)
     index = {
         "campaign_root_id": "campaign",
         "battle_id": "battle-004",
@@ -73,6 +60,263 @@ def test_normalizer_rejects_cross_run_and_projects_public_events(tmp_path) -> No
     assert fixture["lanes"][1]["visible_from_elapsed_seconds"] == 6.0
     assert fixture["lanes"][1]["active_from_elapsed_seconds"] == 8.0
     assert fixture["lineage_edges"][0]["requested_receipt_ref"]["receipt_id"] == "r4"
-    assert fixture["sprite_theme"]["variants"]["v13-shared-runner"]["sprite_id"] == "plague_nurgling"
+    assert (
+        fixture["sprite_theme"]["variants"]["v13-shared-runner"]["sprite_id"]
+        == "plague_nurgling"
+    )
     assert fixture["renderer_contract"]["child_activation_event"] == "child_research_materialized"
     assert "/tmp/" not in json.dumps(fixture)
+
+
+def test_normalizer_projects_v14_memory_continuation_without_raw_receipts(
+    tmp_path,
+) -> None:
+    root = tmp_path / "battle-004-adaptive-memory-v14"
+    root.mkdir()
+    specs = [
+        ("memory_promoted", "red", 3, 0.0),
+        ("memory_promoted", "blue", 3, 0.000001),
+        ("memory_written", "red", 3, 0.000002),
+        ("memory_written", "blue", 3, 0.000003),
+        ("memory_recalled", "red", 3, 2.0),
+        ("memory_recalled", "blue", 3, 2.000001),
+        ("memory_use_acknowledged", "red", 3, 64.0),
+        ("memory_use_acknowledged", "blue", 3, 64.000001),
+        ("memory_generation_evaluated", None, 3, 66.0),
+    ]
+    events = []
+    for seq, (event_type, team, generation, elapsed) in enumerate(specs, 1):
+        event = _event(
+            seq=seq,
+            event_type=event_type,
+            team=team,
+            generation=generation,
+            elapsed=elapsed,
+        )
+        event["timing"].update(
+            {
+                "source_created_at": "2026-07-13T16:37:48Z",
+                "source_elapsed_seconds": elapsed,
+                "timing_source": "receipt_created_at",
+                "projection_tie_break_applied": seq in {2, 3, 4, 6, 8},
+            }
+        )
+        event["payload"] = (
+            {"judge_verdict": "BLUE_SUCCESS", "improvement_proven": False}
+            if event_type == "memory_generation_evaluated"
+            else {"memory_content_sha256": f"{seq:064x}"}
+        )
+        events.append(event)
+    _write_journal(root, events)
+    memory_lifecycle = {
+        "schema": "battle.normalized_adaptive_memory_lifecycle.v1",
+        "status": "PASS",
+        "source_generation": 2,
+        "memory_generation": 3,
+        "improvement_proven": False,
+        "teams": {
+            team: {
+                "evidence_classification": "bounded",
+                "promotion_status": "PASS",
+                "write_status": "PASS",
+                "recall_status": "PASS",
+                "use_status": "PASS",
+                "exact_match_count": 1,
+                "cross_team_items_absent": True,
+                "artifact_changed": True,
+                "reused_method_count": 1,
+                "memory_content_sha256": f"{10 + index:064x}",
+                "parent_artifact_sha256": f"{20 + index:064x}",
+                "child_artifact_sha256": f"{30 + index:064x}",
+            }
+            for index, team in enumerate(("red", "blue"))
+        },
+        "generation_3": {
+            "judge_status": "PASS",
+            "judge_verdict": "BLUE_SUCCESS",
+            "improvement_proven": False,
+        },
+    }
+    index = {
+        "schema": "battle.adaptive_memory_source_receipt_index.v1",
+        "projection_kind": "adaptive_memory_v14",
+        "campaign_root_id": root.name,
+        "battle_id": "battle-004",
+        "run_id": "v14",
+        "source_run_count": 2,
+        "source_campaign": {
+            "run_id": "v13",
+            "campaign_receipt_sha256": "a" * 64,
+            "selection_receipt_sha256": "b" * 64,
+        },
+        "public_receipts": [event["source_receipt"] for event in events],
+        "selection": {"status": "PASS"},
+        "memory_evaluation": {
+            "status": "PASS",
+            "improvement_proven": False,
+        },
+        "memory_lifecycle": memory_lifecycle,
+    }
+    index_path = root / "source-receipt-index.json"
+    index_path.write_text(json.dumps(index))
+
+    fixture = build_normalized_adaptive_fixture(
+        campaign_root=root,
+        source_index_path=index_path,
+        fixture_id="battle-004-adaptive-memory-v14",
+    )
+    local = tmp_path / "local" / "battle.normalized_ux_fixture.json"
+    public = tmp_path / "public" / "battle.normalized_ux_fixture.json"
+    report = write_fixture_copies(
+        fixture=fixture, local_path=local, public_path=public
+    )
+
+    assert report["status"] == "PASS"
+    assert report["event_count"] == 9
+    assert report["local_public_byte_identical"] is True
+    assert fixture["campaign"]["generation_ids"] == [2, 3]
+    assert [lane["lane_id"] for lane in fixture["lanes"]] == [
+        "red-g2",
+        "red-g3",
+        "blue-g2",
+        "blue-g3",
+    ]
+    assert fixture["lineage_edges"][0]["edge_kind"] == "memory_continuation"
+    assert fixture["lineage_edges"][0]["promoted_receipt_ref"]["receipt_id"] == "r1"
+    assert fixture["events"][-1]["scope"] == "generation_pair"
+    assert fixture["events"][-1]["affected_lane_ids"] == ["red-g3", "blue-g3"]
+    assert fixture["memory_lifecycle"]["improvement_proven"] is False
+    assert "recalled_document" not in json.dumps(fixture)
+    assert "/tmp/" not in json.dumps(fixture)
+
+
+def test_normalizer_rejects_raw_path_in_public_payload(tmp_path) -> None:
+    root = tmp_path / "campaign"
+    root.mkdir()
+    events = [
+        _event(
+            seq=1,
+            event_type="judge_verdict",
+            team=None,
+            generation=1,
+            elapsed=1.0,
+        ),
+        _event(
+            seq=2,
+            event_type="fitness_materialized",
+            team="red",
+            generation=1,
+            elapsed=2.0,
+        ),
+        _event(
+            seq=3,
+            event_type="fitness_materialized",
+            team="blue",
+            generation=1,
+            elapsed=3.0,
+        ),
+        _event(
+            seq=4,
+            event_type="spawn_requested",
+            team="red",
+            generation=1,
+            elapsed=4.0,
+        ),
+        _event(
+            seq=5,
+            event_type="spawn_requested",
+            team="blue",
+            generation=1,
+            elapsed=5.0,
+        ),
+        _event(
+            seq=6,
+            event_type="spawn_authorized",
+            team="red",
+            generation=1,
+            elapsed=6.0,
+        ),
+        _event(
+            seq=7,
+            event_type="spawn_authorized",
+            team="blue",
+            generation=1,
+            elapsed=7.0,
+        ),
+        _event(
+            seq=8,
+            event_type="child_research_materialized",
+            team="red",
+            generation=2,
+            elapsed=8.0,
+        ),
+        _event(
+            seq=9,
+            event_type="child_research_materialized",
+            team="blue",
+            generation=2,
+            elapsed=9.0,
+        ),
+    ]
+    events[-1]["payload"] = {"path": "/tmp/provider-workspace/private.json"}
+    _write_journal(root, events)
+    index_path = root / "source-receipt-index.json"
+    index_path.write_text(
+        json.dumps(
+            {
+                "campaign_root_id": root.name,
+                "battle_id": "battle-004",
+                "run_id": "run",
+                "public_receipts": [],
+                "selection": {},
+                "memory_evaluation": {},
+            }
+        )
+    )
+
+    try:
+        build_normalized_adaptive_fixture(
+            campaign_root=root,
+            source_index_path=index_path,
+            fixture_id="fixture",
+        )
+    except ValueError as exc:
+        assert "raw runtime path" in str(exc)
+    else:
+        raise AssertionError("raw path was projected into the public fixture")
+
+
+def _event(
+    *,
+    seq: int,
+    event_type: str,
+    team: str | None,
+    generation: int,
+    elapsed: float,
+) -> dict:
+    return {
+        "schema": "battle.campaign_event.v1",
+        "seq": seq,
+        "event_id": f"e{seq}",
+        "battle_id": "battle-004",
+        "run_id": "run" if generation < 3 else "v14",
+        "campaign_clock_id": "clock",
+        "generation": generation,
+        "team": team,
+        "event_type": event_type,
+        "timing": {"elapsed_seconds": elapsed},
+        "source_receipt": {
+            "receipt_id": f"r{seq}",
+            "schema": "x",
+            "sha256": f"{seq:064x}",
+            "status": "PASS",
+            "verdict": "BLUE_SUCCESS" if event_type.endswith("evaluated") else None,
+        },
+        "payload": {},
+    }
+
+
+def _write_journal(root, events) -> None:
+    (root / "events.jsonl").write_text(
+        "".join(json.dumps(event) + "\n" for event in events)
+    )

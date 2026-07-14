@@ -8,6 +8,8 @@ from battle_skill.adaptive_memory_canary import (
     build_memory_document,
     build_memory_promotion_receipt,
     build_memory_use_acknowledgement,
+    materialize_adaptive_memory_journal,
+    materialize_adaptive_memory_projection,
 )
 
 
@@ -84,6 +86,261 @@ def test_memory_use_requires_exact_citations_method_reuse_and_changed_artifact(
     assert receipt["reused_selected_methods"] == ["method-a"]
     assert all(receipt["provider_citations"].values())
     assert receipt["artifact_changed"] is True
+
+
+def test_archived_v14_materializes_monotonic_public_projection(tmp_path: Path) -> None:
+    archive = _archived_v14(tmp_path / "battle-004-adaptive-memory-v14")
+    local_fixture = tmp_path / "local" / "battle.normalized_ux_fixture.json"
+    public_fixture = tmp_path / "public" / "battle.normalized_ux_fixture.json"
+
+    validation = materialize_adaptive_memory_projection(
+        archive_root=archive,
+        fixture_id="battle-004-adaptive-memory-v14",
+        local_fixture_path=local_fixture,
+        public_fixture_path=public_fixture,
+    )
+
+    assert validation["status"] == "PASS"
+    assert validation["event_count"] == 9
+    assert validation["lane_count"] == 4
+    assert validation["lineage_edge_count"] == 2
+    assert validation["local_public_byte_identical"] is True
+    assert local_fixture.read_bytes() == public_fixture.read_bytes()
+
+    events = [
+        json.loads(line)
+        for line in (archive / "events.jsonl").read_text().splitlines()
+    ]
+    assert [event["seq"] for event in events] == list(range(1, 10))
+    assert [event["event_type"] for event in events].count("memory_promoted") == 2
+    assert [event["event_type"] for event in events].count("memory_written") == 2
+    assert [event["event_type"] for event in events].count("memory_recalled") == 2
+    assert [event["event_type"] for event in events].count(
+        "memory_use_acknowledged"
+    ) == 2
+    assert events[-1]["event_type"] == "memory_generation_evaluated"
+    elapsed = [event["timing"]["elapsed_seconds"] for event in events]
+    assert all(right > left for left, right in zip(elapsed, elapsed[1:]))
+    assert all(
+        event["timing"]["timing_source"] == "receipt_created_at"
+        for event in events
+    )
+
+    fixture = json.loads(local_fixture.read_text())
+    assert fixture["live_source"] == "adaptive_memory_v14"
+    assert fixture["campaign"]["generation_ids"] == [2, 3]
+    assert [lane["lane_id"] for lane in fixture["lanes"]] == [
+        "red-g2",
+        "red-g3",
+        "blue-g2",
+        "blue-g3",
+    ]
+    assert all(
+        edge["edge_kind"] == "memory_continuation"
+        for edge in fixture["lineage_edges"]
+    )
+    assert fixture["renderer_contract"]["child_visibility_event"] == "memory_promoted"
+    assert (
+        fixture["renderer_contract"]["child_activation_event"]
+        == "memory_use_acknowledged"
+    )
+    assert fixture["renderer_contract"]["memory_use_is_not_improvement"] is True
+    assert fixture["memory_lifecycle"]["improvement_proven"] is False
+    assert fixture["events"][-1]["scope"] == "generation_pair"
+    assert fixture["events"][-1]["payload"]["judge_verdict"] == "BLUE_SUCCESS"
+    public_text = json.dumps(fixture, sort_keys=True)
+    for forbidden in (
+        "/tmp/",
+        "memory_service",
+        "service_response",
+        "recalled_document",
+        "provider-workspace",
+        "reviewed/",
+    ):
+        assert forbidden not in public_text
+
+
+def test_archived_v14_rejects_tampered_memory_receipt(tmp_path: Path) -> None:
+    archive = _archived_v14(tmp_path / "battle-004-adaptive-memory-v14")
+    path = archive / "memory" / "red" / "memory-recall-receipt.json"
+    receipt = json.loads(path.read_text())
+    receipt["exact_match_count"] = 0
+    path.write_text(json.dumps(receipt, sort_keys=True) + "\n")
+
+    try:
+        materialize_adaptive_memory_journal(archive_root=archive)
+    except RuntimeError as exc:
+        assert "receipt hash mismatch" in str(exc)
+    else:
+        raise AssertionError("tampered archived receipt was accepted")
+
+
+def _archived_v14(root: Path) -> Path:
+    root.mkdir(parents=True)
+    run_id = "battle-004-adaptive-memory-v14-r6"
+    top_groups: dict[str, dict[str, dict[str, object]]] = {
+        "promotions": {},
+        "writes": {},
+        "recalls": {},
+        "provider_use": {},
+    }
+    for team in ("red", "blue"):
+        content_sha = _hex(f"{team}-content")
+        memory_key = f"battle-004-v13-{team}-g2-selected-evidence"
+        promotion = {
+            "schema": "battle.memory_promotion_receipt.v1",
+            "status": "PASS",
+            "promotion_id": f"{run_id}-{team}-memory-promotion",
+            "battle_id": "battle-004",
+            "run_id": run_id,
+            "team": team,
+            "visibility_scope": f"{team}_only",
+            "selected_generation": 2,
+            "evidence_classification": (
+                "validated_negative_exploit_evidence"
+                if team == "red"
+                else "judge_confirmed_defense_evidence"
+            ),
+            "selection_receipt_sha256": _hex("selection"),
+            "fitness_receipt_sha256": _hex(f"{team}-fitness"),
+            "observation_receipt_sha256": _hex(f"{team}-observation"),
+            "judge_receipt_sha256": _hex("v13-judge"),
+            "genome_sha256": _hex(f"{team}-parent-genome"),
+            "selected_artifact_sha256": _hex(f"{team}-parent-artifact"),
+            "created_at": "2026-07-13T16:37:48Z",
+        }
+        promotion_sha = _write_receipt(
+            root / "memory" / team / "memory-promotion-receipt.json", promotion
+        )
+        top_groups["promotions"][team] = {
+            **promotion,
+            "receipt_sha256": promotion_sha,
+        }
+
+        write = {
+            "schema": "battle.memory_write_receipt.v1",
+            "status": "PASS",
+            "team": team,
+            "memory_key": memory_key,
+            "memory_content_sha256": content_sha,
+            "collection": "lessons",
+            "promotion_receipt_sha256": promotion_sha,
+            "request_document_sha256": _hex(f"{team}-document"),
+            "service_response": {
+                "writeahead_path": "/tmp/private-writeahead.jsonl",
+                "total": 1,
+            },
+            "mocked": False,
+            "live": True,
+            "created_at": "2026-07-13T16:37:48Z",
+        }
+        write_sha = _write_receipt(
+            root / "memory" / team / "memory-write-receipt.json", write
+        )
+        top_groups["writes"][team] = {**write, "receipt_sha256": write_sha}
+
+        recall = {
+            "schema": "battle.memory_recall_receipt.v1",
+            "status": "PASS",
+            "team": team,
+            "memory_key": memory_key,
+            "memory_content_sha256": content_sha,
+            "memory_write_receipt_sha256": write_sha,
+            "collection": "lessons",
+            "query_sha256": _hex(f"{team}-query"),
+            "service_found": True,
+            "service_confidence": 1.0,
+            "exact_match_count": 1,
+            "team_filter_applied": f"team:{team}",
+            "cross_team_items_absent": True,
+            "recalled_document": {
+                "solution": "private recalled strategy text",
+                "tags": [f"team:{team}", f"content-sha:{content_sha}"],
+            },
+            "mocked": False,
+            "live": True,
+            "created_at": "2026-07-13T16:37:50Z",
+        }
+        recall_sha = _write_receipt(
+            root / "memory" / team / "memory-recall-receipt.json", recall
+        )
+        top_groups["recalls"][team] = {**recall, "receipt_sha256": recall_sha}
+
+        use = {
+            "schema": "battle.memory_use_acknowledgement.v1",
+            "status": "PASS",
+            "acknowledgement_id": f"{run_id}-{team}-memory-use",
+            "battle_id": "battle-004",
+            "run_id": run_id,
+            "team": team,
+            "memory_key": memory_key,
+            "memory_content_sha256": content_sha,
+            "memory_recall_receipt_sha256": recall_sha,
+            "provider_call_receipt_sha256": _hex(f"{team}-provider-call"),
+            "provider_citations": {
+                memory_key: True,
+                content_sha: True,
+                recall_sha: True,
+            },
+            "reused_selected_methods": ["method-a"],
+            "parent_genome_sha256": _hex(f"{team}-parent-genome"),
+            "child_genome_sha256": _hex(f"{team}-child-genome"),
+            "parent_artifact_sha256": _hex(f"{team}-parent-artifact"),
+            "child_artifact_sha256": _hex(f"{team}-child-artifact"),
+            "artifact_changed": True,
+            "created_at": "2026-07-13T16:38:52Z",
+        }
+        use_sha = _write_receipt(
+            root / "memory" / team / "memory-use-acknowledgement.json", use
+        )
+        top_groups["provider_use"][team] = {
+            **use,
+            "receipt_sha256": use_sha,
+        }
+
+    top = {
+        "schema": "battle.adaptive_memory_canary.v1",
+        "status": "PASS",
+        "battle_id": "battle-004",
+        "run_id": run_id,
+        "source_campaign": {
+            "run_id": "battle-004-adaptive-red-blue-lineage-v13",
+            "campaign_receipt_sha256": _hex("v13-campaign"),
+            "selection_receipt_sha256": _hex("selection"),
+        },
+        "mocked": False,
+        "live": True,
+        "fixture_fallback_used": False,
+        "memory_service": "http://127.0.0.1:8601",
+        **top_groups,
+        "generation_3": {
+            "tau_status": "PASS",
+            "pipelines": {
+                team: {
+                    "status": "PASS",
+                    "selected_artifact_sha256": _hex(f"{team}-child-artifact"),
+                    "handoff_sha256": _hex(f"{team}-handoff"),
+                }
+                for team in ("red", "blue")
+            },
+            "judge_status": "PASS",
+            "judge_verdict": "BLUE_SUCCESS",
+            "judge_receipt_sha256": _hex("v14-judge"),
+        },
+        "created_at": "2026-07-13T16:38:54Z",
+    }
+    _write_receipt(root / "adaptive-memory-canary-receipt.json", top)
+    return root
+
+
+def _write_receipt(path: Path, value: dict[str, object]) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _hex(label: str) -> str:
+    return hashlib.sha256(label.encode()).hexdigest()
 
 
 def _source() -> dict[str, object]:
