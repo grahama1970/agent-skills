@@ -1,0 +1,34 @@
+{
+  "schema": "persona_dream.provider_schema_research_receipt.v1",
+  "status": "PASS_CURRENT_PROVIDER_SCHEMA_RESEARCH",
+  "checked_at": "2026-07-14",
+  "source_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api",
+  "brave_query": "site:fal.ai/models/fal-ai/kling-video/v3 image-to-video API elements multi_prompt start_image_url",
+  "selected_endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "required_start_image_url": true,
+  "duration_enum": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15"
+  ],
+  "prompt_xor_multi_prompt": true,
+  "elements_contract": "frontal_image_url plus reference_image_urls, addressed as @Element1 and @Element2",
+  "generate_audio_optional": true,
+  "queue_submit_supported": true,
+  "live": false,
+  "mocked": false,
+  "does_not_prove": [
+    "provider request acceptance",
+    "provider task creation"
+  ]
+}
