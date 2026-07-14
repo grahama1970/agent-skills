@@ -475,6 +475,31 @@ def _assertion_question(intent: dict[str, Any], assertion: dict[str, Any]) -> st
     )
 
 
+def _runner_state_to_evidence_verdict(runner_state: str) -> str | None:
+    return {
+        "satisfied": "SATISFIED",
+        "not_satisfied": "NOT_SATISFIED",
+        "inconclusive": "INCONCLUSIVE",
+        "ambiguous_entity": "CLARIFY",
+        "runtime_failure": None,
+    }.get(runner_state)
+
+
+def _aggregate_material_outcomes(outcomes: list[dict[str, Any]]) -> tuple[str, str | None, str]:
+    material = [row for row in outcomes if row["candidate_material"]]
+    if any(row["evidence_execution_state"] == "runtime_failure" for row in material):
+        return "RUNTIME_FAILURE", None, "runtime_failure"
+    if not material:
+        return "INFORMATIONAL", None, "informational"
+    if any(row["evidence_verdict"] == "NOT_SATISFIED" for row in material):
+        return "NOT_SATISFIED", "NOT_SATISFIED", "material_negative"
+    if any(row["evidence_verdict"] == "CLARIFY" for row in material):
+        return "CLARIFY", "CLARIFY", "clarify"
+    if any(row["evidence_verdict"] != "SATISFIED" for row in material):
+        return "INCONCLUSIVE", "INCONCLUSIVE", "unresolved_evidence"
+    return "SATISFIED", "SATISFIED", "satisfied_candidate"
+
+
 def run_family_orchestration(
     envelope: dict[str, Any],
     output_path: Path,
@@ -568,6 +593,7 @@ def run_family_orchestration(
         runner = EvidenceCaseRunner()
         for assertion in assertion_manifest["assertions"]:
             evidence_query = _assertion_question(intent, assertion)
+            assertion_claim_sha256 = sha256_bytes(evidence_query.encode())
             runner_result = runner.run(
                 claim_text=evidence_query,
                 category="compliance",
@@ -577,20 +603,21 @@ def run_family_orchestration(
                     assertion["target_entity"]["id"],
                 ],
                 exact_path_proven=True,
+                assertion_id=assertion["assertion_id"],
+                assertion_claim_sha256=assertion_claim_sha256,
             )
             runner_state = str(
                 (runner_result.get("verdict") or {}).get("state") or "inconclusive"
             )
-            evidence_verdict = {
-                "satisfied": "SATISFIED",
-                "not_satisfied": "NOT_SATISFIED",
-                "inconclusive": "INCONCLUSIVE",
-                "ambiguous_entity": "NOT_SATISFIED",
-            }.get(runner_state, "INCONCLUSIVE")
+            evidence_verdict = _runner_state_to_evidence_verdict(runner_state)
+            assertion_execution_state = "runtime_failure" if evidence_verdict is None else "completed"
             outcome = {
                 **assertion,
                 "evidence_query": evidence_query,
                 "evidence_verdict": evidence_verdict,
+                "evidence_execution_state": assertion_execution_state,
+                "assertion_claim_sha256": assertion_claim_sha256,
+                "semantic_decision": runner_result.get("semantic_decision"),
                 "evidence_case_id": (runner_result.get("claim") or {}).get("id"),
                 "persistence": runner_result.get("persistence"),
                 "gate_trace": runner_result.get("gate_trace") or [],
@@ -618,7 +645,11 @@ def run_family_orchestration(
         "clarify": "unresolved",
     }[triage_disposition]
     if execution_live:
-        evidence_execution_state = "completed"
+        evidence_execution_state = (
+            "runtime_failure"
+            if any(row["evidence_execution_state"] == "runtime_failure" for row in assertion_outcomes)
+            else "completed"
+        )
         crosswalk_resolution_state = "exact_path" if path_proofs else "no_exact_path"
     else:
         evidence_execution_state = (
@@ -643,23 +674,9 @@ def run_family_orchestration(
         evidence_verdict = "INCONCLUSIVE"
         family_disposition = "unresolved_evidence"
     else:
-        material_outcomes = [row for row in assertion_outcomes if row["candidate_material"]]
-        if not material_outcomes:
-            terminal_state = "INFORMATIONAL"
-            evidence_verdict = None
-            family_disposition = "informational"
-        elif any(row["evidence_verdict"] == "NOT_SATISFIED" for row in material_outcomes):
-            terminal_state = "NOT_SATISFIED"
-            evidence_verdict = "NOT_SATISFIED"
-            family_disposition = "material_negative"
-        elif any(row["evidence_verdict"] != "SATISFIED" for row in material_outcomes):
-            terminal_state = "INCONCLUSIVE"
-            evidence_verdict = "INCONCLUSIVE"
-            family_disposition = "unresolved_evidence"
-        else:
-            terminal_state = "SATISFIED"
-            evidence_verdict = "SATISFIED"
-            family_disposition = "satisfied_candidate"
+        terminal_state, evidence_verdict, family_disposition = _aggregate_material_outcomes(
+            assertion_outcomes
+        )
     events.append(_event("verdict", "complete", {"terminal_state": terminal_state}))
 
     family_snapshot_id = "F36B-ECF-" + hashlib.sha256(

@@ -125,6 +125,69 @@ def test_scillm_render_fails_closed_after_transport_errors(monkeypatch):
     assert answer == "LLM render failed: transport unavailable"
 
 
+def test_assertion_semantic_decision_requires_closed_grounded_contract(monkeypatch):
+    captured = {}
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "choices": [{"message": {"content": (
+                    '{"schema":"sparta.assertion_semantic_decision.v1",'
+                    '"assertion_id":"F36B-MAP-test",'
+                    '"assertion_claim_sha256":"sha256:test",'
+                    '"decision":"SUPPORTS",'
+                    '"decision_reason":"The recalled item directly supports the assertion.",'
+                    '"evidence_refs":["qra-1"],'
+                    '"supported_claim_refs":["F36B-MAP-test"],'
+                    '"contradicted_claim_refs":[],"clarification_question":null}'
+                )}}]
+            }
+
+    def post(*args, **kwargs):
+        captured.update(kwargs)
+        return Response()
+
+    monkeypatch.setattr("runner.httpx.post", post)
+    result = EvidenceCaseRunner()._scillm_assertion_decision(
+        assertion_id="F36B-MAP-test",
+        assertion_claim_sha256="sha256:test",
+        claim_text="Does the exact mapping support the engineering obligation?",
+        resolved=[],
+        qra_items=[{"_key": "qra-1", "question": "Q", "answer": "A"}],
+        steps=[],
+    )
+
+    assert result["decision"] == "SUPPORTS"
+    assert result["renderer_terminal_state"] == "completed"
+    assert captured["json"]["response_format"] == {"type": "json_object"}
+    assert captured["json"]["model"] == "gemini-flash"
+
+
+def test_assertion_semantic_decision_marks_validation_exhaustion_runtime_failure(monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": '{"decision":"SUPPORTS"}'}}]}
+
+    monkeypatch.setattr("runner.httpx.post", lambda *args, **kwargs: Response())
+    result = EvidenceCaseRunner()._scillm_assertion_decision(
+        assertion_id="F36B-MAP-test",
+        assertion_claim_sha256="sha256:test",
+        claim_text="Does the exact mapping support the engineering obligation?",
+        resolved=[],
+        qra_items=[],
+        steps=[],
+    )
+
+    assert result["decision"] is None
+    assert result["renderer_terminal_state"] == "validation_exhausted"
+
+
 def test_memory_persistence_client_uses_current_http_daemon(monkeypatch):
     monkeypatch.setattr(storage._thread_local, "memory_http", None, raising=False)
     client = storage._get_memory_http()

@@ -106,6 +106,8 @@ class EvidenceCaseRunner:
         show_progress: bool = True,
         expected_control_ids: list[str] | None = None,
         exact_path_proven: bool = False,
+        assertion_id: str | None = None,
+        assertion_claim_sha256: str | None = None,
     ) -> dict[str, Any]:
         """Run the 4-call pipeline."""
         t0 = time.monotonic()
@@ -115,6 +117,8 @@ class EvidenceCaseRunner:
         # extraction or recall so an unresolved referent such as "this payload"
         # cannot be accidentally redeemed by a generic CAPEC↔ATT&CK source match.
         surface_rule, surface_verdict, surface_blocking = classify_question_surface([], claim_text)
+        if assertion_id and expected_control_ids and exact_path_proven:
+            surface_verdict = "ANSWERABLE"
         if surface_verdict != "ANSWERABLE":
             is_ambiguous_referent = surface_rule == "RULE_0_FAIL_AMBIGUOUS_REFERENT"
             ambiguous_prompt = (
@@ -237,7 +241,7 @@ class EvidenceCaseRunner:
             qra_items = collect_recall(claim_text)
         else:
             pre_existing, qra_items = check_pre_existing_qra(claim_text, entities)
-            if pre_existing is not None:
+            if pre_existing is not None and assertion_id is None:
                 elapsed = time.monotonic() - t0
                 steps.append({
                     "gate": "pre_existing_qra",
@@ -292,10 +296,10 @@ class EvidenceCaseRunner:
 
         if not technique_ok and len(resolved) > 0:
             verdict_state = "inconclusive"
-        elif grounding_ok and len(resolved) > 0 and len(qra_items) > 0:
-            verdict_state = "satisfied"
         elif grounding_ok and len(resolved) > 0:
-            verdict_state = "inconclusive"
+            verdict_state = "candidate_evidence_available" if assertion_id else (
+                "satisfied" if qra_items else "inconclusive"
+            )
         else:
             verdict_state = "not_satisfied"
 
@@ -311,9 +315,27 @@ class EvidenceCaseRunner:
             "detail": lean4_detail,
         })
 
+        semantic_decision: dict[str, Any] | None = None
         if self.gates_only:
             answer = f"Gates-only: {verdict_state}"
             render_ok = True
+        elif assertion_id:
+            semantic_decision = self._scillm_assertion_decision(
+                assertion_id=assertion_id,
+                assertion_claim_sha256=assertion_claim_sha256 or "",
+                claim_text=claim_text,
+                resolved=resolved,
+                qra_items=qra_items,
+                steps=steps,
+            )
+            render_ok = semantic_decision["renderer_terminal_state"] == "completed"
+            answer = semantic_decision.get("decision_reason") or semantic_decision.get("error") or ""
+            verdict_state = {
+                "SUPPORTS": "satisfied",
+                "CONTRADICTS": "not_satisfied",
+                "INSUFFICIENT": "inconclusive",
+                "CLARIFY": "ambiguous_entity",
+            }.get(semantic_decision.get("decision"), "runtime_failure")
         else:
             answer = self._scillm_render(
                 claim_text, verdict_state, resolved, unresolved,
@@ -336,6 +358,11 @@ class EvidenceCaseRunner:
                 "model": SCILLM_EVIDENCE_MODEL,
                 "timeout_s": SCILLM_EVIDENCE_TIMEOUT_S,
                 "caller_skill": "create-evidence-case",
+                "renderer_terminal_state": (
+                    semantic_decision.get("renderer_terminal_state")
+                    if semantic_decision else "completed" if render_ok else "validation_exhausted"
+                ),
+                "semantic_decision": semantic_decision.get("decision") if semantic_decision else None,
             },
         })
 
@@ -347,6 +374,8 @@ class EvidenceCaseRunner:
             grade=grade, score=score, elapsed=elapsed,
             qra_items=qra_items, entities=entities,
         )
+        if semantic_decision is not None:
+            result["semantic_decision"] = semantic_decision
 
         # --- Post-persist: fire lean4 background (doesn't compete with scillm) ---
         # Only attempt lean4 proof if control passes formalizability threshold
@@ -453,6 +482,156 @@ EVIDENCE_CASE:
 
     MAX_RENDER_RETRIES = 2
     RECALL_COHERENCE_THRESHOLD = 0.3
+
+    ASSERTION_DECISION_PROMPT = """\
+You evaluate one requirement-bound cybersecurity mapping assertion using only the supplied evidence.
+An exact graph path proves corpus connectivity, not semantic satisfaction.
+Recalled QRAs are candidate evidence only. Do not use outside knowledge.
+
+Return exactly one JSON object with no unknown fields:
+{
+  "schema": "sparta.assertion_semantic_decision.v1",
+  "assertion_id": "exact input value",
+  "assertion_claim_sha256": "exact input value",
+  "decision": "SUPPORTS|CONTRADICTS|INSUFFICIENT|CLARIFY",
+  "decision_reason": "bounded explanation",
+  "evidence_refs": ["exact recalled evidence IDs"],
+  "supported_claim_refs": ["assertion_id when supported"],
+  "contradicted_claim_refs": ["assertion_id when contradicted"],
+  "clarification_question": null
+}
+
+Rules:
+- SUPPORTS requires nonempty valid evidence_refs and the assertion ID in supported_claim_refs.
+- CONTRADICTS requires nonempty valid evidence_refs and the assertion ID in contradicted_claim_refs.
+- INSUFFICIENT means the supplied evidence cannot support or contradict the assertion.
+- CLARIFY requires a nonempty clarification_question and provides no positive or negative verdict.
+- Never treat entity grounding, recall similarity, or an exact path alone as support.
+- Return JSON only.
+
+ASSERTION_EVIDENCE:
+"""
+
+    def _scillm_assertion_decision(
+        self,
+        *,
+        assertion_id: str,
+        assertion_claim_sha256: str,
+        claim_text: str,
+        resolved: list[dict[str, Any]],
+        qra_items: list[dict[str, Any]],
+        steps: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        evidence_items = []
+        for ordinal, item in enumerate(qra_items[:12], start=1):
+            evidence_ref = str(
+                item.get("_key") or item.get("qra_key") or item.get("control_id") or f"recall-{ordinal}"
+            )
+            evidence_items.append({
+                "evidence_ref": evidence_ref,
+                "control_id": item.get("control_id"),
+                "question": item.get("question", item.get("problem", ""))[:500],
+                "answer": item.get("answer", item.get("solution", ""))[:1000],
+                "candidate_evidence_only": True,
+            })
+        valid_refs = {item["evidence_ref"] for item in evidence_items}
+        payload = {
+            "schema": "sparta.assertion_semantic_input.v1",
+            "assertion_id": assertion_id,
+            "assertion_claim_sha256": assertion_claim_sha256,
+            "assertion_text": claim_text,
+            "exact_path_proven": True,
+            "resolved_entities": [
+                {
+                    "id": item.get("canonical_id"),
+                    "name": item.get("canonical_name", item.get("name")),
+                    "framework": item.get("framework"),
+                }
+                for item in resolved
+            ],
+            "candidate_evidence": evidence_items,
+            "deterministic_gates": steps,
+        }
+        expected_keys = {
+            "schema", "assertion_id", "assertion_claim_sha256", "decision",
+            "decision_reason", "evidence_refs", "supported_claim_refs",
+            "contradicted_claim_refs", "clarification_question",
+        }
+        messages = [{"role": "user", "content": self.ASSERTION_DECISION_PROMPT + json.dumps(payload, indent=2)}]
+        last_error = "validation retries exhausted"
+        for attempt in range(1, self.MAX_RENDER_RETRIES + 1):
+            try:
+                response = httpx.post(
+                    f"{SCILLM_URL}/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {SCILLM_KEY}",
+                        "X-Caller-Skill": "create-evidence-case",
+                    },
+                    json={
+                        "model": SCILLM_EVIDENCE_MODEL,
+                        "messages": messages,
+                        "temperature": 0.0,
+                        "response_format": {"type": "json_object"},
+                    },
+                    timeout=SCILLM_EVIDENCE_TIMEOUT_S,
+                )
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                if content.startswith("```"):
+                    content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+                decision = json.loads(content)
+                errors = []
+                if set(decision) != expected_keys:
+                    errors.append("closed_schema_mismatch")
+                if decision.get("schema") != "sparta.assertion_semantic_decision.v1":
+                    errors.append("schema_mismatch")
+                if decision.get("assertion_id") != assertion_id:
+                    errors.append("assertion_id_mismatch")
+                if decision.get("assertion_claim_sha256") != assertion_claim_sha256:
+                    errors.append("assertion_claim_hash_mismatch")
+                semantic = decision.get("decision")
+                if semantic not in {"SUPPORTS", "CONTRADICTS", "INSUFFICIENT", "CLARIFY"}:
+                    errors.append("invalid_decision")
+                refs = decision.get("evidence_refs")
+                supported = decision.get("supported_claim_refs")
+                contradicted = decision.get("contradicted_claim_refs")
+                if not isinstance(refs, list) or not set(refs).issubset(valid_refs):
+                    errors.append("invalid_evidence_refs")
+                if not isinstance(supported, list) or not isinstance(contradicted, list):
+                    errors.append("invalid_claim_refs")
+                if semantic == "SUPPORTS" and (not refs or assertion_id not in supported or contradicted):
+                    errors.append("invalid_support_contract")
+                if semantic == "CONTRADICTS" and (not refs or assertion_id not in contradicted):
+                    errors.append("invalid_contradiction_contract")
+                if semantic == "CLARIFY" and not str(decision.get("clarification_question") or "").strip():
+                    errors.append("missing_clarification_question")
+                if semantic != "CLARIFY" and decision.get("clarification_question") is not None:
+                    errors.append("unexpected_clarification_question")
+                if not str(decision.get("decision_reason") or "").strip():
+                    errors.append("missing_decision_reason")
+                if not errors:
+                    return {**decision, "renderer_terminal_state": "completed", "attempts": attempt}
+                last_error = ",".join(errors)
+                messages.extend([
+                    {"role": "assistant", "content": content},
+                    {"role": "user", "content": f"Invalid response: {last_error}. Return corrected JSON only."},
+                ])
+            except Exception as exc:
+                last_error = str(exc)
+        return {
+            "schema": "sparta.assertion_semantic_decision.v1",
+            "assertion_id": assertion_id,
+            "assertion_claim_sha256": assertion_claim_sha256,
+            "decision": None,
+            "decision_reason": "",
+            "evidence_refs": [],
+            "supported_claim_refs": [],
+            "contradicted_claim_refs": [],
+            "clarification_question": None,
+            "renderer_terminal_state": "validation_exhausted",
+            "attempts": self.MAX_RENDER_RETRIES,
+            "error": last_error,
+        }
 
     def _recall_coherence_check(
         self,

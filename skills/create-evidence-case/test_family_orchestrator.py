@@ -2,7 +2,9 @@ from pathlib import Path
 
 from family_orchestrator import (
     _assertion_question,
+    _aggregate_material_outcomes,
     _build_assertion_manifest,
+    _runner_state_to_evidence_verdict,
     _usable_edge,
     requirement_content_hash,
     run_family_orchestration,
@@ -197,3 +199,20 @@ def test_expected_entity_restriction_ignores_context_and_spurious_role_entity():
         "ok": True,
         "detail": "pre_grounded_exact_persisted_path",
     }
+
+
+def test_assertion_decision_reconciliation_is_fail_closed():
+    assert _runner_state_to_evidence_verdict("ambiguous_entity") == "CLARIFY"
+    assert _runner_state_to_evidence_verdict("runtime_failure") is None
+    base = {"candidate_material": True, "evidence_execution_state": "completed"}
+    assert _aggregate_material_outcomes([{**base, "evidence_verdict": "NOT_SATISFIED"}]) == (
+        "NOT_SATISFIED", "NOT_SATISFIED", "material_negative"
+    )
+    assert _aggregate_material_outcomes([{**base, "evidence_verdict": "CLARIFY"}])[0] == "CLARIFY"
+    assert _aggregate_material_outcomes([{**base, "evidence_verdict": "INCONCLUSIVE"}])[0] == "INCONCLUSIVE"
+    assert _aggregate_material_outcomes([{**base, "evidence_verdict": "SATISFIED"}])[0] == "SATISFIED"
+    assert _aggregate_material_outcomes([{
+        **base,
+        "evidence_execution_state": "runtime_failure",
+        "evidence_verdict": None,
+    }])[0] == "RUNTIME_FAILURE"
