@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{{TITLE}}</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #f5f6f7; --paper: #ffffff; --text: #202124; --muted: #667085; --line: #d7dce2; --accent: #006d77; --button: #0b57d0; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #151719; --paper: #202326; --text: #f2f4f7; --muted: #a8b0bc; --line: #3a4048; --accent: #67d5df; --button: #8ab4f8; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .toolbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 94%, transparent); backdrop-filter: blur(10px); }
+    .toolbar-inner { max-width: 860px; min-height: 64px; margin: 0 auto; padding: 10px 18px; display: flex; align-items: center; gap: 10px; }
+    .identity { min-width: 0; flex: 1; }
+    .identity strong, .identity span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .identity span { color: var(--muted); font-size: 13px; }
+    button, .download { min-height: 42px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 13px; background: var(--paper); color: var(--text); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    button:hover, .download:hover { border-color: var(--button); color: var(--button); }
+    main { max-width: 860px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 36px 42px 80px; background: var(--paper); }
+    article { overflow-wrap: anywhere; }
+    h1, h2, h3, h4 { line-height: 1.25; margin: 1.7em 0 .55em; letter-spacing: 0; }
+    h1 { margin-top: 0; font-size: 2rem; }
+    h2 { font-size: 1.45rem; border-bottom: 1px solid var(--line); padding-bottom: .3em; }
+    p, ul, ol, blockquote, pre, table { margin: 0 0 1.2em; }
+    a { color: var(--accent); }
+    blockquote { border-left: 4px solid var(--accent); margin-left: 0; padding-left: 18px; color: var(--muted); }
+    pre, code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    pre { overflow: auto; border: 1px solid var(--line); border-radius: 6px; padding: 16px; background: var(--bg); white-space: pre-wrap; }
+    code { font-size: .9em; }
+    table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+    th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+    #copy-status { min-height: 20px; margin: 16px 0 0; color: var(--muted); font-size: 13px; }
+    @media (max-width: 640px) {
+      .toolbar-inner { flex-wrap: wrap; padding: 9px 12px; }
+      .identity { flex-basis: 100%; }
+      button, .download { flex: 1; }
+      main { padding: 26px 20px 64px; }
+      h1 { font-size: 1.65rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-inner">
+      <div class="identity"><strong>{{TITLE}}</strong><span>{{SOURCE_NAME}}</span></div>
+      <button id="copy" type="button" title="Copy source text">Copy</button>
+      <a id="download" class="download" href="#" download title="Download source artifact">Download</a>
+    </div>
+  </header>
+  <main>
+    <article id="artifact">{{CONTENT}}</article>
+    <p id="copy-status" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    const sourceFile = {{SOURCE_FILE_JSON}};
+    const download = document.getElementById("download");
+    const copyButton = document.getElementById("copy");
+    const status = document.getElementById("copy-status");
+    download.href = sourceFile;
+    async function copyText(text) {
+      if (window.isSecureContext && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const field = document.createElement("textarea");
+      field.value = text;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      const copied = document.execCommand("copy");
+      field.remove();
+      if (!copied) throw new Error("browser rejected clipboard access");
+    }
+    copyButton.addEventListener("click", async () => {
+      try {
+        const response = await fetch(sourceFile, {cache: "no-store"});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        await copyText(await response.text());
+        status.textContent = "Copied source text to clipboard.";
+      } catch (error) {
+        status.textContent = `Copy failed: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

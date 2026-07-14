@@ -21,11 +21,15 @@ metadata:
 provides:
   - ingest-youtube
 composes:
+  - artifact-reader
   - memory
   - extractor
   - taxonomy
   - task-monitor
   - doc2qra
+complies:
+  - best-practices-skills
+  - best-practices-python
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -128,6 +132,21 @@ Tests IPRoyal proxy connectivity and IP rotation.
   "errors": []
 }
 ```
+
+## Read On Another Device
+
+After producing an accepted transcript artifact, compose `$artifact-reader`
+instead of building a one-off HTML page or selecting a port manually:
+
+```bash
+skills/artifact-reader/run.sh render /absolute/path/to/transcript.md \
+  --out /tmp/youtube-transcript-reader
+skills/artifact-reader/run.sh start /tmp/youtube-transcript-reader --lan
+```
+
+Return the exact URL from `artifact-reader-server-receipt.json`. The reader's
+Copy control copies the transcript source, and Download returns the original
+artifact file.
 
 **Method values:** `direct`, `proxy`, `whisper-local`, `whisper-api`, or `null` (if all failed)
 

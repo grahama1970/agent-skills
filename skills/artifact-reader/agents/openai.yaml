@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artifact Reader"
+  short_description: "Serve local artifacts in a mobile reader"
+  default_prompt: "Use $artifact-reader to render and serve this local artifact with copy and download controls."

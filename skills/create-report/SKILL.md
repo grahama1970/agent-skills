@@ -29,6 +29,7 @@ provides:
   - plan-iterate-seed
   - evidence-report-handoff
 composes:
+  - artifact-reader
   - best-practices-report
   - project-knowledge
   - monitor-sparta
@@ -39,6 +40,9 @@ composes:
   - review-code
   - review-prompt
   - plan-iterate
+complies:
+  - best-practices-skills
+  - best-practices-report
 taxonomy:
   - reporting
   - orchestration
@@ -118,6 +122,11 @@ follow-on work exists.
    - verify visible blockers, non-claims, source inventory, findings, and
      plan-iterate instructions appear in the default view;
    - record the screenshot/read artifact path when UI verification is required.
+
+8. When the user needs to read the accepted report from another device, compose
+   `$artifact-reader` rather than adding report-specific server or clipboard
+   code. Render the report artifact, start the reader with `--lan`, and return
+   the URL from its server receipt.
 
 ## Project-Specific Routing
 
