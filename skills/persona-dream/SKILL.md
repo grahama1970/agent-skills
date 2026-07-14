@@ -388,6 +388,63 @@ media checks are subgates; the only normal final pass state is
 
 ## Provider Final Gate
 
+### Immutable Runtime And Revision Qualification
+
+Provider planning must read from one explicit immutable revision. Phases 01-10
+must not be reported as current merely because accepted-looking files exist in a
+mutable run directory. The runtime may expose revision artifacts for read-only
+inspection while qualification is blocked, but acceptance and provider
+eligibility remain fail-closed until the Revision Qualification Transaction
+completes.
+
+The transaction is:
+
+```text
+immutable revision manifest + artifact index
+-> recompute every indexed artifact hash
+-> prepare 1 revision + 10 phase + 16 required-artifact Memory records
+-> require Arango exact reread and Qdrant semantic_sync_state=synced
+-> verify semantic recall against the expected revision/phase keys
+-> upsert one deterministic run-scoped active-revision pointer
+-> exact-reread that pointer
+-> append one immutable COMPLETED repair-queue event
+-> write revision_activation_receipt.json last
+-> ACTIVE_CONSISTENT
+```
+
+Canonical runtime files:
+
+```text
+scripts/prepare_revision_qualification.py
+scripts/activate_revision_qualification.py
+schemas/revision_memory_prepare_receipt.v1.schema.json
+schemas/revision_memory_verify_receipt.v1.schema.json
+schemas/revision_activation_receipt.v1.schema.json
+```
+
+`ACTIVE_CONSISTENT` requires the local active pointer, Memory prepare/verify
+receipts, Memory active pointer, work order, preserved historical queue item,
+terminal queue event, revision manifest, and artifact index to agree by run ID,
+revision ID, transaction ID, and SHA-256. Any missing or mismatched link returns
+`LEGACY_UNQUALIFIED` or a specific blocked state and prevents phase acceptance.
+
+The qualified founding revision is currently:
+
+```text
+run_id: pipeline-complete
+revision_id: rev_repair_a8b93ffeca8f
+revision_qualification: ACTIVE_CONSISTENT
+phase_records: 10
+required_artifact_records: 16
+indexed_artifacts_hash_matched: 318
+actual_provider_call_attempts: 0
+provider_ready: false
+live_submit_ready: false
+```
+
+This is live Memory/Arango/Qdrant qualification evidence for Phases 01-10. It
+does not prove Phase 11 submission/return or Phases 12-16.
+
 Before a Kling, Wan, ComfyUI, or other provider video call is allowed, write a
 final provider-readiness gate receipt. A provider packet is not live-submittable
 unless every required gate is `PASS` or explicitly human-accepted as an

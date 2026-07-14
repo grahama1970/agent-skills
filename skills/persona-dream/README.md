@@ -180,6 +180,7 @@ The README uses these proof terms consistently:
 | **Accepted evidence** | The selected run contains a receipt-backed artifact accepted by its current gate |
 | **Fixture-proven** | Deterministic fixture-backed checks pass; no live external behavior is implied |
 | **Live slice proven** | A real external operation or generated artifact was executed and inspected |
+| **Qualified revision** | The immutable revision, required evidence, Memory projection, active pointer, and terminal repair event agree |
 | **Blocked** | A named prerequisite is missing or intentionally disallowed |
 | **Designed** | The architecture and evidence contract exist, but the implementation proof does not |
 | **Not implemented** | No working rung currently exists |
@@ -188,9 +189,7 @@ The README uses these proof terms consistently:
 |---|---|---|
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phase 08 - Media Lock | **Accepted evidence** | Accepted storyboard evidence has a stable local boundary |
-| Phase 09 - Video Provider | **Fixture-proven dry run** | Provider-neutral classification, ranking, and packet routing exist without a live-provider claim |
-| Phase 10 - Provider Contract | **Fixture-proven dry run** | A local compiler and fail-closed contract gate work without network or provider calls |
+| Phases 01-10 - Qualified revision | **Qualified revision** | `rev_repair_a8b93ffeca8f` is `ACTIVE_CONSISTENT`; 10 phase records and 16 required-artifact references are persisted and semantically synchronized through Memory |
 | Phase 11 - Submit and Return | **Blocked** | No paid call or live provider return has been authorized or proven |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
@@ -216,16 +215,16 @@ The complete Persona Dream pipeline has two connected parts:
 
 | Phase | Question | Primary evidence or output | Status |
 |---|---|---|---|
-| **01 - Idea and Memory Residue** | What is the persona dreaming about, and which memories actually support it? | Core directive, grounded multimodal residue, source IDs, relevance, contradictions | **Implemented** |
-| **02 - Story** | What bounded story emerges from the accepted residue? | `story_contract.json`, interaction and relationship coverage, story intent | **Implemented** |
-| **03 - Crew** | Who has creative authority over this dream? | Producer, scriptwriter, director, reviewer, and authority contracts | **Implemented** |
-| **04 - Contact Sheets** | Which characters, props, and environments must remain visually stable? | Character, prop, environment, and reference-pack evidence | **Live slices proven; active hardening** |
-| **05 - Voices** | How should each persona sound without confusing voice expression with psychological authority? | Voice references, audition state, identity boundaries, voice handoff plan | **Implemented planning and audition surface** |
-| **06 - Script** | How does story intent become timed action and dialogue? | `script_contract.json`, beats, dialogue/action coverage, interaction matrix | **Implemented** |
-| **07 - Storyboard** | What must each shot visibly contain, and has it passed visual review? | Accepted panels, start/end frames, prompt contracts, visual-review receipts | **Accepted evidence** |
-| **08 - Media Lock** | Which accepted visual assets are frozen for provider-facing use? | Locked frame subset, roles, hashes, dimensions, identity state | **Accepted evidence** |
-| **09 - Video Provider** | Which provider best fits the accepted scene, and why? | Provider registry refresh, scorecard, selected provider, dry-run packet | **Fixture-proven dry run** |
-| **10 - Provider Contract** | Exactly what would eventually be sent, against which endpoint and contract? | Request body, payload hash, field mapping, media plan, cost/entitlement plan, async plan, non-claims | **Fixture-proven dry run** |
+| **01 - Idea and Memory Residue** | What is the persona dreaming about, and which memories actually support it? | Core directive, grounded multimodal residue, source IDs, relevance, contradictions | **Qualified revision** |
+| **02 - Story** | What bounded story emerges from the accepted residue? | `story_contract.json`, interaction and relationship coverage, story intent | **Qualified revision** |
+| **03 - Crew** | Who has creative authority over this dream? | Producer, scriptwriter, director, reviewer, and authority contracts | **Qualified revision** |
+| **04 - Contact Sheets** | Which characters, props, and environments must remain visually stable? | Character, prop, environment, and reference-pack evidence | **Qualified revision** |
+| **05 - Voices** | How should each persona sound without confusing voice expression with psychological authority? | Voice references, audition state, identity boundaries, voice handoff plan | **Qualified revision** |
+| **06 - Script** | How does story intent become timed action and dialogue? | `script_contract.json`, beats, dialogue/action coverage, interaction matrix | **Qualified revision** |
+| **07 - Storyboard** | What must each shot visibly contain, and has it passed visual review? | Accepted panels, start/end frames, prompt contracts, visual-review receipts | **Qualified revision** |
+| **08 - Media Lock** | Which accepted visual assets are frozen for provider-facing use? | Locked frame subset, roles, hashes, dimensions, identity state | **Qualified revision** |
+| **09 - Video Provider** | Which provider best fits the accepted scene, and why? | Provider registry refresh, scorecard, selected provider, dry-run packet | **Qualified revision; no live call** |
+| **10 - Provider Contract** | Exactly what would eventually be sent, against which endpoint and contract? | Request body, payload hash, field mapping, media plan, cost/entitlement plan, async plan, non-claims | **Qualified revision; no live call** |
 | **11 - Submit and Return** | Can one explicitly authorized provider call produce a valid returned dream artifact? | Media URLs, approval, paid authorization, submit receipt, task ID, polling/callback, downloaded video, FFprobe | **Blocked** |
 
 ### Cognitive and Memory Loop
@@ -238,10 +237,26 @@ The complete Persona Dream pipeline has two connected parts:
 | **15 - Memory, Graph, and Qdrant Persistence** | Can the accepted synthetic dream be stored and retrieved without becoming false history? | Dream memory record, ArangoDB edges, Qdrant points, cross-store validation receipts | **Designed** |
 | **16 - Recall and Behavior Evaluation** | Does the persona later use the dream appropriately while remaining recognizably itself? | Semantic recall, multi-hop traversal, identity-consistency probes, before/after conversation and Chatterbox evidence | **Not implemented as a closed proof** |
 
-### Remaining Work Beyond the Local Dry-Run Boundary
+### Current Qualified Runtime Boundary
 
-The repository has fixture-backed proof for Phase 10. The remaining live and
-closed-loop work is:
+The production read model currently reports `ACTIVE_CONSISTENT` for run
+`pipeline-complete`, revision `rev_repair_a8b93ffeca8f`. Memory contains one
+revision, ten phase records, sixteen required-artifact references, and one
+run-scoped active pointer. All twenty-eight documents report Qdrant semantic
+sync metadata. The immutable revision index independently hash-validates 318
+local artifacts. This qualifies Phases 01-10; it does not prove a provider call,
+returned dream, Watch analysis, interpretation, or later persona behavior.
+
+Primary receipts:
+
+- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_memory_prepare_receipt.json`
+- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_memory_verify_receipt.json`
+- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_activation_receipt.json`
+- `.persona-dream/repair/queue-events/repair-a8b93ffeca8f6014/000001-completed.json`
+
+### Remaining Work Beyond the Qualified Revision
+
+The remaining live and closed-loop work is:
 
 1. verify the current provider endpoint and API schema;
 2. publish and externally probe provider-accessible input media;

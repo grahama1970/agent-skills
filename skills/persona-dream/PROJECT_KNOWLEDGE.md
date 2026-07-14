@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-06 20:33 by agent
+**Last updated:** 2026-07-14 07:26 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -30,6 +30,7 @@
 - 2026-07-04 correction: A fresh status poll of GET http://127.0.0.1:3001/api/tau/dream/script-draft/latest after the Phase 06 knowledge update returned ok=true, status=PASS_SCRIPT_CONTRACT, script_chars=2114, coverage=7, assets=14. Treat 14 asset-usage rows as the current observed API count unless a newer script_contract.json receipt proves otherwise.
 - 2026-07-06: Phase 07 storyboard failure mode: the multi-day blocker was not primarily a card/layout problem. The panel prompt and reviewer gate let character identity become secondary to wide establishing-shot composition, reef/location beauty, and crowd/lineup context. For identity-critical storyboard panels, priority must be: required character identity match > faces visible and reference-verifiable > character-readable composition > location/reef/cinematic details. Use medium-wide foreground two-shots when Embry/Kai are required, and pass Embry/Kai reference sheets as actual image inputs/attachments, not only local path text.
 - 2026-07-06: If the human shows a visual counterexample for a persona-dream panel, stop UI/status-copy work and inspect the generated prompt, reference attachment route, reviewer schema, and acceptance gate. Do not spend further cycles styling around bad imagery. The next artifact must be a corrected Tau creator/reviewer run receipt or a precise blocker proving why regeneration cannot proceed.
+- 2026-07-13: The canonical run pipeline-complete now uses immutable revision rev_repair_a8b93ffeca8f and reports ACTIVE_CONSISTENT. Live Revision Qualification Transaction evidence: 318/318 indexed artifact hashes matched; Memory contains 1 revision, 10 Phase 01-10 records, and 16 required-artifact reference records with semantic_sync_state=synced; a separate run-scoped active pointer is exact-reread from Memory; repair work order repair-a8b93ffeca8f6014 has immutable terminal event 000001-completed.json while the historical QUEUED item remains preserved. Production run-detail reports all 10 phases accepted_current. Storyboard hydration independently returned 8/8 HTTP 200 image responses with matching hashes and decoder success. Provider boundary remains closed: submitted=false, provider_ready=false, live_submit_ready=false, actual_provider_call_attempts=0. Phase 11 is the next phase; Phases 12-16 remain pending.
 
 ## Recent Decisions
 
@@ -57,6 +58,7 @@
 | 2026-07-03 | Phase 05 voice selection may be autonomous only through a creator/reviewer contract | Agents may discover candidate public/provided/local/synthetic voice references, extract clean clips, render Chatterbox demos, and select defaults, but the phase must write `voice_candidate_bundle.json` and `voice_selection_receipt.json` with provenance, rights notes, live non-mocked demo receipts, tone metadata, and reviewer rationale. Silent final voice locking is not accepted. |
 | 2026-07-06 | Phase 07 storyboard prompts must be identity-first for character panels | Wide establishing-shot prompts caused plausible surf/location frames with wrong or unverifiable Embry/Kai identities. Character panels must require foreground, reference-matched, face-visible Embry and Kai before surf composition, reef visibility, crowd pressure, or cinematic beauty. Avoid weak wording like 'for continuity only' for identity references. |
 | 2026-07-06 | Failed identity review invalidates accepted storyboard frames | A generated storyboard frame cannot remain ACCEPTED_START_FRAME or ACCEPTED_END_FRAME when identity_continuity_review.status is FAIL. Reviewer failure must downgrade the frame, write a blocker, and force Tau creator/reviewer regeneration instead of letting the UI display or package the image as accepted. |
+| 2026-07-14 | Phases 01-10 require an immutable ACTIVE_CONSISTENT revision before acceptance | Accepted-looking local files are insufficient. Qualification requires hash-bound local artifacts, exact Memory records, Qdrant semantic sync, a deterministic active pointer, and a terminal repair event. Provider submission remains a separate Phase 11 boundary. |
 
 ## Open Questions
 
