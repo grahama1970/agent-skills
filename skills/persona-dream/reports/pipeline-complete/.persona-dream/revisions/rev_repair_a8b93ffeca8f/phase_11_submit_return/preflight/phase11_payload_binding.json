@@ -65,7 +65,11 @@
       3
     ],
     "generate_audio": false,
-    "provider_voice_ids_required": false
+    "provider_voice_ids_required": false,
+    "fal_credential_available": true,
+    "credential_source_variable": "FAL_API_KEY",
+    "runtime_credential_variable": "FAL_KEY",
+    "credential_value_persisted": false
   },
   "human_gates": {
     "manual_visual_acceptance": false,
@@ -84,5 +88,11 @@
       "paid-call authorization"
     ]
   },
-  "payload_sha256": "sha256:8fa480f0f17dad93116cb9a7e153a994c3f373ec9afaf6418d54ee72e4530e08"
+  "payload_sha256": "sha256:8fa480f0f17dad93116cb9a7e153a994c3f373ec9afaf6418d54ee72e4530e08",
+  "cost": {
+    "source_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
+    "usd_per_second_audio_off": 0.084,
+    "duration_seconds": 10,
+    "maximum_expected_cost_usd": 0.84
+  }
 }

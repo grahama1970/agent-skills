@@ -30,5 +30,9 @@
   "does_not_prove": [
     "provider request acceptance",
     "provider task creation"
-  ]
+  ],
+  "price_source_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
+  "usd_per_second_audio_off": 0.084,
+  "bound_duration_seconds": 10,
+  "maximum_expected_cost_usd": 0.84
 }
