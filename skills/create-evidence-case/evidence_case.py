@@ -106,6 +106,35 @@ app = typer.Typer(
 console = Console()
 
 
+@app.command("family")
+def family(
+    input_file: str = typer.Option(..., "--input", "-i", help="Immutable F36 family input envelope"),
+    output_file: str = typer.Option(..., "--output", "-o", help="Family evidence snapshot JSON"),
+    no_live: bool = typer.Option(False, "--no-live", help="Skip the underlying live evidence-case run"),
+) -> None:
+    """Run one requirement-first canonical QRA family through quarantine."""
+    from family_orchestrator import run_family_orchestration
+
+    input_path = Path(input_file)
+    if not input_path.is_file():
+        console.print(f"[red]Input file not found: {input_file}[/]")
+        raise typer.Exit(code=1)
+    try:
+        envelope = json.loads(input_path.read_text())
+        result = run_family_orchestration(envelope, Path(output_file), live=not no_live)
+    except (ValueError, json.JSONDecodeError, OSError) as exc:
+        console.print(f"[red]Family orchestration failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    print(json.dumps({
+        "family_evidence_case_snapshot_id": result["family_evidence_case_snapshot_id"],
+        "terminal_disposition": result["terminal_disposition"],
+        "path_count": len(result["stage_receipts"]["path_resolution"]["path_proofs"]),
+        "accepted": result["accepted"],
+        "review_state": result["review_state"],
+        "artifact_paths": result["artifact_paths"],
+    }, indent=2))
+
+
 @app.command()
 def create(
     claim: str = typer.Argument(..., help="The claim or question to verify"),
