@@ -13,7 +13,7 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Mapping, Sequence
 from urllib.parse import unquote, urlparse
 
@@ -321,6 +321,68 @@ def resolve_path(base: Path, value: Path | None, default_relative: Path) -> Path
     return (base / default_relative).resolve()
 
 
+PORTABLE_PATH_FIELDS = frozenset({
+    "path",
+    "manifest_path",
+    "relative_path",
+    "revision_relative_path",
+    "body_relative_path",
+})
+
+
+def portable_run_path(context: ActiveContext, path: Path) -> str:
+    """Return a checkout-independent path rooted at the canonical run root."""
+
+    resolved_root = context.run_root.resolve(strict=True)
+    resolved_path = path.expanduser().resolve(strict=False)
+    try:
+        relative = resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise Phase11Blocked(
+            "BLOCKED_PHASE11_CANONICAL_PATH_OUTSIDE_RUN_ROOT",
+            details={"path": str(resolved_path), "run_root": str(resolved_root)},
+        ) from exc
+    require(
+        bool(relative.parts)
+        and not relative.is_absolute()
+        and all(part not in {"", ".", ".."} for part in relative.parts),
+        "BLOCKED_PHASE11_CANONICAL_PATH_INVALID",
+        path=relative.as_posix(),
+    )
+    return relative.as_posix()
+
+
+def portable_file_ref(
+    context: ActiveContext,
+    path: Path,
+    *,
+    sha256: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "path": portable_run_path(context, path),
+        "sha256": sha256 if sha256 is not None else sha256_file(path) if path.is_file() else None,
+    }
+
+
+def canonical_path_violations(value: Any, pointer: str = "$") -> list[str]:
+    """Locate absolute or parent-traversing filesystem paths in canonical JSON."""
+
+    violations: list[str] = []
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            child = f"{pointer}/{key}"
+            if key in PORTABLE_PATH_FIELDS and isinstance(item, str) and item:
+                posix = PurePosixPath(item)
+                windows = PureWindowsPath(item)
+                if posix.is_absolute() or windows.is_absolute() or ".." in posix.parts:
+                    violations.append(child)
+            violations.extend(canonical_path_violations(item, child))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            violations.extend(canonical_path_violations(item, f"{pointer}/{index}"))
+    return violations
+
+
 def provider_mode(endpoint: str) -> str:
     lowered = endpoint.lower()
     if "/standard/" in lowered:
@@ -499,9 +561,10 @@ def validate_transition_evidence(
     expected_sha256: str,
 ) -> tuple[dict[str, Any], list[str]]:
     blockers: list[str] = []
+    manifest_path = portable_run_path(inputs.context, inputs.transition_manifest_path)
     entry = transition_entries(inputs.transition_manifest).get(artifact_id)
     if entry is None:
-        return {"manifest_path": str(inputs.transition_manifest_path), "entry_found": False}, [f"BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:{artifact_id}"]
+        return {"manifest_path": manifest_path, "entry_found": False}, [f"BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:{artifact_id}"]
     if entry.get("url") != url or entry.get("sha256") != expected_sha256:
         blockers.append(f"BLOCKED_PUBLIC_MEDIA_TRANSITION_BINDING:{artifact_id}")
     refs: dict[str, Any] = {}
@@ -538,7 +601,7 @@ def validate_transition_evidence(
         elif name == "teardown_policy":
             if receipt.get("status") not in {"NOT_REQUIRED_PERSISTENT_COMMIT_PINNED", "PASS_PROVIDER_MEDIA_TEARDOWN"}:
                 blockers.append(f"BLOCKED_PUBLIC_MEDIA_TEARDOWN_POLICY:{artifact_id}")
-    return {"manifest_path": str(inputs.transition_manifest_path), "entry_found": True, **refs}, blockers
+    return {"manifest_path": manifest_path, "entry_found": True, **refs}, blockers
 
 
 def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mapping[str, Any]) -> dict[str, Any]:
@@ -546,6 +609,7 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
     locked = inputs.media_lock.get("assets")
     locked_assets = [dict(item) for item in locked] if isinstance(locked, list) and all(isinstance(item, dict) for item in locked) else []
     by_id = {str(item.get("asset_id") or ""): item for item in locked_assets}
+    indexed = index_artifacts(inputs.context)
     if len(locked_assets) != 8:
         blockers.append(f"BLOCKED_LOCKED_ASSET_CARDINALITY:{len(locked_assets)}:expected:8")
     if set(by_id) != set(FRAME_IDS):
@@ -556,6 +620,23 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
     frame_records: list[dict[str, Any]] = []
     for artifact_id in FRAME_IDS:
         source = by_id.get(artifact_id, {})
+        indexed_entry = indexed.get(artifact_id)
+        revision_relative_path: str | None = None
+        if not isinstance(indexed_entry, Mapping):
+            blockers.append(f"BLOCKED_MEDIA_ARTIFACT_INDEX_MISSING:{artifact_id}")
+        else:
+            revision_relative_path = str(indexed_entry.get("relative_path") or "")
+            relative_parts = PurePosixPath(revision_relative_path)
+            if not revision_relative_path or relative_parts.is_absolute() or ".." in relative_parts.parts:
+                blockers.append(f"BLOCKED_MEDIA_ARTIFACT_INDEX_PATH:{artifact_id}")
+            else:
+                try:
+                    indexed_file = safe_indexed_file(inputs.context.revision_root, revision_relative_path)
+                    indexed_sha256 = sha256_file(indexed_file)
+                    if indexed_sha256 != indexed_entry.get("sha256") or indexed_sha256 != source.get("sha256"):
+                        blockers.append(f"BLOCKED_MEDIA_ARTIFACT_INDEX_HASH:{artifact_id}")
+                except GateBlocked:
+                    blockers.append(f"BLOCKED_MEDIA_ARTIFACT_INDEX_PATH:{artifact_id}")
         role = FRAME_ROLES[artifact_id]
         pointer = "/input/start_image_url" if role == "global_start_anchor" else "/input/end_image_url" if role == "global_end_anchor" else None
         url = start_url if role == "global_start_anchor" else end_url if role == "global_end_anchor" else None
@@ -564,7 +645,7 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
             "role": role,
             "json_pointer": pointer,
             "sha256": source.get("sha256"),
-            "revision_relative_path": source.get("path"),
+            "revision_relative_path": revision_relative_path,
             "public_url": url,
             "transition_evidence": None,
         }
@@ -668,10 +749,14 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
         "revision_id": inputs.context.revision_id,
         "activation_transaction_id": inputs.context.activation_transaction_id,
         "source_files": {
-            "media_lock": {"path": str(inputs.media_lock_path), "sha256": sha256_file(inputs.media_lock_path) if inputs.media_lock_path.is_file() else None},
-            "candidate_binding": {"path": str(inputs.candidate_binding_path), "sha256": sha256_file(inputs.candidate_binding_path) if inputs.candidate_binding_path.is_file() else None},
-            "artifact_index": {"path": str(inputs.context.artifact_index_path), "sha256": inputs.context.artifact_index_sha256},
-            "transition_manifest": {"path": str(inputs.transition_manifest_path), "sha256": sha256_file(inputs.transition_manifest_path) if inputs.transition_manifest_path.is_file() else None},
+            "media_lock": portable_file_ref(inputs.context, inputs.media_lock_path),
+            "candidate_binding": portable_file_ref(inputs.context, inputs.candidate_binding_path),
+            "artifact_index": portable_file_ref(
+                inputs.context,
+                inputs.context.artifact_index_path,
+                sha256=inputs.context.artifact_index_sha256,
+            ),
+            "transition_manifest": portable_file_ref(inputs.context, inputs.transition_manifest_path),
         },
         "media_input_contract_sha256": canonical_sha256(source_contract),
         "role_counts": role_counts,
@@ -901,20 +986,21 @@ def approval_bindings(
     }
 
 
-def inspect_approvals(root: Path, bindings: Mapping[str, Any], current: datetime) -> tuple[dict[str, Any], list[str], list[str]]:
+def inspect_approvals(inputs: CompilationInputs, bindings: Mapping[str, Any], current: datetime) -> tuple[dict[str, Any], list[str], list[str]]:
     statuses: dict[str, Any] = {}
     missing: list[str] = []
     blockers: list[str] = []
     for approval_type in APPROVAL_TYPES:
-        path = root / APPROVAL_FILES[approval_type]
+        path = inputs.approval_root / APPROVAL_FILES[approval_type]
+        portable_path = portable_run_path(inputs.context, path)
         if not path.is_file():
-            statuses[approval_type] = {"path": str(path), "state": "MISSING", "sha256": None}
+            statuses[approval_type] = {"path": portable_path, "state": "MISSING", "sha256": None}
             missing.append(approval_type)
             continue
         try:
             receipt = read_object(path)
         except (OSError, json.JSONDecodeError, ValueError):
-            statuses[approval_type] = {"path": str(path), "state": "INVALID", "sha256": None}
+            statuses[approval_type] = {"path": portable_path, "state": "INVALID", "sha256": None}
             blockers.append(f"BLOCKED_APPROVAL_RECEIPT_INVALID:{approval_type}")
             continue
         errors = validate_schema(receipt, "phase11_approval_receipt.v1.schema.json")
@@ -941,7 +1027,7 @@ def inspect_approvals(root: Path, bindings: Mapping[str, Any], current: datetime
         except ValueError:
             blockers.append(f"BLOCKED_APPROVAL_RECEIPT_EXPIRY:{approval_type}")
         statuses[approval_type] = {
-            "path": str(path),
+            "path": portable_path,
             "state": "APPROVED" if not any(code.startswith(f"BLOCKED_APPROVAL_RECEIPT") and f":{approval_type}" in code for code in blockers) else "INVALID",
             "sha256": sha256_file(path),
         }
@@ -960,7 +1046,7 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         provider_snapshot_sha256=inputs.provider_snapshot.sha256,
         request_body_sha256=request_body_sha,
     )
-    approval_statuses, missing_approvals, approval_blockers = inspect_approvals(inputs.approval_root, bindings, inputs.current)
+    approval_statuses, missing_approvals, approval_blockers = inspect_approvals(inputs, bindings, inputs.current)
     technical_blockers = sorted(set(
         request_blockers
         + list(media_manifest.get("blockers") or [])
@@ -1013,9 +1099,13 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         },
         "request_body_sha256": request_body_sha,
         "source_files": {
-            "phase10_payload": {"path": str(inputs.phase10_payload_path), "sha256": sha256_file(inputs.phase10_payload_path) if inputs.phase10_payload_path.is_file() else None},
-            "candidate_binding": {"path": str(inputs.candidate_binding_path), "sha256": sha256_file(inputs.candidate_binding_path) if inputs.candidate_binding_path.is_file() else None},
-            "provider_source_snapshot": {"path": str(inputs.provider_snapshot.path), "sha256": inputs.provider_snapshot.sha256},
+            "phase10_payload": portable_file_ref(inputs.context, inputs.phase10_payload_path),
+            "candidate_binding": portable_file_ref(inputs.context, inputs.candidate_binding_path),
+            "provider_source_snapshot": portable_file_ref(
+                inputs.context,
+                inputs.provider_snapshot.path,
+                sha256=inputs.provider_snapshot.sha256,
+            ),
             "media_binding_manifest_sha256": media_manifest_sha,
         },
         "prompt_transformations": transformations,
@@ -1037,6 +1127,21 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
             "does_not_prove": ["provider readiness", "provider submission", "provider acceptance", "returned video"],
         },
     }
+    canonical_outputs = {
+        "media_binding_manifest": media_manifest,
+        "approval_requirements": approval_requirements,
+        "live_request": live_request,
+    }
+    portability_errors = {
+        name: violations
+        for name, value in canonical_outputs.items()
+        if (violations := canonical_path_violations(value))
+    }
+    require(
+        not portability_errors,
+        "BLOCKED_PHASE11_CANONICAL_PATH_NONPORTABLE",
+        artifacts=portability_errors,
+    )
     return media_manifest, approval_requirements, live_request
 
 

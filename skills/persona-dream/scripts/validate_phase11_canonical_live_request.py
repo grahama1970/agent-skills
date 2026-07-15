@@ -16,6 +16,7 @@ from phase11_canonical_common import (
     DEFAULT_OUTPUT_RELATIVE,
     Phase11Blocked,
     canonical_json_bytes,
+    canonical_path_violations,
     compile_bundle,
     load_inputs,
     memory_document,
@@ -102,6 +103,15 @@ def main(argv: list[str] | None = None) -> int:
             deterministic_errors.append("BLOCKED_PHASE11_APPROVAL_REQUIREMENTS_NONDETERMINISTIC")
         if not same_json(actual_request, expected_request):
             deterministic_errors.append("BLOCKED_PHASE11_LIVE_REQUEST_NONDETERMINISTIC")
+        for name, value in (
+            ("media_binding_manifest", actual_media),
+            ("approval_requirements", actual_approvals),
+            ("live_request", actual_request),
+        ):
+            deterministic_errors.extend(
+                f"BLOCKED_PHASE11_CANONICAL_PATH_NONPORTABLE:{name}:{pointer}"
+                for pointer in canonical_path_violations(value)
+            )
         deterministic_errors.extend(
             f"BLOCKED_PHASE11_LIVE_REQUEST_SCHEMA:{message}"
             for message in validate_schema(actual_request, "phase11_live_request.v1.schema.json")

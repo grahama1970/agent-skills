@@ -189,6 +189,61 @@ def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Pa
     assert any(item["panel_id"] == "sb_003" and "sb003_dialogue_removed" in item["changes"] for item in transformations)
 
 
+def test_canonical_outputs_are_portable_and_byte_identical_across_worktree_prefixes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    inputs_a, _candidate_a, _urls_a = make_compilation_inputs(tmp_path / "WORKTREE_A")
+    inputs_b, _candidate_b, _urls_b = make_compilation_inputs(tmp_path / "WORKTREE_B")
+
+    bundle_a = common.compile_bundle(inputs_a)
+    bundle_b = common.compile_bundle(inputs_b)
+    names = ("media_binding_manifest", "approval_requirements", "live_request")
+    for name, artifact_a, artifact_b in zip(names, bundle_a, bundle_b):
+        assert common.pretty_json_bytes(artifact_a) == common.pretty_json_bytes(artifact_b), name
+        assert common.serialized_file_sha256(artifact_a) == common.serialized_file_sha256(artifact_b), name
+        assert common.canonical_path_violations(artifact_a) == [], name
+        encoded = common.pretty_json_bytes(artifact_a).decode("utf-8")
+        assert str(inputs_a.context.run_root) not in encoded
+        assert str(inputs_b.context.run_root) not in encoded
+
+    media_a, approvals_a, request_a = bundle_a
+    assert media_a["source_files"]["media_lock"]["path"].startswith(
+        ".persona-dream/revisions/"
+    )
+    assert all(
+        not Path(frame["revision_relative_path"]).is_absolute()
+        for frame in media_a["storyboard_frames"]
+    )
+    assert all(
+        not Path(receipt["path"]).is_absolute()
+        for receipt in approvals_a["receipts"].values()
+    )
+    assert not Path(request_a["source_files"]["phase10_payload"]["path"]).is_absolute()
+
+    # Reproduce the clean-worktree scenario: artifacts compiled in A are
+    # independently recomputed by the validator against the same revision in B.
+    output_root_b = inputs_b.context.revision_root / common.DEFAULT_OUTPUT_RELATIVE
+    common.write_compiled_bundle(output_root_b, *bundle_a)
+    monkeypatch.setattr(validator, "load_inputs", lambda *_args, **_kwargs: inputs_b)
+    rc = validator.main([
+        "--run-root", str(inputs_b.context.run_root),
+        "--output-root", str(output_root_b),
+        "--now", "2026-07-15T12:00:00+00:00",
+        "--test-fixture",
+        "--json",
+    ])
+    assert rc == 0
+    receipt = json.loads(
+        (output_root_b / "phase11_validation_receipt.v1.json").read_text(encoding="utf-8")
+    )
+    assert not any(blocker.endswith("_NONDETERMINISTIC") for blocker in receipt["technical_blockers"])
+    assert not any(
+        blocker.startswith("BLOCKED_PHASE11_CANONICAL_PATH_NONPORTABLE")
+        for blocker in receipt["technical_blockers"]
+    )
+
+
+
 def test_validator_detects_standard_pro_and_timing_contradictions(tmp_path: Path):
     inputs, _candidate, _urls = make_compilation_inputs(tmp_path)
     request_body, blockers, _ = common.compile_request_body(inputs)
