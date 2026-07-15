@@ -26,6 +26,9 @@ complies:
 ## Commands
 
 All commands default to `--background` (no KDE switch, no window focus).
+`submit` and `listen` wait up to 2400 seconds (40 minutes) by default because
+long Pro responses can legitimately take 30-40 minutes. Callers may still use
+`--timeout` to select a shorter or longer bounded wait.
 
 ## Hard tab-id preservation rule
 

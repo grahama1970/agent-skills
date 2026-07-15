@@ -206,10 +206,11 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 
 In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
 
-`$ask webgpt ...` defaults to a 900 second WebGPT browser timeout
-(`ASK_WEBGPT_TIMEOUT`) unless the caller supplies `--oracle-timeout`, and
-defaults the ChatGPT reasoning selector to `Pro` (`ASK_WEBGPT_REASONING`) unless
-the caller explicitly overrides the WebGPT reasoning label.
+`webgpt.submit` defaults to a 2400 second (40 minute) browser timeout
+(`SURF_WEBGPT_TIMEOUT`) unless the caller supplies `--timeout`. This covers
+legitimate 30-40 minute Pro responses while preserving an explicit bounded
+wait. The ChatGPT reasoning selector defaults to `Pro`
+(`SURF_WEBGPT_REASONING`) unless the caller explicitly overrides it.
 
 ---
 

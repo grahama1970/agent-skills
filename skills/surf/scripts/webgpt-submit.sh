@@ -24,7 +24,7 @@ Options:
   --submitted-output PATH   Submitted prompt with sentinel injection.
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
-  --timeout SECONDS         Browser wait timeout. Default: 900.
+  --timeout SECONDS         Browser wait timeout. Default: 2400 (40 minutes).
   --advisory-after SECONDS  Soft wait before returning same-tab available text
                             without a sentinel. Default:
                             SURF_WEBGPT_ADVISORY_AFTER_SECONDS or 600.
@@ -93,7 +93,7 @@ receipt_output=""
 submitted_output=""
 sentinel="auto"
 stable_polls=3
-timeout_s=900
+timeout_s="${SURF_WEBGPT_TIMEOUT:-2400}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 model=""
 reasoning="${SURF_WEBGPT_REASONING:-Pro}"

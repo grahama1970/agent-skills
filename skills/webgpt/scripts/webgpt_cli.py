@@ -16,6 +16,7 @@ import typer
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
 SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
+DEFAULT_WEBGPT_TIMEOUT_SECONDS = 2400
 
 
 GITHUB_REPO = "agent-skills"
@@ -356,7 +357,12 @@ def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, backg
 def submit(
     bundle: str | None = typer.Argument(None, help="Path to creation bundle (auto-finds latest)"),
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(900, "--timeout", "-t", help="WebGPT timeout (seconds)"),
+    timeout: int = typer.Option(
+        DEFAULT_WEBGPT_TIMEOUT_SECONDS,
+        "--timeout",
+        "-t",
+        help="WebGPT timeout (seconds)",
+    ),
     background: bool = typer.Option(True, "--background", help="Background: no KDE switch, no window focus"),
     output_contract: str = typer.Option("code", "--output-contract", help="Required response: assess, plan, code, all, or none"),
     architecture_authorized: bool = typer.Option(
@@ -552,7 +558,7 @@ def download(
 @app.command()
 def listen(
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(900, "--timeout", "-t"),
+    timeout: int = typer.Option(DEFAULT_WEBGPT_TIMEOUT_SECONDS, "--timeout", "-t"),
     output: str = typer.Option("response.md", "-o"),
     background: bool = typer.Option(True, "--background"),
 ):

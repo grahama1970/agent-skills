@@ -1,5 +1,6 @@
 """Focused tests for WebGPT's code-deliverable execution gate."""
 
+import inspect
 from pathlib import Path
 import zipfile
 
@@ -112,3 +113,12 @@ def test_download_uses_tab_aware_webgpt_command(tmp_path: Path) -> None:
         "--timeout",
         "120",
     ]
+
+
+def test_long_running_webgpt_commands_default_to_forty_minutes() -> None:
+    submit_timeout = inspect.signature(MODULE.submit).parameters["timeout"].default
+    listen_timeout = inspect.signature(MODULE.listen).parameters["timeout"].default
+
+    assert MODULE.DEFAULT_WEBGPT_TIMEOUT_SECONDS == 2400
+    assert submit_timeout.default == 2400
+    assert listen_timeout.default == 2400
