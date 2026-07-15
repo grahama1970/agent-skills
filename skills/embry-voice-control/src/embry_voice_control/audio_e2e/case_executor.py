@@ -105,30 +105,95 @@ class CaseExecutor:
         self.config = config
         self.listener = listener
 
-    def execute_listener_turns(self, campaign_id: str, case: dict[str, Any]) -> list[dict[str, Any]]:
-        receipts: list[dict[str, Any]] = []
-        source_audio = [Path(path) for path in self.config.get("turn_audio", [])]
-        wake_audio = Path(self.config["wake_audio"]) if self.config.get("wake_audio") else None
-        if source_audio and len(source_audio) != len(case["turn_script"]):
-            raise ValueError("turn_audio_count_mismatch")
-        for turn_offset, turn in enumerate(case["turn_script"]):
-            authority_seed = {
-                "campaign_id": campaign_id,
-                "case_id": case["case_id"],
-                "attempt_id": case["attempt_id"],
-                "session_id": case["session_id"],
-                "turn_id": turn["turn_id"],
-            }
-            source_authority_id = "physical-horus:" + hashlib.sha256(_canonical(authority_seed)).hexdigest()[:24]
-            expected = {**authority_seed, "source_authority_id": source_authority_id}
-            ack = self.listener.arm({
-                "schema": "embry.listener_turn_command.v1",
-                "command": "arm",
-                **expected,
-                "wake_required": True,
-            })
-            if not ack.get("armed"):
-                raise RuntimeError("managed_listener_arm_rejected")
+    @staticmethod
+    def _source_authority(
+        campaign_id: str,
+        case: dict[str, Any],
+        turn: dict[str, Any],
+        source_asset: dict[str, Any] | None,
+    ) -> tuple[str, dict[str, Any]]:
+        source_mode = str(case.get("source_mode") or "")
+        fresh_physical = source_mode == "physical_live_horus"
+        physical_identity_mode = source_mode in {
+            "physical_live_horus",
+            "recorded_physical_horus",
+        }
+        if source_mode == "physical_live_horus":
+            prefix = "physical-horus"
+            source_contract = "physical_horus_identity"
+        elif source_mode == "recorded_physical_horus":
+            prefix = "recorded-physical-horus"
+            source_contract = "physical_horus_identity"
+        elif source_mode in {
+            "qualified_horus_clone",
+            "qualified_horus_audio",
+        }:
+            prefix = "qualified-horus-clone"
+            source_contract = "qualified_horus_clone"
+        else:
+            raise ValueError(f"source_mode_not_executable:{source_mode}")
+        authority_seed = {
+            "campaign_id": campaign_id,
+            "case_id": case["case_id"],
+            "attempt_id": case["attempt_id"],
+            "session_id": case["session_id"],
+            "turn_id": turn["turn_id"],
+            "source_mode": source_mode,
+            "source_contract": source_contract,
+            "source_audio_sha256": (
+                ((source_asset or {}).get("audio") or {}).get("sha256")
+            ),
+        }
+        source_authority_id = (
+            prefix + ":" + hashlib.sha256(_canonical(authority_seed)).hexdigest()[:24]
+        )
+        return source_authority_id, {
+            **authority_seed,
+            "source_authority_id": source_authority_id,
+            "fresh_physical_human_speech": fresh_physical,
+            # Listener/ASR proves audio lineage only.  Physical identity and
+            # personal-memory permission are resolved later from the exact
+            # turn's speaker.verification.completed event.
+            "speaker_identity_proven": False,
+            "speaker_identity_verification_required": physical_identity_mode,
+            "allow_personal_memory": False,
+            "source_contract": source_contract,
+        }
+
+    def execute_listener_turn(
+        self,
+        campaign_id: str,
+        case: dict[str, Any],
+        turn: dict[str, Any],
+        *,
+        wake_audio: Path | None,
+        source_audio: Path | None,
+        wake_asset: dict[str, Any] | None = None,
+        source_asset: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        source_authority_id, expected = self._source_authority(
+            campaign_id,
+            case,
+            turn,
+            source_asset,
+        )
+        ack = self.listener.arm({
+            "schema": "embry.listener_turn_command.v1",
+            "command": "arm",
+            **{key: expected[key] for key in (
+                "campaign_id",
+                "case_id",
+                "attempt_id",
+                "session_id",
+                "turn_id",
+                "source_authority_id",
+            )},
+            "wake_required": True,
+        })
+        if not ack.get("armed"):
+            raise RuntimeError("managed_listener_arm_rejected")
+
+        if source_audio is None:
             print(
                 json.dumps({
                     "status": "AWAITING_HUMAN_SPEECH",
@@ -138,77 +203,186 @@ class CaseExecutor:
                 }),
                 flush=True,
             )
-            wake_event = None
-            if wake_audio is not None:
-                if not wake_audio.is_file():
-                    raise FileNotFoundError(f"wake_audio_missing:{wake_audio}")
-                time.sleep(self.config["source_playback_delay_seconds"])
+        else:
+            print(
+                json.dumps({
+                    "status": "PLAYING_QUALIFIED_HORUS_AUDIO",
+                    "case_id": case["case_id"],
+                    "turn_id": turn["turn_id"],
+                    "source_audio": str(source_audio),
+                }),
+                flush=True,
+            )
+
+        wake_event = None
+        if wake_audio is not None:
+            if not wake_audio.is_file():
+                raise FileNotFoundError(f"wake_audio_missing:{wake_audio}")
+            time.sleep(self.config["source_playback_delay_seconds"])
+            managed_lineage = {key: expected[key] for key in (
+                "campaign_id",
+                "case_id",
+                "attempt_id",
+                "session_id",
+                "turn_id",
+                "source_authority_id",
+            )}
+            for wake_attempt in range(1, 4):
+                print(
+                    json.dumps({
+                        "status": "PLAYING_WAKE_AUDIO",
+                        "case_id": case["case_id"],
+                        "turn_id": turn["turn_id"],
+                        "wake_attempt": wake_attempt,
+                    }),
+                    flush=True,
+                )
                 wake_process = subprocess.run(
-                    [self.config["pw_play"], "--target", self.config["source_playback_target"], str(wake_audio)],
+                    [
+                        self.config["pw_play"],
+                        "--target",
+                        self.config["source_playback_target"],
+                        str(wake_audio),
+                    ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     text=True,
                     timeout=15,
                 )
                 if wake_process.returncode != 0:
-                    raise RuntimeError(f"wake_playback_failed:{wake_process.returncode}:{wake_process.stderr}")
-                wake_event = wait_for_managed_wake(
-                    Path(self.config["journal_db"]),
-                    session_id=case["session_id"],
-                    expected=expected,
-                    timeout_seconds=self.config["turn_timeout_seconds"],
-                )
-            source_process = None
-            if source_audio:
-                audio_path = source_audio[turn_offset]
-                if not audio_path.is_file():
-                    raise FileNotFoundError(f"turn_audio_missing:{audio_path}")
-                time.sleep(self.config["source_playback_delay_seconds"] if wake_event is None else 0.5)
-                source_process = subprocess.Popen(
-                    [
-                        self.config["pw_play"],
-                        "--target", self.config["source_playback_target"],
-                        str(audio_path),
-                    ],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
-            chain = wait_for_managed_turn(
-                Path(self.config["journal_db"]),
-                session_id=case["session_id"],
-                expected=expected,
-                timeout_seconds=self.config["turn_timeout_seconds"],
+                    raise RuntimeError(
+                        f"wake_playback_failed:{wake_process.returncode}:"
+                        f"{wake_process.stderr}"
+                    )
+                try:
+                    wake_event = wait_for_managed_wake(
+                        Path(self.config["journal_db"]),
+                        session_id=case["session_id"],
+                        expected=managed_lineage,
+                        timeout_seconds=min(
+                            10.0,
+                            self.config["turn_timeout_seconds"],
+                        ),
+                    )
+                    break
+                except TimeoutError:
+                    if wake_attempt == 3:
+                        raise
+
+        source_process = None
+        if source_audio is not None:
+            if not source_audio.is_file():
+                raise FileNotFoundError(f"turn_audio_missing:{source_audio}")
+            time.sleep(
+                self.config["source_playback_delay_seconds"]
+                if wake_event is None
+                else 0.5
             )
-            if source_process is not None:
-                _, source_stderr = source_process.communicate(timeout=15)
-                if source_process.returncode != 0:
-                    raise RuntimeError(f"source_playback_failed:{source_process.returncode}:{source_stderr}")
-            final = chain["listener.final_transcript"]
-            request_text = final["payload"].get("request_text") or ""
-            expected_spoken = turn.get("spoken_text", turn["utterance"])
-            request_wer = _request_wer(expected_spoken, request_text)
-            if request_wer > self.config["max_request_wer"]:
+            source_process = subprocess.Popen(
+                [
+                    self.config["pw_play"],
+                    "--target",
+                    self.config["source_playback_target"],
+                    str(source_audio),
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+        chain = wait_for_managed_turn(
+            Path(self.config["journal_db"]),
+            session_id=case["session_id"],
+            expected={key: expected[key] for key in (
+                "campaign_id",
+                "case_id",
+                "attempt_id",
+                "session_id",
+                "turn_id",
+                "source_authority_id",
+            )},
+            timeout_seconds=self.config["turn_timeout_seconds"],
+        )
+        if source_process is not None:
+            _, source_stderr = source_process.communicate(timeout=15)
+            if source_process.returncode != 0:
                 raise RuntimeError(
-                    f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
-                    f"expected={expected_spoken!r}:actual={request_text!r}"
+                    f"source_playback_failed:{source_process.returncode}:"
+                    f"{source_stderr}"
                 )
-            receipts.append({
-                "turn_id": turn["turn_id"],
-                "display_text_sha256": turn.get("display_text_sha256", turn["utterance_sha256"]),
-                "expected_spoken_text_sha256": turn.get("spoken_text_sha256", turn["utterance_sha256"]),
-                "source_authority_id": source_authority_id,
-                "arm_event_id": chain["listener.turn_armed"]["event_id"],
-                "wake_event_id": wake_event["event_id"] if wake_event else None,
-                "final_event_id": final["event_id"],
-                "final_sequence": final["sequence"],
-                "request_text": request_text,
-                "request_wer": round(request_wer, 4),
-                "audio_path": final["payload"].get("audio_path"),
-                "audio_sha256": final["payload"].get("audio_sha256"),
-                "completed_event_id": chain["listener.turn_completed"]["event_id"],
-                "live": final["live"],
-                "mocked": final["mocked"],
-                "source_audio_path": str(source_audio[turn_offset]) if source_audio else None,
-            })
+
+        final = chain["listener.final_transcript"]
+        request_text = final["payload"].get("request_text") or ""
+        expected_spoken = turn.get("spoken_text", turn["utterance"])
+        request_wer = _request_wer(expected_spoken, request_text)
+        if request_wer > self.config["max_request_wer"]:
+            raise RuntimeError(
+                f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
+                f"expected={expected_spoken!r}:actual={request_text!r}"
+            )
+
+        return {
+            "schema": "embry.audio_e2e.listener_turn_receipt.v1",
+            "status": "PASS",
+            "case_id": case["case_id"],
+            "turn_id": turn["turn_id"],
+            "source_mode": case["source_mode"],
+            "fresh_physical_human_speech": expected["fresh_physical_human_speech"],
+            "speaker_identity_proven": expected["speaker_identity_proven"],
+            "speaker_identity_verification_required": expected[
+                "speaker_identity_verification_required"
+            ],
+            "allow_personal_memory": expected["allow_personal_memory"],
+            "source_contract": expected["source_contract"],
+            "display_text_sha256": turn.get(
+                "display_text_sha256", turn["utterance_sha256"]
+            ),
+            "expected_spoken_text_sha256": turn.get(
+                "spoken_text_sha256", turn["utterance_sha256"]
+            ),
+            "source_authority_id": source_authority_id,
+            "arm_event_id": chain["listener.turn_armed"]["event_id"],
+            "wake_event_id": wake_event["event_id"] if wake_event else None,
+            "final_event_id": final["event_id"],
+            "final_sequence": final["sequence"],
+            "request_text": request_text,
+            "request_wer": round(request_wer, 4),
+            "audio_path": final["payload"].get("audio_path"),
+            "audio_sha256": final["payload"].get("audio_sha256"),
+            "completed_event_id": chain["listener.turn_completed"]["event_id"],
+            "live": final["live"],
+            "mocked": final["mocked"],
+            "wake_audio_path": str(wake_audio) if wake_audio else None,
+            "source_audio_path": str(source_audio) if source_audio else None,
+            "wake_asset": wake_asset,
+            "source_asset": source_asset,
+            "typed_transcript_used": False,
+        }
+
+    def execute_listener_turns(
+        self,
+        campaign_id: str,
+        case: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        receipts: list[dict[str, Any]] = []
+        source_audio = [Path(path) for path in self.config.get("turn_audio", [])]
+        wake_audio = (
+            Path(self.config["wake_audio"])
+            if self.config.get("wake_audio")
+            else None
+        )
+        if source_audio and len(source_audio) != len(case["turn_script"]):
+            raise ValueError("turn_audio_count_mismatch")
+        for turn_offset, turn in enumerate(case["turn_script"]):
+            receipts.append(
+                self.execute_listener_turn(
+                    campaign_id,
+                    case,
+                    turn,
+                    wake_audio=wake_audio,
+                    source_audio=(
+                        source_audio[turn_offset] if source_audio else None
+                    ),
+                )
+            )
         return receipts
