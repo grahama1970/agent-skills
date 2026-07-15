@@ -1,0 +1,35 @@
+{
+  "schema": "watch.browser_row9_track_probe.v1",
+  "url": "http://localhost:3002/#watch?clipRow=9",
+  "created_at": "2026-07-15T18:34:24Z",
+  "tracks": [
+    {
+      "track_id": "track_1",
+      "clicked": true,
+      "status_text": "STATUS\nYOLO person box track_1 selected. Choose the character, then save.\nYOLO candidates loaded; no Qdrant label suggestion for track_1 (no_identity_candidates)."
+    },
+    {
+      "track_id": "track_180",
+      "clicked": true,
+      "status_text": "STATUS\nYOLO person box track_180 selected. Choose the character, then save.\nYOLO candidates loaded; Qdrant did not auto-label track_180: Marcus? 0.78 (below_confidence_threshold)."
+    },
+    {
+      "track_id": "track_181",
+      "clicked": true,
+      "status_text": "STATUS\nYOLO person box track_181 selected. Choose the character, then save.\nYOLO candidates loaded; Qdrant did not auto-label track_181: Marcus? 0.81 (below_confidence_threshold)."
+    },
+    {
+      "track_id": "track_3",
+      "clicked": true,
+      "status_text": "STATUS\nYOLO person box track_3 selected. Choose the character, then save.\nYOLO candidates loaded; no Qdrant label suggestion for track_3 (no_identity_candidates)."
+    },
+    {
+      "track_id": "track_77",
+      "clicked": true,
+      "status_text": "STATUS\nYOLO person box track_77 selected. Choose the character, then save.\nYOLO candidates loaded; Qdrant suggests Marcus? 0.98 for track_77."
+    }
+  ],
+  "modal_loaded": true,
+  "readiness_summary": true,
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-watch-main.cXjLXs/watch-row9-track-probe/row9-track77-suggestion.png"
+}
