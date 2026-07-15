@@ -83,14 +83,16 @@ def test_all_mode_is_human_gated_and_sequential() -> None:
     assert "--architecture-authorized" in submit_source
 
 
-def test_submit_and_activate_expose_explicit_target_options() -> None:
+def test_submit_activate_and_download_expose_explicit_target_options() -> None:
     source = MODULE_PATH.read_text()
     submit_source = source[source.index("def submit(") : source.index("def _submit_stage")]
     activate_source = source[source.index("def activate(") : source.index("def navigate(")]
-    for command_source in (submit_source, activate_source):
+    download_source = source[source.index("def download(") : source.index("def listen(")]
+    for command_source in (submit_source, activate_source, download_source):
         assert '"--tab-id"' in command_source
         assert '"--expect-url"' in command_source
     assert "_verify_desktop" not in activate_source
+    assert "_active_chatgpt_tab" not in download_source
 
 
 def test_assess_deliverable_requires_diagnosis_and_ruling(tmp_path: Path) -> None:

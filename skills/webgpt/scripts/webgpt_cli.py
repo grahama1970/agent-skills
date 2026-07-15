@@ -514,16 +514,30 @@ def download(
     timeout: int = typer.Option(60, "--timeout", "-t"),
     output: str | None = typer.Option(None, "-o"),
     background: bool = typer.Option(True, "--background"),
+    tab_id_override: str = typer.Option("", "--tab-id", help="Exact human-supplied tab id"),
+    expected_url_override: str = typer.Option(
+        "", "--expect-url", help="Exact expected ChatGPT conversation URL"
+    ),
 ):
     """Click the download button in the ChatGPT tab, wait for the file in ~/Downloads."""
-    _verify_desktop(_binding(project), background, "download")
-    tab_id = _active_chatgpt_tab()
-    if not tab_id:
-        tab_id = _binding(project).get("tab_id", "")
-    if not tab_id:
-        _report_failure("download", subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="no tab id"), binding=_binding(project), project=project)
-        typer.echo("No active ChatGPT tab found", err=True)
-        raise typer.Exit(1)
+    binding = _binding(project)
+    try:
+        tab_id, conversation_url = _exact_submission_target(
+            binding, tab_id_override, expected_url_override
+        )
+    except ValueError as exc:
+        typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
+        raise typer.Exit(2)
+    preflight = _surf(
+        "webgpt.preflight",
+        "--tab-id", tab_id,
+        "--expect-url", conversation_url,
+        "--no-activate",
+        "--json",
+    )
+    if preflight.returncode != 0:
+        typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
+        raise typer.Exit(preflight.returncode)
     found = _click_and_wait_download(tab_id, match, timeout, background=background)
     if found:
         out = Path(output) if output else found

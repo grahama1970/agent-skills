@@ -170,7 +170,8 @@ python scripts/webgpt_cli.py activate                  # background, no window s
 python scripts/webgpt_cli.py activate --no-background   # foreground (KDE switch)
 
 # Download solution zip (finds button, clicks it, waits for file)
-python scripts/webgpt_cli.py download
+python scripts/webgpt_cli.py download --tab-id 837358116 \
+  --expect-url "https://chatgpt.com/c/..."
 
 # Listen for WebGPT response
 python scripts/webgpt_cli.py listen --timeout 300
