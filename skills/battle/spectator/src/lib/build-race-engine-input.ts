@@ -24,10 +24,12 @@ export function battleRaceEngineMode(): BattleRaceEngineMode {
 
 export function buildRaceEngineRowLayout(lanes: Lane[]): BattleRaceEngineRowLayout[] {
 	const childIds = new Set(lanes.filter((lane) => lane.parentId).map((lane) => lane.id));
+	const rowScale = isBattleReceiptReplayView() && lanes.length >= 4 ? 0.8 : 1;
 	let top = 0;
 	return lanes.map((lane) => {
 		const isChild = childIds.has(lane.id);
-		const heightPx = isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
+		const baseHeightPx = isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
+		const heightPx = Math.floor(baseHeightPx * rowScale);
 		const layout = { laneId: lane.id, topPx: top, heightPx, isChild };
 		top += heightPx;
 		return layout;
