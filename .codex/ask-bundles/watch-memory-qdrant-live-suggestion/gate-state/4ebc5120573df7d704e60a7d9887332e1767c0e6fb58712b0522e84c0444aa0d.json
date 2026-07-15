@@ -1,0 +1,25 @@
+{
+  "schema": "anti_avoidance_gate.v1",
+  "goal_hash": "sha256:4ebc5120573df7d704e60a7d9887332e1767c0e6fb58712b0522e84c0444aa0d",
+  "goal_id": "watch-yolo-memory-identity",
+  "status": "PASSED",
+  "attempt_budget": 2,
+  "baseline_blocker_rc": 1,
+  "last_blocker_rc": 0,
+  "consecutive_no_delta": 0,
+  "rounds": [
+    {
+      "verdict": "MILESTONE_CLOSED",
+      "credited": true,
+      "blocker_rc_before": 1,
+      "blocker_rc_after": 0,
+      "changed_files": [
+        "skills/watch/ui/package.json",
+        "skills/watch/ui/scripts/watchMemorySuggestionLive.smoke.ts"
+      ],
+      "out_of_scope": [],
+      "low_value_only": false,
+      "consecutive_no_delta": 0
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "goal_id": "watch-yolo-memory-identity",
+  "goal_lock": "Watch uses YOLOAnalytics boxes as source regions, queries Memory/Qdrant crop recall for tentative identity suggestions, persists accepted/rejected identity labels, prevents identity leakage across stops, and proves the browser/backend flow.",
+  "current_milestone": "live Memory/Qdrant suggestion smoke proves a real Watch crop returns a tentative Marcus suggestion through the Watch API without mutating accepted label receipts",
+  "top_blocker": "no repeatable test exercises the live /api/projects/watch/identity-suggestions to Memory /watch/identity/recall-crop path",
+  "blocker_evidence": {
+    "command": "npm --prefix skills/watch/ui run test:memory-suggestion-live",
+    "cwd": "/tmp/agent-skills-watch-main.cXjLXs",
+    "current_result": "missing npm script"
+  },
+  "required_live_proof": "test:memory-suggestion-live passes against the live Memory daemon, returns a tentative Marcus suggestion from Qdrant, and confirms the row-9 yolo label receipt is unchanged before/after the query",
+  "allowed_paths": [
+    "skills/watch/ui/package.json",
+    "skills/watch/ui/scripts/watchMemorySuggestionLive.smoke.ts",
+    ".codex/ask-bundles/watch-memory-qdrant-live-suggestion/**"
+  ],
+  "forbidden_scope": [
+    "skills/ask/**",
+    "skills/persona-dream/**",
+    "skills/watch/docs/architecture/generated/watch_yolo_track_labels/**"
+  ],
+  "attempt_budget": 2
+}

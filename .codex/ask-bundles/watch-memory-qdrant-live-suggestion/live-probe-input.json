@@ -1,0 +1,11 @@
+{
+  "schema": "watch.memory_live_probe_input.v1",
+  "crop_path": "skills/watch/docs/architecture/generated/watch_identity_qdrant_marcus_eval/20260704T172759115162Z_yolo_track_2_only/crops/sample_15_12.515_marcus_detector_9_track_2_interpolated.png",
+  "crop_exists": true,
+  "crop_bytes": 51750,
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 9,
+  "expected_character": "Marcus",
+  "expected_min_confidence": 0.82,
+  "data_url_prefix": "data:image/png;base64,"
+}

@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-07-15T18:11:06.686645+00:00",
+  "cwd": "/tmp/agent-skills-watch-main.cXjLXs",
+  "root": "/tmp/agent-skills-watch-main.cXjLXs",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-watch-main.cXjLXs",
+  "url": "http://localhost:3002/watch#watch?clipRow=9",
+  "name": "watch-memory-qdrant-live-suggestion-row9",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-watch-main.cXjLXs/watch-memory-qdrant-live-suggestion-row9/20260715T181026Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-watch-main.cXjLXs/watch-memory-qdrant-live-suggestion-row9/20260715T181026Z.read.json"
+}
