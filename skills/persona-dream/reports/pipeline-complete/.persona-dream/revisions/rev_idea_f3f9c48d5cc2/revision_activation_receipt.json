@@ -1,0 +1,189 @@
+{
+  "activated_at": "2026-07-15T18:17:49.151126+00:00",
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "provider readiness, publication, payment, or provider submission",
+      "Watch, interpretation, Theory-of-Mind, or durable persona behavior",
+      "repair regeneration or creative-media changes"
+    ],
+    "proves": [
+      "Memory exactly re-read one synced run-scoped active revision pointer",
+      "the immutable local pointer, Memory prepare/verify receipts, work order, historical queue item, and terminal event are hash-bound",
+      "the historical QUEUED item was preserved and an immutable COMPLETED event was appended"
+    ]
+  },
+  "collection": "project_knowledge",
+  "command": {
+    "argv": [
+      "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/repair_semantic_mix_revision.py",
+      "--run-root",
+      "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete",
+      "--source-revision-id",
+      "rev_repair_a8b93ffeca8f",
+      "--idea-text",
+      "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+      "--created-at",
+      "2026-07-15T18:17:45Z",
+      "--source-commit",
+      "2d8b75e85e5856b079c81dfe847ef76ca8873502",
+      "--memory-url",
+      "http://127.0.0.1:8601",
+      "--collection",
+      "project_knowledge",
+      "--connect-timeout",
+      "5",
+      "--read-timeout",
+      "60",
+      "--json"
+    ],
+    "cwd": "/tmp/persona-dream-main-final-20260715",
+    "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.10",
+    "script_path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/activate_revision_qualification.py",
+    "script_sha256": "sha256:085959c8474e983911c7a48829e999eefd8c944975c1b7efbabe3d768357a0d5",
+    "source_commit": "2d8b75e85e5856b079c81dfe847ef76ca8873502"
+  },
+  "gate": "revision-activation-and-repair-queue-convergence",
+  "hash_validation": {
+    "artifact_count": 328,
+    "artifact_hash_manifest_sha256": "sha256:9abaf21a125cbad762888a7754e43b4e8ae590a99ba9a60ac4e12ff7787e65fe",
+    "escape_count": 0,
+    "matched_count": 328,
+    "mismatch_count": 0,
+    "recomputed_count": 328,
+    "symlink_count": 0
+  },
+  "live": true,
+  "live_submit_ready": false,
+  "local_files": {
+    "artifact_index": {
+      "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_artifact_index.json",
+      "sha256": "sha256:5e91ddaa96eb9bca56b866db95c83c71a3983d363bd9ca9c25c1b30b79e6288d"
+    },
+    "local_active_pointer": {
+      "relative_path": ".persona-dream/state/active_revision.json",
+      "sha256": "sha256:8f17638b1a537761ec93e37e9119d3a6dcf017fccc35911eaf165a3333cb00c2"
+    },
+    "prepare_receipt": {
+      "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_prepare_receipt.json",
+      "sha256": "sha256:8b09c73e73944275525ab0cc680dba91ec03cd1ab6e94441798513317cd62642"
+    },
+    "queue_item": {
+      "relative_path": ".persona-dream/repair/tau-queue/repair-454b255245a1a162.json",
+      "sha256": "sha256:68b4e92acdca4e682ac62befc8691ee964aab5bc1cc7ed2d90a2046f122df92c"
+    },
+    "queue_terminal_event": {
+      "relative_path": ".persona-dream/repair/queue-events/repair-454b255245a1a162/000001-completed.json",
+      "sha256": "sha256:4dba0ee615a8c9a899bdc0a568c837aa6c42c564cbed3757c886016c96e1fc4f"
+    },
+    "revision_manifest": {
+      "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_manifest.json",
+      "sha256": "sha256:65d207351de2e4b6b14cdb65c588ab08fdb741b0fd3b963ad073da3897de4e6a"
+    },
+    "verify_receipt": {
+      "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_verify_receipt.json",
+      "sha256": "sha256:4082622259849b9390a97858961eb77b1bd4744c2f98c152da06488da2539427"
+    },
+    "work_order": {
+      "relative_path": ".persona-dream/repair/work-orders/repair-454b255245a1a162.json",
+      "sha256": "sha256:0fdc550b9de338827f9fd12aac1aa18aee60d7b322e671afdfc7ef6b7144f3e5"
+    }
+  },
+  "local_pointer": {
+    "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+    "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+    "revision_id": "rev_idea_f3f9c48d5cc2",
+    "revision_manifest_sha256": "sha256:65d207351de2e4b6b14cdb65c588ab08fdb741b0fd3b963ad073da3897de4e6a",
+    "run_id": "pipeline-complete",
+    "schema_version": "persona_dream.active_revision_pointer.v1"
+  },
+  "memory": {
+    "active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
+    "active_revision_id": "rev_idea_f3f9c48d5cc2",
+    "document_contract_sha256": "sha256:5b44a999515f5f879624c747c2ff46905a52065ebf39bcb7ae98868e6c98bad8",
+    "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+    "embedding_version": "v5-omni-small",
+    "exact_reread_count": 1,
+    "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+    "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+    "previous_revision_id": "rev_repair_a8b93ffeca8f",
+    "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+    "qdrant_point_id": "e8514a7e-65c9-5dfe-b03c-725396304850",
+    "requests": {
+      "list_after": {
+        "endpoint": "/list",
+        "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
+        "response_sha256": "sha256:77041e83316b3299bbe99bb0fa06e4ec0acc25e30134839512a62e4611b806f6",
+        "returned_counts": {
+          "collection": "project_knowledge",
+          "count": 1,
+          "total": 1
+        },
+        "status_code": 200
+      },
+      "list_before": {
+        "endpoint": "/list",
+        "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
+        "response_sha256": "sha256:66f6eedc14437a2e0c85944ef9753a79cf4f92c030a9c2331bbb169bb43e3624",
+        "returned_counts": {
+          "collection": "project_knowledge",
+          "count": 1,
+          "total": 1
+        },
+        "status_code": 200
+      },
+      "upsert": {
+        "endpoint": "/upsert",
+        "request_payload_sha256": "sha256:4116b8884041e6f4a43297740215d9e03d8ddae9f191f3a258f553a2a3d4d0ae",
+        "response_sha256": "sha256:aa0230ad6b84423a574aea4e1a65ea807b14d8db2a8d71651181a717f54dadf0",
+        "returned_counts": {
+          "collection": "project_knowledge",
+          "errors": [],
+          "inserted": 0,
+          "total": 1,
+          "updated": 1,
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T181749155550Z_13_137246751590080.jsonl"
+        },
+        "status_code": 200
+      }
+    },
+    "semantic_sync_state": "synced",
+    "text_hash": "afe8b43c0a46711dde64c4622424e1fa578a16c7"
+  },
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "queue": {
+    "historical_queue_status": "QUEUED",
+    "source_revision_id": "rev_repair_a8b93ffeca8f",
+    "target_revision_id": "rev_idea_f3f9c48d5cc2",
+    "terminal_event_schema": "persona_dream.repair_queue_terminal_event.v1",
+    "terminal_event_sequence": 1,
+    "terminal_status": "COMPLETED",
+    "work_order_id": "repair-454b255245a1a162"
+  },
+  "receipt_chain": {
+    "dense_matching_count": 11,
+    "exact_record_count": 27,
+    "max_dense": 0.9073203,
+    "phase_record_count": 10,
+    "prepare_schema": "persona_dream.revision_memory_prepare_receipt.v1",
+    "prepare_status": "PASS_MEMORY_REVISION_PREPARED",
+    "required_artifact_record_count": 16,
+    "semantic_pointer_count": 27,
+    "verify_schema": "persona_dream.revision_memory_verify_receipt.v1",
+    "verify_status": "PASS_MEMORY_REVISION_VERIFIED"
+  },
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "schema": "persona_dream.revision_activation_receipt.v1",
+  "source_commit": "2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "source_revision_id": "rev_repair_a8b93ffeca8f",
+  "status": "PASS_ACTIVE_CONSISTENT",
+  "submitted": false
+}

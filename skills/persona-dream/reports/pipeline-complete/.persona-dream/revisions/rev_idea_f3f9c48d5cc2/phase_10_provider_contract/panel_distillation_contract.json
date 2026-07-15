@@ -1,0 +1,398 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "provider-accessible URLs",
+      "paid authorization",
+      "manual acceptance",
+      "live provider schema canary",
+      "Kling/fal submission"
+    ],
+    "proves": [
+      "per-panel provider distillation artifacts were generated from committed upstream run-root evidence"
+    ]
+  },
+  "distillation_strategy": {
+    "duration_strategy": {
+      "panel_seconds": {
+        "sb_001": 2,
+        "sb_002": 3,
+        "sb_003": 2,
+        "sb_004": 3
+      },
+      "provider_duration_seconds_total": 10,
+      "reason": "fal Kling v3 Pro multi_prompt shot durations are integer seconds; four equal 2.5s panels are approximated as 2/3/2/3 while preserving the 10s total.",
+      "source_panel_seconds": 2.5
+    },
+    "element_strategy": "reference character sheets are represented as intended @Element1/@Element2 constraints but blocked for live use until split provider-ready element packs exist",
+    "goal": "compress accepted storyboard, script, identities, locked frames, and constraints into a provider-comprehensible Kling/fal request without claiming live readiness",
+    "image_strategy": "start/end frames remain local locked media until public URL staging/probe receipts exist",
+    "prompt_budget": "keep each shot prompt under 2500 characters per fal guidance",
+    "provider_mode": "dry_run_request_preview"
+  },
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live_provider_call": false,
+  "mocked": false,
+  "panels": [
+    {
+      "distilled_provider_intent": {
+        "aspect_ratio": "16:9",
+        "identity_constraints": {
+          "Embry": {
+            "description": "Embry: young woman surfer in a navy rashguard, salt-wet, heat-fatigued but controlled, riding or handling an older borrowed white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element1",
+            "reference_asset_ids": [
+              "embry_character_sheet"
+            ],
+            "required": true
+          },
+          "Kai": {
+            "description": "Kai Akana: young Hawaiian male surfer in a black rashguard, calm and restrained, reading the swell and reef line, using a familiar white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element2",
+            "reference_asset_ids": [
+              "kai_character_sheet"
+            ],
+            "required": true
+          }
+        },
+        "model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+        "motion_constraints": [
+          "surf waterline motion",
+          "camera coherent with reef geometry",
+          "natural body mechanics",
+          "salt spray and heat glare remain physically integrated"
+        ],
+        "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content",
+        "omitted_context_ref": "omitted_context::sb_001",
+        "platform": "fal.ai",
+        "prompt": "SB_001 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion.",
+        "provider": "kling",
+        "shot_duration_seconds": 2,
+        "shot_type": "customize"
+      },
+      "live_submit_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"
+      ],
+      "locked_media": {
+        "end_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+          "asset_id": "sb_001.end_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+          "sha256": "sha256:b224348750cd419e9eb000df13d7675d3af0bb0b7668bd010b732d48a66a5335",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        },
+        "start_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+          "asset_id": "sb_001.start_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+          "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        }
+      },
+      "panel_id": "sb_001",
+      "source_audio": {
+        "ambient_audio": [
+          "waterline surf",
+          "salt spray",
+          "public lineup ambience"
+        ],
+        "dialogue_status": "NO_DIALOGUE",
+        "provider_generate_audio": false,
+        "voice_id_status": "NOT_REQUIRED_FOR_PANEL"
+      },
+      "source_dialogue": [],
+      "source_storyboard_action": "Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins.",
+      "source_time_range_s": [
+        0.0,
+        2.5
+      ]
+    },
+    {
+      "distilled_provider_intent": {
+        "aspect_ratio": "16:9",
+        "identity_constraints": {
+          "Embry": {
+            "description": "Embry: young woman surfer in a navy rashguard, salt-wet, heat-fatigued but controlled, riding or handling an older borrowed white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element1",
+            "reference_asset_ids": [
+              "embry_character_sheet"
+            ],
+            "required": true
+          },
+          "Kai": {
+            "description": "Kai Akana: young Hawaiian male surfer in a black rashguard, calm and restrained, reading the swell and reef line, using a familiar white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element2",
+            "reference_asset_ids": [
+              "kai_character_sheet"
+            ],
+            "required": true
+          }
+        },
+        "model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+        "motion_constraints": [
+          "surf waterline motion",
+          "camera coherent with reef geometry",
+          "natural body mechanics",
+          "salt spray and heat glare remain physically integrated"
+        ],
+        "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content",
+        "omitted_context_ref": "omitted_context::sb_002",
+        "platform": "fal.ai",
+        "prompt": "SB_002 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion.",
+        "provider": "kling",
+        "shot_duration_seconds": 3,
+        "shot_type": "customize"
+      },
+      "live_submit_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"
+      ],
+      "locked_media": {
+        "end_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+          "asset_id": "sb_002.end_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+          "sha256": "sha256:caa1e08be654167a6176fd400f7c69960ff135f44d9531b24ed8ac57be3df088",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        },
+        "start_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+          "asset_id": "sb_002.start_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+          "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        }
+      },
+      "panel_id": "sb_002",
+      "source_audio": {
+        "ambient_audio": [
+          "waterline surf",
+          "salt spray",
+          "public lineup ambience"
+        ],
+        "dialogue_status": "NO_DIALOGUE",
+        "provider_generate_audio": false,
+        "voice_id_status": "NOT_REQUIRED_FOR_PANEL"
+      },
+      "source_dialogue": [],
+      "source_storyboard_action": "Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible.",
+      "source_time_range_s": [
+        2.5,
+        5.0
+      ]
+    },
+    {
+      "distilled_provider_intent": {
+        "aspect_ratio": "16:9",
+        "identity_constraints": {
+          "Embry": {
+            "description": "Embry: young woman surfer in a navy rashguard, salt-wet, heat-fatigued but controlled, riding or handling an older borrowed white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element1",
+            "reference_asset_ids": [
+              "embry_character_sheet"
+            ],
+            "required": true
+          },
+          "Kai": {
+            "description": "Kai Akana: young Hawaiian male surfer in a black rashguard, calm and restrained, reading the swell and reef line, using a familiar white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element2",
+            "reference_asset_ids": [
+              "kai_character_sheet"
+            ],
+            "required": true
+          }
+        },
+        "model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+        "motion_constraints": [
+          "surf waterline motion",
+          "camera coherent with reef geometry",
+          "natural body mechanics",
+          "salt spray and heat glare remain physically integrated"
+        ],
+        "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content",
+        "omitted_context_ref": "omitted_context::sb_003",
+        "platform": "fal.ai",
+        "prompt": "SB_003 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. Dialogue cue: Kai quietly says, \"If we paddle now, we're cutting across the lineup.\" Keep it restrained and practical; do not overact. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion.",
+        "provider": "kling",
+        "shot_duration_seconds": 2,
+        "shot_type": "customize"
+      },
+      "live_submit_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
+        "BLOCKED_PROVIDER_VOICE_IDS_MISSING"
+      ],
+      "locked_media": {
+        "end_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+          "asset_id": "sb_003.end_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+          "sha256": "sha256:41b7789f3c89e63f3cd5014364baa8cb5cc45a8f088ba93e8d90c4ffbbcae763",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        },
+        "start_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+          "asset_id": "sb_003.start_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+          "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        }
+      },
+      "panel_id": "sb_003",
+      "source_audio": {
+        "ambient_audio": [
+          "waterline surf",
+          "salt spray",
+          "public lineup ambience"
+        ],
+        "dialogue_status": "PRESENT_TEXT_ONLY",
+        "provider_generate_audio": true,
+        "voice_id_status": "BLOCKED_PROVIDER_VOICE_IDS_MISSING"
+      },
+      "source_dialogue": [
+        {
+          "source": "phase_06_script/timed_transcript.json",
+          "speaker": "Kai",
+          "text": "If we paddle now, we're cutting across the lineup.",
+          "voice_direction": "quiet, practical restraint"
+        }
+      ],
+      "source_storyboard_action": "Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly.",
+      "source_time_range_s": [
+        5.0,
+        7.5
+      ]
+    },
+    {
+      "distilled_provider_intent": {
+        "aspect_ratio": "16:9",
+        "identity_constraints": {
+          "Embry": {
+            "description": "Embry: young woman surfer in a navy rashguard, salt-wet, heat-fatigued but controlled, riding or handling an older borrowed white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element1",
+            "reference_asset_ids": [
+              "embry_character_sheet"
+            ],
+            "required": true
+          },
+          "Kai": {
+            "description": "Kai Akana: young Hawaiian male surfer in a black rashguard, calm and restrained, reading the swell and reef line, using a familiar white shortboard.",
+            "live_element_status": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+            "prompt_token": "@Element2",
+            "reference_asset_ids": [
+              "kai_character_sheet"
+            ],
+            "required": true
+          }
+        },
+        "model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+        "motion_constraints": [
+          "surf waterline motion",
+          "camera coherent with reef geometry",
+          "natural body mechanics",
+          "salt spray and heat glare remain physically integrated"
+        ],
+        "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content",
+        "omitted_context_ref": "omitted_context::sb_004",
+        "platform": "fal.ai",
+        "prompt": "SB_004 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion.",
+        "provider": "kling",
+        "shot_duration_seconds": 3,
+        "shot_type": "customize"
+      },
+      "live_submit_blockers": [
+        "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+        "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+        "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+        "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"
+      ],
+      "locked_media": {
+        "end_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+          "asset_id": "sb_004.end_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+          "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        },
+        "start_frame": {
+          "absolute_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+          "asset_id": "sb_004.start_frame",
+          "height": 864,
+          "provider_accessible_url": null,
+          "relative_path": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+          "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+          "status": "LOCKED_LOCAL_ONLY",
+          "width": 1536
+        }
+      },
+      "panel_id": "sb_004",
+      "source_audio": {
+        "ambient_audio": [
+          "waterline surf",
+          "salt spray",
+          "public lineup ambience"
+        ],
+        "dialogue_status": "NO_DIALOGUE",
+        "provider_generate_audio": false,
+        "voice_id_status": "NOT_REQUIRED_FOR_PANEL"
+      },
+      "source_dialogue": [],
+      "source_storyboard_action": "Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle.",
+      "source_time_range_s": [
+        7.5,
+        10.0
+      ]
+    }
+  ],
+  "provider_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "provider_schema_receipt": "provider_schema_receipt.json",
+  "run_id": "pipeline-complete",
+  "scene_id": "embry-kai-kahaluu-10s",
+  "schema_version": "persona-dream.panel-distillation-contract.v1",
+  "selected_provider": "kling",
+  "source_artifacts": {
+    "kling_scene_packet": "phase_09_video_provider/kling_scene_packet.json",
+    "media_lock_manifest": "phase_09_video_provider/storyboard_media_lock_manifest.json",
+    "script_contract": "phase_06_script/script_contract.json",
+    "storyboard_packet": "phase_07_storyboard_live_tau/storyboard_packet.json",
+    "storyboard_panel_contract": "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json",
+    "timed_transcript": "phase_06_script/timed_transcript.json",
+    "video_provider_packet": "phase_09_video_provider/video_provider_packet/video_provider_packet.json",
+    "video_provider_scorecard": "phase_09_video_provider/video_provider_scorecard.v1.json"
+  },
+  "status": "PASS_PANEL_DISTILLATION_DRY_RUN_CONTRACT"
+}

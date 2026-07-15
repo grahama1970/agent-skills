@@ -1,0 +1,44 @@
+{
+  "createdAt": "2026-07-15T18:17:45Z",
+  "dedupKey": "454b255245a1a162c0e34e3903c09d6ce9441efa79ffc3b91877c967a9c981b2",
+  "detection": {
+    "earliestStalePhase": "01",
+    "phaseRange": [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10"
+    ],
+    "reasons": [
+      {
+        "code": "BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH",
+        "phaseId": "01"
+      }
+    ],
+    "selectedThroughPhase": "10"
+  },
+  "policy": {
+    "forbiddenSideEffects": [
+      "external_network",
+      "public_media_publication",
+      "paid_provider_call",
+      "provider_submission",
+      "human_acceptance_fabrication"
+    ],
+    "maxAttemptsPerPhase": 1,
+    "stopBeforePhase": "11"
+  },
+  "runId": "pipeline-complete",
+  "runRoot": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete",
+  "schemaVersion": "persona_dream.repair_work_order.v1",
+  "sourceRevisionId": "rev_repair_a8b93ffeca8f",
+  "status": "REQUESTED",
+  "targetRevisionId": "rev_idea_f3f9c48d5cc2",
+  "workOrderId": "repair-454b255245a1a162"
+}

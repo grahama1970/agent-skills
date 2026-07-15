@@ -1,0 +1,36 @@
+{
+  "actual_provider_call_attempts": 0,
+  "binding_sha256": "sha256:2b1bef72d0c040c1ff03bdf35a02948cb7826c5bc5221d37e89af7d5d2835e04",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "phase_id": "10",
+  "previous_phase_binding_sha256": "sha256:3a9c762a636e5539bb9051923be6282b477a2b2b2b27ab07e2311fe87b9139b8",
+  "provider_live": false,
+  "provider_ready": false,
+  "required_artifact_hashes": {
+    "panel_distillation_contract": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "provider_schema_receipt": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase_idea_binding.v1",
+  "semantic_evidence": {
+    "domain_hits": [
+      "kahalu",
+      "lineup",
+      "reef",
+      "shortboard",
+      "surf",
+      "swell"
+    ],
+    "mode": "semantic_anchor_and_hash",
+    "person_hits": [
+      "embry",
+      "kai"
+    ]
+  },
+  "source": "explicit_human",
+  "status": "PASS_PHASE_IDEA_BOUND",
+  "submitted": false
+}

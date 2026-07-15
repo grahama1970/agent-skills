@@ -1,7 +1,9 @@
 {
-  "revisionId": "rev_repair_a8b93ffeca8f",
-  "revisionManifestSha256": "sha256:31436766ed937f0682f9316af2ea258f44edaa4cb53d15078aafab69d1cc99bd",
-  "revisionRoot": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f",
+  "ideaId": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "ideaSha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "revisionId": "rev_idea_f3f9c48d5cc2",
+  "revisionManifestSha256": "sha256:65d207351de2e4b6b14cdb65c588ab08fdb741b0fd3b963ad073da3897de4e6a",
+  "revisionRoot": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2",
   "runId": "pipeline-complete",
   "schemaVersion": "persona_dream.active_revision_pointer.v1"
 }

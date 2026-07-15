@@ -1,0 +1,122 @@
+{
+  "assembled_request_preview": {
+    "input": {
+      "cfg_scale": 0.5,
+      "duration": "10",
+      "elements": [],
+      "end_image_url": null,
+      "generate_audio": false,
+      "multi_prompt": [
+        {
+          "duration": "2",
+          "prompt": "SB_001 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+        },
+        {
+          "duration": "3",
+          "prompt": "SB_002 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+        },
+        {
+          "duration": "2",
+          "prompt": "SB_003 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. Dialogue cue: Kai quietly says, \"If we paddle now, we're cutting across the lineup.\" Keep it restrained and practical; do not overact. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+        },
+        {
+          "duration": "3",
+          "prompt": "SB_004 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+        }
+      ],
+      "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content",
+      "prompt": null,
+      "shot_type": "customize",
+      "start_image_url": null
+    },
+    "model": "fal-ai/kling-video/v3/pro/image-to-video",
+    "submitted": false
+  },
+  "blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+    "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+    "BLOCKED_PROVIDER_VOICE_IDS_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "this JSON was accepted by fal",
+      "this JSON was submitted",
+      "local media URLs are provider-accessible"
+    ],
+    "proves": [
+      "exact dry-run request projection was written for UI review"
+    ]
+  },
+  "endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "field_status": {
+    "duration": "MAPPED_FROM_SOURCE_PANEL_DURATIONS_TO_PROVIDER_INTEGER_SECONDS",
+    "elements": "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+    "end_image_url": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "generate_audio": "DISABLED_DRY_RUN_PROVIDER_VOICE_IDS_MISSING",
+    "multi_prompt": "MAPPED_FROM_FOUR_STORYBOARD_PANELS",
+    "negative_prompt": "MAPPED_FROM_IDENTITY_AND_QUALITY_CONSTRAINTS",
+    "start_image_url": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+  },
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live_provider_call": false,
+  "mocked": false,
+  "panel_payloads": [
+    {
+      "end_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+      "panel_id": "sb_001",
+      "payload_role": "multi_prompt_element",
+      "provider_payload_projection": {
+        "duration": "2",
+        "prompt": "SB_001 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2.5s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      "source_end_image_asset_id": "sb_001.end_frame",
+      "source_start_image_asset_id": "sb_001.start_frame",
+      "start_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+    },
+    {
+      "end_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+      "panel_id": "sb_002",
+      "payload_role": "multi_prompt_element",
+      "provider_payload_projection": {
+        "duration": "3",
+        "prompt": "SB_002 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_002 for a 10-second surf scene, time range 2.5s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      "source_end_image_asset_id": "sb_002.end_frame",
+      "source_start_image_asset_id": "sb_002.start_frame",
+      "start_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+    },
+    {
+      "end_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+      "panel_id": "sb_003",
+      "payload_role": "multi_prompt_element",
+      "provider_payload_projection": {
+        "duration": "2",
+        "prompt": "SB_003 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7.5s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. Dialogue cue: Kai quietly says, \"If we paddle now, we're cutting across the lineup.\" Keep it restrained and practical; do not overact. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      "source_end_image_asset_id": "sb_003.end_frame",
+      "source_start_image_asset_id": "sb_003.start_frame",
+      "start_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+    },
+    {
+      "end_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+      "panel_id": "sb_004",
+      "payload_role": "multi_prompt_element",
+      "provider_payload_projection": {
+        "duration": "3",
+        "prompt": "SB_004 provider-distilled shot for Kling v3 Pro I2V. Create storyboard panel SB_004 for a 10-second surf scene, time range 7.5s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahalu\u02bbu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      "source_end_image_asset_id": "sb_004.end_frame",
+      "source_start_image_asset_id": "sb_004.start_frame",
+      "start_image_url_status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+    }
+  ],
+  "payload_kind": "fal_kling_v3_pro_i2v_multi_prompt_preview",
+  "platform": "fal.ai",
+  "provider": "kling",
+  "run_id": "pipeline-complete",
+  "schema_version": "persona-dream.final-provider-payload-by-panel.v1",
+  "status": "BLOCKED_LIVE_SUBMIT_DRY_RUN_PAYLOAD_ONLY"
+}

@@ -1,0 +1,162 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "fal account entitlement",
+      "current pricing",
+      "public URL fetchability",
+      "paid authorization",
+      "live submission"
+    ],
+    "proves": [
+      "official fal docs were rechecked for the selected Kling endpoint and mapped to the local dry-run payload contract"
+    ]
+  },
+  "compatibility_findings": [
+    {
+      "current_field": "start_image_url",
+      "field": "image_url",
+      "source": "fal current Kling v3 Pro I2V docs",
+      "status": "REPLACED_BY_CURRENT_SCHEMA_FIELD"
+    },
+    {
+      "field": "end_image_url",
+      "source": "fal current Kling v3 Pro I2V docs",
+      "status": "SUPPORTED_OPTIONAL"
+    },
+    {
+      "field": "multi_prompt",
+      "source": "fal current Kling v3 Pro I2V docs",
+      "status": "SUPPORTED_OPTIONAL"
+    },
+    {
+      "blocker": "character element packs are still contact-sheet sources, not provider-ready image sets",
+      "field": "elements",
+      "status": "SUPPORTED_OPTIONAL_BUT_BLOCKED_FOR_LIVE"
+    },
+    {
+      "blocker": "provider voice IDs and audio final gate are missing",
+      "field": "generate_audio",
+      "status": "SUPPORTED_OPTIONAL_BUT_DISABLED_OR_PANEL_SCOPED"
+    }
+  ],
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live_provider_call": false,
+  "mocked": false,
+  "model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "observed_schema": {
+    "files_contract": "Inputs may use publicly accessible URLs or fal storage upload URLs; local filesystem paths are not provider-ready.",
+    "input_fields": {
+      "cfg_scale": {
+        "default": 0.5,
+        "required": false,
+        "type": "float"
+      },
+      "duration": {
+        "default": "5",
+        "enum": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "required": false,
+        "type": "DurationEnum"
+      },
+      "elements": {
+        "notes": "Character/object elements referenced in prompt as @Element1, @Element2, etc.",
+        "required": false,
+        "type": "list<KlingV3ComboElementInput>"
+      },
+      "end_image_url": {
+        "notes": "URL of the image to be used for the end of the video.",
+        "required": false,
+        "type": "string"
+      },
+      "generate_audio": {
+        "default": true,
+        "notes": "Native audio generation, supports Chinese and English voice output.",
+        "required": false,
+        "type": "boolean"
+      },
+      "multi_prompt": {
+        "notes": "1-6 shots, total duration not over 15s.",
+        "required": "one_of_prompt_or_multi_prompt",
+        "type": "list<KlingV3MultiPromptElement>"
+      },
+      "negative_prompt": {
+        "default": "blur, distort, and low quality",
+        "required": false,
+        "type": "string"
+      },
+      "prompt": {
+        "notes": "Text prompt; mutually exclusive with multi_prompt.",
+        "required": "one_of_prompt_or_multi_prompt",
+        "type": "string"
+      },
+      "shot_type": {
+        "default": "customize",
+        "enum": [
+          "customize",
+          "intelligent"
+        ],
+        "required": false,
+        "type": "ShotTypeEnum"
+      },
+      "start_image_url": {
+        "notes": "URL of the image to be used for the video.",
+        "required": true,
+        "type": "string"
+      }
+    },
+    "output_fields": {
+      "video": {
+        "required": true,
+        "type": "File"
+      }
+    }
+  },
+  "platform": "fal.ai",
+  "provider": "kling",
+  "schema_version": "persona-dream.provider-schema-receipt.v1",
+  "source_evidence": [
+    {
+      "claim": "Kling v3 Pro image-to-video supports improved visual quality/motion consistency and native audio when generate_audio is enabled.",
+      "lines": "72-77",
+      "url": "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+    },
+    {
+      "claim": "fal client subscribe example uses endpoint fal-ai/kling-video/v3/pro/image-to-video.",
+      "lines": "96-113",
+      "url": "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+    },
+    {
+      "claim": "File inputs require URL/base64/fal storage; own URLs must be publicly accessible.",
+      "lines": "168-180",
+      "url": "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+    },
+    {
+      "claim": "Input schema includes prompt/multi_prompt, start_image_url, duration, generate_audio, end_image_url, elements, shot_type, negative_prompt, cfg_scale.",
+      "lines": "193-234",
+      "url": "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+    },
+    {
+      "claim": "Output schema returns video file metadata.",
+      "lines": "256-268",
+      "url": "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+    }
+  ],
+  "source_urls": [
+    "https://fal.ai/docs/llms.txt",
+    "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api"
+  ],
+  "status": "PASS_PROVIDER_SCHEMA_DRY_RUN_REVIEWED"
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "persona_dream.script_dispatch_receipt.v1",
+  "status": "WAITING",
+  "mocked": false,
+  "live": true,
+  "created_at": "2026-07-03T23:09:34.352Z",
+  "message": "Phase 06 script prompt bundle was dispatched through Tau script-writer/script-reviewer.",
+  "artifacts": {
+    "prompt_payload": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/prompt-payload.json",
+    "prompt_markdown": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/prompt.md",
+    "schema": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/schema.json",
+    "source_context": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/source_context.json",
+    "asset_index": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/prompt-bundle/assets/index.json",
+    "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/script_contract_work_order.json",
+    "receipt": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_dispatch_receipt.json"
+  },
+  "manifest_path": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/manifest.json",
+  "script_contract": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-script-ui-dispatch/script-ui-20260703T230932Z/run/script_contract.json",
+  "counts": {
+    "interaction_rows": 7,
+    "linked_assets": 14
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "No image, Kling, or paid provider call was executed by this route receipt.",
+      "This receipt proves provider route metadata delivery only, not final storyboard image quality."
+    ],
+    "proves": [
+      "Tau injected provider dispatch metadata into the Persona Dream command-backed node stdin.",
+      "Persona Dream recorded the route policy required for the node before producing storyboard evidence."
+    ]
+  },
+  "created_at": "2026-07-07T21:23:15.813292+00:00",
+  "live": true,
+  "mocked": false,
+  "model_policy": {
+    "auth": "codex-oauth",
+    "model": "gpt-2",
+    "provider": "codex"
+  },
+  "prompt_contract": {
+    "schema": "tau.prompt_contract.v1",
+    "system_prompt": "You are the Persona Dream Phase 07 panel-creator. Create storyboard panel packet data only from accepted upstream Persona Dream artifacts: idea, story, interaction matrix, script, crew, contact sheets, voices, linked media, and memory-backed references. Do not use contact sheets as the main storyboard frame. Each panel must have storyboard-specific first-frame and last-frame prompts, camera/lighting/acting beats, required references, seed coverage, negative constraints, and provider-route evidence. Do not claim PASS without gpt-2 OAuth route evidence.",
+    "user_template": "Build or repair the Phase 07 storyboard packet at {storyboard_packet}. Use run_root {run_root}. Required model route: provider=codex, auth=codex-oauth, model=gpt-2. Output required receipts: storyboard_packet.json, storyboard_panel_manifest.json, storyboard_creator_receipt.json, provider_route_receipt. Stop with blockers if any accepted panel lacks start/end frame prompt, seed coverage, references, camera/lighting, acting beats, or provider-route evidence."
+  },
+  "provider_call_executed": false,
+  "provider_route_metadata_delivered": true,
+  "role": "panel-creator",
+  "schema": "persona_dream.provider_route_receipt.v1",
+  "status": "PASS",
+  "tau_dag_node": {
+    "agent": "panel-creator",
+    "dag_id": "persona-dream-phase-07-sb_004-sequential-20260707T204134Z",
+    "fail_closed_on": null,
+    "goal": {
+      "goal_hash": "sha256:persona-dream-phase-07-sb_004-sequential-20260707T204134Z",
+      "goal_id": "persona-dream-phase-07-sb_004-sequential-20260707T204134Z",
+      "goal_version": 4,
+      "summary": "Sequentially generate and review sb_004; previous panel end frame must be reviewer-accepted before generation."
+    },
+    "node_id": "panel-creator",
+    "required_evidence": [
+      "storyboard_packet.json",
+      "storyboard_panel_manifest.json",
+      "storyboard_creator_receipt.json",
+      "provider_route_receipt"
+    ],
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+    }
+  }
+}

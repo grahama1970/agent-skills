@@ -1,0 +1,72 @@
+{
+  "actual_provider_call_attempts": 0,
+  "human_idea_artifact": {
+    "relative_path": "phase_01_idea/human_idea.json",
+    "sha256": "sha256:db39ccc84d88cd9fa2baded45488f0f7ed46357fc68e72eae2362f1798608f2d"
+  },
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "lineage_chain_sha256": "sha256:49ac6f5c5d8bd6675a5190af56b84d6107d5d336e5f940b86573cbb3f4d362a2",
+  "live_submit_ready": false,
+  "phase_binding_count": 10,
+  "phase_bindings": {
+    "01": {
+      "binding_sha256": "sha256:f04fcc58a4f21afb84603e6a91a5b4db49544e8515d4704058ebbfb93da05503",
+      "relative_path": "phase_01_idea/idea_lineage_binding.json",
+      "sha256": "sha256:8afa013a0acaf339af39b6d740baae546f730f6a58da6eb2e89b4b5116f05bfa"
+    },
+    "02": {
+      "binding_sha256": "sha256:3687653d6973684d8adf866905277ffc24516d6bca36471c9286a69333e1ee6e",
+      "relative_path": "phase_02_story/idea_lineage_binding.json",
+      "sha256": "sha256:73cf2c63d549cf3012bf23bb11f9fbca141f9eb4f68f6dbc7094188c4fd93f98"
+    },
+    "03": {
+      "binding_sha256": "sha256:d065497da8f79e8b5fc5b49257b8aa8cffeba9f288beb454b1af03c1091c2031",
+      "relative_path": "phase_03_crew/idea_lineage_binding.json",
+      "sha256": "sha256:0d15b063e72778568ba0dbe7aa76acd5710dbe9c0cffc42e817ae0812b5792fd"
+    },
+    "04": {
+      "binding_sha256": "sha256:970eef56206f80eed049280e6c2723e5614d885e1fa027d11c018cf995f7bf1d",
+      "relative_path": "phase_04_contact_sheets/idea_lineage_binding.json",
+      "sha256": "sha256:6b86260e3b427057842a9a6a5a2d4192b185242c3565e9bf1d707ba1457eb1e4"
+    },
+    "05": {
+      "binding_sha256": "sha256:5b29225968dc157e81b59507ae886f8b18fbbc1635a8885748353ce31b0df38d",
+      "relative_path": "phase_05_voices/idea_lineage_binding.json",
+      "sha256": "sha256:bd8a2d6e143671a7ecf7fc769706f8c4ea3fd8a257d16980f7a59fc9152d57bd"
+    },
+    "06": {
+      "binding_sha256": "sha256:ff5ff919d98147bdf54a8468f02208e2e181a0ab1804050176d649a1a5cd27a7",
+      "relative_path": "phase_06_script/idea_lineage_binding.json",
+      "sha256": "sha256:8085f43e985f41efcb85bc593789e4c59533a092e635c788fce77945d43a6550"
+    },
+    "07": {
+      "binding_sha256": "sha256:fb9bc9298e786065ea6be43ea224e2cefd34e371aa24a647f3c9bcf8ffac7322",
+      "relative_path": "phase_07_storyboard_live_tau/idea_lineage_binding.json",
+      "sha256": "sha256:92dcc253fe598e3532b9fc2a70573cbc1e7a37077927b0f56503dbe5f6408cec"
+    },
+    "08": {
+      "binding_sha256": "sha256:90b2b0a219992b3075e0bc19656fee1087b53d7087c119bf191c1fe35b385083",
+      "relative_path": "phase_08_media_lock/idea_lineage_binding.json",
+      "sha256": "sha256:0edfd416d01efd1ad4c30771644caae2229037971f0dc42678c3fab077f3473f"
+    },
+    "09": {
+      "binding_sha256": "sha256:3a9c762a636e5539bb9051923be6282b477a2b2b2b27ab07e2311fe87b9139b8",
+      "relative_path": "phase_09_video_provider/idea_lineage_binding.json",
+      "sha256": "sha256:e54035337cffd2691eb8804ab01fa820bd82c7165858bf4f491e016a974caccd"
+    },
+    "10": {
+      "binding_sha256": "sha256:2b1bef72d0c040c1ff03bdf35a02948cb7826c5bc5221d37e89af7d5d2835e04",
+      "relative_path": "phase_10_provider_contract/idea_lineage_binding.json",
+      "sha256": "sha256:48934c70afda5e023e2553ba882312080b7bc83810e950dfc7bcd2cb706545fa"
+    }
+  },
+  "provider_live": false,
+  "provider_ready": false,
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase_idea_lineage_manifest.v1",
+  "source": "explicit_human",
+  "status": "PASS_PHASE_IDEA_LINEAGE",
+  "submitted": false
+}

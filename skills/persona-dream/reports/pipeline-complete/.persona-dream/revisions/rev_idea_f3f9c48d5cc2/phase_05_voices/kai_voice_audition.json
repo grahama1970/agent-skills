@@ -1,0 +1,123 @@
+{
+  "schema": "persona_dream.voice_audition_receipt.v1",
+  "created_at": "2026-07-03T15:49:53.184Z",
+  "mocked": false,
+  "live": true,
+  "character": "kai",
+  "answer_text": "Kai, wait. If we paddle now, we are cutting across the lineup.",
+  "answer_text_sha256": "1f956389b26986e6bd190bbf96b48e48543547bf4617ab0c0eca0071cb8cacd4",
+  "tts_render_text": "Kai [laugh], wait. If we paddle now, we are cutting across the lineup.",
+  "tts_render_text_sha256": "e9ef3fdb148c408b9a25d84e98ab8178b0a83cbd98aaa3f2ac6ae6a475153e0e",
+  "tone": "playful_light",
+  "delivery_stage": "positive",
+  "paralinguistic_cue": "[laugh]",
+  "chatterbox_tags": [
+    "[laugh]"
+  ],
+  "selected_paralinguistic_cue": "",
+  "inline_paralinguistic_cue": "[laugh]",
+  "pause_before_ms": 500,
+  "pause_after_ms": 0,
+  "ref_audio": "/mnt/storage12tb/skills/persona-dream/outputs/kai-voice-kling-reference-20260703/kai_kling_chatterbox_reference_30s.wav",
+  "chatterbox_ref_audio": "/work/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+  "chatterbox_agent_url": "http://127.0.0.1:8018",
+  "chatterbox_receipt": {
+    "ok": true,
+    "mocked": false,
+    "live": true,
+    "engine": "chatterbox_turbo",
+    "requested_device": "cuda",
+    "text": "Kai [laugh], wait. If we paddle now, we are cutting across the lineup.",
+    "text_sha256": "e9ef3fdb148c408b9a25d84e98ab8178b0a83cbd98aaa3f2ac6ae6a475153e0e",
+    "reference_audio": "/work/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+    "voice_conditioning": {
+      "reference_audio": "/work/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+      "conditioning_cache_hit": true,
+      "conditioning_cache_key": "0ed8c4d9ef7bbb614e8c555a1bbd60163111eec652161941165407f03658ba64",
+      "conditioning_prepared": false,
+      "fingerprint": {
+        "path": "/work/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+        "mtime_ns": 1783090973946848300,
+        "size": 960078,
+        "sha256": "d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65",
+        "exaggeration": 0,
+        "norm_loudness": true,
+        "cache_key": "0ed8c4d9ef7bbb614e8c555a1bbd60163111eec652161941165407f03658ba64"
+      }
+    },
+    "audio": "/out/dream-kai-1783093791496.wav",
+    "delivery_stage": "positive",
+    "generation_params": {
+      "temperature": 0.7,
+      "top_p": 0.97,
+      "top_k": 1100,
+      "repetition_penalty": 1.16,
+      "norm_loudness": true
+    },
+    "generation_seconds": 1.613,
+    "latency_events": [
+      {
+        "name": "request_received",
+        "elapsed_ms": 0.001
+      },
+      {
+        "name": "generation_params_ready",
+        "elapsed_ms": 0.316
+      },
+      {
+        "name": "voice_conditioning_ready",
+        "elapsed_ms": 1.465,
+        "cache_hit": true,
+        "cache_key": "0ed8c4d9ef7bbb614e8c555a1bbd60163111eec652161941165407f03658ba64",
+        "render_lock": "held"
+      },
+      {
+        "name": "first_audio_ready",
+        "elapsed_ms": 1613.642,
+        "generation_seconds": 1.613
+      },
+      {
+        "name": "audio_saved",
+        "elapsed_ms": 1617.411
+      },
+      {
+        "name": "audio_metrics_ready",
+        "elapsed_ms": 1666.579
+      }
+    ],
+    "total_elapsed_ms": 1666.59,
+    "duration_seconds": 5.16,
+    "realtime_factor": 0.313,
+    "metrics": {
+      "path": "/out/dream-kai-1783093791496.wav",
+      "exists": true,
+      "bytes": 247758,
+      "sha256": "cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4",
+      "ffprobe": {
+        "cmd": [
+          "ffprobe",
+          "-hide_banner",
+          "-v",
+          "error",
+          "-show_entries",
+          "format=duration,size",
+          "-show_entries",
+          "stream=codec_name,sample_rate,channels",
+          "-of",
+          "json",
+          "/out/dream-kai-1783093791496.wav"
+        ],
+        "returncode": 0,
+        "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.160000\",\n        \"size\": \"247758\"\n    }\n}\n",
+        "stderr": ""
+      },
+      "codec_name": "pcm_s16le",
+      "sample_rate": 24000,
+      "channels": 1,
+      "duration_seconds": 5.16,
+      "ffprobe_size": 247758
+    },
+    "failed_gates": []
+  },
+  "output_wav": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-49-53-184Z-kai-12af9cef1db6.wav"
+}

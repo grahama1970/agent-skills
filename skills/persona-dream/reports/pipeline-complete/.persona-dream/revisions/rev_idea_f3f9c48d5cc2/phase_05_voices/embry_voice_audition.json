@@ -1,0 +1,123 @@
+{
+  "schema": "persona_dream.voice_audition_receipt.v1",
+  "created_at": "2026-07-03T15:58:01.590Z",
+  "mocked": false,
+  "live": true,
+  "character": "embry",
+  "answer_text": "Kai, wait. If we paddle now, we're cutting across the lineup.",
+  "answer_text_sha256": "1781704f9dbefedf5fa751d1795042f46f010ac1700f262c0dc2856ff62b0e74",
+  "tts_render_text": "Kai [laugh], wait. If we paddle now, we're cutting across the lineup.",
+  "tts_render_text_sha256": "57156c1212b90a8664f997755fd4c0a2d97af73ec3dadb6bf2dc92a8dad71eaa",
+  "tone": "playful_light",
+  "delivery_stage": "positive",
+  "paralinguistic_cue": "[laugh]",
+  "chatterbox_tags": [
+    "[laugh]"
+  ],
+  "selected_paralinguistic_cue": "",
+  "inline_paralinguistic_cue": "[laugh]",
+  "pause_before_ms": 250,
+  "pause_after_ms": 0,
+  "ref_audio": "/mnt/storage12tb/skills/persona-dream/outputs/horus-embry-tea-void-sparta-r13-regenerated/bakeoff/runs/voice_route_refresh_20260609T0800Z/reference/embry_authorized_ref_30s_8s.wav",
+  "chatterbox_ref_audio": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+  "chatterbox_agent_url": "http://127.0.0.1:8018",
+  "chatterbox_receipt": {
+    "ok": true,
+    "mocked": false,
+    "live": true,
+    "engine": "chatterbox_turbo",
+    "requested_device": "cuda",
+    "text": "Kai [laugh], wait. If we paddle now, we're cutting across the lineup.",
+    "text_sha256": "57156c1212b90a8664f997755fd4c0a2d97af73ec3dadb6bf2dc92a8dad71eaa",
+    "reference_audio": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+    "voice_conditioning": {
+      "reference_audio": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+      "conditioning_cache_hit": true,
+      "conditioning_cache_key": "6f89acdaf40fd932f7dbd4335e4c1b17d69574f0f5035af425e82548ca5c40b4",
+      "conditioning_prepared": false,
+      "fingerprint": {
+        "path": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+        "mtime_ns": 1783090973969848800,
+        "size": 384078,
+        "sha256": "f9dc30305e04c3963cfb100d8a4438b2d1fb219bcabf8861f25407ff01c760fd",
+        "exaggeration": 0,
+        "norm_loudness": true,
+        "cache_key": "6f89acdaf40fd932f7dbd4335e4c1b17d69574f0f5035af425e82548ca5c40b4"
+      }
+    },
+    "audio": "/out/dream-embry-1783094279916.wav",
+    "delivery_stage": "positive",
+    "generation_params": {
+      "temperature": 0.7,
+      "top_p": 0.97,
+      "top_k": 1100,
+      "repetition_penalty": 1.16,
+      "norm_loudness": true
+    },
+    "generation_seconds": 1.608,
+    "latency_events": [
+      {
+        "name": "request_received",
+        "elapsed_ms": 0.002
+      },
+      {
+        "name": "generation_params_ready",
+        "elapsed_ms": 0.338
+      },
+      {
+        "name": "voice_conditioning_ready",
+        "elapsed_ms": 0.963,
+        "cache_hit": true,
+        "cache_key": "6f89acdaf40fd932f7dbd4335e4c1b17d69574f0f5035af425e82548ca5c40b4",
+        "render_lock": "held"
+      },
+      {
+        "name": "first_audio_ready",
+        "elapsed_ms": 1607.874,
+        "generation_seconds": 1.608
+      },
+      {
+        "name": "audio_saved",
+        "elapsed_ms": 1611.429
+      },
+      {
+        "name": "audio_metrics_ready",
+        "elapsed_ms": 1666.958
+      }
+    ],
+    "total_elapsed_ms": 1666.97,
+    "duration_seconds": 5.08,
+    "realtime_factor": 0.317,
+    "metrics": {
+      "path": "/out/dream-embry-1783094279916.wav",
+      "exists": true,
+      "bytes": 243918,
+      "sha256": "67cd2cb426ff69d2fc687953e9640c9d2c3d25d8385867b89cc3d69ad6c9dbd9",
+      "ffprobe": {
+        "cmd": [
+          "ffprobe",
+          "-hide_banner",
+          "-v",
+          "error",
+          "-show_entries",
+          "format=duration,size",
+          "-show_entries",
+          "stream=codec_name,sample_rate,channels",
+          "-of",
+          "json",
+          "/out/dream-embry-1783094279916.wav"
+        ],
+        "returncode": 0,
+        "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.080000\",\n        \"size\": \"243918\"\n    }\n}\n",
+        "stderr": ""
+      },
+      "codec_name": "pcm_s16le",
+      "sample_rate": 24000,
+      "channels": 1,
+      "duration_seconds": 5.08,
+      "ffprobe_size": 243918
+    },
+    "failed_gates": []
+  },
+  "output_wav": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-58-01-589Z-embry-91a98c923f0b.wav"
+}

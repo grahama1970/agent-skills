@@ -1,0 +1,125 @@
+{
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "global_omissions": [
+    {
+      "item": "complete upstream memory graph",
+      "reason": "Kling/fal request should receive only scene-relevant distilled prompt and media, not entire latent project state"
+    },
+    {
+      "item": "raw receipts and hashes inside provider prompt",
+      "reason": "kept in local artifacts for audit; not useful provider semantics"
+    },
+    {
+      "item": "local absolute file paths",
+      "reason": "provider requires public URLs or fal storage URLs"
+    },
+    {
+      "item": "unverified current pricing/account entitlement",
+      "reason": "requires account/API validation outside dry-run contract"
+    }
+  ],
+  "panel_omissions": [
+    {
+      "omitted_or_compressed_context": [
+        {
+          "item": "full upstream script prose",
+          "reason": "compressed into a short provider prompt to stay under fal/Kling prompt-length guidance"
+        },
+        {
+          "item": "contact-sheet grid labels and borders",
+          "reason": "reference-only artifacts must not become scene content"
+        },
+        {
+          "item": "raw local file paths",
+          "reason": "provider accepts URLs, not local paths"
+        },
+        {
+          "item": "unlocked provider voice IDs",
+          "reason": "voice IDs are not present in this run-root and cannot be claimed live-ready"
+        },
+        {
+          "item": "paid-call intent",
+          "reason": "manual acceptance and paid authorization are absent"
+        }
+      ],
+      "panel_id": "sb_001"
+    },
+    {
+      "omitted_or_compressed_context": [
+        {
+          "item": "full upstream script prose",
+          "reason": "compressed into a short provider prompt to stay under fal/Kling prompt-length guidance"
+        },
+        {
+          "item": "contact-sheet grid labels and borders",
+          "reason": "reference-only artifacts must not become scene content"
+        },
+        {
+          "item": "raw local file paths",
+          "reason": "provider accepts URLs, not local paths"
+        },
+        {
+          "item": "unlocked provider voice IDs",
+          "reason": "voice IDs are not present in this run-root and cannot be claimed live-ready"
+        },
+        {
+          "item": "paid-call intent",
+          "reason": "manual acceptance and paid authorization are absent"
+        }
+      ],
+      "panel_id": "sb_002"
+    },
+    {
+      "omitted_or_compressed_context": [
+        {
+          "item": "full upstream script prose",
+          "reason": "compressed into a short provider prompt to stay under fal/Kling prompt-length guidance"
+        },
+        {
+          "item": "contact-sheet grid labels and borders",
+          "reason": "reference-only artifacts must not become scene content"
+        },
+        {
+          "item": "raw local file paths",
+          "reason": "provider accepts URLs, not local paths"
+        },
+        {
+          "item": "unlocked provider voice IDs",
+          "reason": "voice IDs are not present in this run-root and cannot be claimed live-ready"
+        },
+        {
+          "item": "paid-call intent",
+          "reason": "manual acceptance and paid authorization are absent"
+        }
+      ],
+      "panel_id": "sb_003"
+    },
+    {
+      "omitted_or_compressed_context": [
+        {
+          "item": "full upstream script prose",
+          "reason": "compressed into a short provider prompt to stay under fal/Kling prompt-length guidance"
+        },
+        {
+          "item": "contact-sheet grid labels and borders",
+          "reason": "reference-only artifacts must not become scene content"
+        },
+        {
+          "item": "raw local file paths",
+          "reason": "provider accepts URLs, not local paths"
+        },
+        {
+          "item": "unlocked provider voice IDs",
+          "reason": "voice IDs are not present in this run-root and cannot be claimed live-ready"
+        },
+        {
+          "item": "paid-call intent",
+          "reason": "manual acceptance and paid authorization are absent"
+        }
+      ],
+      "panel_id": "sb_004"
+    }
+  ],
+  "schema_version": "persona-dream.provider-payload-omitted-context.v1",
+  "status": "PASS_OMITTED_CONTEXT_LEDGER"
+}

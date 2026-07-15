@@ -1,0 +1,66 @@
+{
+  "accepted": false,
+  "blockers": [
+    "generated_candidate_panels_not_accepted:candidate_panel_001",
+    "panel[0]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts",
+    "panel[1]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts",
+    "panel[2]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts",
+    "panel[3]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "No live provider image generation or Kling submission occurred.",
+      "No downstream video provider submission occurred."
+    ],
+    "proves": [
+      "Tau dispatched the Phase 07 panel-reviewer node and failed closed with blockers."
+    ]
+  },
+  "created_at": "2026-07-05T19:18:12.560252+00:00",
+  "duration_seconds": 10,
+  "entity_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_entity_coverage.json",
+  "live": true,
+  "mocked": false,
+  "panel_count": 4,
+  "per_panel": [
+    {
+      "blockers": [
+        "panel[0]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts"
+      ],
+      "panel_id": "sb_001",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [
+        "panel[1]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts"
+      ],
+      "panel_id": "sb_002",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [
+        "panel[2]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts"
+      ],
+      "panel_id": "sb_003",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [
+        "panel[3]:missing_accepted_storyboard_frame_evidence:requires per-panel storyboard image/start-frame/end-frame artifacts"
+      ],
+      "panel_id": "sb_004",
+      "status": "BLOCKED"
+    }
+  ],
+  "provider_calls": {
+    "image": false,
+    "kling": false,
+    "paid": false
+  },
+  "reference_coverage": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_reference_coverage.json",
+  "role": "panel-reviewer",
+  "schema": "persona_dream.storyboard_review_verdict.v1",
+  "status": "BLOCKED_PANEL_REVIEW",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:1c652cbc80b43c1967404b3a5f0b92c82b4e15e00bbc1351be629c4dc5bdecea"
+}

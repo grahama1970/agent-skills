@@ -1,0 +1,53 @@
+{
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "current fal provider schema compatibility",
+      "provider-accessible media URLs",
+      "paid-call authorization",
+      "manual acceptance",
+      "live provider readiness",
+      "live video generation"
+    ],
+    "proves": [
+      "provider-specific dry-run packet was written from a scorecard, scene contract, and media lock",
+      "no provider, paid, URL, submit, or live-ready state was claimed"
+    ]
+  },
+  "external_task_id": null,
+  "fal_model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "generated_at": "2026-07-10T15:08:17.654481+00:00",
+  "live_submit_ready": false,
+  "media_lock_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_kling_optimized_packet/storyboard_media_lock_manifest.json",
+  "media_lock_sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+  "packet_kind": "fal_kling_image_to_video",
+  "paid_call_authorized": false,
+  "provider_accessible_url_created": false,
+  "provider_id": "kling",
+  "provider_live": false,
+  "provider_payload": {
+    "input": {
+      "aspect_ratio": "16:9",
+      "duration": 10,
+      "end_frame_asset_id": "sb_001.end_frame",
+      "end_image_url": null,
+      "image_url": null,
+      "prompt": "Dry-run Persona Dream video scene embry-kai-kahaluu-10s: identity_locked_character_scene, first_last_frame_transition, surf_sports_motion_scene, multi_character_interaction, cinematic_camera_move. Duration target 10s. Preserve accepted storyboard identity, camera, motion, and negative constraints from upstream packet.",
+      "start_frame_asset_id": "sb_001.start_frame"
+    },
+    "model": "fal-ai/kling-video/v3/pro/image-to-video",
+    "submitted": false
+  },
+  "provider_ready": false,
+  "provider_route": "fal-kling",
+  "revision_id": "rev_pipeline_complete_phase09_restore_20260710",
+  "run_id": "pipeline-complete",
+  "scene_contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_kling_optimized_packet/video_scene_contract.v1.json",
+  "scene_contract_sha256": "sha256:78573cec7d8a42687315af8e498351e269ed8160c0b5b180a427c9a6039d1206",
+  "scene_id": "embry-kai-kahaluu-10s",
+  "schema_version": "persona-dream.video-provider-packet.v1",
+  "status": "PASS_VIDEO_PROVIDER_PACKET_DRY_RUN",
+  "submitted": false,
+  "video_provider_scorecard_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_kling_optimized_packet/video_provider_scorecard.v1.json",
+  "video_provider_scorecard_sha256": "sha256:d25eecc3be9f9dc198c9f99c941249bd737e1ac6750cfb3f2110c53158d095f3"
+}

@@ -1,0 +1,298 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_index_path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_artifact_index.json",
+  "artifact_index_sha256": "sha256:5e91ddaa96eb9bca56b866db95c83c71a3983d363bd9ca9c25c1b30b79e6288d",
+  "claims": {
+    "does_not_prove": [
+      "Memory active-revision compare-and-swap",
+      "file active-pointer mutation or ACTIVE_CONSISTENT state",
+      "repair queue completion",
+      "provider readiness, publication, payment, or submission"
+    ],
+    "proves": [
+      "the immutable Phase 01-10 revision hashes were recomputed again before verification",
+      "Memory durably returned the exact revision, phase, and required-artifact records",
+      "question-shaped recall returned the expected run and revision with a positive dense score",
+      "the revision record lifecycle advanced from PREPARED to VERIFIED through Memory"
+    ]
+  },
+  "collection": "project_knowledge",
+  "command": {
+    "argv": [
+      "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/repair_semantic_mix_revision.py",
+      "--run-root",
+      "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete",
+      "--source-revision-id",
+      "rev_repair_a8b93ffeca8f",
+      "--idea-text",
+      "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+      "--created-at",
+      "2026-07-15T18:17:45Z",
+      "--source-commit",
+      "2d8b75e85e5856b079c81dfe847ef76ca8873502",
+      "--memory-url",
+      "http://127.0.0.1:8601",
+      "--collection",
+      "project_knowledge",
+      "--connect-timeout",
+      "5",
+      "--read-timeout",
+      "60",
+      "--json"
+    ],
+    "cwd": "/tmp/persona-dream-main-final-20260715",
+    "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.10",
+    "script_path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/prepare_revision_qualification.py",
+    "script_sha256": "sha256:355bdfba3625976c6917d9e11c12966bd603e353e3dc37e591d635388aafe82d",
+    "source_commit": "2d8b75e85e5856b079c81dfe847ef76ca8873502"
+  },
+  "hash_validation": {
+    "artifact_count": 328,
+    "artifact_hash_manifest_sha256": "sha256:9abaf21a125cbad762888a7754e43b4e8ae590a99ba9a60ac4e12ff7787e65fe",
+    "escape_count": 0,
+    "matched_count": 328,
+    "mismatch_count": 0,
+    "recomputed_count": 328,
+    "symlink_count": 0
+  },
+  "lifecycle_state": "VERIFIED",
+  "live": true,
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "paid_call_authorized": false,
+  "prepare_receipt_sha256": "sha256:8b09c73e73944275525ab0cc680dba91ec03cd1ab6e94441798513317cd62642",
+  "provider_live": false,
+  "records": {
+    "after_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "before_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "exact_keys": [
+      "pd_rev_e488045219b827c7bddd57248529755381e862ea2c423485",
+      "pd_phase_ba3be7382929a2dc387bf86ca309564d5948c973371bf9c3",
+      "pd_phase_721e8215e505f2296e638848597d0254d401a37bd0906309",
+      "pd_phase_29e6c6c942d61d9b70761a6b3d519a50b735f42cc668f0ef",
+      "pd_phase_771c79c38a8a2897e46986ccdc3fe266966063be13b3884c",
+      "pd_phase_dd93a8c34370ddd45f70cf786e262455f10af48d41e9ded5",
+      "pd_phase_6a6f89dbbfffd6421b0c796ca1f66a317079e51f0f838d52",
+      "pd_phase_16605bb0beb3b7c46f7f38780b4028d2d8eb60290c29386f",
+      "pd_phase_e278b8fbb448b2029f9a3a4421bda971870c7cc80bd99877",
+      "pd_phase_d486d5dffdbb3b4dbefd3602ddb68a97819940a7431f0bf2",
+      "pd_phase_321b616a6bda528396b264ad751f83b07c4728784468205d",
+      "pd_artifact_c2d13572b494403f67547e207ff7e9828546eae2025c1780",
+      "pd_artifact_053f5baba0151135e62c174f83b699a591c3e24d39920b8a",
+      "pd_artifact_78f637cf9c45f41eec49a28517ff89fb91c4e83f2c4bcfc1",
+      "pd_artifact_c5b592461001b5dd358cda5746592ebaaeff1199af912037",
+      "pd_artifact_661ad4ae302783fe087eb7d9330e5e9dfadea49548b3f638",
+      "pd_artifact_ab98c11333929407865c8dbbb7387604b1a9219ba7b0971f",
+      "pd_artifact_72ee5a6f70ac52ae09f4a7fa1c6b2a170c0fd91d28f0f8ac",
+      "pd_artifact_39a1751e6f6fc2bcb68dfd920f9a38c925c45e8df3c4b113",
+      "pd_artifact_b8e144ffccb0148e5ed2bd2eaa23aacbbb5b774933b040a3",
+      "pd_artifact_1f6c4652b62fc3d8474d7d5856e7217a98996195a0ba9edf",
+      "pd_artifact_3296e45afab9d7df4752030518dc15b53cdadaeacefe8f0a",
+      "pd_artifact_ac3ada559f32153f4b906c5b180e95df4100931f25189c61",
+      "pd_artifact_268a53dbb3414167826bcce25ded738db073f11eea84b27b",
+      "pd_artifact_7864f45d3d79aecdda6f6b1adfc261475629f976f07c9c57",
+      "pd_artifact_928c35dff32000146f92db5c7b622de819793487dfead848",
+      "pd_artifact_b54781e235592a065493cea47e46cffa6cc9109f20769156"
+    ],
+    "expected_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "phase_keys": {
+      "01": "pd_phase_ba3be7382929a2dc387bf86ca309564d5948c973371bf9c3",
+      "02": "pd_phase_721e8215e505f2296e638848597d0254d401a37bd0906309",
+      "03": "pd_phase_29e6c6c942d61d9b70761a6b3d519a50b735f42cc668f0ef",
+      "04": "pd_phase_771c79c38a8a2897e46986ccdc3fe266966063be13b3884c",
+      "05": "pd_phase_dd93a8c34370ddd45f70cf786e262455f10af48d41e9ded5",
+      "06": "pd_phase_6a6f89dbbfffd6421b0c796ca1f66a317079e51f0f838d52",
+      "07": "pd_phase_16605bb0beb3b7c46f7f38780b4028d2d8eb60290c29386f",
+      "08": "pd_phase_e278b8fbb448b2029f9a3a4421bda971870c7cc80bd99877",
+      "09": "pd_phase_d486d5dffdbb3b4dbefd3602ddb68a97819940a7431f0bf2",
+      "10": "pd_phase_321b616a6bda528396b264ad751f83b07c4728784468205d"
+    },
+    "required_artifact_keys": {
+      "contact_sheet_gate_receipt": "pd_artifact_39a1751e6f6fc2bcb68dfd920f9a38c925c45e8df3c4b113",
+      "contact_sheet_manifest": "pd_artifact_72ee5a6f70ac52ae09f4a7fa1c6b2a170c0fd91d28f0f8ac",
+      "contact_sheet_requirements": "pd_artifact_ab98c11333929407865c8dbbb7387604b1a9219ba7b0971f",
+      "crew_contract": "pd_artifact_c5b592461001b5dd358cda5746592ebaaeff1199af912037",
+      "crew_gate_receipt": "pd_artifact_661ad4ae302783fe087eb7d9330e5e9dfadea49548b3f638",
+      "dream_request": "pd_artifact_c2d13572b494403f67547e207ff7e9828546eae2025c1780",
+      "media_lock": "pd_artifact_ac3ada559f32153f4b906c5b180e95df4100931f25189c61",
+      "panel_distillation_contract": "pd_artifact_928c35dff32000146f92db5c7b622de819793487dfead848",
+      "provider_final_gate": "pd_artifact_7864f45d3d79aecdda6f6b1adfc261475629f976f07c9c57",
+      "provider_schema_receipt": "pd_artifact_b54781e235592a065493cea47e46cffa6cc9109f20769156",
+      "residue_links": "pd_artifact_053f5baba0151135e62c174f83b699a591c3e24d39920b8a",
+      "script_contract": "pd_artifact_1f6c4652b62fc3d8474d7d5856e7217a98996195a0ba9edf",
+      "story_contract": "pd_artifact_78f637cf9c45f41eec49a28517ff89fb91c4e83f2c4bcfc1",
+      "storyboard_packet": "pd_artifact_3296e45afab9d7df4752030518dc15b53cdadaeacefe8f0a",
+      "video_provider_scorecard": "pd_artifact_268a53dbb3414167826bcce25ded738db073f11eea84b27b",
+      "voice_evidence": "pd_artifact_b8e144ffccb0148e5ed2bd2eaa23aacbbb5b774933b040a3"
+    },
+    "revision_key": "pd_rev_e488045219b827c7bddd57248529755381e862ea2c423485"
+  },
+  "requests": {
+    "finalize_revision": {
+      "endpoint": "/upsert",
+      "request_payload_sha256": "sha256:a98eebfd7ac3d508e42d1ed52983c48fa45029204d07b821955d728af40e63a3",
+      "response_sha256": "sha256:bf4594c13d6d42f6eb5064b224b6070e4f4649b2298ecdba3fb7f3dc7df99d37",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "errors": [],
+        "inserted": 0,
+        "total": 1,
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T181748840964Z_13_137246751590080.jsonl"
+      },
+      "status_code": 200
+    },
+    "list_after_verify": {
+      "endpoint": "/list",
+      "request_payload_sha256": "sha256:25b2d0e880a6bb9929a955c31fdac11795a0e47aa09458f04f9d5c363ecb0413",
+      "response_sha256": "sha256:081f0e8b0523d4689b4804062dd2778ba6eb3a7b920e2ae7c332ef41eeddf143",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "count": 27,
+        "total": 27
+      },
+      "status_code": 200
+    },
+    "list_before_verify": {
+      "endpoint": "/list",
+      "request_payload_sha256": "sha256:25b2d0e880a6bb9929a955c31fdac11795a0e47aa09458f04f9d5c363ecb0413",
+      "response_sha256": "sha256:44c825ede8cfd65f1c527936c9613910990fea5f6b9d2f044df2cfb2adfd3cd2",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "count": 27,
+        "total": 27
+      },
+      "status_code": 200
+    },
+    "recall": {
+      "endpoint": "/recall",
+      "request_payload_sha256": "sha256:7f4513f23b6b320a9c6f0b3f4b61409c425b4ea36f09b3ca7a0336da507913a7",
+      "response_sha256": "sha256:9f448ad6e3c436ccc1d996f237e0befbabb71d48abba16562d642e593391f30e",
+      "returned_counts": {
+        "errors": []
+      },
+      "status_code": 200
+    }
+  },
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "revision_manifest_sha256": "sha256:65d207351de2e4b6b14cdb65c588ab08fdb741b0fd3b963ad073da3897de4e6a",
+  "revision_root": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "schema": "persona_dream.revision_memory_verify_receipt.v1",
+  "semantic_sync": {
+    "after": {
+      "expected_pointer_count": 27,
+      "pointer_count": 27,
+      "required": true,
+      "states": {
+        "synced": 27
+      }
+    },
+    "before": {
+      "expected_pointer_count": 27,
+      "pointer_count": 27,
+      "required": true,
+      "states": {
+        "synced": 27
+      }
+    },
+    "recall": {
+      "dense_matching_count": 11,
+      "evidence": [
+        {
+          "dense": 0.9073203,
+          "key": "pd_rev_e488045219b827c7bddd57248529755381e862ea2c423485",
+          "phase_id": null,
+          "record_type": "revision"
+        },
+        {
+          "dense": 0.6616968,
+          "key": "pd_phase_ba3be7382929a2dc387bf86ca309564d5948c973371bf9c3",
+          "phase_id": "01",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.59953845,
+          "key": "pd_phase_321b616a6bda528396b264ad751f83b07c4728784468205d",
+          "phase_id": "10",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.63695884,
+          "key": "pd_phase_721e8215e505f2296e638848597d0254d401a37bd0906309",
+          "phase_id": "02",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.6417745,
+          "key": "pd_phase_16605bb0beb3b7c46f7f38780b4028d2d8eb60290c29386f",
+          "phase_id": "07",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.62279934,
+          "key": "pd_phase_dd93a8c34370ddd45f70cf786e262455f10af48d41e9ded5",
+          "phase_id": "05",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.63702166,
+          "key": "pd_phase_6a6f89dbbfffd6421b0c796ca1f66a317079e51f0f838d52",
+          "phase_id": "06",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.6135613,
+          "key": "pd_phase_29e6c6c942d61d9b70761a6b3d519a50b735f42cc668f0ef",
+          "phase_id": "03",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.58643925,
+          "key": "pd_phase_e278b8fbb448b2029f9a3a4421bda971870c7cc80bd99877",
+          "phase_id": "08",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.5879735,
+          "key": "pd_phase_d486d5dffdbb3b4dbefd3602ddb68a97819940a7431f0bf2",
+          "phase_id": "09",
+          "record_type": "phase"
+        },
+        {
+          "dense": 0.6004751,
+          "key": "pd_phase_771c79c38a8a2897e46986ccdc3fe266966063be13b3884c",
+          "phase_id": "04",
+          "record_type": "phase"
+        }
+      ],
+      "human_idea_revision_dense_count": 1,
+      "item_count": 27,
+      "matching_identity_count": 11,
+      "max_dense": 0.9073203,
+      "question": "Which immutable Persona Dream revision stores the explicit human idea 'Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.' for run pipeline-complete revision rev_idea_f3f9c48d5cc2, and which Phase 01 through Phase 10 records are bound to that exact idea?"
+    }
+  },
+  "source_commit": "2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "source_revision_id": "rev_repair_a8b93ffeca8f",
+  "status": "PASS_MEMORY_REVISION_VERIFIED",
+  "submitted": false,
+  "verified_at": "2026-07-15T18:17:48.995261+00:00"
+}

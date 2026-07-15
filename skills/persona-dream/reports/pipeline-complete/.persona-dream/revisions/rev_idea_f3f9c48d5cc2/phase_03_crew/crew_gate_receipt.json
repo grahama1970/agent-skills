@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "live_true": true,
+    "mocked_false": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a new Memory recall or creative crew selection was executed"
+    ],
+    "proves": [
+      "the existing crew contract was copied byte-for-byte and locally checked"
+    ]
+  },
+  "schema": "persona_dream.crew_migration_gate_receipt.v1",
+  "source_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+  "status": "PASS_CREW_SOURCE_REBOUND"
+}

@@ -1,0 +1,26 @@
+{
+  "actual_provider_call_attempts": 0,
+  "created_at": "2026-07-15T18:17:45Z",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "idea_source": "explicit_human",
+  "live_submit_ready": false,
+  "migration": {
+    "authoritative_source": "phase_03_crew/crew_contract.json#/source_context/core_idea",
+    "authoritative_source_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+    "creative_regeneration_performed": false,
+    "human_story_acceptance_inferred": false,
+    "kind": "semantic_mix_repair"
+  },
+  "provider_live": false,
+  "provider_ready": false,
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.story_contract.v1",
+  "seed": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+  "source_revision_id": "rev_repair_a8b93ffeca8f",
+  "status": "PASS_IDEA_LINEAGE_REPAIRED",
+  "story": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+  "submitted": false,
+  "target_duration_s": 10
+}
