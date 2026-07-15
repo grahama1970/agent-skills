@@ -67,6 +67,8 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
             "--realtime-model", "tiny.en",
             "--device", self.config["listener_device"],
             "--compute-type", self.config["listener_compute_type"],
+            "--post-speech-silence-duration",
+            str(self.config["listener_post_speech_silence_seconds"]),
         ]
         log_path = Path(self.config["campaign_dir"]) / "managed-listener.log"
         self._log = log_path.open("w", encoding="utf-8")
@@ -242,6 +244,8 @@ class CaseExecutor:
                         self.config["pw_play"],
                         "--target",
                         self.config["source_playback_target"],
+                        "--volume",
+                        str(self.config["wake_playback_volume"]),
                         str(wake_audio),
                     ],
                     stdout=subprocess.DEVNULL,
@@ -283,6 +287,8 @@ class CaseExecutor:
                     self.config["pw_play"],
                     "--target",
                     self.config["source_playback_target"],
+                    "--volume",
+                    str(self.config["source_playback_volume"]),
                     str(source_audio),
                 ],
                 stdout=subprocess.DEVNULL,
@@ -354,6 +360,8 @@ class CaseExecutor:
             "mocked": final["mocked"],
             "wake_audio_path": str(wake_audio) if wake_audio else None,
             "source_audio_path": str(source_audio) if source_audio else None,
+            "wake_playback_volume": self.config["wake_playback_volume"],
+            "source_playback_volume": self.config["source_playback_volume"],
             "wake_asset": wake_asset,
             "source_asset": source_asset,
             "typed_transcript_used": False,

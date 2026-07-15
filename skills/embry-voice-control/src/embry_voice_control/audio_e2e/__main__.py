@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .case_compiler import compile_campaign
+from .prepare_clone_assets import prepare_clone_assets
 from .runner import bundle_failure, run_campaign, status
 
 
@@ -22,6 +23,43 @@ def parser() -> argparse.ArgumentParser:
     selection.add_argument("--all", action="store_true", dest="select_all")
     compile_parser.add_argument("--source-mode", default="physical_live_horus")
     compile_parser.add_argument("--output", type=Path, required=True)
+
+    prepare_parser = commands.add_parser("prepare-clone-assets")
+    prepare_parser.add_argument("--manifest", type=Path, required=True)
+    prepare_parser.add_argument("--source-contract-receipt", type=Path, required=True)
+    prepare_parser.add_argument(
+        "--qualified-wake-assets-manifest",
+        type=Path,
+        required=True,
+        help=(
+            "Existing embry.audio_e2e_audio_assets.v1 manifest whose wake_audio "
+            "locators already passed the managed listener qualification boundary."
+        ),
+    )
+    prepare_parser.add_argument("--orpheus-url", default="http://127.0.0.1:8767")
+    prepare_parser.add_argument("--checkpoint-id", required=True)
+    prepare_parser.add_argument("--checkpoint-sha256", required=True)
+    prepare_parser.add_argument("--orpheus-checkpoints-root", type=Path, required=True)
+    prepare_parser.add_argument("--output-dir", type=Path, required=True)
+    prepare_parser.add_argument("--timeout-seconds", type=float, default=300.0)
+    prepare_parser.add_argument("--temperature", type=float, default=0.4)
+    prepare_parser.add_argument("--top-p", type=float, default=0.4)
+    prepare_parser.add_argument("--repetition-penalty", type=float, default=1.1)
+    prepare_parser.add_argument("--qualification-model", default="small.en")
+    prepare_parser.add_argument("--qualification-device", default="cpu")
+    prepare_parser.add_argument(
+        "--qualification-compute-type", default="int8"
+    )
+    prepare_parser.add_argument("--max-request-wer", type=float, default=0.25)
+    prepare_parser.add_argument("--max-candidates", type=int, default=5)
+    prepare_parser.add_argument(
+        "--regenerate-conflicts",
+        action="store_true",
+        help=(
+            "Archive conflicting deterministic asset directories and regenerate "
+            "them. Without this flag, incomplete or conflicting assets fail closed."
+        ),
+    )
 
     for name in ("run", "resume"):
         run_parser = commands.add_parser(name)
@@ -73,6 +111,9 @@ def parser() -> argparse.ArgumentParser:
         run_parser.add_argument("--max-request-wer", type=float, default=0.25)
         run_parser.add_argument("--listener-device", default="cpu")
         run_parser.add_argument("--listener-compute-type", default="int8")
+        run_parser.add_argument(
+            "--listener-post-speech-silence-seconds", type=float, default=2.0
+        )
 
         # Backward-compatible one-case playback options. Multi-case unattended
         # runs should use --audio-assets-manifest.
@@ -80,6 +121,8 @@ def parser() -> argparse.ArgumentParser:
         run_parser.add_argument("--wake-audio", type=Path)
         run_parser.add_argument("--source-playback-target")
         run_parser.add_argument("--source-playback-delay-seconds", type=float, default=2.0)
+        run_parser.add_argument("--wake-playback-volume", type=float, default=3.0)
+        run_parser.add_argument("--source-playback-volume", type=float, default=1.0)
         run_parser.add_argument("--pw-play", default="/usr/bin/pw-play")
 
     status_parser = commands.add_parser("status")
@@ -119,6 +162,31 @@ def main() -> int:
                 },
                 sort_keys=True,
             )
+        )
+        return 0
+
+    if args.command == "prepare-clone-assets":
+        prepare_clone_assets(
+            manifest_path=args.manifest,
+            source_contract_path=args.source_contract_receipt,
+            qualified_wake_assets_manifest_path=(
+                args.qualified_wake_assets_manifest
+            ),
+            orpheus_url=args.orpheus_url,
+            checkpoint_id=args.checkpoint_id,
+            checkpoint_sha256=args.checkpoint_sha256,
+            orpheus_checkpoints_root=args.orpheus_checkpoints_root,
+            output_dir=args.output_dir,
+            timeout_seconds=args.timeout_seconds,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            repetition_penalty=args.repetition_penalty,
+            qualification_model=args.qualification_model,
+            qualification_device=args.qualification_device,
+            qualification_compute_type=args.qualification_compute_type,
+            max_request_wer=args.max_request_wer,
+            max_candidates=args.max_candidates,
+            regenerate_conflicts=args.regenerate_conflicts,
         )
         return 0
 
@@ -182,10 +250,15 @@ def main() -> int:
                 "max_request_wer": args.max_request_wer,
                 "listener_device": args.listener_device,
                 "listener_compute_type": args.listener_compute_type,
+                "listener_post_speech_silence_seconds": (
+                    args.listener_post_speech_silence_seconds
+                ),
                 "turn_audio": [str(path) for path in args.turn_audio],
                 "wake_audio": str(args.wake_audio) if args.wake_audio else None,
                 "source_playback_target": args.source_playback_target,
                 "source_playback_delay_seconds": args.source_playback_delay_seconds,
+                "wake_playback_volume": args.wake_playback_volume,
+                "source_playback_volume": args.source_playback_volume,
                 "pw_play": args.pw_play,
             }
         state = run_campaign(
