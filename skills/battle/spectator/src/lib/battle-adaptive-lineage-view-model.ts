@@ -147,11 +147,79 @@ function memoryPromotionForLane(
 	};
 }
 
+function adaptiveLifecycleFields(
+	source: AdaptiveLineageLane,
+	fixture: BattleNormalizedAdaptiveLineageFixtureV1,
+	events: AdaptiveLineageEvent[],
+): Pick<Lane, "knowledge_packet" | "spawn_request" | "tau_branch_decision"> {
+	const childLane = fixture.lanes.find((lane) => lane.parent_lane_id === source.lane_id);
+	const lineageEvents = childLane
+		? [...events, ...fixture.events.filter((event) => event.lane_id === childLane.lane_id)]
+		: events;
+	const observation = events.find(
+		(event) =>
+			event.event_type === "parent_observation_materialized" ||
+			event.event_type === "generation_observation_materialized",
+	);
+	const fitness = events.find((event) => event.event_type === "fitness_materialized");
+	const request = events.find((event) => event.event_type === "spawn_requested");
+	const authorization = events.find((event) => event.event_type === "spawn_authorized");
+	const packet = lineageEvents.find((event) => event.event_type === "knowledge_packet_materialized");
+	const acknowledgement = lineageEvents.find((event) => event.event_type === "child_knowledge_acknowledged");
+	const observedEvidenceRefs = [observation, fitness]
+		.filter((event): event is AdaptiveLineageEvent => Boolean(event))
+		.map(receiptId);
+
+	return {
+		knowledge_packet: packet
+			? {
+					present: true,
+					status: packet.receipt_ref.status ?? "materialized",
+					packet_id: packet.payload.packet_id == null ? null : String(packet.payload.packet_id),
+					parent_packet_id: null,
+					research_goals: [],
+					parent_analysis: {},
+					child_ack: {
+						required: true,
+						received: Boolean(acknowledgement),
+						ack_source: acknowledgement ? receiptId(acknowledgement) : null,
+					},
+				}
+			: undefined,
+		spawn_request: request
+			? {
+					present: true,
+					schema: request.receipt_ref.schema,
+					request_id: receiptId(request),
+					claim_authority: "parent-authored request (pre-policy)",
+					requested_decision:
+						request.payload.requested_action == null ? undefined : String(request.payload.requested_action),
+					child_exploit_id: childLane?.lane_id ?? null,
+					battle_allowed: false,
+					policy_owner: "battle",
+				}
+			: undefined,
+		tau_branch_decision: request
+			? {
+					present: true,
+					schema: authorization?.receipt_ref.schema ?? request.receipt_ref.schema,
+					decision_id: receiptId(authorization ?? request),
+					decision_authority: authorization ? "battle" : "parent",
+					battle_policy_authority: "battle",
+					decision: "spawn_requested",
+					observed_evidence_refs: observedEvidenceRefs,
+					battle_policy_result: authorization ? "allowed" : "pending",
+				}
+			: undefined,
+	};
+}
+
 function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLineageFixtureV1): Lane {
 	const duration = fixture.campaign.elapsed_seconds;
 	const events = fixture.events.filter((event) => event.lane_id === source.lane_id);
 	const childLane = fixture.lanes.find((lane) => lane.parent_lane_id === source.lane_id);
 	const isMemory = fixture.live_source === "adaptive_memory_v14";
+	const lifecycle = adaptiveLifecycleFields(source, fixture, events);
 	return {
 		id: source.lane_id,
 		name: source.display_name,
@@ -175,6 +243,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 		terminal: "none",
 		events: events.map((event) => toLaneEvent(event, duration)),
 		activitySegments: activitySegments(source, fixture.events, duration, isMemory),
+		...lifecycle,
 		memory_promotion: memoryPromotionForLane(source, fixture),
 		lineageGroupId: `lineage:${source.team}`,
 		collapsible: source.role === "parent",
