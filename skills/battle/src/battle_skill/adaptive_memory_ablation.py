@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import time
@@ -38,6 +39,7 @@ import jsonschema
 EXPERIMENT_SCHEMA = "battle.memory_ablation_experiment.v1"
 TRIAL_SCHEMA = "battle.memory_ablation_trial.v1"
 RESULT_SCHEMA = "battle.memory_ablation_result.v1"
+PREFLIGHT_SCHEMA = "battle.memory_ablation_preflight_receipt.v1"
 
 CONDITION_ORDER = ("R0B0", "R1B0", "R0B1", "R1B1")
 TEAMS = ("red", "blue")
@@ -947,6 +949,174 @@ def _validate_source_root_against_plan(
             raise ContractError(f"live source artifact binding mismatch for {team}")
 
 
+def _json_command(*, command: list[str], cwd: Path, label: str) -> dict[str, Any]:
+    environment = os.environ.copy()
+    # Battle and Tau require different Python versions. Never let a nested Tau
+    # uv process repurpose Battle's active project environment in place.
+    environment.pop("UV_PROJECT_ENVIRONMENT", None)
+    completed = subprocess.run(
+        command,
+        cwd=cwd,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
+        raise ContractError(f"{label} failed: {detail}")
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"{label} returned invalid JSON") from exc
+    if not isinstance(payload, dict):
+        raise ContractError(f"{label} did not return a JSON object")
+    return payload
+
+
+def _tau_runtime_readiness(*, tau_root: Path) -> dict[str, Any]:
+    root = tau_root.expanduser().resolve()
+    if not (root / "pyproject.toml").is_file():
+        raise ContractError(f"Tau root is not a Tau checkout: {root}")
+    doctor = _json_command(
+        command=["uv", "run", "tau", "doctor"], cwd=root, label="Tau doctor"
+    )
+    lanes = doctor.get("lanes") if isinstance(doctor.get("lanes"), dict) else {}
+    if (
+        doctor.get("schema") != "tau.doctor.v1"
+        or doctor.get("status") != "PASS"
+        or doctor.get("ok") is not True
+        or doctor.get("mocked") is not False
+        or doctor.get("live") is not True
+        or lanes.get("local_cli", {}).get("ready") is not True
+        or lanes.get("local_sanity", {}).get("ready") is not True
+    ):
+        raise ContractError("Tau doctor did not establish local runtime readiness")
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if commit.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", commit.stdout.strip()):
+        raise ContractError("Tau Git identity is unavailable")
+    return {
+        "status": "PASS",
+        "schema": doctor["schema"],
+        "receipt_sha256": canonical_sha256(doctor),
+        "tau_git_commit": commit.stdout.strip(),
+        "local_cli_ready": True,
+        "local_sanity_ready": True,
+        "mocked": False,
+        "live": True,
+    }
+
+
+def _scillm_auth_readiness(
+    *, tau_root: Path, scillm_base_url: str, model: str
+) -> dict[str, Any]:
+    script = (
+        "import json,sys; "
+        "from tau_coding.battle_scillm import preflight_battle_scillm_auth; "
+        "print(json.dumps(preflight_battle_scillm_auth("
+        "scillm_base_url=sys.argv[1], model=sys.argv[2], allow_repair=False), "
+        "sort_keys=True))"
+    )
+    auth = _json_command(
+        command=["uv", "run", "python", "-c", script, scillm_base_url, model],
+        cwd=tau_root.expanduser().resolve(),
+        label="SciLLM auth preflight",
+    )
+    if (
+        auth.get("schema") != "tau.battle_scillm_auth_preflight.v1"
+        or auth.get("status") != "PASS"
+        or auth.get("ok") is not True
+        or auth.get("mocked") is not False
+        or auth.get("live") is not True
+    ):
+        raise ContractError(
+            f"SciLLM endpoint/auth readiness failed: {auth.get('errors') or auth.get('reason')}"
+        )
+    return {
+        "status": "PASS",
+        "schema": auth["schema"],
+        "receipt_sha256": canonical_sha256(auth),
+        "base_url_sha256": hashlib.sha256(
+            scillm_base_url.rstrip("/").encode("utf-8")
+        ).hexdigest(),
+        "model": model,
+        "http_status": auth.get("status_code"),
+        "api_key_present": auth.get("api_key_present") is True,
+        "repair_attempted": auth.get("repair_attempted") is True,
+        "mocked": False,
+        "live": True,
+    }
+
+
+def _judge_readiness(*, plan: Mapping[str, Any]) -> dict[str, Any]:
+    from .adaptive_red_blue_lineage_canary import _judge_reviewed_generation
+    from .arena_live_battle_proof import _judge_tau_artifacts
+
+    policy_sha256 = hashlib.sha256(JUDGE_POLICY_ID.encode("utf-8")).hexdigest()
+    if plan["immutable_inputs"]["judge_policy_id"] != JUDGE_POLICY_ID:
+        raise ContractError("Judge policy id differs from the executable policy")
+    if plan["immutable_inputs"]["judge_policy_sha256"] != policy_sha256:
+        raise ContractError("Judge policy hash differs from the executable policy")
+    if not callable(_judge_reviewed_generation) or not callable(_judge_tau_artifacts):
+        raise ContractError("Judge runtime entry points are not callable")
+    files = {
+        "reviewed_pair": Path(__file__).with_name("adaptive_red_blue_lineage_canary.py"),
+        "judge_runtime": Path(__file__).with_name("arena_live_battle_proof.py"),
+        "judge_core": Path(__file__).with_name("judge.py"),
+    }
+    if not all(path.is_file() for path in files.values()):
+        raise ContractError("Judge executable source is incomplete")
+    return {
+        "status": "PASS",
+        "policy_id": JUDGE_POLICY_ID,
+        "policy_sha256": policy_sha256,
+        "executable_sha256": {
+            name: file_sha256(path) for name, path in files.items()
+        },
+        "reviewed_pair_entrypoint_ready": True,
+        "judge_runtime_entrypoint_ready": True,
+    }
+
+
+def _assert_unused_trial_outputs(
+    *, plan: Mapping[str, Any], experiment_root: Path
+) -> dict[str, Any]:
+    root = experiment_root.expanduser().resolve()
+    used = [
+        str(trial["output_relpath"])
+        for trial in plan["trials"]
+        if (root / str(trial["output_relpath"])).exists()
+    ]
+    if used:
+        raise ContractError(f"predeclared trial output paths are already used: {used}")
+    return {"status": "PASS", "checked_count": len(plan["trials"]), "used": []}
+
+
+def _existing_memory_keys(
+    *, client: httpx.Client, collection: str, keys: Iterable[str]
+) -> list[str]:
+    existing: list[str] = []
+    for key in keys:
+        response = client.post(
+            "/list",
+            json={"collection": collection, "limit": 2, "filters": {"_key": key}},
+        )
+        response.raise_for_status()
+        body = response.json()
+        documents = body.get("documents") if isinstance(body, dict) else None
+        if isinstance(documents, list) and any(
+            isinstance(item, dict) and item.get("_key") == key for item in documents
+        ):
+            existing.append(key)
+    return existing
+
+
 def _load_public_research_context(*, source_root: Path, team: str) -> dict[str, Any]:
     root = source_root / "generation-2" / "arena" / "team-public" / "research" / team
     receipts: list[dict[str, Any]] = []
@@ -978,9 +1148,12 @@ def preflight_experiment(
     plan: Mapping[str, Any],
     source_root: Path,
     memory_base_url: str,
+    scillm_base_url: str,
+    tau_root: Path,
+    experiment_root: Path,
     plan_file_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Validate immutable inputs and one non-trial Memory write/recall probe."""
+    """Fail closed until every dependency for the frozen live trial set is ready."""
 
     validate_experiment_plan(plan)
     _validate_source_root_against_plan(plan=plan, source_root=source_root)
@@ -989,6 +1162,21 @@ def preflight_experiment(
     )
     if actual_docker_identity != plan["immutable_inputs"]["docker_image_identity"]:
         raise ContractError("Docker image identity differs from the frozen plan")
+    expected_route = plan["immutable_inputs"]["scillm_route_sha256"]
+    actual_route = hashlib.sha256(scillm_base_url.encode("utf-8")).hexdigest()
+    if actual_route != expected_route:
+        raise ContractError("SciLLM route differs from the frozen experiment plan")
+
+    output_readiness = _assert_unused_trial_outputs(
+        plan=plan, experiment_root=experiment_root
+    )
+    tau_readiness = _tau_runtime_readiness(tau_root=tau_root)
+    scillm_readiness = _scillm_auth_readiness(
+        tau_root=tau_root,
+        scillm_base_url=scillm_base_url,
+        model=str(plan["immutable_inputs"]["model"]),
+    )
+    judge_readiness = _judge_readiness(plan=plan)
 
     collection = plan["trials"][0]["memory_namespace"]["collection"]
     probe_key = f"{plan['battle_id']}:{plan['experiment_id']}:preflight"
@@ -1015,6 +1203,18 @@ def preflight_experiment(
         ) as client:
             health = client.get("/health")
             health.raise_for_status()
+            planned_keys = [
+                str(trial["memory_namespace"][f"{team}_key"])
+                for trial in plan["trials"]
+                for team in TEAMS
+            ]
+            existing_keys = _existing_memory_keys(
+                client=client, collection=collection, keys=planned_keys
+            )
+            if existing_keys:
+                raise ContractError(
+                    f"Memory trial namespace is not clean: {len(existing_keys)} keys exist"
+                )
             write = client.post(
                 "/upsert", json={"collection": collection, "documents": [document]}
             )
@@ -1051,21 +1251,44 @@ def preflight_experiment(
         raise ContractError(f"Memory preflight failed: {exc}") from exc
     if recalled is None:
         raise ContractError("Memory preflight exact recall did not converge")
+    source_binding = {
+        key: plan["immutable_inputs"][key]
+        for key in (
+            "campaign_receipt_sha256",
+            "selection_receipt_sha256",
+            "target_identity_sha256",
+            "scenario_sha256",
+            "research_input_sha256",
+            "parent_genome_sha256",
+            "parent_artifact_sha256",
+        )
+    }
     return {
-        "schema": "battle.memory_ablation_preflight_receipt.v1",
+        "schema": PREFLIGHT_SCHEMA,
         "status": "PASS",
         "approval": "APPROVED_FOR_LIVE",
         "experiment_id": plan["experiment_id"],
         "experiment_plan_sha256": canonical_sha256(plan),
         "experiment_plan_file_sha256": plan_file_sha256,
-        "source_binding_passed": True,
+        "source_binding": {"status": "PASS", "immutable": source_binding},
         "docker_image_identity": actual_docker_identity,
-        "memory_collection": collection,
-        "memory_probe_key_sha256": hashlib.sha256(
-            probe_key.encode("utf-8")
-        ).hexdigest(),
-        "memory_probe_document_sha256": canonical_sha256(document),
-        "memory_probe_recalled_sha256": canonical_sha256(recalled),
+        "tau_readiness": tau_readiness,
+        "scillm_readiness": scillm_readiness,
+        "judge_readiness": judge_readiness,
+        "output_readiness": output_readiness,
+        "memory_readiness": {
+            "status": "PASS",
+            "base_url_sha256": hashlib.sha256(memory_base_url.encode("utf-8")).hexdigest(),
+            "health_response_sha256": canonical_sha256(health.json()),
+            "collection": collection,
+            "planned_key_count": len(planned_keys),
+            "existing_planned_key_count": 0,
+            "namespace_clean": True,
+            "probe_key_sha256": hashlib.sha256(probe_key.encode("utf-8")).hexdigest(),
+            "probe_document_sha256": canonical_sha256(document),
+            "probe_recalled_sha256": canonical_sha256(recalled),
+            "exact_write_recall_passed": True,
+        },
         "credentials_exposed": False,
         "created_at": _now(),
     }
@@ -1806,6 +2029,7 @@ def run_experiment(
     out_dir: Path,
     memory_base_url: str,
     scillm_base_url: str | None = None,
+    tau_root: Path | None = None,
 ) -> dict[str, Any]:
     """Run exactly the twelve predeclared trials; never add favorable replacements."""
 
@@ -1827,6 +2051,10 @@ def run_experiment(
         plan=plan,
         source_root=source_root,
         memory_base_url=memory_base_url,
+        scillm_base_url=scillm_base_url or "http://localhost:4001",
+        tau_root=tau_root
+        or Path(os.environ.get("BATTLE_TAU_ROOT", "/home/graham/workspace/experiments/tau")),
+        experiment_root=out_dir,
         plan_file_sha256=plan_sha,
     )
     if preflight.get("approval") != "APPROVED_FOR_LIVE":

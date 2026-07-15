@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import sys
 import pytest
 
 from battle_skill import adaptive_memory_ablation as ablation
@@ -108,6 +110,52 @@ def test_written_plan_keeps_canonical_and_file_hashes_distinct(tmp_path) -> None
     assert receipt["plan_sha256"] == ablation.canonical_sha256(written)
     assert receipt["plan_file_sha256"] == ablation.file_sha256(plan_path)
     assert ablation.validate_experiment_plan(written)["plan_sha256"] == receipt["plan_sha256"]
+
+
+def test_nested_runtime_command_cannot_repurpose_battle_uv_environment(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/tmp/battle-active-environment")
+    payload = ablation._json_command(
+        command=[
+            sys.executable,
+            "-c",
+            "import json,os; print(json.dumps({'uv_env': os.getenv('UV_PROJECT_ENVIRONMENT')}))",
+        ],
+        cwd=tmp_path,
+        label="environment isolation probe",
+    )
+    assert payload == {"uv_env": None}
+    assert os.environ["UV_PROJECT_ENVIRONMENT"] == "/tmp/battle-active-environment"
+
+
+def test_preflight_rejects_any_preexisting_trial_output(tmp_path) -> None:
+    plan = _plan()
+    used = tmp_path / plan["trials"][0]["output_relpath"]
+    used.mkdir(parents=True)
+    with pytest.raises(ablation.ContractError, match="output paths are already used"):
+        ablation._assert_unused_trial_outputs(plan=plan, experiment_root=tmp_path)
+
+
+def test_judge_readiness_binds_frozen_policy_and_executable_hashes() -> None:
+    receipt = ablation._judge_readiness(plan=_plan())
+    assert receipt["status"] == "PASS"
+    assert receipt["policy_id"] == ablation.JUDGE_POLICY_ID
+    assert receipt["policy_sha256"] == hashlib.sha256(
+        ablation.JUDGE_POLICY_ID.encode("utf-8")
+    ).hexdigest()
+    assert set(receipt["executable_sha256"]) == {
+        "reviewed_pair",
+        "judge_runtime",
+        "judge_core",
+    }
+
+
+def test_judge_readiness_rejects_policy_drift() -> None:
+    plan = _plan()
+    plan["immutable_inputs"]["judge_policy_sha256"] = "0" * 64
+    with pytest.raises(ablation.ContractError, match="Judge policy hash"):
+        ablation._judge_readiness(plan=plan)
 
 
 def test_plan_randomization_changes_only_predeclared_order() -> None:

@@ -1037,6 +1037,9 @@ def adaptive_memory_ablation(
     ),
     model: str = typer.Option("gpt-5.5", "--model"),
     scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
+    tau_root: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/tau"), "--tau-root"
+    ),
     timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
     generated_at: Optional[str] = typer.Option(None, "--generated-at"),
 ):
@@ -1100,6 +1103,9 @@ def adaptive_memory_ablation(
                 plan=payload,
                 source_root=source_root,
                 memory_base_url=memory_base_url,
+                scillm_base_url=scillm_base_url,
+                tau_root=tau_root,
+                experiment_root=out,
                 plan_file_sha256=file_sha256(plan),
             )
             out.mkdir(parents=True, exist_ok=True)
@@ -1116,6 +1122,7 @@ def adaptive_memory_ablation(
                 out_dir=out,
                 memory_base_url=memory_base_url,
                 scillm_base_url=scillm_base_url,
+                tau_root=tau_root,
             )
         elif normalized_phase == "aggregate":
             if plan is None or out is None:
