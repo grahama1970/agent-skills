@@ -1,0 +1,900 @@
+{
+  "$defs": {
+    "attempt": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "live_started": {
+          "type": "boolean"
+        },
+        "signature": {
+          "$ref": "#/$defs/sha256"
+        },
+        "started_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "BLOCKED"
+          ]
+        }
+      },
+      "required": [
+        "attempt",
+        "status",
+        "live_started",
+        "started_at"
+      ],
+      "type": "object"
+    },
+    "claims": {
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "must_not_claim": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "type": "array"
+        }
+      },
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ],
+      "type": "object"
+    },
+    "condition": {
+      "additionalProperties": false,
+      "properties": {
+        "blue_memory": {
+          "type": "boolean"
+        },
+        "red_memory": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "red_memory",
+        "blue_memory"
+      ],
+      "type": "object"
+    },
+    "context": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "envelope": {
+          "type": "object"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "token_match_status": {
+          "const": "NOT_VERIFIABLE"
+        }
+      },
+      "required": [
+        "envelope",
+        "sha256",
+        "bytes",
+        "token_match_status"
+      ],
+      "type": "object"
+    },
+    "efficiency": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_usd": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "input_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "output_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "provider_attempt_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "provider_duration_seconds": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "repair_attempt_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "trial_wall_time_seconds": {
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "provider_attempt_count",
+        "repair_attempt_count",
+        "provider_duration_seconds",
+        "trial_wall_time_seconds",
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "cost_usd"
+      ],
+      "type": "object"
+    },
+    "failure": {
+      "additionalProperties": false,
+      "properties": {
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/attempt"
+          },
+          "maxItems": 2,
+          "type": "array"
+        },
+        "blocked_by_systemic_failure": {
+          "type": "boolean"
+        },
+        "detail": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "family": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "signature": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "family",
+        "signature",
+        "detail",
+        "blocked_by_systemic_failure",
+        "attempts"
+      ],
+      "type": "object"
+    },
+    "inputBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "contexts": {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/context"
+            },
+            "red": {
+              "$ref": "#/$defs/context"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        },
+        "experiment_plan_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "immutable_inputs": {
+          "additionalProperties": false,
+          "properties": {
+            "campaign_receipt_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "docker_image_identity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "judge_policy_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "parent_artifact_sha256": {
+              "$ref": "#/$defs/teamHashMap"
+            },
+            "parent_genome_sha256": {
+              "$ref": "#/$defs/teamHashMap"
+            },
+            "research_input_sha256": {
+              "$ref": "#/$defs/teamHashMap"
+            },
+            "scenario_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "selection_receipt_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "target_identity_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          },
+          "required": [
+            "campaign_receipt_sha256",
+            "selection_receipt_sha256",
+            "target_identity_sha256",
+            "scenario_sha256",
+            "research_input_sha256",
+            "parent_genome_sha256",
+            "parent_artifact_sha256",
+            "docker_image_identity",
+            "judge_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "request_envelopes": {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/requestEnvelope"
+            },
+            "red": {
+              "$ref": "#/$defs/requestEnvelope"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        },
+        "trial_input_binding_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "experiment_plan_sha256",
+        "trial_input_binding_sha256",
+        "immutable_inputs",
+        "contexts",
+        "request_envelopes"
+      ],
+      "type": "object"
+    },
+    "judge": {
+      "additionalProperties": false,
+      "properties": {
+        "judged_pair_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "status": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "verdict": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "verdict",
+        "judged_pair_count",
+        "receipt_sha256"
+      ],
+      "type": "object"
+    },
+    "measurement": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "memoryEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "control_receipt_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        },
+        "memory_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "OFF",
+            "ON"
+          ]
+        },
+        "recall_receipt_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        },
+        "service_request_count": {
+          "oneOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "const": "NOT_EMITTED"
+            }
+          ]
+        },
+        "source_memory_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        },
+        "use_was_optional": {
+          "const": true
+        },
+        "write_receipt_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        }
+      },
+      "required": [
+        "mode",
+        "service_request_count",
+        "memory_key",
+        "source_memory_sha256",
+        "write_receipt_sha256",
+        "recall_receipt_sha256",
+        "control_receipt_sha256",
+        "use_was_optional"
+      ],
+      "type": "object"
+    },
+    "nullableSha": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "optionalValue": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "EMITTED",
+            "NOT_EMITTED"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "status",
+        "value"
+      ],
+      "type": "object"
+    },
+    "outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "descriptive": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact_changed_from_parent": {
+              "type": "boolean"
+            },
+            "pair_verdict": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "pair_verdict",
+            "artifact_changed_from_parent"
+          ],
+          "type": "object"
+        },
+        "efficiency": {
+          "$ref": "#/$defs/efficiency"
+        },
+        "security": {
+          "$ref": "#/$defs/security"
+        },
+        "team": {
+          "enum": [
+            "red",
+            "blue"
+          ]
+        }
+      },
+      "required": [
+        "team",
+        "security",
+        "efficiency",
+        "descriptive"
+      ],
+      "type": "object"
+    },
+    "pipeline": {
+      "additionalProperties": false,
+      "properties": {
+        "compile_receipt_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        },
+        "handoff_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "review_receipt_sha256": {
+          "$ref": "#/$defs/nullableSha"
+        },
+        "selected_artifact_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "status": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "selected_artifact_sha256",
+        "compile_receipt_sha256",
+        "review_receipt_sha256",
+        "handoff_sha256"
+      ],
+      "type": "object"
+    },
+    "providerExecution": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_usd": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "input_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "live": {
+          "const": true
+        },
+        "materialized_artifact_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "memory_identifier_citation_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "mocked": {
+          "const": false
+        },
+        "model": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "output_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "persona": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "provider_attempt_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "provider_identity": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "provider_request_sha256": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "repair_used": {
+          "type": "boolean"
+        },
+        "request_envelope_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scillm_call_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "seed": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "status": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "strategy_genome_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "surface": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "tau_handoff_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "tau_subagent_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "temperature": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "total_tokens": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "trial_wall_time_seconds": {
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "status",
+        "request_envelope_sha256",
+        "scillm_call_receipt_sha256",
+        "provider_identity",
+        "model",
+        "provider_request_sha256",
+        "seed",
+        "temperature",
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "cost_usd",
+        "duration_seconds",
+        "trial_wall_time_seconds",
+        "memory_identifier_citation_count",
+        "live",
+        "mocked",
+        "tau_handoff_receipt_sha256",
+        "tau_subagent_receipt_sha256",
+        "materialized_artifact_sha256",
+        "strategy_genome_sha256",
+        "persona",
+        "surface",
+        "provider_attempt_count",
+        "repair_used"
+      ],
+      "type": "object"
+    },
+    "requestEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "envelope": {
+          "type": "object"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "envelope",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "security": {
+      "additionalProperties": {
+        "$ref": "#/$defs/measurement"
+      },
+      "minProperties": 4,
+      "type": "object"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "teamHashMap": {
+      "additionalProperties": false,
+      "properties": {
+        "blue": {
+          "$ref": "#/$defs/sha256"
+        },
+        "red": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "red",
+        "blue"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "battle.memory_ablation_trial.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "null"
+          },
+          "judge": {
+            "type": "object"
+          },
+          "live": {
+            "const": true
+          },
+          "outcomes": {
+            "type": "object"
+          },
+          "pipelines": {
+            "type": "object"
+          },
+          "provider_execution": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "BLOCKED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "attempts": {
+      "items": {
+        "$ref": "#/$defs/attempt"
+      },
+      "maxItems": 2,
+      "type": "array"
+    },
+    "battle_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "block_id": {
+      "pattern": "^block-0[1-3]$",
+      "type": "string"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "condition": {
+      "$ref": "#/$defs/condition"
+    },
+    "condition_id": {
+      "enum": [
+        "R0B0",
+        "R1B0",
+        "R0B1",
+        "R1B1"
+      ]
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "experiment_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "experiment_plan_file_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "experiment_plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "failure": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/failure"
+        }
+      ]
+    },
+    "fixture_fallback_used": {
+      "const": false
+    },
+    "input_binding": {
+      "$ref": "#/$defs/inputBinding"
+    },
+    "judge": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/judge"
+        }
+      ]
+    },
+    "live": {
+      "type": "boolean"
+    },
+    "memory": {
+      "additionalProperties": false,
+      "properties": {
+        "blue": {
+          "$ref": "#/$defs/memoryEvidence"
+        },
+        "red": {
+          "$ref": "#/$defs/memoryEvidence"
+        }
+      },
+      "required": [
+        "red",
+        "blue"
+      ],
+      "type": "object"
+    },
+    "mocked": {
+      "const": false
+    },
+    "order_index": {
+      "maximum": 4,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "outcomes": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/outcome"
+            },
+            "red": {
+              "$ref": "#/$defs/outcome"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "pipelines": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/pipeline"
+            },
+            "red": {
+              "$ref": "#/$defs/pipeline"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "provider_execution": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/providerExecution"
+            },
+            "red": {
+              "$ref": "#/$defs/providerExecution"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "replicate": {
+      "maximum": 3,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "schema": {
+      "const": "battle.memory_ablation_trial.v1"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
+    "trial_id": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "trial_id",
+    "experiment_id",
+    "experiment_plan_sha256",
+    "experiment_plan_file_sha256",
+    "battle_id",
+    "block_id",
+    "replicate",
+    "order_index",
+    "condition_id",
+    "condition",
+    "mocked",
+    "live",
+    "fixture_fallback_used",
+    "input_binding",
+    "memory",
+    "provider_execution",
+    "pipelines",
+    "judge",
+    "outcomes",
+    "failure",
+    "claims",
+    "created_at"
+  ],
+  "type": "object"
+}

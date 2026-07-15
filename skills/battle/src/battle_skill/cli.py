@@ -1010,6 +1010,134 @@ def adaptive_memory_canary(
         raise typer.Exit(1)
 
 
+@app.command("adaptive-memory-ablation")
+def adaptive_memory_ablation(
+    phase: str = typer.Argument(
+        ..., help="One of: plan, validate, preflight, run, aggregate."
+    ),
+    battle_id: str = typer.Option("battle-004", "--battle-id"),
+    experiment_id: str = typer.Option(
+        "battle-004-memory-ablation-v15", "--experiment-id"
+    ),
+    source_root: Optional[Path] = typer.Option(
+        None, "--source-root", exists=True, readable=True
+    ),
+    memory_source_root: Optional[Path] = typer.Option(
+        None, "--memory-source-root", exists=True, readable=True
+    ),
+    plan: Optional[Path] = typer.Option(
+        None, "--plan", exists=True, file_okay=True, dir_okay=False, readable=True
+    ),
+    out: Optional[Path] = typer.Option(None, "--out"),
+    randomization_seed: str = typer.Option("battle-v15-block-order", "--seed"),
+    memory_base_url: str = typer.Option("http://127.0.0.1:8601", "--memory-base-url"),
+    docker_image: str = typer.Option("python:3.12-slim", "--docker-image"),
+    docker_image_identity: Optional[str] = typer.Option(
+        None, "--docker-image-identity"
+    ),
+    model: str = typer.Option("gpt-5.5", "--model"),
+    scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
+    timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
+    generated_at: Optional[str] = typer.Option(None, "--generated-at"),
+):
+    """Plan, validate, preflight, run, or aggregate the bounded V15 2x2x3 memory ablation."""
+    import json as _json
+
+    from .adaptive_memory_ablation import (
+        ContractError,
+        aggregate_experiment,
+        build_experiment_plan,
+        file_sha256,
+        load_source_bindings,
+        preflight_experiment,
+        resolve_docker_image_identity,
+        run_experiment,
+        validate_experiment_plan,
+        write_experiment_plan,
+    )
+
+    normalized_phase = phase.strip().lower()
+    try:
+        if normalized_phase == "plan":
+            if source_root is None or memory_source_root is None or out is None:
+                raise ContractError(
+                    "plan requires --source-root, --memory-source-root, and --out"
+                )
+            source_binding, memory_sources = load_source_bindings(
+                source_root=source_root,
+                memory_source_root=memory_source_root,
+                battle_id=battle_id,
+            )
+            identity = docker_image_identity or resolve_docker_image_identity(
+                docker_image
+            )
+            experiment = build_experiment_plan(
+                battle_id=battle_id,
+                experiment_id=experiment_id,
+                source_binding=source_binding,
+                memory_sources=memory_sources,
+                randomization_seed=randomization_seed,
+                docker_image=docker_image,
+                docker_image_identity=identity,
+                model=model,
+                scillm_base_url=scillm_base_url,
+                timeout_s=timeout_s,
+                generated_at=generated_at,
+            )
+            result = write_experiment_plan(plan=experiment, out=out)
+        elif normalized_phase == "validate":
+            if plan is None:
+                raise ContractError("validate requires --plan")
+            payload = _json.loads(plan.read_text(encoding="utf-8"))
+            result = validate_experiment_plan(payload)
+        elif normalized_phase == "preflight":
+            if plan is None or source_root is None or out is None:
+                raise ContractError(
+                    "preflight requires --plan, --source-root, and --out"
+                )
+            payload = _json.loads(plan.read_text(encoding="utf-8"))
+            result = preflight_experiment(
+                plan=payload,
+                source_root=source_root,
+                memory_base_url=memory_base_url,
+                plan_file_sha256=file_sha256(plan),
+            )
+            out.mkdir(parents=True, exist_ok=True)
+            (out / "memory-ablation-preflight-receipt.json").write_text(
+                _json.dumps(result, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        elif normalized_phase == "run":
+            if plan is None or source_root is None or out is None:
+                raise ContractError("run requires --plan, --source-root, and --out")
+            result = run_experiment(
+                plan_path=plan,
+                source_root=source_root,
+                out_dir=out,
+                memory_base_url=memory_base_url,
+                scillm_base_url=scillm_base_url,
+            )
+        elif normalized_phase == "aggregate":
+            if plan is None or out is None:
+                raise ContractError("aggregate requires --plan and --out")
+            result = aggregate_experiment(
+                plan_path=plan,
+                experiment_root=out,
+                out_path=out / "memory-ablation-result.json",
+            )
+        else:
+            raise ContractError(
+                f"unsupported phase {phase!r}; expected plan, validate, preflight, run, or aggregate"
+            )
+    except (ContractError, _json.JSONDecodeError) as exc:
+        console.print(f"[red]Battle V15 memory ablation blocked:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+
+    console.print_json(data=result)
+    if normalized_phase in {"run", "aggregate"} and result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command("live-tau-child-dag-canary")
 def live_tau_child_dag_canary(
     battle_id: str = typer.Argument(

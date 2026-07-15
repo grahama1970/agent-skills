@@ -1,0 +1,714 @@
+{
+  "$defs": {
+    "block": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "pattern": "^block-0[1-3]$",
+          "type": "string"
+        },
+        "condition_order": {
+          "items": {
+            "enum": [
+              "R0B0",
+              "R1B0",
+              "R0B1",
+              "R1B1"
+            ]
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "replicate": {
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "trial_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "block_id",
+        "replicate",
+        "condition_order",
+        "trial_ids"
+      ],
+      "type": "object"
+    },
+    "claims": {
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "must_not_claim": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4,
+          "type": "array"
+        }
+      },
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ],
+      "type": "object"
+    },
+    "condition": {
+      "additionalProperties": false,
+      "properties": {
+        "blue_memory": {
+          "type": "boolean"
+        },
+        "red_memory": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "red_memory",
+        "blue_memory"
+      ],
+      "type": "object"
+    },
+    "immutableInputs": {
+      "additionalProperties": false,
+      "properties": {
+        "campaign_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "docker_image": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "docker_image_identity": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "judge_policy_id": {
+          "const": "battle-reviewed-red-blue-pair-v1"
+        },
+        "judge_policy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "memory_sources": {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/memorySource"
+            },
+            "red": {
+              "$ref": "#/$defs/memorySource"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        },
+        "model": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "parent_artifact_sha256": {
+          "$ref": "#/$defs/teamHashes"
+        },
+        "parent_genome_sha256": {
+          "$ref": "#/$defs/teamHashes"
+        },
+        "personas": {
+          "additionalProperties": false,
+          "properties": {
+            "blue": {
+              "$ref": "#/$defs/persona"
+            },
+            "red": {
+              "$ref": "#/$defs/persona"
+            }
+          },
+          "required": [
+            "red",
+            "blue"
+          ],
+          "type": "object"
+        },
+        "prompt_template_sha256": {
+          "$ref": "#/$defs/teamHashes"
+        },
+        "requested_seed": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "requested_temperature": {
+          "$ref": "#/$defs/optionalValue"
+        },
+        "research_input_sha256": {
+          "$ref": "#/$defs/teamHashes"
+        },
+        "research_inputs_are_identical_across_conditions": {
+          "const": true
+        },
+        "scenario_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scillm_route_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "selection_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_campaign_run_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "target_identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "timeout_s": {
+          "minimum": 60,
+          "type": "number"
+        }
+      },
+      "required": [
+        "source_campaign_run_id",
+        "campaign_receipt_sha256",
+        "selection_receipt_sha256",
+        "target_identity_sha256",
+        "scenario_sha256",
+        "research_input_sha256",
+        "parent_genome_sha256",
+        "parent_artifact_sha256",
+        "memory_sources",
+        "personas",
+        "prompt_template_sha256",
+        "research_inputs_are_identical_across_conditions",
+        "docker_image",
+        "docker_image_identity",
+        "model",
+        "scillm_route_sha256",
+        "judge_policy_id",
+        "judge_policy_sha256",
+        "requested_seed",
+        "requested_temperature",
+        "timeout_s"
+      ],
+      "type": "object"
+    },
+    "memorySource": {
+      "additionalProperties": false,
+      "properties": {
+        "memory_content_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "solution_json": {
+          "minLength": 2,
+          "type": "string"
+        },
+        "solution_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_recall_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "memory_content_sha256",
+        "solution_sha256",
+        "solution_json",
+        "source_recall_receipt_sha256"
+      ],
+      "type": "object"
+    },
+    "namespace": {
+      "additionalProperties": false,
+      "properties": {
+        "blue_key": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "collection": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "red_key": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "collection",
+        "red_key",
+        "blue_key"
+      ],
+      "type": "object"
+    },
+    "optionalValue": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "EMITTED",
+            "NOT_EMITTED"
+          ]
+        },
+        "value": {}
+      },
+      "required": [
+        "status",
+        "value"
+      ],
+      "type": "object"
+    },
+    "persona": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "teamHashes": {
+      "additionalProperties": false,
+      "properties": {
+        "blue": {
+          "$ref": "#/$defs/sha256"
+        },
+        "red": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "red",
+        "blue"
+      ],
+      "type": "object"
+    },
+    "trialPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "pattern": "^block-0[1-3]$",
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/$defs/condition"
+        },
+        "condition_id": {
+          "enum": [
+            "R0B0",
+            "R1B0",
+            "R0B1",
+            "R1B1"
+          ]
+        },
+        "memory_namespace": {
+          "$ref": "#/$defs/namespace"
+        },
+        "order_index": {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "output_relpath": {
+          "pattern": "^trials/[A-Za-z0-9._-]+$",
+          "type": "string"
+        },
+        "replicate": {
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "trial_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "trial_input_binding_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "trial_id",
+        "block_id",
+        "replicate",
+        "order_index",
+        "condition_id",
+        "condition",
+        "output_relpath",
+        "memory_namespace",
+        "trial_input_binding_sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "battle.memory_ablation_experiment.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "aggregation_policy": {
+      "additionalProperties": false,
+      "properties": {
+        "benefit_min_positive_contrasts": {
+          "const": 4
+        },
+        "classifications": {
+          "const": [
+            "OBSERVED_BENEFIT",
+            "NO_OBSERVED_EFFECT",
+            "OBSERVED_REGRESSION",
+            "INCONCLUSIVE"
+          ]
+        },
+        "duration_tie_fraction": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "interaction_classifications": {
+          "const": [
+            "OBSERVED_INTERACTION",
+            "NO_OBSERVED_INTERACTION",
+            "INCONCLUSIVE"
+          ]
+        },
+        "interaction_reversal_blocks_required": {
+          "const": 2
+        },
+        "policy_id": {
+          "const": "battle-memory-ablation-team-vector-v1"
+        },
+        "regression_min_negative_contrasts": {
+          "const": 4
+        },
+        "required_contrasts_per_team": {
+          "const": 6
+        },
+        "security_outcomes_precede_efficiency": {
+          "const": true
+        }
+      },
+      "required": [
+        "policy_id",
+        "security_outcomes_precede_efficiency",
+        "duration_tie_fraction",
+        "benefit_min_positive_contrasts",
+        "regression_min_negative_contrasts",
+        "required_contrasts_per_team",
+        "interaction_reversal_blocks_required",
+        "classifications",
+        "interaction_classifications"
+      ],
+      "type": "object"
+    },
+    "battle_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "controls": {
+      "additionalProperties": false,
+      "properties": {
+        "context_target_bytes": {
+          "minimum": 1024,
+          "type": "integer"
+        },
+        "off_service_calls_after_preflight": {
+          "const": 0
+        },
+        "on_use_is_optional": {
+          "const": true
+        },
+        "policy_id": {
+          "const": "battle-memory-ablation-attention-match-v1"
+        },
+        "same_docker_and_judge": {
+          "const": true
+        },
+        "same_model_request_shape": {
+          "const": true
+        },
+        "same_personas": {
+          "const": true
+        },
+        "same_prompt_shape": {
+          "const": true
+        },
+        "same_public_context": {
+          "const": true
+        },
+        "same_research_inputs": {
+          "const": true
+        },
+        "token_match_status": {
+          "const": "NOT_VERIFIABLE"
+        }
+      },
+      "required": [
+        "policy_id",
+        "same_personas",
+        "same_prompt_shape",
+        "same_public_context",
+        "same_research_inputs",
+        "same_model_request_shape",
+        "same_docker_and_judge",
+        "context_target_bytes",
+        "token_match_status",
+        "on_use_is_optional",
+        "off_service_calls_after_preflight"
+      ],
+      "type": "object"
+    },
+    "defect_dispositions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "defect_id": {
+            "pattern": "^D(?:[1-9]|1[0-5])$",
+            "type": "string"
+          },
+          "resolution": {
+            "minLength": 10,
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "CONFIRMED",
+              "CORRECTED",
+              "REJECTED"
+            ]
+          }
+        },
+        "required": [
+          "defect_id",
+          "verdict",
+          "resolution"
+        ],
+        "type": "object"
+      },
+      "maxItems": 15,
+      "minItems": 15,
+      "type": "array"
+    },
+    "design": {
+      "additionalProperties": false,
+      "properties": {
+        "block_count": {
+          "const": 3
+        },
+        "condition_ids": {
+          "const": [
+            "R0B0",
+            "R1B0",
+            "R0B1",
+            "R1B1"
+          ]
+        },
+        "design_type": {
+          "const": "blocked_full_factorial_2x2"
+        },
+        "factor_levels": {
+          "const": [
+            "OFF",
+            "ON"
+          ]
+        },
+        "factors": {
+          "const": [
+            "red_memory",
+            "blue_memory"
+          ]
+        },
+        "total_trials": {
+          "const": 12
+        },
+        "trials_per_block": {
+          "const": 4
+        }
+      },
+      "required": [
+        "design_type",
+        "factors",
+        "factor_levels",
+        "block_count",
+        "trials_per_block",
+        "total_trials",
+        "condition_ids"
+      ],
+      "type": "object"
+    },
+    "experiment_id": {
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "type": "string"
+    },
+    "failure_policy": {
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts_per_trial_blocker": {
+          "const": 2
+        },
+        "max_identical_failures_per_family": {
+          "const": 3
+        },
+        "policy_id": {
+          "const": "battle-memory-ablation-bounded-failure-v1"
+        },
+        "replacement_trials_forbidden": {
+          "const": true
+        },
+        "systemic_failure_action": {
+          "const": "stop_family_mark_remaining_blocked_continue_independent_families"
+        },
+        "valid_but_poor_output_is_not_retryable": {
+          "const": true
+        }
+      },
+      "required": [
+        "policy_id",
+        "max_attempts_per_trial_blocker",
+        "max_identical_failures_per_family",
+        "systemic_failure_action",
+        "valid_but_poor_output_is_not_retryable",
+        "replacement_trials_forbidden"
+      ],
+      "type": "object"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "immutable_inputs": {
+      "$ref": "#/$defs/immutableInputs"
+    },
+    "phase": {
+      "const": "experiment_contract_review"
+    },
+    "provider_matching": {
+      "additionalProperties": false,
+      "properties": {
+        "missing_fields_are_not_emitted": {
+          "const": true
+        },
+        "provider_identity_required": {
+          "const": false
+        },
+        "repeated_calls_are_not_deterministic": {
+          "const": true
+        },
+        "seed_matching": {
+          "const": "NOT_VERIFIABLE"
+        },
+        "temperature_matching": {
+          "const": "NOT_VERIFIABLE"
+        },
+        "visible_request_fields_bound": {
+          "const": true
+        }
+      },
+      "required": [
+        "visible_request_fields_bound",
+        "seed_matching",
+        "temperature_matching",
+        "provider_identity_required",
+        "missing_fields_are_not_emitted",
+        "repeated_calls_are_not_deterministic"
+      ],
+      "type": "object"
+    },
+    "randomization": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "sha256-sort-v1"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/block"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array"
+        },
+        "seed": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "seed",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "research_sources": {
+      "items": {
+        "format": "uri",
+        "type": "string"
+      },
+      "minItems": 5,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "battle.memory_ablation_experiment.v1"
+    },
+    "status": {
+      "const": "CONTRACT_VALIDATED"
+    },
+    "trials": {
+      "items": {
+        "$ref": "#/$defs/trialPlan"
+      },
+      "maxItems": 12,
+      "minItems": 12,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "experiment_id",
+    "battle_id",
+    "generated_at",
+    "phase",
+    "defect_dispositions",
+    "design",
+    "randomization",
+    "immutable_inputs",
+    "controls",
+    "provider_matching",
+    "failure_policy",
+    "aggregation_policy",
+    "trials",
+    "claims",
+    "research_sources"
+  ],
+  "type": "object"
+}

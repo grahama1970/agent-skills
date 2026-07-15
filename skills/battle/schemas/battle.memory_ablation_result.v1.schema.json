@@ -1,0 +1,366 @@
+{
+  "$defs": {
+    "claims": {
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "must_not_claim": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4,
+          "type": "array"
+        }
+      },
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ],
+      "type": "object"
+    },
+    "classification": {
+      "enum": [
+        "OBSERVED_BENEFIT",
+        "NO_OBSERVED_EFFECT",
+        "OBSERVED_REGRESSION",
+        "INCONCLUSIVE"
+      ]
+    },
+    "contrast": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "block_id": {
+          "pattern": "^block-0[1-3]$",
+          "type": "string"
+        },
+        "control_trial_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deciding_component": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "opponent_memory_on": {
+          "type": "boolean"
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sign": {
+          "oneOf": [
+            {
+              "enum": [
+                -1,
+                0,
+                1
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "team": {
+          "enum": [
+            "red",
+            "blue"
+          ]
+        },
+        "treatment_trial_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "team",
+        "block_id",
+        "opponent_memory_on",
+        "control_trial_id",
+        "treatment_trial_id",
+        "available",
+        "sign",
+        "deciding_component",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "contrastSet": {
+      "items": {
+        "$ref": "#/$defs/contrast"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "type": "array"
+    },
+    "interaction": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/interactionClassification"
+        },
+        "opposite_sign_reversal_blocks": {
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unresolved_blocks": {
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "classification",
+        "opposite_sign_reversal_blocks",
+        "unresolved_blocks"
+      ],
+      "type": "object"
+    },
+    "interactionClassification": {
+      "enum": [
+        "OBSERVED_INTERACTION",
+        "NO_OBSERVED_INTERACTION",
+        "INCONCLUSIVE"
+      ]
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "trialRef": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "pattern": "^block-0[1-3]$",
+          "type": "string"
+        },
+        "condition_id": {
+          "enum": [
+            "R0B0",
+            "R1B0",
+            "R0B1",
+            "R1B1"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "BLOCKED"
+          ]
+        },
+        "trial_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "trial_id",
+        "condition_id",
+        "block_id",
+        "status",
+        "sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "battle.memory_ablation_result.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "blocked_trials": {
+            "maxItems": 0
+          },
+          "live_proof": {
+            "properties": {
+              "all_trials_crossed_tau_docker_judge": {
+                "const": true
+              },
+              "completed_live_trial_count": {
+                "const": 12
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "aggregation_policy_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "battle_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "blocked_trials": {
+      "items": {
+        "$ref": "#/$defs/trialRef"
+      },
+      "type": "array"
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "classifications": {
+      "additionalProperties": false,
+      "properties": {
+        "blue": {
+          "$ref": "#/$defs/classification"
+        },
+        "red": {
+          "$ref": "#/$defs/classification"
+        }
+      },
+      "required": [
+        "red",
+        "blue"
+      ],
+      "type": "object"
+    },
+    "contrasts": {
+      "additionalProperties": false,
+      "properties": {
+        "blue": {
+          "$ref": "#/$defs/contrastSet"
+        },
+        "red": {
+          "$ref": "#/$defs/contrastSet"
+        }
+      },
+      "required": [
+        "red",
+        "blue"
+      ],
+      "type": "object"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "experiment_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "experiment_plan_canonical_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "experiment_plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "interaction": {
+      "additionalProperties": false,
+      "properties": {
+        "blue_memory_by_red_memory": {
+          "$ref": "#/$defs/interaction"
+        },
+        "red_memory_by_blue_memory": {
+          "$ref": "#/$defs/interaction"
+        }
+      },
+      "required": [
+        "red_memory_by_blue_memory",
+        "blue_memory_by_red_memory"
+      ],
+      "type": "object"
+    },
+    "live_proof": {
+      "additionalProperties": false,
+      "properties": {
+        "all_trials_crossed_tau_docker_judge": {
+          "type": "boolean"
+        },
+        "completed_live_trial_count": {
+          "maximum": 12,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "required_trial_count": {
+          "const": 12
+        }
+      },
+      "required": [
+        "required_trial_count",
+        "completed_live_trial_count",
+        "all_trials_crossed_tau_docker_judge"
+      ],
+      "type": "object"
+    },
+    "research_sources": {
+      "items": {
+        "format": "uri",
+        "type": "string"
+      },
+      "minItems": 5,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "battle.memory_ablation_result.v1"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
+    "trial_receipts": {
+      "items": {
+        "$ref": "#/$defs/trialRef"
+      },
+      "maxItems": 12,
+      "minItems": 12,
+      "type": "array"
+    },
+    "trial_set_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "experiment_id",
+    "battle_id",
+    "experiment_plan_sha256",
+    "aggregation_policy_sha256",
+    "trial_set_sha256",
+    "experiment_plan_canonical_sha256",
+    "trial_receipts",
+    "blocked_trials",
+    "contrasts",
+    "classifications",
+    "interaction",
+    "live_proof",
+    "claims",
+    "research_sources",
+    "created_at"
+  ],
+  "type": "object"
+}
