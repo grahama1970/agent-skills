@@ -22,6 +22,10 @@ FRAME_NAME = re.compile(
     r"^(sb_\d{3})_(start|end)_frame\.(png|jpe?g|webp)$",
     re.IGNORECASE,
 )
+PHASE_01_IDENTITY_ARTIFACT_IDS = {
+    "human_idea.json": "human_idea",
+    "idea_lineage_manifest.json": "idea_lineage_manifest",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -59,6 +63,10 @@ def optional_artifact_id(phase_id: str | None, relative_path: str) -> str:
 
 
 def canonical_artifact_id(path: Path, phase_id: str | None, relative_path: str) -> str:
+    if phase_id == "01":
+        stable_id = PHASE_01_IDENTITY_ARTIFACT_IDS.get(path.name.lower())
+        if stable_id:
+            return stable_id
     match = FRAME_NAME.fullmatch(path.name)
     if match:
         panel_id = match.group(1).lower()
