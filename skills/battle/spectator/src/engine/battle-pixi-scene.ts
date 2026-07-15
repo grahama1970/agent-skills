@@ -254,8 +254,9 @@ function clampRunnerX(
 	const anchorX = Math.max(0, Math.min(1, runnerSpriteAnchor(variantId).x));
 	const leftExtent = framePx * scale * anchorX;
 	const rightExtent = framePx * scale * (1 - anchorX);
-	const minX = leftExtent;
-	const maxX = contentWidth - rightExtent;
+	const edgePaddingPx = 12;
+	const minX = leftExtent + edgePaddingPx;
+	const maxX = contentWidth - rightExtent - edgePaddingPx;
 	if (maxX < minX) return contentWidth / 2;
 	return Math.max(minX, Math.min(maxX, x));
 }
