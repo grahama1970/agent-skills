@@ -9,7 +9,8 @@
     "dev:all": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "build": "vite build",
     "start": "node server/prod.js",
-    "test": "tsx scripts/watchAnnotationSession.smoke.ts && tsx scripts/watchYoloSequenceProjection.smoke.ts",
+    "test": "tsx scripts/watchAnnotationSession.smoke.ts && tsx scripts/watchYoloSequenceProjection.smoke.ts && tsx scripts/watchYoloLabelReceiptReplay.smoke.ts",
+    "test:yolo-label-receipt": "tsx scripts/watchYoloLabelReceiptReplay.smoke.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
