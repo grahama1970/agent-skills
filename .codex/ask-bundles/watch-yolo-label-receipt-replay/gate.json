@@ -1,0 +1,26 @@
+{
+  "goal_id": "watch-yolo-memory-identity",
+  "goal_lock": "Watch uses YOLOAnalytics boxes as source regions, persists accepted/rejected identity labels, prevents identity leakage across stops, and proves the browser/backend flow.",
+  "current_milestone": "deterministic yolo-label receipt replay test covers accept, unassign stop, reload readback, and reassignment",
+  "top_blocker": "no test exercises the /api/projects/watch/yolo-labels receipt persistence and reload semantics",
+  "blocker_evidence": {
+    "command": "npm --prefix skills/watch/ui run test:yolo-label-receipt",
+    "cwd": "/home/graham/workspace/experiments/agent-skills"
+  },
+  "required_live_proof": "test:yolo-label-receipt passes and the normal Watch UI test/typecheck still pass",
+  "allowed_paths": [
+    "skills/watch/ui/package.json",
+    "skills/watch/ui/scripts/**",
+    "skills/watch/ui/server/**",
+    "skills/watch/ui/components/WatchReportView.tsx"
+  ],
+  "forbidden_scope": [
+    "skills/persona-dream/**",
+    "skills/battle/**",
+    "skills/ux-lab/**",
+    "agents/**",
+    "PROJECT_KNOWLEDGE.md",
+    "skills/watch/docs/**"
+  ],
+  "attempt_budget": 2
+}

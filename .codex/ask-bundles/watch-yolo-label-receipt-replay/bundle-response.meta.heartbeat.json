@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-15T17:24:55Z",
+  "submitted_at": "2026-07-15T17:19:00Z",
+  "last_browser_observation_at": "2026-07-15T17:24:55Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": ".codex/ask-bundles/watch-yolo-label-receipt-replay/bundle-response.raw.md",
+  "next_expected_artifact": ".codex/ask-bundles/watch-yolo-label-receipt-replay/bundle-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260715T171858Z:fa691598>>>",
+  "prepared_prompt_is_transport_proof": false
+}
