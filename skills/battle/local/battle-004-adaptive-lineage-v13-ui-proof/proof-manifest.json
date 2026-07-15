@@ -3,9 +3,9 @@
   "status": "PASS",
   "mocked": false,
   "live": true,
-  "source_commit": "3fee73d26ff842e38d32d808ad6c5310abe99de8",
-  "host": "http://127.0.0.1:3004",
-  "route": "http://127.0.0.1:3004/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "source_commit": "6d9e6a152d0e0068a2d7a58c177df1c4ab7531a3",
+  "host": "http://127.0.0.1:3002",
+  "route": "http://127.0.0.1:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
   "retained_campaign": {
     "campaign_receipt_sha256": "6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3",
     "events_jsonl_sha256": "2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902"
@@ -45,58 +45,58 @@
   "proof_artifacts": [
     {
       "path": "proof-summary.json",
-      "sha256": "a1d8a7f53fe4116049f496e918483113bca1433ed18c6982128256983fe9b55c",
-      "bytes": 7620
+      "sha256": "5407338a29ef7b3b682fe6fdfcc08f44b40f5f3b7aa11fcc9083846c50c644eb",
+      "bytes": 7618
     },
     {
       "path": "browser-console.json",
-      "sha256": "d70965521dca34c20f11f681f3730bed6b636032469cbf64e644f0ee672ac949",
+      "sha256": "7587405f9961a3f17fe293962aae6559e12a2abc06c089b97a1eab48812d4647",
       "bytes": 1206
     },
     {
       "path": "network-authority-requests.json",
-      "sha256": "c8d3ba0beeb2cfbf5af600d2a2b10fb4fc3b6801b8c0534659c5ed2b4712c721",
+      "sha256": "8bce21770a396c803c0f1527e95f0b852858e5b3a49c1c410b31b2f1e5fced63",
       "bytes": 1101
     },
     {
       "path": "screenshots/01-pre-spawn-children-hidden.png",
-      "sha256": "84b8e71889a4648090d6d881f4867e56c600fcf6feccdbb148a15ac4613735cb",
-      "bytes": 304833
+      "sha256": "20e1aa6a4b8a58fb69737cf640fa23de3937ea8f45b4489913fe5c4fd09ba962",
+      "bytes": 298381
     },
     {
       "path": "screenshots/02-spawn-authorized-pending.png",
-      "sha256": "14fb3719a1dd16a6ffdd470d499160d841d17bdf4b71458278ddcdb24ed4dd67",
-      "bytes": 317936
+      "sha256": "474e9e7a3564e80e7157c1e0a474da64997ccc6b5ef2cdc9a23dbb7853f003f6",
+      "bytes": 308403
     },
     {
       "path": "screenshots/03-ladder-descent-hop.png",
-      "sha256": "8e1df01595428f71f20fd05685b18da6ec4ed55ee69c38db856a99b040b6d37b",
-      "bytes": 324952
+      "sha256": "541c483a001d786ddec1de0fc733e3a257c3d53e4530919db7cbcf491eb96998",
+      "bytes": 323833
     },
     {
       "path": "screenshots/04-children-active-research.png",
-      "sha256": "517447255b2de5a0e426eeb83a54ffdb997a1da19c1bcf82064e431528ee1b9b",
-      "bytes": 336142
+      "sha256": "28aeef35a6907ea1f4b95b45d59f266b91ad6a35022ce7fbd9c6be27581d8028",
+      "bytes": 329480
     },
     {
       "path": "screenshots/05-mutation-evidence.png",
-      "sha256": "3e1f21ab6829f1a5ae962749547daed912dd47948d7a9414c3ec96e90dd2ec21",
-      "bytes": 320294
+      "sha256": "dd58b204d343d3c9128dc595ed6e86fed229a7c97f85b5750f58b42fe19c2228",
+      "bytes": 322167
     },
     {
       "path": "screenshots/06-judge-selection-memory-boundary.png",
-      "sha256": "3448fc482392ca2265bd9b92298fec2265fbb5d75845eb7799210058c47a0772",
-      "bytes": 320294
+      "sha256": "4f79c3d08d963a05c471f8162d0a9c1fefe8f676542425b6849390229d27d386",
+      "bytes": 322196
     },
     {
       "path": "screenshots/07-four-lane-mobile.png",
-      "sha256": "1becf3a870a3f42e2138cfc06e1dd624228b4784f541e4007ad8ad29da6d64f2",
-      "bytes": 127701
+      "sha256": "fe04eede6fa16a64613ab421692b0e2ef2ae99dfb71fbdac3b22d59bf367ad74",
+      "bytes": 130873
     },
     {
       "path": "screenshots/08-four-lane-mobile-race.png",
-      "sha256": "2eeaace41348375e2ffd796a441091b3a7cd882c66d941f45260861bcfac4aed",
-      "bytes": 50522
+      "sha256": "18dbba88ac0673404c80d531e8f2a5919f991618900ba46117331f1cfc6a521d",
+      "bytes": 41848
     }
   ],
   "claims": {

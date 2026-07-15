@@ -3,9 +3,9 @@
   "pass": true,
   "mocked": false,
   "live": true,
-  "source_commit": "3fee73d26ff842e38d32d808ad6c5310abe99de8",
-  "host": "http://127.0.0.1:3004",
-  "route": "http://127.0.0.1:3004/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "source_commit": "6d9e6a152d0e0068a2d7a58c177df1c4ab7531a3",
+  "host": "http://127.0.0.1:3002",
+  "route": "http://127.0.0.1:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
   "fixture": {
     "event_count": 24,
     "lane_count": 4,
@@ -166,7 +166,7 @@
       "pass": true,
       "detail": {
         "width": 1030,
-        "height": 356,
+        "height": 282,
         "mountId": "6"
       }
     },
@@ -182,7 +182,7 @@
         ],
         "canvas": {
           "width": 1030,
-          "height": 356,
+          "height": 282,
           "mountId": "7"
         },
         "pageWidth": {
@@ -227,32 +227,32 @@
           "x": 253,
           "y": 40,
           "width": 138,
-          "height": 84,
-          "spritePixels": 1911
+          "height": 65,
+          "spritePixels": 1218
         },
         {
           "laneId": "red-g2",
           "x": 253,
-          "y": 132,
+          "y": 113,
           "width": 138,
-          "height": 78,
-          "spritePixels": 1453
+          "height": 60,
+          "spritePixels": 920
         },
         {
           "laneId": "blue-g1",
           "x": 253,
-          "y": 218,
+          "y": 181,
           "width": 138,
-          "height": 84,
-          "spritePixels": 1873
+          "height": 65,
+          "spritePixels": 1182
         },
         {
           "laneId": "blue-g2",
           "x": 253,
-          "y": 310,
+          "y": 254,
           "width": 138,
-          "height": 78,
-          "spritePixels": 1441
+          "height": 60,
+          "spritePixels": 918
         }
       ]
     },
@@ -261,12 +261,12 @@
       "pass": true,
       "detail": [
         {
-          "url": "http://127.0.0.1:3004/battle-sprites/pixijs/plague_nurgling.json?v=4",
+          "url": "http://127.0.0.1:3002/battle-sprites/pixijs/plague_nurgling.json?v=4",
           "resource_type": "fetch",
           "method": "GET"
         },
         {
-          "url": "http://127.0.0.1:3004/battle-sprites/pixijs/plague_nurgling.png?v=4",
+          "url": "http://127.0.0.1:3002/battle-sprites/pixijs/plague_nurgling.png?v=4",
           "resource_type": "fetch",
           "method": "GET"
         }
