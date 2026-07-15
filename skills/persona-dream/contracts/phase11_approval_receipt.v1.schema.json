@@ -15,20 +15,26 @@
     "provider_source_snapshot_sha256",
     "pricing_snapshot_sha256",
     "approved_by",
+    "approver",
     "approved_at",
     "expires_at",
+    "decision_source",
+    "purpose",
+    "authorization_scope",
+    "currency",
+    "maximum_spend_usd",
+    "revoked",
+    "revocation_state",
+    "authorization_packet_path",
+    "authorization_packet_sha256",
     "actual_provider_call_attempts",
     "media_input_contract_sha256",
     "approval_binding_kind",
     "approval_binding_sha256"
   ],
   "properties": {
-    "schema": {
-      "const": "persona_dream.phase11_approval_receipt.v1"
-    },
-    "status": {
-      "const": "APPROVED"
-    },
+    "schema": {"const": "persona_dream.phase11_approval_receipt.v1"},
+    "status": {"const": "APPROVED"},
     "approval_type": {
       "enum": [
         "publication_authorization",
@@ -38,70 +44,49 @@
         "paid_call_authorization"
       ]
     },
-    "run_id": {
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "provider_id": {"type": "string", "minLength": 1},
+    "endpoint": {"type": "string", "minLength": 1},
+    "request_body_sha256": {"$ref": "#/$defs/sha256"},
+    "media_binding_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "provider_source_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "pricing_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "approved_by": {"type": "string", "minLength": 1},
+    "approver": {
+      "type": "object",
+      "required": ["id", "display_name", "authority_basis"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "display_name": {"type": "string", "minLength": 1},
+        "authority_basis": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "approved_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "decision_source": {"const": "explicit_human_authorization_packet"},
+    "purpose": {"const": "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY"},
+    "authorization_scope": {"const": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT"},
+    "currency": {"const": "USD"},
+    "maximum_spend_usd": {"type": "number", "exclusiveMinimum": 0},
+    "revoked": {"const": false},
+    "revocation_state": {"const": "NOT_REVOKED"},
+    "authorization_packet_path": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}
     },
-    "revision_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "activation_transaction_id": {
-      "type": "string",
-      "pattern": "^activation-[a-f0-9]{32}$"
-    },
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "endpoint": {
-      "type": "string",
-      "minLength": 1
-    },
-    "request_body_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "media_binding_manifest_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "provider_source_snapshot_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "pricing_snapshot_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
-    "approved_by": {
-      "type": "string",
-      "minLength": 1
-    },
-    "approved_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "actual_provider_call_attempts": {
-      "const": 0
-    },
-    "media_input_contract_sha256": {
-      "$ref": "#/$defs/sha256"
-    },
+    "authorization_packet_sha256": {"$ref": "#/$defs/sha256"},
+    "actual_provider_call_attempts": {"const": 0},
+    "media_input_contract_sha256": {"$ref": "#/$defs/sha256"},
     "approval_binding_kind": {
-      "enum": [
-        "media_input_contract",
-        "phase11_request_bundle"
-      ]
+      "enum": ["media_input_contract", "phase11_request_bundle"]
     },
-    "approval_binding_sha256": {
-      "$ref": "#/$defs/sha256"
-    }
+    "approval_binding_sha256": {"$ref": "#/$defs/sha256"}
   },
   "$defs": {
-    "sha256": {
-      "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
-    }
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
   }
 }

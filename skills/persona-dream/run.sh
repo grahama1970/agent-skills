@@ -81,6 +81,9 @@ Commands:
   reconcile-phase11-upstream-validation Replace the historical 12/15 false-green summary with an explicit deferred boundary
   compile-phase11-canonical-live-request  Compile the ACTIVE_CONSISTENT zero-call Phase 11 request bundle
   validate-phase11-canonical-live-request Independently validate and optionally persist the Phase 11 boundary
+  write-phase11-approval-receipts  Write five receipts only from an explicit human authorization packet
+  phase11-fal-canary-preflight  Prove the zero-call submit/resume/download adapter preflight
+  phase11-fal-canary-execute  Execute the exactly-once canary only after all five approvals validate
   tailscale-funnel-publication-canary  Plan or run authorized Funnel publish/probe/teardown with zero provider calls
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
@@ -401,6 +404,15 @@ case "$COMMAND" in
     ;;
   validate-phase11-canonical-live-request)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_phase11_canonical_live_request.py" "$@"
+    ;;
+  write-phase11-approval-receipts)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_approval_receipts.py" "$@"
+    ;;
+  phase11-fal-canary-preflight)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/phase11_fal_canary_adapter.py" --preflight "$@"
+    ;;
+  phase11-fal-canary-execute)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/phase11_fal_canary_adapter.py" --execute "$@"
     ;;
   write-cognitive-loop-dry-run)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_cognitive_loop_dry_run.py" "$@"

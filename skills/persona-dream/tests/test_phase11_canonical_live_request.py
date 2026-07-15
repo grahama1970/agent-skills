@@ -21,6 +21,7 @@ import compile_phase11_canonical_live_request as compiler  # noqa: E402
 import validate_phase11_canonical_live_request as validator  # noqa: E402
 from phase11_fixture_helpers import (  # noqa: E402
     fake_memory_server,
+    install_adapter_preflight,
     make_compilation_inputs,
     sha256_bytes,
     write_json,
@@ -34,7 +35,12 @@ def local_ref(run_root: Path, path: Path) -> dict[str, str]:
     }
 
 
-def install_transition_evidence(inputs: common.CompilationInputs, request_body: dict[str, Any]) -> common.CompilationInputs:
+def install_transition_evidence(
+    inputs: common.CompilationInputs,
+    request_body: dict[str, Any],
+    *,
+    install_preflight: bool = True,
+) -> common.CompilationInputs:
     slots: dict[str, dict[str, Any]] = {}
 
     def add(pointer: str, url: str) -> None:
@@ -138,7 +144,8 @@ def install_transition_evidence(inputs: common.CompilationInputs, request_body: 
     }
     assert common.validate_schema(transition, "provider_media_transition_manifest.v1.schema.json") == []
     write_json(inputs.transition_manifest_path, transition)
-    return replace(inputs, transition_manifest=transition)
+    resolved = replace(inputs, transition_manifest=transition)
+    return install_adapter_preflight(resolved) if install_preflight else resolved
 
 
 def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Path):
@@ -292,7 +299,7 @@ def test_upstream_12_of_15_false_green_is_an_explicit_technical_blocker(tmp_path
         {"status": "PASS_PANEL_REVIEWED", "passed_step_count": 12, "step_count": 15, "first_blocker": None},
     )
     request_body, _blockers, _ = common.compile_request_body(inputs)
-    inputs = install_transition_evidence(inputs, request_body)
+    inputs = install_transition_evidence(inputs, request_body, install_preflight=False)
     _media, _approvals, request = common.compile_bundle(inputs)
     assert request["status"] == "BLOCKED_PROVIDER_GATE"
     assert "BLOCKED_UPSTREAM_VALIDATION_INCOMPLETE:12/15" in request["technical_blockers"]

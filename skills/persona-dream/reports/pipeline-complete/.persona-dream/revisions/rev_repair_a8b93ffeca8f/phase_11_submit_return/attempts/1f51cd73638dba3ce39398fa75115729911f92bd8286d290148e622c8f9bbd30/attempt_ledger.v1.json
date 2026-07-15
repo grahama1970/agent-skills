@@ -1,0 +1,24 @@
+{
+  "activation_transaction_id": "activation-d8b7a1b0713d566ff14b49ada1824c9e",
+  "actual_provider_call_attempts": 0,
+  "ambiguous_submit": false,
+  "created_at": "2026-07-15T15:48:40+00:00",
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "history": [
+    {
+      "actual_provider_call_attempts": 0,
+      "at": "2026-07-15T15:48:40+00:00",
+      "event": "PREFLIGHT_READY"
+    }
+  ],
+  "poll_count": 0,
+  "request_body_sha256": "sha256:1f51cd73638dba3ce39398fa75115729911f92bd8286d290148e622c8f9bbd30",
+  "request_id": null,
+  "request_key": "1f51cd73638dba3ce39398fa75115729911f92bd8286d290148e622c8f9bbd30",
+  "revision_id": "rev_repair_a8b93ffeca8f",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_attempt_ledger.v1",
+  "state": "PREFLIGHT_READY",
+  "submit_intent_count": 0,
+  "updated_at": "2026-07-15T15:48:40+00:00"
+}

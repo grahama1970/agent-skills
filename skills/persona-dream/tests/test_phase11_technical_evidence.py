@@ -16,7 +16,11 @@ import capture_phase11_provider_source_snapshot as provider_capture  # noqa: E40
 import capture_phase11_public_media_evidence as media_capture  # noqa: E402
 import phase11_canonical_common as common  # noqa: E402
 import reconcile_phase11_upstream_validation as upstream  # noqa: E402
-from phase11_fixture_helpers import make_compilation_inputs, write_json  # noqa: E402
+from phase11_fixture_helpers import (  # noqa: E402
+    install_adapter_preflight,
+    make_compilation_inputs,
+    write_json,
+)
 
 
 def official_schema_body() -> bytes:
@@ -155,6 +159,7 @@ def test_technical_evidence_leaves_only_five_hash_bound_human_approvals(
         allow_test_host=True,
     )
     inputs = replace(inputs, transition_manifest=transition)
+    inputs = install_adapter_preflight(inputs)
     media, approvals, request = common.compile_bundle(inputs)
     assert media["blockers"] == []
     assert request["technical_blockers"] == []

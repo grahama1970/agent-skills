@@ -436,3 +436,75 @@ def make_compilation_inputs(tmp_path: Path):
         validation_path=validation_path.resolve(),
         current=datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc),
     ), request_input, urls
+
+
+
+
+class _FixtureFalSyncClient:
+    def submit(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not submit")
+
+    def get_handle(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not get a handle")
+
+    def status(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not poll")
+
+    def result(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not fetch a result")
+
+
+class _FixtureFalRequestHandle:
+    def status(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not poll")
+
+    def get(self, *_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("fixture preflight must not fetch a result")
+
+
+class _FixtureFalModule:
+    __version__ = "fixture"
+    SyncClient = _FixtureFalSyncClient
+    SyncRequestHandle = _FixtureFalRequestHandle
+
+
+class _FixtureFalImplementation:
+    MAX_ATTEMPTS = 10
+
+
+def fixture_fal_importer(name: str) -> Any:
+    if name == "fal_client":
+        return _FixtureFalModule
+    if name == "fal_client.client":
+        return _FixtureFalImplementation
+    raise ImportError(name)
+
+
+def install_adapter_preflight(inputs: Any) -> Any:
+    import sys
+
+    skill_root = Path(__file__).resolve().parents[1]
+    scripts = skill_root / "scripts"
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    import phase11_canonical_common as common
+    import phase11_execution_common as execution
+
+    bootstrap = common.compile_bundle(inputs)
+    common.write_compiled_bundle(
+        inputs.context.revision_root / common.DEFAULT_OUTPUT_RELATIVE,
+        *bootstrap,
+    )
+    receipt = execution.run_adapter_preflight(
+        inputs,
+        current=datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc),
+        poll_interval_seconds=5,
+        max_polls=180,
+        adapter_script_path=skill_root / "scripts" / "phase11_fal_canary_adapter.py",
+        environ={"FAL_API_KEY": "fixture-secret-never-persisted"},
+        importer=fixture_fal_importer,
+        ffprobe_resolver=lambda _name: "/usr/bin/ffprobe",
+    )
+    assert receipt["status"] == "PASS_PHASE11_ADAPTER_PREFLIGHT", receipt
+    assert receipt["actual_provider_call_attempts"] == 0
+    return inputs

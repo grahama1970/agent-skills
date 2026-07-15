@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_adapter_preflight_receipt.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "revision_id",
+    "activation_transaction_id",
+    "endpoint",
+    "request_body_sha256",
+    "media_input_contract_sha256",
+    "provider_source_snapshot_sha256",
+    "pricing_snapshot_sha256",
+    "approval_binding_sha256",
+    "adapter_script_sha256",
+    "credential",
+    "fal_client",
+    "ffprobe",
+    "poll_policy",
+    "attempt_ledger",
+    "download_directory",
+    "approval_validation",
+    "idempotency",
+    "technical_blockers",
+    "created_at",
+    "expires_at",
+    "mocked",
+    "live",
+    "provider_live",
+    "paid_call_authorized",
+    "submitted",
+    "provider_ready",
+    "live_submit_ready",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_adapter_preflight_receipt.v1"},
+    "status": {"enum": ["PASS_PHASE11_ADAPTER_PREFLIGHT", "BLOCKED_PHASE11_ADAPTER_PREFLIGHT"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "endpoint": {"type": "string", "minLength": 1},
+    "request_body_sha256": {"$ref": "#/$defs/sha256"},
+    "media_input_contract_sha256": {"$ref": "#/$defs/sha256"},
+    "provider_source_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "pricing_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "approval_binding_sha256": {"$ref": "#/$defs/sha256"},
+    "adapter_script_sha256": {"$ref": "#/$defs/sha256"},
+    "credential": {
+      "type": "object",
+      "required": ["present", "source_variable", "runtime_variable", "secret_value_persisted", "secret_hash_persisted"],
+      "properties": {
+        "present": {"type": "boolean"},
+        "source_variable": {"type": ["string", "null"]},
+        "runtime_variable": {"const": "FAL_KEY"},
+        "secret_value_persisted": {"const": false},
+        "secret_hash_persisted": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "fal_client": {
+      "type": "object",
+      "required": ["imported", "version", "api_surface", "submit_retry_control"],
+      "properties": {
+        "imported": {"type": "boolean"},
+        "version": {"type": ["string", "null"]},
+        "api_surface": {"type": "object", "additionalProperties": {"type": "boolean"}},
+        "submit_retry_control": {"const": "fal_client.client.MAX_ATTEMPTS=1"}
+      },
+      "additionalProperties": false
+    },
+    "ffprobe": {
+      "type": "object",
+      "required": ["available", "path"],
+      "properties": {
+        "available": {"type": "boolean"},
+        "path": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "poll_policy": {
+      "type": "object",
+      "required": ["interval_seconds", "max_polls", "maximum_elapsed_seconds"],
+      "properties": {
+        "interval_seconds": {"type": "number", "minimum": 0.5, "maximum": 60},
+        "max_polls": {"type": "integer", "minimum": 1, "maximum": 360},
+        "maximum_elapsed_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 1800}
+      },
+      "additionalProperties": false
+    },
+    "attempt_ledger": {
+      "type": "object",
+      "required": ["relative_path", "sha256", "state", "request_key", "submit_intent_count", "actual_provider_call_attempts"],
+      "properties": {
+        "relative_path": {"$ref": "#/$defs/portable_path"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "state": {"const": "PREFLIGHT_READY"},
+        "request_key": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "submit_intent_count": {"const": 0},
+        "actual_provider_call_attempts": {"const": 0}
+      },
+      "additionalProperties": false
+    },
+    "download_directory": {
+      "type": "object",
+      "required": ["relative_path", "writable"],
+      "properties": {
+        "relative_path": {"$ref": "#/$defs/portable_path"},
+        "writable": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "approval_validation": {
+      "type": "object",
+      "required": ["required_types", "missing_types", "receipts", "invalid_blockers"],
+      "properties": {
+        "required_types": {"$ref": "#/$defs/approval_types"},
+        "missing_types": {"type": "array", "items": {"type": "string"}},
+        "receipts": {"type": "object"},
+        "invalid_blockers": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "idempotency": {
+      "type": "object",
+      "required": [
+        "fence_written_before_submit",
+        "existing_task_resumes_without_submit",
+        "submit_intent_without_task_id_fails_closed",
+        "ambiguous_submit_requires_human_reconciliation",
+        "automatic_resubmit_allowed"
+      ],
+      "properties": {
+        "fence_written_before_submit": {"const": true},
+        "existing_task_resumes_without_submit": {"const": true},
+        "submit_intent_without_task_id_fails_closed": {"const": true},
+        "ambiguous_submit_requires_human_reconciliation": {"const": true},
+        "automatic_resubmit_allowed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "technical_blockers": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "mocked": {"type": "boolean"},
+    "live": {"type": "boolean"},
+    "provider_live": {"const": false},
+    "paid_call_authorized": {"const": false},
+    "submitted": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "portable_path": {
+      "type": "string",
+      "minLength": 1,
+      "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}
+    },
+    "approval_types": {
+      "const": [
+        "publication_authorization",
+        "visual_media_acceptance",
+        "exact_request_acceptance",
+        "cost_acceptance",
+        "paid_call_authorization"
+      ]
+    }
+  }
+}

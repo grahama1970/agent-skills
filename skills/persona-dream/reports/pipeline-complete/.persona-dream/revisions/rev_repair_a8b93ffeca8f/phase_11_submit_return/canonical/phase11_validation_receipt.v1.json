@@ -22,7 +22,7 @@
       "--revision-id",
       "rev_repair_a8b93ffeca8f",
       "--now",
-      "2026-07-15T14:57:58Z",
+      "2026-07-15T15:48:40Z",
       "--persist-memory",
       "--memory-url",
       "http://127.0.0.1:8601",
@@ -51,7 +51,7 @@
     },
     "live_request": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical/phase11_live_request.v1.json",
-      "sha256": "sha256:04688324534a378f154bee6a82230114e93b6cc28ad4decae22fa76a81ea94ec"
+      "sha256": "sha256:a991f38637dbd97c397bbd452b7dd651e6ef4a050e8ab228f0af0ca7791b709f"
     },
     "media_binding_manifest": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json",
@@ -100,7 +100,7 @@
       "exact_list": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:60e407063bf0ac8ca6f71f60601bc0b74faf37d6eb5f1a079f33dd314e6643ea",
-        "response_sha256": "sha256:c179a6a855e41a768727d3e54eadc8679e3e1140560b384afc385cab5e0b27d9",
+        "response_sha256": "sha256:3ca8345b8460356496309a0e3e3acd875c310d48032e0d36a64418329c6562ba",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -111,7 +111,7 @@
       "recall": {
         "endpoint": "/recall",
         "request_payload_sha256": "sha256:126f9d96b3e053522b2a888692a85e85a3525617e932fd9005e5804cbfd17647",
-        "response_sha256": "sha256:cc5b37090cfe6afdc66a1ab37048bf3ff41ce7ff54925057f1b3013592c5ceee",
+        "response_sha256": "sha256:a969d91085ac17811ee1300ab8880f4a030cfcd1bfb5e76e8ee388fef5648aa6",
         "returned_counts": {
           "errors": []
         },
@@ -119,15 +119,15 @@
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:c9534f64aab4c24f8508c259cc82459d0b47f58d8bb9a43d0a61ebe8a9246230",
-        "response_sha256": "sha256:f48cb65f4572c247cb939ad843148c37b5a6be3ec6046194b8df476ae73c21e6",
+        "request_payload_sha256": "sha256:dbc4b81e7f7545348748a4b5939f03dd03aa1c9a4d3f8952f38056ed608274fe",
+        "response_sha256": "sha256:df21e65cb926a80c7b8a69f32b11e39a1ab83cc2d1fa6a44980c655ee9475cf4",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T150215052138Z_13_137247147951808.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T154926270417Z_13_137246952916672.jsonl"
         },
         "status_code": 200
       }
@@ -147,7 +147,7 @@
   "provider_live": false,
   "provider_ready": false,
   "request_body_sha256": "sha256:1f51cd73638dba3ce39398fa75115729911f92bd8286d290148e622c8f9bbd30",
-  "request_output_file_sha256": "sha256:04688324534a378f154bee6a82230114e93b6cc28ad4decae22fa76a81ea94ec",
+  "request_output_file_sha256": "sha256:a991f38637dbd97c397bbd452b7dd651e6ef4a050e8ab228f0af0ca7791b709f",
   "revision_id": "rev_repair_a8b93ffeca8f",
   "run_id": "pipeline-complete",
   "runtime_release_id": "agent-skills@62c255c9b8d380079ce37c39cab3ab9adada30e3",
@@ -156,6 +156,6 @@
   "source_revision_id": "rev_0001",
   "submitted": false,
   "technical_blockers": [],
-  "validated_at": "2026-07-15T14:57:58+00:00",
+  "validated_at": "2026-07-15T15:48:40+00:00",
   "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
 }

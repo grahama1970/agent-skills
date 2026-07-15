@@ -12,7 +12,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Mapping, Sequence
 from urllib.parse import unquote, urlparse
@@ -56,6 +56,9 @@ DEFAULT_TRANSITION_RELATIVE = Path("phase_11_submit_return") / "preflight" / "pr
 DEFAULT_APPROVAL_ROOT_RELATIVE = Path("phase_11_submit_return") / "preflight" / "approvals"
 DEFAULT_PHASE10_RELATIVE = Path("phase_10_provider_contract") / "final_provider_payload_by_panel.json"
 DEFAULT_MEDIA_LOCK_RELATIVE = Path("phase_08_media_lock") / "storyboard_media_lock_manifest.json"
+DEFAULT_ADAPTER_PREFLIGHT_RELATIVE = Path("phase_11_submit_return") / "preflight" / "phase11_adapter_preflight_receipt.v1.json"
+AUTHORIZATION_PURPOSE = "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY"
+AUTHORIZATION_SCOPE = "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT"
 UPSTREAM_MIGRATION_RELATIVE = Path("phase_11_submit_return") / "preflight" / "upstream_validation_migration_receipt.json"
 UPSTREAM_DEFERRED_STEPS = (
     {"step_id": "phase11_submit_and_return", "status": "NOT_EXECUTED"},
@@ -1158,6 +1161,209 @@ def approval_bindings(
     }
 
 
+def _approval_metadata_blockers(
+    inputs: CompilationInputs,
+    receipt: Mapping[str, Any],
+    approval_type: str,
+    bindings: Mapping[str, Any],
+    current: datetime,
+) -> list[str]:
+    blockers: list[str] = []
+    approver = receipt.get("approver")
+    if not isinstance(approver, Mapping):
+        blockers.append(f"BLOCKED_APPROVAL_RECEIPT_APPROVER:{approval_type}")
+    else:
+        for field in ("id", "display_name", "authority_basis"):
+            if not str(approver.get(field) or "").strip():
+                blockers.append(f"BLOCKED_APPROVAL_RECEIPT_APPROVER:{approval_type}:{field}")
+        if receipt.get("approved_by") != approver.get("id"):
+            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_APPROVER:{approval_type}:approved_by")
+    expected = {
+        "decision_source": "explicit_human_authorization_packet",
+        "purpose": AUTHORIZATION_PURPOSE,
+        "authorization_scope": AUTHORIZATION_SCOPE,
+        "currency": "USD",
+        "revoked": False,
+        "revocation_state": "NOT_REVOKED",
+        "actual_provider_call_attempts": 0,
+    }
+    for field, value in expected.items():
+        if receipt.get(field) != value:
+            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_AUTHORITY:{approval_type}:{field}")
+    try:
+        maximum_spend = float(receipt.get("maximum_spend_usd") or 0)
+        pricing = inputs.provider_snapshot.value.get("pricing_source")
+        required_spend = float(pricing.get("maximum_expected_cost_usd") or 0) if isinstance(pricing, Mapping) else 0
+        if required_spend <= 0 or maximum_spend < required_spend:
+            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_MAX_SPEND:{approval_type}")
+    except (TypeError, ValueError):
+        blockers.append(f"BLOCKED_APPROVAL_RECEIPT_MAX_SPEND:{approval_type}")
+    try:
+        approved_at = parse_time(str(receipt.get("approved_at") or ""))
+        expires_at = parse_time(str(receipt.get("expires_at") or ""))
+        if approved_at > current + timedelta(minutes=5):
+            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_FUTURE:{approval_type}")
+        if expires_at <= current or expires_at <= approved_at:
+            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_EXPIRED:{approval_type}")
+    except ValueError:
+        blockers.append(f"BLOCKED_APPROVAL_RECEIPT_EXPIRY:{approval_type}")
+    relative_path = str(receipt.get("authorization_packet_path") or "")
+    expected_sha = str(receipt.get("authorization_packet_sha256") or "")
+    try:
+        pure = PurePosixPath(relative_path)
+        require(
+            bool(pure.parts) and not pure.is_absolute() and ".." not in pure.parts,
+            "BLOCKED_APPROVAL_RECEIPT_AUTHORIZATION_PACKET_PATH",
+        )
+        packet_path = (inputs.context.run_root / pure).resolve(strict=True)
+        packet_path.relative_to(inputs.context.run_root)
+        require(
+            SHA256_RE.fullmatch(expected_sha) is not None
+            and sha256_file(packet_path) == expected_sha,
+            "BLOCKED_APPROVAL_RECEIPT_AUTHORIZATION_PACKET_HASH",
+        )
+        packet = read_object(packet_path)
+        require(
+            not validate_schema(packet, "phase11_authorization_packet.v1.schema.json"),
+            "BLOCKED_APPROVAL_RECEIPT_AUTHORIZATION_PACKET_SCHEMA",
+        )
+        require(
+            packet.get("run_id") == inputs.context.run_id
+            and packet.get("revision_id") == inputs.context.revision_id
+            and packet.get("activation_transaction_id") == inputs.context.activation_transaction_id
+            and packet.get("bindings") == dict(bindings)
+            and packet.get("approval_types") == list(APPROVAL_TYPES)
+            and packet.get("decision") == "APPROVE"
+            and packet.get("decision_source") == "EXPLICIT_HUMAN"
+            and packet.get("revoked") is False,
+            "BLOCKED_APPROVAL_RECEIPT_AUTHORIZATION_PACKET_IDENTITY",
+        )
+    except (OSError, ValueError, json.JSONDecodeError, Phase11Blocked) as exc:
+        code = exc.code if isinstance(exc, Phase11Blocked) else "BLOCKED_APPROVAL_RECEIPT_AUTHORIZATION_PACKET_INVALID"
+        blockers.append(f"{code}:{approval_type}")
+    return blockers
+
+
+def adapter_preflight_blockers(
+    inputs: CompilationInputs,
+    *,
+    bindings: Mapping[str, Any],
+    current: datetime,
+) -> list[str]:
+    path = inputs.context.revision_root / DEFAULT_ADAPTER_PREFLIGHT_RELATIVE
+    if not path.is_file():
+        return ["BLOCKED_PHASE11_ADAPTER_PREFLIGHT_REQUIRED"]
+    try:
+        receipt = read_object(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return ["BLOCKED_PHASE11_ADAPTER_PREFLIGHT_INVALID"]
+    blockers = [
+        f"BLOCKED_PHASE11_ADAPTER_PREFLIGHT_SCHEMA:{error}"
+        for error in validate_schema(receipt, "phase11_adapter_preflight_receipt.v1.schema.json")
+    ]
+    expected = {
+        "status": "PASS_PHASE11_ADAPTER_PREFLIGHT",
+        "run_id": inputs.context.run_id,
+        "revision_id": inputs.context.revision_id,
+        "activation_transaction_id": inputs.context.activation_transaction_id,
+        "endpoint": bindings.get("endpoint"),
+        "request_body_sha256": bindings.get("request_body_sha256"),
+        "media_input_contract_sha256": bindings.get("media_input_contract_sha256"),
+        "provider_source_snapshot_sha256": bindings.get("provider_source_snapshot_sha256"),
+        "pricing_snapshot_sha256": bindings.get("pricing_snapshot_sha256"),
+        "approval_binding_sha256": canonical_sha256(bindings),
+        "actual_provider_call_attempts": 0,
+        "provider_live": False,
+        "paid_call_authorized": False,
+        "submitted": False,
+        "provider_ready": False,
+        "live_submit_ready": False,
+        "mocked": inputs.context.mocked,
+        "live": not inputs.context.mocked,
+    }
+    for field, value in expected.items():
+        if receipt.get(field) != value:
+            blockers.append(f"BLOCKED_PHASE11_ADAPTER_PREFLIGHT_BINDING:{field}")
+    try:
+        if parse_time(str(receipt.get("expires_at") or "")) <= current:
+            blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_EXPIRED")
+    except ValueError:
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_EXPIRY")
+    adapter_script = ROOT / "scripts" / "phase11_fal_canary_adapter.py"
+    if not adapter_script.is_file() or receipt.get("adapter_script_sha256") != sha256_file(adapter_script):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_SCRIPT_HASH")
+    credential = receipt.get("credential")
+    if (
+        not isinstance(credential, Mapping)
+        or credential.get("present") is not True
+        or credential.get("runtime_variable") != "FAL_KEY"
+        or credential.get("secret_value_persisted") is not False
+        or credential.get("secret_hash_persisted") is not False
+    ):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_CREDENTIAL")
+    fal_client = receipt.get("fal_client")
+    api_surface = fal_client.get("api_surface") if isinstance(fal_client, Mapping) else None
+    if (
+        not isinstance(fal_client, Mapping)
+        or fal_client.get("imported") is not True
+        or fal_client.get("submit_retry_control") != "fal_client.client.MAX_ATTEMPTS=1"
+        or not isinstance(api_surface, Mapping)
+        or not api_surface
+        or not all(value is True for value in api_surface.values())
+    ):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_FAL_API")
+    ffprobe = receipt.get("ffprobe")
+    if not isinstance(ffprobe, Mapping) or ffprobe.get("available") is not True or not str(ffprobe.get("path") or ""):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_FFPROBE")
+    approval_validation = receipt.get("approval_validation")
+    if (
+        not isinstance(approval_validation, Mapping)
+        or approval_validation.get("required_types") != list(APPROVAL_TYPES)
+        or approval_validation.get("invalid_blockers") != []
+    ):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_APPROVAL_VALIDATION")
+    idempotency = receipt.get("idempotency")
+    required_idempotency = {
+        "fence_written_before_submit": True,
+        "existing_task_resumes_without_submit": True,
+        "submit_intent_without_task_id_fails_closed": True,
+        "ambiguous_submit_requires_human_reconciliation": True,
+        "automatic_resubmit_allowed": False,
+    }
+    if not isinstance(idempotency, Mapping) or any(idempotency.get(field) != value for field, value in required_idempotency.items()):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_IDEMPOTENCY")
+    ledger_ref = receipt.get("attempt_ledger")
+    if not isinstance(ledger_ref, Mapping):
+        blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER")
+    else:
+        relative_path = str(ledger_ref.get("relative_path") or "")
+        expected_sha = str(ledger_ref.get("sha256") or "")
+        try:
+            pure = PurePosixPath(relative_path)
+            require(bool(pure.parts) and not pure.is_absolute() and ".." not in pure.parts, "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER")
+            ledger_path = (inputs.context.run_root / pure).resolve(strict=True)
+            ledger_path.relative_to(inputs.context.run_root)
+            require(SHA256_RE.fullmatch(expected_sha) is not None and sha256_file(ledger_path) == expected_sha, "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER")
+            ledger = read_object(ledger_path)
+            require(not validate_schema(ledger, "phase11_attempt_ledger.v1.schema.json"), "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER")
+            require(
+                ledger.get("run_id") == inputs.context.run_id
+                and ledger.get("revision_id") == inputs.context.revision_id
+                and ledger.get("activation_transaction_id") == inputs.context.activation_transaction_id
+                and ledger.get("endpoint") == bindings.get("endpoint")
+                and ledger.get("request_body_sha256") == bindings.get("request_body_sha256")
+                and ledger.get("state") == "PREFLIGHT_READY"
+                and ledger.get("submit_intent_count") == 0
+                and ledger.get("actual_provider_call_attempts") == 0
+                and ledger.get("request_id") is None
+                and ledger.get("ambiguous_submit") is False,
+                "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER",
+            )
+        except (OSError, ValueError, json.JSONDecodeError, Phase11Blocked):
+            blockers.append("BLOCKED_PHASE11_ADAPTER_PREFLIGHT_LEDGER")
+    return sorted(set(blockers))
+
+
 def inspect_approvals(inputs: CompilationInputs, bindings: Mapping[str, Any], current: datetime) -> tuple[dict[str, Any], list[str], list[str]]:
     statuses: dict[str, Any] = {}
     missing: list[str] = []
@@ -1193,11 +1399,7 @@ def inspect_approvals(inputs: CompilationInputs, bindings: Mapping[str, Any], cu
                 blockers.append(f"BLOCKED_APPROVAL_RECEIPT_BINDING:{approval_type}:{field}")
         if receipt.get("approval_binding_kind") != expected_kind or receipt.get("approval_binding_sha256") != expected_binding_sha:
             blockers.append(f"BLOCKED_APPROVAL_RECEIPT_BINDING:{approval_type}:approval_binding")
-        try:
-            if parse_time(str(receipt.get("expires_at") or "")) <= current:
-                blockers.append(f"BLOCKED_APPROVAL_RECEIPT_EXPIRED:{approval_type}")
-        except ValueError:
-            blockers.append(f"BLOCKED_APPROVAL_RECEIPT_EXPIRY:{approval_type}")
+        blockers.extend(_approval_metadata_blockers(inputs, receipt, approval_type, bindings, current))
         statuses[approval_type] = {
             "path": portable_path,
             "state": "APPROVED" if not any(code.startswith(f"BLOCKED_APPROVAL_RECEIPT") and f":{approval_type}" in code for code in blockers) else "INVALID",
@@ -1218,11 +1420,17 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         provider_snapshot_sha256=inputs.provider_snapshot.sha256,
         request_body_sha256=request_body_sha,
     )
+    preflight_blockers = adapter_preflight_blockers(
+        inputs,
+        bindings=bindings,
+        current=inputs.current,
+    )
     approval_statuses, missing_approvals, approval_blockers = inspect_approvals(inputs, bindings, inputs.current)
     technical_blockers = sorted(set(
         request_blockers
         + list(media_manifest.get("blockers") or [])
         + upstream_validation_blockers(inputs.validation_path, inputs.context)
+        + preflight_blockers
         + approval_blockers
     ))
     if technical_blockers:
@@ -1230,7 +1438,7 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
     elif missing_approvals:
         gate_status = "BLOCKED_AWAITING_HUMAN_APPROVAL"
     else:
-        technical_blockers.append("BLOCKED_PROVIDER_SUBMISSION_ADAPTER_OUT_OF_SCOPE")
+        technical_blockers.append("BLOCKED_PHASE11_EXPLICIT_EXECUTION_NOT_STARTED")
         gate_status = "BLOCKED_PROVIDER_GATE"
 
     approval_requirements = {
@@ -1277,6 +1485,10 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
                 inputs.context,
                 inputs.provider_snapshot.path,
                 sha256=inputs.provider_snapshot.sha256,
+            ),
+            "adapter_preflight": portable_file_ref(
+                inputs.context,
+                inputs.context.revision_root / DEFAULT_ADAPTER_PREFLIGHT_RELATIVE,
             ),
             "media_binding_manifest_sha256": media_manifest_sha,
         },

@@ -148,6 +148,10 @@
   "schema": "persona_dream.phase11_live_request.v1",
   "source_commit": "62c255c9b8d380079ce37c39cab3ab9adada30e3",
   "source_files": {
+    "adapter_preflight": {
+      "path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+      "sha256": "sha256:0eaa11fb2be684ff9929ed2a33d5e3d832f9c57f48e5d6179f81f7b9ac0a0fa3"
+    },
     "candidate_binding": {
       "path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/phase11_payload_binding.json",
       "sha256": "sha256:bc2cb053a2309643474c60a5ecface4b22de25188839a834ac8cff307c70d993"

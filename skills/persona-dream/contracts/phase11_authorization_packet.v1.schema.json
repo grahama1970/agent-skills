@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_authorization_packet.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "decision",
+    "decision_source",
+    "run_id",
+    "revision_id",
+    "activation_transaction_id",
+    "approver",
+    "approved_at",
+    "expires_at",
+    "purpose",
+    "authorization_scope",
+    "currency",
+    "maximum_spend_usd",
+    "revoked",
+    "revocation_state",
+    "approval_types",
+    "bindings",
+    "acknowledgements"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_authorization_packet.v1"},
+    "decision": {"const": "APPROVE"},
+    "decision_source": {"const": "EXPLICIT_HUMAN"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "approver": {
+      "type": "object",
+      "required": ["id", "display_name", "authority_basis"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "display_name": {"type": "string", "minLength": 1},
+        "authority_basis": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "approved_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "purpose": {"const": "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY"},
+    "authorization_scope": {"const": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT"},
+    "currency": {"const": "USD"},
+    "maximum_spend_usd": {"type": "number", "exclusiveMinimum": 0},
+    "revoked": {"const": false},
+    "revocation_state": {"const": "NOT_REVOKED"},
+    "approval_types": {
+      "const": [
+        "publication_authorization",
+        "visual_media_acceptance",
+        "exact_request_acceptance",
+        "cost_acceptance",
+        "paid_call_authorization"
+      ]
+    },
+    "bindings": {"$ref": "#/$defs/bindings"},
+    "acknowledgements": {
+      "type": "object",
+      "required": [
+        "authorize_one_paid_generation",
+        "no_automatic_resubmit",
+        "ambiguous_submit_requires_human_reconciliation",
+        "provider_return_does_not_authorize_watch_or_cognition"
+      ],
+      "properties": {
+        "authorize_one_paid_generation": {"const": true},
+        "no_automatic_resubmit": {"const": true},
+        "ambiguous_submit_requires_human_reconciliation": {"const": true},
+        "provider_return_does_not_authorize_watch_or_cognition": {"const": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "bindings": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "revision_id",
+        "activation_transaction_id",
+        "provider_id",
+        "endpoint",
+        "request_body_sha256",
+        "media_binding_manifest_sha256",
+        "media_input_contract_sha256",
+        "provider_source_snapshot_sha256",
+        "pricing_snapshot_sha256",
+        "actual_provider_call_attempts"
+      ],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "revision_id": {"type": "string", "minLength": 1},
+        "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+        "provider_id": {"type": "string", "minLength": 1},
+        "endpoint": {"type": "string", "minLength": 1},
+        "request_body_sha256": {"$ref": "#/$defs/sha256"},
+        "media_binding_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "media_input_contract_sha256": {"$ref": "#/$defs/sha256"},
+        "provider_source_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+        "pricing_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+        "actual_provider_call_attempts": {"const": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
