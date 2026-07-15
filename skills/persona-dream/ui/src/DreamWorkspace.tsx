@@ -474,6 +474,13 @@ function dreamInferMediaType(path: string, explicit?: string): string {
   return ext ?? normalized
 }
 
+function dreamRenderableMediaUrl(value?: string): boolean {
+  const url = String(value ?? '').trim()
+  if (!url) return false
+  if (/^\/(?:api|assets)\//i.test(url)) return true
+  return /\.(?:png|jpe?g|webp|gif|svg|avif|mp4|mov|webm|wav|mp3|ogg|flac|m4a)(?:[?#].*)?$/i.test(url)
+}
+
 function dreamMemoryResultFromDocument(doc: Record<string, unknown>, index: number): ResearchMemoryResult {
   const title = dreamStringField(doc, ['title', 'name', 'label', '_key']) || `Memory residue ${index + 1}`
   const rawSnippet = dreamStringField(doc, [
@@ -940,7 +947,7 @@ function StageCard({
               researchSeed={researchSeed}
               ideaText={humanIdea?.text || ideaText || ''}
               linkedAssets={(memoryResults ?? [])
-                .filter((result) => Boolean(result.url))
+                .filter((result) => dreamRenderableMediaUrl(result.url))
                 .map(linkedStoryAssetFromMemoryResult)}
             />
           </div>
@@ -951,7 +958,7 @@ function StageCard({
             researchSeed={researchSeed}
             ideaText={humanIdea?.text || ideaText || ''}
             linkedAssets={(memoryResults ?? [])
-              .filter((result) => Boolean(result.url))
+              .filter((result) => dreamRenderableMediaUrl(result.url))
               .map(linkedStoryAssetFromMemoryResult)}
           />
         )}
@@ -974,7 +981,7 @@ function StageCard({
             researchSeed={researchSeed}
             ideaText={humanIdea?.text || ideaText || ''}
             linkedAssets={(memoryResults ?? [])
-              .filter((result) => Boolean(result.url))
+              .filter((result) => dreamRenderableMediaUrl(result.url))
               .map(linkedStoryAssetFromMemoryResult)}
           />
         )}
@@ -7713,10 +7720,10 @@ function IdeaMemoryControl({
         id: r.memoryKey ? `persona_memory/${r.memoryKey}` : `mem-research-${i}`,
         label: humanMemoryCaption(r),
         subtitle: r.title || '',
-        imageUrl: r.url || '',
+        imageUrl: dreamRenderableMediaUrl(r.url) ? r.url : '',
         mediaType: r.mediaType || '',
         memoryKey: r.memoryKey,
-        mediaUrl: r.mediaUrl || r.url || '',
+        mediaUrl: dreamRenderableMediaUrl(r.mediaUrl || r.url) ? (r.mediaUrl || r.url || '') : '',
         score: r.score,
       })) as Array<{ id: string; label: string; subtitle: string; imageUrl: string; mediaType: string; memoryKey?: string; mediaUrl?: string; score?: number }>
       const media = mapped.filter((m) => Boolean(m.imageUrl))
