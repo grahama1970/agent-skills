@@ -1,0 +1,122 @@
+{
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 0,
+  "blockers": [
+    "BLOCKED_CHARACTER_ELEMENT_PACK_COUNT:0:expected:2",
+    "BLOCKED_MEDIA_ROLE_COUNTS",
+    "BLOCKED_PROVIDER_MEDIA_URL_INVALID"
+  ],
+  "element_packs": [],
+  "media_input_contract_sha256": "sha256:97748c71d501e1e08d7d231e82d070d26ab278c505966c65d843ff592603bfcc",
+  "provider_live": false,
+  "publication_policy": {
+    "authorization_required": true,
+    "existing_url_without_transition_evidence_blocks": true,
+    "public_probe_required": true,
+    "publication_receipt_required": true,
+    "teardown_policy_required": true
+  },
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "role_counts": {
+    "continuity_only": 6,
+    "element_packs": 0,
+    "global_end_anchor": 1,
+    "global_start_anchor": 1
+  },
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_media_binding_manifest.v2",
+  "source_files": {
+    "artifact_index": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_artifact_index.json",
+      "sha256": "sha256:5e91ddaa96eb9bca56b866db95c83c71a3983d363bd9ca9c25c1b30b79e6288d"
+    },
+    "candidate_binding": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_payload_binding.json",
+      "sha256": null
+    },
+    "media_lock": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_08_media_lock/storyboard_media_lock_manifest.json",
+      "sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd"
+    },
+    "transition_manifest": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+      "sha256": null
+    }
+  },
+  "status": "BLOCKED_PROVIDER_GATE",
+  "storyboard_frames": [
+    {
+      "artifact_id": "sb_001.start_frame",
+      "json_pointer": "/input/start_image_url",
+      "public_url": "",
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+      "role": "global_start_anchor",
+      "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_001.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:b224348750cd419e9eb000df13d7675d3af0bb0b7668bd010b732d48a66a5335",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_002.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_002.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:caa1e08be654167a6176fd400f7c69960ff135f44d9531b24ed8ac57be3df088",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_003.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_003.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:41b7789f3c89e63f3cd5014364baa8cb5cc45a8f088ba93e8d90c4ffbbcae763",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_004.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_004.end_frame",
+      "json_pointer": "/input/end_image_url",
+      "public_url": "",
+      "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+      "role": "global_end_anchor",
+      "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
+      "transition_evidence": null
+    }
+  ],
+  "submitted": false
+}

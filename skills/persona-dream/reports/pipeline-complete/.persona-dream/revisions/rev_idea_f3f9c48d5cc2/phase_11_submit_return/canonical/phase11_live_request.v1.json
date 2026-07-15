@@ -1,0 +1,156 @@
+{
+  "activation_receipt_sha256": "sha256:22b0b1d035fd844863de6730e970f0362481bbc342f59e377cfe557ddcdb5b7d",
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 0,
+  "approval_bindings": {
+    "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+    "actual_provider_call_attempts": 0,
+    "endpoint": "",
+    "media_binding_manifest_sha256": "sha256:4039940e5aa4e0b2873bd6b73e7d85b925168d42aaaea6864e339a7fd43d7bea",
+    "media_input_contract_sha256": "sha256:97748c71d501e1e08d7d231e82d070d26ab278c505966c65d843ff592603bfcc",
+    "pricing_snapshot_sha256": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "provider_id": "kling",
+    "provider_source_snapshot_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "request_body_sha256": "sha256:346f04666ec9a96ddc187b1b959623521075bc4cbf815b98b390bb9ad7f3c163",
+    "revision_id": "rev_idea_f3f9c48d5cc2",
+    "run_id": "pipeline-complete"
+  },
+  "claims": {
+    "does_not_prove": [
+      "provider readiness",
+      "provider submission",
+      "provider acceptance",
+      "returned video"
+    ],
+    "proves": [
+      "one canonical zero-call Phase 11 request body is bound to the ACTIVE_CONSISTENT revision"
+    ]
+  },
+  "cost": {},
+  "endpoint": "",
+  "generation_call_started": false,
+  "live": false,
+  "live_submit_ready": false,
+  "missing_approval_types": [
+    "cost_acceptance",
+    "exact_request_acceptance",
+    "paid_call_authorization",
+    "publication_authorization",
+    "visual_media_acceptance"
+  ],
+  "mocked": false,
+  "mode": "unknown",
+  "paid_call_authorized": false,
+  "prompt_transformations": [
+    {
+      "changes": [
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_001"
+    },
+    {
+      "changes": [
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_002"
+    },
+    {
+      "changes": [
+        "provider_tier_normalized",
+        "time_range_normalized",
+        "sb003_dialogue_removed"
+      ],
+      "panel_id": "sb_003"
+    },
+    {
+      "changes": [
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_004"
+    }
+  ],
+  "provider_id": "kling",
+  "provider_live": false,
+  "provider_ready": false,
+  "provider_request_body": {
+    "cfg_scale": 0.5,
+    "duration": "10",
+    "elements": [],
+    "end_image_url": null,
+    "generate_audio": false,
+    "multi_prompt": [
+      {
+        "duration": "2",
+        "prompt": "SB_001 provider-distilled shot for Kling v3 Unknown I2V. Create storyboard panel SB_001 for a 10-second surf scene, time range 0s-2s. Waterline wide establishing frame at Kahalu'u Bay in hot, humid daylight. Embry in a navy rashguard and Kai in a black rashguard wait outside the lineup instead of cutting across it. Clear water reveals dark lava reef shapes below; public surf etiquette and shared lineup pressure must be visible. The frame should show restraint, heat, glare, and reef geography before action begins. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahaluʻu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_002 provider-distilled shot for Kling v3 Unknown I2V. Create storyboard panel SB_002 for a 10-second surf scene, time range 2s-5s. Medium waterline action frame on Embry's borrowed white shortboard. Embry wears a navy rashguard darkened by water and heat; sweat and salt mark her face. Her right palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. The panel must make heat, softened wax, fatigue, June swell timing, and lava reef caution visible. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahaluʻu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      {
+        "duration": "2",
+        "prompt": "SB_003 provider-distilled shot for Kling v3 Unknown I2V. Create storyboard panel SB_003 for a 10-second surf scene, time range 5s-7s. Two-character medium-wide lineup frame with Kai slightly outside on his familiar white shortboard and Embry closer to the decision point. Kai wears a black rashguard, reads the local surfer, safe channel, reef, and Embry's paddle cadence, then gives one restrained nonverbal hand signal to wait. Embry remains the decision-maker. Show public lineup geometry and surf etiquette clearly. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahaluʻu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No spoken dialogue. Kai communicates only through gaze, posture, and one restrained hand signal. No lip movement, captions, dialogue text, or speech bubbles. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_004 provider-distilled shot for Kling v3 Unknown I2V. Create storyboard panel SB_004 for a 10-second surf scene, time range 7s-10s. Decisive waterline frame as a clean summer shoulder stands over the visible lava reef boundary. Embry in navy rashguard chooses the safe channel and commits only when the lineup opens. Kai remains understated and outside the main action. The wave, reef, softened wax, fatigue, and unresolved phone obligation converge into one controlled physical decision. End on embodied agency, not spectacle. Preserve @Element1 Embry and @Element2 Kai identity continuity from accepted upstream references. Use waterline cinematic surf motion with Kahaluʻu Bay, lava reef, heat glare, salt spray, public lineup geometry, and restrained decision pressure. No explicit spoken dialogue in this panel; use body language, surf motion, ambient water, and visual restraint. Avoid identity drift, unrelated foreground characters, distant silhouettes, UI/text overlays, contact-sheet artifacts, pasted reef overlays, and low-quality blur/distortion."
+      }
+    ],
+    "negative_prompt": "no audible speech, no lip-sync, no mouth articulating words, no subtitles, no captions, no dialogue text, no speech bubbles",
+    "shot_type": "customize",
+    "start_image_url": null
+  },
+  "request_body_canonicalization": {
+    "encoding": "UTF-8",
+    "ensure_ascii": false,
+    "json": "RFC8259",
+    "separators": [
+      ",",
+      ":"
+    ],
+    "sort_keys": true
+  },
+  "request_body_sha256": "sha256:346f04666ec9a96ddc187b1b959623521075bc4cbf815b98b390bb9ad7f3c163",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "schema": "persona_dream.phase11_live_request.v1",
+  "source_commit": "2d8b75e85e5856b079c81dfe847ef76ca8873502",
+  "source_files": {
+    "adapter_preflight": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+      "sha256": null
+    },
+    "candidate_binding": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_payload_binding.json",
+      "sha256": null
+    },
+    "media_binding_manifest_sha256": "sha256:4039940e5aa4e0b2873bd6b73e7d85b925168d42aaaea6864e339a7fd43d7bea",
+    "phase10_payload": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_10_provider_contract/final_provider_payload_by_panel.json",
+      "sha256": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22"
+    },
+    "provider_source_snapshot": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_source_snapshot.json",
+      "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "source_revision_id": "rev_repair_a8b93ffeca8f",
+  "status": "BLOCKED_PROVIDER_GATE",
+  "submitted": false,
+  "technical_blockers": [
+    "BLOCKED_CHARACTER_ELEMENT_PACK_COUNT",
+    "BLOCKED_CHARACTER_ELEMENT_PACK_COUNT:0:expected:2",
+    "BLOCKED_MEDIA_ROLE_COUNTS",
+    "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_REQUIRED",
+    "BLOCKED_PROVIDER_END_IMAGE_URL_MISSING",
+    "BLOCKED_PROVIDER_MEDIA_URL_INVALID",
+    "BLOCKED_PROVIDER_REQUEST_NULL_FIELD",
+    "BLOCKED_PROVIDER_SOURCE_SNAPSHOT_MISSING",
+    "BLOCKED_PROVIDER_START_IMAGE_URL_MISSING",
+    "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_IDENTITY"
+  ]
+}
