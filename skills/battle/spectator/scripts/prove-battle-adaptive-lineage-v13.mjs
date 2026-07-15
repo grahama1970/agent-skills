@@ -14,6 +14,7 @@ const repositoryDir = resolve(battleDir, '..', '..')
 const retainedRoot = resolve(process.env.BATTLE_ADAPTIVE_V13_CAMPAIGN_ROOT ?? '/tmp/battle-004-adaptive-red-blue-lineage-v13')
 const fixtureId = 'battle-004-adaptive-lineage-v13'
 const baseUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&pixiTest=1&reducedMotion=1&particles=0`
+const continuousReplayUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&reducedMotion=1&particles=0`
 const expectedCampaignHash = '6f933c26fd8a1b7871ddec4909b7b620aaa8629dde473c12938e48ea83ffa4e3'
 const expectedEventsHash = '2e8c83e1665057c3667c46f86103a1c8f258f33715651734a0e311896a7ce902'
 const checks = []
@@ -58,6 +59,74 @@ const fixture = await fixtureResponse.json()
 record('fixture-http', fixtureResponse.ok && fixture.schema === 'battle.normalized_adaptive_lineage_fixture.v1', { status: fixtureResponse.status, schema: fixture.schema })
 record('fixture-causal-contract', fixture.causal_continuity_proven === true && fixture.events?.length === 24 && fixture.lanes?.length === 4 && fixture.lineage_edges?.length === 2, { causal: fixture.causal_continuity_proven, events: fixture.events?.length, lanes: fixture.lanes?.length, edges: fixture.lineage_edges?.length })
 record('fixture-shared-atlas', fixture.sprite_theme?.shared_atlas === true && fixture.sprite_theme?.semantic_authority === false && fixture.sprite_theme?.variants?.['v13-shared-runner']?.sprite_id === 'plague_nurgling', fixture.sprite_theme)
+
+function replayStateSummary(state) {
+  return {
+    playheadSeconds: state.playheadSeconds,
+    playheadLabel: state.playheadLabel,
+    laneIds: state.laneIds,
+    lineagePhases: state.lineagePhases,
+    animations: state.animations,
+    mountId: state.mountId,
+    sameCanvas: state.sameCanvas,
+  }
+}
+
+async function readContinuousReplayState(initialCanvas) {
+  return page.evaluate((originalCanvas) => {
+    const parseRecord = (value) => {
+      try {
+        const parsed = JSON.parse(value ?? '{}')
+        return parsed && typeof parsed === 'object' ? parsed : {}
+      } catch {
+        return {}
+      }
+    }
+    const stage = document.querySelector('[data-qid="battle:pixi:stage"]')
+    const canvas = document.querySelector('canvas.pixiRaceCanvas')
+    const slider = document.querySelector('[data-qid="battle:timeline:scrub"]')
+    const playheadSeconds = Number(slider?.getAttribute('aria-valuenow'))
+    return {
+      playheadSeconds: Number.isFinite(playheadSeconds) ? playheadSeconds : null,
+      playheadLabel: document.querySelector('.playheadLabel')?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
+      laneIds: [...new Set([...document.querySelectorAll('[data-lane-id]')].map((element) => element.getAttribute('data-lane-id')).filter(Boolean))].sort(),
+      animations: parseRecord(stage?.dataset.battleRunnerAnimations),
+      lineagePhases: parseRecord(stage?.dataset.battleLineagePhases),
+      mountId: canvas?.dataset.battlePixiMountId ?? null,
+      sameCanvas: canvas === originalCanvas,
+    }
+  }, initialCanvas)
+}
+
+async function waitForContinuousReplayState(initialCanvas, label, predicate, timeoutMs = 5_000) {
+  const deadline = Date.now() + timeoutMs
+  let latest = await readContinuousReplayState(initialCanvas)
+  while (Date.now() < deadline) {
+    if (predicate(latest)) return latest
+    await page.waitForTimeout(50)
+    latest = await readContinuousReplayState(initialCanvas)
+  }
+  throw new Error(`${label} did not converge: ${JSON.stringify(replayStateSummary(latest))}`)
+}
+
+async function scrubContinuousReplayTo(initialCanvas, seconds) {
+  const slider = page.locator('[data-qid="battle:timeline:scrub"]')
+  const box = await slider.boundingBox()
+  if (!box) throw new Error('Battle replay scrub slider is not visible')
+  const maxSeconds = Number(await slider.getAttribute('aria-valuemax'))
+  if (!Number.isFinite(maxSeconds) || maxSeconds <= 0) throw new Error('Battle replay scrub maximum is unavailable')
+  const target = Math.max(0, Math.min(maxSeconds, seconds))
+  const x = target <= 0 ? 1 : target >= maxSeconds ? Math.max(1, box.width - 1) : Math.max(1, Math.min(box.width - 1, (target / maxSeconds) * box.width))
+  await slider.click({ position: { x, y: Math.max(1, Math.min(box.height - 1, box.height / 2)) } })
+  if (target <= 0) await slider.press('ArrowLeft')
+  if (target >= maxSeconds) await slider.press('ArrowRight')
+  const tolerance = target <= 0 || target >= maxSeconds ? 0.05 : Math.max(0.35, (maxSeconds / Math.max(1, box.width)) * 2)
+  return waitForContinuousReplayState(
+    initialCanvas,
+    `scrub to ${target.toFixed(3)}s`,
+    (state) => state.playheadSeconds != null && Math.abs(state.playheadSeconds - target) <= tolerance,
+  )
+}
 
 async function inspectAt(seconds, name, viewport = { width: 1600, height: 1050 }) {
   await page.setViewportSize(viewport)
@@ -199,6 +268,160 @@ const pixelEvidence = await page.evaluate(async ({ dataUrl, regions }) => {
 }, { dataUrl: `data:image/png;base64,${mobile.raceScreenshotBuffer.toString('base64')}`, regions: laneRegions })
 record('mobile-four-runner-pixel-occupancy', pixelEvidence.length === 4 && pixelEvidence.every((region) => region.spritePixels >= 80), pixelEvidence)
 
+let continuousReplayScreenshot = null
+let continuousReplayDetail = { route: continuousReplayUrl }
+let continuousReplayPassed = false
+try {
+  await page.setViewportSize({ width: 1600, height: 1050 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(continuousReplayUrl, { waitUntil: 'networkidle', timeout: 60_000 })
+  await page.waitForSelector('[data-battle-pixi-engine="animated-sprites"]', { timeout: 20_000 })
+  await page.waitForSelector('canvas.pixiRaceCanvas', { timeout: 20_000 })
+  await page.waitForTimeout(900)
+  const proofMenu = page.locator('[data-qid="battle:nav:proofs-menu"]')
+  if (await proofMenu.getAttribute('open') !== null) await proofMenu.locator('summary').click()
+
+  const canvas = page.locator('canvas.pixiRaceCanvas')
+  const initialCanvas = await canvas.elementHandle()
+  if (!initialCanvas) throw new Error('Initial Pixi canvas handle is unavailable')
+  const initialMountId = await canvas.getAttribute('data-battle-pixi-mount-id')
+  if (!initialMountId) throw new Error('Initial Pixi mount id is unavailable')
+
+  await scrubContinuousReplayTo(initialCanvas, 0)
+  const zero = await waitForContinuousReplayState(
+    initialCanvas,
+    'restart at zero',
+    (state) => JSON.stringify(state.laneIds) === JSON.stringify(['blue-g1', 'red-g1']),
+  )
+  const playButton = page.locator('[data-qid="battle:control:playhead"]')
+  const playStart = zero.playheadSeconds ?? 0
+  await playButton.click()
+  const played = await waitForContinuousReplayState(
+    initialCanvas,
+    'continuous Play',
+    (state) => state.playheadSeconds != null && state.playheadSeconds >= playStart + 0.5,
+    4_000,
+  )
+  await playButton.click()
+  await page.waitForTimeout(100)
+  const pauseStart = await readContinuousReplayState(initialCanvas)
+  await page.waitForTimeout(750)
+  const pauseEnd = await readContinuousReplayState(initialCanvas)
+  const pauseDelta = Math.abs((pauseEnd.playheadSeconds ?? Number.NaN) - (pauseStart.playheadSeconds ?? Number.NaN))
+
+  await scrubContinuousReplayTo(initialCanvas, 71)
+  const preSpawnContinuous = await waitForContinuousReplayState(
+    initialCanvas,
+    'pre-spawn parent-only state',
+    (state) => JSON.stringify(state.laneIds) === JSON.stringify(['blue-g1', 'red-g1']),
+  )
+  await scrubContinuousReplayTo(initialCanvas, 72)
+  const pendingContinuous = await waitForContinuousReplayState(
+    initialCanvas,
+    'authorized-pending state',
+    (state) => state.lineagePhases['red-g2'] === 'authorized_pending'
+      && state.lineagePhases['blue-g2'] === 'authorized_pending'
+      && state.animations['red-g2'] === 'idle'
+      && state.animations['blue-g2'] === 'idle',
+  )
+  await scrubContinuousReplayTo(initialCanvas, 79.2)
+  const descendingContinuous = await waitForContinuousReplayState(
+    initialCanvas,
+    'child descent state',
+    (state) => state.lineagePhases['red-g2'] === 'descending'
+      && state.lineagePhases['blue-g2'] === 'descending'
+      && state.animations['red-g2'] === 'spawn'
+      && state.animations['blue-g2'] === 'spawn',
+  )
+  await scrubContinuousReplayTo(initialCanvas, 82)
+  const researchContinuous = await waitForContinuousReplayState(
+    initialCanvas,
+    'child research state',
+    (state) => state.lineagePhases['red-g2'] === 'active'
+      && state.lineagePhases['blue-g2'] === 'active'
+      && state.animations['red-g2'] === 'research'
+      && state.animations['blue-g2'] === 'research',
+  )
+  await scrubContinuousReplayTo(initialCanvas, Number(fixture.campaign?.elapsed_seconds ?? 134.457076))
+  const mutationContinuous = await waitForContinuousReplayState(
+    initialCanvas,
+    'mutation/final state',
+    (state) => state.animations['red-g2'] === 'mutate'
+      && state.animations['blue-g2'] === 'mutate'
+      && Object.values(state.animations).every((animation) => !['killed', 'victory', 'promoted'].includes(animation)),
+  )
+  const screenshotName = '09-continuous-replay-single-mount.png'
+  await page.screenshot({ path: resolve(screenshotsDir, screenshotName), fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css' })
+  continuousReplayScreenshot = `screenshots/${screenshotName}`
+  await scrubContinuousReplayTo(initialCanvas, 0)
+  const restarted = await waitForContinuousReplayState(
+    initialCanvas,
+    'parent-only state after restart',
+    (state) => JSON.stringify(state.laneIds) === JSON.stringify(['blue-g1', 'red-g1']),
+  )
+  const finalCanvas = page.locator('canvas.pixiRaceCanvas')
+  const finalMountId = await finalCanvas.getAttribute('data-battle-pixi-mount-id')
+  const finalStateContinuous = await readContinuousReplayState(initialCanvas)
+
+  const parents = JSON.stringify(['blue-g1', 'red-g1'])
+  const allLanes = ['red-g1', 'red-g2', 'blue-g1', 'blue-g2']
+  const parentOnly = (state) => JSON.stringify(state.laneIds) === parents
+  const fourLanes = (state) => allLanes.every((laneId) => state.laneIds.includes(laneId))
+  const pendingTruthful = fourLanes(pendingContinuous)
+    && pendingContinuous.lineagePhases['red-g2'] === 'authorized_pending'
+    && pendingContinuous.lineagePhases['blue-g2'] === 'authorized_pending'
+    && pendingContinuous.animations['red-g2'] === 'idle'
+    && pendingContinuous.animations['blue-g2'] === 'idle'
+  const descentTruthful = fourLanes(descendingContinuous)
+    && descendingContinuous.lineagePhases['red-g2'] === 'descending'
+    && descendingContinuous.lineagePhases['blue-g2'] === 'descending'
+    && descendingContinuous.animations['red-g2'] === 'spawn'
+    && descendingContinuous.animations['blue-g2'] === 'spawn'
+  const researchTruthful = fourLanes(researchContinuous)
+    && researchContinuous.lineagePhases['red-g2'] === 'active'
+    && researchContinuous.lineagePhases['blue-g2'] === 'active'
+    && researchContinuous.animations['red-g2'] === 'research'
+    && researchContinuous.animations['blue-g2'] === 'research'
+  const terminalOverclaim = Object.values(mutationContinuous.animations).some((animation) => ['killed', 'victory', 'promoted'].includes(animation))
+  const mutationTruthful = fourLanes(mutationContinuous)
+    && mutationContinuous.animations['red-g2'] === 'mutate'
+    && mutationContinuous.animations['blue-g2'] === 'mutate'
+    && !terminalOverclaim
+  const states = { zero, played, pauseStart, pauseEnd, preSpawn: preSpawnContinuous, pending: pendingContinuous, descending: descendingContinuous, research: researchContinuous, mutation: mutationContinuous, restarted, finalState: finalStateContinuous }
+  const mountStableAtEveryStep = Object.values(states).every((state) => state.sameCanvas === true && state.mountId === initialMountId)
+
+  continuousReplayDetail = {
+    route: continuousReplayUrl,
+    initial_mount_id: initialMountId,
+    final_mount_id: finalMountId,
+    observed_playhead_values: Object.fromEntries(Object.entries(states).map(([name, state]) => [name, state.playheadSeconds])),
+    pause_delta_seconds: pauseDelta,
+    states: Object.fromEntries(Object.entries(states).map(([name, state]) => [name, replayStateSummary(state)])),
+    same_canvas_node: finalStateContinuous.sameCanvas,
+    mount_stable_at_every_step: mountStableAtEveryStep,
+  }
+  continuousReplayPassed = played.playheadSeconds != null
+    && played.playheadSeconds > playStart
+    && Number.isFinite(pauseDelta)
+    && pauseDelta <= 0.15
+    && parentOnly(preSpawnContinuous)
+    && pendingTruthful
+    && descentTruthful
+    && researchTruthful
+    && mutationTruthful
+    && parentOnly(restarted)
+    && finalMountId === initialMountId
+    && finalStateContinuous.sameCanvas === true
+    && mountStableAtEveryStep
+  await initialCanvas.dispose()
+} catch (error) {
+  continuousReplayDetail = {
+    ...continuousReplayDetail,
+    error: error instanceof Error ? error.message : String(error),
+  }
+}
+record('continuous-replay-single-mount', continuousReplayPassed, continuousReplayDetail)
+
 const requestList = [...requests.values()]
 const authorityRequestList = requestList.filter((request) => ['fetch', 'xhr', 'image', 'media'].includes(request.resource_type))
 record('plague-atlas-requested', requestList.some(({ url }) => /plague_nurgling\.json/.test(url)) && requestList.some(({ url }) => /plague_nurgling\.png/.test(url)), requestList.filter(({ url }) => /plague_nurgling/.test(url)))
@@ -221,9 +444,12 @@ const report = {
   checks,
   failed: failed.map((check) => check.id),
   errors,
-  screenshots: ['01-pre-spawn-children-hidden.png', '02-spawn-authorized-pending.png', '03-ladder-descent-hop.png', '04-children-active-research.png', '05-mutation-evidence.png', '06-judge-selection-memory-boundary.png', '07-four-lane-mobile.png', '08-four-lane-mobile-race.png'].map((name) => `screenshots/${name}`),
+  screenshots: [
+    ...['01-pre-spawn-children-hidden.png', '02-spawn-authorized-pending.png', '03-ladder-descent-hop.png', '04-children-active-research.png', '05-mutation-evidence.png', '06-judge-selection-memory-boundary.png', '07-four-lane-mobile.png', '08-four-lane-mobile-race.png'].map((name) => `screenshots/${name}`),
+    ...(continuousReplayScreenshot ? [continuousReplayScreenshot] : []),
+  ],
   claims: {
-    proves: ['The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners and one-way outer-scroll camera control.'],
+    proves: ['The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount.'],
     does_not_prove: ['Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness.'],
   },
 }

@@ -82,6 +82,8 @@ export function BattleRacePixiSpike({
 	const runtimeRef = useRef<PixiRaceRuntime | null>(null);
 	const runnersRef = useRef<Map<string, RunnerActor>>(new Map());
 	const scrollLeftRef = useRef(scrollLeft);
+	const contentWidthRef = useRef(contentWidth);
+	const totalHeightRef = useRef(0);
 	const atlasReadyRef = useRef(false);
 	const frameStateRef = useRef<SceneFrameState>({
 		lanes,
@@ -172,6 +174,9 @@ export function BattleRacePixiSpike({
 		() => rowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0),
 		[rowLayout],
 	);
+	const initialSpriteIdsRef = useRef(spriteIds);
+	totalHeightRef.current = totalHeight;
+	contentWidthRef.current = contentWidth;
 
 	useEffect(() => {
 		frameStateRef.current = {
@@ -204,7 +209,7 @@ export function BattleRacePixiSpike({
 				return;
 			}
 
-			const [markerSheet] = await Promise.all([loadBattleRaceAtlas(), loadBattleRunnerSprites(spriteIds)]);
+			const [markerSheet] = await Promise.all([loadBattleRaceAtlas(), loadBattleRunnerSprites(initialSpriteIdsRef.current)]);
 			const markerAtlas = markerSheet.textures;
 			if (destroyed) {
 				destroyApplication(app);
@@ -220,9 +225,9 @@ export function BattleRacePixiSpike({
 			const viewport = new Viewport({
 				events: app.renderer.events,
 				screenWidth: Math.max(1, host.clientWidth),
-				screenHeight: Math.max(1, totalHeight),
-				worldWidth: contentWidth,
-				worldHeight: Math.max(1, totalHeight),
+				screenHeight: Math.max(1, totalHeightRef.current),
+				worldWidth: contentWidthRef.current,
+				worldHeight: Math.max(1, totalHeightRef.current),
 			});
 			configureBattleViewportAccessibility(viewport);
 			app.stage.addChild(viewport);
@@ -235,9 +240,9 @@ export function BattleRacePixiSpike({
 				if (!runtime) return;
 				runtime.viewport.resize(
 					Math.max(1, host.clientWidth),
-					Math.max(1, totalHeight),
-					contentWidth,
-					Math.max(1, totalHeight),
+					Math.max(1, totalHeightRef.current),
+					contentWidthRef.current,
+					Math.max(1, totalHeightRef.current),
 				);
 			});
 			resizeObserver.observe(host);
@@ -247,7 +252,7 @@ export function BattleRacePixiSpike({
 			atlasReadyRef.current = true;
 			bindBattlePixiTicker(app, { tick: tickerBindingRef.current.tick, context: tickerBindingRef.current });
 
-			viewport.position.x = -pixiViewportScrollLeft(viewport, scrollLeftRef.current, contentWidth);
+			viewport.position.x = -pixiViewportScrollLeft(viewport, scrollLeftRef.current, contentWidthRef.current);
 			tickerBindingRef.current.tick(runtime.app.ticker);
 		};
 
@@ -268,7 +273,7 @@ export function BattleRacePixiSpike({
 			}
 			host.replaceChildren();
 		};
-	}, [contentWidth, spriteIds, totalHeight]);
+	}, []);
 
 	useEffect(() => {
 		void loadBattleRunnerSprites(spriteIds);
@@ -277,8 +282,14 @@ export function BattleRacePixiSpike({
 	useEffect(() => {
 		const runtime = runtimeRef.current;
 		if (!runtime) return;
+		runtime.viewport.resize(
+			Math.max(1, hostRef.current?.clientWidth ?? 1),
+			Math.max(1, totalHeight),
+			contentWidth,
+			Math.max(1, totalHeight),
+		);
 		runtime.viewport.position.x = -pixiViewportScrollLeft(runtime.viewport, scrollLeft, contentWidth);
-	}, [contentWidth, scrollLeft]);
+	}, [contentWidth, scrollLeft, totalHeight]);
 
 	return (
 		<div ref={stageHostRef} className="battleRaceStageHost" style={{ height: heightPx }} data-battle-pixi-engine="animated-sprites" data-battle-viewport-seconds={input.viewport.currentSeconds} data-qid="battle:pixi:stage">
