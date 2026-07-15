@@ -33,7 +33,7 @@ export function BattleProofNav() {
 			<a href="#battle" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" title="Dense design-parity mockup (not receipt truth)">
 				Design
 			</a>
-			<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu" open={onProofFamily || undefined}>
+			<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu">
 				<summary className={onProofFamily ? "is-active" : undefined}>Proofs &amp; stages</summary>
 				<div className="battle-proof-nav-more-links">
 					<a
