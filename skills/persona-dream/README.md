@@ -25,14 +25,14 @@ cannot silently become literal history or rewrite the persona's identity.
 > closed loop. The implemented runtime remains narrower than the complete system
 > described here.
 
-**Current proof boundary:** code now rejects revisions whose Phase 01 human idea
-does not match the idea consumed by Phases 02-10. The previously active
-`rev_repair_a8b93ffeca8f` is a known semantic-mix counterexample and must remain
-`LEGACY_UNQUALIFIED` until the explicit semantic-mix repair command creates,
-Memory-verifies, and activates a new immutable revision. This documentation does
-not claim that migration has been executed. No live provider return,
-Watch-based self-analysis, dream persistence, or changed later behavior is
-proven.
+**Current proof boundary:** code rejects revisions whose Phase 01 human idea
+does not match the idea consumed by Phases 02-10. The semantic-mix repair was
+executed live and activated `rev_idea_f3f9c48d5cc2`; 10/10 phase lineage
+bindings and 27 revision/phase/required-artifact Memory records were exact-read
+with synchronized semantic pointers. The superseded `rev_repair_a8b93ffeca8f`
+remains a rejected semantic-mix counterexample. No live provider return,
+Watch-based self-analysis, synthetic dream persistence, or changed later
+behavior is proven.
 
 **Jump to:**
 [Quick Start](#quick-start) -
@@ -192,8 +192,8 @@ The README uses these proof terms consistently:
 |---|---|---|
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phases 01-10 - Qualified revision | **Qualified revision** | `rev_repair_a8b93ffeca8f` is `ACTIVE_CONSISTENT`; 10 phase records and 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Blocked** | No paid call or live provider return has been authorized or proven |
+| Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
+| Phase 11 - Submit and Return | **Blocked provider gate** | The request compiler/lifecycle boundary is not live-submittable; no paid call or live provider return has been authorized or proven |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -243,19 +243,20 @@ The complete Persona Dream pipeline has two connected parts:
 ### Current Qualified Runtime Boundary
 
 The production read model currently reports `ACTIVE_CONSISTENT` for run
-`pipeline-complete`, revision `rev_repair_a8b93ffeca8f`. Memory contains one
+`pipeline-complete`, revision `rev_idea_f3f9c48d5cc2`. Memory contains one
 revision, ten phase records, sixteen required-artifact references, and one
 run-scoped active pointer. All twenty-eight documents report Qdrant semantic
-sync metadata. The immutable revision index independently hash-validates 318
+sync metadata. The immutable revision index contains 328 revision-scoped
 local artifacts. This qualifies Phases 01-10; it does not prove a provider call,
 returned dream, Watch analysis, interpretation, or later persona behavior.
 
 Primary receipts:
 
-- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_memory_prepare_receipt.json`
-- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_memory_verify_receipt.json`
-- `.persona-dream/revisions/rev_repair_a8b93ffeca8f/revision_activation_receipt.json`
-- `.persona-dream/repair/queue-events/repair-a8b93ffeca8f6014/000001-completed.json`
+- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/semantic_mix_repair_receipt.json`
+- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_prepare_receipt.json`
+- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_verify_receipt.json`
+- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_activation_receipt.json`
+- `.persona-dream/repair/queue-events/repair-454b255245a1a162/000001-completed.json`
 
 ### Remaining Work Beyond the Qualified Revision
 

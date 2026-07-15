@@ -436,11 +436,12 @@ The qualified founding revision is currently:
 
 ```text
 run_id: pipeline-complete
-revision_id: rev_repair_a8b93ffeca8f
+revision_id: rev_idea_f3f9c48d5cc2
 revision_qualification: ACTIVE_CONSISTENT
+phase_idea_lineage: 10/10
 phase_records: 10
 required_artifact_records: 16
-indexed_artifacts_hash_matched: 318
+indexed_artifacts: 328
 actual_provider_call_attempts: 0
 provider_ready: false
 live_submit_ready: false
