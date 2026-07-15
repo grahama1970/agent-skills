@@ -243,6 +243,23 @@ export function runnerDisplayScale(rowHeightPx: number): number {
 	return Math.max(0.65, Math.min(1.15, raw));
 }
 
+function clampRunnerX(
+	x: number,
+	contentWidth: number,
+	rowHeightPx: number,
+	variantId: BattleRunnerSpriteId,
+): number {
+	const framePx = 64;
+	const scale = runnerDisplayScale(rowHeightPx);
+	const anchorX = Math.max(0, Math.min(1, runnerSpriteAnchor(variantId).x));
+	const leftExtent = framePx * scale * anchorX;
+	const rightExtent = framePx * scale * (1 - anchorX);
+	const minX = leftExtent;
+	const maxX = contentWidth - rightExtent;
+	if (maxX < minX) return contentWidth / 2;
+	return Math.max(minX, Math.min(maxX, x));
+}
+
 function upsertRunnerActor(args: {
 	runners: Container;
 	runnerMap: Map<string, RunnerActor>;
@@ -516,6 +533,7 @@ function syncEntities(
 			runnerAnimationWithReceiptGate(lane, currentSeconds, allottedSeconds, validationGate.receiptSafe, useElapsed);
 		const activeSegment = activitySegmentAtPlayhead(lane, currentSeconds, allottedSeconds, useElapsed);
 		const runnerAlpha = lineageMotion?.alpha ?? (activeSegment?.phase === "authorized_pending" ? 0.42 : activeSegment && isProvisionalSegment(activeSegment) ? 0.62 : 1);
+		const renderedRunnerX = clampRunnerX(runnerX, contentWidth, row.heightPx, variantId);
 		upsertRunnerActor({
 			runners: layers.runners,
 			runnerMap,
@@ -523,7 +541,7 @@ function syncEntities(
 			variantId,
 			sheet,
 			animation,
-			x: runnerX,
+			x: renderedRunnerX,
 			y,
 			rowHeightPx: row.heightPx,
 			alpha: runnerAlpha,
