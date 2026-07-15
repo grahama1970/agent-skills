@@ -2,7 +2,7 @@
 name: watch
 description: >
   Watch any video (URL or local file) with scene-change frame extraction,
-  transcript extraction (native captions or Whisper via scillm), SRT-based
+  transcript extraction (native captions or configured Whisper runtime), SRT-based
   emotion/scene analysis, and structured reports. Merges capabilities from
   ingest-youtube (transcripts) and ingest-movie (scene/emotion analysis) with
   ffmpeg scene-change detection.
@@ -48,7 +48,7 @@ complies:
 
 Watch any video (URL or local file) and get:
 1. **Scene-change frames** — one JPEG per detected shot via ffmpeg `select=gt(scene,…)`
-2. **Transcript** — native captions first, then Whisper via scillm
+2. **Transcript** — native captions first, then the configured Whisper runtime
 3. **SRT emotion/scene analysis** — for local files with subtitles
 4. **Scene element table** — timecode, transcript text, marker image, movie segment, and sound note per sampled scene
 5. **HTML inspection table** — thumbnails, visual description status, playable video/audio controls where local paths are available
@@ -80,7 +80,7 @@ cd ${HOME}/workspace/experiments/agent-skills/skills/watch
 ```
 watch "https://youtube.com/watch?v=..."   → YouTube: ingest-youtube + yt-dlp frames
 watch /path/to/video.mp4                  → Local file: direct processing
-watch "There Will Be Blood"              → Movie title: disk → ingest-movie search → ingest-movie Radarr
+watch "There Will Be Blood"              → Movie title: local disk lookup; if missing, acquire with ingest-movie
 ```
 
 **Movie resolution and acquisition:**
@@ -109,10 +109,10 @@ Rules:
 
 | Source type | Transcript | Scene/emotion analysis | Download/acquisition |
 |-------------|-----------|----------------------|---------------------|
-| **YouTube URL** | `ingest-youtube` (captions via `--no-whisper`, then scillm Whisper on video) | Not applicable | `yt-dlp` for frames |
-| **Local file with SRT** | English SRT plus separate scillm Whisper | `ingest-movie` scenes analyze/find | N/A (local) |
-| **Movie title** (name not found in library) | English SRT plus separate scillm Whisper | `ingest-movie` scenes analyze/find | `ingest-movie` Radarr + Bazarr English SRT recovery |
-| **Other URL / no SRT** | scillm Whisper fallback | Built-in SRT parser (fallback) | `yt-dlp` download |
+| **YouTube URL** | `ingest-youtube` captions first, then configured Whisper fallback when requested | Not applicable | `yt-dlp` for frames |
+| **Local file with SRT** | English SRT plus separate configured Whisper stream when requested | `ingest-movie` scenes analyze/find | N/A (local) |
+| **Movie title** (name not found in library) | Not processed until acquired locally | `ingest-movie` scenes analyze/find after acquisition | `ingest-movie` Radarr + Bazarr English SRT recovery |
+| **Other URL / no SRT** | Configured Whisper fallback | Built-in SRT parser (fallback) | `yt-dlp` download |
 
 ## Pipeline
 
@@ -133,7 +133,9 @@ Source (URL or local)
   ├─ Transcript routing:
   │   ├─ YouTube URL ──→ compose with ingest-youtube (uv subprocess, stdout JSON)
   │   ├─ Local English SRT file ──→ parse directly (SSA/ASS/SRT)
-  │   └─ Fallback ──→ scillm Whisper (httpx to localhost:4001, not raw API key)
+  │   └─ Fallback ──→ configured Whisper runtime
+  │      Current implementation: Docker Whisper endpoint from WHISPER_API_URL,
+  │      with local faster-whisper fallback when Docker is unavailable.
   │      Note: Whisper is a separate transcript stream; it does not satisfy
   │      the English SRT requirement for movie canary/product runs.
   │
@@ -227,7 +229,7 @@ answer.
 | `--emotion` | — | Emotion tag for scene filtering (rage, anger, etc.) |
 | `--tag` | — | SRT cue tag for scene filtering |
 | `--query` | — | Free-text search in SRT |
-| `--whisper` | `True` | Enable Whisper fallback via scillm |
+| `--whisper` | `True` | Enable configured Whisper fallback |
 | `--no-whisper` | — | Skip Whisper fallback |
 | `--out-dir` | tmp | Working directory |
 | `--json` | — | Output JSON instead of markdown |
@@ -433,14 +435,10 @@ All environment variables are centralized in `scripts/config.py`:
 
 ## PGS Subtitle OCR
 
-BluRay PGS (image-based) subtitles are OCR'd via a batch approach:
-1. `ffprobe` extracts subtitle event PTS values
-2. `ffmpeg` overlay renders each subtitle on a scaled video frame
-3. `tesseract` OCRs each frame (ThreadPoolExecutor with 4 workers)
-4. Produces an SRT file with timing from the PTS metadata
-
-Capped at 500 events (same as the single-pass frame budget). Falls back to
-Whisper-only if OCR fails.
+BluRay PGS image subtitles are not OCR'd by the main pipeline. The current
+runtime detects PGS, records that text subtitles are unavailable, and falls back
+to Whisper-only transcript evidence when `--whisper` is enabled. Dormant OCR
+helpers exist in the codebase but are not part of the executable contract.
 
 ## Dependencies
 
@@ -448,7 +446,7 @@ Whisper-only if OCR fails.
 uv pip install httpx rich loguru typer pillow
 ```
 
-System: `ffmpeg`, `ffprobe`, `yt-dlp`, `tesseract` (for PGS OCR)
+System: `ffmpeg`, `ffprobe`, `yt-dlp`
 
 The CLI validates system deps at startup: missing `ffmpeg`, `ffprobe`, or
 `yt-dlp` produces a clear error before any pipeline work begins.
@@ -467,11 +465,17 @@ cd ../ingest-movie
 ./run.sh scenes extract --subtitle file.srt --tag rage --video movie.mkv
 ```
 
-For **Whisper transcription**, use scillm:
-```python
-import httpx
-resp = httpx.post("http://localhost:4001/v1/audio/transcriptions", ...)
+For **Whisper transcription**, the current Watch runtime uses the configured
+OpenAI-compatible Docker Whisper endpoint:
+
+```bash
+export WHISPER_API_URL="http://127.0.0.1:9000/v1/audio/transcriptions"
+export WHISPER_API_KEY="<watch-whisper-key>"
 ```
+
+The Watch agent persona may still require delegated/scillm transcription for
+agent-authored operations. That is an agent governance boundary, not the current
+skill runtime implementation.
 
 ## Sanity
 

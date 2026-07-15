@@ -81,7 +81,7 @@ Two-pass approach (no `-frames:v` limit that caused partial coverage):
 1. ffmpeg `select='gt(scene,0.3)'` detects all scene changes across the entire video
 2. Results subsampled evenly to `--max-frames` if more than budget
 
-Covers the full movie. Frame budget defaults to 150 (capped at 500).
+Covers the full movie. Frame budget defaults to 100 (explicitly capped at 500).
 
 ## Whisper Docker
 
@@ -144,7 +144,7 @@ Aliases: `grandma`→`Granny`, `kid`→`Thurman Merman`, `santa`→`Willie T. So
 | `answer` field stores both SRT + Whisper | So `/recall` returns both, agent decides which to trust |
 | No `-frames:v` limit in scene detection | Without limit, ffmpeg detects all scene changes across full duration; subsampled afterward |
 | Three divergence types only | SRT and Whisper naturally describe different things — only flag when one captures something the other structurally cannot |
-| PGS OCR not attempted | ffmpeg overlay + tesseract is too slow (~2s per subtitle event × 3000 = ~100min) |
+| PGS OCR not attempted | ffmpeg overlay + tesseract is too slow for the main pipeline; use Whisper-only when no text subtitle exists |
 | SRT extracted from MKV, not downloaded | Third-party SRTs have unreliable timing vs specific encodes |
 | `--persona` flag tags records | Enables persona-specific recall filtering |
 

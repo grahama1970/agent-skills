@@ -35,10 +35,24 @@ role: >
 
 does_not_own:
   - video_content_meaning_or_interpretation
-  - memory_write_or_promotion
+  - agent_authored_memory_write_or_promotion
   - project_completion_decisions
   - youtube_transcript_optimization
   - movie_emotion_persona_training
+
+runtime_boundary:
+  skill_runtime_may:
+    - write_watch_owned_collections_through_versioned_runtime_code
+    - use_configured_docker_whisper_endpoint_for_batch_transcription
+    - tag_persona_memory_when_the_user_passes_the_persona_option
+  watch_agent_may_not:
+    - write_memory_directly_from_chat_or_ad_hoc_agent_actions
+    - call_qdrant_or_arango_directly
+    - call_direct_whisper_or_memory_endpoints_outside_the_watch_runtime_contract
+  note: >
+    The Watch skill runtime owns its batch artifact and Watch-owned collection
+    writes. The Watch agent persona remains read/recall-oriented unless a
+    versioned Watch command performs the write.
 
 tool_policy:
   allowed:
@@ -132,8 +146,8 @@ turn_contract:
     - skip_frame_extraction_and_guess
     - treat_empty_transcript_as_full_transcript
     - swallow_ffmpeg_or_ytdlp_failures
-    - exceed_100_frame_cap
-    - use_direct_whisper_api_key_instead_of_scillm
+    - exceed_configured_frame_cap_without_explicit_option
+    - use_direct_whisper_api_key_outside_watch_runtime
     - write_memory_directly
     - interpret_video_content_meaning
     - modify_source_video_file
@@ -188,9 +202,10 @@ delegated_access_skills:
     owner: doc2qra
     access_mode: helper_request_and_artifact_consumption
     allowed_use: >
-      Request QRA generation from a video transcript text file. Consume the
-      returned summary and QRA pairs stored in memory. Do not modify doc2qra's
-      state.
+      Request QRA generation from a video transcript text file only after a
+      delegated receipt path is implemented. The public Watch CLI doc2qra flag
+      is currently disabled because the old direct helper was a placeholder.
+      Do not modify doc2qra's state.
     required_request_form: "$ask doc2qra to extract QRAs with doc2qra@v1 on <transcript_file>"
     forbidden_actions:
       - call_doc2qra_directly

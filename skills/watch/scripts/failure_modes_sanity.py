@@ -7,6 +7,7 @@ not depend on live YouTube, movie-library, Whisper, model, or memory services.
 from __future__ import annotations
 
 import json
+import inspect
 import sys
 import tempfile
 from contextlib import ExitStack
@@ -54,9 +55,12 @@ def _base_patches(tmp: Path, *, transcript: dict | None = None, transcribe_error
     stack.enter_context(patch.object(watch, "extract_frames", return_value=(frames, "uniform")))
     stack.enter_context(patch.object(watch, "persist_frames", return_value=[]))
     stack.enter_context(patch.object(watch, "extract_and_persist_audio", return_value=None))
+    stack.enter_context(patch.object(watch, "generate_playable_segments", return_value=(frames, [])))
     stack.enter_context(patch.object(watch, "describe_scene_images", return_value=[]))
     stack.enter_context(patch.object(watch, "describe_scene_images_with_receipt", return_value=([], visual_receipt)))
     stack.enter_context(patch.object(watch, "upsert_visual_descriptions", return_value=0))
+    stack.enter_context(patch.object(watch, "upsert_scene_elements", return_value=[]))
+    stack.enter_context(patch.object(watch, "upsert_persona_watch_record", return_value=None))
     if transcribe_error is not None:
         stack.enter_context(patch.object(watch, "transcribe_video", side_effect=transcribe_error))
     elif transcript is not None:
@@ -92,6 +96,56 @@ def check_unresolvable_movie_returns_nonzero() -> None:
         with patch.object(watch, "_resolve_movie_source", return_value=None):
             code = watch.run_watch("Movie That Does Not Exist 2099", out_dir=str(out), whisper=False)
         assert code == 1
+
+
+def check_movie_title_resolution_does_not_call_radarr() -> None:
+    with patch.object(watch, "_find_movie_in_library", return_value=None), \
+         patch.dict(watch.os.environ, {"RADARR_API_KEY": "sentinel"}, clear=False):
+        resolved = watch._resolve_movie_source("Movie That Does Not Exist 2099")
+    assert resolved is None
+    assert not hasattr(watch, "_check_radarr_library"), "Watch must not own direct Radarr access"
+
+
+def check_doc2qra_is_disabled_until_delegated_receipts_exist() -> None:
+    with tempfile.TemporaryDirectory(prefix="watch-fail-") as d:
+        out = Path(d) / "out"
+        with patch.object(watch, "download", side_effect=AssertionError("doc2qra should fail before media work")):
+            code = watch.run_watch("anything.mp4", out_dir=str(out), doc2qra=True)
+    assert code == 1
+
+
+def check_run_watch_default_frame_budget_matches_cli_contract() -> None:
+    assert inspect.signature(watch.run_watch).parameters["max_frames"].default == 100
+
+
+def check_wikipedia_cast_lookup_uses_parse_quote() -> None:
+    calls: list[str] = []
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self) -> bytes:
+            return json.dumps({
+                "parse": {
+                    "text": {
+                        "*": '<li><a href="/wiki/Actor">Actor Name</a> as Character Name</li>'
+                    }
+                }
+            }).encode("utf-8")
+
+    def fake_urlopen(req, timeout=15):
+        calls.append(req.full_url)
+        return FakeResponse()
+
+    watch._CAST_CACHE.clear()
+    with patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        cast = watch._fetch_cast_map("Bad Santa: Test")
+    assert cast == {"Character Name": "Actor Name"}
+    assert calls and "Bad_Santa%3A_Test" in calls[0]
 
 
 def check_youtube_download_failure_returns_nonzero() -> None:
@@ -366,6 +420,10 @@ def check_movie_question_can_use_brave_corroboration() -> None:
 
 CHECKS = [
     check_unresolvable_movie_returns_nonzero,
+    check_movie_title_resolution_does_not_call_radarr,
+    check_doc2qra_is_disabled_until_delegated_receipts_exist,
+    check_run_watch_default_frame_budget_matches_cli_contract,
+    check_wikipedia_cast_lookup_uses_parse_quote,
     check_youtube_download_failure_returns_nonzero,
     check_corrupt_local_file_returns_nonzero,
     check_frame_extraction_failure_returns_nonzero,

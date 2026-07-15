@@ -82,7 +82,7 @@ source URL, file, or title
   -> local media path
   -> scene-change or uniform frame extraction
   -> transcript routing
-       YouTube captions / local SRT / scillm Whisper fallback
+       YouTube captions / local SRT / configured Whisper fallback
   -> optional SRT emotion, tag, or query matching
   -> scene element table
   -> report.md, report.json, report.html, frames_manifest.json
@@ -210,7 +210,6 @@ System dependencies:
 ffmpeg
 ffprobe
 yt-dlp
-tesseract   # only for PGS subtitle OCR
 ```
 
 Python dependencies are managed by the skill environment. The quick manual
@@ -238,6 +237,10 @@ export WHISPER_API_KEY="$(docker exec watch-whisper whisper_manage --showkey | g
 
 Without Docker Whisper, local extraction still works, but transcript fallback may
 be slower or weaker depending on available services.
+
+PGS image subtitles are not OCR'd by the main pipeline. When only PGS subtitles
+are available, Watch records that text subtitles are unavailable and relies on
+Whisper transcript evidence if enabled.
 
 ## Watch UI
 

@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-07-06 07:02 by agent
+**Last updated:** 2026-07-15 10:53 by agent
 
 ## watch subagent
 
@@ -10,18 +10,18 @@
 - **include_edges:** MUST be `False` for `watch_content` (lesson_edges doesn't exist)
 - **Views:** `watch_content_search` must exist + `watch_content` linked in `unified_search`
 - **recall.py KEEP list:** Must include `question`, `reasoning`, `answer`, `frames`, `frame_dir`, `audio_path`
-- **Image description:** `mimo-v2-omni` via Zen API (concurrent ThreadPoolExecutor)
+- **Image description:** configurable via `WATCH_VISUAL_DESCRIPTION_MODEL`; current default is `vlm-chutes` with bounded fallback models and per-frame receipts
 - **Audio description:** `gpt-5.5` via scillm port 4001 (concurrent ThreadPoolExecutor)
 - **QRA generation:** 3-tier fallback: `deepseek-v4-flash` (Zen) → `gpt-5.5` (scillm) → deterministic from transcript
 - **Embedder:** `jinaai/jina-embeddings-v5-omni-small-retrieval` (1024d), port 8603
 - **Vectors:** `text_mm` (text), `image_mm` (images + audio)
-- **Scene fallback:** If scene-change covers <10% of video duration, fall back to uniform sampling
+- **Scene fallback:** ffmpeg scene-change extraction runs without `-frames:v`; if fewer than 10 scene frames are found, Watch falls back to uniform sampling
 - **audio_path stored:** in document but audio embedding pending service Docker rebuild for data:audio/ MIME support
 - **Persisted artifacts:** `/mnt/storage12tb/media/watch-frames/<slug>/` (frames + audio.wav)
-- **Movie acquisition:** Route ALL through `ingest-movie` (search + Radarr). brave-search for topic discovery only.
-- **Key env vars:** `ZEN_API_KEY` (deepseek, mimo-v2-omni), `RADARR_API_KEY` (Radarr), `NZBD_GEEK_API_KEY` (Usenet search), `SABNZBD_API_KEY` (download)
-- **Bugs found in e2e:** `import re` missing in storage.py, `args.no_whisper` doesn't exist, `_build_scene_chunks` lost in refactor, deepseek returns malformed JSON → added fallback chain
-- **E2E sanity:** 17/17 tests pass
+- **Movie acquisition:** Watch checks local movie storage only. Acquisition/search/Radarr belongs to `ingest-movie`; brave-search is topic discovery only.
+- **Key env vars:** `ZEN_API_KEY` (deepseek), `WATCH_VISUAL_DESCRIPTION_MODEL`, `WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS`, `WHISPER_API_URL`, `WHISPER_API_KEY`
+- **Known current contract repairs:** direct Radarr access removed from Watch; broken public `--doc2qra` option disabled until delegated receipts exist; cast lookup uses `urllib.parse.quote`; default frame budget is 100 with explicit cap at 500.
+- **Sanity status:** current deterministic failure-mode sanity is fixture-backed and not a full live pipeline proof. Do not cite old `17/17` claims as current E2E evidence.
 **Status:** Active development
 - 2026-06-21 Orpheus classifier rollout/tuning: tuned classifier receipt is /mnt/storage12tb/skills/voice-segment-selector/jobs/orpheus-classifier-rollout-20260621/classifier-human-alignment-tuned.json with schema voice_segment_selector.orpheus_classifier_rollout.v1 and classifier_variant ast_tuned_hard_reject_narrow. Human-reviewed sample count: accept=86, reject=61, maybe=1. Tuned classifier decisions on those human-reviewed clips: manual_review=105, accept=40, reject=3. Pair counts: accept|accept=40, accept|manual_review=44, accept|reject=2, reject|manual_review=60, reject|reject=1, maybe|manual_review=1. Policy: do not treat AST as authoritative; use classifier as conservative triage only. Hard reject is reserved for empty/unreadable audio, obvious <laugh> waveform collapse, or strong laugh-neighbor conflicts for target <laugh>. Non-laugh neighbor conflicts must route to manual_review because human accepted cough/groan/gasp examples AST mislabeled as sigh/gasp. Next generation loop: prompt-reviewer PASS -> ElevenLabs generation -> classify-orpheus-sfx -> human review for manual_review/reject overrides -> export only accepted clips.
 - 2026-06-21 Orpheus waveform classifier refinement: laugh/chuckle/sigh gates now encode the human-observed waveform shapes directly. Added transient_peak_count, transient_peak_density, and envelope_cv to skills/voice-segment-selector/scripts/lib/orpheus_audio_classifier.py. Laugh now requires sustained duration plus repeated bursts/transient spikes and rejects or reviews short/low-amplitude/few-pulse chuckle-like candidates. Chuckle is reviewed when it looks sustained/high-amplitude like a laugh. Sigh is treated as a smooth single-envelope sound and reviewed when it has repeated transient pulses. Focused proof: cd skills/voice-segment-selector && uv run pytest -q tests/test_orpheus_audio_classifier.py tests/test_orpheus_sfx.py -> 13 passed. Real waveform smoke receipt: /mnt/storage12tb/skills/voice-segment-selector/jobs/orpheus-classifier-rollout-20260621/waveform-shape-smoke-20260621.jsonl; embry_laugh_0003_sustained waveform passed with duration=3.76s, burst_count=11, transient_peak_count=16; horus_chuckle_0019 was reviewed as chuckle_amplitude_laugh_like with duration=1.92s, burst_count=3, transient_peak_count=3.

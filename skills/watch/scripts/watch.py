@@ -4,7 +4,6 @@
 Composes with sibling skills:
   - ingest-youtube: transcript for YouTube URLs (3-tier fallback)
   - ingest-movie: SRT scene/emotion analysis for local files
-  - doc2qra: QRA extraction from transcripts (optional)
 
 Input: video URL, local file path, or movie title
 Output: frames + transcript + 3 QRA pairs + image descriptions + audio descriptions
@@ -63,12 +62,13 @@ def _word_in(phrase: str, word: str) -> bool:
 def _fetch_cast_map(title: str) -> dict[str, str]:
     """Query Wikipedia API for cast list and return {Character: Actor} map."""
     import json
+    import urllib.parse
     import urllib.request
     cache_key = title.lower().strip()
     if cache_key in _CAST_CACHE:
         return _CAST_CACHE[cache_key]
     movie_name = title.split("(")[0].strip().replace(" ", "_")
-    api_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.request.quote(movie_name)}&prop=text&section=2&format=json"
+    api_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.parse.quote(movie_name)}&prop=text&section=2&format=json"
     cast_map: dict[str, str] = {}
     try:
         req = urllib.request.Request(api_url, headers={"User-Agent": "WatchSkill/1.0"})
@@ -153,27 +153,6 @@ def _find_srt_in_dir(dir_path: Path) -> Path | None:
     return None
 
 
-def _check_radarr_library(title: str) -> dict | None:
-    api_key = os.environ.get("RADARR_API_KEY", "")
-    radarr_url = os.environ.get("RADARR_URL", "http://localhost:7878")
-    if not api_key:
-        return None
-    try:
-        resp = httpx.get(f"{radarr_url}/api/v3/movie", params={"apikey": api_key}, timeout=15)
-        if resp.status_code != 200:
-            return None
-        title_lower = title.lower().strip()
-        for m in resp.json():
-            m_title = m.get("title", "").lower()
-            if title_lower in m_title or m_title in title_lower:
-                return {"in_library": True, "has_file": m.get("hasFile", False), "title": m.get("title"),
-                        "year": m.get("year"), "tmdb_id": m.get("tmdbId"), "downloaded": m.get("hasFile", False)}
-        return {"in_library": False}
-    except Exception as exc:
-        logger.debug("Radarr check failed: {}", exc)
-        return None
-
-
 def _resolve_movie_source(source: str) -> str | None:
     if is_url(source) or Path(source).exists():
         return source
@@ -182,14 +161,10 @@ def _resolve_movie_source(source: str) -> str | None:
         video = _find_video_in_dir(movie_dir) if movie_dir.is_dir() else movie_dir
         if video and video.exists():
             return str(video)
-    radarr_status = _check_radarr_library(source)
-    if radarr_status:
-        if radarr_status.get("has_file"):
-            pass
-        elif radarr_status.get("in_library"):
-            logger.info("in Radarr but not downloaded (tmdbId={})", radarr_status.get("tmdb_id"))
-        else:
-            logger.info("not in Radarr. Add via ingest-movie: cd {} && ./run.sh acquire radarr --preset horus_standard --execute", SKILLS_DIR / "ingest-movie")
+    logger.info(
+        "movie title not found in local library. Acquire via ingest-movie, for example: cd {} && ./run.sh acquire radarr --preset horus_standard --execute",
+        SKILLS_DIR / "ingest-movie",
+    )
     return None
 
 
@@ -260,7 +235,7 @@ def run_watch(
     source: str,
     scene_change: bool = True,
     fps: float | None = None,
-    max_frames: int = 150,
+    max_frames: int = 100,
     resolution: int = 512,
     start: str | None = None,
     end: str | None = None,
@@ -278,6 +253,10 @@ def run_watch(
     require_visual_descriptions: bool = False,
 ) -> int:
     """Main watch pipeline: resolve source, extract frames, transcribe, generate QRA, store to memory."""
+    if doc2qra:
+        logger.error("--doc2qra is disabled: the delegated doc2qra receipt path is not implemented")
+        return 1
+
     max_frames_capped = min(max_frames, 500)
 
     # Rolling window: if video exceeds frame budget, split into chunks
@@ -460,17 +439,6 @@ def run_watch(
         gaps.append("missing_transcript")
 
     qra_result = None
-    if transcript and transcript.get("full_text") and doc2qra:
-        from qra import _build_scene_chunks, _call_doc2qra_scene
-        scenes_text = _build_scene_chunks(transcript["segments"], frames, sampling_mode)
-        if scenes_text:
-            qra_results = []
-            for scene in scenes_text:
-                r = _call_doc2qra_scene(scene["text"], scene["index"], title, scene["start_seconds"], scene["end_seconds"])
-                if r:
-                    qra_results.append(r)
-            if qra_results:
-                qra_result = {"scene_count": len(qra_results), "scenes": qra_results}
 
     scenes_analysis = None
     emotion_analysis = None
