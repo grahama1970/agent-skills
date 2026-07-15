@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715.submitted-code.md",
+  "submitted_output": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.md.submitted.md",
+  "output": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.md",
+  "raw_output": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.raw.md",
+  "meta_output": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260715T203839Z:fb982bd2>>>",
+  "requested_tab_id": "837358135",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-15T20:38:53Z"
+}

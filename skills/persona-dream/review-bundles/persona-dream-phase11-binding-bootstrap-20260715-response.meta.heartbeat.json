@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-15T20:53:53Z",
+  "submitted_at": "2026-07-15T20:38:42Z",
+  "last_browser_observation_at": "2026-07-15T20:53:53Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.raw.md",
+  "next_expected_artifact": "skills/persona-dream/review-bundles/persona-dream-phase11-binding-bootstrap-20260715-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260715T203839Z:fb982bd2>>>",
+  "prepared_prompt_is_transport_proof": false
+}
