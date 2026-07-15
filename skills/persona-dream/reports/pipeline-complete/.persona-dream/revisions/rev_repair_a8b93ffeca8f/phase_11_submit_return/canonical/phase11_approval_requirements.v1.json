@@ -3,13 +3,13 @@
   "bindings": {
     "activation_transaction_id": "activation-d8b7a1b0713d566ff14b49ada1824c9e",
     "actual_provider_call_attempts": 0,
-    "endpoint": "",
-    "media_binding_manifest_sha256": "sha256:6255934494c2ded9f1f2903bd4a55dba6b347f80a0292978e9d4ffb2dc83e5ca",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "media_binding_manifest_sha256": "sha256:737d5ed9a340f570fd61bd97b55fefff4b143a15594c8b9b1217ffd17db18aa2",
     "media_input_contract_sha256": "sha256:e366e67753f662c27636ac5788fe5335eacb5a5c25f5bea347aeec627014733f",
-    "pricing_snapshot_sha256": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "pricing_snapshot_sha256": "sha256:1793cdcb91dda4a86fe1b7d5e4f3b621e78d5b4ff9c115cace6d309d0a6b6b2a",
     "provider_id": "kling",
-    "provider_source_snapshot_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "request_body_sha256": "sha256:293078b202cb22b69c316ed7c072550a46e8514f51f1d0c4d6e06d530779122b",
+    "provider_source_snapshot_sha256": "sha256:fd99e5e501028147d51fcb1ca40ac1ce2b62f815592567a907e243100d00308e",
+    "request_body_sha256": "sha256:1f51cd73638dba3ce39398fa75115729911f92bd8286d290148e622c8f9bbd30",
     "revision_id": "rev_repair_a8b93ffeca8f",
     "run_id": "pipeline-complete"
   },

@@ -1,0 +1,186 @@
+{
+  "activation_transaction_id": "activation-d8b7a1b0713d566ff14b49ada1824c9e",
+  "actual_provider_call_attempts": 0,
+  "checked_at": "2026-07-15T14:57:58+00:00",
+  "entries": [
+    {
+      "artifact_id": "phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
+      "json_pointers": [
+        "/input/elements/0/frontal_image_url"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json",
+        "sha256": "sha256:5259688f36aa5780ad0caa4a85e1d4266e3c36297d7972986934f7116ba6a368"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json",
+        "sha256": "sha256:4f01dbf5571e63c0b3eb829c4e84254f96fcab9c56afb8984eb3f4ff345e83e0"
+      },
+      "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/teardown_policy_receipt.json",
+        "sha256": "sha256:66c7030d2ebbd64dc8a9efdafecde3467b5b778062a95cc7857069b0ddd68831"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg"
+    },
+    {
+      "artifact_id": "phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png",
+      "json_pointers": [
+        "/input/elements/1/frontal_image_url"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json",
+        "sha256": "sha256:14f53de75d7784300da47605a374a3ecd3723d959e406c6d10934c40939eb0c2"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json",
+        "sha256": "sha256:ba1ee2aeff9d200835b033605e92f217194254692f3f4e0a15bba65b1098c0e4"
+      },
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/teardown_policy_receipt.json",
+        "sha256": "sha256:8f48258635a1018c0ac50269db10ac356fbfb1892aa551a923f527ec87d299b8"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png"
+    },
+    {
+      "artifact_id": "sb_001.start_frame",
+      "json_pointers": [
+        "/input/elements/1/reference_image_urls/0",
+        "/input/start_image_url"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
+        "sha256": "sha256:3a0f1a5e27aa6bdd58ecbf31714e02734afe23f5bc0ac9d9afe0b51419f8c0ad"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
+        "sha256": "sha256:3fddd8f73337d170ccaa2e06df6113bcade4499686cf482464da1016c4c9dec5"
+      },
+      "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/teardown_policy_receipt.json",
+        "sha256": "sha256:ac6cee51a1df01bc615083605bfbdb240a32472e2f7650c325885c70dffc4668"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png"
+    },
+    {
+      "artifact_id": "sb_002.start_frame",
+      "json_pointers": [
+        "/input/elements/0/reference_image_urls/0"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json",
+        "sha256": "sha256:a1f337dcf6ea6bc22026b291c5882637facc422dcdefeae441097bcfe1ec73fb"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json",
+        "sha256": "sha256:039fa6a2e4d342d6440fca67c5b5b5da21ee69c9138f273249f9ca47a81293ac"
+      },
+      "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/teardown_policy_receipt.json",
+        "sha256": "sha256:06f8a561abba8ad132c59c2628af59b26b3d7b5ef4784ad723e3c77baf3e1404"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png"
+    },
+    {
+      "artifact_id": "sb_003.start_frame",
+      "json_pointers": [
+        "/input/elements/1/reference_image_urls/1"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json",
+        "sha256": "sha256:ea07f70bd552477da1ab4a020baea4899c202e615f4ba642d1967d3a5638e6cb"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json",
+        "sha256": "sha256:70b8e87c3bd5d38976f38c0998ca15e69f21d75c227f50b1a0f311ec4b162ee9"
+      },
+      "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/teardown_policy_receipt.json",
+        "sha256": "sha256:a50a4ff29eb5bb48c12ea51ee6cb49e94554c90bfbadfb3debf833b79e406e16"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png"
+    },
+    {
+      "artifact_id": "sb_004.end_frame",
+      "json_pointers": [
+        "/input/end_image_url"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/public_probe_receipt.json",
+        "sha256": "sha256:20a6355b8d9080b374979b206b10823d3c7c7cc25873a1786ca4319a2462f904"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/existing_publication_receipt.json",
+        "sha256": "sha256:c82fb6f22ef157c5533e789979f3741284021a0dc0fbe03db19c7709acadac59"
+      },
+      "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/teardown_policy_receipt.json",
+        "sha256": "sha256:7c9a4764443dab4ab91711967fbfca5e7b25f0fe6d80c183223de78678fec4da"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png"
+    },
+    {
+      "artifact_id": "sb_004.start_frame",
+      "json_pointers": [
+        "/input/elements/0/reference_image_urls/1"
+      ],
+      "public_probe": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json",
+        "sha256": "sha256:15e77085b5275cc133938799032be031e80bf867dc59600e7a6b3f26c4d2976f"
+      },
+      "publication_authorization": {
+        "approval_type": "publication_authorization",
+        "state": "MISSING_HUMAN_APPROVAL"
+      },
+      "publication_receipt": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json",
+        "sha256": "sha256:b52e50bd3a8ee9b9365ee12b66bfb51860691a6d0e4d8bb0848c9cbbd9550513"
+      },
+      "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+      "teardown_policy": {
+        "relative_path": ".persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/teardown_policy_receipt.json",
+        "sha256": "sha256:384da3455166a689939114e980c3c84edc99850c6ccf8fcf5961b79120dbc113"
+      },
+      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/5529ca5dee3fe5b4c6bb2c174847f5b762c86031/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png"
+    }
+  ],
+  "provider_live": false,
+  "publication_authorization_present": false,
+  "publication_authorization_required": true,
+  "publication_performed_by_this_command": false,
+  "request_asset_count": 7,
+  "revision_id": "rev_repair_a8b93ffeca8f",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.provider_media_transition_manifest.v1",
+  "status": "PASS_PROVIDER_MEDIA_TRANSITIONS_TECHNICAL",
+  "submitted": false
+}

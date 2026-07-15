@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema", "status", "artifact_id", "url", "final_url", "http_status",
+    "content_type", "content_length", "downloaded_sha256", "checked_at",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_public_media_probe_receipt.v1"},
+    "status": {"const": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"},
+    "artifact_id": {"type": "string", "minLength": 1},
+    "url": {"type": "string", "pattern": "^https://"},
+    "final_url": {"type": "string", "pattern": "^https://"},
+    "http_status": {"const": 200},
+    "content_type": {"type": "string", "pattern": "^image/"},
+    "content_length": {"type": "integer", "minimum": 1},
+    "downloaded_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "checked_at": {"type": "string", "format": "date-time"},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "additionalProperties": false
+}

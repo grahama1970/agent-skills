@@ -56,6 +56,12 @@ DEFAULT_TRANSITION_RELATIVE = Path("phase_11_submit_return") / "preflight" / "pr
 DEFAULT_APPROVAL_ROOT_RELATIVE = Path("phase_11_submit_return") / "preflight" / "approvals"
 DEFAULT_PHASE10_RELATIVE = Path("phase_10_provider_contract") / "final_provider_payload_by_panel.json"
 DEFAULT_MEDIA_LOCK_RELATIVE = Path("phase_08_media_lock") / "storyboard_media_lock_manifest.json"
+UPSTREAM_MIGRATION_RELATIVE = Path("phase_11_submit_return") / "preflight" / "upstream_validation_migration_receipt.json"
+UPSTREAM_DEFERRED_STEPS = (
+    {"step_id": "phase11_submit_and_return", "status": "NOT_EXECUTED"},
+    {"step_id": "phase12_watch_observation", "status": "NOT_EXECUTED"},
+    {"step_id": "phase13_16_cognitive_loop", "status": "NOT_EXECUTED"},
+)
 
 APPROVAL_TYPES = (
     "publication_authorization",
@@ -392,7 +398,11 @@ def provider_mode(endpoint: str) -> str:
     return "unknown"
 
 
-def load_provider_snapshot(path: Path, current: datetime) -> ProviderSnapshotResult:
+def load_provider_snapshot(
+    path: Path,
+    current: datetime,
+    context: ActiveContext | None = None,
+) -> ProviderSnapshotResult:
     blockers: list[str] = []
     if not path.is_file():
         placeholder = {
@@ -410,6 +420,25 @@ def load_provider_snapshot(path: Path, current: datetime) -> ProviderSnapshotRes
     snapshot_sha = sha256_file(path)
     if value.get("actual_provider_call_attempts") != 0:
         blockers.append("BLOCKED_PROVIDER_CALL_ATTEMPT_NONZERO")
+    if context is not None and (
+        value.get("run_id") != context.run_id
+        or value.get("revision_id") != context.revision_id
+        or value.get("activation_transaction_id") != context.activation_transaction_id
+    ):
+        blockers.append("BLOCKED_PROVIDER_SOURCE_SNAPSHOT_IDENTITY")
+    retrieval = value.get("retrieval")
+    command = retrieval.get("command") if isinstance(retrieval, Mapping) else None
+    if (
+        not isinstance(retrieval, Mapping)
+        or retrieval.get("provider_generation_call_attempted") is not False
+        or retrieval.get("actual_provider_call_attempts") != 0
+        or not isinstance(command, list)
+        or command[:2] != [
+            "skills/persona-dream/run.sh",
+            "capture-phase11-provider-source-snapshot",
+        ]
+    ):
+        blockers.append("BLOCKED_PROVIDER_SOURCE_RETRIEVAL_EVIDENCE")
     endpoint = str(value.get("endpoint") or "")
     mode = str(value.get("mode") or "").lower()
     if provider_mode(endpoint) != mode:
@@ -421,6 +450,10 @@ def load_provider_snapshot(path: Path, current: datetime) -> ProviderSnapshotRes
             blockers.append("BLOCKED_PROVIDER_SOURCE_SNAPSHOT_TTL_EXPIRED")
     except (TypeError, ValueError):
         blockers.append("BLOCKED_PROVIDER_SOURCE_SNAPSHOT_TIMESTAMP_INVALID")
+    expected_source_paths = {
+        "schema_source": "/models/fal-ai/kling-video/v3/standard/image-to-video/api",
+        "pricing_source": "/models/fal-ai/kling-video/v3/standard/image-to-video",
+    }
     for source_name in ("schema_source", "pricing_source"):
         source = value.get(source_name)
         if not isinstance(source, Mapping):
@@ -429,7 +462,12 @@ def load_provider_snapshot(path: Path, current: datetime) -> ProviderSnapshotRes
         if not 200 <= int(source.get("http_status") or 0) < 300:
             blockers.append(f"BLOCKED_PROVIDER_{source_name.upper()}_HTTP_STATUS")
         final_url = str(source.get("final_url") or "")
-        if urlparse(final_url).scheme != "https":
+        parsed_final = urlparse(final_url)
+        if (
+            parsed_final.scheme != "https"
+            or parsed_final.netloc != "fal.ai"
+            or parsed_final.path.rstrip("/") != expected_source_paths[source_name]
+        ):
             blockers.append(f"BLOCKED_PROVIDER_{source_name.upper()}_FINAL_URL")
         expected_remote_hash = str(source.get("remote_content_sha256") or "")
         if not SHA256_RE.fullmatch(expected_remote_hash):
@@ -468,11 +506,30 @@ def load_provider_snapshot(path: Path, current: datetime) -> ProviderSnapshotRes
         try:
             duration = int(pricing.get("duration_seconds") or 0)
             rate = float(pricing.get("usd_per_second_audio_off") or 0)
+            audio_rate = float(pricing.get("usd_per_second_audio_on") or 0)
+            voice_rate = float(pricing.get("usd_per_second_voice_control") or 0)
             maximum = float(pricing.get("maximum_expected_cost_usd") or 0)
-            if duration != 10 or rate <= 0 or abs(maximum - rate * duration) > 1e-9:
+            if (
+                duration != 10
+                or abs(rate - 0.084) > 1e-12
+                or abs(audio_rate - 0.126) > 1e-12
+                or abs(voice_rate - 0.154) > 1e-12
+                or abs(maximum - rate * duration) > 1e-9
+            ):
                 blockers.append("BLOCKED_PROVIDER_PRICING_CONTRACT")
         except (TypeError, ValueError):
             blockers.append("BLOCKED_PROVIDER_PRICING_CONTRACT")
+    migration = value.get("phase10_endpoint_migration")
+    if not isinstance(migration, Mapping):
+        blockers.append("BLOCKED_PROVIDER_PHASE10_ENDPOINT_MIGRATION_MISSING")
+    else:
+        if migration.get("to_endpoint") != endpoint:
+            blockers.append("BLOCKED_PROVIDER_PHASE10_ENDPOINT_MIGRATION_INVALID")
+        if migration.get("status") not in {"APPLIED", "NOT_REQUIRED"}:
+            blockers.append("BLOCKED_PROVIDER_PHASE10_ENDPOINT_MIGRATION_INVALID")
+        for field in ("phase10_payload_sha256", "candidate_binding_sha256"):
+            if not SHA256_RE.fullmatch(str(migration.get(field) or "")):
+                blockers.append("BLOCKED_PROVIDER_PHASE10_ENDPOINT_MIGRATION_INVALID")
     return ProviderSnapshotResult(value, path, snapshot_sha, tuple(sorted(set(blockers))))
 
 
@@ -509,7 +566,7 @@ def load_inputs(
         candidate_binding=candidate_value,
         media_lock_path=media_lock_path,
         media_lock=media_lock_value,
-        provider_snapshot=load_provider_snapshot(provider_path, current),
+        provider_snapshot=load_provider_snapshot(provider_path, current, context),
         transition_manifest_path=transition_path,
         transition_manifest=transition_value,
         approval_root=approvals,
@@ -559,16 +616,44 @@ def validate_transition_evidence(
     artifact_id: str,
     url: str,
     expected_sha256: str,
+    json_pointer: str,
 ) -> tuple[dict[str, Any], list[str]]:
     blockers: list[str] = []
     manifest_path = portable_run_path(inputs.context, inputs.transition_manifest_path)
-    entry = transition_entries(inputs.transition_manifest).get(artifact_id)
-    if entry is None:
+    manifest = inputs.transition_manifest
+    if not isinstance(manifest, Mapping):
         return {"manifest_path": manifest_path, "entry_found": False}, [f"BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:{artifact_id}"]
+    header_errors = validate_schema(manifest, "provider_media_transition_manifest.v1.schema.json")
+    if header_errors:
+        blockers.append("BLOCKED_PUBLIC_MEDIA_TRANSITION_MANIFEST_SCHEMA")
+    if (
+        manifest.get("status") != "PASS_PROVIDER_MEDIA_TRANSITIONS_TECHNICAL"
+        or manifest.get("run_id") != inputs.context.run_id
+        or manifest.get("revision_id") != inputs.context.revision_id
+        or manifest.get("activation_transaction_id") != inputs.context.activation_transaction_id
+        or manifest.get("actual_provider_call_attempts") != 0
+    ):
+        blockers.append("BLOCKED_PUBLIC_MEDIA_TRANSITION_MANIFEST_IDENTITY")
+    entry = transition_entries(manifest).get(artifact_id)
+    if entry is None:
+        return {"manifest_path": manifest_path, "entry_found": False}, blockers + [f"BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:{artifact_id}"]
     if entry.get("url") != url or entry.get("sha256") != expected_sha256:
         blockers.append(f"BLOCKED_PUBLIC_MEDIA_TRANSITION_BINDING:{artifact_id}")
-    refs: dict[str, Any] = {}
-    for name in ("publication_authorization", "publication_receipt", "public_probe", "teardown_policy"):
+    pointers = entry.get("json_pointers")
+    if not isinstance(pointers, list) or json_pointer not in pointers:
+        blockers.append(f"BLOCKED_PUBLIC_MEDIA_JSON_POINTER_BINDING:{artifact_id}:{json_pointer}")
+
+    authorization = entry.get("publication_authorization")
+    if not isinstance(authorization, Mapping) or authorization.get("approval_type") != "publication_authorization":
+        blockers.append(f"BLOCKED_PUBLIC_MEDIA_PUBLICATION_AUTHORIZATION_STATE:{artifact_id}")
+    elif authorization.get("state") not in {"MISSING_HUMAN_APPROVAL", "APPROVED"}:
+        blockers.append(f"BLOCKED_PUBLIC_MEDIA_PUBLICATION_AUTHORIZATION_STATE:{artifact_id}")
+
+    refs: dict[str, Any] = {
+        "publication_authorization": dict(authorization) if isinstance(authorization, Mapping) else None,
+        "json_pointers": list(pointers) if isinstance(pointers, list) else [],
+    }
+    for name in ("publication_receipt", "public_probe", "teardown_policy"):
         ref = entry.get(name)
         if not isinstance(ref, Mapping):
             blockers.append(f"BLOCKED_PUBLIC_MEDIA_{name.upper()}_MISSING:{artifact_id}")
@@ -587,16 +672,27 @@ def validate_transition_evidence(
             blockers.append(f"BLOCKED_PUBLIC_MEDIA_{name.upper()}_INVALID:{artifact_id}")
             continue
         refs[name] = {"relative_path": relative_path, "sha256": observed_hash, "status": receipt.get("status")}
-        if name == "publication_authorization":
-            if receipt.get("status") != "APPROVED" or receipt.get("approval_type") != "publication_authorization":
-                blockers.append(f"BLOCKED_PUBLIC_MEDIA_PUBLICATION_AUTHORIZATION:{artifact_id}")
-        elif name == "publication_receipt":
-            if receipt.get("status") not in {"PUBLISHED", "PASS_PROVIDER_MEDIA_PUBLISHED"}:
+        if receipt.get("artifact_id") != artifact_id or receipt.get("url") != url:
+            blockers.append(f"BLOCKED_PUBLIC_MEDIA_{name.upper()}_BINDING:{artifact_id}")
+        if receipt.get("actual_provider_call_attempts") != 0:
+            blockers.append("BLOCKED_PROVIDER_CALL_ATTEMPT_NONZERO")
+        if name == "publication_receipt":
+            if (
+                receipt.get("status") != "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+                or receipt.get("sha256") != expected_sha256
+                or receipt.get("publication_performed_by_this_command") is not False
+                or receipt.get("publication_authorization_present") is not False
+            ):
                 blockers.append(f"BLOCKED_PUBLIC_MEDIA_PUBLICATION_RECEIPT:{artifact_id}")
         elif name == "public_probe":
             probe_sha = receipt.get("downloaded_sha256") or receipt.get("observed_sha256")
             final_url = receipt.get("final_url") or receipt.get("url")
-            if receipt.get("status") not in {"PASS", "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"} or int(receipt.get("http_status") or 0) != 200 or probe_sha != expected_sha256 or final_url != url:
+            if (
+                receipt.get("status") != "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+                or int(receipt.get("http_status") or 0) != 200
+                or probe_sha != expected_sha256
+                or final_url != url
+            ):
                 blockers.append(f"BLOCKED_PUBLIC_MEDIA_PROBE:{artifact_id}")
         elif name == "teardown_policy":
             if receipt.get("status") not in {"NOT_REQUIRED_PERSISTENT_COMMIT_PINNED", "PASS_PROVIDER_MEDIA_TEARDOWN"}:
@@ -659,6 +755,7 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
                 evidence, evidence_blockers = validate_transition_evidence(
                     inputs,
                     artifact_id=artifact_id,
+                    json_pointer=str(pointer),
                     url=str(url or ""),
                     expected_sha256=str(source.get("sha256") or ""),
                 )
@@ -692,6 +789,7 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
                 evidence, evidence_blockers = validate_transition_evidence(
                     inputs,
                     artifact_id=artifact_id,
+                    json_pointer=pointer,
                     url=url,
                     expected_sha256=str(entry.get("sha256") or ""),
                 )
@@ -828,7 +926,17 @@ def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], lis
     if candidate_model and endpoint and candidate_model != endpoint:
         blockers.append("BLOCKED_PROVIDER_ENDPOINT_CANDIDATE_MISMATCH")
     if phase10_model and endpoint and phase10_model != endpoint:
-        blockers.append("BLOCKED_PROVIDER_ENDPOINT_CHANGED_FROM_PHASE10")
+        migration = snapshot.get("phase10_endpoint_migration")
+        migration_valid = (
+            isinstance(migration, Mapping)
+            and migration.get("status") == "APPLIED"
+            and migration.get("from_endpoint") == phase10_model
+            and migration.get("to_endpoint") == endpoint
+            and migration.get("phase10_payload_sha256") == sha256_file(inputs.phase10_payload_path)
+            and migration.get("candidate_binding_sha256") == sha256_file(inputs.candidate_binding_path)
+        )
+        if not migration_valid:
+            blockers.append("BLOCKED_PROVIDER_ENDPOINT_CHANGED_FROM_PHASE10")
     if provider_mode(endpoint) != mode:
         blockers.append("BLOCKED_PROVIDER_STANDARD_PRO_MODE_MISMATCH")
 
@@ -944,7 +1052,21 @@ def validate_request_body(body: Mapping[str, Any], *, endpoint: str, mode: str) 
     return blockers
 
 
-def upstream_validation_blockers(path: Path) -> list[str]:
+def upstream_validation_contract(value: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "status": value.get("status"),
+        "passed_step_count": value.get("passed_step_count"),
+        "step_count": value.get("step_count"),
+        "first_blocker": value.get("first_blocker"),
+        "phase11_upstream_gate": value.get("phase11_upstream_gate"),
+        "upstream_required_step_count": value.get("upstream_required_step_count"),
+        "upstream_passed_step_count": value.get("upstream_passed_step_count"),
+        "deferred_steps": value.get("deferred_steps"),
+        "actual_provider_call_attempts": value.get("actual_provider_call_attempts"),
+    }
+
+
+def upstream_validation_blockers(path: Path, context: ActiveContext) -> list[str]:
     if not path.is_file():
         return ["BLOCKED_UPSTREAM_VALIDATION_MISSING"]
     value = read_object(path)
@@ -953,6 +1075,56 @@ def upstream_validation_blockers(path: Path) -> list[str]:
         total = int(value.get("step_count") or 0)
     except (TypeError, ValueError):
         return ["BLOCKED_UPSTREAM_VALIDATION_INVALID"]
+    if passed == total and total > 0 and str(value.get("status") or "").upper().startswith("PASS"):
+        return []
+
+    corrected = (
+        passed == 12
+        and total == 15
+        and value.get("status") == "BLOCKED_DOWNSTREAM_NOT_EXECUTED"
+        and value.get("first_blocker") == "BLOCKED_PHASE11_PROVIDER_SUBMIT_NOT_EXECUTED"
+        and value.get("phase11_upstream_gate") == "PASS_PHASE11_UPSTREAM_QUALIFIED"
+        and value.get("upstream_required_step_count") == 12
+        and value.get("upstream_passed_step_count") == 12
+        and value.get("deferred_steps") == list(UPSTREAM_DEFERRED_STEPS)
+        and value.get("actual_provider_call_attempts") == 0
+    )
+    if corrected:
+        relative_path = str(value.get("phase11_validation_migration_receipt") or "")
+        expected_sha = str(value.get("phase11_validation_migration_receipt_sha256") or "")
+        try:
+            pure = PurePosixPath(relative_path)
+            require(
+                bool(pure.parts) and not pure.is_absolute() and ".." not in pure.parts,
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_PATH",
+            )
+            receipt_path = (context.run_root / pure).resolve(strict=True)
+            receipt_path.relative_to(context.run_root)
+            require(
+                SHA256_RE.fullmatch(expected_sha) is not None
+                and sha256_file(receipt_path) == expected_sha,
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_HASH",
+            )
+            receipt = read_object(receipt_path)
+            require(
+                not validate_schema(receipt, "phase11_upstream_validation_migration.v1.schema.json"),
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_SCHEMA",
+            )
+            require(
+                receipt.get("run_id") == context.run_id
+                and receipt.get("revision_id") == context.revision_id
+                and receipt.get("activation_transaction_id") == context.activation_transaction_id,
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_IDENTITY",
+            )
+            require(
+                receipt.get("corrected_contract_sha256") == canonical_sha256(upstream_validation_contract(value)),
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_CONTRACT",
+            )
+            return []
+        except (OSError, ValueError, json.JSONDecodeError, Phase11Blocked) as exc:
+            code = exc.code if isinstance(exc, Phase11Blocked) else "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_INVALID"
+            return [code]
+
     blockers: list[str] = []
     if total <= 0 or passed != total:
         blockers.append(f"BLOCKED_UPSTREAM_VALIDATION_INCOMPLETE:{passed}/{total}")
@@ -1050,7 +1222,7 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
     technical_blockers = sorted(set(
         request_blockers
         + list(media_manifest.get("blockers") or [])
-        + upstream_validation_blockers(inputs.validation_path)
+        + upstream_validation_blockers(inputs.validation_path, inputs.context)
         + approval_blockers
     ))
     if technical_blockers:

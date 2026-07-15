@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema", "status", "artifact_id", "url", "sha256", "source_commit",
+    "publication_performed_by_this_command", "publication_authorization_present",
+    "observed_at", "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_existing_publication_receipt.v1"},
+    "status": {"const": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"},
+    "artifact_id": {"type": "string", "minLength": 1},
+    "url": {"type": "string", "pattern": "^https://"},
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "publication_performed_by_this_command": {"const": false},
+    "publication_authorization_present": {"const": false},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "additionalProperties": false
+}

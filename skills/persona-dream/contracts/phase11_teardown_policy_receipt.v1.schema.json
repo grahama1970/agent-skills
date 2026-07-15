@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema", "status", "artifact_id", "url", "source_commit", "reason",
+    "actual_provider_call_attempts"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_teardown_policy_receipt.v1"},
+    "status": {"const": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"},
+    "artifact_id": {"type": "string", "minLength": 1},
+    "url": {"type": "string", "pattern": "^https://"},
+    "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "reason": {"type": "string", "minLength": 1},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "additionalProperties": false
+}

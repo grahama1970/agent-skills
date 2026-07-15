@@ -22,7 +22,7 @@
       "--revision-id",
       "rev_repair_a8b93ffeca8f",
       "--now",
-      "2026-07-15T14:17:21Z",
+      "2026-07-15T14:57:58Z",
       "--persist-memory",
       "--memory-url",
       "http://127.0.0.1:8601",
@@ -47,22 +47,22 @@
     },
     "approval_requirements": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical/phase11_approval_requirements.v1.json",
-      "sha256": "sha256:c4ab662225893e2f286a4ae77b9dd824660a42011ff1170c8e7655d14da61be1"
+      "sha256": "sha256:75fa55028c435b588ff031acb337b20ceeb987d9b631d28f5b071944e6bb6091"
     },
     "live_request": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical/phase11_live_request.v1.json",
-      "sha256": "sha256:e0e60825d57fd6cf6dd09db2ba576054a06727e51e1d5c38575bd12df68b1e52"
+      "sha256": "sha256:04688324534a378f154bee6a82230114e93b6cc28ad4decae22fa76a81ea94ec"
     },
     "media_binding_manifest": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json",
-      "sha256": "sha256:6255934494c2ded9f1f2903bd4a55dba6b347f80a0292978e9d4ffb2dc83e5ca"
+      "sha256": "sha256:737d5ed9a340f570fd61bd97b55fefff4b143a15594c8b9b1217ffd17db18aa2"
     },
     "provider_source_snapshot": {
       "path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/provider_source_snapshot.json",
-      "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      "sha256": "sha256:fd99e5e501028147d51fcb1ca40ac1ce2b62f815592567a907e243100d00308e"
     }
   },
-  "gate_status": "BLOCKED_PROVIDER_GATE",
+  "gate_status": "BLOCKED_AWAITING_HUMAN_APPROVAL",
   "live": true,
   "live_submit_ready": false,
   "memory": {
@@ -79,7 +79,7 @@
     "recall": {
       "dense_matching_count": 1,
       "matching_identity_count": 1,
-      "max_dense": 0.77854204,
+      "max_dense": 0.75092334,
       "question": "What is the canonical pre-Kling Phase 11 state for Persona Dream run pipeline-complete revision rev_repair_a8b93ffeca8f?",
       "tags": [
         "active-revision:rev_repair_a8b93ffeca8f"
@@ -100,7 +100,7 @@
       "exact_list": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:60e407063bf0ac8ca6f71f60601bc0b74faf37d6eb5f1a079f33dd314e6643ea",
-        "response_sha256": "sha256:d1f51a5baa867c9620f69e8b93752ede21b765cfdcfcad9f10e25dc8ae39d9f6",
+        "response_sha256": "sha256:c179a6a855e41a768727d3e54eadc8679e3e1140560b384afc385cab5e0b27d9",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -111,7 +111,7 @@
       "recall": {
         "endpoint": "/recall",
         "request_payload_sha256": "sha256:126f9d96b3e053522b2a888692a85e85a3525617e932fd9005e5804cbfd17647",
-        "response_sha256": "sha256:9e73055ab68e9014e2d7bed31eab4891331bc6445db3291163d94ca3e4bb19dc",
+        "response_sha256": "sha256:cc5b37090cfe6afdc66a1ab37048bf3ff41ce7ff54925057f1b3013592c5ceee",
         "returned_counts": {
           "errors": []
         },
@@ -119,21 +119,21 @@
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:0bf3e41a330df2bb042860cccfbf0021b1746e4ef16c1f906e7fc427156feafb",
-        "response_sha256": "sha256:fc1ddb254f4362d37ccd50fde93fb21ebd9ceee8c657b2366f498ec56ab9eb22",
+        "request_payload_sha256": "sha256:c9534f64aab4c24f8508c259cc82459d0b47f58d8bb9a43d0a61ebe8a9246230",
+        "response_sha256": "sha256:f48cb65f4572c247cb939ad843148c37b5a6be3ec6046194b8df476ae73c21e6",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T141721628610Z_13_137246921459392.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T150215052138Z_13_137247147951808.jsonl"
         },
         "status_code": 200
       }
     },
     "semantic_sync_state": "synced",
-    "text_hash": "27cfb929ee5381da00951083068547b06fee13d5"
+    "text_hash": "f1cd6c828efdc036d56c8876593181a7c556c379"
   },
   "missing_approval_types": [
     "cost_acceptance",
@@ -146,8 +146,8 @@
   "paid_call_authorized": false,
   "provider_live": false,
   "provider_ready": false,
-  "request_body_sha256": "sha256:293078b202cb22b69c316ed7c072550a46e8514f51f1d0c4d6e06d530779122b",
-  "request_output_file_sha256": "sha256:e0e60825d57fd6cf6dd09db2ba576054a06727e51e1d5c38575bd12df68b1e52",
+  "request_body_sha256": "sha256:1f51cd73638dba3ce39398fa75115729911f92bd8286d290148e622c8f9bbd30",
+  "request_output_file_sha256": "sha256:04688324534a378f154bee6a82230114e93b6cc28ad4decae22fa76a81ea94ec",
   "revision_id": "rev_repair_a8b93ffeca8f",
   "run_id": "pipeline-complete",
   "runtime_release_id": "agent-skills@62c255c9b8d380079ce37c39cab3ab9adada30e3",
@@ -155,20 +155,7 @@
   "source_commit": "62c255c9b8d380079ce37c39cab3ab9adada30e3",
   "source_revision_id": "rev_0001",
   "submitted": false,
-  "technical_blockers": [
-    "BLOCKED_PROVIDER_ENDPOINT_CHANGED_FROM_PHASE10",
-    "BLOCKED_PROVIDER_SOURCE_SNAPSHOT_MISSING",
-    "BLOCKED_PROVIDER_STANDARD_PRO_MODE_MISMATCH",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:sb_001.start_frame",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:sb_002.start_frame",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:sb_003.start_frame",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:sb_004.end_frame",
-    "BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE:sb_004.start_frame",
-    "BLOCKED_UPSTREAM_VALIDATION_FALSE_GREEN_FIRST_BLOCKER_NULL",
-    "BLOCKED_UPSTREAM_VALIDATION_INCOMPLETE:12/15"
-  ],
-  "validated_at": "2026-07-15T14:17:21+00:00",
+  "technical_blockers": [],
+  "validated_at": "2026-07-15T14:57:58+00:00",
   "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
 }

@@ -35,80 +35,86 @@ def local_ref(run_root: Path, path: Path) -> dict[str, str]:
 
 
 def install_transition_evidence(inputs: common.CompilationInputs, request_body: dict[str, Any]) -> common.CompilationInputs:
-    provisional = common.build_media_binding_manifest(inputs, request_body)
-    media_input_sha = provisional["media_input_contract_sha256"]
-    request_body_sha = common.canonical_sha256(request_body)
-    pricing = inputs.provider_snapshot.value["pricing_source"]
-    pricing_sha = common.canonical_sha256(pricing)
-    approval_root = inputs.approval_root
-    publication_approval = {
-        "schema": "persona_dream.phase11_approval_receipt.v1",
-        "status": "APPROVED",
-        "approval_type": "publication_authorization",
-        "run_id": inputs.context.run_id,
-        "revision_id": inputs.context.revision_id,
-        "activation_transaction_id": inputs.context.activation_transaction_id,
-        "provider_id": inputs.provider_snapshot.value["provider_id"],
-        "endpoint": inputs.provider_snapshot.value["endpoint"],
-        "request_body_sha256": request_body_sha,
-        "media_input_contract_sha256": media_input_sha,
-        "provider_source_snapshot_sha256": inputs.provider_snapshot.sha256,
-        "pricing_snapshot_sha256": pricing_sha,
-        "approval_binding_kind": "media_input_contract",
-        "approval_binding_sha256": media_input_sha,
-        "approved_by": "fixture-reviewer",
-        "approved_at": "2026-07-15T11:00:00+00:00",
-        "expires_at": "2026-07-16T11:00:00+00:00",
-        "actual_provider_call_attempts": 0,
-    }
-    auth_path = write_json(approval_root / "publication_authorization_receipt.json", publication_approval)
+    slots: dict[str, dict[str, Any]] = {}
 
-    slots: dict[str, tuple[str, str]] = {}
-    slots["sb_001.start_frame"] = (
-        request_body["start_image_url"],
-        next(item["sha256"] for item in inputs.media_lock["assets"] if item["asset_id"] == "sb_001.start_frame"),
-    )
-    slots["sb_004.end_frame"] = (
-        request_body["end_image_url"],
-        next(item["sha256"] for item in inputs.media_lock["assets"] if item["asset_id"] == "sb_004.end_frame"),
-    )
-    for element in request_body["elements"]:
-        for url in [element["frontal_image_url"], *element["reference_image_urls"]]:
-            artifact_id, entry = common.artifact_for_url(inputs.context, url)
-            slots[artifact_id] = (url, entry["sha256"])
+    def add(pointer: str, url: str) -> None:
+        artifact_id, entry = common.artifact_for_url(inputs.context, url)
+        current = slots.setdefault(
+            artifact_id,
+            {
+                "artifact_id": artifact_id,
+                "url": url,
+                "sha256": entry["sha256"],
+                "json_pointers": [],
+            },
+        )
+        assert current["url"] == url
+        current["json_pointers"].append(pointer)
+
+    add("/input/start_image_url", request_body["start_image_url"])
+    add("/input/end_image_url", request_body["end_image_url"])
+    for element_index, element in enumerate(request_body["elements"]):
+        add(f"/input/elements/{element_index}/frontal_image_url", element["frontal_image_url"])
+        for reference_index, url in enumerate(element["reference_image_urls"]):
+            add(f"/input/elements/{element_index}/reference_image_urls/{reference_index}", url)
+    assert len(slots) == 7
 
     entries = []
-    for artifact_id, (url, digest) in sorted(slots.items()):
+    for artifact_id, binding in sorted(slots.items()):
         root = inputs.context.run_root / "phase11-fixture-evidence" / artifact_id
         publication = write_json(
-            root / "publication_receipt.json",
-            {"status": "PUBLISHED", "artifact_id": artifact_id, "url": url, "sha256": digest},
+            root / "existing_publication_receipt.json",
+            {
+                "schema": "persona_dream.phase11_existing_publication_receipt.v1",
+                "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED",
+                "artifact_id": artifact_id,
+                "url": binding["url"],
+                "sha256": binding["sha256"],
+                "source_commit": "0" * 40,
+                "publication_performed_by_this_command": False,
+                "publication_authorization_present": False,
+                "observed_at": "2026-07-15T11:00:00+00:00",
+                "actual_provider_call_attempts": 0,
+            },
         )
         probe = write_json(
             root / "public_probe_receipt.json",
             {
+                "schema": "persona_dream.phase11_public_media_probe_receipt.v1",
                 "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH",
                 "artifact_id": artifact_id,
-                "url": url,
-                "final_url": url,
+                "url": binding["url"],
+                "final_url": binding["url"],
                 "http_status": 200,
-                "downloaded_sha256": digest,
+                "content_type": "image/png",
+                "content_length": 1,
+                "downloaded_sha256": binding["sha256"],
+                "checked_at": "2026-07-15T11:00:00+00:00",
+                "actual_provider_call_attempts": 0,
             },
         )
         teardown = write_json(
-            root / "teardown_policy.json",
+            root / "teardown_policy_receipt.json",
             {
+                "schema": "persona_dream.phase11_teardown_policy_receipt.v1",
                 "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED",
                 "artifact_id": artifact_id,
-                "url": url,
+                "url": binding["url"],
+                "source_commit": "0" * 40,
+                "reason": "Fixture URL represents persistent commit-pinned content.",
+                "actual_provider_call_attempts": 0,
             },
         )
         entries.append(
             {
                 "artifact_id": artifact_id,
-                "url": url,
-                "sha256": digest,
-                "publication_authorization": local_ref(inputs.context.run_root, auth_path),
+                "json_pointers": sorted(binding["json_pointers"]),
+                "url": binding["url"],
+                "sha256": binding["sha256"],
+                "publication_authorization": {
+                    "approval_type": "publication_authorization",
+                    "state": "MISSING_HUMAN_APPROVAL",
+                },
                 "publication_receipt": local_ref(inputs.context.run_root, publication),
                 "public_probe": local_ref(inputs.context.run_root, probe),
                 "teardown_policy": local_ref(inputs.context.run_root, teardown),
@@ -116,12 +122,21 @@ def install_transition_evidence(inputs: common.CompilationInputs, request_body: 
         )
     transition = {
         "schema": "persona_dream.provider_media_transition_manifest.v1",
-        "status": "PASS_PROVIDER_MEDIA_TRANSITIONS",
+        "status": "PASS_PROVIDER_MEDIA_TRANSITIONS_TECHNICAL",
         "run_id": inputs.context.run_id,
         "revision_id": inputs.context.revision_id,
+        "activation_transaction_id": inputs.context.activation_transaction_id,
+        "checked_at": "2026-07-15T11:00:00+00:00",
+        "request_asset_count": 7,
         "entries": entries,
+        "publication_authorization_required": True,
+        "publication_authorization_present": False,
+        "publication_performed_by_this_command": False,
         "actual_provider_call_attempts": 0,
+        "provider_live": False,
+        "submitted": False,
     }
+    assert common.validate_schema(transition, "provider_media_transition_manifest.v1.schema.json") == []
     write_json(inputs.transition_manifest_path, transition)
     return replace(inputs, transition_manifest=transition)
 
@@ -151,9 +166,10 @@ def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Pa
         "cost_acceptance",
         "exact_request_acceptance",
         "paid_call_authorization",
+        "publication_authorization",
         "visual_media_acceptance",
     ]
-    assert approvals["receipts"]["publication_authorization"]["state"] == "APPROVED"
+    assert approvals["receipts"]["publication_authorization"]["state"] == "MISSING"
     assert request["actual_provider_call_attempts"] == 0
     assert request["provider_ready"] is False
     assert request["live_submit_ready"] is False

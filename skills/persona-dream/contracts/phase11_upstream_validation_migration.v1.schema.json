@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema", "status", "run_id", "revision_id", "activation_transaction_id",
+    "source_validation_sha256", "source_status", "source_passed_step_count",
+    "source_step_count", "source_first_blocker", "corrected_contract_sha256",
+    "corrected_status", "corrected_first_blocker", "upstream_required_step_count",
+    "upstream_passed_step_count", "deferred_steps", "reconciled_at",
+    "actual_provider_call_attempts", "provider_live", "submitted"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_upstream_validation_migration.v1"},
+    "status": {"const": "PASS_PHASE11_UPSTREAM_VALIDATION_RECONCILED"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "source_validation_sha256": {"$ref": "#/$defs/sha256"},
+    "source_status": {"type": "string", "minLength": 1},
+    "source_passed_step_count": {"const": 12},
+    "source_step_count": {"const": 15},
+    "source_first_blocker": {"type": "null"},
+    "corrected_contract_sha256": {"$ref": "#/$defs/sha256"},
+    "corrected_status": {"const": "BLOCKED_DOWNSTREAM_NOT_EXECUTED"},
+    "corrected_first_blocker": {"const": "BLOCKED_PHASE11_PROVIDER_SUBMIT_NOT_EXECUTED"},
+    "upstream_required_step_count": {"const": 12},
+    "upstream_passed_step_count": {"const": 12},
+    "deferred_steps": {"$ref": "#/$defs/deferred_steps"},
+    "reconciled_at": {"type": "string", "format": "date-time"},
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "submitted": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "deferred_steps": {
+      "const": [
+        {"step_id": "phase11_submit_and_return", "status": "NOT_EXECUTED"},
+        {"step_id": "phase12_watch_observation", "status": "NOT_EXECUTED"},
+        {"step_id": "phase13_16_cognitive_loop", "status": "NOT_EXECUTED"}
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -3,128 +3,105 @@
   "$id": "https://agent-skills.local/persona-dream/phase11_provider_source_snapshot.v1.schema.json",
   "type": "object",
   "required": [
-    "schema",
-    "status",
-    "provider_id",
-    "endpoint",
-    "mode",
-    "retrieved_at",
-    "ttl_seconds",
-    "schema_source",
-    "pricing_source",
-    "actual_provider_call_attempts"
+    "schema", "status", "provider_id", "endpoint", "mode", "run_id",
+    "revision_id", "activation_transaction_id", "retrieved_at", "ttl_seconds",
+    "retrieval", "phase10_endpoint_migration", "schema_source", "pricing_source",
+    "actual_provider_call_attempts", "provider_live", "submitted"
   ],
   "properties": {
-    "schema": {
-      "const": "persona_dream.phase11_provider_source_snapshot.v1"
+    "schema": {"const": "persona_dream.phase11_provider_source_snapshot.v1"},
+    "status": {"const": "PASS_PROVIDER_SOURCE_SNAPSHOT"},
+    "provider_id": {"const": "kling"},
+    "endpoint": {"const": "fal-ai/kling-video/v3/standard/image-to-video"},
+    "mode": {"const": "standard"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 86400},
+    "retrieval": {
+      "type": "object",
+      "required": ["command", "provider_generation_call_attempted", "actual_provider_call_attempts"],
+      "properties": {
+        "command": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+        "provider_generation_call_attempted": {"const": false},
+        "actual_provider_call_attempts": {"const": 0}
+      },
+      "additionalProperties": false
     },
-    "status": {
-      "const": "PASS_PROVIDER_SOURCE_SNAPSHOT"
-    },
-    "provider_id": {
-      "const": "kling"
-    },
-    "endpoint": {
-      "type": "string",
-      "minLength": 1
-    },
-    "mode": {
-      "enum": [
-        "standard",
-        "pro"
-      ]
-    },
-    "retrieved_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "ttl_seconds": {
-      "type": "integer",
-      "minimum": 1
+    "phase10_endpoint_migration": {
+      "type": "object",
+      "required": [
+        "status", "from_endpoint", "to_endpoint", "phase10_payload_sha256",
+        "candidate_binding_sha256", "reason"
+      ],
+      "properties": {
+        "status": {"enum": ["APPLIED", "NOT_REQUIRED"]},
+        "from_endpoint": {"type": "string", "minLength": 1},
+        "to_endpoint": {"const": "fal-ai/kling-video/v3/standard/image-to-video"},
+        "phase10_payload_sha256": {"$ref": "#/$defs/sha256"},
+        "candidate_binding_sha256": {"$ref": "#/$defs/sha256"},
+        "reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
     },
     "schema_source": {
-      "$ref": "#/$defs/remote_source"
-    },
-    "pricing_source": {
       "allOf": [
-        {
-          "$ref": "#/$defs/remote_source"
-        },
+        {"$ref": "#/$defs/remote_source"},
         {
           "type": "object",
-          "required": [
-            "currency",
-            "usd_per_second_audio_off",
-            "duration_seconds",
-            "maximum_expected_cost_usd"
-          ],
+          "required": ["normalized_schema_sha256", "input_schema"],
           "properties": {
-            "currency": {
-              "const": "USD"
-            },
-            "usd_per_second_audio_off": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "duration_seconds": {
-              "const": 10
-            },
-            "maximum_expected_cost_usd": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
+            "normalized_schema_sha256": {"$ref": "#/$defs/sha256"},
+            "input_schema": {"type": "object"}
           }
         }
       ]
     },
-    "actual_provider_call_attempts": {
-      "const": 0
-    }
+    "pricing_source": {
+      "allOf": [
+        {"$ref": "#/$defs/remote_source"},
+        {
+          "type": "object",
+          "required": [
+            "currency", "usd_per_second_audio_off", "usd_per_second_audio_on",
+            "usd_per_second_voice_control", "duration_seconds", "maximum_expected_cost_usd"
+          ],
+          "properties": {
+            "currency": {"const": "USD"},
+            "usd_per_second_audio_off": {"const": 0.084},
+            "usd_per_second_audio_on": {"const": 0.126},
+            "usd_per_second_voice_control": {"const": 0.154},
+            "duration_seconds": {"const": 10},
+            "maximum_expected_cost_usd": {"const": 0.84}
+          }
+        }
+      ]
+    },
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "submitted": {"const": false}
   },
   "$defs": {
-    "sha256": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "portable_path": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 1,
+      "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}
     },
     "remote_source": {
       "type": "object",
       "required": [
-        "requested_url",
-        "final_url",
-        "http_status",
-        "remote_content_sha256",
-        "body_relative_path"
+        "requested_url", "final_url", "http_status", "content_type",
+        "remote_content_sha256", "body_relative_path"
       ],
       "properties": {
-        "requested_url": {
-          "type": "string",
-          "pattern": "^https://"
-        },
-        "final_url": {
-          "type": "string",
-          "pattern": "^https://"
-        },
-        "http_status": {
-          "type": "integer",
-          "minimum": 200,
-          "maximum": 299
-        },
-        "remote_content_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "normalized_schema_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "input_schema": {
-          "type": "object"
-        },
-        "body_relative_path": {
-          "type": "string",
-          "minLength": 1,
-          "not": {
-            "pattern": "(^/|(^|/)\\.\\.(/|$))"
-          }
-        }
+        "requested_url": {"type": "string", "pattern": "^https://fal\\.ai/"},
+        "final_url": {"type": "string", "pattern": "^https://fal\\.ai/"},
+        "http_status": {"type": "integer", "minimum": 200, "maximum": 299},
+        "content_type": {"type": "string"},
+        "remote_content_sha256": {"$ref": "#/$defs/sha256"},
+        "body_relative_path": {"$ref": "#/$defs/portable_path"}
       }
     }
   }

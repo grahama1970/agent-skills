@@ -76,6 +76,9 @@ Commands:
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
+  capture-phase11-provider-source-snapshot Capture official current fal schema and pricing evidence without generation
+  capture-phase11-public-media-evidence Probe the seven exact request assets and write technical transition evidence
+  reconcile-phase11-upstream-validation Replace the historical 12/15 false-green summary with an explicit deferred boundary
   compile-phase11-canonical-live-request  Compile the ACTIVE_CONSISTENT zero-call Phase 11 request bundle
   validate-phase11-canonical-live-request Independently validate and optionally persist the Phase 11 boundary
   tailscale-funnel-publication-canary  Plan or run authorized Funnel publish/probe/teardown with zero provider calls
@@ -383,6 +386,15 @@ case "$COMMAND" in
     ;;
   write-phase11-dry-run-bundle)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_dry_run_bundle.py" "$@"
+    ;;
+  capture-phase11-provider-source-snapshot)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/capture_phase11_provider_source_snapshot.py" "$@"
+    ;;
+  capture-phase11-public-media-evidence)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/capture_phase11_public_media_evidence.py" "$@"
+    ;;
+  reconcile-phase11-upstream-validation)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/reconcile_phase11_upstream_validation.py" "$@"
     ;;
   compile-phase11-canonical-live-request)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/compile_phase11_canonical_live_request.py" "$@"
