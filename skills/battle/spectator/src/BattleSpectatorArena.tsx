@@ -396,7 +396,7 @@ export function BattleSpectatorArena() {
             ? {
                 gridTemplateRows: `auto minmax(0, 1fr) ${BATTLE_MOCKUP_LEGEND_PX}px ${BATTLE_MOCKUP_FOOTER_PX}px`,
               }
-            : undefined
+            : { gridTemplateRows: "142px minmax(0, 1fr) 34px 104px" }
         }
       >
         <BattleHeader receiptFixture={typedReceiptFixture} events={tickerEvents} onTestSound={playCue} onSelectActor={selectActor} onOpenJsonl={() => setJsonlOpen(true)} deathAnnouncement={deathAnnouncement} onDismissDeathAnnouncement={() => setDeathAnnouncement(null)} />
