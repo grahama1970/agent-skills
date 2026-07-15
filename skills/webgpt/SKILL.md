@@ -27,19 +27,140 @@ complies:
 
 All commands default to `--background` (no KDE switch, no window focus).
 
+## Hard tab-id preservation rule
+
+When the human gives an explicit WebGPT/ChatGPT tab id, that tab id is
+authoritative. Do not create, select, discover, or reuse any other tab.
+
+Required behavior before submitting:
+
+1. Run a tab identity preflight against the exact tab id and expected URL.
+2. Submit only with that exact tab id and expected URL.
+3. Do not pass `--create-tab`.
+4. Do not rely on project binding alone.
+5. Do not rely on `/tmp/surf-webgpt-controlled-tab-id`.
+6. If the wrapper cannot expose explicit tab-id submission, use the composed
+   Surf transport directly:
+
 ```bash
-# One command: submit + wait + download
+skills/surf/run.sh webgpt.preflight \
+  --tab-id <HUMAN_TAB_ID> \
+  --expect-url "<EXPECTED_CHATGPT_CONVERSATION_URL>" \
+  --no-activate \
+  --json
+
+skills/surf/run.sh webgpt.submit \
+  --input bundle.md \
+  --output response.md \
+  --raw-output response.raw.md \
+  --meta-output response.meta.json \
+  --receipt-output response.receipt.json \
+  --tab-id <HUMAN_TAB_ID> \
+  --expect-url "<EXPECTED_CHATGPT_CONVERSATION_URL>" \
+  --no-activate \
+  --no-remember
+```
+
+The proof metadata must show:
+
+```text
+requested_tab_id == controlled_tab_id == <HUMAN_TAB_ID>
+controlled_tab_id_mismatch == false
+tab_was_created == false
+```
+
+If any of those checks fail, stop and report the routing failure. Do not
+resubmit through a path that can create a new tab.
+
+## Execution-gate and deliverable contract
+
+WebGPT is an assessor, architect, code creator, or bounded reviewer — but only
+when the request names one current gate. Its output is not evidence that the
+gate passed, and an architecture response is not progress on an unresolved
+deployment, API, persistence, or UI defect.
+
+WebGPT normally runs as a single bounded skill node. When the human explicitly
+authorizes architecture work, `all` composes three bounded submissions in order:
+`assess`, then `plan`, then `code`. Each stage keeps its own deliverable and
+stops fail-closed before the next stage when its contract is missing. Longer
+iteration remains a Tau DAG responsibility.
+
+Select the per-submission deliverable with `--output-contract`:
+
+| Mode | Ask WebGPT to | Required deliverable | Human-gated |
+|------|---------------|----------------------|-------------|
+| `assess` | Diagnose where the project agent is blocked or spiraling | `DIAGNOSIS` + a gate ruling (`PASS_CURRENT_GATE` / `BLOCKED_CURRENT_GATE:` / `REJECTED_SCOPE_EXPANSION`) | no |
+| `plan` | Produce a bounded architectural task plan for the current gate | `TASK_PLAN` with per-step file boundary + live proof | yes (`--architecture-authorized`) |
+| `code` | Write the actual fix | unified diff or finished-file zip | no |
+| `all` | Diagnose, plan, then write the fix | all three stage deliverables, in order | yes (`--architecture-authorized`) |
+| `none` | Free-form reply, no contract | none | no |
+
+A missing deliverable blocks with `BLOCKED_WEBGPT_<MODE>_DELIVERABLE_MISSING`
+(exit 4). Routing-proof failures exit 3. Single-stage assess/code use remains
+ungated. Direct `plan` and `all` invocations require explicit human authorization
+through `--architecture-authorized`.
+
+For a code request, the bundle must state:
+
+```text
+current_gate
+one blocking defect
+allowed files or module boundary
+required live proof
+stop condition
+forbidden adjacent scope
+```
+
+Run `submit` with its default `--output-contract code`. That contract requires
+either a unified diff in the response or a non-empty finished-file zip. A
+roadmap, staged architecture, status analysis, or prose-only implementation
+plan fails as `BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING`.
+
+## Research contract
+
+Research is a two-sided requirement:
+
+1. **Project agent (before calling WebGPT).** The project agent runs
+   `/brave-search` first, distills the findings, and embeds them in the bundle
+   under a `## Research context` section. WebGPT does not call `/brave-search`;
+   that is the caller's pre-step.
+2. **WebGPT (during the answer).** Every submission is prepended with a research
+   directive instructing ChatGPT to use its own web search for current,
+   authoritative sources and to cite the source URLs it relied on. The embedded
+   `## Research context` is a starting point, not a limit.
+
+The directive and the per-mode output contract are injected automatically at
+submit time (text bundles are augmented in place as
+`<bundle>.submitted-<mode>.md`; zip bundles are attached unmodified).
+
+After applying code, reconcile it against repository and live evidence. Review
+the current gate only and return exactly one ruling:
+
+```text
+PASS_CURRENT_GATE
+BLOCKED_CURRENT_GATE: <one concrete blocker>
+REJECTED_SCOPE_EXPANSION
+```
+
+Do not request or create another architecture while a current gate has an
+unexecuted live proof, unless the human explicitly asks for a diagram of that
+gate. Do not credit fixture results, committed source, or WebGPT output as live
+deployment proof.
+
+```bash
+# One command: submit + wait + download (default --output-contract code)
 python scripts/webgpt_cli.py submit bundle.md
 
-# Deadline-bound implementation review: fail if the bundle can drift
-python scripts/webgpt_cli.py submit bundle.md --execution-locked
+# Ask WebGPT to diagnose where the project agent is stuck (no code)
+python scripts/webgpt_cli.py submit bundle.md --output-contract assess
 
-# Code is the default contract; prose-only responses fail closed
-python scripts/webgpt_cli.py submit bundle.md --output-contract code
+# Ask for a bounded architectural task plan
+python scripts/webgpt_cli.py submit bundle.md --output-contract plan --architecture-authorized
 
-# Preserve an explicitly selected human tab and exact conversation
-python scripts/webgpt_cli.py submit bundle.md \
-  --tab-id 837358116 --expect-url "https://chatgpt.com/c/..."
+# Human-authorized diagnose -> plan -> code composition on one exact tab
+python scripts/webgpt_cli.py submit bundle.md --output-contract all \
+  --architecture-authorized --tab-id 837358116 \
+  --expect-url "https://chatgpt.com/c/..."
 
 # Re-submit latest bundle (auto-finds creation-bundle*.md)
 python scripts/webgpt_cli.py submit
@@ -91,69 +212,3 @@ python scripts/webgpt_cli.py config --tab-id 837356566 --url "https://chatgpt.co
 ```
 
 Stored in `~/.pi/webgpt-projects/<project>.json`.
-
-## Execution Lock
-
-When the user names a deadline, campaign, immediate runnable target, or says the
-agent is drifting, every implementation or architecture submission must use
-`--execution-locked`. The bundle must contain these exact level-two headings:
-
-```text
-## Objective
-## Current Phase
-## Critical Path
-## Deferred Work
-## Stop Condition
-```
-
-The critical path must be the shortest path to the user's named runnable
-artifact. Put release hardening, adjacent subsystems, comprehensive redesigns,
-and later qualification in Deferred Work unless they are strictly required for
-the current stop condition. WebGPT recommendations do not authorize the agent
-to expand the critical path. If a recommendation adds prerequisites, the agent
-must identify which existing critical-path command they unblock; otherwise the
-recommendation remains deferred.
-
-## Code Deliverable Gate
-
-Code submissions default to `--output-contract code`. Before Surf is called,
-the bundle must contain exactly one non-empty line for each field:
-
-```text
-current_gate: ...
-blocking_defect: ...
-allowed_files: comma-separated exact repo paths or directory prefixes ending in /
-required_live_proof: ...
-stop_condition: ...
-forbidden_adjacent_scope: ...
-```
-
-The response must contain a unified diff or produce a non-empty solution zip,
-and every returned path must remain inside `allowed_files`.
-Unified diffs must pass `git apply --check` against the current repository
-before the wrapper may emit `PASS_CURRENT_GATE`.
-Prose-only responses fail with `BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING`.
-Explicit `--tab-id` submissions also require an exact `--expect-url`; the
-runtime never replaces or creates a tab in that mode.
-
-Execution-locked bundles must also contain:
-
-```text
-## Failure Policy
-max_identical_failures_per_family: 3
-systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families
-reviewer_scope_authority: none
-```
-
-Three cases in one test family with the same failed gate, error code, or root
-cause are a systemic failure. Stop that family immediately, preserve the three
-representative receipts, and mark its untouched cases
-`blocked_by_systemic_failure`. Do not spend live calls reproducing the same
-defect. Continue independent families so one subsystem does not conceal the
-rest of the campaign's coverage.
-
-WebGPT must recommend repair of the current systemic blocker before broad
-reruns. It must not respond to a systemic failure by adding architecture,
-qualification rungs, model training, dashboards, manifests, or adjacent
-subsystems to the critical path. Reviewer output has no authority to change the
-human's objective or expand scope; only the human may do that explicitly.

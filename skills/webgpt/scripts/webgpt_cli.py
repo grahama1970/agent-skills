@@ -5,215 +5,21 @@ from __future__ import annotations
 import datetime
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 import time
-import zipfile
 from pathlib import Path
 
 import typer
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
-SURF = Path.home() / "workspace/experiments/agent-skills/skills/surf/run.sh"
+SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
 
 
 GITHUB_REPO = "agent-skills"
 GITHUB_ORG = "grahama1970"
-
-EXECUTION_LOCK_HEADINGS = (
-    "objective",
-    "current phase",
-    "critical path",
-    "deferred work",
-    "failure policy",
-    "stop condition",
-)
-
-CODE_GATE_FIELDS = (
-    "current_gate",
-    "blocking_defect",
-    "allowed_files",
-    "required_live_proof",
-    "stop_condition",
-    "forbidden_adjacent_scope",
-)
-
-EXECUTION_LOCK_DIRECTIVES = (
-    "max_identical_failures_per_family: 3",
-    "systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families",
-    "reviewer_scope_authority: none",
-)
-
-
-def validate_execution_lock(text: str) -> list[str]:
-    """Return missing execution-lock requirements for deadline-bound reviews."""
-    lowered = text.lower()
-    missing = [
-        heading
-        for heading in EXECUTION_LOCK_HEADINGS
-        if f"## {heading}" not in lowered
-    ]
-    missing.extend(
-        directive
-        for directive in EXECUTION_LOCK_DIRECTIVES
-        if directive not in lowered
-    )
-    return missing
-
-
-def validate_code_gate(text: str) -> list[str]:
-    """Return missing or duplicated fields in a code-deliverable gate."""
-    errors: list[str] = []
-    for field in CODE_GATE_FIELDS:
-        matches = re.findall(
-            rf"(?im)^\s*(?:[-*]\s*)?{re.escape(field)}\s*:\s*(\S.*)$",
-            text,
-        )
-        if not matches:
-            errors.append(f"missing_{field}")
-        elif len(matches) > 1:
-            errors.append(f"duplicate_{field}")
-    return errors
-
-
-def code_gate_values(text: str) -> dict[str, str]:
-    """Parse canonical gate fields after validation succeeds."""
-    values: dict[str, str] = {}
-    for field in CODE_GATE_FIELDS:
-        match = re.search(
-            rf"(?im)^\s*(?:[-*]\s*)?{re.escape(field)}\s*:\s*(\S.*)$",
-            text,
-        )
-        if match:
-            values[field] = match.group(1).strip()
-    return values
-
-
-def _allowed_path(path: str, allowed: list[str]) -> bool:
-    normalized = path.removeprefix("a/").removeprefix("b/").lstrip("./")
-    return any(
-        normalized == item.rstrip("/")
-        or (item.endswith("/") and normalized.startswith(item))
-        for item in allowed
-    )
-
-
-def code_deliverable_errors(
-    response_text: str,
-    zip_path: Path,
-    gate_text: str,
-    repo_root: Path | None = None,
-) -> list[str]:
-    """Validate that returned code is real and stays inside the declared boundary."""
-    allowed = [
-        item.strip().lstrip("./")
-        for item in code_gate_values(gate_text).get("allowed_files", "").split(",")
-        if item.strip()
-    ]
-    diff_paths = re.findall(r"(?m)^diff --git a/(\S+) b/(\S+)$", response_text)
-    patch_paths = re.findall(
-        r"(?m)^\*\*\* (?:Add|Update|Delete) File:\s*(\S.*)$", response_text
-    )
-    returned_paths = [path for pair in diff_paths for path in pair] + patch_paths
-    if returned_paths:
-        outside = sorted({path for path in returned_paths if not _allowed_path(path, allowed)})
-        if outside:
-            return [f"path_outside_allowed_files:{path}" for path in outside]
-        if not diff_paths:
-            return ["non_unified_patch_format"]
-        if repo_root is not None:
-            check = subprocess.run(
-                ["git", "apply", "--check", "--whitespace=nowarn", "-"],
-                cwd=repo_root,
-                input=response_text,
-                capture_output=True,
-                text=True,
-            )
-            if check.returncode != 0:
-                detail = (check.stderr or check.stdout).strip().splitlines()
-                return ["unapplicable_unified_diff:" + (detail[0] if detail else "unknown")]
-        return []
-    if zip_path.is_file() and zipfile.is_zipfile(zip_path):
-        with zipfile.ZipFile(zip_path) as archive:
-            members = [
-                member for member in archive.infolist() if not member.is_dir() and member.file_size > 0
-            ]
-        if not members:
-            return ["empty_solution_zip"]
-        outside = sorted(
-            member.filename for member in members if not _allowed_path(member.filename, allowed)
-        )
-        return [f"path_outside_allowed_files:{path}" for path in outside]
-    return ["code_deliverable_missing"]
-
-
-def read_code_gate_text(bundle_path: Path) -> str:
-    """Read the code gate from Markdown or a zipped execution-gate.md."""
-    if bundle_path.suffix != ".zip":
-        return bundle_path.read_text(encoding="utf-8")
-    if not zipfile.is_zipfile(bundle_path):
-        return ""
-    with zipfile.ZipFile(bundle_path) as archive:
-        matches = [
-            member
-            for member in archive.infolist()
-            if not member.is_dir() and Path(member.filename).name == "execution-gate.md"
-        ]
-        if len(matches) != 1:
-            return ""
-        return archive.read(matches[0]).decode("utf-8")
-
-
-def validate_explicit_tab(tab_id: str, expected_url: str, tabs: list[dict]) -> list[str]:
-    """Verify an explicit human-selected tab without replacing it."""
-    if not tab_id:
-        return []
-    if not expected_url:
-        return ["explicit_tab_requires_expect_url"]
-    match = next((tab for tab in tabs if str(tab.get("id", "")) == tab_id), None)
-    if match is None:
-        return ["explicit_tab_not_found"]
-    actual_url = str(match.get("url", ""))
-    if actual_url.rstrip("/") != expected_url.rstrip("/"):
-        return ["explicit_tab_url_mismatch"]
-    return []
-
-
-def submission_target_args(tab_id: str, expected_url: str, binding: dict) -> list[str]:
-    """Build Surf targeting args without replacing an explicit tab."""
-    selected_tab = tab_id or str(binding.get("tab_id", ""))
-    selected_url = expected_url or str(binding.get("conversation_url", ""))
-    if not selected_tab:
-        return ["--create-tab"]
-    args = ["--tab-id", selected_tab]
-    if selected_url:
-        args += ["--expect-url", selected_url]
-    if tab_id:
-        args += ["--no-remember"]
-    return args
-
-
-def webgpt_download_args(
-    tab_id: str, pattern: str, output_path: Path, timeout: int
-) -> list[str]:
-    """Build the supported Surf WebGPT download command."""
-    return [
-        "webgpt.download",
-        "--match",
-        pattern,
-        "--tab-id",
-        tab_id,
-        "--output",
-        str(output_path),
-        "--timeout",
-        str(timeout),
-    ]
 
 
 def _now() -> str:
@@ -397,7 +203,6 @@ def _verify_desktop(binding: dict, background: bool, label: str = "") -> dict:
                     stored.update(binding)
                     path.write_text(json.dumps(stored, indent=2) + "\n")
                 print(f"TAB_REPLACED: {tab_id} -> {new_id} (new window on Desktop 2){tag}", file=sys.stderr)
-
     return binding
 
 
@@ -414,14 +219,136 @@ def _active_chatgpt_tab() -> str:
     return f.read_text().strip() if f.exists() else ""
 
 
+def _exact_submission_target(
+    binding: dict,
+    tab_id_override: str = "",
+    expected_url_override: str = "",
+) -> tuple[str, str]:
+    """Return the bound tab and URL or fail closed before browser mutation."""
+    tab_id = tab_id_override.strip() or str(binding.get("tab_id", "")).strip()
+    conversation_url = (
+        expected_url_override.strip()
+        or str(binding.get("conversation_url", "")).strip()
+    )
+    if not tab_id or not conversation_url:
+        raise ValueError("exact tab_id and conversation_url are required for submit")
+    return tab_id, conversation_url
+
+
+def _routing_meta_is_exact(meta: dict, tab_id: str) -> bool:
+    requested = str(meta.get("requested_tab_id", ""))
+    controlled = str(meta.get("controlled_tab_id", ""))
+    return (
+        requested == tab_id
+        and controlled == tab_id
+        and meta.get("controlled_tab_id_mismatch") is False
+        and meta.get("tab_was_created") is False
+    )
+
+
+def _has_code_deliverable(response_path: Path, solution_path: Path) -> bool:
+    """A code request must yield a patch or a non-empty finished-file zip."""
+    if solution_path.exists() and solution_path.stat().st_size > 0:
+        return True
+    if not response_path.exists():
+        return False
+    response = response_path.read_text(errors="replace")
+    return (
+        "diff --git " in response
+        or "*** Begin Patch" in response
+        or ("--- a/" in response and "+++ b/" in response)
+    )
+
+
+WEBGPT_MODES = {"assess", "plan", "code", "all", "none"}
+
+_RESEARCH_CLAUSE = """## Research directive
+Before answering, use your own web search to research current, authoritative
+sources for this problem, and cite the source URLs you relied on. The bundle may
+also include a "## Research context" section the project agent gathered via
+brave-search; treat it as a starting point, not a limit."""
+
+_MODE_CONTRACTS = {
+    "assess": """## Output contract: ASSESS
+Diagnose where the project agent is blocked or spiraling. Do NOT write code.
+Return, in order:
+- DIAGNOSIS: <root cause of the block or spiral>
+- EVIDENCE: <what in the bundle/research supports it>
+- CURRENT_GATE: <the one gate that must be closed next>
+- NEXT_STEP: <single concrete action>
+End with exactly one ruling line:
+PASS_CURRENT_GATE | BLOCKED_CURRENT_GATE: <one concrete blocker> | REJECTED_SCOPE_EXPANSION""",
+    "plan": """## Output contract: PLAN
+Produce a bounded architectural task plan for the named current gate only.
+Do NOT write code. Return:
+- TASK_PLAN: numbered steps; each names allowed files/module boundary and required live proof
+- FORBIDDEN_ADJACENT_SCOPE: <what must not be touched>
+Stay within the current gate; do not expand scope.""",
+    "code": """## Output contract: CODE
+Return a unified diff (diff --git / *** Begin Patch) or a single finished-file zip.
+Scope: the one current gate and allowed files only. A roadmap, staged architecture,
+status analysis, or prose-only plan does NOT satisfy this contract.""",
+    "none": "",
+}
+
+
+def _augment_bundle(bp: Path, mode: str) -> Path:
+    """Prepend the research directive + mode output-contract to a text bundle.
+
+    Zip bundles are attached as-is and cannot be augmented.
+    """
+    if bp.suffix == ".zip":
+        return bp
+    original = bp.read_text(errors="replace")
+    contract = _MODE_CONTRACTS.get(mode, "")
+    blocks = [blk for blk in (_RESEARCH_CLAUSE, contract) if blk]
+    header = "\n\n".join(blocks) + "\n\n---\n\n"
+    aug = bp.with_name(f"{bp.stem}.submitted-{mode}.md")
+    aug.write_text(header + original)
+    return aug
+
+
+def _has_assess_deliverable(response_path: Path) -> bool:
+    """An assess request must return a diagnosis and a gate ruling."""
+    if not response_path.exists():
+        return False
+    text = response_path.read_text(errors="replace")
+    has_diagnosis = "DIAGNOSIS" in text
+    has_ruling = any(
+        token in text
+        for token in ("PASS_CURRENT_GATE", "BLOCKED_CURRENT_GATE", "REJECTED_SCOPE_EXPANSION")
+    )
+    return has_diagnosis and has_ruling
+
+
+def _has_plan_deliverable(response_path: Path) -> bool:
+    """A plan request must return a bounded task plan."""
+    if not response_path.exists():
+        return False
+    return "TASK_PLAN" in response_path.read_text(errors="replace")
+
+
+def _deliverable_ok(mode: str, response_path: Path, solution_path: Path) -> bool:
+    if mode == "code":
+        return _has_code_deliverable(response_path, solution_path)
+    if mode == "assess":
+        return _has_assess_deliverable(response_path)
+    if mode == "plan":
+        return _has_plan_deliverable(response_path)
+    return True
+
+
 def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, background: bool = False) -> Path | None:
-    """Download through Surf's tab-aware WebGPT artifact command."""
-    del background
-    suffix = Path(pattern).suffix or ".download"
-    output_path = Path("/tmp") / f"webgpt-download-{os.getpid()}-{time.time_ns()}{suffix}"
-    result = _surf(*webgpt_download_args(tab_id, pattern, output_path, timeout))
-    if result.returncode == 0 and output_path.is_file() and output_path.stat().st_size > 0:
-        return output_path
+    """Click a download button by text match, poll ~/Downloads."""
+    before = set((Path.home() / "Downloads").iterdir()) if (Path.home() / "Downloads").exists() else set()
+    _surf("click", pattern, *(["--no-activate"] if background else []), "--tab-id", tab_id, capture=False)
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        time.sleep(2)
+        after = set((Path.home() / "Downloads").iterdir())
+        new = [f for f in (after - before) if pattern in f.name and f.stat().st_size > 0]
+        if new:
+            return new[0]
     return None
 
 
@@ -431,67 +358,117 @@ def submit(
     project: str = typer.Option("sparta", "-p"),
     timeout: int = typer.Option(900, "--timeout", "-t", help="WebGPT timeout (seconds)"),
     background: bool = typer.Option(True, "--background", help="Background: no KDE switch, no window focus"),
-    execution_locked: bool = typer.Option(
+    output_contract: str = typer.Option("code", "--output-contract", help="Required response: assess, plan, code, all, or none"),
+    architecture_authorized: bool = typer.Option(
         False,
-        "--execution-locked",
-        help="Require a shortest-path execution lock in the submitted bundle",
+        "--architecture-authorized",
+        help="Human authorization required for plan or all",
     ),
-    output_contract: str = typer.Option(
-        "code", "--output-contract", help="Required response deliverable: code or prose"
+    tab_id_override: str = typer.Option("", "--tab-id", help="Exact human-supplied tab id"),
+    expected_url_override: str = typer.Option(
+        "", "--expect-url", help="Exact expected ChatGPT conversation URL"
     ),
-    tab_id: str = typer.Option("", "--tab-id", help="Exact human-selected WebGPT tab"),
-    expect_url: str = typer.Option("", "--expect-url", help="Exact URL required for --tab-id"),
 ):
-    """Submit a bundle, capture response, download solution zip. All complexity hidden."""
+    """Submit a bundle, capture response, enforce the output contract. All complexity hidden.
+
+    Single modes run one bounded submission. Human-authorized ``all`` composes
+    assess, plan, and code; longer iteration remains a Tau DAG responsibility.
+    """
     bp = Path(bundle) if bundle else _latest_bundle()
     if not bp or not bp.exists():
         typer.echo("Bundle not found", err=True)
         raise typer.Exit(1)
-    if execution_locked:
-        missing = validate_execution_lock(bp.read_text(encoding="utf-8"))
-        if missing:
-            typer.echo(
-                "Execution lock missing headings: " + ", ".join(missing), err=True
-            )
-            raise typer.Exit(2)
 
-    if output_contract not in {"code", "prose"}:
-        typer.echo("output contract must be code or prose", err=True)
+    if output_contract not in WEBGPT_MODES:
+        typer.echo("--output-contract must be one of: assess, plan, code, all, none", err=True)
         raise typer.Exit(2)
-    bundle_text = read_code_gate_text(bp)
-    if output_contract == "code":
-        gate_errors = validate_code_gate(bundle_text)
-        if gate_errors:
-            typer.echo("BLOCKED_WEBGPT_CODE_GATE_INVALID: " + ", ".join(gate_errors), err=True)
-            raise typer.Exit(2)
 
     b = _binding(project)
-    if tab_id:
-        tab_result = _surf("tab.list", "--json", "--with-kde")
-        try:
-            tab_payload = json.loads(tab_result.stdout) if tab_result.returncode == 0 else {}
-            tabs = tab_payload.get("tabs", []) if isinstance(tab_payload, dict) else tab_payload
-        except json.JSONDecodeError:
-            tabs = []
-        tab_errors = validate_explicit_tab(tab_id, expect_url, tabs if isinstance(tabs, list) else [])
-        if tab_errors:
-            typer.echo("BLOCKED_WEBGPT_EXPLICIT_TAB_INVALID: " + ", ".join(tab_errors), err=True)
-            raise typer.Exit(2)
-    else:
-        b = _verify_desktop(b, background, "submit")
+    try:
+        tab_id, conversation_url = _exact_submission_target(
+            b, tab_id_override, expected_url_override
+        )
+    except ValueError as exc:
+        typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
+        raise typer.Exit(2)
 
-    resp_path = bp.with_name(f"{bp.stem}-response.md")
-    zip_path = bp.with_name(f"{bp.stem}-solution.zip")
+    if output_contract in {"plan", "all"} and not architecture_authorized:
+        typer.echo(
+            "REJECTED_SCOPE_EXPANSION: plan/all requires --architecture-authorized",
+            err=True,
+        )
+        raise typer.Exit(2)
 
-    typer.echo(f"Submitting {bp.name}...", err=True)
+    modes = ("assess", "plan", "code") if output_contract == "all" else (output_contract,)
+    for mode in modes:
+        ok, _resp = _submit_stage(bp, mode, tab_id, conversation_url, b, timeout)
+        if not ok:
+            _raise_deliverable_missing(mode, bp, b)
+
+
+def _raise_deliverable_missing(mode: str, bp: Path, binding: dict) -> None:
+    """Report a missing stage deliverable and stop the composed run."""
+    if mode == "code":
+        failure = subprocess.CompletedProcess(
+            args=[],
+            returncode=4,
+            stdout="",
+            stderr="WebGPT returned no unified diff and no finished-file zip",
+        )
+        _report_failure(
+            "submit-output-contract", failure, binding=binding, bundle=str(bp)
+        )
+    typer.echo(f"BLOCKED_WEBGPT_{mode.upper()}_DELIVERABLE_MISSING", err=True)
+    raise typer.Exit(4)
+
+
+def _submit_stage(
+    bp: Path,
+    mode: str,
+    tab_id: str,
+    conversation_url: str,
+    b: dict,
+    timeout: int,
+) -> tuple[bool, Path]:
+    """Run one WebGPT submission for `mode`.
+
+    Hard-fails closed (typer.Exit) on preflight or routing-proof errors. Returns
+    (deliverable_satisfied, response_path).
+    """
+    aug = _augment_bundle(bp, mode)
+    preflight = _surf(
+        "webgpt.preflight",
+        "--tab-id", tab_id,
+        "--expect-url", conversation_url,
+        "--no-activate",
+        "--json",
+    )
+    if preflight.returncode != 0:
+        _report_failure("submit-preflight", preflight, binding=b, bundle=str(bp))
+        typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
+        raise typer.Exit(preflight.returncode)
+
+    tag = "" if mode in {"code", "none"} else f"-{mode}"
+    resp_path = bp.with_name(f"{bp.stem}{tag}-response.md")
+    zip_path = bp.with_name(f"{bp.stem}{tag}-solution.zip")
+    raw_path = bp.with_name(f"{bp.stem}{tag}-response.raw.md")
+    meta_path = bp.with_name(f"{bp.stem}{tag}-response.meta.json")
+    receipt_path = bp.with_name(f"{bp.stem}{tag}-response.receipt.json")
+
+    typer.echo(f"Submitting {bp.name} [{mode}]...", err=True)
     cmd: list[str | int] = [
-        "webgpt.submit", "--input", str(bp), "--output", str(resp_path),
+        "webgpt.submit",
+        "--input", str(aug),
+        "--output", str(resp_path),
+        "--raw-output", str(raw_path),
+        "--meta-output", str(meta_path),
+        "--receipt-output", str(receipt_path),
         "--timeout", str(timeout),
+        "--tab-id", tab_id,
+        "--expect-url", conversation_url,
+        "--no-activate",
+        "--no-remember",
     ]
-    selected_tab = tab_id or str(b.get("tab_id", ""))
-    cmd += submission_target_args(tab_id, expect_url, b)
-    if background:
-        cmd += ["--no-activate"]
     if bp.suffix == ".zip":
         cmd += ["--attach-file", str(bp)]
     result = _surf(*cmd)
@@ -500,39 +477,26 @@ def submit(
         _report_failure("submit", result, binding=b, bundle=str(bp), timeout=str(timeout))
         typer.echo("Submit failed", err=True)
         raise typer.Exit(result.returncode)
+
+    try:
+        meta = json.loads(meta_path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        typer.echo(f"BLOCKED_WEBGPT_ROUTING_PROOF_MISSING: {exc}", err=True)
+        raise typer.Exit(3)
+    if not _routing_meta_is_exact(meta, tab_id):
+        typer.echo("BLOCKED_WEBGPT_ROUTING_PROOF_MISMATCH", err=True)
+        raise typer.Exit(3)
     typer.echo(f"Response: {resp_path}")
 
-    response_text = resp_path.read_text(encoding="utf-8") if resp_path.exists() else ""
-    repo_root = Path(__file__).resolve().parents[3]
-    if output_contract == "code" and not code_deliverable_errors(
-        response_text, zip_path, bundle_text, repo_root
-    ):
-        typer.echo("PASS_CURRENT_GATE")
-        return
-
-    # Try to download solution zip from the new tab
-    typer.echo("Looking for solution zip...", err=True)
-    time.sleep(3)
-    new_tab = selected_tab or _active_chatgpt_tab()
-    if new_tab:
-        found = _click_and_wait_download(new_tab, ".zip", timeout=120, background=background)
+    if mode == "code" and not _has_code_deliverable(resp_path, zip_path):
+        typer.echo("Looking for solution zip...", err=True)
+        time.sleep(3)
+        found = _click_and_wait_download(tab_id, ".zip", timeout=120, background=True)
         if found:
             shutil.copy2(str(found), str(zip_path))
             typer.echo(f"Solution: {zip_path}")
-    if output_contract == "code":
-        errors = code_deliverable_errors(response_text, zip_path, bundle_text, repo_root)
-        if errors:
-            ruling = (
-                "REJECTED_SCOPE_EXPANSION"
-                if any(error.startswith("path_outside_allowed_files:") for error in errors)
-                else "BLOCKED_WEBGPT_CODE_DELIVERABLE_MISSING"
-            )
-            typer.echo(ruling + ": " + ", ".join(errors), err=True)
-            raise typer.Exit(3)
-        typer.echo("PASS_CURRENT_GATE")
-        return
-    if not zip_path.exists():
-        typer.echo("No zip detected (check Downloads)", err=True)
+
+    return _deliverable_ok(mode, resp_path, zip_path), resp_path
 
 
 def _latest_bundle() -> Path | None:
@@ -603,14 +567,30 @@ def listen(
 def activate(
     project: str = typer.Option("sparta", "-p"),
     background: bool = typer.Option(True, "--background"),
+    tab_id_override: str = typer.Option("", "--tab-id", help="Exact human-supplied tab id"),
+    expected_url_override: str = typer.Option(
+        "", "--expect-url", help="Exact expected ChatGPT conversation URL"
+    ),
 ):
     """Activate the project tab: KDE switch, close duplicates, release CDP, clear drafts."""
     b = _binding(project)
-    _verify_desktop(b, background, "activate")
-    tab_id = b.get("tab_id", "")
-    if not tab_id:
-        typer.echo("No tab_id in binding. Run `config` first or use `submit` which auto-creates.", err=True)
-        return
+    try:
+        tab_id, conversation_url = _exact_submission_target(
+            b, tab_id_override, expected_url_override
+        )
+    except ValueError as exc:
+        typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
+        raise typer.Exit(2)
+    preflight = _surf(
+        "webgpt.preflight",
+        "--tab-id", tab_id,
+        "--expect-url", conversation_url,
+        "--no-activate",
+        "--json",
+    )
+    if preflight.returncode != 0:
+        typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
+        raise typer.Exit(preflight.returncode)
     _surf("tab.activate", tab_id, capture=False)
     time.sleep(2)
     if not background:
