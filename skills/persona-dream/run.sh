@@ -76,6 +76,8 @@ Commands:
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
+  compile-phase11-canonical-live-request  Compile the ACTIVE_CONSISTENT zero-call Phase 11 request bundle
+  validate-phase11-canonical-live-request Independently validate and optionally persist the Phase 11 boundary
   tailscale-funnel-publication-canary  Plan or run authorized Funnel publish/probe/teardown with zero provider calls
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
@@ -381,6 +383,12 @@ case "$COMMAND" in
     ;;
   write-phase11-dry-run-bundle)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_dry_run_bundle.py" "$@"
+    ;;
+  compile-phase11-canonical-live-request)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/compile_phase11_canonical_live_request.py" "$@"
+    ;;
+  validate-phase11-canonical-live-request)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_phase11_canonical_live_request.py" "$@"
     ;;
   write-cognitive-loop-dry-run)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_cognitive_loop_dry_run.py" "$@"

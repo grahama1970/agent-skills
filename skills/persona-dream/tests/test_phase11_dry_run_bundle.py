@@ -5,28 +5,35 @@ import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("phase11_bundle", ROOT / "scripts/write_phase11_dry_run_bundle.py")
+spec = importlib.util.spec_from_file_location(
+    "phase11_bundle", ROOT / "scripts/write_phase11_dry_run_bundle.py"
+)
 assert spec is not None and spec.loader is not None
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
 def write(path: Path, value: dict):
-    path.write_text(json.dumps(value))
+    path.write_text(json.dumps(value), encoding="utf-8")
     return path
 
 
-def test_dry_run_gate_passes_with_live_blockers_and_zero_side_effects(tmp_path: Path):
-    phase10 = write(tmp_path / "phase10.json", {"status": "PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN_WITH_LIVE_BLOCKERS", "actual_provider_call_attempts": 0})
-    schema = write(tmp_path / "schema.json", {"status": "PASS_PROVIDER_SCHEMA_DRY_RUN_REVIEWED", "provider": "kling", "model_endpoint": "fal-ai/kling", "generated_at": "2026-07-10T00:00:00Z", "source_urls": ["https://fal.ai/docs"], "observed_schema": {"input": {}}})
-    preflight = write(tmp_path / "preflight.json", {"status": "PASS_FAL_API_PREFLIGHT", "actual_provider_call_attempts": 0})
-    media = write(tmp_path / "media.json", {"status": "PASS_PHASE11_MEDIA_REQUIREMENTS_DRY_RUN", "publication_performed": False, "provider_accessible_url_created": False, "actual_provider_call_attempts": 0})
-    metadata, approvals, gate = module.build_bundle(phase10, schema, preflight, media, "rev-1", datetime(2026, 7, 12, tzinfo=timezone.utc))
-    assert metadata["status"] == "PASS_PHASE11_PROVIDER_METADATA_DRY_RUN"
-    assert approvals["paid_call_authorized"] is False
-    assert gate["status"] == "PASS_PHASE11_SUBMIT_GATE_DRY_RUN"
-    assert gate["live_submit_status"] == "BLOCKED_PHASE11_LIVE_SUBMIT"
-    assert gate["dry_run_blockers"] == []
-    assert len(gate["live_blockers"]) == 6
+def test_legacy_bundle_is_fail_closed_and_cannot_emit_pass(tmp_path: Path):
+    placeholder = write(tmp_path / "placeholder.json", {"status": "PASS"})
+    metadata, approvals, gate = module.build_bundle(
+        placeholder,
+        placeholder,
+        placeholder,
+        placeholder,
+        "invented-revision",
+        datetime(2026, 7, 15, tzinfo=timezone.utc),
+    )
+    assert metadata["status"] == "BLOCKED_PROVIDER_GATE"
+    assert approvals["status"] == "BLOCKED_PROVIDER_GATE"
+    assert gate["status"] == "BLOCKED_PROVIDER_GATE"
+    assert "BLOCKED_LEGACY_FREE_FORM_REVISION_ID" in gate["technical_blockers"]
+    assert "BLOCKED_LEGACY_PAYLOAD_HASHES_RECEIPT_NOT_REQUEST_BODY" in gate["technical_blockers"]
     assert gate["actual_provider_call_attempts"] == 0
+    assert gate["provider_ready"] is False
+    assert gate["live_submit_ready"] is False
     assert gate["submitted"] is False

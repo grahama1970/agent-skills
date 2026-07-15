@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_live_request.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "revision_id",
+    "source_revision_id",
+    "source_commit",
+    "runtime_release_id",
+    "activation_transaction_id",
+    "activation_receipt_sha256",
+    "provider_id",
+    "endpoint",
+    "mode",
+    "provider_request_body",
+    "request_body_canonicalization",
+    "request_body_sha256",
+    "approval_bindings",
+    "missing_approval_types",
+    "technical_blockers",
+    "actual_provider_call_attempts",
+    "generation_call_started",
+    "provider_live",
+    "paid_call_authorized",
+    "submitted",
+    "provider_ready",
+    "live_submit_ready",
+    "mocked",
+    "live"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.phase11_live_request.v1"
+    },
+    "status": {
+      "enum": [
+        "BLOCKED_PROVIDER_GATE",
+        "BLOCKED_AWAITING_HUMAN_APPROVAL"
+      ]
+    },
+    "activation_transaction_id": {
+      "type": "string",
+      "pattern": "^activation-[a-f0-9]{32}$"
+    },
+    "activation_receipt_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "request_body_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "provider_request_body": {
+      "type": "object"
+    },
+    "technical_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_approval_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "generation_call_started": {
+      "const": false
+    },
+    "provider_live": {
+      "const": false
+    },
+    "paid_call_authorized": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "provider_ready": {
+      "const": false
+    },
+    "live_submit_ready": {
+      "const": false
+    },
+    "request_body_canonicalization": {
+      "type": "object",
+      "required": [
+        "encoding",
+        "json",
+        "sort_keys",
+        "separators",
+        "ensure_ascii"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "UTF-8"
+        },
+        "json": {
+          "const": "RFC8259"
+        },
+        "sort_keys": {
+          "const": true
+        },
+        "separators": {
+          "const": [
+            ",",
+            ":"
+          ]
+        },
+        "ensure_ascii": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  }
+}

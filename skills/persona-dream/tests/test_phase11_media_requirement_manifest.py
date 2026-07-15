@@ -1,35 +1,43 @@
 from pathlib import Path
-import importlib.util
-import json
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("media_requirements", ROOT / "scripts/write_phase11_media_requirement_manifest.py")
-assert spec is not None and spec.loader is not None
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
+sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "tests"))
+
+from phase11_canonical_common import compile_request_body  # noqa: E402
+from phase11_fixture_helpers import make_compilation_inputs  # noqa: E402
+from write_phase11_media_requirement_manifest import build_manifest  # noqa: E402
 
 
-def test_eight_locked_assets_receive_explicit_roles(tmp_path: Path):
-    assets = []
-    panels = []
-    for index in range(1, 5):
-        panel = f"sb_{index:03d}"
-        start = f"{panel}.start_frame"
-        end = f"{panel}.end_frame"
-        assets.extend([
-            {"asset_id": start, "panel_id": panel, "frame_role": "start_frame", "sha256": "sha256:" + "a" * 64, "path": f"/{start}.png", "provider_accessible_url": None},
-            {"asset_id": end, "panel_id": panel, "frame_role": "end_frame", "sha256": "sha256:" + "b" * 64, "path": f"/{end}.png", "provider_accessible_url": None},
-        ])
-        panels.append({"panel_id": panel, "source_start_image_asset_id": start, "source_end_image_asset_id": end})
-    lock = tmp_path / "lock.json"
-    payload = tmp_path / "payload.json"
-    lock.write_text(json.dumps({"assets": assets}))
-    payload.write_text(json.dumps({"panel_payloads": panels}))
-    manifest = module.build_manifest(lock, payload, "rev-1")
-    assert manifest["status"] == "PASS_PHASE11_MEDIA_REQUIREMENTS_DRY_RUN"
-    assert manifest["all_locked_asset_count"] == 8
-    assert manifest["submission_required_count"] == 8
-    assert all(asset["provider_role"] == "submission_required" for asset in manifest["assets"])
-    assert manifest["publication_performed"] is False
+def test_media_manifest_v2_has_two_anchors_six_continuity_and_two_element_packs(tmp_path: Path):
+    inputs, _candidate_input, _urls = make_compilation_inputs(tmp_path)
+    request_body, _blockers, _transformations = compile_request_body(inputs)
+    manifest = build_manifest(inputs, request_body)
+
+    assert manifest["schema"] == "persona_dream.phase11_media_binding_manifest.v2"
+    assert manifest["role_counts"] == {
+        "global_start_anchor": 1,
+        "global_end_anchor": 1,
+        "continuity_only": 6,
+        "element_packs": 2,
+    }
+    frames = {item["artifact_id"]: item for item in manifest["storyboard_frames"]}
+    assert frames["sb_001.start_frame"]["role"] == "global_start_anchor"
+    assert frames["sb_001.start_frame"]["json_pointer"] == "/input/start_image_url"
+    assert frames["sb_004.end_frame"]["role"] == "global_end_anchor"
+    assert frames["sb_004.end_frame"]["json_pointer"] == "/input/end_image_url"
+    assert sum(item["role"] == "continuity_only" for item in frames.values()) == 6
+
+    packs = manifest["element_packs"]
+    assert [item["prompt_token"] for item in packs] == ["@Element1", "@Element2"]
+    assert [item["identity"] for item in packs] == ["embry", "kai"]
+    assert [len(item["images"]) for item in packs] == [3, 3]
+    assert packs[0]["images"][0]["json_pointer"] == "/input/elements/0/frontal_image_url"
+    assert packs[1]["images"][2]["json_pointer"] == "/input/elements/1/reference_image_urls/1"
     assert manifest["actual_provider_call_attempts"] == 0
+    assert manifest["provider_live"] is False
+    # No transition manifest was installed; the correct state is a technical block.
+    assert manifest["status"] == "BLOCKED_PROVIDER_GATE"
+    assert any(code.startswith("BLOCKED_PUBLIC_MEDIA_TRANSITION_EVIDENCE") for code in manifest["blockers"])
