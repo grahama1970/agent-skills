@@ -18,23 +18,15 @@
     "argv": [
       "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/validate_phase11_canonical_live_request.py",
       "--run-root",
-      "/tmp/persona-dream-main-final-20260715/skills/persona-dream/reports/pipeline-complete",
+      "reports/pipeline-complete",
       "--revision-id",
       "rev_repair_a8b93ffeca8f",
-      "--now",
-      "2026-07-15T15:48:40Z",
+      "--output-root",
+      "reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/canonical",
       "--persist-memory",
-      "--memory-url",
-      "http://127.0.0.1:8601",
-      "--collection",
-      "project_knowledge",
-      "--connect-timeout",
-      "5",
-      "--read-timeout",
-      "60",
       "--json"
     ],
-    "cwd": "/tmp/persona-dream-main-final-20260715",
+    "cwd": "/tmp/persona-dream-main-final-20260715/skills/persona-dream",
     "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
     "python_version": "3.12.10",
     "script_path": "/tmp/persona-dream-main-final-20260715/skills/persona-dream/scripts/validate_phase11_canonical_live_request.py",
@@ -100,7 +92,7 @@
       "exact_list": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:60e407063bf0ac8ca6f71f60601bc0b74faf37d6eb5f1a079f33dd314e6643ea",
-        "response_sha256": "sha256:3ca8345b8460356496309a0e3e3acd875c310d48032e0d36a64418329c6562ba",
+        "response_sha256": "sha256:99caf2eec0943ccc5a4267dd1eeb474b74141d2060f5566e39c8b3ca0d853d4a",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -111,7 +103,7 @@
       "recall": {
         "endpoint": "/recall",
         "request_payload_sha256": "sha256:126f9d96b3e053522b2a888692a85e85a3525617e932fd9005e5804cbfd17647",
-        "response_sha256": "sha256:a969d91085ac17811ee1300ab8880f4a030cfcd1bfb5e76e8ee388fef5648aa6",
+        "response_sha256": "sha256:984df22db964cddb018aeede5bfa8d7f4f082fe34b6ed4509465d8e4e7b4ff31",
         "returned_counts": {
           "errors": []
         },
@@ -120,14 +112,14 @@
       "upsert": {
         "endpoint": "/upsert",
         "request_payload_sha256": "sha256:dbc4b81e7f7545348748a4b5939f03dd03aa1c9a4d3f8952f38056ed608274fe",
-        "response_sha256": "sha256:df21e65cb926a80c7b8a69f32b11e39a1ab83cc2d1fa6a44980c655ee9475cf4",
+        "response_sha256": "sha256:05bf19d0930b39dc01f908d9c1b3958df40df4273b9ff72d49141a38065df3ca",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T154926270417Z_13_137246952916672.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T161221906567Z_13_137246730618560.jsonl"
         },
         "status_code": 200
       }
@@ -156,6 +148,6 @@
   "source_revision_id": "rev_0001",
   "submitted": false,
   "technical_blockers": [],
-  "validated_at": "2026-07-15T15:48:40+00:00",
+  "validated_at": "2026-07-15T16:12:21.670896+00:00",
   "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
 }
