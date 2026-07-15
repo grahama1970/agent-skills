@@ -1,0 +1,91 @@
+{
+  "active_submission_state": "terminal_finalization",
+  "agent_id": "surf-doctor",
+  "allowed_actions": [
+    "preserve_incident",
+    "classify_failure",
+    "read_only_reproduction",
+    "prepare_repair_packet"
+  ],
+  "browser_mutation_authorized": false,
+  "captured_at": "2026-07-15T16:45:15.186734+00:00",
+  "controlled_tab_id": "837357102",
+  "conversation_url": null,
+  "dag_spec": {
+    "max_attempts": 3,
+    "mode": "bounded_dag",
+    "nodes": [
+      "preserve_incident",
+      "classify_failure",
+      "reproduce_or_bound",
+      "prepare_repair"
+    ],
+    "schema": "subagent_dag.v1",
+    "stop_conditions": [
+      "diagnosis_and_repair_packet_written",
+      "same_failure_repeated_twice",
+      "architectural_change_required",
+      "browser_mutation_required"
+    ]
+  },
+  "failure_class": "focus_stolen_despite_no_activate",
+  "forbidden_actions": [
+    "webgpt_resubmit",
+    "tab_activate",
+    "tab_close",
+    "tab_navigate",
+    "page_refresh",
+    "extension_reload"
+  ],
+  "proof_status": "degraded_focus",
+  "requested_tab_id": "837357102",
+  "requested_url": null,
+  "schema": "surf_doctor.incident_request.v1",
+  "sentinel": "<<<WEBGPT_DONE:20260715T164413Z:c4b839a7>>>",
+  "source_artifacts": [
+    {
+      "bytes": 3914,
+      "kind": "response_meta",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.meta.json",
+      "sha256": "943093b706f6e1f9a784867a63977a0c79c401d6760a5805ba73f3358e3f81d7"
+    },
+    {
+      "bytes": 821,
+      "kind": "submit_receipt",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.receipt.json",
+      "sha256": "a3129f1dd6769760d5010848a52740482194bec5051d73670e306c0e1cc747b0"
+    },
+    {
+      "bytes": 7958,
+      "kind": "submitted_prompt",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.md.submitted.md",
+      "sha256": "a2f10cac9a95f1d47a06d06ebd80752af82722c3581c5ca2001c67dd78f99581"
+    },
+    {
+      "bytes": 963,
+      "kind": "raw_response",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.raw.md",
+      "sha256": "af2098b67d664793aaf45279c09f8ed3475f3e0170c5873ee36fa1ee1e1e74e3"
+    },
+    {
+      "bytes": 917,
+      "kind": "clean_response",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.md",
+      "sha256": "34e41e548d3c1b44fbbd969d0e2bd33bb3ca26854f55556086e9f2014a23860c"
+    },
+    {
+      "bytes": 583,
+      "kind": "heartbeat",
+      "path": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.meta.heartbeat.json",
+      "sha256": "a0b91fc3c553a2242f30c5aac6fb4178b77887d8bd1f547001c7485ab096cdba"
+    },
+    {
+      "bytes": 319,
+      "kind": "stderr",
+      "path": "/tmp/surf-webgpt-submit-stderr.IE7xkK.log",
+      "sha256": "52b565d2f0550477f07a7e2445375117615225e058b76147076f705a697e4243"
+    }
+  ],
+  "status": "PENDING_DIAGNOSIS",
+  "submitted_to_chatgpt": true
+}

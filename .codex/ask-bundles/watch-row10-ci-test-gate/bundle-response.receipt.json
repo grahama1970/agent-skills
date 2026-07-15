@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle.submitted-code.md",
+  "submitted_output": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.md.submitted.md",
+  "output": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.md",
+  "raw_output": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.raw.md",
+  "meta_output": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260715T164413Z:c4b839a7>>>",
+  "requested_tab_id": "837357102",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-15T16:44:22Z"
+}

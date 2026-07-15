@@ -9,6 +9,7 @@
     "dev:all": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "build": "vite build",
     "start": "node server/prod.js",
+    "test": "tsx scripts/watchAnnotationSession.smoke.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

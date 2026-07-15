@@ -1,0 +1,28 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate",
+  "requested_tab_id": "837357102",
+  "requested_url": null,
+  "controlled_tab_id": "837357102",
+  "submit_receipt_status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.raw.md",
+  "response_meta_path": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.meta.json",
+  "response_receipt_path": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.receipt.json",
+  "submitted_path": ".codex/ask-bundles/watch-row10-ci-test-gate/bundle-response.md.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260715T164413Z:c4b839a7>>>",
+  "raw_sentinel_present": true,
+  "focus_changed": true,
+  "transport_degraded": true,
+  "raw_response_advisory": false,
+  "final_transport_state": "completed_with_focus_drift",
+  "proof_status": "degraded_focus",
+  "agent_diagnosis": "The controlled tab returned sentinel output, but browser focus changed during no-activate mode.",
+  "agent_action": "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof.",
+  "next_command": "surf webgpt.recover --artifact-dir /home/graham/workspace/experiments/agent-skills/.codex/ask-bundles/watch-row10-ci-test-gate --audit",
+  "do_not_do": [
+    "do_not_treat_focus_drift_as_transport_failure_when_sentinel_matches"
+  ],
+  "needs_attention": null
+}

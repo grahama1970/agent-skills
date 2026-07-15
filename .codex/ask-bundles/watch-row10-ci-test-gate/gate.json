@@ -1,0 +1,27 @@
+{
+  "goal_id": "watch-row10-sequence-ci",
+  "goal_lock": "Watch produces source-grounded, durable, replayable video evidence; row-10 annotation stop/reassign semantics must be runnable as deterministic package tests before adding UI or streaming complexity.",
+  "current_milestone": "row-10 annotation reducer smoke is exposed through npm test",
+  "top_blocker": "skills/watch/ui/package.json has no test script for row-10 reducer replay semantics",
+  "blocker_evidence": {
+    "command": "npm --prefix skills/watch/ui test",
+    "cwd": "/home/graham/workspace/experiments/agent-skills"
+  },
+  "required_live_proof": "npm --prefix skills/watch/ui test exits 0 and exercises row-10 UNASSIGN_STOP hydration/reassignment semantics",
+  "allowed_paths": [
+    "skills/watch/ui/package.json",
+    "skills/watch/ui/scripts/watchAnnotationSession.smoke.ts",
+    "skills/watch/ui/src/watchAnnotationSession.ts",
+    "skills/watch/ui/tests/**"
+  ],
+  "forbidden_scope": [
+    "skills/watch/ui/components/WatchReportView.tsx",
+    "skills/watch/scripts/**",
+    "skills/watch/docs/**",
+    "skills/watch/docs/architecture/generated/**",
+    "skills/watch/README.md",
+    "skills/watch/SKILL.md",
+    "PROJECT_KNOWLEDGE.md"
+  ],
+  "attempt_budget": 2
+}
