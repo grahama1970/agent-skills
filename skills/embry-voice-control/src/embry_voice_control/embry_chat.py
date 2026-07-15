@@ -155,6 +155,61 @@ def is_capital_france_query(text: str) -> bool:
     return "capital" in normalized and "france" in normalized
 
 
+def split_speakable_text(text: str, max_chars: int = 300) -> list[str]:
+    """Split speech at word boundaries without exceeding the renderer limit."""
+    words = text.split()
+    chunks: list[str] = []
+    current: list[str] = []
+    for word in words:
+        if len(word) > max_chars:
+            raise ValueError("speakable_word_exceeds_max_chars")
+        candidate = " ".join([*current, word])
+        if current and len(candidate) > max_chars:
+            chunks.append(" ".join(current))
+            current = [word]
+        else:
+            current.append(word)
+    if current:
+        chunks.append(" ".join(current))
+    return chunks
+
+
+def split_speakable_with_emotion_close(text: str, max_chars: int = 300) -> list[str]:
+    """Keep a terminal paralinguistic cue and its closing sentence together."""
+    marker = text.rfind(" [")
+    if marker <= 0:
+        return split_speakable_text(text, max_chars=max_chars)
+    body = text[:marker].strip()
+    closing = text[marker:].strip()
+    if len(closing) > max_chars:
+        raise ValueError("emotion_close_exceeds_max_chars")
+    return [*split_speakable_text(body, max_chars=max_chars), closing]
+
+
+def chunk_tone_arc(chunk_count: int) -> list[str]:
+    """Return a bounded concerned-to-confident-to-happy delivery arc."""
+    if chunk_count <= 0:
+        return []
+    if chunk_count == 1:
+        return ["memory_confident"]
+    if chunk_count == 2:
+        return ["careful_concerned", "playful_light"]
+    return ["careful_concerned", *(["memory_confident"] * (chunk_count - 2)), "playful_light"]
+
+
+def normalize_tts_text(text: str) -> str:
+    """Expand known domain acronyms and machine notation for speech."""
+    replacements = {
+        "SPARTA": "Space Attack Research and Tactic Analysis",
+        "QRA": "question, reasoning, and answer",
+    }
+    spoken = text
+    for acronym, expansion in replacements.items():
+        spoken = re.sub(rf"\b{acronym}\b", expansion, spoken, flags=re.IGNORECASE)
+    spoken = spoken.replace("rapidfuzz token_set_ratio >= 0.6", "a fuzzy token-set ratio of at least zero point six")
+    return spoken
+
+
 def build_tau_response_plan(
     *,
     turn_text: str,
@@ -167,14 +222,22 @@ def build_tau_response_plan(
     memory_classification = classify_memory_answer(answer_result, turn_text=turn_text)
     if memory_classification.startswith("memory_miss"):
         memory_answer = ""
-    if intent_action in {"COMPLIANCE", "CLARIFY", "IDENTITY_CLARIFICATION", "DEFLECT"}:
+    if intent_action in {"CLARIFY", "IDENTITY_CLARIFICATION", "DEFLECT"}:
         route_taken = "fail_closed"
         answer_text = "I need to keep that inside the memory and compliance path."
         route_reason = f"memory_intent_action_{intent_action.lower()}"
     elif memory_answer:
         route_taken = "memory_answer"
         answer_text = memory_answer
-        route_reason = "memory_answer_available"
+        route_reason = (
+            "compliance_grounded_memory_answer"
+            if intent_action == "COMPLIANCE"
+            else "memory_answer_available"
+        )
+    elif intent_action == "COMPLIANCE":
+        route_taken = "fail_closed"
+        answer_text = "I need to keep that inside the memory and compliance path."
+        route_reason = "memory_intent_action_compliance"
     elif is_capital_france_query(turn_text):
         route_taken = "static_answer"
         answer_text = "The capital of France is Paris."
@@ -183,7 +246,9 @@ def build_tau_response_plan(
         route_taken = "memory_miss_no_static_answer"
         answer_text = "I do not have enough grounded memory for that yet."
         route_reason = "memory_miss_no_allowed_fallback_in_this_rung"
-    tts_render_text = answer_text
+    tts_render_text = normalize_tts_text(answer_text)
+    if route_taken == "memory_answer":
+        tts_render_text += " [happy]"
     return {
         "subagent": "embry-chat",
         "memory_first": True,

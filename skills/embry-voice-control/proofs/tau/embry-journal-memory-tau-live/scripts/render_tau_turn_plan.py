@@ -56,12 +56,70 @@ def main() -> int:
     evidence = {item["kind"]: item for item in handoff["result"]["evidence"]}
     _, claim = load_locator(evidence["source_event_claim_receipt"])
     source_event = claim["source_event"]
+    source_evidence = claim.get("source_evidence_event")
+    if not isinstance(source_evidence, dict):
+        # Backward compatibility for physical-only historical receipts.
+        source_evidence = claim.get("speaker_evidence_event")
+    if not isinstance(source_evidence, dict):
+        raise ValueError("source_evidence_event_missing")
+    source_contract = plan.get("source_contract") or {}
+    contract_name = str(source_contract.get("name") or "")
+    if contract_name not in {
+        "physical_horus_identity",
+        "qualified_horus_clone",
+    }:
+        raise ValueError("turn_plan_source_contract_invalid")
+    if plan.get("suite_ready") is not False:
+        raise ValueError("turn_plan_suite_ready_invalid")
+    if source_contract.get("suite_ready") is not False:
+        raise ValueError("source_contract_suite_ready_invalid")
+    if source_contract.get("release_readiness_authority") is not False:
+        raise ValueError("source_contract_release_authority_invalid")
+    if source_evidence.get("session_id") != source_event.get("session_id"):
+        raise ValueError("source_evidence_session_mismatch")
+    if source_evidence.get("turn_id") != source_event.get("turn_id"):
+        raise ValueError("source_evidence_turn_mismatch")
+    if source_evidence.get("live") is not True or source_evidence.get("mocked") is not False:
+        raise ValueError("source_evidence_not_live")
+    evidence_payload = source_evidence.get("payload") or {}
+    if contract_name == "qualified_horus_clone":
+        expected_clone = {
+            "source_contract": "qualified_horus_clone",
+            "source_identity": "qualified_horus_clone",
+            "fresh_physical_human_speech": False,
+            "speaker_identity_proven": False,
+            "allow_personal_memory": False,
+            "suite_ready": False,
+        }
+        if source_evidence.get("type") != "audio_source.qualification.completed":
+            raise ValueError("clone_source_evidence_type_invalid")
+        if any(
+            evidence_payload.get(key) != value
+            for key, value in expected_clone.items()
+        ):
+            raise ValueError("clone_source_evidence_contract_mismatch")
+    else:
+        if source_evidence.get("type") != "speaker.verification.completed":
+            raise ValueError("physical_source_evidence_type_invalid")
+
     tts_text = plan["tts_render_text"]
     tts_hash = hashlib.sha256(tts_text.encode()).hexdigest()
     if plan["tts_render_text_sha256"] != tts_hash:
         raise ValueError("turn_plan_text_hash_mismatch")
 
     plan_locator = handoff["context"]["tau_turn_plan"]
+    render_label_digest = hashlib.sha256(
+        f"{plan['session_id']}\0{plan['turn_id']}".encode()
+    ).hexdigest()[:16]
+    render_label = f"{str(plan['session_id'])[:48]}-{render_label_digest}"
+    chunks_match_plan = (
+        " ".join(chunk["text"] for chunk in plan["speakable_chunks"]) == tts_text
+        and all(
+            chunk["text_sha256"] == hashlib.sha256(chunk["text"].encode()).hexdigest()
+            and len(chunk["text"]) <= int(chunk["max_chars"])
+            for chunk in plan["speakable_chunks"]
+        )
+    )
     request = {
         "schema": "tau.voice_render_request.v1",
         "run_id": plan["plan_id"],
@@ -79,15 +137,32 @@ def main() -> int:
         "interruptible": True,
         "use_blessed_qra_cache": False,
         "turn_control_policy": {"cancel_requested": False, "stale_old_turn_chunks_should_skip": True},
-        "external_evidence": {"source_event": {"event_id": source["event_id"], "sequence": source["sequence"], "session_id": source["session_id"], "turn_id": source["turn_id"], "audio_sha256": source_event["payload"]["audio_sha256"]}, "speaker_verification": claim["speaker_evidence_event"], "tau_turn_plan": plan_locator, "memory_intent": plan["memory_intent_receipt"], "memory_answer": plan["memory_answer_receipt"]},
+        "external_evidence": {
+            "source_event": {
+                "event_id": source["event_id"],
+                "sequence": source["sequence"],
+                "session_id": source["session_id"],
+                "turn_id": source["turn_id"],
+                "audio_sha256": source_event["payload"]["audio_sha256"],
+            },
+            "source_evidence": source_evidence,
+            "source_contract": source_contract,
+            "tau_turn_plan": plan_locator,
+            "memory_intent": plan["memory_intent_receipt"],
+            "memory_answer": plan["memory_answer_receipt"],
+        },
         "receipt_root": str(output / "chatterbox"),
-        "label": f"{plan['session_id']}-{plan['turn_id']}",
+        "label": render_label,
         "include_completion_cue": False,
         "asr_verify": False,
     }
     request_path = output / "request.json"
     write_json(request_path, request)
-    response = httpx.post(args.chatterbox_url.rstrip("/") + "/tau/voice-render", json=request, timeout=180).json()
+    http_response = httpx.post(
+        args.chatterbox_url.rstrip("/") + "/tau/voice-render", json=request, timeout=180
+    )
+    http_response.raise_for_status()
+    response = http_response.json()
     response_path = output / "response.json"
     write_json(response_path, response)
     audio_value = response.get("finished_response_audio")
@@ -104,12 +179,38 @@ def main() -> int:
         failed.append("chatterbox_echoed_turn_plan_hash")
     audio_sha = hashlib.sha256(audio_path.read_bytes()).hexdigest() if audio_path.is_file() else ""
     receipt = {
-        "schema": "embry.voice.causal_chatterbox_render_receipt.v1", "status": "PASS" if not failed else "FAIL", "ok": not failed, "live": True, "mocked": False,
-        "source_event": {"event_id": source["event_id"], "sequence": source["sequence"], "session_id": source["session_id"], "turn_id": source["turn_id"], "audio_sha256": source_event["payload"]["audio_sha256"]},
-        "speaker_verification": {"event_id": claim["speaker_evidence_event"]["event_id"], "speaker_id": "horus_lupercal", "score": claim["speaker_evidence_event"]["payload"]["candidates"][0]["confidence"]},
+        "schema": "embry.voice.causal_chatterbox_render_receipt.v2",
+        "status": "PASS" if not failed else "FAIL",
+        "ok": not failed,
+        "live": True,
+        "mocked": False,
+        "suite_ready": False,
+        "release_readiness_authority": False,
+        "source_contract": source_contract,
+        "source_event": {
+            "event_id": source["event_id"],
+            "sequence": source["sequence"],
+            "session_id": source["session_id"],
+            "turn_id": source["turn_id"],
+            "audio_sha256": source_event["payload"]["audio_sha256"],
+        },
+        "source_evidence": {
+            "event_id": source_evidence["event_id"],
+            "type": source_evidence["type"],
+            "source_identity": evidence_payload.get("source_identity"),
+            "voice_persona": evidence_payload.get("voice_persona"),
+            "fresh_physical_human_speech": evidence_payload.get(
+                "fresh_physical_human_speech",
+                contract_name == "physical_horus_identity",
+            ),
+            "speaker_identity_proven": evidence_payload.get(
+                "speaker_identity_proven",
+                contract_name == "physical_horus_identity",
+            ),
+        },
         "tau": {"tick_count": 1, "turn_plan_schema": plan["schema"], "turn_plan_path": str(plan_path), "turn_plan_sha256": plan_locator["sha256"], "route": plan["route"], "memory_result_classification": plan["memory_result_classification"], "tts_render_text_sha256": tts_hash},
         "chatterbox": {"endpoint": "/tau/voice-render", "request_path": str(request_path), "request_sha256": sha256_path(request_path), "response_path": str(response_path), "response_sha256": sha256_path(response_path), "response_source": response.get("source"), "answer_text_sha256": tau_receipt.get("answer_text_sha256"), "echoed_turn_plan_sha256": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256"), "audio_path": str(audio_path), "audio_sha256": audio_sha, "audio_bytes": audio_path.stat().st_size if audio_path.is_file() else 0},
-        "acceptance": {"embry_project_runtime_selected": str(plan["planner"]["python_executable"]).startswith(str(Path(__file__).resolve().parents[4] / ".venv")), "production_planner_called": plan["planner"]["callable"] == "embry_voice_control.embry_chat.build_tau_response_plan", "source_event_lineage_preserved": actual == expected, "irrelevant_memory_answer_rejected": plan["memory_result_classification"] == "memory_miss_irrelevant_answer", "static_answer_selected_by_existing_policy": plan["route"] == "static_answer", "one_bounded_tau_tick": True, "turn_plan_hash_preserved_in_handoff": sha256_path(plan_path) == plan_locator["sha256"], "render_request_built_only_from_turn_plan": True, "question_hash_matches_source_event": request["question_text_sha256"] == hashlib.sha256(source_event["payload"]["text"].encode()).hexdigest(), "chunk_hash_matches_turn_plan": request["speakable_chunks"][0]["text_sha256"] == tts_hash, "chatterbox_echoed_turn_plan_hash": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256") == plan_locator["sha256"], "chatterbox_audio_nonempty": audio_path.is_file() and audio_path.stat().st_size > 44, "no_global_latest_read": True, "no_ui": True, "no_orb": True, "no_replay": True, "no_playback": True},
+        "acceptance": {"embry_project_runtime_selected": str(plan["planner"]["python_executable"]).startswith(str(Path(__file__).resolve().parents[4] / ".venv")), "production_planner_called": plan["planner"]["callable"] == "embry_voice_control.embry_chat.build_tau_response_plan", "source_event_lineage_preserved": actual == expected, "memory_classification_matches_route": (plan["route"] == "memory_answer" and plan["memory_result_classification"] == "memory_answer") or (plan["route"] != "memory_answer" and plan["memory_result_classification"].startswith("memory_miss")), "turn_plan_route_is_renderable": plan["route"] in {"memory_answer", "static_answer", "research_answer", "skill_answer"}, "one_bounded_tau_tick": True, "turn_plan_hash_preserved_in_handoff": sha256_path(plan_path) == plan_locator["sha256"], "render_request_built_only_from_turn_plan": True, "question_hash_matches_source_event": request["question_text_sha256"] == hashlib.sha256(source_event["payload"]["text"].encode()).hexdigest(), "chunk_hashes_match_turn_plan": chunks_match_plan, "chatterbox_echoed_turn_plan_hash": (tau_receipt.get("external_evidence") or {}).get("tau_turn_plan", {}).get("sha256") == plan_locator["sha256"], "chatterbox_audio_nonempty": audio_path.is_file() and audio_path.stat().st_size > 44, "no_global_latest_read": True, "no_ui": True, "no_orb": True, "no_replay": True, "no_playback": True, "source_contract_preserved": source_contract == plan.get("source_contract"), "suite_ready_false": plan.get("suite_ready") is False, "synthetic_audio_not_relabelled_as_physical": contract_name != "qualified_horus_clone" or (evidence_payload.get("fresh_physical_human_speech") is False and evidence_payload.get("speaker_identity_proven") is False)},
         "failed_gates": failed,
     }
     if not all(receipt["acceptance"].values()):
