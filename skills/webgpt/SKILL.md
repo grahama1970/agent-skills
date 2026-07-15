@@ -26,9 +26,6 @@ complies:
 ## Commands
 
 All commands default to `--background` (no KDE switch, no window focus).
-`submit` and `listen` wait up to 2400 seconds (40 minutes) by default because
-long Pro responses can legitimately take 30-40 minutes. Callers may still use
-`--timeout` to select a shorter or longer bounded wait.
 
 ## Hard tab-id preservation rule
 
@@ -136,6 +133,13 @@ The directive and the per-mode output contract are injected automatically at
 submit time (text bundles are augmented in place as
 `<bundle>.submitted-<mode>.md`; zip bundles are attached unmodified).
 
+Every non-`none` submission is also wrapped in a **GOAL LOCK** — a preamble at
+the very top and a reminder at the very bottom (last instruction wins) — that
+forbids WebGPT from drifting into easier, adjacent, or off-goal side quests and
+tells it to work only on the one stated gate. If it cannot make real progress on
+that gate, it must return the contract's block/ruling rather than solve an
+easier, unrelated problem.
+
 After applying code, reconcile it against repository and live evidence. Review
 the current gate only and return exactly one ruling:
 
@@ -173,8 +177,7 @@ python scripts/webgpt_cli.py activate                  # background, no window s
 python scripts/webgpt_cli.py activate --no-background   # foreground (KDE switch)
 
 # Download solution zip (finds button, clicks it, waits for file)
-python scripts/webgpt_cli.py download --tab-id 837358116 \
-  --expect-url "https://chatgpt.com/c/..."
+python scripts/webgpt_cli.py download
 
 # Listen for WebGPT response
 python scripts/webgpt_cli.py listen --timeout 300
@@ -182,6 +185,69 @@ python scripts/webgpt_cli.py listen --timeout 300
 # Project binding
 python scripts/webgpt_cli.py config --tab-id 837356566 --url "https://chatgpt.com/..." --kde-desktop 2
 ```
+
+## Project-agent usage (unambiguous)
+
+A project agent calls webgpt as a **single bounded skill node**: one submission,
+one deliverable contract. Do **not** loop webgpt yourself — iteration against an
+immutable goal (bounded rounds, drift/fail-closed, receipts, human goal changes)
+is a **Tau DAG** responsibility via a webgpt `skill` node.
+
+**Step 1 — target the exact human tab (never auto-pick one).** Either pass it
+inline or use a stored project binding:
+
+```bash
+# inline (preferred, most explicit)
+python scripts/webgpt_cli.py submit bundle.md -p <project> \
+  --tab-id <HUMAN_TAB_ID> --expect-url "https://chatgpt.com/c/<id>"
+
+# or bind once, then submit
+python scripts/webgpt_cli.py config -p <project> --tab-id <HUMAN_TAB_ID> --url "https://chatgpt.com/c/<id>" --kde-desktop 2
+python scripts/webgpt_cli.py submit bundle.md -p <project>
+```
+
+**Step 2 — choose exactly one mode.** Modes, the flag they need, the required
+deliverable, and where the response is written (relative to the bundle):
+
+| `--output-contract` | Needs `--architecture-authorized` | Deliverable | Response file(s) |
+|---|---|---|---|
+| `assess` (default off) | no | `DIAGNOSIS` + one ruling (`PASS_CURRENT_GATE` / `BLOCKED_CURRENT_GATE:` / `REJECTED_SCOPE_EXPANSION`) | `<bundle>-assess-response.md` |
+| `plan` | **yes** | `TASK_PLAN` (per-step file boundary + live proof) | `<bundle>-plan-response.md` |
+| `code` (default) | no | unified diff (`diff --git` / `*** Begin Patch`) or non-empty finished-file zip | `<bundle>-response.md` (+ `<bundle>-solution.zip`) |
+| `all` | **yes** | `assess` → `plan` → `code`, in order, on the same tab; stops fail-closed at the first missing deliverable | all three files above |
+| `none` | no | free-form (no contract) | `<bundle>-response.md` |
+
+**Step 3 — branch on the exit code / stderr marker.** These are stable and
+machine-checkable:
+
+| Exit | Marker (stderr) | Meaning |
+|---|---|---|
+| 0 | — | every requested deliverable satisfied |
+| 1 | `Bundle not found` | bad bundle path |
+| 2 | `--output-contract must be one of: …` | invalid mode |
+| 2 | `BLOCKED_WEBGPT_EXACT_TAB_REQUIRED` | no exact tab id + conversation URL |
+| 2 | `REJECTED_SCOPE_EXPANSION` | `plan`/`all` without `--architecture-authorized` |
+| 3 | `BLOCKED_WEBGPT_ROUTING_PROOF_MISSING` / `…_MISMATCH` | routing proof absent or wrong tab |
+| nonzero | `BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT` | tab/URL preflight failed |
+| 4 | `BLOCKED_WEBGPT_<MODE>_DELIVERABLE_MISSING` | the contract was not met |
+
+**Step 4 — verify routing proof.** Always confirm the run hit the intended tab
+by reading `<bundle>[-<mode>]-response.meta.json`:
+
+```text
+requested_tab_id == controlled_tab_id == <HUMAN_TAB_ID>
+controlled_tab_id_mismatch == false
+tab_was_created == false
+```
+
+**Research (both sides).** Before calling webgpt, the project agent runs
+`/brave-search` and embeds the distilled findings under a `## Research context`
+heading in the bundle. webgpt separately injects a directive telling ChatGPT to
+run its own web search and cite source URLs. webgpt never calls `/brave-search`.
+
+**What webgpt does NOT do.** No goal memory, no multi-round loop, no retry
+policy, no stall/mutation detection, no receipts ledger. Route all of that
+through a Tau `tau.dag_contract.v1` with a webgpt skill node.
 
 ## Failure reporting
 

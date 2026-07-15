@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "failure": "submit_failed",
+  "sentinel": "<<<WEBGPT_DONE:test>>>",
+  "requested_tab_id": "837354098",
+  "raw_contains_sentinel": false
+}

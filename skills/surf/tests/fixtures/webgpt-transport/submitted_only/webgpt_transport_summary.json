@@ -1,0 +1,29 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only",
+  "requested_tab_id": "837354098",
+  "requested_url": null,
+  "controlled_tab_id": null,
+  "submit_receipt_status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": null,
+  "response_meta_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only/02_response.meta.json",
+  "response_receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only/02_response.receipt.json",
+  "submitted_path": null,
+  "sentinel": "<<<WEBGPT_DONE:test>>>",
+  "raw_sentinel_present": false,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": false,
+  "final_transport_state": "submitted_only",
+  "proof_status": null,
+  "agent_diagnosis": null,
+  "agent_action": null,
+  "next_command": "surf webgpt.extract --tab-id 837354098 --output /home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only/02_response.md --raw-output /home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only/02_response.raw.md --meta-output /home/graham/workspace/experiments/agent-skills/skills/surf/tests/fixtures/webgpt-transport/submitted_only/02_response.meta.json --sentinel '<<<WEBGPT_DONE:test>>>'",
+  "do_not_do": [
+    "do_not_claim_completion",
+    "do_not_retry_submit_until_timeout"
+  ],
+  "needs_attention": null
+}

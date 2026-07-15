@@ -198,6 +198,40 @@ describe("CDPController", () => {
       expect(error).toBeDefined();
       expect(error?.message).toBe("Failed to attach debugger: Some other error");
     });
+
+    it("detaches and retries once when a stale debugger is attached", async () => {
+      mockChrome.debugger.attach
+        .mockRejectedValueOnce(
+          new Error("Another debugger is already attached to the tab with id: 100."),
+        )
+        .mockResolvedValueOnce(undefined);
+      mockChrome.debugger.detach.mockResolvedValue(undefined);
+
+      await controller.attach(tabId);
+
+      expect(mockChrome.debugger.detach).toHaveBeenCalledWith({ tabId });
+      expect(mockChrome.debugger.attach).toHaveBeenCalledTimes(2);
+    });
+
+    it("preserves attach failure when stale debugger recovery fails", async () => {
+      mockChrome.debugger.attach.mockRejectedValue(
+        new Error("Another debugger is already attached to the tab with id: 100."),
+      );
+      mockChrome.debugger.detach.mockResolvedValue(undefined);
+
+      let error: Error | undefined;
+      try {
+        await controller.attach(tabId);
+      } catch (e) {
+        error = e as Error;
+      }
+
+      expect(error).toBeDefined();
+      expect(error?.message).toBe(
+        "Failed to attach debugger: Another debugger is already attached to the tab with id: 100.",
+      );
+      expect(mockChrome.debugger.attach).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("detach", () => {

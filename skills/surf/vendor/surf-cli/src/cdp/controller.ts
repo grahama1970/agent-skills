@@ -163,7 +163,18 @@ export class CDPController {
       if (message.includes("Cannot access") || message.includes("Cannot attach")) {
         throw new Error(`Cannot control this page. Chrome restricts automation on chrome://, extensions, and web store pages.`);
       }
-      throw new Error(`Failed to attach debugger: ${message}`);
+      if (message.includes("Another debugger is already attached")) {
+        try {
+          await chrome.debugger.detach(target);
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          await chrome.debugger.attach(target, "1.3");
+        } catch (retryErr) {
+          const retryMessage = retryErr instanceof Error ? retryErr.message : String(retryErr);
+          throw new Error(`Failed to attach debugger: ${retryMessage}`);
+        }
+      } else {
+        throw new Error(`Failed to attach debugger: ${message}`);
+      }
     }
     this.targets.set(tabId, target);
 

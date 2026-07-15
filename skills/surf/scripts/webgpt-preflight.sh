@@ -20,6 +20,7 @@ Options:
   --expect-url URL
   --expect-title TEXT
   --allow-unverified-tab-id
+  --create-tab
   --no-activate
   --allow-foreground-controlled
   --json
@@ -32,6 +33,7 @@ target_url=""
 expect_url=""
 expect_title=""
 allow_unverified_tab_id=0
+create_tab=0
 no_activate=0
 allow_foreground=0
 json_only=0
@@ -43,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --expect-url) expect_url="${2:-}"; shift 2 ;;
     --expect-title) expect_title="${2:-}"; shift 2 ;;
     --allow-unverified-tab-id) allow_unverified_tab_id=1; shift ;;
+    --create-tab) create_tab=1; shift ;;
     --no-activate) no_activate=1; shift ;;
     --allow-foreground-controlled) allow_foreground=1; shift ;;
     --json) json_only=1; shift ;;
@@ -51,7 +54,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-export RUN_SH SCRIPT_DIR tab_id target_url expect_url expect_title allow_unverified_tab_id no_activate allow_foreground json_only
+export RUN_SH SCRIPT_DIR tab_id target_url expect_url expect_title allow_unverified_tab_id create_tab no_activate allow_foreground json_only
 exec python3 - "$@" <<'PY'
 import json
 import os
@@ -64,6 +67,7 @@ target_url = os.environ.get("target_url", "")
 expect_url = os.environ.get("expect_url", "")
 expect_title = os.environ.get("expect_title", "")
 allow_unverified_tab_id = os.environ.get("allow_unverified_tab_id") == "1"
+create_tab = os.environ.get("create_tab") == "1"
 no_activate = os.environ.get("no_activate") == "1"
 allow_foreground = os.environ.get("allow_foreground") == "1"
 json_only = os.environ.get("json_only") == "1"
@@ -102,6 +106,7 @@ if tab_id:
     if not digits:
         add("tab_id_valid", False, "invalid --tab-id")
     else:
+        expected_url = expect_url or target_url
         ident = subprocess.run(
             [
                 sys.executable,
@@ -111,7 +116,7 @@ if tab_id:
                 digits,
                 "--source",
                 "tab-id",
-                *(["--expect-url", expect_url] if expect_url else []),
+                *(["--expect-url", expected_url] if expected_url else []),
                 *(["--expect-title", expect_title] if expect_title else []),
                 *(["--allow-unverified-tab-id"] if allow_unverified_tab_id else []),
             ],
@@ -172,15 +177,17 @@ elif target_url:
         add("url_resolve", False, err)
         if err == "ambiguous_url":
             add("url_ambiguous", False, json.dumps(resolved.get("candidates") or []))
+elif create_tab:
+    add("explicit_target", True, "--create-tab")
 else:
     add("explicit_target", False, "pass --tab-id or --url")
 
 if no_activate and requested_tab_id and not allow_foreground:
     if active_tab == requested_tab_id:
         add(
-            "not_foreground_controlled",
-            False,
-            "controlled tab is active; switch tabs or --allow-foreground-controlled",
+            "foreground_controlled_user_visible",
+            True,
+            "controlled tab is already active; no activation needed, but this is not background proof",
         )
     else:
         add(

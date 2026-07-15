@@ -16,7 +16,6 @@ import typer
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
 SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
-DEFAULT_WEBGPT_TIMEOUT_SECONDS = 2400
 
 
 GITHUB_REPO = "agent-skills"
@@ -293,19 +292,44 @@ status analysis, or prose-only plan does NOT satisfy this contract.""",
 }
 
 
-def _augment_bundle(bp: Path, mode: str) -> Path:
-    """Prepend the research directive + mode output-contract to a text bundle.
+_GOAL_LOCK_TOP = """## GOAL LOCK - read first, obey throughout
+Work on ONLY the single current gate / goal stated in this request. You are
+FORBIDDEN from drifting into easier, adjacent, or tangential work - no unrelated
+refactors, renames, new tooling, extra features, unrequested tests, or broader
+architecture - none of which close the stated gate. If the stated gate is
+unclear, out of scope, or blocked, say so and stop; do NOT substitute a
+different, easier problem to look productive."""
 
-    Zip bundles are attached as-is and cannot be augmented.
+_GOAL_LOCK_BOTTOM = """## GOAL LOCK - final check (this is the last instruction; it wins)
+Before you send your answer, re-read the stated gate/goal above and verify EVERY
+line of your response directly serves it. Delete anything that is a side-quest,
+nice-to-have, or adjacent improvement. Do not expand scope. Return only what the
+output contract requires. If you cannot make real progress on the stated gate,
+return the contract's block/ruling instead of solving an easier, unrelated
+problem."""
+
+
+def _augment_bundle(bp: Path, mode: str) -> Path:
+    """Wrap a text bundle with a goal lock (top + bottom), the research directive,
+    and the mode output-contract.
+
+    The goal lock is placed both first and last (LLMs weight the start and end of
+    a prompt most) so WebGPT stays on the one stated gate and cannot devolve into
+    easy, off-goal side quests. Zip bundles are attached as-is and cannot be
+    augmented.
     """
     if bp.suffix == ".zip":
         return bp
     original = bp.read_text(errors="replace")
     contract = _MODE_CONTRACTS.get(mode, "")
-    blocks = [blk for blk in (_RESEARCH_CLAUSE, contract) if blk]
-    header = "\n\n".join(blocks) + "\n\n---\n\n"
+    lock = mode != "none"
+    top_blocks = [
+        blk for blk in (_GOAL_LOCK_TOP if lock else "", _RESEARCH_CLAUSE, contract) if blk
+    ]
+    header = "\n\n".join(top_blocks) + "\n\n---\n\n"
+    footer = ("\n\n---\n\n" + _GOAL_LOCK_BOTTOM) if lock else ""
     aug = bp.with_name(f"{bp.stem}.submitted-{mode}.md")
-    aug.write_text(header + original)
+    aug.write_text(header + original + footer)
     return aug
 
 
@@ -357,12 +381,7 @@ def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, backg
 def submit(
     bundle: str | None = typer.Argument(None, help="Path to creation bundle (auto-finds latest)"),
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(
-        DEFAULT_WEBGPT_TIMEOUT_SECONDS,
-        "--timeout",
-        "-t",
-        help="WebGPT timeout (seconds)",
-    ),
+    timeout: int = typer.Option(900, "--timeout", "-t", help="WebGPT timeout (seconds)"),
     background: bool = typer.Option(True, "--background", help="Background: no KDE switch, no window focus"),
     output_contract: str = typer.Option("code", "--output-contract", help="Required response: assess, plan, code, all, or none"),
     architecture_authorized: bool = typer.Option(
@@ -520,30 +539,16 @@ def download(
     timeout: int = typer.Option(60, "--timeout", "-t"),
     output: str | None = typer.Option(None, "-o"),
     background: bool = typer.Option(True, "--background"),
-    tab_id_override: str = typer.Option("", "--tab-id", help="Exact human-supplied tab id"),
-    expected_url_override: str = typer.Option(
-        "", "--expect-url", help="Exact expected ChatGPT conversation URL"
-    ),
 ):
     """Click the download button in the ChatGPT tab, wait for the file in ~/Downloads."""
-    binding = _binding(project)
-    try:
-        tab_id, conversation_url = _exact_submission_target(
-            binding, tab_id_override, expected_url_override
-        )
-    except ValueError as exc:
-        typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
-        raise typer.Exit(2)
-    preflight = _surf(
-        "webgpt.preflight",
-        "--tab-id", tab_id,
-        "--expect-url", conversation_url,
-        "--no-activate",
-        "--json",
-    )
-    if preflight.returncode != 0:
-        typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
-        raise typer.Exit(preflight.returncode)
+    _verify_desktop(_binding(project), background, "download")
+    tab_id = _active_chatgpt_tab()
+    if not tab_id:
+        tab_id = _binding(project).get("tab_id", "")
+    if not tab_id:
+        _report_failure("download", subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="no tab id"), binding=_binding(project), project=project)
+        typer.echo("No active ChatGPT tab found", err=True)
+        raise typer.Exit(1)
     found = _click_and_wait_download(tab_id, match, timeout, background=background)
     if found:
         out = Path(output) if output else found
@@ -558,7 +563,7 @@ def download(
 @app.command()
 def listen(
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(DEFAULT_WEBGPT_TIMEOUT_SECONDS, "--timeout", "-t"),
+    timeout: int = typer.Option(900, "--timeout", "-t"),
     output: str = typer.Option("response.md", "-o"),
     background: bool = typer.Option(True, "--background"),
 ):

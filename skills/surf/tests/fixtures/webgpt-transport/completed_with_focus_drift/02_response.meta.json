@@ -1,0 +1,9 @@
+{
+  "status": "recovered_focus_changed",
+  "sentinel": "<<<WEBGPT_DONE:drift>>>",
+  "requested_tab_id": "837354098",
+  "controlled_tab_id": "837354098",
+  "raw_contains_sentinel": true,
+  "focus_changed": true,
+  "transport_degraded": true
+}

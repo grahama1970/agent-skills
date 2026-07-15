@@ -1,0 +1,9 @@
+{
+  "status": "missing_sentinel",
+  "failure": "missing_sentinel",
+  "sentinel": "<<<WEBGPT_DONE:current>>>",
+  "requested_tab_id": "837352352",
+  "controlled_tab_id": "837352352",
+  "raw_contains_sentinel": false,
+  "raw_response_advisory": true
+}

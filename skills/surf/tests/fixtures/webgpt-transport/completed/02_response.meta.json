@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "sentinel": "<<<WEBGPT_DONE:done>>>",
+  "requested_tab_id": "123",
+  "controlled_tab_id": "123",
+  "raw_contains_sentinel": true,
+  "focus_changed": false
+}
