@@ -100,6 +100,12 @@ def install_storyboard_fixture(revision_root: Path) -> None:
         "accepted": True,
         "panel_count": 4,
         "duration_seconds": 10,
+        "source_context": {
+            "core_idea": MEMORY_FIXTURE.IDEA_TEXT,
+            "characters": ["Embry", "Kai"],
+            "activity": "surfing at Kahaluʻu Bay over a lava reef during a summer swell",
+            "social_constraint": "local surf etiquette and lineup order",
+        },
         "panels": panels,
     }
     write_json(packet_path, packet)
@@ -107,6 +113,7 @@ def install_storyboard_fixture(revision_root: Path) -> None:
     packet_entry["size_bytes"] = packet_path.stat().st_size
     index["artifact_count"] = len(artifacts)
     write_json(index_path, index)
+    MEMORY_FIXTURE.install_idea_lineage_fixture(revision_root)
 
 
 def write_activation_inputs(run_root: Path, revision_root: Path) -> tuple[Path, Path, Path]:
@@ -128,6 +135,7 @@ def write_activation_inputs(run_root: Path, revision_root: Path) -> tuple[Path, 
         },
     )
     pointer_path = run_root / ".persona-dream" / "state" / "active_revision.json"
+    lineage = MEMORY_FIXTURE.install_idea_lineage_fixture(revision_root)
     write_json(
         pointer_path,
         {
@@ -136,6 +144,8 @@ def write_activation_inputs(run_root: Path, revision_root: Path) -> tuple[Path, 
             "revisionId": REVISION_ID,
             "revisionRoot": str(revision_root),
             "revisionManifestSha256": manifest_sha256,
+            "ideaId": lineage.idea_id,
+            "ideaSha256": lineage.idea_sha256,
         },
     )
 

@@ -25,11 +25,14 @@ cannot silently become literal history or rewrite the persona's identity.
 > closed loop. The implemented runtime remains narrower than the complete system
 > described here.
 
-**Current proof boundary:** the project has grounded dream packets, live image
-and storyboard slices, media locking, provider routing, and a fixture-backed
-Phase 10 provider-contract dry run. It has not yet proven a live provider
-return, Watch-based self-analysis, dream persistence, or changed later
-behavior.
+**Current proof boundary:** code now rejects revisions whose Phase 01 human idea
+does not match the idea consumed by Phases 02-10. The previously active
+`rev_repair_a8b93ffeca8f` is a known semantic-mix counterexample and must remain
+`LEGACY_UNQUALIFIED` until the explicit semantic-mix repair command creates,
+Memory-verifies, and activates a new immutable revision. This documentation does
+not claim that migration has been executed. No live provider return,
+Watch-based self-analysis, dream persistence, or changed later behavior is
+proven.
 
 **Jump to:**
 [Quick Start](#quick-start) -

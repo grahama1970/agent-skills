@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase_idea_binding.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema", "status", "run_id", "revision_id", "phase_id", "idea_id", "idea_sha256",
+    "source", "required_artifact_hashes", "previous_phase_binding_sha256", "semantic_evidence",
+    "binding_sha256", "actual_provider_call_attempts", "provider_live", "provider_ready",
+    "live_submit_ready", "submitted"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase_idea_binding.v1"},
+    "status": {"const": "PASS_PHASE_IDEA_BOUND"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "pattern": "^(0[1-9]|10)$"},
+    "idea_id": {"type": "string", "pattern": "^pd_idea_[a-f0-9]{32}$"},
+    "idea_sha256": {"$ref": "#/$defs/sha256"},
+    "source": {"const": "explicit_human"},
+    "required_artifact_hashes": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/sha256"}
+    },
+    "previous_phase_binding_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "semantic_evidence": {
+      "type": "object",
+      "required": ["mode", "person_hits", "domain_hits"],
+      "properties": {
+        "mode": {"enum": ["exact_human_idea", "exact_story_binding", "exact_core_idea", "semantic_anchor_and_hash", "structural_hash_chain"]},
+        "person_hits": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "domain_hits": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "binding_sha256": {"$ref": "#/$defs/sha256"},
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "submitted": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

@@ -2,8 +2,9 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
-import type { DreamRunDetailResponse, StoryboardConsumerProjection } from '../../contracts/src/index'
+import type { DreamRunDetailResponse, HumanIdeaProjection, StoryboardConsumerProjection } from '../../contracts/src/index'
 import { hydrateStoryboardConsumer } from './consumerContracts'
+import { validateIdeaLineage } from './ideaLineage'
 import { DreamPathPolicy } from './paths'
 import { projectStages } from './stages'
 
@@ -111,6 +112,7 @@ function validateActivationChain(options: {
   pointerPath: string
   pointer: JsonRecord | null
   fixtureRun: boolean
+  humanIdea: HumanIdeaProjection
 }): Qualification {
   const receiptPath = resolve(options.evidenceRoot, ACTIVATION_RECEIPT_NAME)
   if (!existsSync(receiptPath)) {
@@ -186,6 +188,7 @@ function validateActivationChain(options: {
     assertInvariant(index.run_id === options.runId && index.revision_id === options.revisionId, 'BLOCKED_REVISION_ARTIFACT_INDEX_IDENTITY')
     assertInvariant(options.pointer && localPointer.runId === options.runId && localPointer.revisionId === options.revisionId, 'BLOCKED_LOCAL_ACTIVE_POINTER_MISMATCH')
     assertInvariant(localPointer.revisionManifestSha256 === manifestSha256, 'BLOCKED_LOCAL_ACTIVE_POINTER_MANIFEST_MISMATCH')
+    assertInvariant(localPointer.ideaId === options.humanIdea.ideaId && localPointer.ideaSha256 === options.humanIdea.ideaSha256, 'BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH')
 
     assertInvariant(prepare.schema === 'persona_dream.revision_memory_prepare_receipt.v1' && prepare.status === 'PASS_MEMORY_REVISION_PREPARED', 'BLOCKED_MEMORY_PREPARE_RECEIPT_INVALID')
     assertInvariant(verify.schema === 'persona_dream.revision_memory_verify_receipt.v1' && verify.status === 'PASS_MEMORY_REVISION_VERIFIED', 'BLOCKED_MEMORY_VERIFY_RECEIPT_INVALID')
@@ -280,6 +283,8 @@ function validateActivationChain(options: {
       run_id: options.runId,
       active_revision_id: options.revisionId,
       previous_revision_id: sourceRevisionId,
+      idea_id: options.humanIdea.ideaId,
+      idea_sha256: options.humanIdea.ideaSha256,
       source_commit: sourceCommit,
       runtime_release_id: runtimeReleaseId,
       lifecycle_state: 'ACTIVE',
@@ -412,12 +417,23 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
   const evidenceRoot = localRevisionRoot && existsSync(localRevisionRoot)
     ? policy.resolveDirectory(realpathSync(localRevisionRoot))
     : runRoot
+  let humanIdea: HumanIdeaProjection | undefined
+  let ideaLineageBlocker: string | undefined
+  if (sourceRevisionId && localRevisionRoot && existsSync(localRevisionRoot)) {
+    try {
+      humanIdea = validateIdeaLineage(evidenceRoot, basename(runRoot), sourceRevisionId)
+    } catch {
+      ideaLineageBlocker = 'BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH'
+    }
+  }
   const files = await listFiles(evidenceRoot)
   const projectedStages = projectStages(evidenceRoot, files, '10', sourceRevisionId || undefined)
   const runId = basename(runRoot)
   const fixtureRun = revision?.fixture === true
   const revisionQualification: DreamRunDetailResponse['revisionQualification'] = sourceRevisionId
-    ? validateActivationChain({
+    ? ideaLineageBlocker || !humanIdea
+      ? blockedQualification(['BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH'])
+      : validateActivationChain({
         runRoot,
         evidenceRoot,
         runId,
@@ -425,6 +441,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
         pointerPath,
         pointer,
         fixtureRun,
+        humanIdea,
       })
     : blockedQualification(['BLOCKED_ACTIVE_REVISION_MISSING'], 'MISSING')
   const stages = projectedStages.map((stage) => {
@@ -526,7 +543,7 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       manifestSha256: typeof pointer?.revisionManifestSha256 === 'string' ? pointer.revisionManifestSha256 : undefined,
     } : undefined,
     revisionQualification,
-    consumers: storyboard ? { storyboard } : undefined,
+    consumers: humanIdea || storyboard ? { humanIdea, storyboard } : undefined,
     earliestIssue: earliest ? {
       phaseId: earliest.id,
       kind: earliest.evidence.state === 'malformed' || earliest.evidence.state === 'semantic_invalid' ? 'malformed' : 'missing',

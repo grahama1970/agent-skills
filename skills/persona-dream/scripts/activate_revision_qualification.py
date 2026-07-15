@@ -485,6 +485,8 @@ def validate_local_pointer(snapshot: Any) -> dict[str, Any]:
         "runId": snapshot.run_id,
         "revisionId": snapshot.revision_id,
         "revisionManifestSha256": snapshot.manifest_sha256,
+        "ideaId": snapshot.idea_lineage.idea_id,
+        "ideaSha256": snapshot.idea_lineage.idea_sha256,
     }
     for field, expected_value in expected.items():
         require_equal(
@@ -678,6 +680,8 @@ def terminal_event(
         "work_order_id": queue["work_order_id"],
         "source_revision_id": snapshot.source_revision_id,
         "target_revision_id": snapshot.revision_id,
+        "idea_id": snapshot.idea_lineage.idea_id,
+        "idea_sha256": snapshot.idea_lineage.idea_sha256,
         "historical_queue_status": "QUEUED",
         "memory_active_pointer_key": active_key,
         "prepare_receipt_sha256": chain["prepare_sha256"],
@@ -746,6 +750,8 @@ def pointer_document(
         "run_id": snapshot.run_id,
         "active_revision_id": snapshot.revision_id,
         "previous_revision_id": snapshot.source_revision_id,
+        "idea_id": snapshot.idea_lineage.idea_id,
+        "idea_sha256": snapshot.idea_lineage.idea_sha256,
         "source_commit": snapshot.source_commit,
         "runtime_release_id": chain["runtime_release_id"],
         "lifecycle_state": "ACTIVE",
@@ -1009,6 +1015,8 @@ def activation_receipt(
             "run_id": snapshot.run_id,
             "revision_id": snapshot.revision_id,
             "revision_manifest_sha256": snapshot.manifest_sha256,
+            "idea_id": snapshot.idea_lineage.idea_id,
+            "idea_sha256": snapshot.idea_lineage.idea_sha256,
         },
         "receipt_chain": {
             "prepare_schema": "persona_dream.revision_memory_prepare_receipt.v1",
@@ -1026,6 +1034,8 @@ def activation_receipt(
             "active_pointer_key": active_key,
             "active_revision_id": snapshot.revision_id,
             "previous_revision_id": snapshot.source_revision_id,
+            "idea_id": snapshot.idea_lineage.idea_id,
+            "idea_sha256": snapshot.idea_lineage.idea_sha256,
             "exact_reread_count": 1,
             "document_contract_sha256": semantic_pointer["document_contract_sha256"],
             "qdrant_collection": semantic_pointer["qdrant_collection"],

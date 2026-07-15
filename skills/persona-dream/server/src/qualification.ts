@@ -4,6 +4,7 @@ import { readdir } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { PHASE_ARTIFACTS_CONTRACT } from '../../contracts/src/index'
 import { hydrateStoryboardConsumer } from './consumerContracts'
+import { validateIdeaLineage } from './ideaLineage'
 import { projectStages } from './stages'
 
 type ArtifactIndex = {
@@ -43,6 +44,7 @@ export async function qualifyRevisionLocally(runId: string, revisionId: string, 
   if (artifactIndex.schema !== 'persona_dream.revision_artifact_index.v1' || artifactIndex.revision_id !== revisionId || artifactIndex.run_id !== runId) {
     throw new Error('BLOCKED_READ_MODEL_REVISION_MISMATCH')
   }
+  const humanIdea = validateIdeaLineage(revisionRoot, runId, revisionId)
   const stages = projectStages(revisionRoot, await listFiles(revisionRoot), '10', revisionId)
   const omittedRequiredIds: string[] = []
   const mismatchedRequiredIds: string[] = []
@@ -88,9 +90,13 @@ export async function qualifyRevisionLocally(runId: string, revisionId: string, 
     accepted_frame_count: storyboard.frames.length,
     resolved_frame_artifact_ids: storyboard.frames.map((frame) => frame.artifactId),
     hardcoded_fallback_used: false,
+    human_idea_artifact_id: humanIdea.artifactId,
+    idea_id: humanIdea.ideaId,
+    idea_sha256: humanIdea.ideaSha256,
+    exact_human_idea_text: humanIdea.text,
     mocked: false,
     live: false,
     actual_provider_call_attempts: 0,
   }
-  return { readModelReceipt, consumerReceipt }
+  return { readModelReceipt, consumerReceipt, humanIdea }
 }

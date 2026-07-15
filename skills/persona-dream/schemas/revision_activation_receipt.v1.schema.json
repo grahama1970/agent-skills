@@ -107,7 +107,9 @@
         "schema_version",
         "run_id",
         "revision_id",
-        "revision_manifest_sha256"
+        "revision_manifest_sha256",
+        "idea_id",
+        "idea_sha256"
       ],
       "properties": {
         "schema_version": {
@@ -118,7 +120,9 @@
         },
         "run_id": {"$ref": "#/$defs/identity"},
         "revision_id": {"$ref": "#/$defs/identity"},
-        "revision_manifest_sha256": {"$ref": "#/$defs/sha256"}
+        "revision_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "idea_id": {"type": "string", "pattern": "^pd_idea_[a-f0-9]{32}$"},
+        "idea_sha256": {"$ref": "#/$defs/sha256"}
       },
       "additionalProperties": false
     },
@@ -170,6 +174,8 @@
         "active_pointer_key",
         "active_revision_id",
         "previous_revision_id",
+        "idea_id",
+        "idea_sha256",
         "exact_reread_count",
         "document_contract_sha256",
         "qdrant_collection",
@@ -186,6 +192,8 @@
           "pattern": "^pd_active_[a-f0-9]{48}$"
         },
         "active_revision_id": {"$ref": "#/$defs/identity"},
+        "idea_id": {"type": "string", "pattern": "^pd_idea_[a-f0-9]{32}$"},
+        "idea_sha256": {"$ref": "#/$defs/sha256"},
         "previous_revision_id": {
           "type": "string",
           "minLength": 1

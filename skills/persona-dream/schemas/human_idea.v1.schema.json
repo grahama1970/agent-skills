@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/human_idea.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema", "artifact_id", "idea_id", "idea_sha256", "text", "source",
+    "created_at", "run_id", "revision_id", "source_revision_id", "memory_required",
+    "actual_provider_call_attempts", "provider_live", "provider_ready", "live_submit_ready", "submitted"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.human_idea.v1"},
+    "artifact_id": {"const": "human_idea"},
+    "idea_id": {"type": "string", "pattern": "^pd_idea_[a-f0-9]{32}$"},
+    "idea_sha256": {"$ref": "#/$defs/sha256"},
+    "text": {"type": "string", "minLength": 1},
+    "source": {"const": "explicit_human"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "source_revision_id": {"type": "string", "minLength": 1},
+    "memory_required": {"const": true},
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "submitted": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

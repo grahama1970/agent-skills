@@ -76,6 +76,7 @@ Commands:
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
+  repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
   capture-phase11-provider-source-snapshot Capture official current fal schema and pricing evidence without generation
   capture-phase11-public-media-evidence Probe the seven exact request assets and write technical transition evidence
   reconcile-phase11-upstream-validation Replace the historical 12/15 false-green summary with an explicit deferred boundary
@@ -377,6 +378,9 @@ case "$COMMAND" in
     ;;
   write-phase10-reproducibility-receipt)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_reproducibility_receipt.py" "$@"
+    ;;
+  repair-semantic-mix-revision)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/repair_semantic_mix_revision.py" "$@"
     ;;
   write-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_observation_packet.py" "$@"

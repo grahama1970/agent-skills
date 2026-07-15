@@ -105,6 +105,20 @@ type RevisionQualification = {
   blockers: string[]
 }
 
+type HumanIdeaProjection = {
+  contract: 'dream_human_idea_v1'
+  artifactId: 'human_idea'
+  ideaId: string
+  ideaSha256: string
+  text: string
+  source: 'explicit_human'
+  createdAt: string
+  runId: string
+  revisionId: string
+  lineageManifestSha256: string
+  phaseBindingCount: 10
+}
+
 type StoryboardFrameProjection = {
   artifactId: string
   sha256: string
@@ -135,8 +149,6 @@ type ResearchMemoryResult = {
   score?: number
   memoryKey?: string
 }
-
-const EMBRY_KAI_SURF_CORE_IDEA = "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette."
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map((item) => stableJson(item)).join(',')}]`
@@ -296,10 +308,8 @@ function fnv1a32(input: string): string {
   return hash.toString(16).padStart(8, '0')
 }
 
-function dreamCoreIdeaFromStage(stage?: DreamStage | null): string {
-  const summary = stage?.summary?.trim() ?? ''
-  if (!summary || /insufficient|missing|required preflight evidence/i.test(summary)) return EMBRY_KAI_SURF_CORE_IDEA
-  return summary
+function persistedHumanIdea(projection?: HumanIdeaProjection): string {
+  return projection?.source === 'explicit_human' ? projection.text.trim() : ''
 }
 
 type MemoryConnectionSignal = {
@@ -390,7 +400,7 @@ type DreamRunDetailResponse = {
   stageReportPath?: string
   stages: DreamStage[]
   revisionQualification?: RevisionQualification
-  consumers?: { storyboard?: StoryboardConsumerProjection }
+  consumers?: { humanIdea?: HumanIdeaProjection; storyboard?: StoryboardConsumerProjection }
   error?: string
 }
 
@@ -876,6 +886,7 @@ function StageCard({
   ideaText,
   storyboardProjection,
   revisionQualified,
+  humanIdea,
 }: {
   run: DreamRun
   stage: DreamStage
@@ -891,6 +902,7 @@ function StageCard({
   memoryResults?: ResearchMemoryResult[] | null
   storyboardProjection?: StoryboardConsumerProjection
   revisionQualified: boolean
+  humanIdea?: HumanIdeaProjection
 }) {
   const ideaStage = allStages?.find((s) => s.id === '01')
   const isBlockedByPrev = stage.id === '02' && ideaStage != null && !isStagePassed(ideaStage)
@@ -918,6 +930,7 @@ function StageCard({
             onTriggerMemories={onTriggerMemories ?? (() => {})}
             processing={processing ?? false}
             memoryResults={memoryResults}
+            humanIdea={humanIdea}
           />
         )}
         {stage.id === '02' && (
@@ -925,7 +938,7 @@ function StageCard({
             <StoryMatrix
               stage={stage}
               researchSeed={researchSeed}
-              ideaText={ideaText || ideaStage?.summary || ''}
+              ideaText={humanIdea?.text || ideaText || ''}
               linkedAssets={(memoryResults ?? [])
                 .filter((result) => Boolean(result.url))
                 .map(linkedStoryAssetFromMemoryResult)}
@@ -936,7 +949,7 @@ function StageCard({
           <CrewConsole
             stage={stage}
             researchSeed={researchSeed}
-            ideaText={ideaText || ideaStage?.summary || ''}
+            ideaText={humanIdea?.text || ideaText || ''}
             linkedAssets={(memoryResults ?? [])
               .filter((result) => Boolean(result.url))
               .map(linkedStoryAssetFromMemoryResult)}
@@ -959,7 +972,7 @@ function StageCard({
             stage={stage}
             allStages={allStages ?? []}
             researchSeed={researchSeed}
-            ideaText={ideaText || ideaStage?.summary || ''}
+            ideaText={humanIdea?.text || ideaText || ''}
             linkedAssets={(memoryResults ?? [])
               .filter((result) => Boolean(result.url))
               .map(linkedStoryAssetFromMemoryResult)}
@@ -7656,14 +7669,16 @@ function IdeaMemoryControl({
   onTriggerMemories,
   processing,
   memoryResults,
+  humanIdea,
 }: {
   ideaStage: DreamStage | null
   memoryStage: DreamStage | null
   onTriggerMemories: (ideaText: string) => void
   processing: boolean
   memoryResults?: ResearchMemoryResult[] | null
+  humanIdea?: HumanIdeaProjection
 }) {
-  const [localIdea, setLocalIdea] = useState(dreamCoreIdeaFromStage(ideaStage))
+  const [localIdea, setLocalIdea] = useState(persistedHumanIdea(humanIdea))
   const [linkedEntities, setLinkedEntities] = useState<Record<string, string>>({})
   const [debouncedIdea, setDebouncedIdea] = useState(localIdea)
   const [ideaFocused, setIdeaFocused] = useState(false)
@@ -7678,9 +7693,8 @@ function IdeaMemoryControl({
   }, [localIdea])
 
   useEffect(() => {
-    const nextIdea = dreamCoreIdeaFromStage(ideaStage)
-    setLocalIdea((current) => current.trim().length > 0 && current !== EMBRY_KAI_SURF_CORE_IDEA ? current : nextIdea)
-  }, [ideaStage?.summary])
+    setLocalIdea(persistedHumanIdea(humanIdea))
+  }, [humanIdea?.ideaSha256])
   useEffect(() => {
     const input = ideaInputRef.current
     if (!input) return
@@ -7762,7 +7776,7 @@ function IdeaMemoryControl({
           </div>
           <div
             ref={ideaInputRef}
-            contentEditable
+            contentEditable={!humanIdea}
             suppressContentEditableWarning
             onInput={(e) => setLocalIdea(e.currentTarget.innerText)}
             onKeyDown={(e) => {
@@ -7781,6 +7795,11 @@ function IdeaMemoryControl({
           >
             {localIdea}
           </div>
+          {humanIdea && (
+            <div data-qid="dream:idea:persisted-identity" style={{ marginTop: 8, color: '#64748b', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Persisted explicit human idea · {humanIdea.ideaId} · {humanIdea.ideaSha256.slice(0, 18)}…
+            </div>
+          )}
           <div style={nvis.ideaComposerActions}>
             <button
               type="button"
@@ -8535,7 +8554,10 @@ export function DreamWorkspace() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return await response.json() as DreamRunDetailResponse
       })
-      .then((data) => setRunDetail(data))
+      .then((data) => {
+        ideaTextRef.current = data.consumers?.humanIdea?.text ?? ''
+        setRunDetail(data)
+      })
       .catch((err) => {
         if ((err as Error).name !== 'AbortError') {
           setDetailError(err instanceof Error ? err.message : String(err))
@@ -9108,6 +9130,7 @@ export function DreamWorkspace() {
                   ideaText={ideaTextRef.current}
                   memoryResults={researchResults}
                   storyboardProjection={runDetail?.consumers?.storyboard}
+                  humanIdea={runDetail?.consumers?.humanIdea}
                   revisionQualified={revisionQualified}
                   onTriggerMemories={handleAutoExtract}
                   onNoteChange={(value) => setStageNotes((current) => ({ ...current, [selectedStage.id]: value }))}

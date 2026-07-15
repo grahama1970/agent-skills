@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase_idea_lineage_manifest.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema", "status", "run_id", "revision_id", "idea_id", "idea_sha256", "source",
+    "human_idea_artifact", "phase_binding_count", "phase_bindings", "lineage_chain_sha256",
+    "actual_provider_call_attempts", "provider_live", "provider_ready", "live_submit_ready", "submitted"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase_idea_lineage_manifest.v1"},
+    "status": {"const": "PASS_PHASE_IDEA_LINEAGE"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "idea_id": {"type": "string", "pattern": "^pd_idea_[a-f0-9]{32}$"},
+    "idea_sha256": {"$ref": "#/$defs/sha256"},
+    "source": {"const": "explicit_human"},
+    "human_idea_artifact": {"$ref": "#/$defs/file_ref"},
+    "phase_binding_count": {"const": 10},
+    "phase_bindings": {
+      "type": "object",
+      "required": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
+      "properties": {
+        "01": {"$ref": "#/$defs/binding_ref"}, "02": {"$ref": "#/$defs/binding_ref"},
+        "03": {"$ref": "#/$defs/binding_ref"}, "04": {"$ref": "#/$defs/binding_ref"},
+        "05": {"$ref": "#/$defs/binding_ref"}, "06": {"$ref": "#/$defs/binding_ref"},
+        "07": {"$ref": "#/$defs/binding_ref"}, "08": {"$ref": "#/$defs/binding_ref"},
+        "09": {"$ref": "#/$defs/binding_ref"}, "10": {"$ref": "#/$defs/binding_ref"}
+      },
+      "additionalProperties": false
+    },
+    "lineage_chain_sha256": {"$ref": "#/$defs/sha256"},
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "submitted": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "portable_path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}},
+    "file_ref": {
+      "type": "object", "required": ["relative_path", "sha256"],
+      "properties": {"relative_path": {"$ref": "#/$defs/portable_path"}, "sha256": {"$ref": "#/$defs/sha256"}},
+      "additionalProperties": false
+    },
+    "binding_ref": {
+      "type": "object", "required": ["relative_path", "sha256", "binding_sha256"],
+      "properties": {
+        "relative_path": {"$ref": "#/$defs/portable_path"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "binding_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

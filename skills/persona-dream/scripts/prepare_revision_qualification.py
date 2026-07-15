@@ -24,6 +24,12 @@ from typing import Any, Iterable, Mapping, Sequence
 import httpx
 from jsonschema import Draft202012Validator
 
+from idea_lineage import (
+    IdeaLineage,
+    IdeaLineageError,
+    validate_revision_idea_lineage,
+)
+
 DEFAULT_MEMORY_URL = "http://127.0.0.1:8601"
 DEFAULT_COLLECTION = "project_knowledge"
 PREPARE_RECEIPT_NAME = "revision_memory_prepare_receipt.json"
@@ -175,6 +181,7 @@ class RevisionSnapshot:
     manifest_sha256: str
     artifacts: dict[str, dict[str, Any]]
     hash_validation: HashValidation
+    idea_lineage: IdeaLineage
 
 
 class MemoryClient:
@@ -496,6 +503,12 @@ def load_snapshot(
         )
 
     hash_validation = validate_all_indexed_files(revision_root, artifacts)
+    try:
+        idea_lineage = validate_revision_idea_lineage(
+            revision_root, run_id, revision_id, index
+        )
+    except IdeaLineageError as exc:
+        raise GateBlocked(exc.code, details=exc.details) from exc
     return RevisionSnapshot(
         run_root=resolved_run_root,
         revision_root=revision_root,
@@ -512,6 +525,7 @@ def load_snapshot(
         manifest_sha256=sha256_file(manifest_path),
         artifacts=artifacts,
         hash_validation=hash_validation,
+        idea_lineage=idea_lineage,
     )
 
 
@@ -553,6 +567,12 @@ def build_documents(
         "source": f"persona-dream://{snapshot.run_id}/revisions/{snapshot.revision_id}",
         "project": "persona-dream",
         "lineage": lineage(snapshot),
+        "idea_id": snapshot.idea_lineage.idea_id,
+        "idea_sha256": snapshot.idea_lineage.idea_sha256,
+        "idea_source": snapshot.idea_lineage.source,
+        "idea_lineage_manifest_sha256": snapshot.idea_lineage.lineage_manifest_sha256,
+        "idea_phase_binding_count": snapshot.idea_lineage.phase_binding_count,
+        "actual_provider_call_attempts": 0,
     }
 
     revision_key = stable_memory_key(
@@ -577,6 +597,8 @@ def build_documents(
             "required_artifact_count": len(REQUIRED_ARTIFACT_IDS),
             "required_artifact_ids": list(REQUIRED_ARTIFACT_IDS),
             "artifact_count": snapshot.hash_validation.artifact_count,
+            "human_idea_text": snapshot.idea_lineage.text,
+            "human_idea_created_at": snapshot.idea_lineage.created_at,
             "problem": (
                 f"Persona Dream immutable revision {snapshot.revision_id} "
                 f"for run {snapshot.run_id}"
@@ -591,13 +613,15 @@ def build_documents(
                 "for Phase 01 through Phase 10 and is prepared for Memory verification. "
                 f"Source revision {snapshot.source_revision_id}; source commit "
                 f"{snapshot.source_commit}; {snapshot.hash_validation.artifact_count} "
-                "indexed artifacts and 16 required artifact references."
+                f"indexed artifacts and {len(REQUIRED_ARTIFACT_IDS)} required artifact "
+                f"references. Explicit human idea: {snapshot.idea_lineage.text}"
             ),
             "tags": [
                 "persona-dream",
                 "pipeline-revision",
                 f"run:{snapshot.run_id}",
                 f"revision:{snapshot.revision_id}",
+                f"idea:{snapshot.idea_lineage.idea_id}",
                 f"lifecycle:{lifecycle_state.lower()}",
             ],
         }
@@ -651,13 +675,16 @@ def build_documents(
                         f"for run {snapshot.run_id}, revision {snapshot.revision_id}. "
                         f"Required immutable evidence: {', '.join(required_ids)}. "
                         "Evidence status is CURRENT and all indexed hashes were "
-                        "recomputed from the immutable revision."
+                        "recomputed from the immutable revision. The phase is bound to "
+                        f"human idea {snapshot.idea_lineage.idea_id} with SHA-256 "
+                        f"{snapshot.idea_lineage.idea_sha256}."
                     ),
                     "tags": [
                         "persona-dream",
                         "pipeline-phase",
                         f"run:{snapshot.run_id}",
                         f"revision:{snapshot.revision_id}",
+                        f"idea:{snapshot.idea_lineage.idea_id}",
                         f"phase:{phase_id}",
                     ],
                 }
@@ -930,10 +957,13 @@ def dense_score(item: Mapping[str, Any]) -> float:
 def recall_request(collection: str, snapshot: RevisionSnapshot) -> dict[str, Any]:
     return {
         "q": (
-            "Which immutable Persona Dream revision is prepared for run "
-            f"{snapshot.run_id} revision {snapshot.revision_id}, and which "
-            "Phase 01 through Phase 10 evidence records belong to it?"
+            "Which immutable Persona Dream revision stores the explicit human idea "
+            f"'{snapshot.idea_lineage.text}' for run {snapshot.run_id} revision "
+            f"{snapshot.revision_id}, and which Phase 01 through Phase 10 records "
+            "are bound to that exact idea?"
         ),
+        "collections": [collection],
+        "tags": [f"revision:{snapshot.revision_id}"],
         "k": 50,
         "threshold": 0.0,
     }
@@ -979,6 +1009,17 @@ def validate_recall(
                 }
             )
     dense_matching = [item for item in matching if item["dense"] > 0.0]
+    revision_key = stable_memory_key("revision", snapshot.run_id, snapshot.revision_id)
+    revision_dense = [
+        item for item in dense_matching
+        if item["key"] == revision_key and item["record_type"] == "revision"
+    ]
+    if not revision_dense:
+        raise GateBlocked(
+            "BLOCKED_MEMORY_SEMANTIC_SYNC_REQUIRED",
+            details={"reason": "human_idea_revision_dense_match_missing", "matching_items": matching[:20]},
+            exit_code=3,
+        )
     if not dense_matching:
         raise GateBlocked(
             "BLOCKED_MEMORY_SEMANTIC_SYNC_REQUIRED",
@@ -993,6 +1034,7 @@ def validate_recall(
         "item_count": len(raw_items),
         "matching_identity_count": len(matching),
         "dense_matching_count": len(dense_matching),
+        "human_idea_revision_dense_count": len(revision_dense),
         "max_dense": max(item["dense"] for item in dense_matching),
         "evidence": dense_matching,
     }

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/semantic_mix_repair_receipt.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "source_revision_id",
+    "target_revision_id",
+    "idea_id",
+    "idea_sha256",
+    "idea_text",
+    "idea_source",
+    "phase_lineage_passed_count",
+    "phase_lineage_expected_count",
+    "artifact_index_sha256",
+    "revision_manifest_sha256",
+    "memory_prepare_receipt_sha256",
+    "memory_verify_receipt_sha256",
+    "activation_receipt_sha256",
+    "provider_live",
+    "provider_ready",
+    "live_submit_ready",
+    "submitted",
+    "actual_provider_call_attempts",
+    "mocked",
+    "live",
+    "work_order_id",
+    "memory_prepare_status",
+    "memory_verify_status",
+    "activation_status"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.semantic_mix_repair_receipt.v1"
+    },
+    "status": {
+      "const": "PASS_SEMANTIC_MIX_REPAIR_ACTIVE"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idea_id": {
+      "type": "string",
+      "pattern": "^pd_idea_[a-f0-9]{32}$"
+    },
+    "idea_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "idea_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idea_source": {
+      "const": "explicit_human"
+    },
+    "phase_lineage_passed_count": {
+      "const": 10
+    },
+    "phase_lineage_expected_count": {
+      "const": 10
+    },
+    "artifact_index_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "revision_manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "memory_prepare_receipt_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "memory_verify_receipt_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "activation_receipt_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "provider_live": {
+      "const": false
+    },
+    "provider_ready": {
+      "const": false
+    },
+    "live_submit_ready": {
+      "const": false
+    },
+    "submitted": {
+      "const": false
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "mocked": {
+      "type": "boolean"
+    },
+    "live": {
+      "type": "boolean"
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "memory_prepare_status": {
+      "const": "PASS_MEMORY_REVISION_PREPARED"
+    },
+    "memory_verify_status": {
+      "const": "PASS_MEMORY_REVISION_VERIFIED"
+    },
+    "activation_status": {
+      "const": "PASS_ACTIVE_CONSISTENT"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

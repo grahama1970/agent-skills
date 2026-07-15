@@ -98,6 +98,10 @@ timed transcript -> voice_handoff_plan.json -> create-movie/audio-lane
 
 Own:
 
+- Persist the initiating explicit human idea as an immutable, revision-scoped
+  Phase 01 artifact and bind every Phase 01-10 record to its deterministic ID
+  and canonical SHA-256.
+- Fail closed on missing, cross-run, `write_memory=false`, or mixed idea lineage.
 - Recall persona-specific memory residue.
 - Preserve source residue ids and scopes.
 - Detect simple tensions or contradictions between residue items.

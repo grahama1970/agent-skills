@@ -17,6 +17,20 @@ export type DreamImageRef = {
   url: string
 }
 
+export type HumanIdeaProjection = {
+  contract: 'dream_human_idea_v1'
+  artifactId: 'human_idea'
+  ideaId: string
+  ideaSha256: string
+  text: string
+  source: 'explicit_human'
+  createdAt: string
+  runId: string
+  revisionId: string
+  lineageManifestSha256: string
+  phaseBindingCount: 10
+}
+
 export type StoryboardFrameProjection = {
   artifactId: string
   sha256: string
@@ -111,6 +125,7 @@ export type DreamRunDetailResponse = {
     liveSubmitReady: false
   }
   consumers?: {
+    humanIdea?: HumanIdeaProjection
     storyboard?: StoryboardConsumerProjection
   }
   earliestIssue?: {

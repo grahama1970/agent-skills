@@ -14,12 +14,21 @@ from jsonschema import Draft202012Validator
 
 
 SKILL_ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+from idea_lineage import (  # noqa: E402
+    build_lineage_manifest,
+    build_phase_bindings,
+    idea_id,
+    idea_sha256,
+    validate_revision_idea_lineage,
+)
 SCRIPT = SKILL_ROOT / "scripts" / "prepare_revision_qualification.py"
 PREPARE_SCHEMA = SKILL_ROOT / "schemas" / "revision_memory_prepare_receipt.v1.schema.json"
 VERIFY_SCHEMA = SKILL_ROOT / "schemas" / "revision_memory_verify_receipt.v1.schema.json"
 SOURCE_COMMIT = "74ff9f50539bcd4df0d180d727a8da7fa0232f3c"
 REVISION_ID = "rev_repair_a8b93ffeca8f"
 COLLECTION = "project_knowledge"
+IDEA_TEXT = "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette."
 
 REQUIRED_BY_PHASE = {
     "01": ("dream_request", "residue_links"),
@@ -54,15 +63,33 @@ def write_revision(tmp_path: Path) -> tuple[Path, Path]:
         phase_root.mkdir()
         for artifact_id in artifact_ids:
             path = phase_root / f"{artifact_id}.json"
-            payload = json.dumps(
-                {
-                    "schema": f"fixture.{artifact_id}.v1",
-                    "status": "PASS",
-                    "artifact_id": artifact_id,
-                    "phase_id": phase_id,
-                },
-                sort_keys=True,
-            ).encode("utf-8")
+            value = {
+                "schema": f"fixture.{artifact_id}.v1",
+                "status": "PASS",
+                "artifact_id": artifact_id,
+                "phase_id": phase_id,
+                "idea_context": IDEA_TEXT,
+            }
+            if artifact_id == "dream_request":
+                value.update({
+                    "run_id": "pipeline-complete",
+                    "revision_id": REVISION_ID,
+                    "about": IDEA_TEXT,
+                    "write_memory": True,
+                    "idea_id": idea_id(IDEA_TEXT),
+                    "idea_sha256": idea_sha256(IDEA_TEXT),
+                })
+            elif artifact_id == "story_contract":
+                value.update({
+                    "run_id": "pipeline-complete",
+                    "revision_id": REVISION_ID,
+                    "story": IDEA_TEXT,
+                    "idea_id": idea_id(IDEA_TEXT),
+                    "idea_sha256": idea_sha256(IDEA_TEXT),
+                })
+            elif artifact_id == "crew_contract":
+                value.update({"source_context": {"core_idea": IDEA_TEXT}})
+            payload = json.dumps(value, sort_keys=True).encode("utf-8")
             path.write_bytes(payload)
             artifacts[artifact_id] = {
                 "phase_id": phase_id,
@@ -76,7 +103,46 @@ def write_revision(tmp_path: Path) -> tuple[Path, Path]:
                 "roles": ["required_evidence"],
             }
 
-    optional_count = 318 - len(artifacts)
+    phase01 = revision_root / "phase_01"
+    human_path = phase01 / "human_idea.json"
+    human_value = {
+        "schema": "persona_dream.human_idea.v1",
+        "artifact_id": "human_idea",
+        "idea_id": idea_id(IDEA_TEXT),
+        "idea_sha256": idea_sha256(IDEA_TEXT),
+        "text": IDEA_TEXT,
+        "source": "explicit_human",
+        "created_at": "2026-07-15T12:00:00+00:00",
+        "run_id": "pipeline-complete",
+        "revision_id": REVISION_ID,
+        "source_revision_id": "rev_0001",
+        "memory_required": True,
+        "actual_provider_call_attempts": 0,
+        "provider_live": False,
+        "provider_ready": False,
+        "live_submit_ready": False,
+        "submitted": False,
+    }
+    human_path.write_text(json.dumps(human_value, sort_keys=True), encoding="utf-8")
+    lineage_path = phase01 / "idea_lineage_manifest.json"
+    lineage_path.write_text("{}", encoding="utf-8")
+    for artifact_id, path, schema in (
+        ("human_idea", human_path, "persona_dream.human_idea.v1"),
+        ("idea_lineage_manifest", lineage_path, "persona_dream.phase_idea_lineage_manifest.v1"),
+    ):
+        artifacts[artifact_id] = {
+            "phase_id": "01",
+            "relative_path": str(path.relative_to(revision_root)),
+            "sha256": sha256_bytes(path.read_bytes()),
+            "size_bytes": path.stat().st_size,
+            "kind": "json",
+            "media_type": "application/json",
+            "schema": schema,
+            "consumer_contract": None,
+            "roles": ["idea_lineage_evidence"],
+        }
+
+    optional_count = 318 - len(artifacts) - 10
     for index in range(optional_count):
         phase_id = f"{(index % 10) + 1:02d}"
         phase_root = revision_root / f"phase_{phase_id}"
@@ -103,6 +169,8 @@ def write_revision(tmp_path: Path) -> tuple[Path, Path]:
         "sourceRevisionId": "rev_0001",
         "selectedThroughPhase": "10",
         "status": "FROZEN_ALL_LOCAL_GATES_PASS",
+        "ideaId": idea_id(IDEA_TEXT),
+        "ideaSha256": idea_sha256(IDEA_TEXT),
     }
     (revision_root / "revision_manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
@@ -120,7 +188,57 @@ def write_revision(tmp_path: Path) -> tuple[Path, Path]:
         json.dumps(index_value, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    install_idea_lineage_fixture(revision_root)
     return run_root, revision_root
+
+
+def install_idea_lineage_fixture(revision_root: Path):
+    index_path = revision_root / "revision_artifact_index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    human_path = revision_root / index["artifacts"]["human_idea"]["relative_path"]
+    human = json.loads(human_path.read_text(encoding="utf-8"))
+    bindings, paths = build_phase_bindings(revision_root, index, human)
+    for phase_id, path in paths.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(bindings[phase_id], indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        artifact_id = f"phase{phase_id}.idea_lineage_binding"
+        index["artifacts"][artifact_id] = {
+            "phase_id": phase_id,
+            "relative_path": str(path.relative_to(revision_root)),
+            "sha256": sha256_bytes(path.read_bytes()),
+            "size_bytes": path.stat().st_size,
+            "kind": "json",
+            "media_type": "application/json",
+            "schema": "persona_dream.phase_idea_binding.v1",
+            "consumer_contract": None,
+            "roles": ["idea_lineage_evidence"],
+        }
+    manifest = build_lineage_manifest(
+        revision_root, human_path, human, bindings, paths
+    )
+    lineage_path = (
+        revision_root
+        / index["artifacts"]["idea_lineage_manifest"]["relative_path"]
+    )
+    lineage_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    index["artifacts"]["idea_lineage_manifest"].update({
+        "sha256": sha256_bytes(lineage_path.read_bytes()),
+        "size_bytes": lineage_path.stat().st_size,
+    })
+    index["artifact_count"] = len(index["artifacts"])
+    index_path.write_text(
+        json.dumps(index, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return validate_revision_idea_lineage(
+        revision_root, "pipeline-complete", REVISION_ID, index
+    )
 
 
 class FakeMemoryState:

@@ -1,0 +1,122 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+SKILL_ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+sys.path.insert(0, str(SKILL_ROOT / "tests"))
+
+import idea_lineage  # noqa: E402
+import prepare_revision_qualification as qualification  # noqa: E402
+import repair_semantic_mix_revision as repair  # noqa: E402
+import test_revision_memory_qualification as memory_fixture  # noqa: E402
+
+
+def write_json(path: Path, value: dict) -> None:
+    path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def update_index_hash(revision_root: Path, artifact_id: str) -> None:
+    index_path = revision_root / "revision_artifact_index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    entry = index["artifacts"][artifact_id]
+    path = revision_root / entry["relative_path"]
+    entry["sha256"] = memory_fixture.sha256_bytes(path.read_bytes())
+    entry["size_bytes"] = path.stat().st_size
+    write_json(index_path, index)
+
+
+def test_current_tau_surf_semantic_mix_is_rejected(tmp_path: Path) -> None:
+    run_root, revision_root = memory_fixture.write_revision(tmp_path)
+    request_path = revision_root / "phase_01" / "dream_request.json"
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    request.update({
+        "about": "Tau issue 41 dream packet creator reviewer loop",
+        "run_id": "issue-41-persona-dream-dream-packet-loop-20260629T204320Z",
+        "write_memory": False,
+    })
+    write_json(request_path, request)
+    update_index_hash(revision_root, "dream_request")
+
+    with pytest.raises(qualification.GateBlocked) as blocked:
+        qualification.load_snapshot(run_root, memory_fixture.REVISION_ID, memory_fixture.SOURCE_COMMIT)
+    assert blocked.value.code == "BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH"
+    assert blocked.value.details["phase_id"] == "01"
+
+
+def test_valid_revision_persists_one_idea_across_revision_and_ten_phases(tmp_path: Path) -> None:
+    run_root, _revision_root = memory_fixture.write_revision(tmp_path)
+    snapshot = qualification.load_snapshot(run_root, memory_fixture.REVISION_ID, memory_fixture.SOURCE_COMMIT)
+    documents, _keys = qualification.build_documents(snapshot, lifecycle_state="PREPARED")
+    revision = next(item for item in documents if item["record_type"] == "revision")
+    phases = [item for item in documents if item["record_type"] == "phase"]
+
+    assert revision["human_idea_text"] == memory_fixture.IDEA_TEXT
+    assert revision["idea_id"] == idea_lineage.idea_id(memory_fixture.IDEA_TEXT)
+    assert revision["idea_sha256"] == idea_lineage.idea_sha256(memory_fixture.IDEA_TEXT)
+    assert len(phases) == 10
+    assert {item["idea_id"] for item in phases} == {revision["idea_id"]}
+    assert {item["idea_sha256"] for item in phases} == {revision["idea_sha256"]}
+    assert all(item["actual_provider_call_attempts"] == 0 for item in documents)
+
+
+def test_downstream_binding_tamper_is_rejected(tmp_path: Path) -> None:
+    run_root, revision_root = memory_fixture.write_revision(tmp_path)
+    snapshot = qualification.load_snapshot(run_root, memory_fixture.REVISION_ID, memory_fixture.SOURCE_COMMIT)
+    manifest = json.loads(snapshot.idea_lineage.lineage_manifest_path.read_text(encoding="utf-8"))
+    phase06_path = revision_root / manifest["phase_bindings"]["06"]["relative_path"]
+    phase06 = json.loads(phase06_path.read_text(encoding="utf-8"))
+    phase06["idea_sha256"] = "sha256:" + "0" * 64
+    write_json(phase06_path, phase06)
+
+    with pytest.raises(qualification.GateBlocked) as blocked:
+        qualification.load_snapshot(run_root, memory_fixture.REVISION_ID, memory_fixture.SOURCE_COMMIT)
+    assert blocked.value.code == "BLOCKED_REVISION_HASH_MISMATCH"
+    assert any(
+        mismatch["artifact_id"] == "phase06.idea_lineage_binding"
+        for mismatch in blocked.value.details["mismatches"]
+    )
+
+    update_index_hash(revision_root, "phase06.idea_lineage_binding")
+    with pytest.raises(qualification.GateBlocked) as lineage_blocked:
+        qualification.load_snapshot(run_root, memory_fixture.REVISION_ID, memory_fixture.SOURCE_COMMIT)
+    assert lineage_blocked.value.code == "BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH"
+    assert lineage_blocked.value.details["phase_id"] == "06"
+    assert lineage_blocked.value.details["reason"] == "LINEAGE_PHASE_BINDING_FILE_HASH_MISMATCH"
+
+
+def test_repair_copy_never_mutates_or_copies_mixed_phase01_phase02(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    (source / "phase_01_bad").mkdir(parents=True)
+    (source / "phase_02_bad").mkdir()
+    (source / "phase_03_crew").mkdir()
+    (source / "phase_11_submit_return").mkdir()
+    (source / "phase_01_bad" / "dream_request.json").write_text("old", encoding="utf-8")
+    (source / "phase_02_bad" / "story_contract.json").write_text("old", encoding="utf-8")
+    (source / "phase_03_crew" / "crew_contract.json").write_text("accepted", encoding="utf-8")
+    (source / "phase_11_submit_return" / "provider.json").write_text("forbidden", encoding="utf-8")
+
+    repair.copy_source_revision(source, target)
+
+    assert (source / "phase_01_bad" / "dream_request.json").read_text(encoding="utf-8") == "old"
+    assert not any(path.name.startswith("phase_01") for path in target.iterdir())
+    assert not any(path.name.startswith("phase_02") for path in target.iterdir())
+    assert not (target / "phase_11_submit_return").exists()
+    assert (target / "phase_03_crew" / "crew_contract.json").read_text(encoding="utf-8") == "accepted"
+
+
+def test_run_detail_and_ui_are_bound_to_persisted_human_idea() -> None:
+    runs_source = (SKILL_ROOT / "server" / "src" / "runs.ts").read_text(encoding="utf-8")
+    ui_source = (SKILL_ROOT / "ui" / "src" / "DreamWorkspace.tsx").read_text(encoding="utf-8")
+    assert "BLOCKED_PHASE_IDEA_LINEAGE_MISMATCH" in runs_source
+    assert "validateIdeaLineage" in runs_source
+    assert "consumers: { humanIdea" in runs_source or "humanIdea," in runs_source
+    assert "EMBRY_KAI_SURF_CORE_IDEA" not in ui_source
+    assert "dreamCoreIdeaFromStage" not in ui_source
+    assert "humanIdea?.text" in ui_source
+    assert "ideaStage?.summary" not in ui_source
