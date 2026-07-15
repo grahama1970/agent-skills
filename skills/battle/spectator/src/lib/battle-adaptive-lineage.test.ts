@@ -108,6 +108,23 @@ describe("Battle V14 adaptive memory projection", () => {
 		expect(child.first_active_segment_elapsed_seconds).toBe(64);
 		expect(child.activitySegments?.[0]?.label).toBe("MEMORY PROMOTED · PENDING");
 		expect(child.activitySegments?.[1]?.label).toBe("MEMORY USE ACKNOWLEDGED");
+		expect(child.memory_promotion).toMatchObject({
+			present: true,
+			durable_promoted: true,
+			reason: "provider use acknowledged",
+		});
+		const parent = fixture.lanes.find((lane) => lane.id === "red-g2")!;
+		expect(parent.memory_promotion).toMatchObject({
+			present: true,
+			durable_promoted: true,
+			reason: "selected evidence promoted to durable team memory",
+		});
+		const ticker = receiptBeatsVisibleAtPlayhead(collectReceiptBeats(fixture, fixture.lanes), 64.001, 2);
+		expect(ticker.map((beat) => beat.react.liveEvent.notification)).toEqual([
+			"Adaptive memory — RED G3 MEMORY CHILD: MEMORY USE ACKNOWLEDGED",
+			"Adaptive memory — BLUE G3 MEMORY CHILD: MEMORY USE ACKNOWLEDGED",
+		]);
+		expect(ticker.every((beat) => !beat.react.liveEvent.notification.includes("Blue patch inbound"))).toBe(true);
 	});
 
 	it("fails closed when V14 memory use is presented as improvement", async () => {

@@ -1,5 +1,5 @@
 import type { BattleNormalizedAdaptiveLineageFixtureV1, AdaptiveLineageEvent, AdaptiveLineageLane } from "./battle-adaptive-lineage-types";
-import type { BattleEvent, BattleNormalizedUxFixture, Lane, LaneActivitySegment, LaneEvent } from "./battle-types";
+import type { BattleEvent, BattleMemoryPromotion, BattleNormalizedUxFixture, Lane, LaneActivitySegment, LaneEvent } from "./battle-types";
 
 function pct(seconds: number, duration: number): number {
 	return Math.max(0, Math.min(100, (seconds / Math.max(1, duration)) * 100));
@@ -108,6 +108,45 @@ function activitySegments(source: AdaptiveLineageLane, events: AdaptiveLineageEv
 	return segments;
 }
 
+function memoryPromotionForLane(
+	source: AdaptiveLineageLane,
+	fixture: BattleNormalizedAdaptiveLineageFixtureV1,
+): BattleMemoryPromotion | undefined {
+	if (fixture.live_source !== "adaptive_memory_v14") return undefined;
+	const childLaneId = source.role === "child"
+		? source.lane_id
+		: fixture.lineage_edges.find((edge) => edge.parent_lane_id === source.lane_id)?.child_lane_id;
+	if (!childLaneId) return undefined;
+	const events = fixture.events.filter((event) => event.lane_id === childLaneId);
+	const promoted = events.find((event) => event.event_type === "memory_promoted");
+	if (!promoted) return undefined;
+	if (source.role === "parent") {
+		return {
+			present: true,
+			candidate_id: receiptId(promoted),
+			durable_promoted: events.some((event) => event.event_type === "memory_written"),
+			promotion_scope: String(promoted.payload.visibility_scope ?? `${source.team}_only`),
+			reason: "selected evidence promoted to durable team memory",
+		};
+	}
+	const latest = ["memory_use_acknowledged", "memory_recalled", "memory_written", "memory_promoted"]
+		.map((eventType) => events.find((event) => event.event_type === eventType))
+		.find(Boolean);
+	const reasonByType: Record<string, string> = {
+		memory_promoted: "promotion pending",
+		memory_written: "written to durable team memory",
+		memory_recalled: "exact recall completed",
+		memory_use_acknowledged: "provider use acknowledged",
+	};
+	return {
+		present: true,
+		candidate_id: receiptId(promoted),
+		durable_promoted: events.some((event) => event.event_type === "memory_written"),
+		promotion_scope: String(promoted.payload.visibility_scope ?? `${source.team}_only`),
+		reason: latest ? reasonByType[latest.event_type] : "promotion pending",
+	};
+}
+
 function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLineageFixtureV1): Lane {
 	const duration = fixture.campaign.elapsed_seconds;
 	const events = fixture.events.filter((event) => event.lane_id === source.lane_id);
@@ -136,6 +175,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 		terminal: "none",
 		events: events.map((event) => toLaneEvent(event, duration)),
 		activitySegments: activitySegments(source, fixture.events, duration, isMemory),
+		memory_promotion: memoryPromotionForLane(source, fixture),
 		lineageGroupId: `lineage:${source.team}`,
 		collapsible: source.role === "parent",
 		expandedByDefault: true,

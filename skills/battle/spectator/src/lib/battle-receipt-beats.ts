@@ -156,18 +156,25 @@ function makeBeat(args: {
 }): ReceiptBeat {
 	const { fixture, lanes, lane, laneEvent, atSeconds, kind } = args;
 	const reactKind = cueKindForReact(kind);
-	const adaptiveLabel = laneEvent.label && [
-		"CHILD RESEARCH ACTIVE",
-		"MUTATION EVIDENCE VERIFIED",
-	].includes(laneEvent.label)
+	const adaptiveLineageLabels = new Set(["CHILD RESEARCH ACTIVE", "MUTATION EVIDENCE VERIFIED"]);
+	const adaptiveMemoryLabels = new Set([
+		"MEMORY PROMOTED · PENDING",
+		"MEMORY WRITTEN",
+		"MEMORY RECALLED",
+		"MEMORY USE ACKNOWLEDGED",
+	]);
+	const adaptiveLabel = laneEvent.label && (adaptiveLineageLabels.has(laneEvent.label) || adaptiveMemoryLabels.has(laneEvent.label))
 		? laneEvent.label
 		: null;
+	const adaptivePrefix = adaptiveLabel && adaptiveMemoryLabels.has(adaptiveLabel)
+		? "Adaptive memory — "
+		: "Adaptive lineage — ";
 	const ticker = adaptiveLabel
 		? {
-			prefix: "Adaptive lineage — ",
+			prefix: adaptivePrefix,
 			highlight: `${(lane.name || lane.id).toUpperCase()}: ${adaptiveLabel}`,
 			highlightTone: "green" as const,
-			notification: `Adaptive lineage — ${(lane.name || lane.id).toUpperCase()}: ${adaptiveLabel}`,
+			notification: `${adaptivePrefix}${(lane.name || lane.id).toUpperCase()}: ${adaptiveLabel}`,
 		}
 		: hungerGamesNotification(reactKind, lane);
 	return {
