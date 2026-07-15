@@ -719,10 +719,15 @@ function mapToolToMessage(tool, args, tabId) {
       return { type: "CLOSE_TAB", tabId: a.tab_id || a.tabId, tabIds: a.tab_ids || a.tabIds };
     case "tab.list":
       return { type: "LIST_TABS" };
+    case "tab.recovery-state":
+      if (!Number.isSafeInteger(tabId) || tabId <= 0) {
+        throw new Error("explicit positive integer tabId required");
+      }
+      return { type: "TAB_RECOVERY_STATE", ...baseMsg };
     case "focus.state":
       return { type: "GET_FOCUS_STATE" };
     case "tab.new":
-      return { type: "NEW_TAB", url: a.url, urls: a.urls };
+      return { type: "NEW_TAB", url: a.url, urls: a.urls, active: a.background !== true };
     case "tab.switch": {
       const id = a.id || a.tab_id || a.tabId;
       if (typeof id === "string" && !/^\d+$/.test(id)) {
@@ -1032,6 +1037,9 @@ function mapToolToMessage(tool, args, tabId) {
         type: "CHATGPT_EXTRACT",
         targetTabId: parseInt(a["tab-id"] || a.tabId || baseMsg.tabId, 10),
         sentinel: a.sentinel,
+        wait: a.wait === true,
+        stablePolls: a["stable-polls"] ? parseInt(a["stable-polls"], 10) : undefined,
+        noActivate: a["no-activate"] === true,
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 12000,
         ...baseMsg
       };

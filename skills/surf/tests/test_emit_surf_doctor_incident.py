@@ -1,0 +1,109 @@
+import importlib.util
+import json
+from pathlib import Path
+
+
+SCRIPT = Path(__file__).parents[1] / "scripts" / "emit_surf_doctor_incident.py"
+SPEC = importlib.util.spec_from_file_location("emit_surf_doctor_incident", SCRIPT)
+assert SPEC and SPEC.loader
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+
+SUBMIT_TEST = Path(__file__).with_name("test_webgpt_submit_attach_preflight.py")
+SUBMIT_SPEC = importlib.util.spec_from_file_location("webgpt_submit_test_helpers", SUBMIT_TEST)
+assert SUBMIT_SPEC and SUBMIT_SPEC.loader
+SUBMIT_HELPERS = importlib.util.module_from_spec(SUBMIT_SPEC)
+SUBMIT_SPEC.loader.exec_module(SUBMIT_HELPERS)
+
+
+def test_terminal_failure_emits_fail_closed_incident(tmp_path: Path) -> None:
+    meta = tmp_path / "response.meta.json"
+    receipt = tmp_path / "response.receipt.json"
+    submitted = tmp_path / "response.submitted.md"
+    raw = tmp_path / "response.raw.md"
+    clean = tmp_path / "response.md"
+    heartbeat = tmp_path / "response.meta.heartbeat.json"
+    stderr = tmp_path / "response.stderr.log"
+    meta.write_text(
+        json.dumps(
+            {
+                "status": "missing_sentinel",
+                "failure": "missing_sentinel",
+                "proof_status": "submitted_no_response_proof",
+                "requested_tab_id": "837358072",
+                "controlled_tab_id": "837358072",
+                "sentinel": "<<<WEBGPT_DONE:test>>>",
+                "submitted_to_chatgpt": True,
+                "stderr_log": str(stderr),
+            }
+        ),
+        encoding="utf-8",
+    )
+    receipt.write_text('{"submitted_to_chatgpt":true}\n', encoding="utf-8")
+    submitted.write_text("prompt\n", encoding="utf-8")
+    raw.write_text("Pro thinking.\n", encoding="utf-8")
+    clean.write_text("Pro thinking.\n", encoding="utf-8")
+    heartbeat.write_text("{}\n", encoding="utf-8")
+    stderr.write_text("missing sentinel\n", encoding="utf-8")
+
+    output = MODULE.emit_incident(
+        meta_path=meta,
+        receipt_path=receipt,
+        submitted_path=submitted,
+        raw_path=raw,
+        clean_path=clean,
+        heartbeat_path=heartbeat,
+    )
+
+    assert output == tmp_path / "response.meta.surf-doctor-request.json"
+    incident = json.loads(output.read_text(encoding="utf-8"))
+    assert incident["status"] == "PENDING_DIAGNOSIS"
+    assert incident["requested_tab_id"] == incident["controlled_tab_id"]
+    assert incident["browser_mutation_authorized"] is False
+    assert "webgpt_resubmit" in incident["forbidden_actions"]
+    assert len(incident["source_artifacts"]) == 7
+    updated_meta = json.loads(meta.read_text(encoding="utf-8"))
+    assert updated_meta["surf_doctor_request_path"] == str(output)
+
+
+def test_proven_response_does_not_emit_incident(tmp_path: Path) -> None:
+    meta = tmp_path / "response.meta.json"
+    meta.write_text('{"proof_status":"response_proven"}\n', encoding="utf-8")
+
+    output = MODULE.emit_incident(
+        meta_path=meta,
+        receipt_path=tmp_path / "receipt.json",
+        submitted_path=tmp_path / "submitted.md",
+        raw_path=tmp_path / "raw.md",
+        clean_path=tmp_path / "clean.md",
+        heartbeat_path=tmp_path / "heartbeat.json",
+    )
+
+    assert output is None
+    assert not (tmp_path / "response.meta.surf-doctor-request.json").exists()
+
+
+def test_webgpt_submit_hook_emits_incident_on_missing_sentinel(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    SUBMIT_HELPERS.make_zip(archive, 5)
+    fake_run = (
+        SUBMIT_HELPERS.FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'partial reviewer answer without sentinel'
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    echo 'ResponseTimedOut: true' >&2
+    exit 0
+    ;;
+  *) exit 99 ;;
+esac
+"""
+    )
+
+    proc = SUBMIT_HELPERS.run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 4
+    incident_path = tmp_path / "response.meta.surf-doctor-request.json"
+    incident = json.loads(incident_path.read_text(encoding="utf-8"))
+    assert incident["failure_class"] == "missing_sentinel"
+    assert incident["browser_mutation_authorized"] is False

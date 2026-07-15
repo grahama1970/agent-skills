@@ -133,6 +133,80 @@ function base64ToBlob(base64: string, mimeType = "image/png"): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
+type RecoveryGuardValue = true | false | "unknown";
+
+type RecoveryGuard = {
+  value: RecoveryGuardValue;
+  reason: string;
+};
+
+function recoveryUrlEvidenceOrigin(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.origin === "null" ? null : parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+async function getActiveDownloadRecoveryGuard(tabUrl: unknown): Promise<RecoveryGuard> {
+  if (!chrome.downloads?.search) {
+    return { value: "unknown", reason: "chrome downloads API is unavailable" };
+  }
+  if (typeof tabUrl !== "string" || tabUrl.length === 0) {
+    return { value: "unknown", reason: "tab URL is unavailable for active download check" };
+  }
+
+  let tabOrigin: string | null = null;
+  try {
+    const parsedTabUrl = new URL(tabUrl);
+    tabOrigin = parsedTabUrl.origin === "null" ? null : parsedTabUrl.origin;
+  } catch {
+    return { value: "unknown", reason: "tab URL is invalid for active download check" };
+  }
+
+  try {
+    const activeDownloads = await chrome.downloads.search({ state: "in_progress" });
+    if (activeDownloads.length === 0) {
+      return { value: false, reason: "no in-progress Chrome downloads found" };
+    }
+
+    const exactMatches = activeDownloads.filter((download) => {
+      const candidates = [(download as any).url, (download as any).finalUrl, (download as any).referrer];
+      return candidates.some((candidate) => candidate === tabUrl);
+    });
+    if (exactMatches.length > 0) {
+      return {
+        value: true,
+        reason: `found ${exactMatches.length} in-progress Chrome download(s) with exact tab URL evidence`,
+      };
+    }
+
+    if (!tabOrigin) {
+      return { value: "unknown", reason: "tab URL has no deterministic origin for active download check" };
+    }
+
+    const originMatches = activeDownloads.filter((download) => {
+      const candidates = [(download as any).url, (download as any).finalUrl, (download as any).referrer];
+      return candidates.some((candidate) => recoveryUrlEvidenceOrigin(candidate) === tabOrigin);
+    });
+    if (originMatches.length > 0) {
+      return {
+        value: true,
+        reason: `found ${originMatches.length} in-progress Chrome download(s) with matching tab origin evidence`,
+      };
+    }
+
+    return {
+      value: false,
+      reason: `checked ${activeDownloads.length} in-progress Chrome download(s); none matched exact tab URL or origin`,
+    };
+  } catch (err: any) {
+    return { value: "unknown", reason: `active download check failed: ${err?.message || String(err)}` };
+  }
+}
+
 async function captureFullPage(tabId: number, maxHeight: number): Promise<{ base64: string; width: number; height: number }> {
   const dimensionsResult = await cdp.evaluateScript(tabId, `(() => ({
     viewportHeight: window.innerHeight,
@@ -2354,7 +2428,7 @@ export async function handleMessage(
       for (let i = 0; i < urls.length; i++) {
         const createOptions: chrome.tabs.CreateProperties = {
           url: urls[i],
-          active: i === 0,
+          active: message.active !== false && i === 0,
         };
         // Support creating tab in specific window
         if (message.windowId) {
@@ -2725,6 +2799,112 @@ export async function handleMessage(
       return { success: true };
     }
 
+    case "TAB_RECOVERY_STATE": {
+      if (typeof tabId !== "number" || !Number.isFinite(tabId)) {
+        throw new Error("Explicit numeric tabId required");
+      }
+
+      const tab = await chrome.tabs.get(tabId);
+      const tabIdentity = {
+        id: tab.id,
+        windowId: tab.windowId,
+        index: tab.index,
+        url: tab.url,
+        title: tab.title,
+        active: tab.active,
+        highlighted: tab.highlighted,
+        pinned: tab.pinned,
+        incognito: tab.incognito,
+        discarded: tab.discarded,
+        frozen: (tab as any).frozen,
+      };
+
+      let pageState: any = null;
+      let pageStateError: string | null = null;
+      try {
+        const result = await cdp.evaluateScript(tabId, `
+(() => {
+  const editableSelector = [
+    "textarea",
+    "input:not([type])",
+    "input[type='text']",
+    "input[type='search']",
+    "[contenteditable='true']",
+    "[role='textbox']"
+  ].join(",");
+
+  const editables = Array.from(document.querySelectorAll(editableSelector));
+  const nonEmptyEditable = editables.find((el) => {
+    const value = "value" in el ? String(el.value || "") : String(el.textContent || "");
+    return value.trim().length > 0;
+  });
+
+  const stopSelector = [
+    "button[aria-label*='Stop']",
+    "button[aria-label*='stop']",
+    "button[aria-label*='Cancel']",
+    "button[data-testid*='stop']",
+    "button[data-testid*='Stop']"
+  ].join(",");
+  const generationButton = Array.from(document.querySelectorAll(stopSelector)).find((el) => {
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
+  });
+
+  return {
+    readyState: document.readyState,
+    locationHref: location.href,
+    title: document.title,
+    hasNonEmptyEditableDraft: Boolean(nonEmptyEditable),
+    nonEmptyEditableDraftReason: nonEmptyEditable
+      ? "found a non-empty editable input or contenteditable element"
+      : "no non-empty editable input or contenteditable element found",
+    isChatGPTGenerating: Boolean(generationButton),
+    chatGPTGenerationReason: generationButton
+      ? "found a visible ChatGPT stop/cancel generation control"
+      : "no visible ChatGPT stop/cancel generation control found",
+  };
+})()
+        `);
+        pageState = result.result?.value || null;
+      } catch (err: any) {
+        pageStateError = err?.message || String(err);
+      }
+
+      const guardUnknownReason = pageStateError
+        ? `page inspection failed: ${pageStateError}`
+        : "page inspection did not return a value";
+
+      const activeDownloadGuard = await getActiveDownloadRecoveryGuard(pageState?.locationHref ?? tab.url);
+
+      return {
+        tab: tabIdentity,
+        loadState: {
+          status: tab.status,
+          documentReadyState: pageState?.readyState ?? "unknown",
+          url: pageState?.locationHref ?? tab.url,
+          title: pageState?.title ?? tab.title,
+        },
+        guards: {
+          chatgptGeneration: pageState ? {
+            value: pageState.isChatGPTGenerating === true,
+            reason: pageState.chatGPTGenerationReason,
+          } : {
+            value: "unknown",
+            reason: guardUnknownReason,
+          },
+          nonEmptyEditableDraft: pageState ? {
+            value: pageState.hasNonEmptyEditableDraft === true,
+            reason: pageState.nonEmptyEditableDraftReason,
+          } : {
+            value: "unknown",
+            reason: guardUnknownReason,
+          },
+          activeDownload: activeDownloadGuard,
+        },
+      };
+    }
     case "ZOOM_GET": {
       if (!tabId) throw new Error("No tabId provided");
       const zoom = await chrome.tabs.getZoom(tabId);

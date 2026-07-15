@@ -89,6 +89,24 @@ def test_expected_url_matching_different_tab_fails():
     assert out["url_resolution"]["tab_id"] == "837346844"
 
 
+def test_expected_project_slug_mismatch_fails_with_same_conversation_uuid():
+    cid = "6a4d9287-cf38-83ea-a247-a6321ff09844"
+    tabs = (
+        "837358033\tChatGPT\t"
+        f"https://chatgpt.com/g/g-p-project/c/{cid}\n"
+    )
+    code, out = _check(
+        "837358033",
+        tabs,
+        "--expect-url",
+        f"https://chatgpt.com/g/g-p-project-sparta-explorer/c/{cid}",
+    )
+    assert code == 5
+    assert out["error"] == "expected_url_mismatch"
+    assert out["url_match"]["tab_project_context"] == "g-p-project"
+    assert out["url_match"]["expected_project_context"] == "g-p-project-sparta-explorer"
+
+
 def test_expected_title_verifies_requested_tab():
     tabs = (
         "837346327\tDelegate review\t"

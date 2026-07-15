@@ -1,0 +1,87 @@
+import json
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+from tab_recovery_receipt import (  # noqa: E402
+    build_tab_recovery_receipt,
+    write_tab_recovery_receipt,
+)
+
+
+def test_rebound_receipt_contains_required_evidence_and_writes_atomically(tmp_path):
+    output = tmp_path / "artifacts" / "tab-recovery.json"
+    path = write_tab_recovery_receipt(
+        output,
+        status="rebound",
+        project="demo",
+        requested_tab_id="123",
+        resolved_tab_id="456",
+        url_evidence={"requested_url": "https://chatgpt.com/c/abc", "resolved_url": "https://chatgpt.com/c/abc"},
+        guard_values={"url_match": True, "project_match": {"passed": True}},
+        repair_trigger="proactive_tab_maintenance",
+        action_started_at="2026-01-01T00:00:00+00:00",
+        action_finished_at="2026-01-01T00:00:01+00:00",
+        before_observation={"attached": False},
+        after_observation={"attached": True},
+        written_at="2026-01-01T00:00:02+00:00",
+    )
+
+    assert path == output
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["schema"] == "surf.tab_recovery_receipt.v1"
+    assert payload["status"] == "rebound"
+    assert payload["success"] is True
+    assert payload["project"] == "demo"
+    assert payload["requested_tab_id"] == "123"
+    assert payload["resolved_tab_id"] == "456"
+    assert payload["url_evidence"]["requested_url"] == "https://chatgpt.com/c/abc"
+    assert payload["guard_values"] == {"url_match": True, "project_match": {"passed": True}}
+    assert payload["repair_trigger"] == "proactive_tab_maintenance"
+    assert payload["action_started_at"] == "2026-01-01T00:00:00+00:00"
+    assert payload["action_finished_at"] == "2026-01-01T00:00:01+00:00"
+    assert payload["before_observation"] == {"attached": False}
+    assert payload["after_observation"] == {"attached": True}
+    assert not any(name.startswith(f".{output.name}.tmp.") for name in os.listdir(output.parent))
+
+
+def test_statuses_are_distinguished_and_guarded_skip_is_never_success():
+    statuses = {"scanned", "skipped_guarded", "rebound", "reloaded", "failed"}
+    receipts = {
+        status: build_tab_recovery_receipt(
+            status=status,
+            project="demo",
+            requested_tab_id="1",
+            resolved_tab_id="1",
+            url_evidence="https://example.test",
+            guard_values={"guard": True},
+            repair_trigger="test",
+            written_at="2026-01-01T00:00:00+00:00",
+        )
+        for status in statuses
+    }
+
+    assert set(receipts) == statuses
+    assert receipts["rebound"]["success"] is True
+    assert receipts["reloaded"]["success"] is True
+    assert receipts["scanned"]["success"] is False
+    assert receipts["skipped_guarded"]["success"] is False
+    assert receipts["failed"]["success"] is False
+
+
+def test_skipped_or_unknown_guard_cannot_encode_success():
+    for guard_value in ("unknown", "skipped", {"skipped": True}, {"status": "unknown"}):
+        receipt = build_tab_recovery_receipt(
+            status="reloaded",
+            project="demo",
+            requested_tab_id="1",
+            resolved_tab_id="1",
+            url_evidence="https://example.test",
+            guard_values={"guard": guard_value},
+            repair_trigger="test",
+            written_at="2026-01-01T00:00:00+00:00",
+        )
+        assert receipt["guard_success"] is False
+        assert receipt["success"] is False

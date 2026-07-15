@@ -17,6 +17,8 @@ Options:
   --meta-output PATH      Proof metadata JSON. Default: <output>.meta.json
   --sentinel MARKER       Completion marker expected in assistant DOM text.
   --timeout SECONDS       CDP extraction timeout. Default: 12.
+  --wait                  Wait for the sentinel on the existing assistant turn.
+  --stable-polls COUNT    Stable polls required with --wait. Default: 3.
 EOF
 }
 
@@ -26,6 +28,8 @@ raw_output=""
 meta_output=""
 sentinel=""
 timeout_s=12
+wait_for_sentinel=0
+stable_polls=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +39,8 @@ while [[ $# -gt 0 ]]; do
     --meta-output) meta_output="${2:-}"; shift 2 ;;
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --wait) wait_for_sentinel=1; shift ;;
+    --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -45,11 +51,11 @@ if [[ -z "$tab_id" || -z "$output" ]]; then
   exit 2
 fi
 
-requested_tab_id="$(printf '%s' "$tab_id" | tr -cd '0-9' | head -c 20 || true)"
-if [[ -z "$requested_tab_id" ]]; then
+if [[ ! "$tab_id" =~ ^[0-9]+$ ]]; then
   echo "Invalid --tab-id: $tab_id" >&2
   exit 2
 fi
+requested_tab_id="$tab_id"
 
 raw_output="${raw_output:-${output}.raw.md}"
 meta_output="${meta_output:-${output}.meta.json}"
@@ -62,6 +68,9 @@ started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 args=(chatgpt.extract --tab-id "$requested_tab_id" --timeout "$timeout_s")
 if [[ -n "$sentinel" ]]; then
   args+=(--sentinel "$sentinel")
+fi
+if [[ "$wait_for_sentinel" -eq 1 ]]; then
+  args+=(--wait --stable-polls "$stable_polls" --no-activate)
 fi
 
 set +e

@@ -12,6 +12,8 @@ const kimiTabClient = require("./kimi-tab-client.cjs");
 const geminiClient = require("./gemini-client.cjs");
 const perplexityClient = require("./perplexity-client.cjs");
 const { mapToolToMessage, mapComputerAction, formatToolContent } = require("./host-helpers.cjs");
+const { KeyedRequestQueue } = require("./ai-request-queue.cjs");
+const { createBoundedLogger, summarizeExtensionMessage } = require("./host-log.cjs");
 
 const SOCKET_PATH = "/tmp/surf.sock";
 
@@ -50,31 +52,11 @@ function resizeImage(filePath, maxSize) {
   }
 }
 
-const aiRequestQueue = [];
-let aiRequestInProgress = false;
+const aiRequestQueue = new KeyedRequestQueue(2000);
 
-function queueAiRequest(handler) {
-  return new Promise((resolve, reject) => {
-    aiRequestQueue.push({ handler, resolve, reject });
-    processAiQueue();
-  });
+function queueAiRequest(handler, key = "global") {
+  return aiRequestQueue.enqueue(key, handler);
 }
-
-async function processAiQueue() {
-  if (aiRequestInProgress || aiRequestQueue.length === 0) return;
-  aiRequestInProgress = true;
-  const { handler, resolve, reject } = aiRequestQueue.shift();
-  try {
-    const result = await handler();
-    resolve(result);
-  } catch (err) {
-    reject(err);
-  } finally {
-    aiRequestInProgress = false;
-    setTimeout(processAiQueue, 2000);
-  }
-}
-const LOG_FILE = "/tmp/surf-host.log";
 const AUTH_FILE = path.join(os.homedir(), ".pi", "agent", "auth.json");
 
 const DEFAULT_RETRY_OPTIONS = {
@@ -283,9 +265,7 @@ async function handleApiRequest(msg, sendResponse) {
   }
 }
 
-const log = (msg) => {
-  fs.appendFileSync(LOG_FILE, `${new Date().toISOString()} ${msg}\n`);
-};
+const log = createBoundedLogger();
 
 log("Host starting...");
 
@@ -450,6 +430,7 @@ function handleToolRequest(msg, socket) {
   if (extensionMsg.type === "CHATGPT_QUERY") {
     const { query, model, reasoning, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
 
+    const chatgptQueueKey = `chatgpt:${targetTabId || extensionMsg.tabId || "auto"}`;
     queueAiRequest(async () => {
       let pageContext = null;
       if (withPage) {
@@ -615,11 +596,19 @@ function handleToolRequest(msg, socket) {
       });
       
       return result;
-    }).then((result) => {
+    }, chatgptQueueKey).then((result) => {
       sendToolResponse(socket, originalId, {
         response: result.response,
         model: result.model,
+        requestedModel: result.requestedModel,
+        selectedModel: result.selectedModel,
+        modelSelectionStatus: result.modelSelectionStatus,
+        modelSelectionError: result.modelSelectionError,
         reasoning: result.reasoning,
+        requestedReasoning: result.requestedReasoning,
+        selectedReasoning: result.selectedReasoning,
+        reasoningSelectionStatus: result.reasoningSelectionStatus,
+        reasoningSelectionError: result.reasoningSelectionError,
         tabId: result.tabId,
         controlledTabId: result.controlledTabId,
         conversationUrl: result.conversationUrl,
@@ -650,6 +639,9 @@ function handleToolRequest(msg, socket) {
       tabId: requestedTabId,
       sentinel: extensionMsg.sentinel,
       timeout: extensionMsg.timeout,
+      wait: extensionMsg.wait === true,
+      stablePolls: extensionMsg.stablePolls,
+      noActivate: extensionMsg.noActivate === true,
       cdpEvaluate: (tabId, expression) => new Promise((resolve) => {
         const evalId = ++requestCounter;
         pendingToolRequests.set(evalId, {
@@ -1282,7 +1274,7 @@ function processInput() {
     
     try {
       const msg = JSON.parse(jsonStr);
-      log(`Received from extension: ${JSON.stringify(msg)}`);
+      log(`Received from extension: ${summarizeExtensionMessage(msg, Buffer.byteLength(jsonStr))}`);
       
       if (msg.type === "GET_AUTH") {
         log("Handling GET_AUTH from extension");

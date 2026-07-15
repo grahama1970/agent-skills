@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
@@ -141,9 +141,13 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     const file = String(heartbeatFile);
     const dir = path.dirname(file);
     fs.mkdirSync(dir, { recursive: true });
-    const existing = fs.existsSync(file)
+    let existing = fs.existsSync(file)
       ? JSON.parse(fs.readFileSync(file, "utf8"))
       : {};
+    const sentinelChanged = Boolean(
+      event.sentinel && existing.sentinel && existing.sentinel !== event.sentinel
+    );
+    if (sentinelChanged) existing = {};
     const assistantText = String(event.assistantText || "");
     const observedAt = isoNow();
     const assistant = {
@@ -171,6 +175,7 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     const payload = {
       ...existing,
       schema: existing.schema || "surf.webgpt_heartbeat.v1",
+      sentinel: event.sentinel || existing.sentinel || null,
       stream_schema: "surf.webgpt_assistant_stream.v1",
       updated_at: observedAt,
       last_browser_observation_at: observedAt,
@@ -203,6 +208,7 @@ function writeAssistantHeartbeat(heartbeatFile, event) {
     fs.renameSync(tmp, file);
     const eventPath = heartbeatEventsPath(file);
     if (eventPath) {
+      if (sentinelChanged) fs.writeFileSync(eventPath, "", "utf8");
       const eventPayload = {
         schema: "surf.webgpt_assistant_stream_event.v1",
         event: "assistant_snapshot",
@@ -249,9 +255,7 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
     let lastAssistantTurn = newAssistantTurns.length
       ? newAssistantTurns[newAssistantTurns.length - 1]
       : null;
-    const sentinelVariants = SENTINEL
-      ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
-      : [];
+    const sentinelVariants = SENTINEL ? [SENTINEL] : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
     if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
       // ChatGPT can mutate an already-counted assistant container after we capture the
@@ -297,10 +301,6 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       ? turnText
       : contentText;
     const sentinelMatch = findSentinel(text);
-    if (SENTINEL && sentinelMatch && sentinelMatch !== SENTINEL) {
-      const idx = text.lastIndexOf(sentinelMatch);
-      text = text.slice(0, idx) + SENTINEL + text.slice(idx + sentinelMatch.length);
-    }
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
     const messageId = messageRoot.getAttribute('data-message-id') || null;
@@ -356,11 +356,45 @@ async function waitForPageLoad(cdp, timeoutMs = 45000) {
 async function isCloudflareBlocked(cdp) {
   const title = await evaluate(cdp, "document.title.toLowerCase()");
   if (title && title.includes("just a moment")) return true;
-  const hasScript = await evaluate(
+  const state = await evaluate(
     cdp,
-    `Boolean(document.querySelector('${SELECTORS.cloudflareScript}'))`
+    `(() => {
+      const text = document.body?.innerText || "";
+      const hasChallengeText = /verify you are human|checking your browser|just a moment|cloudflare|turnstile/i.test(text);
+      const hasComposer = Boolean(document.querySelector('${SELECTORS.promptTextarea}'));
+      const hasConversation = Boolean(document.querySelector('${SELECTORS.assistantMessage}'));
+      const hasScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
+      return { hasChallengeText, hasComposer, hasConversation, hasScript };
+    })()`
   );
-  return hasScript;
+  return Boolean(state?.hasChallengeText && !state?.hasComposer && !state?.hasConversation);
+}
+
+async function recoverCloudflareChallenge(cdp, inputCdp, log, options = {}) {
+  const {
+    maxReloads = 1,
+    reloadWaitMs = 2000,
+    pageLoadTimeoutMs = 45000,
+  } = options;
+  if (!(await isCloudflareBlocked(cdp))) return { detected: false, reloads: 0 };
+
+  for (let reloads = 1; reloads <= maxReloads; reloads += 1) {
+    log?.(`Cloudflare challenge detected; hard reloading controlled tab (${reloads}/${maxReloads})`);
+    await inputCdp("Page.reload", { ignoreCache: true });
+    if (reloadWaitMs > 0) await delay(reloadWaitMs);
+    await waitForPageLoad(cdp, pageLoadTimeoutMs);
+    if (!(await isCloudflareBlocked(cdp))) {
+      log?.(`Cloudflare challenge cleared after ${reloads} hard reload(s)`);
+      return { detected: true, reloads, recovered: true };
+    }
+  }
+
+  const error = new Error(
+    `Cloudflare challenge persisted after ${maxReloads} automatic hard reload(s)`,
+  );
+  error.code = "cloudflare_challenge_persisted";
+  error.cloudflareRecovery = { detected: true, reloads: maxReloads, recovered: false };
+  throw error;
 }
 
 async function checkLoginStatus(cdp) {
@@ -486,12 +520,27 @@ async function assertReadyForNewPrompt(cdp) {
     err.chatgptPageState = state;
     throw err;
   }
-  if (state?.stoppedThinkingCount > 0 || state?.tailContainsStoppedThinking) {
-    const err = new Error("ChatGPT page is in a stopped-generation state before submit; retry in a clean conversation or use a fresh reviewer tab");
-    err.chatgptPageState = state;
-    throw err;
-  }
   return state;
+}
+
+async function attemptOptionalSelection(kind, requested, selector, log, onUnavailable) {
+  if (!requested) {
+    return { requested: null, selected: null, status: null, error: null };
+  }
+  try {
+    const selected = await selector(requested);
+    return { requested, selected, status: "selected", error: null };
+  } catch (error) {
+    const message = error?.message || String(error);
+    if (onUnavailable) await onUnavailable().catch(() => {});
+    log?.(`${kind} selection unavailable for ${requested}; preserving current browser setting: ${message}`);
+    return {
+      requested,
+      selected: null,
+      status: "unavailable_using_current",
+      error: message,
+    };
+  }
 }
 
 async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
@@ -935,15 +984,19 @@ async function captureAssistantBaseline(cdp) {
       ? directAssistantTurns
       : conversationTurns.filter((node) => isAssistantTurn(node));
     const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
+    const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"], [data-turn="user"]'))
+      .filter((node) => node instanceof HTMLElement);
     return {
       assistantCount: assistantTurns.length,
       lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
+      userCount: userTurns.length,
     };
   })()`;
   const value = await evaluate(cdp, expr);
   return {
     assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
     lastMessageId: value?.lastMessageId || null,
+    userCount: Number.isFinite(value?.userCount) ? value.userCount : 0,
   };
 }
 
@@ -993,9 +1046,11 @@ async function clickSend(cdp, inputCdp) {
   return true;
 }
 
-async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
+async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000, baseline = {}) {
   const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
   const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
+  const baselineAssistantCount = Number.isFinite(baseline.assistantCount) ? baseline.assistantCount : 0;
+  const baselineUserCount = Number.isFinite(baseline.userCount) ? baseline.userCount : 0;
   const deadline = Date.now() + timeoutMs;
   let lastState = null;
   while (Date.now() < deadline) {
@@ -1008,15 +1063,24 @@ async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000) {
         const promptEnd = ${promptEnd};
         const prompt = document.querySelector(PROMPT_SELECTOR);
         const text = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '') : '';
+        const assistantTurns = document.querySelectorAll('[data-message-author-role="assistant"], [data-turn="assistant"]');
+        const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"], [data-turn="user"]'));
+        const lastUser = userTurns.length ? userTurns[userTurns.length - 1] : null;
+        const lastUserText = lastUser ? (lastUser.innerText || lastUser.textContent || '') : '';
         return {
           stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
           promptPresent: Boolean(prompt),
           composerStillContainsPrompt: Boolean(text && text.includes(promptStart) && text.includes(promptEnd)),
           composerChars: text.length,
+          assistantCount: assistantTurns.length,
+          userCount: userTurns.length,
+          lastUserContainsPrompt: Boolean(lastUserText && lastUserText.includes(promptStart) && lastUserText.includes(promptEnd)),
         };
       })()`
     );
-    if (lastState?.stopVisible || lastState?.composerStillContainsPrompt === false) {
+    const assistantAdvanced = Number(lastState?.assistantCount || 0) > baselineAssistantCount;
+    const userTurnAdvanced = Number(lastState?.userCount || 0) > baselineUserCount && lastState?.lastUserContainsPrompt === true;
+    if (lastState?.stopVisible || assistantAdvanced || userTurnAdvanced) {
       return { accepted: true, ...lastState };
     }
     await delay(200);
@@ -1040,6 +1104,7 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const heartbeatFile = options.heartbeatFile || null;
   const hiddenRecoveryPolls = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_POLLS || "25", 10);
   const hiddenRecoveryIdleMs = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_IDLE_MS || "30000", 10);
+  const stableStallMs = Number.parseInt(process.env.SURF_WEBGPT_STABLE_STALL_MS || "0", 10);
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -1146,7 +1211,33 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       hiddenPolls,
       hiddenRecoveryUsed,
       pollCount,
+      sentinel,
     });
+    if (
+      sentinel
+      && stableStallMs > 0
+      && currentLength > 0
+      && !hasAssistantSentinel
+      && stableCycles >= requiredStableCycles
+      && stableMs >= stableStallMs
+    ) {
+      const error = new Error(`Stable assistant response stalled without sentinel after ${stableMs}ms`);
+      error.partialResponse = {
+        text: currentText,
+        messageId: snapshot.messageId || null,
+        turnIndex: snapshot.turnIndex,
+        sentinel,
+        hasSentinel: false,
+        source: snapshot.source || "assistant-dom",
+        pageTextContainsSentinel: pageHasSentinel,
+        documentHiddenAtCompletion: snapshot.documentHidden === true,
+        visibilityStateAtCompletion: snapshot.visibilityState || null,
+        backgroundHiddenPolls: hiddenPolls,
+        backgroundPollCount: pollCount,
+        hiddenRecoveryUsed,
+      };
+      throw error;
+    }
     // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
     // is focused, even after the assistant message is complete. In --no-activate mode we
     // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
@@ -1207,11 +1298,38 @@ async function extractAssistantResponse(options) {
     sentinel,
     cdpEvaluate,
     timeout = 12000,
+    wait = false,
+    stablePolls = 3,
+    noActivate = false,
   } = options;
   if (!tabId) {
     throw new Error("tabId required");
   }
   const cdp = (expr) => cdpEvaluate(tabId, expr);
+  if (wait) {
+    if (!sentinel) throw new Error("sentinel required with chatgpt.extract --wait");
+    const result = await waitForResponse(cdp, timeout, {
+      sentinel,
+      stablePolls,
+      noActivate,
+      baselineAssistantCount: 0,
+    });
+    return {
+      response: result.text,
+      tabId,
+      controlledTabId: tabId,
+      messageId: result.messageId || null,
+      responseSource: result.source || "assistant-dom",
+      sentinel,
+      hasSentinel: result.hasSentinel === true,
+      pageTextContainsSentinel: result.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: result.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: result.visibilityStateAtCompletion || null,
+      stopVisible: false,
+      finished: true,
+      turnIndex: result.turnIndex,
+    };
+  }
   const snapshot = await assistantSnapshot(cdp, sentinel, timeout);
   const text = snapshot?.text || "";
   const hasSentinel = sentinel ? text.includes(sentinel) : false;
@@ -1282,9 +1400,7 @@ async function query(options) {
   try {
     await waitForPageLoad(cdp);
     log("Page loaded");
-    if (await isCloudflareBlocked(cdp)) {
-      throw new Error("Cloudflare challenge detected - complete in browser");
-    }
+    await recoverCloudflareChallenge(cdp, inputCdp, log);
     const loginStatus = await checkLoginStatus(cdp);
     if (loginStatus.status !== 200 || loginStatus.hasLoginCta) {
       throw new Error("ChatGPT login required");
@@ -1296,28 +1412,14 @@ async function query(options) {
     }
     await assertReadyForNewPrompt(cdp);
     log("Prompt ready");
-    if (model) {
-      const selectedLabel = await selectModel(cdp, model);
-      log(`Selected model: ${selectedLabel}`);
-    }
-    let selectedReasoning = null;
-    let reasoningSelectionStatus = reasoning ? "not_requested" : null;
-    let reasoningSelectionError = null;
-    if (reasoning) {
-      reasoningSelectionStatus = "requested";
-      try {
-        selectedReasoning = await selectReasoning(cdp, reasoning);
-        reasoningSelectionStatus = "selected";
-        log(`Selected reasoning: ${selectedReasoning}`);
-      } catch (err) {
-        reasoningSelectionError = err?.message || String(err);
-        if (!reasoningSelectionError.includes("Reasoning selector button not found")) {
-          throw err;
-        }
-        reasoningSelectionStatus = "selector_unavailable";
-        log(`Reasoning selector unavailable for ${reasoning}; continuing with current ChatGPT setting`);
-      }
-    }
+    const modelSelection = await attemptOptionalSelection(
+      "Model", model, (value) => selectModel(cdp, value), log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+    );
+    const reasoningSelection = await attemptOptionalSelection(
+      "Reasoning", reasoning, (value) => selectReasoning(cdp, value), log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+    );
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
       log(`File attached: ${file}`);
@@ -1327,7 +1429,7 @@ async function query(options) {
     const assistantBaseline = await captureAssistantBaseline(cdp);
     log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
-    const submitState = await waitForSubmitAccepted(cdp, prompt);
+    const submitState = await waitForSubmitAccepted(cdp, prompt, 10000, assistantBaseline);
     log(`Prompt accepted: sentinel=${sentinel || ''} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     let response;
@@ -1357,12 +1459,16 @@ async function query(options) {
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
-      model: model || "current",
-      reasoning: selectedReasoning || reasoning || null,
-      requestedReasoning: reasoning || null,
-      selectedReasoning: selectedReasoning || null,
-      reasoningSelectionStatus,
-      reasoningSelectionError,
+      model: modelSelection.selected || "current",
+      requestedModel: modelSelection.requested,
+      selectedModel: modelSelection.selected,
+      modelSelectionStatus: modelSelection.status,
+      modelSelectionError: modelSelection.error,
+      reasoning: reasoningSelection.selected || null,
+      requestedReasoning: reasoningSelection.requested,
+      selectedReasoning: reasoningSelection.selected,
+      reasoningSelectionStatus: reasoningSelection.status,
+      reasoningSelectionError: reasoningSelection.error,
       tabId,
       controlledTabId: tabId,
       conversationUrl,
@@ -1399,4 +1505,7 @@ module.exports = {
   assertReadyForNewPrompt,
   waitForSubmitAccepted,
   typePrompt,
+  recoverCloudflareChallenge,
+  attemptOptionalSelection,
+  waitForResponse,
 };
