@@ -8126,7 +8126,11 @@ function AgentPane({
   const selectedStagePassed = selectedStage != null && statusTone(selectedStageStatus) === 'pass'
   const agentGuidance = (() => {
     if (!selectedStage) return 'Select a Dream run and phase before creating work orders.'
-    if (selectedStage.id === '01') return 'The Idea Core appears insufficient. Define the character\'s core motivation or the environment\'s physical constraints.'
+    if (selectedStage.id === '01') {
+      return selectedStagePassed
+        ? ''
+        : 'The Idea Core appears insufficient. Define the character\'s core motivation or the environment\'s physical constraints.'
+    }
     if (selectedStage.id === '02') {
       return isStagePassed(selectedStage)
         ? 'Live media descriptions and TOM graph links are present for Phase 02 story generation.'
