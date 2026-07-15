@@ -3,7 +3,7 @@
   "pass": true,
   "mocked": false,
   "live": true,
-  "source_commit": "6d9e6a152d0e0068a2d7a58c177df1c4ab7531a3",
+  "source_commit": "874a932862f4946a40648af74ca40ccd0de1cb09",
   "host": "http://127.0.0.1:3002",
   "route": "http://127.0.0.1:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
   "fixture": {
@@ -228,7 +228,7 @@
           "y": 40,
           "width": 138,
           "height": 65,
-          "spritePixels": 1218
+          "spritePixels": 1200
         },
         {
           "laneId": "red-g2",
@@ -236,7 +236,7 @@
           "y": 113,
           "width": 138,
           "height": 60,
-          "spritePixels": 920
+          "spritePixels": 917
         },
         {
           "laneId": "blue-g1",
@@ -244,7 +244,7 @@
           "y": 181,
           "width": 138,
           "height": 65,
-          "spritePixels": 1182
+          "spritePixels": 1170
         },
         {
           "laneId": "blue-g2",
@@ -257,6 +257,226 @@
       ]
     },
     {
+      "id": "continuous-replay-single-mount",
+      "pass": true,
+      "detail": {
+        "route": "http://127.0.0.1:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&reducedMotion=1&particles=0",
+        "initial_mount_id": "8",
+        "final_mount_id": "8",
+        "observed_playhead_values": {
+          "zero": 0,
+          "played": 0.5582999999999994,
+          "pauseStart": 0.7916000000000003,
+          "pauseEnd": 0.7916000000000003,
+          "preSpawn": 70.88368181359223,
+          "pending": 71.92800861747573,
+          "descending": 79.10775539417476,
+          "research": 81.97965410485436,
+          "mutation": 134.457076,
+          "restarted": 0,
+          "finalState": 0
+        },
+        "pause_delta_seconds": 0,
+        "states": {
+          "zero": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "played": {
+            "playheadSeconds": 0.5582999999999994,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pauseStart": {
+            "playheadSeconds": 0.7916000000000003,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pauseEnd": {
+            "playheadSeconds": 0.7916000000000003,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "preSpawn": {
+            "playheadSeconds": 70.88368181359223,
+            "playheadLabel": "PLAYHEAD 01:10",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pending": {
+            "playheadSeconds": 71.92800861747573,
+            "playheadLabel": "PLAYHEAD 01:11",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "authorized_pending",
+              "blue-g2": "authorized_pending"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "idle",
+              "blue-g1": "run",
+              "blue-g2": "idle"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "descending": {
+            "playheadSeconds": 79.10775539417476,
+            "playheadLabel": "PLAYHEAD 01:19",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "descending",
+              "blue-g2": "descending"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "spawn",
+              "blue-g1": "run",
+              "blue-g2": "spawn"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "research": {
+            "playheadSeconds": 81.97965410485436,
+            "playheadLabel": "PLAYHEAD 01:21",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "active",
+              "blue-g2": "active"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "research",
+              "blue-g1": "run",
+              "blue-g2": "research"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "mutation": {
+            "playheadSeconds": 134.457076,
+            "playheadLabel": "PLAYHEAD 02:14",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "active",
+              "blue-g2": "active"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "mutate",
+              "blue-g1": "run",
+              "blue-g2": "mutate"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "restarted": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "finalState": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          }
+        },
+        "same_canvas_node": true,
+        "mount_stable_at_every_step": true
+      }
+    },
+    {
       "id": "plague-atlas-requested",
       "pass": true,
       "detail": [
@@ -267,6 +487,11 @@
         },
         {
           "url": "http://127.0.0.1:3002/battle-sprites/pixijs/plague_nurgling.png?v=4",
+          "resource_type": "fetch",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:3002/battle-audio/score/v1/motifs/plague_nurgling.ogg",
           "resource_type": "fetch",
           "method": "GET"
         }
@@ -301,11 +526,12 @@
     "screenshots/05-mutation-evidence.png",
     "screenshots/06-judge-selection-memory-boundary.png",
     "screenshots/07-four-lane-mobile.png",
-    "screenshots/08-four-lane-mobile-race.png"
+    "screenshots/08-four-lane-mobile-race.png",
+    "screenshots/09-continuous-replay-single-mount.png"
   ],
   "claims": {
     "proves": [
-      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners and one-way outer-scroll camera control."
+      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount."
     ],
     "does_not_prove": [
       "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."

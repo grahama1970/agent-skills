@@ -3,7 +3,7 @@
   "status": "PASS",
   "mocked": false,
   "live": true,
-  "source_commit": "6d9e6a152d0e0068a2d7a58c177df1c4ab7531a3",
+  "source_commit": "874a932862f4946a40648af74ca40ccd0de1cb09",
   "host": "http://127.0.0.1:3002",
   "route": "http://127.0.0.1:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
   "retained_campaign": {
@@ -45,18 +45,18 @@
   "proof_artifacts": [
     {
       "path": "proof-summary.json",
-      "sha256": "5407338a29ef7b3b682fe6fdfcc08f44b40f5f3b7aa11fcc9083846c50c644eb",
-      "bytes": 7618
+      "sha256": "15ffe639e185d1ea515e6c0ca89b39f148585a3929cb2d25d2097c380cdba456",
+      "bytes": 14199
     },
     {
       "path": "browser-console.json",
-      "sha256": "7587405f9961a3f17fe293962aae6559e12a2abc06c089b97a1eab48812d4647",
-      "bytes": 1206
+      "sha256": "a876e56634b831e7b389c4cbc19ed5892551417b0b248841e3830792e7c6743d",
+      "bytes": 1202
     },
     {
       "path": "network-authority-requests.json",
-      "sha256": "8bce21770a396c803c0f1527e95f0b852858e5b3a49c1c410b31b2f1e5fced63",
-      "bytes": 1101
+      "sha256": "63ff9c6f8277e7527cd930785c91c0b6b15110a5c120939722ba1a5b16b22708",
+      "bytes": 1255
     },
     {
       "path": "screenshots/01-pre-spawn-children-hidden.png",
@@ -70,8 +70,8 @@
     },
     {
       "path": "screenshots/03-ladder-descent-hop.png",
-      "sha256": "541c483a001d786ddec1de0fc733e3a257c3d53e4530919db7cbcf491eb96998",
-      "bytes": 323833
+      "sha256": "7d30f86bf11ef9b95743b0362a49e94ba77bced3e8befff7acf7372bd7e88cc4",
+      "bytes": 323843
     },
     {
       "path": "screenshots/04-children-active-research.png",
@@ -80,8 +80,8 @@
     },
     {
       "path": "screenshots/05-mutation-evidence.png",
-      "sha256": "dd58b204d343d3c9128dc595ed6e86fed229a7c97f85b5750f58b42fe19c2228",
-      "bytes": 322167
+      "sha256": "e8d814ad908fd254c37ce70bd4c90cabc5cec5682156e0e1a066d0394f0daa05",
+      "bytes": 322187
     },
     {
       "path": "screenshots/06-judge-selection-memory-boundary.png",
@@ -95,13 +95,18 @@
     },
     {
       "path": "screenshots/08-four-lane-mobile-race.png",
-      "sha256": "18dbba88ac0673404c80d531e8f2a5919f991618900ba46117331f1cfc6a521d",
-      "bytes": 41848
+      "sha256": "633f33b20e018792df3b94c8b9137d30785e1dabd5513a570c7ebda5cb2bf6b2",
+      "bytes": 42104
+    },
+    {
+      "path": "screenshots/09-continuous-replay-single-mount.png",
+      "sha256": "9c28c00737478895219c8d12bc47015bd83bec4beceb874ddd43c4283577010d",
+      "bytes": 324230
     }
   ],
   "claims": {
     "proves": [
-      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners and one-way outer-scroll camera control."
+      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount."
     ],
     "does_not_prove": [
       "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."

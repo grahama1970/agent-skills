@@ -34,6 +34,11 @@
       "url": "http://127.0.0.1:3002/battle-sprites/pixijs/battle-race-atlas.png",
       "resource_type": "fetch",
       "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3002/battle-audio/score/v1/motifs/plague_nurgling.ogg",
+      "resource_type": "fetch",
+      "method": "GET"
     }
   ]
 }
