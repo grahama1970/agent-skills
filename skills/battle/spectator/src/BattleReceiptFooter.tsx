@@ -41,8 +41,8 @@ export function BattleReceiptFooter({
   useRegisterAction("battle:control:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Focus", description: "Filter receipt-backed Battle lanes", tags: ["battle", "receipt-backed"] });
 
   return (
-    <footer className="flex min-h-[56px] items-center justify-between gap-3 rounded-2xl border border-white/10 bg-battle-panel/80 px-3 py-2 shadow-acrylic backdrop-blur-xl" data-qid="battle:receipt-footer">
-      <div className="flex min-w-0 items-center gap-3">
+    <footer className="grid h-[104px] min-h-[104px] grid-cols-[minmax(0,1fr)_auto] grid-rows-[44px_44px] items-center gap-x-3 gap-y-1 rounded-2xl border border-white/10 bg-battle-panel/80 px-3 py-1 shadow-acrylic backdrop-blur-xl" data-qid="battle:receipt-footer">
+      <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2">
         <Button data-qid="battle:control:playhead" data-qs-action="BATTLE_REPLAY_PLAYHEAD_TOGGLE" title={playing ? "Pause receipt replay playhead" : "Play receipt replay playhead"} variant={playing ? "green" : "outline"} size="icon" className="min-h-11 min-w-11" onClick={() => setPlaying((value) => !value)}>
           {playing ? <Icons.Pause className="h-4 w-4" /> : <Icons.Play className="h-4 w-4" />}
         </Button>
@@ -60,7 +60,7 @@ export function BattleReceiptFooter({
         </ToggleGroup>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+      <div className="col-span-2 col-start-1 row-start-2 flex min-w-0 items-center justify-center gap-2">
         <span className="battle-label mr-2">Focus</span>
         {([
           ["all", "All Lanes"],
@@ -73,7 +73,7 @@ export function BattleReceiptFooter({
         ))}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">{receiptStreamButton}</div>
+      <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-2">{receiptStreamButton}</div>
     </footer>
   );
 }

@@ -305,7 +305,7 @@ export function BattleSpectatorArena() {
   }
 
   return (
-    <div className={cn("h-full min-h-0 overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
+    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
       <Toaster theme="dark" richColors position="top-right" />
       {(receiptReplay || liveReplay || mockupShell) ? <BattleProofNav /> : null}
       {liveTransport.isLiveRoute && (liveTransport.contractModel || liveTransport.model) ? (
@@ -386,10 +386,10 @@ export function BattleSpectatorArena() {
       ) : null}
       <div
         className={cn(
-          "mx-auto grid h-full min-h-0",
+          "mx-auto grid min-h-0 w-full flex-1",
           mockupShell
             ? "battle-mockup-shell"
-            : "max-w-[1920px] grid-rows-[142px_minmax(0,1fr)_34px_56px] gap-2.5"
+            : "max-w-[1920px] grid-rows-[142px_minmax(0,1fr)_34px_104px] gap-2.5"
         )}
         style={
           mockupShell
