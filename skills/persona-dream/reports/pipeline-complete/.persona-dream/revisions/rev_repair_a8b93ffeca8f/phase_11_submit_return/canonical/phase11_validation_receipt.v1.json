@@ -22,7 +22,7 @@
       "--revision-id",
       "rev_repair_a8b93ffeca8f",
       "--now",
-      "2026-07-15T14:15:52Z",
+      "2026-07-15T14:17:21Z",
       "--persist-memory",
       "--memory-url",
       "http://127.0.0.1:8601",
@@ -100,7 +100,7 @@
       "exact_list": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:60e407063bf0ac8ca6f71f60601bc0b74faf37d6eb5f1a079f33dd314e6643ea",
-        "response_sha256": "sha256:04cc01101e88cfb170d62ae505ca7862978e0aa30340ef11f9f6b010ea3274a4",
+        "response_sha256": "sha256:d1f51a5baa867c9620f69e8b93752ede21b765cfdcfcad9f10e25dc8ae39d9f6",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -111,7 +111,7 @@
       "recall": {
         "endpoint": "/recall",
         "request_payload_sha256": "sha256:126f9d96b3e053522b2a888692a85e85a3525617e932fd9005e5804cbfd17647",
-        "response_sha256": "sha256:4283ecb5c493d6db212f31bad3adee2c37b9cf28b43a34bcafb15e4b1a8a35ed",
+        "response_sha256": "sha256:9e73055ab68e9014e2d7bed31eab4891331bc6445db3291163d94ca3e4bb19dc",
         "returned_counts": {
           "errors": []
         },
@@ -120,14 +120,14 @@
       "upsert": {
         "endpoint": "/upsert",
         "request_payload_sha256": "sha256:0bf3e41a330df2bb042860cccfbf0021b1746e4ef16c1f906e7fc427156feafb",
-        "response_sha256": "sha256:0c18b6ad74094c37e8565f5bddc7328a892010007cf84ae00f2760bed94e85bf",
+        "response_sha256": "sha256:fc1ddb254f4362d37ccd50fde93fb21ebd9ceee8c657b2366f498ec56ab9eb22",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T141553312596Z_13_137246952916672.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260715T141721628610Z_13_137246921459392.jsonl"
         },
         "status_code": 200
       }
@@ -169,6 +169,6 @@
     "BLOCKED_UPSTREAM_VALIDATION_FALSE_GREEN_FIRST_BLOCKER_NULL",
     "BLOCKED_UPSTREAM_VALIDATION_INCOMPLETE:12/15"
   ],
-  "validated_at": "2026-07-15T14:15:52+00:00",
+  "validated_at": "2026-07-15T14:17:21+00:00",
   "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
 }
