@@ -305,7 +305,7 @@ export function BattleSpectatorArena() {
   }
 
   return (
-    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")}>
+    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")} style={{ boxSizing: "border-box" }}>
       <Toaster theme="dark" richColors position="top-right" />
       {(receiptReplay || liveReplay || mockupShell) ? <BattleProofNav /> : null}
       {liveTransport.isLiveRoute && (liveTransport.contractModel || liveTransport.model) ? (
