@@ -25,11 +25,12 @@ type Props = {
   onToggleCollapse?: () => void;
   allottedSeconds: number;
   hideTrack?: boolean;
+  rowHeightPx?: number;
   statusLabel?: string;
 };
 
 export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
-  { lane, hasChildren = false, isCollapsed = false, isChild = false, isSelected, isDimmed, activeFinisher, onSelect, onToggleCollapse, allottedSeconds, hideTrack = false, statusLabel },
+  { lane, hasChildren = false, isCollapsed = false, isChild = false, isSelected, isDimmed, activeFinisher, onSelect, onToggleCollapse, allottedSeconds, hideTrack = false, rowHeightPx: sharedRowHeightPx, statusLabel },
   ref
 ) {
   const designView = isBattleDesignView();
@@ -134,7 +135,9 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
     );
   }
 
-  const rowHeightPx = isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
+  const rowHeightPx = hideTrack && sharedRowHeightPx != null
+    ? sharedRowHeightPx
+    : isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
   const terminalVariant = lane.terminal === "blocked" ? "blue" : lane.terminal === "none" ? "yellow" : "green";
   const workerSuffix = lane.name === displayName ? null : lane.name.slice(displayName.length).trim();
 

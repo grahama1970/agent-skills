@@ -411,7 +411,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
       <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")} style={receiptReplay && pixiEngine ? { ["--battle-label-w" as string]: `${BATTLE_LANE_LABEL_PX}px` } : undefined}>
         {!designView ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
-        {visibleLanes.map((lane) => (
+        {visibleLanes.map((lane, index) => (
           <LaneRow
             ref={getRowRef(lane.id)}
             key={lane.id}
@@ -438,6 +438,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             onSelect={onSelect}
             allottedSeconds={allotted}
             hideTrack={pixiEngine}
+            rowHeightPx={pixiEngine ? pixiRowLayout[index]?.heightPx : undefined}
           />
         ))}
         {(!pixiEngine || designView) ? (
