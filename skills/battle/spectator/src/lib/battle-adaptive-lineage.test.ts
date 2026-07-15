@@ -125,6 +125,14 @@ describe("Battle V14 adaptive memory projection", () => {
 			"Adaptive memory — BLUE G3 MEMORY CHILD: MEMORY USE ACKNOWLEDGED",
 		]);
 		expect(ticker.every((beat) => !beat.react.liveEvent.notification.includes("Blue patch inbound"))).toBe(true);
+
+		const recalled = receiptBeatsVisibleAtPlayhead(collectReceiptBeats(fixture, fixture.lanes), 2.1, 3);
+		expect(recalled.map((beat) => beat.react.liveEvent.notification)).toEqual([
+			"Adaptive memory — RED G3 MEMORY CHILD: MEMORY RECALLED",
+			"Adaptive memory — BLUE G3 MEMORY CHILD: MEMORY WRITTEN",
+			"Adaptive memory — BLUE G3 MEMORY CHILD: MEMORY RECALLED",
+		]);
+		expect(recalled.every((beat) => beat.react.soundCue === "none" && beat.pixi.emphasis === "none")).toBe(true);
 	});
 
 	it("fails closed when V14 memory use is presented as improvement", async () => {

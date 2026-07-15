@@ -141,6 +141,12 @@ function pushBeat(beats: ReceiptBeat[], beat: ReceiptBeat) {
 	beats.push(beat);
 }
 
+const ADAPTIVE_MEMORY_RECEIPT_LABELS = new Set([
+	"MEMORY PROMOTED · PENDING",
+	"MEMORY WRITTEN",
+	"MEMORY RECALLED",
+]);
+
 function makeBeat(args: {
 	fixture: BattleNormalizedUxFixture;
 	lanes: Lane[];
@@ -211,6 +217,23 @@ export function collectReceiptBeats(fixture: BattleNormalizedUxFixture, lanes: L
 		for (const laneEvent of lane.events) {
 			if (!laneEvent.proven) continue;
 			const atSeconds = eventElapsedSeconds(laneEvent, allottedSeconds, useElapsed);
+
+			if (laneEvent.kind === "useful" && laneEvent.label && ADAPTIVE_MEMORY_RECEIPT_LABELS.has(laneEvent.label)) {
+				pushBeat(
+					beats,
+					makeBeat({
+						fixture,
+						lanes,
+						lane,
+						laneEvent,
+						atSeconds,
+						kind: "useful",
+						follow: false,
+						deathCard: false,
+					}),
+				);
+				continue;
+			}
 
 			if (laneEvent.kind === "handoff") {
 				pushBeat(
