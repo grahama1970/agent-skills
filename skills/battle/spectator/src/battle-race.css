@@ -609,6 +609,11 @@
   gap: 10px;
   overflow-x: hidden;
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows:
+    auto
+    minmax(0, 1fr)
+    var(--battle-shell-legend-height, 34px)
+    var(--battle-shell-footer-height, 53px);
   height: 100%;
   min-height: 0;
 }
@@ -628,9 +633,38 @@
   min-width: 0;
 }
 
+.battle-receipt-footer {
+  height: 104px;
+  min-height: 104px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 44px 44px;
+}
+
+.battle-receipt-footer-transport {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.battle-receipt-footer-focus {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+}
+
+.battle-receipt-footer-proof {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 @media (max-width: 700px) {
+  .battle-mockup-app {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
   .battle-mockup-shell {
+    flex: 0 0 auto;
     height: auto;
+    grid-template-rows: auto auto auto auto;
     overflow: visible;
   }
 
@@ -652,6 +686,7 @@
 
   .battle-mockup-main {
     grid-template-columns: minmax(0, 1fr);
+    min-height: 420px;
   }
 
   .battle-spectator-rail-slot,
@@ -662,6 +697,26 @@
   .battle-mockup-footer {
     position: static;
     flex-wrap: wrap;
+  }
+
+  .battle-receipt-footer {
+    display: flex;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .battle-receipt-footer-transport,
+  .battle-receipt-footer-focus,
+  .battle-receipt-footer-proof {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
   }
 }
 

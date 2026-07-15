@@ -394,7 +394,8 @@ export function BattleSpectatorArena() {
         style={
           mockupShell
             ? {
-                gridTemplateRows: `auto minmax(0, 1fr) ${BATTLE_MOCKUP_LEGEND_PX}px ${receiptChrome ? 104 : BATTLE_MOCKUP_FOOTER_PX}px`,
+                ["--battle-shell-legend-height" as string]: `${BATTLE_MOCKUP_LEGEND_PX}px`,
+                ["--battle-shell-footer-height" as string]: `${receiptChrome ? 104 : BATTLE_MOCKUP_FOOTER_PX}px`,
               }
             : { gridTemplateRows: "142px minmax(0, 1fr) 34px 104px" }
         }
