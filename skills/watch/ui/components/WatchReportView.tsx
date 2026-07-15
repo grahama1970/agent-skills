@@ -858,7 +858,7 @@ function upsertYoloLabelEvent(events: WatchYoloLabelEvent[], event: WatchYoloLab
   return [...events, event]
 }
 
-function latestYoloLabelEventForTrack(
+export function latestYoloLabelEventForTrack(
   events: WatchYoloLabelEvent[],
   trackId: string,
   timeSeconds: number,
@@ -871,7 +871,7 @@ function latestYoloLabelEventForTrack(
   return candidates.length > 0 ? candidates[candidates.length - 1].event : null
 }
 
-function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | null {
+export function yoloLabelFromEvent(event: WatchYoloLabelEvent): WatchYoloTrackLabel | null {
   if (isYoloIdentityStopEvent(event)) return null
   if (!event.character_name || event.character_name === 'Unassigned') return null
   return {
@@ -955,7 +955,7 @@ function watchSequenceRowsFromAnnotationSession(state: AnnotationSessionState): 
   return rows.sort((a, b) => a.sortValue - b.sortValue)
 }
 
-function yoloLabelForOverlay(
+export function yoloLabelForOverlay(
   overlay: WatchOverlayPayloadOverlay,
   events: WatchYoloLabelEvent[],
   labels: Record<string, WatchYoloTrackLabel>,
@@ -966,6 +966,7 @@ function yoloLabelForOverlay(
   const latestEvent = latestYoloLabelEventForTrack(events, overlay.track_id, timeSeconds)
   if (latestEvent) return yoloLabelFromEvent(latestEvent)
   if (rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]) return null
+  if (events.some((event) => event.track_id === overlay.track_id)) return null
   return labels[overlay.track_id] ?? suggestions[overlay.track_id] ?? null
 }
 
