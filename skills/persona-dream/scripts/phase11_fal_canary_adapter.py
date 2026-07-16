@@ -36,6 +36,8 @@ from phase11_execution_common import (
     iso,
     provider_return_root,
     poll_policy,
+    persist_provider_result_error,
+    request_attempt_observation,
     run_adapter_preflight,
     submit_once,
     update_poll_state,
@@ -190,7 +192,28 @@ def execute_canary(inputs: Any, args: argparse.Namespace, current: Any) -> dict[
         observed = provider.status(endpoint, request_id)
         name = status_name(observed)
         if name in {"COMPLETED", "SUCCEEDED", "SUCCESS"}:
-            result = provider.result(endpoint, request_id)
+            try:
+                result = provider.result(endpoint, request_id)
+            except Exception as exc:
+                error_receipt, failed_ledger = persist_provider_result_error(
+                    inputs,
+                    request_hash,
+                    endpoint=endpoint,
+                    request_id=request_id,
+                    current=now_from_argument(None),
+                    poll_count=poll_count,
+                    error=exc,
+                )
+                raise Phase11Blocked(
+                    str(error_receipt["status"]),
+                    details={
+                        "request_id": request_id,
+                        "http_status": error_receipt.get("http_status"),
+                        "error_count": error_receipt.get("error_count"),
+                        "automatic_resubmit_allowed": False,
+                        "attempt_ledger_state": failed_ledger.get("state"),
+                    },
+                ) from exc
             terminal = True
             break
         if name in {"FAILED", "CANCELLED", "CANCELED", "ERROR"}:
@@ -320,9 +343,12 @@ def execute_canary(inputs: Any, args: argparse.Namespace, current: Any) -> dict[
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    inputs: Any | None = None
+    request_hash: str | None = None
     try:
         current = now_from_argument(args.now)
         inputs = load_inputs_from_args(args, current)
+        request_hash = str(build_execution_state(inputs).bindings["request_body_sha256"])
         if args.preflight:
             result = run_adapter_preflight(
                 inputs,
@@ -336,13 +362,23 @@ def main(argv: list[str] | None = None) -> int:
             result = execute_canary(inputs, args, current)
             exit_code = 0
     except Phase11Blocked as exc:
+        attempts = 0
+        ledger_state = None
+        if inputs is not None and request_hash:
+            observation, _blockers = request_attempt_observation(inputs, request_hash)
+            attempts = int(observation.get("actual_provider_call_attempts") or 0)
+            ledger_state = observation.get("state")
         result = {
             "schema": "persona_dream.phase11_fal_canary_error.v1",
             "status": exc.code,
             "details": exc.details,
-            "provider_live": False,
-            "submitted": False,
-            "actual_provider_call_attempts": 0,
+            "attempt_ledger_state": ledger_state,
+            "provider_live": attempts > 0,
+            "paid_call_authorized": False,
+            "submitted": attempts > 0,
+            "provider_ready": False,
+            "live_submit_ready": False,
+            "actual_provider_call_attempts": attempts,
         }
         exit_code = exc.exit_code
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else result["status"])

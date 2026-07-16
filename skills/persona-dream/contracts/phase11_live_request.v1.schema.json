@@ -52,7 +52,43 @@
       "$ref": "#/$defs/sha256"
     },
     "provider_request_body": {
-      "type": "object"
+      "type": "object",
+      "required": [
+        "multi_prompt",
+        "start_image_url",
+        "duration",
+        "generate_audio",
+        "end_image_url",
+        "elements",
+        "shot_type",
+        "negative_prompt",
+        "cfg_scale"
+      ],
+      "properties": {
+        "multi_prompt": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["duration", "prompt"],
+            "properties": {
+              "duration": {"enum": ["2", "3"]},
+              "prompt": {"type": "string", "minLength": 1, "maxLength": 512}
+            },
+            "additionalProperties": false
+          }
+        },
+        "start_image_url": {"type": "string", "minLength": 1},
+        "duration": {"const": "10"},
+        "generate_audio": {"const": false},
+        "end_image_url": {"type": "string", "minLength": 1},
+        "elements": {"type": "array", "minItems": 2, "maxItems": 2},
+        "shot_type": {"const": "customize"},
+        "negative_prompt": {"type": "string", "minLength": 1},
+        "cfg_scale": {"type": "number"}
+      },
+      "additionalProperties": false
     },
     "technical_blockers": {
       "type": "array",
@@ -67,19 +103,21 @@
       }
     },
     "actual_provider_call_attempts": {
-      "const": 0
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
     },
     "generation_call_started": {
-      "const": false
+      "type": "boolean"
     },
     "provider_live": {
-      "const": false
+      "type": "boolean"
     },
     "paid_call_authorized": {
       "const": false
     },
     "submitted": {
-      "const": false
+      "type": "boolean"
     },
     "provider_ready": {
       "const": false

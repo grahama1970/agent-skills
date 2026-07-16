@@ -908,20 +908,27 @@ def normalize_prompt(prompt: str, *, panel_id: str, duration: int, start: int, e
 
 
 def source_multi_prompt(inputs: CompilationInputs) -> list[dict[str, Any]]:
-    candidate_input = inputs.candidate_binding.get("input")
-    if isinstance(candidate_input, Mapping) and isinstance(candidate_input.get("multi_prompt"), list):
-        return [dict(item) for item in candidate_input["multi_prompt"] if isinstance(item, Mapping)]
+    # Phase 10 is the immutable semantic source.  The candidate binding carries
+    # media/publication bindings but is not allowed to preserve provider-invalid
+    # prompt text from an already-consumed request.
     preview = inputs.phase10_payload.get("assembled_request_preview")
     if isinstance(preview, Mapping):
         request_input = preview.get("input")
         if isinstance(request_input, Mapping) and isinstance(request_input.get("multi_prompt"), list):
             return [dict(item) for item in request_input["multi_prompt"] if isinstance(item, Mapping)]
+    candidate_input = inputs.candidate_binding.get("input")
+    if isinstance(candidate_input, Mapping) and isinstance(candidate_input.get("multi_prompt"), list):
+        return [dict(item) for item in candidate_input["multi_prompt"] if isinstance(item, Mapping)]
     return []
 
 
 def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     blockers: list[str] = list(inputs.provider_snapshot.blockers)
-    from phase11_payload_binding import payload_binding_blockers
+    from phase11_payload_binding import (
+        PayloadBindingBlocked,
+        compile_concise_prompt,
+        payload_binding_blockers,
+    )
 
     blockers.extend(
         payload_binding_blockers(
@@ -969,16 +976,29 @@ def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], lis
             observed_duration = 0
         if observed_duration != expected_duration:
             blockers.append(f"BLOCKED_PROVIDER_SHOT_DURATION:{panel_id}:{observed_duration}:expected:{expected_duration}")
+        source_prompt = str(raw.get("prompt") or "")
         normalized, changes = normalize_prompt(
-            str(raw.get("prompt") or ""),
+            source_prompt,
             panel_id=panel_id,
             duration=expected_duration,
             start=cumulative,
             end=cumulative + expected_duration,
             mode=mode,
         )
+        try:
+            concise = compile_concise_prompt(
+                source_prompt,
+                panel_id=panel_id,
+                start=cumulative,
+                end=cumulative + expected_duration,
+            )
+            if concise != normalized:
+                changes.append("provider_prompt_compacted_to_512")
+            normalized = concise
+        except PayloadBindingBlocked as exc:
+            blockers.append(exc.code)
         compiled_prompts.append({"duration": str(expected_duration), "prompt": normalized})
-        transformations.append({"panel_id": panel_id, "changes": changes})
+        transformations.append({"panel_id": panel_id, "changes": sorted(set(changes))})
         cumulative += expected_duration
 
     candidate_input = inputs.candidate_binding.get("input")
@@ -1034,6 +1054,15 @@ def validate_request_body(body: Mapping[str, Any], *, endpoint: str, mode: str) 
         except (TypeError, ValueError):
             duration = 0
         prompt = str(item.get("prompt") or "")
+        from phase11_payload_binding import compiled_prompt_blockers
+        blockers.extend(
+            compiled_prompt_blockers(
+                prompt,
+                panel_id=panel_id,
+                start=elapsed,
+                end=elapsed + duration,
+            )
+        )
         match = TIME_RANGE_RE.search(prompt)
         if match is None:
             blockers.append(f"BLOCKED_PROVIDER_TIME_RANGE_MISSING:{panel_id}")
@@ -1146,6 +1175,78 @@ def upstream_validation_blockers(path: Path, context: ActiveContext) -> list[str
     return blockers
 
 
+def request_attempt_observation(
+    inputs: CompilationInputs, request_body_sha256: str
+) -> tuple[dict[str, Any], list[str]]:
+    digest = request_body_sha256.removeprefix("sha256:")
+    if not SHA256_RE.fullmatch(request_body_sha256):
+        return {
+            "state": "INVALID_REQUEST_HASH",
+            "actual_provider_call_attempts": 0,
+            "ledger_path": None,
+            "ledger_sha256": None,
+            "request_id": None,
+        }, ["BLOCKED_PHASE11_REQUEST_BODY_HASH_INVALID"]
+    path = (
+        inputs.context.revision_root
+        / "phase_11_submit_return"
+        / "attempts"
+        / digest
+        / "attempt_ledger.v1.json"
+    )
+    if not path.is_file():
+        return {
+            "state": "NOT_CREATED",
+            "actual_provider_call_attempts": 0,
+            "ledger_path": portable_run_path(inputs.context, path),
+            "ledger_sha256": None,
+            "request_id": None,
+        }, []
+    blockers: list[str] = []
+    try:
+        ledger = read_object(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {
+            "state": "INVALID",
+            "actual_provider_call_attempts": 0,
+            "ledger_path": portable_run_path(inputs.context, path),
+            "ledger_sha256": None,
+            "request_id": None,
+        }, ["BLOCKED_PHASE11_ATTEMPT_LEDGER_INVALID"]
+    blockers.extend(
+        f"BLOCKED_PHASE11_ATTEMPT_LEDGER_SCHEMA:{error}"
+        for error in validate_schema(ledger, "phase11_attempt_ledger.v1.schema.json")
+    )
+    expected = {
+        "run_id": inputs.context.run_id,
+        "revision_id": inputs.context.revision_id,
+        "activation_transaction_id": inputs.context.activation_transaction_id,
+        "endpoint": str(inputs.provider_snapshot.value.get("endpoint") or ""),
+        "request_key": digest,
+        "request_body_sha256": request_body_sha256,
+    }
+    for field, value in expected.items():
+        if ledger.get(field) != value:
+            blockers.append(f"BLOCKED_PHASE11_ATTEMPT_LEDGER_BINDING:{field}")
+    try:
+        attempts = int(ledger.get("actual_provider_call_attempts") or 0)
+    except (TypeError, ValueError):
+        attempts = 0
+        blockers.append("BLOCKED_PHASE11_ATTEMPT_LEDGER_ATTEMPT_COUNT")
+    if attempts not in {0, 1}:
+        blockers.append("BLOCKED_PHASE11_ATTEMPT_LEDGER_ATTEMPT_COUNT")
+    state = str(ledger.get("state") or "")
+    if state != "PREFLIGHT_READY":
+        blockers.append(f"BLOCKED_PHASE11_ATTEMPT_LEDGER_STATE:{state or 'MISSING'}")
+    return {
+        "state": state,
+        "actual_provider_call_attempts": attempts,
+        "ledger_path": portable_run_path(inputs.context, path),
+        "ledger_sha256": sha256_file(path),
+        "request_id": ledger.get("request_id"),
+    }, sorted(set(blockers))
+
+
 def approval_bindings(
     inputs: CompilationInputs,
     *,
@@ -1153,6 +1254,7 @@ def approval_bindings(
     media_input_contract_sha256: str,
     provider_snapshot_sha256: str,
     request_body_sha256: str,
+    actual_provider_call_attempts: int = 0,
 ) -> dict[str, Any]:
     pricing = inputs.provider_snapshot.value.get("pricing_source")
     pricing_sha = canonical_sha256(pricing if isinstance(pricing, Mapping) else {})
@@ -1167,7 +1269,7 @@ def approval_bindings(
         "media_input_contract_sha256": media_input_contract_sha256,
         "provider_source_snapshot_sha256": provider_snapshot_sha256,
         "pricing_snapshot_sha256": pricing_sha,
-        "actual_provider_call_attempts": 0,
+        "actual_provider_call_attempts": actual_provider_call_attempts,
     }
 
 
@@ -1378,9 +1480,15 @@ def inspect_approvals(inputs: CompilationInputs, bindings: Mapping[str, Any], cu
     statuses: dict[str, Any] = {}
     missing: list[str] = []
     blockers: list[str] = []
+    request_digest = str(bindings.get("request_body_sha256") or "").removeprefix("sha256:")
+    scoped_root = inputs.approval_root / request_digest
     for approval_type in APPROVAL_TYPES:
-        path = inputs.approval_root / APPROVAL_FILES[approval_type]
-        portable_path = portable_run_path(inputs.context, path)
+        scoped_path = scoped_root / APPROVAL_FILES[approval_type]
+        legacy_path = inputs.approval_root / APPROVAL_FILES[approval_type]
+        path = scoped_path if scoped_path.is_file() else legacy_path
+        portable_path = portable_run_path(
+            inputs.context, path if path.is_file() else scoped_path
+        )
         if not path.is_file():
             statuses[approval_type] = {"path": portable_path, "state": "MISSING", "sha256": None}
             missing.append(approval_type)
@@ -1390,6 +1498,14 @@ def inspect_approvals(inputs: CompilationInputs, bindings: Mapping[str, Any], cu
         except (OSError, json.JSONDecodeError, ValueError):
             statuses[approval_type] = {"path": portable_path, "state": "INVALID", "sha256": None}
             blockers.append(f"BLOCKED_APPROVAL_RECEIPT_INVALID:{approval_type}")
+            continue
+        if receipt.get("request_body_sha256") != bindings.get("request_body_sha256"):
+            statuses[approval_type] = {
+                "path": portable_path,
+                "state": "STALE_OTHER_REQUEST",
+                "sha256": sha256_file(path),
+            }
+            missing.append(approval_type)
             continue
         errors = validate_schema(receipt, "phase11_approval_receipt.v1.schema.json")
         if errors:
@@ -1422,6 +1538,12 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
     request_body, request_blockers, transformations = compile_request_body(inputs)
     media_manifest = build_media_binding_manifest(inputs, request_body)
     request_body_sha = canonical_sha256(request_body)
+    attempt_observation, attempt_blockers = request_attempt_observation(
+        inputs, request_body_sha
+    )
+    authoritative_attempts = int(
+        attempt_observation.get("actual_provider_call_attempts") or 0
+    )
     media_manifest_sha = serialized_file_sha256(media_manifest)
     bindings = approval_bindings(
         inputs,
@@ -1429,6 +1551,7 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         media_input_contract_sha256=str(media_manifest["media_input_contract_sha256"]),
         provider_snapshot_sha256=inputs.provider_snapshot.sha256,
         request_body_sha256=request_body_sha,
+        actual_provider_call_attempts=authoritative_attempts,
     )
     preflight_blockers = adapter_preflight_blockers(
         inputs,
@@ -1440,6 +1563,7 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         request_blockers
         + list(media_manifest.get("blockers") or [])
         + upstream_validation_blockers(inputs.validation_path, inputs.context)
+        + attempt_blockers
         + preflight_blockers
         + approval_blockers
     ))
@@ -1459,9 +1583,9 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
         "receipts": approval_statuses,
         "missing_approval_types": missing_approvals,
         "blockers": approval_blockers,
-        "actual_provider_call_attempts": 0,
-        "provider_live": False,
-        "submitted": False,
+        "actual_provider_call_attempts": authoritative_attempts,
+        "provider_live": authoritative_attempts > 0,
+        "submitted": authoritative_attempts > 0,
     }
     endpoint = str(inputs.provider_snapshot.value.get("endpoint") or inputs.candidate_binding.get("model") or "")
     mode = str(inputs.provider_snapshot.value.get("mode") or inputs.candidate_binding.get("mode") or provider_mode(endpoint)).lower()
@@ -1501,17 +1625,18 @@ def compile_bundle(inputs: CompilationInputs) -> tuple[dict[str, Any], dict[str,
                 inputs.context.revision_root / DEFAULT_ADAPTER_PREFLIGHT_RELATIVE,
             ),
             "media_binding_manifest_sha256": media_manifest_sha,
+            "attempt_ledger": attempt_observation,
         },
         "prompt_transformations": transformations,
         "cost": dict(pricing) if isinstance(pricing, Mapping) else {},
         "approval_bindings": bindings,
         "missing_approval_types": missing_approvals,
         "technical_blockers": sorted(set(technical_blockers)),
-        "actual_provider_call_attempts": 0,
-        "generation_call_started": False,
-        "provider_live": False,
+        "actual_provider_call_attempts": authoritative_attempts,
+        "generation_call_started": authoritative_attempts > 0,
+        "provider_live": authoritative_attempts > 0,
         "paid_call_authorized": False,
-        "submitted": False,
+        "submitted": authoritative_attempts > 0,
         "provider_ready": False,
         "live_submit_ready": False,
         "mocked": inputs.context.mocked,
@@ -1556,8 +1681,26 @@ def write_compiled_bundle(output_root: Path, media: Mapping[str, Any], approvals
     return paths
 
 
-def phase11_memory_key(run_id: str, revision_id: str) -> str:
+def legacy_phase11_memory_key(run_id: str, revision_id: str) -> str:
+    """Return the pre-request-scoping key for backward-readable history only."""
+
     digest = hashlib.sha256(f"persona-dream-phase11\0{run_id}\0{revision_id}".encode("utf-8")).hexdigest()
+    return f"pd_phase11_{digest[:48]}"
+
+
+def phase11_memory_key(
+    run_id: str,
+    revision_id: str,
+    request_body_sha256: str,
+) -> str:
+    """Return the immutable Memory identity for one exact Phase 11 request."""
+
+    require(
+        SHA256_RE.fullmatch(request_body_sha256) is not None,
+        "BLOCKED_PHASE11_REQUEST_BODY_HASH_INVALID",
+    )
+    identity = f"persona-dream-phase11-request\0{run_id}\0{revision_id}\0{request_body_sha256}"
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()
     return f"pd_phase11_{digest[:48]}"
 
 
@@ -1572,7 +1715,18 @@ def memory_document(
     technical_blockers: Sequence[str],
     missing_approvals: Sequence[str],
 ) -> dict[str, Any]:
-    key = phase11_memory_key(inputs.context.run_id, inputs.context.revision_id)
+    key = phase11_memory_key(
+        inputs.context.run_id,
+        inputs.context.revision_id,
+        request_body_sha256,
+    )
+    request_identity = request_body_sha256.removeprefix("sha256:")
+    attempt_observation, _attempt_blockers = request_attempt_observation(
+        inputs, request_body_sha256
+    )
+    authoritative_attempts = int(
+        attempt_observation.get("actual_provider_call_attempts") or 0
+    )
     document: dict[str, Any] = {
         "_key": key,
         "schema": "persona_dream.phase11_boundary.v1",
@@ -1593,20 +1747,21 @@ def memory_document(
         "technical_blockers": list(technical_blockers),
         "missing_approval_types": list(missing_approvals),
         "lifecycle_state": "TECHNICALLY_BLOCKED" if technical_blockers else "AWAITING_HUMAN_APPROVAL",
-        "provider_live": False,
+        "provider_live": authoritative_attempts > 0,
         "paid_call_authorized": False,
-        "submitted": False,
+        "submitted": authoritative_attempts > 0,
         "provider_ready": False,
         "live_submit_ready": False,
-        "actual_provider_call_attempts": 0,
-        "scope": f"persona-dream:{inputs.context.run_id}:{inputs.context.revision_id}:phase11",
-        "source": f"persona-dream://{inputs.context.run_id}/revisions/{inputs.context.revision_id}/phase11",
+        "actual_provider_call_attempts": authoritative_attempts,
+        "attempt_ledger": attempt_observation,
+        "scope": f"persona-dream:{inputs.context.run_id}:{inputs.context.revision_id}:phase11:request:{request_identity}",
+        "source": f"persona-dream://{inputs.context.run_id}/revisions/{inputs.context.revision_id}/phase11/requests/{request_identity}",
         "retrieval_text": (
             f"Persona Dream Phase 11 canonical pre-Kling boundary for run {inputs.context.run_id}, "
             f"active revision {inputs.context.revision_id}. Gate status {gate_status}. "
             f"Technical blockers: {', '.join(technical_blockers) or 'none'}. "
             f"Missing approvals: {', '.join(missing_approvals) or 'none'}. "
-            "No provider submission or generation call has occurred."
+            f"Authoritative attempts for this request hash: {authoritative_attempts}."
         ),
         "tags": [
             "persona-dream",
@@ -1614,6 +1769,7 @@ def memory_document(
             f"run:{inputs.context.run_id}",
             f"active-revision:{inputs.context.revision_id}",
             f"gate:{gate_status}",
+            f"phase11-request:{request_identity}",
         ],
     }
     document["document_contract_sha256"] = canonical_sha256(document)
@@ -1635,17 +1791,25 @@ def dense_score(item: Mapping[str, Any]) -> float:
         return 0.0
 
 
-def phase11_recall_payload(inputs: CompilationInputs, collection: str) -> dict[str, Any]:
+def phase11_recall_payload(
+    inputs: CompilationInputs,
+    collection: str,
+    request_body_sha256: str,
+) -> dict[str, Any]:
+    request_key = phase11_memory_key(
+        inputs.context.run_id,
+        inputs.context.revision_id,
+        request_body_sha256,
+    )
+    request_identity = request_body_sha256.removeprefix("sha256:")
     return {
         "q": (
             "What is the canonical pre-Kling Phase 11 state for Persona Dream "
-            f"run {inputs.context.run_id} revision {inputs.context.revision_id}?"
+            f"run {inputs.context.run_id}, revision {inputs.context.revision_id}, "
+            f"exact request {request_body_sha256}, Memory key {request_key}?"
         ),
         "collections": [collection],
-        # Memory tag filtering is OR-like across broad tags in current deployments.
-        # The active-revision tag alone is the narrow durable identity boundary
-        # shared by the active pointer and this exact Phase 11 record.
-        "tags": [f"active-revision:{inputs.context.revision_id}"],
+        "tags": [f"phase11-request:{request_identity}"],
         "k": 20,
         "threshold": 0.0,
     }
@@ -1686,6 +1850,18 @@ def persist_phase11_boundary(
     require(isinstance(activation_memory, Mapping), "BLOCKED_MEMORY_ACTIVE_REVISION_UNPROVEN")
     active_key = str(activation_memory.get("active_pointer_key") or "")
     phase11_key = str(document.get("_key") or "")
+    request_body_sha256 = str(document.get("request_body_sha256") or "")
+    expected_phase11_key = phase11_memory_key(
+        inputs.context.run_id,
+        inputs.context.revision_id,
+        request_body_sha256,
+    )
+    require(
+        phase11_key == expected_phase11_key,
+        "BLOCKED_PHASE11_MEMORY_KEY_IDENTITY",
+        expected=expected_phase11_key,
+        observed=phase11_key,
+    )
     with MemoryClient(memory_url, connect_timeout=connect_timeout, read_timeout=read_timeout) as client:
         active_list_payload = {
             "collection": collection,
@@ -1727,7 +1903,9 @@ def persist_phase11_boundary(
         missing_semantic = [field for field in SEMANTIC_REQUIRED_FIELDS if observed.get(field) in (None, "")]
         require(not missing_semantic and observed.get("semantic_sync_state") == "synced", "BLOCKED_MEMORY_SEMANTIC_SYNC_REQUIRED", missing_fields=missing_semantic)
 
-        recall_payload = phase11_recall_payload(inputs, collection)
+        recall_payload = phase11_recall_payload(
+            inputs, collection, request_body_sha256
+        )
         recall_evidence = client.post("/recall", recall_payload)
         recall_summary = validate_phase11_recall_items(
             recall_evidence.response.get("items"), phase11_key
@@ -1737,10 +1915,13 @@ def persist_phase11_boundary(
         "persisted": True,
         "collection": collection,
         "phase11_key": phase11_key,
+        "legacy_phase11_key": legacy_phase11_memory_key(inputs.context.run_id, inputs.context.revision_id),
+        "request_body_sha256": request_body_sha256,
         "active_pointer_key": active_key,
         "active_pointer_exact_reread_count": 1,
         "exact_reread_count": 1,
         "semantic_sync_state": "synced",
+        "actual_provider_call_attempts": int(document.get("actual_provider_call_attempts") or 0),
         "qdrant_collection": observed.get("qdrant_collection"),
         "qdrant_point_id": observed.get("qdrant_point_id"),
         "embedding_model": observed.get("embedding_model"),

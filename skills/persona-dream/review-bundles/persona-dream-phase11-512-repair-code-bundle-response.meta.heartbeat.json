@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-16T12:44:02Z",
+  "submitted_at": "2026-07-16T12:28:41Z",
+  "last_browser_observation_at": "2026-07-16T12:44:02Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-512-repair-code-bundle-response.raw.md",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-512-repair-code-bundle-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260716T122838Z:df3a536b>>>",
+  "prepared_prompt_is_transport_proof": false
+}

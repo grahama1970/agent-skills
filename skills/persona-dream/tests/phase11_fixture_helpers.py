@@ -265,16 +265,24 @@ def make_compilation_inputs(tmp_path: Path):
     prompts = []
     ranges = ((0, 2.5), (2.5, 5), (5, 7.5), (7.5, 10))
     durations = (2, 3, 2, 3)
-    for number, ((start, end), duration) in enumerate(zip(ranges, durations), 1):
+    source_actions = (
+        "Waterline wide establishing frame at Kahaluʻu Bay. Embry and Kai wait outside the lineup over visible lava reef and respect surf etiquette.",
+        "Medium waterline action on Embry. Her palm loses grip on sun-softened wax before the lava reef; heat, sweat, and fatigue remain visible while Kai stays outside.",
+        "Medium-wide lineup frame. Kai reads the safe channel, reef, and surf etiquette before signaling Embry to wait; Embry remains the decision-maker.",
+        "Waterline finish. Embry chooses and commits through the safe channel above visible lava reef while Kai stays outside; the controlled decision preserves agency.",
+    )
+    for number, ((start, end), duration, action) in enumerate(
+        zip(ranges, durations, source_actions), 1
+    ):
         panel_id = f"SB_{number:03d}"
         prompt = (
             f"{panel_id} provider-distilled shot for Kling v3 Pro I2V. "
             f"Create storyboard panel {panel_id} for a 10-second surf scene, time range {start}s-{end}s. "
-            "Embry and Kai hold position near the lineup. Preserve @Element1 Embry and @Element2 Kai identity continuity. "
+            f"{action} Preserve @Element1 Embry and @Element2 Kai identity continuity. "
         )
         if number == 3:
-            prompt += "Kai then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Embry remains the decision-maker. Dialogue cue: Kai quietly says, \"If we paddle now, we're cutting across the lineup.\" Keep it restrained. "
-        prompt += "Avoid identity drift."
+            prompt += "Kai then gives one restrained cue: 'If we paddle now, we're cutting across the lineup.' Dialogue cue: Kai quietly says, \"If we paddle now, we're cutting across the lineup.\" "
+        prompt += "Use cinematic waterline motion, heat glare, salt spray, public lineup geometry, restrained decision pressure, and avoid identity drift, overlays, blur, and distortion."
         prompts.append({"duration": str(duration), "prompt": prompt})
 
     elements = [

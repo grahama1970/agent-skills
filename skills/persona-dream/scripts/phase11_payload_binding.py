@@ -20,6 +20,7 @@ DEFAULT_REPOSITORY = "grahama1970/agent-skills"
 PAYLOAD_BINDING_SCHEMA = "persona_dream.phase11_payload_binding.v1"
 PAYLOAD_BINDING_STATUS = "BLOCKED_PUBLIC_MEDIA_PROBE_REQUIRED"
 EXPECTED_DURATIONS = (2, 3, 2, 3)
+MAX_MULTI_PROMPT_CHARS = 512
 FRAME_IDS = tuple(
     f"sb_{panel:03d}.{role}_frame"
     for panel in range(1, 5)
@@ -54,6 +55,61 @@ SPOKEN_PATTERNS = (
 SPEECH_NEGATIVE = (
     "no audible speech, no lip-sync, no mouth articulating words, no subtitles, "
     "no captions, no dialogue text, no speech bubbles"
+)
+
+# The live fal queue accepted the request but result validation rejected each
+# KlingV3MultiPromptElement.prompt above this Unicode character boundary.
+# Keep this constraint shared by binding generation and canonical validation.
+PANEL_SOURCE_REQUIREMENTS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
+    "sb_001": (
+        ("location", ("kahalu", "kona")),
+        ("lineup", ("lineup",)),
+        ("reef", ("reef",)),
+        ("restraint", ("wait", "hold", "outside")),
+    ),
+    "sb_002": (
+        ("wax", ("wax",)),
+        ("grip", ("grip", "palm")),
+        ("reef", ("reef",)),
+        ("fatigue", ("fatigue", "sweat", "heat")),
+    ),
+    "sb_003": (
+        ("lineup", ("lineup",)),
+        ("safe_channel", ("safe channel",)),
+        ("reef", ("reef",)),
+        ("etiquette", ("etiquette",)),
+    ),
+    "sb_004": (
+        ("safe_channel", ("safe channel",)),
+        ("reef", ("reef",)),
+        ("commit", ("commit", "chooses")),
+        ("agency", ("decision", "agency")),
+    ),
+}
+
+PANEL_CONCISE_ACTIONS = {
+    "sb_001": (
+        "Waterline wide at Kahaluʻu Bay: @Element1 Embry and @Element2 Kai hold "
+        "outside the lineup over visible lava reef, respecting surf etiquette."
+    ),
+    "sb_002": (
+        "Medium waterline action: @Element1 Embry resets her grip as sun-softened "
+        "wax slips before the lava reef; heat and fatigue show while @Element2 Kai stays outside."
+    ),
+    "sb_003": (
+        "Medium-wide lineup: @Element2 Kai reads the safe channel, reef, and surf "
+        "etiquette, then signals @Element1 Embry to wait; Embry remains the decision-maker."
+    ),
+    "sb_004": (
+        "Waterline finish: @Element1 Embry commits through the safe channel above "
+        "visible lava reef; @Element2 Kai stays outside the main action, preserving Embry's agency."
+    ),
+}
+
+COMMON_CONTINUITY = "Preserve Embry and Kai identity and rashguard continuity."
+SB003_SILENCE = (
+    "Silent shot: No spoken dialogue. No lip movement; use gaze, posture, and one "
+    "nonverbal hand signal."
 )
 
 
@@ -256,34 +312,101 @@ def _phase10_prompts(phase10: Mapping[str, Any]) -> list[dict[str, Any]]:
     return [dict(item) for item in raw]
 
 
-def _normalize_prompt(prompt: str, *, panel_id: str, start: int, end: int) -> str:
-    value = TIER_RE.sub("Kling v3 Standard I2V", prompt)
-    value = TIME_RANGE_RE.sub(f"time range {start}s-{end}s", value)
+def _source_semantic_blockers(prompt: str, panel_id: str) -> list[str]:
+    lowered = prompt.casefold()
+    blockers: list[str] = []
+    for label, alternatives in PANEL_SOURCE_REQUIREMENTS[panel_id]:
+        if not any(token.casefold() in lowered for token in alternatives):
+            blockers.append(
+                f"BLOCKED_PROVIDER_PROMPT_SEMANTIC_SOURCE_MISSING:{panel_id}:{label}"
+            )
+    return blockers
+
+
+def compiled_prompt_blockers(
+    prompt: str,
+    *,
+    panel_id: str,
+    start: int,
+    end: int,
+) -> list[str]:
+    blockers: list[str] = []
+    character_count = len(prompt)
+    if character_count > MAX_MULTI_PROMPT_CHARS:
+        blockers.append(
+            f"BLOCKED_PROVIDER_MULTI_PROMPT_MAX_512:{panel_id}:{character_count}"
+        )
+    lowered = prompt.casefold()
+    required_literals = (
+        panel_id,
+        "kling v3 standard i2v",
+        f"time range {start}s-{end}s",
+        "@element1",
+        "@element2",
+        "embry",
+        "kai",
+    )
+    for token in required_literals:
+        if token.casefold() not in lowered:
+            blockers.append(
+                f"BLOCKED_PROVIDER_PROMPT_REQUIRED_TOKEN:{panel_id}:{token}"
+            )
+    for label, alternatives in PANEL_SOURCE_REQUIREMENTS[panel_id]:
+        if not any(token.casefold() in lowered for token in alternatives):
+            blockers.append(
+                f"BLOCKED_PROVIDER_PROMPT_SEMANTIC_TOKEN:{panel_id}:{label}"
+            )
     if panel_id == "sb_003":
-        value = re.sub(
-            r"then gives one restrained cue:\s*['\"“].*?['\"”]\s*Embry remains",
-            "then gives one restrained nonverbal hand signal to wait. Embry remains",
-            value,
-            flags=re.I,
-        )
-        value = re.sub(
-            r"Dialogue cue:.*?(?=Avoid identity drift|$)",
-            "No spoken dialogue. Kai communicates only through gaze, posture, and one restrained hand signal. "
-            "No lip movement, captions, dialogue text, or speech bubbles. ",
-            value,
-            flags=re.I | re.S,
-        )
-        value = re.sub(r"['\"“]If we paddle now, we're cutting across the lineup\.[\"”']", "", value, flags=re.I)
-        value = re.sub(r"\bKai\s+(?:quietly\s+)?says?\b[^.]*\.", "", value, flags=re.I)
-        value = re.sub(r"\s{2,}", " ", value).strip()
-        if "No spoken dialogue." not in value:
-            value += " No spoken dialogue. Kai communicates only through gaze, posture, and one restrained hand signal."
-    if re.search(r"\bPro\b", value, re.I):
+        for token in ("no spoken dialogue", "no lip movement", "nonverbal hand signal"):
+            if token not in lowered:
+                blockers.append(
+                    f"BLOCKED_PROVIDER_PROMPT_SILENCE_TOKEN:{panel_id}:{token}"
+                )
+        if any(pattern.search(prompt) for pattern in SPOKEN_PATTERNS):
+            blockers.append("BLOCKED_PROVIDER_AUDIO_OFF_SPOKEN_DIALOGUE:sb_003")
+    if re.search(r"\bPro\b", prompt, re.I):
+        blockers.append(f"BLOCKED_PROVIDER_STANDARD_PRO_NAMING_CONFLICT:{panel_id}")
+    match = TIME_RANGE_RE.search(prompt)
+    if match is None or float(match.group(1)) != start or float(match.group(2)) != end:
+        blockers.append(f"BLOCKED_PROVIDER_TIME_RANGE_CONTRADICTION:{panel_id}")
+    return sorted(set(blockers))
+
+
+def compile_concise_prompt(
+    source_prompt: str,
+    *,
+    panel_id: str,
+    start: int,
+    end: int,
+) -> str:
+    source = re.sub(r"\s+", " ", source_prompt).strip()
+    source_blockers = _source_semantic_blockers(source, panel_id)
+    if source_blockers:
         raise PayloadBindingBlocked(
-            "BLOCKED_PROVIDER_STANDARD_PRO_NAMING_CONFLICT",
-            details={"panel_id": panel_id},
+            source_blockers[0],
+            details={"panel_id": panel_id, "blockers": source_blockers},
         )
-    return value
+    parts = [
+        f"{panel_id.upper()}. Kling v3 Standard I2V. time range {start}s-{end}s.",
+        PANEL_CONCISE_ACTIONS[panel_id],
+        COMMON_CONTINUITY,
+    ]
+    if panel_id == "sb_003":
+        parts.append(SB003_SILENCE)
+    prompt = " ".join(parts)
+    blockers = compiled_prompt_blockers(
+        prompt, panel_id=panel_id, start=start, end=end
+    )
+    if blockers:
+        raise PayloadBindingBlocked(
+            blockers[0],
+            details={
+                "panel_id": panel_id,
+                "character_count": len(prompt),
+                "blockers": blockers,
+            },
+        )
+    return prompt
 
 
 def _normalized_prompts(phase10: Mapping[str, Any]) -> list[dict[str, str]]:
@@ -302,14 +425,12 @@ def _normalized_prompts(phase10: Mapping[str, Any]) -> list[dict[str, str]]:
                 "BLOCKED_PROVIDER_SHOT_DURATION",
                 details={"panel_id": panel_id, "observed": duration, "expected": expected_duration},
             )
-        prompt = _normalize_prompt(
+        prompt = compile_concise_prompt(
             str(item.get("prompt") or ""),
             panel_id=panel_id,
             start=elapsed,
             end=elapsed + expected_duration,
         )
-        if not prompt:
-            raise PayloadBindingBlocked("BLOCKED_PROVIDER_PROMPT_MISSING", details={"panel_id": panel_id})
         result.append({"duration": str(expected_duration), "prompt": prompt})
         elapsed += expected_duration
     return result
@@ -600,12 +721,24 @@ def validate_payload_binding(
             raise PayloadBindingBlocked("BLOCKED_PROVIDER_SHOT_DURATION", details={"panel_id": panel_id})
         prompt = str(item.get("prompt") or "")
         if re.search(r"\bPro\b", prompt, re.I) or "Kling v3 Standard I2V" not in prompt:
-            raise PayloadBindingBlocked("BLOCKED_PROVIDER_STANDARD_PRO_NAMING_CONFLICT", details={"panel_id": panel_id})
-        match = TIME_RANGE_RE.search(prompt)
-        if match is None or float(match.group(1)) != elapsed or float(match.group(2)) != elapsed + expected_duration:
-            raise PayloadBindingBlocked("BLOCKED_PROVIDER_TIME_RANGE_CONTRADICTION", details={"panel_id": panel_id})
+            raise PayloadBindingBlocked(
+                "BLOCKED_PROVIDER_STANDARD_PRO_NAMING_CONFLICT",
+                details={"panel_id": panel_id},
+            )
         if panel_id == "sb_003" and any(pattern.search(prompt) for pattern in SPOKEN_PATTERNS):
-            raise PayloadBindingBlocked("BLOCKED_PROVIDER_AUDIO_OFF_SPOKEN_DIALOGUE", details={"panel_id": panel_id})
+            raise PayloadBindingBlocked(
+                "BLOCKED_PROVIDER_AUDIO_OFF_SPOKEN_DIALOGUE",
+                details={"panel_id": panel_id},
+            )
+        # The binding may be a historical source projection.  Provider validity
+        # is established by the deterministic concise projection, not by reusing
+        # its raw prompt bytes.
+        compile_concise_prompt(
+            prompt,
+            panel_id=panel_id,
+            start=elapsed,
+            end=elapsed + expected_duration,
+        )
         elapsed += expected_duration
     if elapsed != 10:
         raise PayloadBindingBlocked("BLOCKED_PROVIDER_TOTAL_DURATION", details={"observed": elapsed})

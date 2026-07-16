@@ -1,0 +1,75 @@
+{
+  "agent_action": "Do not use output as proof. If ChatGPT visibly completed, run webgpt.extract with the exact sentinel; otherwise resubmit to a clean verified tab.",
+  "agent_diagnosis": "Surf captured response text, but it did not contain the current completion sentinel in assistant output.",
+  "clean_chars": 134,
+  "clean_contains_sentinel": false,
+  "controlled_tab_id": "837358135",
+  "conversation_url": null,
+  "extract_fallback_meta": null,
+  "extract_fallback_raw": null,
+  "extract_fallback_reason": "missing_sentinel",
+  "extract_fallback_used": false,
+  "failure": "missing_sentinel",
+  "finished_at": "2026-07-16T14:27:46Z",
+  "input": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle.submitted-code.md",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-response.md",
+  "proof_status": "submitted_no_response_proof",
+  "raw_chars": 134,
+  "raw_contains_sentinel": false,
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-response.raw.md",
+  "raw_response_advisory": true,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837358135",
+  "requested_url": null,
+  "response_source": null,
+  "response_timed_out": null,
+  "roundtrip_preflight": null,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight_required": false,
+  "sentinel": "<<<WEBGPT_DONE:20260716T141232Z:6f688a00>>>",
+  "started_at": "2026-07-16T14:12:35Z",
+  "status": "missing_sentinel",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.V807U3.log",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-response.md.submitted.md",
+  "submitted_to_chatgpt": true,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-response.meta.surf-doctor-request.json",
+  "tab_identity_preflight": {
+    "chatgpt_tabs_count": 8,
+    "checks": [
+      {
+        "detail": "837358135",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "expected_url matched tab 837358135",
+        "name": "expected_url_matches_tab",
+        "ok": true
+      },
+      {
+        "detail": "verified",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      }
+    ],
+    "error": null,
+    "expected_title": null,
+    "expected_url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193/c/6a50d492-490c-83ea-a034-4760ea336861",
+    "ok": true,
+    "source": "tab-id",
+    "tab": {
+      "id": "837358135",
+      "title": "Dream - Persona Dream Assessment",
+      "url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193/c/6a50d492-490c-83ea-a034-4760ea336861"
+    },
+    "tab_id": "837358135"
+  },
+  "timeout_error": null
+}

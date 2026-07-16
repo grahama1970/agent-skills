@@ -37,6 +37,7 @@ from phase11_canonical_common import (
     output_paths,
     parse_time,
     portable_run_path,
+    request_attempt_observation,
     read_object,
     serialized_file_sha256,
     sha256_file,
@@ -51,6 +52,7 @@ ADAPTER_PREFLIGHT_NAME = "phase11_adapter_preflight_receipt.v1.json"
 ATTEMPT_LEDGER_NAME = "attempt_ledger.v1.json"
 DOWNLOAD_RECEIPT_NAME = "phase11_download_ffprobe_receipt.v1.json"
 RETURN_ENVELOPE_NAME = "phase11_provider_return_envelope.v1.json"
+PROVIDER_RESULT_ERROR_RECEIPT_NAME = "provider_result_error_receipt.v1.json"
 DEFAULT_PREFLIGHT_TTL_SECONDS = 3600
 MAX_PREFLIGHT_TTL_SECONDS = 3600
 MAX_POLL_TIMEOUT_SECONDS = 1800
@@ -172,6 +174,12 @@ def build_execution_state(inputs: Any) -> ExecutionState:
     request_body, request_blockers, _ = compile_request_body(inputs)
     media_manifest = build_media_binding_manifest(inputs, request_body)
     request_body_sha = canonical_sha256(request_body)
+    attempt_observation, attempt_blockers = request_attempt_observation(
+        inputs, request_body_sha
+    )
+    authoritative_attempts = int(
+        attempt_observation.get("actual_provider_call_attempts") or 0
+    )
     media_manifest_sha = serialized_file_sha256(media_manifest)
     bindings = approval_bindings(
         inputs,
@@ -179,12 +187,14 @@ def build_execution_state(inputs: Any) -> ExecutionState:
         media_input_contract_sha256=str(media_manifest.get("media_input_contract_sha256") or ""),
         provider_snapshot_sha256=inputs.provider_snapshot.sha256,
         request_body_sha256=request_body_sha,
+        actual_provider_call_attempts=authoritative_attempts,
     )
     blockers = sorted(
         set(
             request_blockers
             + list(media_manifest.get("blockers") or [])
             + upstream_validation_blockers(inputs.validation_path, inputs.context)
+            + attempt_blockers
         )
     )
     canonical_root = inputs.context.revision_root / DEFAULT_OUTPUT_RELATIVE
@@ -337,6 +347,7 @@ def new_preflight_ledger(inputs: Any, request_body_sha256: str, current: datetim
         "actual_provider_call_attempts": 0,
         "request_id": None,
         "ambiguous_submit": False,
+        "automatic_resubmit_allowed": False,
         "poll_count": 0,
         "created_at": iso(current),
         "updated_at": iso(current),
@@ -492,12 +503,12 @@ def run_adapter_preflight(
         "expires_at": iso(expires_at),
         "mocked": bool(inputs.context.mocked),
         "live": not bool(inputs.context.mocked),
-        "provider_live": False,
+        "provider_live": int(ledger.get("actual_provider_call_attempts") or 0) > 0,
         "paid_call_authorized": False,
-        "submitted": False,
+        "submitted": int(ledger.get("actual_provider_call_attempts") or 0) > 0,
         "provider_ready": False,
         "live_submit_ready": False,
-        "actual_provider_call_attempts": 0,
+        "actual_provider_call_attempts": int(ledger.get("actual_provider_call_attempts") or 0),
     }
     schema_errors = validate_schema(receipt, "phase11_adapter_preflight_receipt.v1.schema.json")
     if schema_errors:
@@ -623,7 +634,10 @@ def write_approval_receipts(
         inputs, packet, packet_path=packet_path, current=current
     )
     expected = {str(receipt["approval_type"]): receipt for receipt in receipts}
-    approval_root = inputs.approval_root
+    approval_root = (
+        inputs.approval_root
+        / request_digest(str(bindings["request_body_sha256"]))
+    )
     written_now = False
 
     def validate_existing_set() -> None:
@@ -753,6 +767,25 @@ def submit_once(
             raise Phase11Blocked(blockers[0], details={"blockers": blockers})
         request_id = str(ledger.get("request_id") or "")
         if request_id:
+            if ledger.get("state") == "FAILED":
+                last_error = ledger.get("last_error")
+                status = (
+                    str(last_error.get("status") or "")
+                    if isinstance(last_error, Mapping)
+                    else ""
+                )
+                raise Phase11Blocked(
+                    status or "BLOCKED_PHASE11_PROVIDER_TASK_FAILED",
+                    details={
+                        "request_id": request_id,
+                        "automatic_resubmit_allowed": False,
+                    },
+                )
+            if ledger.get("state") == "COMPLETED":
+                raise Phase11Blocked(
+                    "BLOCKED_PHASE11_REQUEST_ALREADY_COMPLETED",
+                    details={"request_id": request_id},
+                )
             return SubmitDecision("resume_existing_task", request_id, ledger)
         if ledger.get("state") != "PREFLIGHT_READY" or int(ledger.get("submit_intent_count") or 0) != 0:
             raise Phase11Blocked("BLOCKED_PHASE11_DUPLICATE_SUBMIT_PREVENTED")
@@ -809,6 +842,219 @@ def update_poll_state(
         append_history(ledger, state, current, poll_count=poll_count)
         atomic_write_json(path, ledger)
         return ledger
+
+
+def _error_response_payload(exc: BaseException) -> tuple[int | None, Any]:
+    response = getattr(exc, "response", None)
+    status = getattr(exc, "status_code", None)
+    if status is None and response is not None:
+        status = getattr(response, "status_code", None)
+    try:
+        http_status = int(status) if status is not None else None
+    except (TypeError, ValueError):
+        http_status = None
+    payload: Any = None
+    if response is not None:
+        try:
+            payload = response.json()
+        except Exception:
+            payload = None
+    if payload is None:
+        for name in ("body", "detail", "errors"):
+            value = getattr(exc, name, None)
+            if value is not None:
+                payload = value
+                break
+    return http_status, payload
+
+
+def normalize_provider_errors(exc: BaseException) -> tuple[int | None, list[dict[str, Any]]]:
+    http_status, payload = _error_response_payload(exc)
+    raw_errors: Any = payload
+    if isinstance(payload, Mapping):
+        raw_errors = payload.get("detail", payload.get("errors", payload))
+    if not isinstance(raw_errors, list):
+        raw_errors = [raw_errors] if raw_errors not in (None, "") else []
+    normalized: list[dict[str, Any]] = []
+    for raw in raw_errors:
+        item = dict(raw) if isinstance(raw, Mapping) else {}
+        location = item.get("loc") or item.get("location") or []
+        if not isinstance(location, list):
+            location = [str(location)]
+        message = str(
+            item.get("msg")
+            or item.get("message")
+            or item.get("detail")
+            or raw
+            or str(exc)
+            or type(exc).__name__
+        )
+        context = item.get("ctx")
+        context_error = (
+            str(context.get("error"))
+            if isinstance(context, Mapping) and context.get("error") is not None
+            else None
+        )
+        input_value = item.get("input")
+        input_text = input_value if isinstance(input_value, str) else None
+        normalized.append(
+            {
+                "location": [part if isinstance(part, (str, int)) else str(part) for part in location],
+                "message": message,
+                "type": str(item.get("type") or type(exc).__name__),
+                "context_error": context_error,
+                "input_character_count": len(input_text) if input_text is not None else None,
+                "input_sha256": (
+                    "sha256:" + hashlib.sha256(input_text.encode("utf-8")).hexdigest()
+                    if input_text is not None
+                    else None
+                ),
+            }
+        )
+    if not normalized:
+        normalized.append(
+            {
+                "location": [],
+                "message": str(exc) or type(exc).__name__,
+                "type": type(exc).__name__,
+                "context_error": None,
+                "input_character_count": None,
+                "input_sha256": None,
+            }
+        )
+    normalized.sort(
+        key=lambda item: (
+            json.dumps(item["location"], separators=(",", ":")),
+            item["type"],
+            item["message"],
+        )
+    )
+    return http_status, normalized
+
+
+def persist_provider_result_error(
+    inputs: Any,
+    request_body_sha256: str,
+    *,
+    endpoint: str,
+    request_id: str,
+    current: datetime,
+    poll_count: int,
+    error: BaseException,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    path = attempt_ledger_path(inputs, request_body_sha256)
+    with ledger_lock(path):
+        ledger = load_ledger(path)
+        ledger_blockers = validate_ledger(ledger, inputs, request_body_sha256)
+        if ledger_blockers and not all(
+            blocker.startswith("BLOCKED_PHASE11_ATTEMPT_LEDGER_STATE:")
+            for blocker in ledger_blockers
+        ):
+            raise Phase11Blocked(
+                "BLOCKED_PHASE11_ATTEMPT_LEDGER_INVALID",
+                details={"blockers": ledger_blockers},
+            )
+        if str(ledger.get("request_id") or "") != request_id:
+            raise Phase11Blocked(
+                "BLOCKED_PHASE11_ATTEMPT_LEDGER_REQUEST_ID_MISMATCH"
+            )
+        if int(ledger.get("actual_provider_call_attempts") or 0) != 1:
+            raise Phase11Blocked(
+                "BLOCKED_PHASE11_ATTEMPT_LEDGER_ATTEMPT_COUNT"
+            )
+
+        http_status, errors = normalize_provider_errors(error)
+        if http_status == 422:
+            status = "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION"
+            terminal_state = "RESULT_VALIDATION_FAILED"
+        elif isinstance(error, Phase11Blocked):
+            status = "BLOCKED_PHASE11_PROVIDER_RESULT_SCHEMA"
+            terminal_state = "RESULT_SCHEMA_FAILED"
+        else:
+            status = "BLOCKED_PHASE11_PROVIDER_RESULT_HTTP_ERROR"
+            terminal_state = "RESULT_HTTP_FAILED"
+        receipt_path = path.parent / PROVIDER_RESULT_ERROR_RECEIPT_NAME
+        receipt = {
+            "schema": "persona_dream.phase11_provider_result_error_receipt.v1",
+            "status": status,
+            "run_id": inputs.context.run_id,
+            "revision_id": inputs.context.revision_id,
+            "activation_transaction_id": inputs.context.activation_transaction_id,
+            "endpoint": endpoint,
+            "request_body_sha256": request_body_sha256,
+            "request_id": request_id,
+            "http_status": http_status,
+            "errors": errors,
+            "error_count": len(errors),
+            "observed_at": iso(current),
+            "automatic_resubmit_allowed": False,
+            "returned_video": False,
+            "watch_invoked": False,
+            "actual_provider_call_attempts": 1,
+            "provider_live": True,
+            "submitted": True,
+        }
+        receipt_errors = validate_schema(
+            receipt, "phase11_provider_result_error_receipt.v1.schema.json"
+        )
+        if receipt_errors:
+            raise Phase11Blocked(
+                "BLOCKED_PHASE11_PROVIDER_RESULT_ERROR_RECEIPT_SCHEMA",
+                details={"errors": receipt_errors},
+            )
+        payload = (
+            json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        ).encode("utf-8")
+        if receipt_path.is_file():
+            existing = receipt_path.read_bytes()
+            if existing != payload:
+                existing_receipt = read_object(receipt_path)
+                if (
+                    existing_receipt.get("request_body_sha256") != request_body_sha256
+                    or existing_receipt.get("request_id") != request_id
+                    or existing_receipt.get("status") != status
+                ):
+                    raise Phase11Blocked(
+                        "BLOCKED_PHASE11_PROVIDER_RESULT_ERROR_RECEIPT_CONFLICT"
+                    )
+                receipt = existing_receipt
+        else:
+            atomic_write_json(receipt_path, receipt)
+
+        receipt_sha = sha256_file(receipt_path)
+        ledger["state"] = "FAILED"
+        ledger["poll_count"] = poll_count
+        ledger["provider_terminal_state"] = terminal_state
+        ledger["automatic_resubmit_allowed"] = False
+        ledger["last_error"] = {
+            "status": status,
+            "http_status": receipt.get("http_status"),
+            "error_count": receipt.get("error_count"),
+            "receipt_relative_path": portable_run_path(inputs.context, receipt_path),
+            "receipt_sha256": receipt_sha,
+            "automatic_resubmit_allowed": False,
+        }
+        if not any(
+            isinstance(item, Mapping)
+            and item.get("event") == "FAILED"
+            and item.get("receipt_sha256") == receipt_sha
+            for item in ledger.get("history", [])
+        ):
+            append_history(
+                ledger,
+                "FAILED",
+                current,
+                poll_count=poll_count,
+                receipt_sha256=receipt_sha,
+            )
+        ledger_errors = validate_schema(ledger, "phase11_attempt_ledger.v1.schema.json")
+        if ledger_errors:
+            raise Phase11Blocked(
+                "BLOCKED_PHASE11_ATTEMPT_LEDGER_SCHEMA",
+                details={"errors": ledger_errors},
+            )
+        atomic_write_json(path, ledger)
+        return receipt, ledger
 
 
 def download_provider_video(

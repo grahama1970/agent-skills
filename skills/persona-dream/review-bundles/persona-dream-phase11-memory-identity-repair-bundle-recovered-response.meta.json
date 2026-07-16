@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-recovered-response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/persona-dream-phase11-memory-identity-repair-bundle-recovered-response.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-extract-stderr.k8w3Cb.log",
+  "sentinel": "<<<WEBGPT_DONE:20260716T141232Z:6f688a00>>>",
+  "requested_tab_id": "837358135",
+  "controlled_tab_id": "837358135",
+  "response_source": "assistant-dom",
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": false,
+  "raw_chars": 11745,
+  "clean_chars": 11700,
+  "started_at": "2026-07-16T14:35:06Z",
+  "finished_at": "2026-07-16T14:41:48Z"
+}

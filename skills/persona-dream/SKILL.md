@@ -453,14 +453,15 @@ does not prove Phase 11 submission/return or Phases 12-16.
 The current canonical Phase 11 pre-Kling boundary for that revision is:
 
 ```text
-request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
 validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
 adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
 gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
 technical_blockers: 0
 missing_hash_bound_approvals: 5
 memory_exact_reread_count: 1
-memory_dense_recall_max: 0.76713914
+memory_request_scoped_key: pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad
+memory_dense_recall_max: 0.792625
 actual_provider_call_attempts: 0
 provider_ready: false
 live_submit_ready: false

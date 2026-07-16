@@ -43,6 +43,7 @@
     "actual_provider_call_attempts": {"type": "integer", "minimum": 0, "maximum": 1},
     "request_id": {"type": ["string", "null"]},
     "ambiguous_submit": {"type": "boolean"},
+    "automatic_resubmit_allowed": {"const": false},
     "poll_count": {"type": "integer", "minimum": 0, "maximum": 360},
     "created_at": {"type": "string", "format": "date-time"},
     "updated_at": {"type": "string", "format": "date-time"},

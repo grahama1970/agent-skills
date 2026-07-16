@@ -21,12 +21,12 @@
     "memory": {"type": "object", "required": ["persisted"]},
     "mocked": {"type": "boolean"},
     "live": {"type": "boolean"},
-    "provider_live": {"const": false},
+    "provider_live": {"type": "boolean"},
     "paid_call_authorized": {"const": false},
-    "submitted": {"const": false},
+    "submitted": {"type": "boolean"},
     "provider_ready": {"const": false},
     "live_submit_ready": {"const": false},
-    "actual_provider_call_attempts": {"const": 0}
+    "actual_provider_call_attempts": {"type": "integer", "minimum": 0, "maximum": 1}
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}

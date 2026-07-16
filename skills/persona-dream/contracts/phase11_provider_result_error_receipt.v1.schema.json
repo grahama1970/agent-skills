@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_provider_result_error_receipt.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "revision_id",
+    "activation_transaction_id",
+    "endpoint",
+    "request_body_sha256",
+    "request_id",
+    "http_status",
+    "errors",
+    "error_count",
+    "observed_at",
+    "automatic_resubmit_allowed",
+    "returned_video",
+    "watch_invoked",
+    "actual_provider_call_attempts",
+    "provider_live",
+    "submitted"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_provider_result_error_receipt.v1"},
+    "status": {
+      "enum": [
+        "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION",
+        "BLOCKED_PHASE11_PROVIDER_RESULT_HTTP_ERROR",
+        "BLOCKED_PHASE11_PROVIDER_RESULT_SCHEMA"
+      ]
+    },
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "endpoint": {"type": "string", "minLength": 1},
+    "request_body_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "request_id": {"type": "string", "minLength": 1},
+    "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+    "errors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["location", "message", "type"],
+        "properties": {
+          "location": {"type": "array", "items": {"type": ["string", "integer"]}},
+          "message": {"type": "string", "minLength": 1},
+          "type": {"type": "string", "minLength": 1},
+          "context_error": {"type": ["string", "null"]},
+          "input_character_count": {"type": ["integer", "null"], "minimum": 0},
+          "input_sha256": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "error_count": {"type": "integer", "minimum": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "automatic_resubmit_allowed": {"const": false},
+    "returned_video": {"const": false},
+    "watch_invoked": {"const": false},
+    "actual_provider_call_attempts": {"const": 1},
+    "provider_live": {"const": true},
+    "submitted": {"const": true}
+  },
+  "additionalProperties": false
+}

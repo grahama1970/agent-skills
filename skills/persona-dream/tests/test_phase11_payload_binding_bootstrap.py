@@ -215,3 +215,43 @@ def test_provider_capture_invalid_binding_is_json_blocker_before_remote_fetch(
     assert output["actual_provider_call_attempts"] == 0
     assert output["provider_live"] is False
     assert output["submitted"] is False
+
+
+def test_multi_prompt_unicode_character_boundary_and_required_semantics() -> None:
+    base = binding_module.compile_concise_prompt(
+        "Waterline wide at Kahaluʻu Bay. Embry and Kai wait outside the lineup over visible lava reef.",
+        panel_id="sb_001",
+        start=0,
+        end=2,
+    )
+    exact = base + (" " * (binding_module.MAX_MULTI_PROMPT_CHARS - len(base)))
+    assert len(exact) == 512
+    assert binding_module.compiled_prompt_blockers(
+        exact, panel_id="sb_001", start=0, end=2
+    ) == []
+
+    over = exact + "x"
+    blockers = binding_module.compiled_prompt_blockers(
+        over, panel_id="sb_001", start=0, end=2
+    )
+    assert "BLOCKED_PROVIDER_MULTI_PROMPT_MAX_512:sb_001:513" in blockers
+
+
+def test_compiled_prompts_preserve_required_tokens_and_change_failed_request_hash(
+    tmp_path: Path,
+) -> None:
+    inputs, _request, _urls = make_compilation_inputs(tmp_path)
+    body, blockers, _changes = __import__("phase11_canonical_common").compile_request_body(inputs)
+    assert blockers == []
+    prompts = body["multi_prompt"]
+    assert [len(item["prompt"]) for item in prompts] == [247, 268, 362, 271]
+    for index, item in enumerate(prompts):
+        panel_id = f"sb_{index + 1:03d}"
+        start = sum((2, 3, 2, 3)[:index])
+        end = start + (2, 3, 2, 3)[index]
+        assert binding_module.compiled_prompt_blockers(
+            item["prompt"], panel_id=panel_id, start=start, end=end
+        ) == []
+    assert __import__("phase11_canonical_common").canonical_sha256(body) != (
+        "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71"
+    )

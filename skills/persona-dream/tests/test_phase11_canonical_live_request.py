@@ -309,13 +309,38 @@ def test_upstream_12_of_15_false_green_is_an_explicit_technical_blocker(tmp_path
     assert "BLOCKED_UPSTREAM_VALIDATION_FALSE_GREEN_FIRST_BLOCKER_NULL" in request["technical_blockers"]
 
 
+def test_phase11_memory_key_is_stable_request_scoped_and_legacy_readable():
+    run_id = "pipeline-complete"
+    revision_id = "rev_idea_f3f9c48d5cc2"
+    failed_request = "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71"
+    corrected_request = "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16"
+
+    legacy = common.legacy_phase11_memory_key(run_id, revision_id)
+    failed = common.phase11_memory_key(run_id, revision_id, failed_request)
+    corrected = common.phase11_memory_key(run_id, revision_id, corrected_request)
+
+    assert legacy == "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941"
+    assert failed == "pd_phase11_ab56b1cf2875c1c9c35871073006bdc779397deae2777732"
+    assert corrected == "pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad"
+    assert len({legacy, failed, corrected}) == 3
+    assert common.phase11_memory_key(run_id, revision_id, failed_request) == failed
+    assert common.phase11_memory_key(run_id, revision_id, corrected_request) == corrected
+
+    with pytest.raises(common.Phase11Blocked) as invalid:
+        common.phase11_memory_key(run_id, revision_id, "sha256:not-a-request-hash")
+    assert invalid.value.code == "BLOCKED_PHASE11_REQUEST_BODY_HASH_INVALID"
+
+
 def test_phase11_recall_is_revision_scoped_and_rejects_wrong_identity_or_zero_dense(tmp_path: Path):
     inputs, _candidate, _urls = make_compilation_inputs(tmp_path)
-    payload = common.phase11_recall_payload(inputs, "project_knowledge")
-    assert payload["tags"] == [f"active-revision:{inputs.context.revision_id}"]
+    request_hash = "sha256:" + "1" * 64
+    payload = common.phase11_recall_payload(inputs, "project_knowledge", request_hash)
+    assert payload["tags"] == [f"phase11-request:{request_hash.removeprefix('sha256:')}"]
     assert payload["collections"] == ["project_knowledge"]
     assert payload["k"] == 20
     assert payload["threshold"] == 0.0
+    assert request_hash in payload["q"]
+    assert common.phase11_memory_key(inputs.context.run_id, inputs.context.revision_id, request_hash) in payload["q"]
 
     expected_key = "pd_phase11_expected"
     with pytest.raises(common.Phase11Blocked) as wrong_identity:
@@ -381,14 +406,23 @@ def test_phase11_memory_record_exact_reread_and_dense_recall(tmp_path: Path):
     assert evidence["persisted"] is True
     assert evidence["exact_reread_count"] == 1
     assert evidence["semantic_sync_state"] == "synced"
-    assert evidence["recall"]["tags"] == [f"active-revision:{inputs.context.revision_id}"]
+    assert evidence["request_body_sha256"] == request["request_body_sha256"]
+    assert evidence["phase11_key"] == common.phase11_memory_key(
+        inputs.context.run_id, inputs.context.revision_id, request["request_body_sha256"]
+    )
+    assert evidence["legacy_phase11_key"] == common.legacy_phase11_memory_key(
+        inputs.context.run_id, inputs.context.revision_id
+    )
+    request_tag = f"phase11-request:{request['request_body_sha256'].removeprefix('sha256:')}"
+    assert evidence["recall"]["tags"] == [request_tag]
     assert evidence["recall"]["matching_identity_count"] == 1
     assert evidence["recall"]["dense_matching_count"] == 1
     assert evidence["recall"]["max_dense"] > 0
     recall_payloads = [payload for path, payload in state.requests if path == "/recall"]
     assert len(recall_payloads) == 1
-    assert recall_payloads[0]["tags"] == [f"active-revision:{inputs.context.revision_id}"]
+    assert recall_payloads[0]["tags"] == [request_tag]
     assert document["_key"] in state.collections["project_knowledge"]
+    assert request_tag in document["tags"]
     assert "revision_id" not in document
     assert document["phase11_revision_id"] == inputs.context.revision_id
     assert not common.FORBIDDEN_VECTOR_FIELDS.intersection(document)
@@ -461,7 +495,24 @@ def test_independent_validator_writes_schema_valid_memory_backed_receipt(tmp_pat
     monkeypatch.setattr(validator, "load_inputs", lambda *_args, **_kwargs: inputs)
 
     with fake_memory_server() as (memory_url, state):
-        state.collections.setdefault("project_knowledge", {})["pd_active_fixture"] = {
+        documents = state.collections.setdefault("project_knowledge", {})
+        legacy_key = common.legacy_phase11_memory_key(
+            inputs.context.run_id, inputs.context.revision_id
+        )
+        legacy_failed = {
+            "_key": legacy_key,
+            "record_type": "phase11_boundary",
+            "run_id": inputs.context.run_id,
+            "phase11_revision_id": inputs.context.revision_id,
+            "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+            "actual_provider_call_attempts": 1,
+            "provider_terminal_state": "RESULT_VALIDATION_FAILED",
+            "provider_result_http_status": 422,
+            "authorization_consumed": True,
+            "automatic_resubmit_allowed": False,
+        }
+        documents[legacy_key] = json.loads(json.dumps(legacy_failed))
+        documents["pd_active_fixture"] = {
             "_key": "pd_active_fixture",
             "record_type": "active_revision_pointer",
             "run_id": inputs.context.run_id,
@@ -485,10 +536,22 @@ def test_independent_validator_writes_schema_valid_memory_backed_receipt(tmp_pat
     assert receipt["gate_status"] == "BLOCKED_AWAITING_HUMAN_APPROVAL"
     assert receipt["memory"]["persisted"] is True
     assert receipt["memory"]["exact_reread_count"] == 1
+    assert receipt["memory"]["request_body_sha256"] == request["request_body_sha256"]
+    corrected_key = common.phase11_memory_key(
+        inputs.context.run_id,
+        inputs.context.revision_id,
+        request["request_body_sha256"],
+    )
+    assert receipt["memory"]["phase11_key"] == corrected_key
+    assert receipt["memory"]["legacy_phase11_key"] == legacy_key
     assert receipt["memory"]["recall"]["max_dense"] > 0
     assert receipt["mocked"] is True
     assert receipt["live"] is False
     assert receipt["actual_provider_call_attempts"] == 0
+    assert state.collections["project_knowledge"][legacy_key] == legacy_failed
+    assert corrected_key in state.collections["project_knowledge"]
+    assert corrected_key != legacy_key
+    assert "provider_result_http_status" not in state.collections["project_knowledge"][corrected_key]
 
 
 def test_compiler_cli_writes_canonical_artifacts_without_provider_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

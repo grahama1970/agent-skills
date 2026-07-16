@@ -193,7 +193,7 @@ The README uses these proof terms consistently:
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
 | Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Failed canary; resubmit unauthorized** | One explicitly authorized attempt was submitted as request `019f6acb-853c-7552-bc73-ff8a6548afb1`. fal returned HTTP 422 because all four shot prompts exceeded 512 characters. Attempts are `1`; no MP4 exists and automatic resubmit is forbidden |
+| Phase 11 - Submit and Return | **Corrected preflight awaiting new approvals** | Failed request `444a5a27...` remains terminal with one attempt and no MP4. Corrected request `9966f6b6...` has four prompts under 512 characters, zero technical blockers, live Memory/Qdrant proof, zero attempts, and five stale/missing request-bound approvals |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -457,19 +457,21 @@ has analyzed the actual media.
 Current canonical evidence for `rev_idea_f3f9c48d5cc2`:
 
 ```text
-request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
 validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
 adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
 gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
 technical_blockers: []
 missing_approval_count: 5
 actual_provider_call_attempts: 0
+memory_key: pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad
+memory_dense_recall_max: 0.792625
 provider_ready: false
 live_submit_ready: false
 ```
 
-That zero-call validation receipt records the state before authorization. The
-subsequent immutable execution ledger is now the current Phase 11 authority:
+That zero-call receipt is the current corrected-request authority. The prior
+request remains immutable failed-attempt history:
 
 ```text
 request_id: 019f6acb-853c-7552-bc73-ff8a6548afb1

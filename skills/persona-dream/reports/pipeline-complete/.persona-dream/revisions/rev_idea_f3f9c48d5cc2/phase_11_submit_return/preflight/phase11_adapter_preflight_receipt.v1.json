@@ -1,8 +1,8 @@
 {
   "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
   "actual_provider_call_attempts": 0,
-  "adapter_script_sha256": "sha256:a2f28f5ca333e83146e3da13c353bfa5562fb678a2375a2b97821e5db620abc2",
-  "approval_binding_sha256": "sha256:2e8721db27f74d23f6cbebe98feecf14ac15de2d778f34c1fc1f6de1adeb60ae",
+  "adapter_script_sha256": "sha256:eee4ff6f2a0c37da7457c7048ed8657665d1240cedb0156880b932073965d6f4",
+  "approval_binding_sha256": "sha256:a2c1ba04951a8aab5143955a8f3ca4a7647d18b9e71926aa90689eb5a775fa80",
   "approval_validation": {
     "invalid_blockers": [],
     "missing_types": [
@@ -15,28 +15,28 @@
     "receipts": {
       "cost_acceptance": {
         "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/cost_acceptance_receipt.json",
-        "sha256": null,
-        "state": "MISSING"
+        "sha256": "sha256:68ced910d44d6935deb09833d6686554b71f1d628c19ae11700fac1936c5240a",
+        "state": "STALE_OTHER_REQUEST"
       },
       "exact_request_acceptance": {
         "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/exact_request_acceptance_receipt.json",
-        "sha256": null,
-        "state": "MISSING"
+        "sha256": "sha256:4442c0da1110cae15b7c697b35a17781fae3fb6215bb3a3124a83ac5c65d9a6c",
+        "state": "STALE_OTHER_REQUEST"
       },
       "paid_call_authorization": {
         "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/paid_call_authorization_receipt.json",
-        "sha256": null,
-        "state": "MISSING"
+        "sha256": "sha256:985a68b2ba21ddac9eaac56622d0020ff79381fe7b69307714b857f76a7b301d",
+        "state": "STALE_OTHER_REQUEST"
       },
       "publication_authorization": {
         "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/publication_authorization_receipt.json",
-        "sha256": null,
-        "state": "MISSING"
+        "sha256": "sha256:df3130982f5eb98dd8e742ea6e2bb28c299e1a5c37acbefd5d1d12b5341e9c82",
+        "state": "STALE_OTHER_REQUEST"
       },
       "visual_media_acceptance": {
         "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/visual_media_acceptance_receipt.json",
-        "sha256": null,
-        "state": "MISSING"
+        "sha256": "sha256:ce5a8744dfea087ed1cedc311d575f1f021722ac6a0c2a1359b8f183b36b9ecf",
+        "state": "STALE_OTHER_REQUEST"
       }
     },
     "required_types": [
@@ -49,13 +49,13 @@
   },
   "attempt_ledger": {
     "actual_provider_call_attempts": 0,
-    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71/attempt_ledger.v1.json",
-    "request_key": "444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
-    "sha256": "sha256:35c1ad469390211619c51f4cde72da513eb12cfbaa92d4febd01c08e7cd738df",
+    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16/attempt_ledger.v1.json",
+    "request_key": "9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+    "sha256": "sha256:5a2b246c862f7bc4a16ba487c029c52aaa8f1526df758aa164d64b0816e311ef",
     "state": "PREFLIGHT_READY",
     "submit_intent_count": 0
   },
-  "created_at": "2026-07-16T11:16:24.500145+00:00",
+  "created_at": "2026-07-16T15:07:28.694904+00:00",
   "credential": {
     "present": true,
     "runtime_variable": "FAL_KEY",
@@ -64,11 +64,11 @@
     "source_variable": "FAL_KEY"
   },
   "download_directory": {
-    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
     "writable": true
   },
   "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-  "expires_at": "2026-07-16T12:16:24.500145+00:00",
+  "expires_at": "2026-07-16T16:07:28.694904+00:00",
   "fal_client": {
     "api_surface": {
       "SyncClient": true,
@@ -109,7 +109,7 @@
   "provider_live": false,
   "provider_ready": false,
   "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
-  "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+  "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.phase11_adapter_preflight_receipt.v1",

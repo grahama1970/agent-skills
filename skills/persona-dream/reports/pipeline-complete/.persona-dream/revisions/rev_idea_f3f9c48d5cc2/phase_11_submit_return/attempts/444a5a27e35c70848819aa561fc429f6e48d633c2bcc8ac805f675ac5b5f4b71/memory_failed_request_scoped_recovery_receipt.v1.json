@@ -1,0 +1,52 @@
+{
+  "action": "inserted_then_exactly_verified",
+  "actual_provider_call_attempts": 1,
+  "automatic_resubmit_allowed": false,
+  "claims": {
+    "does_not_prove": [
+      "corrected request persistence",
+      "new human approval",
+      "another provider call",
+      "returned video",
+      "Watch observation"
+    ],
+    "proves": [
+      "failed request history is separately persisted and exactly reread",
+      "semantic sync and dense recall identify the failed exact request",
+      "legacy collided record was unchanged during scoped recovery"
+    ]
+  },
+  "collection": "project_knowledge",
+  "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+  "embedding_version": "v5-omni-small",
+  "exact_reread_count": 1,
+  "legacy_key": "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941",
+  "legacy_record_sha256": "sha256:616cc9c43c6f3c5dc2099b9c8669c58f2204ef9ed69f427cf95e06786faf1b60",
+  "legacy_record_unchanged": true,
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-16T15:01:13.450576+00:00",
+  "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+  "qdrant_point_id": "660a685e-2555-5e6a-b24c-8c2e61207399",
+  "recall": {
+    "dense_matching_count": 1,
+    "matching_identity_count": 1,
+    "max_dense": 0.75495136,
+    "question": "What happened for Persona Dream Phase 11 exact failed request sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71, and may it be resubmitted automatically?",
+    "tags": [
+      "phase11-request:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71"
+    ]
+  },
+  "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+  "request_scoped_key": "pd_phase11_ab56b1cf2875c1c9c35871073006bdc779397deae2777732",
+  "returned_video": false,
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_request_scoped_memory_recovery_receipt.v1",
+  "semantic_sync_state": "synced",
+  "source_failure_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71/memory_failure_persistence_receipt.v1.json",
+  "source_failure_receipt_sha256": "sha256:8e0fd11406cebd2dee19dc573ac31d8e6ba8ae8222a77587ce0d0eae391da915",
+  "status": "PASS_PHASE11_FAILED_REQUEST_HISTORY_SCOPED",
+  "text_hash": "71c1ef836bf79e4390169f4a2996f7b0064171f9",
+  "watch_invoked": false
+}

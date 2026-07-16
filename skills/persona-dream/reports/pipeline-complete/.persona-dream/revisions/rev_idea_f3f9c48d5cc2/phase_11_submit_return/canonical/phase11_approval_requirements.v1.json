@@ -9,7 +9,7 @@
     "pricing_snapshot_sha256": "sha256:241d79ab092e1a475dddd7b65392376096fedb09e4e868a4b60131b4bcc3c0fe",
     "provider_id": "kling",
     "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
-    "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+    "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
     "revision_id": "rev_idea_f3f9c48d5cc2",
     "run_id": "pipeline-complete"
   },
@@ -25,28 +25,28 @@
   "receipts": {
     "cost_acceptance": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/cost_acceptance_receipt.json",
-      "sha256": null,
-      "state": "MISSING"
+      "sha256": "sha256:68ced910d44d6935deb09833d6686554b71f1d628c19ae11700fac1936c5240a",
+      "state": "STALE_OTHER_REQUEST"
     },
     "exact_request_acceptance": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/exact_request_acceptance_receipt.json",
-      "sha256": null,
-      "state": "MISSING"
+      "sha256": "sha256:4442c0da1110cae15b7c697b35a17781fae3fb6215bb3a3124a83ac5c65d9a6c",
+      "state": "STALE_OTHER_REQUEST"
     },
     "paid_call_authorization": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/paid_call_authorization_receipt.json",
-      "sha256": null,
-      "state": "MISSING"
+      "sha256": "sha256:985a68b2ba21ddac9eaac56622d0020ff79381fe7b69307714b857f76a7b301d",
+      "state": "STALE_OTHER_REQUEST"
     },
     "publication_authorization": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/publication_authorization_receipt.json",
-      "sha256": null,
-      "state": "MISSING"
+      "sha256": "sha256:df3130982f5eb98dd8e742ea6e2bb28c299e1a5c37acbefd5d1d12b5341e9c82",
+      "state": "STALE_OTHER_REQUEST"
     },
     "visual_media_acceptance": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/visual_media_acceptance_receipt.json",
-      "sha256": null,
-      "state": "MISSING"
+      "sha256": "sha256:ce5a8744dfea087ed1cedc311d575f1f021722ac6a0c2a1359b8f183b36b9ecf",
+      "state": "STALE_OTHER_REQUEST"
     }
   },
   "required_approval_types": [

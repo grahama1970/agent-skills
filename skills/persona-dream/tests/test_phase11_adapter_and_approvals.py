@@ -199,7 +199,12 @@ def test_approval_writer_rejects_wrong_hash_stale_or_revoked_and_dry_run_writes_
         dry_run=False,
     )
     assert written["approval_receipt_count"] == 5
-    paid_path = inputs.approval_root / common.APPROVAL_FILES["paid_call_authorization"]
+    request_hash = execution.build_execution_state(inputs).bindings["request_body_sha256"]
+    paid_path = (
+        inputs.approval_root
+        / execution.request_digest(request_hash)
+        / common.APPROVAL_FILES["paid_call_authorization"]
+    )
     paid = common.read_object(paid_path)
     paid["revoked"] = True
     paid["revocation_state"] = "REVOKED"
@@ -265,3 +270,138 @@ def test_ambiguous_submit_is_persisted_and_never_resubmitted(tmp_path: Path):
             submit=lambda: "must-not-submit",
         )
     assert retry.value.code == "BLOCKED_PHASE11_AMBIGUOUS_SUBMIT_REQUIRES_HUMAN_RECONCILIATION"
+
+
+FAILED_REQUEST_HASH = "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71"
+
+
+def test_new_request_hash_isolated_from_consumed_failed_ledger(tmp_path: Path) -> None:
+    inputs = ready_inputs(tmp_path)
+    current_state = execution.build_execution_state(inputs)
+    current_hash = current_state.bindings["request_body_sha256"]
+    assert current_hash != FAILED_REQUEST_HASH
+
+    failed_path = execution.attempt_ledger_path(inputs, FAILED_REQUEST_HASH)
+    failed = execution.new_preflight_ledger(
+        inputs, FAILED_REQUEST_HASH, datetime(2026, 7, 16, 11, tzinfo=timezone.utc)
+    )
+    failed.update(
+        {
+            "state": "FAILED",
+            "submit_intent_count": 1,
+            "actual_provider_call_attempts": 1,
+            "request_id": "019f6acb-853c-7552-bc73-ff8a6548afb1",
+            "poll_count": 2,
+            "provider_terminal_state": "RESULT_VALIDATION_FAILED",
+            "automatic_resubmit_allowed": False,
+            "last_error": {
+                "status": "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION",
+                "automatic_resubmit_allowed": False,
+            },
+        }
+    )
+    execution.atomic_write_json(failed_path, failed)
+    failed_bytes = failed_path.read_bytes()
+
+    observation, blockers = common.request_attempt_observation(inputs, current_hash)
+    assert blockers == []
+    assert observation["state"] == "PREFLIGHT_READY"
+    assert observation["actual_provider_call_attempts"] == 0
+    assert failed_path.read_bytes() == failed_bytes
+    assert common.read_object(failed_path)["actual_provider_call_attempts"] == 1
+
+
+def test_compiler_reports_authoritative_selected_request_attempt_count(tmp_path: Path) -> None:
+    inputs = ready_inputs(tmp_path)
+    request_hash = execution.build_execution_state(inputs).bindings["request_body_sha256"]
+    ledger_path = execution.attempt_ledger_path(inputs, request_hash)
+    ledger = common.read_object(ledger_path)
+    ledger.update(
+        {
+            "state": "FAILED",
+            "submit_intent_count": 1,
+            "actual_provider_call_attempts": 1,
+            "request_id": "task-failed-1",
+            "provider_terminal_state": "RESULT_VALIDATION_FAILED",
+            "automatic_resubmit_allowed": False,
+        }
+    )
+    execution.atomic_write_json(ledger_path, ledger)
+
+    _media, approvals, request = common.compile_bundle(inputs)
+    assert request["actual_provider_call_attempts"] == 1
+    assert request["generation_call_started"] is True
+    assert request["provider_live"] is True
+    assert request["submitted"] is True
+    assert approvals["actual_provider_call_attempts"] == 1
+    assert approvals["bindings"]["actual_provider_call_attempts"] == 1
+    assert "BLOCKED_PHASE11_ATTEMPT_LEDGER_STATE:FAILED" in request["technical_blockers"]
+
+
+def test_terminal_provider_result_error_is_persisted_and_never_resubmitted(
+    tmp_path: Path,
+) -> None:
+    inputs = ready_inputs(tmp_path)
+    request_hash = execution.build_execution_state(inputs).bindings["request_body_sha256"]
+    decision = execution.submit_once(
+        inputs,
+        request_hash,
+        current=datetime(2026, 7, 16, 12, tzinfo=timezone.utc),
+        submit=lambda: "task-result-validation-1",
+    )
+    assert decision.request_id == "task-result-validation-1"
+
+    class Response:
+        status_code = 422
+
+        @staticmethod
+        def json():
+            return {
+                "detail": [
+                    {
+                        "loc": ["body", "multi_prompt", 0, "prompt"],
+                        "msg": "Value error, Prompt must not exceed 512 characters.",
+                        "type": "value_error",
+                        "ctx": {"error": "Prompt must not exceed 512 characters."},
+                        "input": "x" * 513,
+                    }
+                ]
+            }
+
+    class FalClientHTTPError(RuntimeError):
+        def __init__(self) -> None:
+            super().__init__("422 provider result validation")
+            self.response = Response()
+
+    receipt, ledger = execution.persist_provider_result_error(
+        inputs,
+        request_hash,
+        endpoint="fal-ai/kling-video/v3/standard/image-to-video",
+        request_id="task-result-validation-1",
+        current=datetime(2026, 7, 16, 12, 1, tzinfo=timezone.utc),
+        poll_count=2,
+        error=FalClientHTTPError(),
+    )
+    assert receipt["status"] == "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION"
+    assert receipt["http_status"] == 422
+    assert receipt["error_count"] == 1
+    assert receipt["errors"][0]["input_character_count"] == 513
+    assert receipt["actual_provider_call_attempts"] == 1
+    assert receipt["automatic_resubmit_allowed"] is False
+    assert receipt["returned_video"] is False
+    assert receipt["watch_invoked"] is False
+    assert ledger["state"] == "FAILED"
+    assert ledger["actual_provider_call_attempts"] == 1
+    assert ledger["request_id"] == "task-result-validation-1"
+    assert ledger["last_error"]["receipt_sha256"].startswith("sha256:")
+
+    calls = {"count": 0}
+    with pytest.raises(common.Phase11Blocked) as blocked:
+        execution.submit_once(
+            inputs,
+            request_hash,
+            current=datetime(2026, 7, 16, 12, 2, tzinfo=timezone.utc),
+            submit=lambda: calls.__setitem__("count", calls["count"] + 1),
+        )
+    assert blocked.value.code == "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION"
+    assert calls["count"] == 0

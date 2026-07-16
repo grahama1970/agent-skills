@@ -1,0 +1,30 @@
+{
+  "goal_id": "persona-dream-phase11-provider-contract-repair",
+  "goal_lock": "Persona Dream must compile a provider-valid Phase 11 multi-prompt request and persist terminal provider validation failures without resetting or hiding consumed attempts.",
+  "current_milestone": "The zero-call compiler rejects or deterministically compiles every multi_prompt prompt to at most 512 characters and the adapter records result-validation failure as terminal FAILED evidence.",
+  "top_blocker": "The authorized request contained four 1036-1098 character multi_prompt prompts because the technical gate did not enforce the live provider's 512-character item limit; result retrieval then raised without terminal ledger persistence.",
+  "blocker_evidence": {
+    "command": "jq -e '.. | objects | select(has(\"multi_prompt\")) | [.multi_prompt[].prompt | length] | all(. <= 512)' skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/canonical/phase11_live_request.v1.json",
+    "cwd": "/home/graham/workspace/experiments/agent-skills-main"
+  },
+  "required_live_proof": "Regenerated zero-call request has four prompts each <=512 characters, a new request-body hash, zero attempts for that new hash, all focused tests pass, and no provider submit/status/result method is called during proof.",
+  "allowed_paths": [
+    "skills/persona-dream/scripts/phase11_payload_binding.py",
+    "skills/persona-dream/scripts/phase11_canonical_common.py",
+    "skills/persona-dream/scripts/phase11_execution_common.py",
+    "skills/persona-dream/scripts/phase11_fal_canary_adapter.py",
+    "skills/persona-dream/contracts/**",
+    "skills/persona-dream/tests/test_phase11_*.py",
+    "skills/persona-dream/tests/phase11_fixture_helpers.py"
+  ],
+  "forbidden_scope": [
+    "skills/persona-dream/ui/**",
+    "skills/persona-dream/server/**",
+    "skills/memory/**",
+    "skills/watch/**",
+    "provider submission or another generation call",
+    "Phases 12-16",
+    "README or project status copy"
+  ],
+  "attempt_budget": 2
+}
