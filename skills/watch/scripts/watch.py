@@ -257,7 +257,7 @@ def run_watch(
     source: str,
     scene_change: bool = True,
     fps: float | None = None,
-    max_frames: int = 150,
+    max_frames: int = 100,
     resolution: int = 512,
     start: str | None = None,
     end: str | None = None,
